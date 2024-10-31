@@ -24,12 +24,14 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
     setMounted(true)
   }, [])
 
+  // 优化后的动画变体
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
         staggerChildren: 0.2,
+        delayChildren: 0.3,
         when: "beforeChildren",
       },
     },
@@ -91,17 +93,17 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="text-center max-w-4xl mx-auto px-4 relative z-10"
+        className="text-center max-w-4xl mx-auto px-4 relative z-10 space-y-8 md:space-y-12"
       >
+        {/* Logo 区域 */}
         <motion.div 
           variants={itemVariants} 
-          className="mb-8"
+          className="mb-6 md:mb-8"
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
-          {/* 优化后的 Logo 展示组件 */}
           <motion.div
-            className="relative group perspective-1000"
+            className="relative group perspective-1000 inline-block"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -133,31 +135,20 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
               <img
                 src="/assets/logo.jpg"
                 alt="ShaTa AI"
-                className="h-24 md:h-32 w-auto mx-auto rounded-lg
+                className="h-20 md:h-24 w-auto mx-auto rounded-lg
                   shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40
                   backdrop-blur-sm
                   border border-white/10 hover:border-white/20
                   transition-all duration-300
                   transform-gpu will-change-transform"
               />
-              
-              {/* Logo 悬停效果 */}
-              <motion.div
-                className="absolute -bottom-12 left-1/2 -translate-x-1/2
-                  opacity-0 group-hover:opacity-100
-                  transition-opacity duration-300"
-                initial={{ y: 10 }}
-                whileHover={{ y: 0 }}
-              >
-                <p className="text-white/80 text-sm font-medium whitespace-nowrap
-                  bg-black/20 backdrop-blur-sm px-4 py-2 rounded-full">
-                  智能企业服务专家
-                </p>
-              </motion.div>
             </motion.div>
           </motion.div>
+        </motion.div>
 
-          <h1 className="text-3xl md:text-6xl font-bold text-white mb-4 leading-tight">
+        {/* 标题区域 */}
+        <motion.div variants={itemVariants} className="space-y-4">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
             沙塔 AI - 智慧企业服务专家
           </h1>
           <p className="text-lg md:text-2xl text-white/80">
@@ -165,49 +156,43 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           </p>
         </motion.div>
 
+        {/* 描述文字 */}
         <motion.p
           variants={itemVariants}
-          className="text-base md:text-xl text-white/70 mb-8 max-w-2xl mx-auto"
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          className="text-base md:text-xl text-white/70 max-w-2xl mx-auto"
         >
           自动生成单据和报表，智能分析企业经营数据，
           <br className="hidden md:block" />
           为中小企业提供智能化解决方案
         </motion.p>
 
+        {/* 按钮区域 */}
         <motion.div
           variants={itemVariants}
           className="flex flex-col md:flex-row gap-4 justify-center items-center"
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
         >
           <Button
             size="lg"
-            className="bg-white text-primary-dark hover:bg-white/90 font-medium px-8 w-full md:w-auto"
+            className="bg-white text-primary-dark hover:bg-white/90 font-medium px-8 w-full md:w-auto
+              transform hover:scale-105 active:scale-95 transition-all duration-300"
             onClick={onGetStarted}
-            onMouseEnter={() => scaleSpring.set(1.05)}
-            onMouseLeave={() => scaleSpring.set(1)}
-            style={{
-              scale: scaleSpring
-            }}
           >
             立即开始
           </Button>
           <Button
             size="lg"
             variant="bordered"
-            className="text-white border-white hover:bg-white/10 font-medium px-8 w-full md:w-auto"
+            className="text-white border-white hover:bg-white/10 font-medium px-8 w-full md:w-auto
+              transform hover:scale-105 active:scale-95 transition-all duration-300"
           >
             了解更多
           </Button>
         </motion.div>
 
+        {/* 客户数量信息 */}
         <motion.div
           variants={itemVariants}
-          className="mt-12 text-white/60 text-sm"
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
+          className="mt-8 md:mt-12 text-white/60 text-sm"
         >
           <p>已服务超过 1000+ 企业客户</p>
         </motion.div>
