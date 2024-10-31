@@ -95,7 +95,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         animate="visible"
         className="text-center max-w-4xl mx-auto px-4 relative z-10 space-y-8 md:space-y-12"
       >
-        {/* Logo 区域 */}
+        {/* Logo 区域 - 调整尺寸和效果 */}
         <motion.div 
           variants={itemVariants} 
           className="mb-6 md:mb-8"
@@ -135,7 +135,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
               <img
                 src="/assets/logo.jpg"
                 alt="ShaTa AI"
-                className="h-20 md:h-24 w-auto mx-auto rounded-lg
+                className="h-24 md:h-32 lg:h-40 w-auto mx-auto rounded-lg
                   shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40
                   backdrop-blur-sm
                   border border-white/10 hover:border-white/20
