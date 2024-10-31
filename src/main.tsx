@@ -1,0 +1,23 @@
+import React from "react"
+import ReactDOM from "react-dom/client"
+import { BrowserRouter } from "react-router-dom"
+import App from "./App"
+import { Provider } from "./provider"
+import "./styles/globals.css"
+import "./styles/github-markdown.css"
+import { Toaster } from "sonner"
+import { Toaster as ShadcnToaster } from "@/components/ui/toaster"
+import "./i18n"
+import "./globalStore"
+import "./tools"
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  // <React.StrictMode>
+  <BrowserRouter>
+    <Provider>
+      <App />
+      <Toaster position='top-center' expand={true} richColors closeButton></Toaster>
+    </Provider>
+  </BrowserRouter>
+  // </React.StrictMode>
+)

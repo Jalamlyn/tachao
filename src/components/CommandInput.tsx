@@ -1,0 +1,166 @@
+"use client"
+import type { TextAreaProps } from "@nextui-org/react"
+
+import React, { useEffect, useState } from "react"
+import { Button, Tooltip, Input } from "@nextui-org/react"
+import { Icon } from "@iconify/react"
+import { cn } from "@nextui-org/react"
+
+import PromptInput from "./PromptInput"
+import { useFormSubmission } from "./from-templates/hook/useFormSubmission"
+
+// 导入企业微信 JSAPI
+import * as ww from "@wecom/jssdk"
+import message from "./Message"
+
+export default function Component(props: TextAreaProps & { classNames?: Record<"button" | "buttonIcon", string> }) {
+  const [prompt, setPrompt] = React.useState<string>("")
+  const { submitForm } = useFormSubmission()
+  const [isRecording, setIsRecording] = React.useState<boolean>(false)
+  const [localId, setLocalId] = React.useState<string>("")
+  const [isLoading, setIsLoading] = React.useState<boolean>(false)
+  const [signature, setSignature] = useState<string>(
+    "kgt8ON7yVITDhtdwci0qeUiDs4BGN8Nv1BTeJl6_DRfVMekQi10Szp0kiRDdSZkANokxKITDT4cv1UV6mWuiKA"
+  )
+  const [showSignatureInput, setShowSignatureInput] = useState<boolean>(false)
+
+  useEffect(() => {
+    // 注册企业微信 JSAPI
+    ww.register({
+      corpId: "wwe22bac8b8ee6f528", // 请替换为您的企业 ID
+      jsApiList: ["startRecord", "stopRecord", "translateVoice"],
+      getConfigSignature() {
+        // 使用动态的 signature
+        return ww.getSignature(signature)
+      },
+    })
+  }, [signature])
+
+  const handleSendCommand = async () => {
+    if (prompt && !isLoading) {
+      try {
+        setIsLoading(true)
+        await submitForm(prompt)
+        console.log("Form submitted successfully")
+        setPrompt("") // 清空输入
+      } catch (error) {
+        console.error("Error submitting form:", error)
+        message.error("发送指令失败，请稍后重试")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+  }
+
+  const startRecording = () => {
+    ww.startRecord({
+      fail(res) {
+        setIsRecording(false)
+        message.error("语音输入只在手机端上可用")
+      },
+    })
+    setIsRecording(true)
+  }
+
+  const stopRecording = () => {
+    ww.stopRecord({
+      success: function (res) {
+        setLocalId(res.localId)
+        setIsRecording(false)
+        // 停止录音后直接调用语音识别
+        ww.translateVoice({
+          localId: res.localId,
+          isShowProgressTips: true,
+          success: function (translateRes) {
+            setPrompt(translateRes.translateResult)
+          },
+          fail: function (translateRes) {
+            console.error("语音转文字失败:", translateRes)
+          },
+        })
+      },
+      fail: function (res) {
+        console.error("录音失败:", res)
+        setIsRecording(false)
+      },
+    })
+  }
+
+  const handleSignatureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSignature(e.target.value)
+  }
+
+  const toggleSignatureInput = () => {
+    setShowSignatureInput(!showSignatureInput)
+  }
+
+  return (
+    <div className='flex flex-col w-full items-start gap-2'>
+      <form className='flex w-full items-start gap-2' onSubmit={(e) => e.preventDefault()}>
+        <PromptInput
+          {...props}
+          classNames={{
+            innerWrapper: cn("items-center", props.classNames?.innerWrapper),
+            input: cn(
+              "text-medium data-[has-start-content=true]:ps-0 data-[has-start-content=true]:pe-0",
+              props.classNames?.input
+            ),
+          }}
+          endContent={
+            <div className='flex gap-2'>
+              <Tooltip showArrow content={isRecording ? "停止录音" : "开始录音"}>
+                <Button isIconOnly radius='full' variant='light' onClick={isRecording ? stopRecording : startRecording}>
+                  <Icon icon={isRecording ? "solar:stop-circle-linear" : "solar:microphone-3-linear"} width={20} />
+                </Button>
+              </Tooltip>
+              <Tooltip showArrow content='发送指令'>
+                <Button
+                  isIconOnly
+                  className={props?.classNames?.button || ""}
+                  color={!prompt || isLoading ? "default" : "primary"}
+                  isDisabled={!prompt || isLoading}
+                  radius='full'
+                  variant={!prompt || isLoading ? "flat" : "solid"}
+                  onClick={handleSendCommand}
+                  isLoading={isLoading}
+                >
+                  {isLoading ? (
+                    <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
+                  ) : (
+                    <Icon
+                      className={cn(
+                        "[&>path]:stroke-[2px]",
+                        !prompt ? "text-default-500" : "text-primary-foreground",
+                        props?.classNames?.buttonIcon || ""
+                      )}
+                      icon='solar:arrow-up-linear'
+                      width={20}
+                    />
+                  )}
+                </Button>
+              </Tooltip>
+            </div>
+          }
+          startContent={
+            <Tooltip showArrow content='Add file'>
+              <Button isIconOnly className='p-[10px]' radius='full' variant='light'>
+                <Icon className='text-default-500' icon='solar:paperclip-linear' width={20} />
+              </Button>
+            </Tooltip>
+          }
+          value={prompt}
+          onValueChange={setPrompt}
+          disabled={isLoading}
+        />
+      </form>
+      <div className='flex items-center gap-2'>
+        <Button size='sm' onClick={toggleSignatureInput}>
+          {showSignatureInput ? "隐藏" : "显示"} ticket
+        </Button>
+        {showSignatureInput && (
+          <Input size='sm' placeholder='输入新的 Signature' value={signature} onChange={handleSignatureChange} />
+        )}
+      </div>
+    </div>
+  )
+}

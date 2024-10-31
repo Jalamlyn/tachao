@@ -1,0 +1,40 @@
+export default {
+  product: "Product",
+  real_ai_engineer: "Super AI Dev Agent",
+  mo2_description:
+    "Mo is an AI-powered engineering assistant that understands your project, writes code and documentation, and boosts your development efficiency by 10x.",
+  mo2_advanced_ai:
+    "Mo has extremely high intelligence and is the representative of the most advanced intelligent body development technology. It can understand and analyze projects, provide professional modification suggestions, and generate high-quality code to complete development work directly.",
+  product_introduction: "Product Introduction",
+  product_introduction_description:
+    "Our product offers a comprehensive solution for your business needs, integrating advanced AI technology to streamline your operations and enhance productivity.",
+  product_docs: "Product Documentation",
+  product_docs_description: "Find detailed information and guides on how to use our product.",
+  getting_started: "Getting Started",
+  getting_started_description: "Learn the basics of getting started with our product.",
+  step_1: "Step 1: Download the Client",
+  download_client: "Try mo for free",
+  client_link: "this link.",
+  step_2: "Step 2: Install Node.js",
+  install_nodejs: "Install Node.js from ",
+  nodejs_link: "this link.",
+  step_3: "Step 3: Unzip the Client",
+  unzip_client: "Unzip the client to the root directory of the project you want to develop.",
+  step_4: "Step 4: Modify agent.cjs",
+  modify_agent: "Modify the agent.cjs file according to your actual situation.",
+  step_5: "Step 5: Install Dependencies",
+  install_dependencies: "Install the necessary dependencies using ",
+  step_6: "Step 6: Start WebSocket Server",
+  start_ws_server: "Start the WebSocket server using ",
+  step_7: "Step 7: Create Project",
+  create_project: "Go back to the platform, create a project, and create an application.",
+  step_8: "Step 8: Connect Development Environment",
+  connect_dev_env:
+    "Click on the development icon, fill in the WebSocket server port number, and see the connection success message.",
+  step_9: "Step 9: Start Developing",
+  start_developing:
+    "Click on the development icon to start a conversation with Mo and let Mo complete various development tasks.",
+  faq_header: "Frequently Asked Questions",
+  faq_download_client_issue: "If you encounter issues run the client, please refer to the instructions ",
+  here: "here",
+};

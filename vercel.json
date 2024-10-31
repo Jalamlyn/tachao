@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
+  "github": {
+    "enabled": true,
+    "silent": false
+  },
+  "rewrites": [
+    {
+      "source": "/dev/:path*",
+      "destination": "https://www.mobenai.com.cn/api/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://www.mobenai.com.cn/api/:path*"
+    },
+    {
+      "source": "/((?!api|dev).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
