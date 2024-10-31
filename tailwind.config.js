@@ -26,34 +26,9 @@ module.exports = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        // primary: {
-        //   DEFAULT: "hsl(var(--primary))",
-        //   foreground: "hsl(var(--primary-foreground))",
-        // },
-        // secondary: {
-        //   DEFAULT: "hsl(var(--secondary))",
-        //   foreground: "hsl(var(--secondary-foreground))",
-        // },
-        // destructive: {
-        //   DEFAULT: "hsl(var(--destructive))",
-        //   foreground: "hsl(var(--destructive-foreground))",
-        // },
-        // muted: {
-        //   DEFAULT: "hsl(var(--muted))",
-        //   foreground: "hsl(var(--muted-foreground))",
-        // },
-        // accent: {
-        //   DEFAULT: "hsl(var(--accent))",
-        //   foreground: "hsl(var(--accent-foreground))",
-        // },
-        // popover: {
-        //   DEFAULT: "hsl(var(--popover))",
-        //   foreground: "hsl(var(--popover-foreground))",
-        // },
-        // card: {
-        //   DEFAULT: "hsl(var(--card))",
-        //   foreground: "hsl(var(--card-foreground))",
-        // },
+        'primary-dark': '#1E2B8C',
+        'primary-light': '#4B9EF4',
+        'accent': '#6C63FF',
       },
       borderRadius: {
         lg: `var(--radius)`,
@@ -72,17 +47,6 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-      },
-      animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-      },
-      animation: {
-        shimmer: "shimmer 8s infinite",
-        "spin-around": "spin-around calc(var(--speed) * 2) infinite linear",
-        slide: "slide var(--speed) ease-in-out infinite alternate",
-      },
-      keyframes: {
         "spin-around": {
           "0%": {
             transform: "translateZ(0) rotate(0)",
@@ -110,9 +74,27 @@ module.exports = {
             "background-position": "calc(100% + var(--shimmer-width)) 0",
           },
         },
+        gradient: {
+          '0%, 100%': {
+            'background-size': '200% 200%',
+            'background-position': 'left center',
+          },
+          '50%': {
+            'background-size': '200% 200%',
+            'background-position': 'right center',
+          },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        shimmer: "shimmer 8s infinite",
+        "spin-around": "spin-around calc(var(--speed) * 2) infinite linear",
+        slide: "slide var(--speed) ease-in-out infinite alternate",
+        'gradient': 'gradient 8s linear infinite',
       },
     },
   },
-  darkMode: ["class"],
+  darkMode: "class",
   plugins: [nextui(), require("tailwindcss-animate"), addDynamicIconSelectors()],
 }
