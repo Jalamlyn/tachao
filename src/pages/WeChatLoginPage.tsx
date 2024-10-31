@@ -9,6 +9,8 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Card,
+  CardBody,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -17,6 +19,8 @@ import EnterpriseList from "@/components/EnterpriseList"
 import { message } from "@/components/Message"
 import { useTranslation } from "react-i18next"
 import { jsonParse, jsonStringify } from "@/utils"
+import { motion } from "framer-motion"
+import AnimatedBackground from "@/components/landing/AnimatedBackground"
 
 export default function WeChatLoginPage() {
   const { t } = useTranslation()
@@ -50,7 +54,6 @@ export default function WeChatLoginPage() {
       setRememberMe(true)
     }
 
-    // 添加标语动画效果
     const timer = setTimeout(() => {
       setSloganVisible(true)
     }, 500)
@@ -131,60 +134,135 @@ export default function WeChatLoginPage() {
   }
 
   return (
-    <div className='flex h-screen w-full items-center justify-center p-2'>
-      <div className='flex w-full flex-col gap-4 rounded-large bg-content1 px-4 pb-6 pt-4 shadow-large'>
-        <p className='pb-2 text-lg font-medium'>欢迎登录 沙塔 智慧数字系统 </p>
-        {/* 新添加的标语 */}
-        <div
-          className={`text-center text-xl font-bold text-primary transition-opacity duration-1000 ${
-            sloganVisible ? "opacity-100" : "opacity-0"
-          }`}
+    <div className="min-h-screen relative bg-gradient-to-b from-primary-dark to-primary-light">
+      <AnimatedBackground />
+      <div className="container mx-auto px-4 min-h-screen flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-md"
         >
-          AI 帮你管单据，工作从未如此轻松
-        </div>
-        <form className='flex flex-col gap-3' onSubmit={(e) => e.preventDefault()}>
-          <EnterpriseList loginData={loginData} />
-          <Input
-            isRequired
-            label={t("username")}
-            name='account'
-            placeholder={t("enter_your_username")}
-            type='text'
-            variant='bordered'
-            onChange={handleInputChange}
-            value={account}
-          />
-          <Input
-            isRequired
-            endContent={
-              <button type='button' onClick={toggleVisibility}>
-                {isVisible ? (
-                  <Icon className='pointer-events-none text-xl text-default-400' icon='solar:eye-closed-linear' />
-                ) : (
-                  <Icon className='pointer-events-none text-xl text-default-400' icon='solar:eye-bold' />
-                )}
-              </button>
-            }
-            label={t("password")}
-            name='password'
-            placeholder={t("enter_your_password")}
-            type={isVisible ? "text" : "password"}
-            variant='bordered'
-            onChange={handleInputChange}
-            value={password}
-          />
-          <div className='flex items-center justify-between px-1 py-2'>
-            <Checkbox name='remember' size='sm' isSelected={rememberMe} onValueChange={handleRememberMeChange}>
-              {t("remember_me")}
-            </Checkbox>
-            <Link className='text-default-500' href='#' size='sm' onClick={handleForgotPasswordClick}>
-              {t("forgot_password")}
-            </Link>
-          </div>
-          <Button color='primary' type='submit' onClick={handleLogin} isLoading={loginLoading}>
-            {t("login")}
-          </Button>
-        </form>
+          <Card className="bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl">
+            <CardBody className="gap-4 p-8">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-center"
+              >
+                <h2 className="text-2xl font-bold text-white mb-2">欢迎登录 沙塔 智慧数字系统</h2>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: sloganVisible ? 1 : 0 }}
+                  transition={{ duration: 1 }}
+                  className="text-white/80 text-lg mb-6"
+                >
+                  AI 帮你管单据，工作从未如此轻松
+                </motion.p>
+              </motion.div>
+
+              <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <EnterpriseList loginData={loginData} />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <Input
+                    isRequired
+                    label={t("username")}
+                    name="account"
+                    placeholder={t("enter_your_username")}
+                    type="text"
+                    variant="bordered"
+                    onChange={handleInputChange}
+                    value={account}
+                    classNames={{
+                      input: "text-white",
+                      label: "text-white",
+                    }}
+                  />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <Input
+                    isRequired
+                    endContent={
+                      <button type="button" onClick={toggleVisibility}>
+                        {isVisible ? (
+                          <Icon className="text-white text-xl" icon="solar:eye-closed-linear" />
+                        ) : (
+                          <Icon className="text-white text-xl" icon="solar:eye-bold" />
+                        )}
+                      </button>
+                    }
+                    label={t("password")}
+                    name="password"
+                    placeholder={t("enter_your_password")}
+                    type={isVisible ? "text" : "password"}
+                    variant="bordered"
+                    onChange={handleInputChange}
+                    value={password}
+                    classNames={{
+                      input: "text-white",
+                      label: "text-white",
+                    }}
+                  />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="flex items-center justify-between px-1 py-2"
+                >
+                  <Checkbox
+                    name="remember"
+                    size="sm"
+                    isSelected={rememberMe}
+                    onValueChange={handleRememberMeChange}
+                    classNames={{
+                      label: "text-white",
+                    }}
+                  >
+                    {t("remember_me")}
+                  </Checkbox>
+                  <Link className="text-white" href="#" size="sm" onClick={handleForgotPasswordClick}>
+                    {t("forgot_password")}
+                  </Link>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <Button
+                    color="primary"
+                    type="submit"
+                    onClick={handleLogin}
+                    isLoading={loginLoading}
+                    className="w-full bg-white text-primary-dark hover:bg-white/90"
+                  >
+                    {t("login")}
+                  </Button>
+                </motion.div>
+              </form>
+            </CardBody>
+          </Card>
+        </motion.div>
       </div>
 
       <Modal isOpen={modalVisible} onClose={handleModalClose}>
@@ -194,7 +272,7 @@ export default function WeChatLoginPage() {
             <p>{t("contact_admin_to_reset_password")}</p>
           </ModalBody>
           <ModalFooter>
-            <Button color='primary' onClick={handleModalClose}>
+            <Button color="primary" onClick={handleModalClose}>
               {t("close")}
             </Button>
           </ModalFooter>
