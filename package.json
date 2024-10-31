@@ -100,6 +100,7 @@
     "react-mermaid2": "^0.1.4",
     "react-resizable-panels": "^2.1.1",
     "react-router-dom": "6.23.0",
+    "react-swipeable": "^7.0.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-virtuoso": "^4.10.2",
     "recharts": "^2.13.0",

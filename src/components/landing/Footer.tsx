@@ -10,7 +10,7 @@ const Footer: React.FC = () => {
       <div className='container mx-auto px-4'>
         <div className='grid grid-cols-1 md:grid-cols-4 gap-8'>
           <div className='space-y-4'>
-            {/* <img src='/assets/logo.jpg' alt='ShaTa AI' className='h-8 w-auto' /> */}
+            <img src='/assets/logo.jpg' alt='ShaTa AI' className='h-auto w-[200px] rounded-lg' />
             <p className='text-white/70'>智能企业服务专家，让企业管理更简单</p>
           </div>
 
