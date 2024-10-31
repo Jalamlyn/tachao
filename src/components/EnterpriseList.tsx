@@ -87,18 +87,14 @@ const EnterpriseList: React.FC<EnterpriseListProps> = ({ loginData }) => {
   }, [])
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <Autocomplete
-        variant="bordered"
-        size="lg"
+        variant='bordered'
+        size='lg'
         value={value}
         onSelectionChange={onSelectionChange}
         onInputChange={onInputChange}
-        placeholder="输入您所在的企业名称"
+        placeholder='输入您所在的企业名称'
         isLoading={isLoading}
         errorMessage={error}
         classNames={{
@@ -106,7 +102,7 @@ const EnterpriseList: React.FC<EnterpriseListProps> = ({ loginData }) => {
           listbox: "max-h-[320px]",
           selectorButton: "text-white",
           value: "text-white",
-          input: "text-white",
+          input: "text-white placeholder:text-white/70", // 添加 placeholder 样式
           label: "text-white",
         }}
         listboxProps={{
@@ -125,11 +121,7 @@ const EnterpriseList: React.FC<EnterpriseListProps> = ({ loginData }) => {
             ],
           },
         }}
-        endContent={
-          isLoading && (
-            <Spinner size="sm" color="current" className="text-white/50" />
-          )
-        }
+        endContent={isLoading && <Spinner size='sm' color='current' className='text-white/50' />}
       >
         {options.map((option) => (
           <AutocompleteItem key={option.value} value={option.value}>

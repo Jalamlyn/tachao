@@ -23,27 +23,20 @@ const Navbar: React.FC = () => {
       animate={{ y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <img
-              src="/assets/logo.png"
+      <div className='container mx-auto px-4'>
+        <div className='flex items-center justify-between h-16'>
+          <div className='flex items-center'>
+            {/* <img
+              src="/assets/logo.jpg"
               alt="ShaTa AI"
               className="h-8 w-auto"
-            />
+            /> */}
           </div>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="light"
-              className="text-white"
-              onClick={() => navigate("/we-chat-login")}
-            >
+          <div className='flex items-center gap-4'>
+            <Button variant='light' className='text-white' onClick={() => navigate("/we-chat-login")}>
               登录
             </Button>
-            <Button
-              className="bg-white text-primary-dark"
-              onClick={() => navigate("/we-chat-login")}
-            >
+            <Button className='bg-white text-primary-dark' onClick={() => navigate("/we-chat-login")}>
               立即开始
             </Button>
           </div>
