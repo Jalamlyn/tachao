@@ -12,28 +12,88 @@ const ScrollNav: React.FC = () => {
   const [activeSection, setActiveSection] = useState("hero")
 
   useEffect(() => {
+    // 创建一个 Map 来存储每个部分的可见性状态
+    const visibilityMap = new Map()
+    
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id)
+          // 更新可见性 Map
+          visibilityMap.set(entry.target.id, {
+            visible: entry.isIntersecting,
+            ratio: entry.intersectionRatio
+          })
+
+          // 找到当前最大可见比例的部分
+          let maxRatio = 0
+          let mostVisibleSection = activeSection
+
+          visibilityMap.forEach((value, key) => {
+            if (value.visible && value.ratio > maxRatio) {
+              maxRatio = value.ratio
+              mostVisibleSection = key
+            }
+          })
+
+          // 只有当最可见部分改变时才更新状态
+          if (mostVisibleSection !== activeSection) {
+            setActiveSection(mostVisibleSection)
           }
         })
       },
-      { threshold: 0.5 }
+      { 
+        threshold: [0, 0.2, 0.4, 0.6, 0.8, 1],
+        rootMargin: "-20% 0px -20% 0px" // 调整观察区域
+      }
     )
 
+    // 监听所有部分
     sections.forEach(({ id }) => {
       const element = document.getElementById(id)
-      if (element) observer.observe(element)
+      if (element) {
+        observer.observe(element)
+      }
     })
 
-    return () => observer.disconnect()
-  }, [])
+    // 添加滚动事件监听器作为备份
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + window.innerHeight / 3
+
+      // 找到当前滚动位置最接近的部分
+      let closestSection = sections[0].id
+      let minDistance = Infinity
+
+      sections.forEach(({ id }) => {
+        const element = document.getElementById(id)
+        if (element) {
+          const distance = Math.abs(element.getBoundingClientRect().top + window.scrollY - scrollPosition)
+          if (distance < minDistance) {
+            minDistance = distance
+            closestSection = id
+          }
+        }
+      })
+
+      setActiveSection(closestSection)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [activeSection]) // 添加 activeSection 作为依赖
 
   const scrollTo = (sectionId: string) => {
     const element = document.getElementById(sectionId)
-    element?.scrollIntoView({ behavior: "smooth" })
+    if (element) {
+      const offset = element.offsetTop - 100 // 添加偏移量以考虑固定头部
+      window.scrollTo({
+        top: offset,
+        behavior: "smooth"
+      })
+    }
   }
 
   return (
