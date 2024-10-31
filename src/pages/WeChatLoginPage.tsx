@@ -3,12 +3,6 @@ import {
   Button,
   Input,
   Checkbox,
-  Link,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   Card,
   CardBody,
 } from "@nextui-org/react"
@@ -27,7 +21,6 @@ export default function WeChatLoginPage() {
   const [isVisible, setIsVisible] = useState(false)
   const [loginLoading, setLoginLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("enterprise")
-  const [modalVisible, setModalVisible] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [account, setAccount] = useState("")
   const [password, setPassword] = useState("")
@@ -121,103 +114,89 @@ export default function WeChatLoginPage() {
     }
   }
 
-  const handleForgotPasswordClick = () => {
-    setModalVisible(true)
-  }
-
-  const handleModalClose = () => {
-    setModalVisible(false)
-  }
-
   const handleRememberMeChange = (isSelected) => {
     setRememberMe(isSelected)
   }
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-b from-primary-dark to-primary-light">
+    <div className='min-h-screen relative bg-gradient-to-b from-primary-dark to-primary-light'>
       <AnimatedBackground />
-      <div className="container mx-auto px-4 min-h-screen flex items-center justify-center">
+      <div className='container mx-auto px-4 min-h-screen flex items-center justify-center'>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="w-full max-w-md"
+          className='w-full max-w-md'
         >
-          <Card className="bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl">
-            <CardBody className="gap-4 p-8">
+          <Card className='bg-white/20 border border-white/30 shadow-2xl'>
+            <CardBody className='gap-4 p-8'>
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-center"
+                className='text-center'
               >
-                <h2 className="text-2xl font-bold text-white mb-2">欢迎登录 沙塔 智慧数字系统</h2>
+                <h2 className='text-2xl font-bold text-white mb-2 drop-shadow-lg'>欢迎登录 沙塔 智慧数字系统</h2>
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: sloganVisible ? 1 : 0 }}
                   transition={{ duration: 1 }}
-                  className="text-white/80 text-lg mb-6"
+                  className='text-white/90 text-lg mb-6 drop-shadow'
                 >
                   AI 帮你管单据，工作从未如此轻松
                 </motion.p>
               </motion.div>
 
-              <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
+              <form className='flex flex-col gap-4' onSubmit={(e) => e.preventDefault()}>
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
                   <EnterpriseList loginData={loginData} />
                 </motion.div>
 
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 }}
-                >
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
                   <Input
                     isRequired
                     label={t("username")}
-                    name="account"
+                    name='account'
                     placeholder={t("enter_your_username")}
-                    type="text"
-                    variant="bordered"
+                    type='text'
+                    variant='bordered'
                     onChange={handleInputChange}
                     value={account}
                     classNames={{
                       input: "text-white",
-                      label: "text-white",
+                      label: "text-white font-medium",
                     }}
                   />
                 </motion.div>
 
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
                   <Input
                     isRequired
                     endContent={
-                      <button type="button" onClick={toggleVisibility}>
+                      <button type='button' onClick={toggleVisibility} className='focus:outline-none'>
                         {isVisible ? (
-                          <Icon className="text-white text-xl" icon="solar:eye-closed-linear" />
+                          <Icon
+                            className='text-white/90 hover:text-white text-xl transition-colors'
+                            icon='solar:eye-closed-linear'
+                          />
                         ) : (
-                          <Icon className="text-white text-xl" icon="solar:eye-bold" />
+                          <Icon
+                            className='text-white/90 hover:text-white text-xl transition-colors'
+                            icon='solar:eye-bold'
+                          />
                         )}
                       </button>
                     }
                     label={t("password")}
-                    name="password"
+                    name='password'
                     placeholder={t("enter_your_password")}
                     type={isVisible ? "text" : "password"}
-                    variant="bordered"
+                    variant='bordered'
                     onChange={handleInputChange}
                     value={password}
                     classNames={{
                       input: "text-white",
-                      label: "text-white",
+                      label: "text-white font-medium",
                     }}
                   />
                 </motion.div>
@@ -226,35 +205,28 @@ export default function WeChatLoginPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.6 }}
-                  className="flex items-center justify-between px-1 py-2"
+                  className='flex items-center justify-between px-1 py-2'
                 >
                   <Checkbox
-                    name="remember"
-                    size="sm"
+                    name='remember'
+                    size='sm'
                     isSelected={rememberMe}
                     onValueChange={handleRememberMeChange}
                     classNames={{
-                      label: "text-white",
+                      label: "text-white/90 hover:text-white transition-colors",
                     }}
                   >
                     {t("remember_me")}
                   </Checkbox>
-                  <Link className="text-white" href="#" size="sm" onClick={handleForgotPasswordClick}>
-                    {t("forgot_password")}
-                  </Link>
                 </motion.div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7 }}
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
                   <Button
-                    color="primary"
-                    type="submit"
+                    color='primary'
+                    type='submit'
                     onClick={handleLogin}
                     isLoading={loginLoading}
-                    className="w-full bg-white text-primary-dark hover:bg-white/90"
+                    className='w-full bg-white text-primary-dark hover:bg-white/90 transition-all duration-300 font-medium shadow-lg hover:shadow-xl'
                   >
                     {t("login")}
                   </Button>
@@ -264,20 +236,6 @@ export default function WeChatLoginPage() {
           </Card>
         </motion.div>
       </div>
-
-      <Modal isOpen={modalVisible} onClose={handleModalClose}>
-        <ModalContent>
-          <ModalHeader>{t("forgot_password")}</ModalHeader>
-          <ModalBody>
-            <p>{t("contact_admin_to_reset_password")}</p>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="primary" onClick={handleModalClose}>
-              {t("close")}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </div>
   )
 }
