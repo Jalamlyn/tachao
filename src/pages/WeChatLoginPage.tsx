@@ -92,7 +92,7 @@ export default function WeChatLoginPage() {
         if (callback) {
           window.location.href = callback
         } else {
-          navigate("/")
+          navigate("/forms")
         }
       } else {
         message.error(t("login_failed"))
