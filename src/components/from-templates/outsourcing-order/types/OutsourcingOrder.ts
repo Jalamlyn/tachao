@@ -26,97 +26,70 @@ export interface BasicInfo {
 export interface ProductDetail {
   id: string
   productName: string
-  specification: string // 保留字段保持兼容性
+  specification: string
+  model: string // 新增规格型号字段
   unit: string
   outboundQuantity: number
   inboundQuantity: number
   quantity: number // 保留原字段保持兼容性
   unitPrice: number
   totalPrice: number
-  processingRequirements: string // 保留字段保持兼容性
+  processingRequirements: string
   remarks: string
+  // 保持原有字段
+  serviceItems?: string[]
+  defectiveCount?: number
+  squareMeters?: number
+  invoiceNumber?: string
+  invoiceDate?: string
 }
 
 export interface ProcessConfirmations {
-  warehouseOutbound: {
+  warehouseConfirm: {
     confirmed: boolean
     confirmer: string
     confirmationDate: string
     comments: string
   }
-  manufacturerReceipt: {
+  purchaseConfirm: {
     confirmed: boolean
     confirmer: string
     confirmationDate: string
     comments: string
   }
-  processingComplete: {
-    confirmed: boolean
-    confirmer: string
-    confirmationDate: string
-    deliveryInfo: {
-      plateNumber: string
-      driverName: string
-      driverContact: string
-    }
-    comments: string
-  }
-  warehouseInbound: {
-    confirmed: boolean
-    confirmer: string
-    confirmationDate: string
-    comments: string
-  }
-  financeAmountConfirm: {
+  financeConfirm: {
     confirmed: boolean
     confirmer: string
     confirmationDate: string
     confirmedAmount: number
     comments: string
   }
-  financePayment: {
-    confirmed: boolean
-    confirmer: string
-    confirmationDate: string
-    paymentAmount: number
-    comments: string
-  }
-  manufacturerPaymentReceipt: {
-    confirmed: boolean
-    confirmer: string
-    confirmationDate: string
-    comments: string
-  }
+  // 保留原字段以保持兼容性
+  warehouseOutbound?: any
+  manufacturerReceipt?: any
+  processingComplete?: any
+  warehouseInbound?: any
+  financeAmountConfirm?: any
+  financePayment?: any
+  manufacturerPaymentReceipt?: any
 }
 
 export const PROCESS_STEPS = {
-  WAREHOUSE_OUTBOUND: 'warehouseOutbound',
-  MANUFACTURER_RECEIPT: 'manufacturerReceipt',
-  PROCESSING_COMPLETE: 'processingComplete',
-  WAREHOUSE_INBOUND: 'warehouseInbound',
-  FINANCE_AMOUNT_CONFIRM: 'financeAmountConfirm',
-  FINANCE_PAYMENT: 'financePayment',
-  MANUFACTURER_PAYMENT_RECEIPT: 'manufacturerPaymentReceipt'
+  WAREHOUSE_CONFIRM: 'warehouseConfirm',
+  PURCHASE_CONFIRM: 'purchaseConfirm',
+  FINANCE_CONFIRM: 'financeConfirm'
 } as const
 
 export type ProcessStep = typeof PROCESS_STEPS[keyof typeof PROCESS_STEPS]
 
 export const PROCESS_STEP_LABELS: Record<ProcessStep, string> = {
-  [PROCESS_STEPS.WAREHOUSE_OUTBOUND]: '仓库出库确认',
-  [PROCESS_STEPS.MANUFACTURER_RECEIPT]: '加工单位收货确认',
-  [PROCESS_STEPS.PROCESSING_COMPLETE]: '加工完成送货确认',
-  [PROCESS_STEPS.WAREHOUSE_INBOUND]: '仓库收货确认',
-  [PROCESS_STEPS.FINANCE_AMOUNT_CONFIRM]: '财务金额确认',
-  [PROCESS_STEPS.FINANCE_PAYMENT]: '财务付款确认',
-  [PROCESS_STEPS.MANUFACTURER_PAYMENT_RECEIPT]: '加工单位收款确认'
+  [PROCESS_STEPS.WAREHOUSE_CONFIRM]: '仓库确认',
+  [PROCESS_STEPS.PURCHASE_CONFIRM]: '采购确认',
+  [PROCESS_STEPS.FINANCE_CONFIRM]: '财务确认'
 }
 
 export const PROCESS_STEP_DESCRIPTIONS: Record<ProcessStep, string> = {
-  [PROCESS_STEPS.WAREHOUSE_OUTBOUND]: '✨ 仓库已完成物料清点和包装，即将发往加工单位进行专业加工',
-  [PROCESS_STEPS.MANUFACTURER_RECEIPT]: '📦 加工单位已接收物料，将按照要求开始安排生产加工',
-  [PROCESS_STEPS.PROCESSING_COMPLETE]: '🚚 加工单位已完成全部加工工序，产品已完成质检并准备送货',
-  [PROCESS_STEPS.WAREHOUSE_INBOUND]: '🎯 仓库已验收加工完成的产品，确认质量和数量符合要求',
-  [PROCESS_STEPS.FINANCE_AMOUNT_CONFIRM]: '💰 财务部门已核实加工费用，确认金额准确无误',
-  [PROCESS_STEPS.FINANCE_PAYMENT]: '💳 财务部门已完成加工费用支付，等待对方确认',
-  [PROCESS_STEPS.MANUFACTURER_PAYMENT_RECEIPT]: '🤝 加工单位已确认收到全部加工费用，订单圆满完成'
+  [PROCESS_STEPS.WAREHOUSE_CONFIRM]: '✨ 仓库已完成物料清点和包装，确认出入库数量无误',
+  [PROCESS_STEPS.PURCHASE_CONFIRM]: '📦 采购部门已确认加工质量和数量符合要求',
+  [PROCESS_STEPS.FINANCE_CONFIRM]: '💰 财务部门已核实加工费用，确认金额准确无误'
 }

@@ -3,7 +3,7 @@ import * as z from "zod"
 const materialDetailSchema = z.object({
   id: z.string(),
   materialName: z.string().min(1, { message: "请输入物料名称" }),
-  specification: z.string().min(1, { message: "请输入规格型号" }),
+  specification: z.string().min(1, { message: "请输入料号" }),
   unit: z.string().min(1, { message: "请输入单位" }),
   quantity: z.number().min(0.01, { message: "数量必须大于0" }),
   processingProcess: z.string().min(1, { message: "请输入加工工序" }),

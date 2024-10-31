@@ -1,209 +1,201 @@
-import React, { useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import React from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Button } from "@nextui-org/button"
 import { Icon } from "@iconify/react"
 import { UseFormReturn } from "react-hook-form"
-import { ProductData } from "../types/SalesOrder"
-import { handleProductSelection, updateTotals, handleDiscountCalculation, formatAmount } from "../utils/formUtils"
+import { SalesOrderFormValues } from "../schema"
+import { INITIAL_PRODUCT } from "../constants/salesOrderConstants"
+import { TABLE_COLUMNS } from "../types/SalesOrder"
+import ResourceSelectButton from "@/components/common/ResourceSelectButton"
+import numberToWords from "@/utils/numberToWords"
 
 interface ProductDetailsProps {
-  form: UseFormReturn<any>
-  products: ProductData[]
+  form: UseFormReturn<SalesOrderFormValues>
   isEditable: boolean
 }
 
-const ProductDetails: React.FC<ProductDetailsProps> = ({ form, products, isEditable }) => {
-  const [selectedProducts, setSelectedProducts] = useState<{ [key: string]: ProductData }>({})
-  const [quantities, setQuantities] = useState<{ [key: string]: number }>({})
-  const [sellingPrices, setSellingPrices] = useState<{ [key: string]: number }>({})
-
+const ProductDetails: React.FC<ProductDetailsProps> = ({ form, isEditable }) => {
   const productDetails = form.watch("data.productDetails")
-  const totalAmount = form.watch("data.totalAmount")
-  const discountAmount = form.watch("data.discountAmount")
-  const discountRate = form.watch("data.discountRate")
-  const grossProfitRate = form.watch("data.grossProfitRate")
 
-  useEffect(() => {
-    if (productDetails) {
-      const initialProducts: { [key: string]: ProductData } = {}
-      const initialQuantities: { [key: string]: number } = {}
-      const initialPrices: { [key: string]: number } = {}
-
-      productDetails.forEach((product: any, index: number) => {
-        if (product.data_id) {
-          initialProducts[index] = product
-          initialQuantities[index] = product.quantity || 0
-          initialPrices[index] = parseFloat(product["销售单价(含税)/元"]) || 0
-        }
-      })
-
-      setSelectedProducts(initialProducts)
-      setQuantities(initialQuantities)
-      setSellingPrices(initialPrices)
-    }
-  }, [])
-
-  const handleQuantityChange = (index: number, value: number) => {
-    const currentProducts = form.getValues("data.productDetails")
-    const product = currentProducts[index]
-    const sellingPrice = sellingPrices[index] || parseFloat(product["销售单价(含税)/元"])
-
-    setQuantities((prev) => ({
-      ...prev,
-      [index]: value,
-    }))
-
-    currentProducts[index] = {
-      ...product,
-      quantity: value,
-      totalPrice: value * sellingPrice,
-      productOriginalTotalPrice: value * sellingPrice,
-    }
-
-    form.setValue("data.productDetails", currentProducts, {
-      shouldValidate: true,
-      shouldDirty: true,
-      shouldTouch: true,
-    })
-    updateTotals(form, currentProducts)
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const value = Number(e.target.value) || 0
+    form.setValue(`data.productDetails.${index}.quantity`, value)
+    updateTotalPrice(index)
   }
 
-  const handleSellingPriceChange = (index: number, value: number) => {
-    const currentProducts = form.getValues("data.productDetails")
-    const product = currentProducts[index]
-
-    setSellingPrices((prev) => ({
-      ...prev,
-      [index]: value,
-    }))
-
-    currentProducts[index] = {
-      ...product,
-      ["销售单价(含税)/元"]: value.toString(),
-      totalPrice: (quantities[index] || product.quantity) * value,
-      productOriginalTotalPrice: (quantities[index] || product.quantity) * value,
-    }
-
-    form.setValue("data.productDetails", currentProducts, {
-      shouldValidate: true,
-      shouldDirty: true,
-      shouldTouch: true,
-    })
-    updateTotals(form, currentProducts)
+  const handleUnitPriceChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const value = Number(e.target.value) || 0
+    form.setValue(`data.productDetails.${index}.unitPrice`, value)
+    updateTotalPrice(index)
   }
 
-  const handleDeleteProduct = (index: number) => {
-    const currentProducts = form.getValues("data.productDetails")
-    currentProducts.splice(index, 1)
-    form.setValue("data.productDetails", currentProducts, {
-      shouldValidate: true,
-      shouldDirty: true,
-      shouldTouch: true,
-    })
-    updateTotals(form, currentProducts)
+  const updateTotalPrice = (index: number) => {
+    const products = form.getValues("data.productDetails")
+    const product = products[index]
+    const quantity = Number(product.quantity) || 0
+    const unitPrice = Number(product.unitPrice) || 0
+    const totalPrice = Number((quantity * unitPrice).toFixed(2))
+    
+    form.setValue(`data.productDetails.${index}.totalPrice`, totalPrice)
+    updateTotals(products)
+  }
 
-    const newSelectedProducts = { ...selectedProducts }
-    const newQuantities = { ...quantities }
-    const newSellingPrices = { ...sellingPrices }
-
-    delete newSelectedProducts[index]
-    delete newQuantities[index]
-    delete newSellingPrices[index]
-
-    setSelectedProducts(newSelectedProducts)
-    setQuantities(newQuantities)
-    setSellingPrices(newSellingPrices)
+  const updateTotals = (products: any[]) => {
+    const totalAmount = products.reduce((sum, product) => {
+      const totalPrice = Number(product.totalPrice) || 0
+      return sum + totalPrice
+    }, 0)
+    
+    const roundedTotal = Number(totalAmount.toFixed(2))
+    form.setValue("data.totalAmount", roundedTotal)
+    form.setValue("data.totalAmountInWords", numberToWords(roundedTotal))
   }
 
   const handleAddProduct = () => {
     const currentProducts = form.getValues("data.productDetails") || []
-    const newProduct = { isProductSelected: false }
-    form.setValue("data.productDetails", [...currentProducts, newProduct], {
-      shouldValidate: true,
-      shouldDirty: true,
-      shouldTouch: true,
-    })
+    const newProduct = {
+      ...INITIAL_PRODUCT,
+      id: Date.now().toString(),
+    }
+    form.setValue("data.productDetails", [...currentProducts, newProduct])
+  }
+
+  const handleDeleteProduct = (index: number) => {
+    const currentProducts = form.getValues("data.productDetails")
+    const updatedProducts = currentProducts.filter((_, i) => i !== index)
+    form.setValue("data.productDetails", updatedProducts)
+    updateTotals(updatedProducts)
+  }
+
+  const handleSelectProducts = (selectedProducts: any[]) => {
+    const currentProducts = form.getValues("data.productDetails") || []
+    const newProducts = selectedProducts.map(product => ({
+      ...INITIAL_PRODUCT,
+      id: Date.now().toString() + Math.random(),
+      materialCode: product.物料代码 || "",
+      nc5tCode: product.NC5T编码 || "",productName: product.产品名称 || "",
+      specification: product.料号 || "",
+      unit: product.单位 || "",
+    }))
+
+    form.setValue("data.productDetails", [...currentProducts, ...newProducts])
   }
 
   return (
-    <Card>
-      <CardContent>
-        <h2 className='text-xl font-semibold mb-4'>销售产品明细</h2>
-        <p className='text-sm text-gray-500 mb-2'>请选择需要的产品，并在选择完毕后填写销售数量！</p>
-        <p className='text-sm text-red-500 mb-4'>毛利率低于 35%，不能通过</p>
+    <div>
+      <div className='flex justify-between items-center mb-4'>
+        <h2 className='text-xl font-semibold'>产品明细</h2>
+        {isEditable && (
+          <div className="flex gap-2">
+            <Button
+              onClick={handleAddProduct}
+              variant="flat"
+              endContent={<Icon icon="mdi:plus" />}
+            >
+              添加产品
+            </Button>
+            <ResourceSelectButton
+              resourceName='银隆加工物料表'
+              appId=''
+              onSelect={handleSelectProducts}
+              buttonText='从产品表选择'
+              buttonProps={{
+                variant: "flat",
+                endContent: <Icon icon="mdi:table-search" />,
+              }}
+            />
+          </div>
+        )}
+      </div>
 
+      <div className='overflow-x-auto'>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>序号</TableHead>
-              <TableHead>产品名称</TableHead>
-              <TableHead>产品编码</TableHead>
-              <TableHead>规格型号</TableHead>
-              <TableHead>单位</TableHead>
-              <TableHead>销售数量</TableHead>
-              <TableHead>成本单价/元</TableHead>
-              <TableHead>销售单价(含税)</TableHead>
-              <TableHead>产品原价合计(含税)/元</TableHead>
-              <TableHead>增值税税率</TableHead>
-              <TableHead>销售单价(不含税)</TableHead>
-              <TableHead>税额</TableHead>
-              <TableHead>优惠金额</TableHead>
-              <TableHead>总价</TableHead>
-              {isEditable && <TableHead>操作</TableHead>}
+              {TABLE_COLUMNS.map((column) => (
+                <TableHead key={column.key} className={`min-w-[${column.width}]`}>
+                  {column.label}
+                </TableHead>
+              ))}
+              {isEditable && <TableHead className='min-w-[60px]'>操作</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {productDetails?.map((product: any, index: number) => (
-              <TableRow key={index}>
+              <TableRow key={product.id}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>
                   <FormField
                     control={form.control}
-                    name={`data.productDetails.${index}.data_id`}
+                    name={`data.productDetails.${index}.materialCode`}
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          {isEditable ? (
-                            <Select
-                              onValueChange={(value) =>
-                                handleProductSelection(
-                                  form,
-                                  index,
-                                  products.find((p) => p.data_id === value)!,
-                                  quantities,
-                                  sellingPrices
-                                )
-                              }
-                              defaultValue={field.value}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder='选择产品' />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {products.map((p) => (
-                                  <SelectItem key={p.data_id} value={p.data_id}>
-                                    {p.产品名称}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <Input type='text' value={product.产品名称} disabled />
-                          )}
+                          <Input {...field} disabled={!isEditable} className="min-w-[120px]" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </TableCell>
-                <TableCell>{product.产品编码}</TableCell>
-                <TableCell>{product.规格型号}</TableCell>
-                <TableCell>{product.单位}</TableCell>
+                <TableCell>
+                  <FormField
+                    control={form.control}
+                    name={`data.productDetails.${index}.nc5tCode`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input {...field} disabled={!isEditable} className="min-w-[120px]" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TableCell>
+                <TableCell>
+                  <FormField
+                    control={form.control}
+                    name={`data.productDetails.${index}.productName`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input {...field} disabled={!isEditable} className="min-w-[200px]" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TableCell>
+                <TableCell>
+                  <FormField
+                    control={form.control}
+                    name={`data.productDetails.${index}.specification`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input {...field} disabled={!isEditable} className="min-w-[120px]" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TableCell>
+                <TableCell>
+                  <FormField
+                    control={form.control}
+                    name={`data.productDetails.${index}.unit`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input {...field} disabled={!isEditable} className="min-w-[80px]" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TableCell>
                 <TableCell>
                   <FormField
                     control={form.control}
@@ -212,10 +204,13 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ form, products, isEdita
                       <FormItem>
                         <FormControl>
                           <Input
-                            type='number'
                             {...field}
-                            onChange={(e) => handleQuantityChange(index, Number(e.target.value))}
-                            disabled={!product.isProductSelected || !isEditable}
+                            type="number"
+                            min="0"
+                            step="1"
+                            onChange={(e) => handleQuantityChange(e, index)}
+                            disabled={!isEditable}
+                            className='text-right font-mono min-w-[100px]'
                           />
                         </FormControl>
                         <FormMessage />
@@ -223,19 +218,21 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ form, products, isEdita
                     )}
                   />
                 </TableCell>
-                <TableCell>{product["成本单价/元"]}</TableCell>
                 <TableCell>
                   <FormField
                     control={form.control}
-                    name={`data.productDetails.${index}.销售单价(含税)/元`}
+                    name={`data.productDetails.${index}.unitPrice`}
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
                           <Input
-                            type='number'
                             {...field}
-                            onChange={(e) => handleSellingPriceChange(index, Number(e.target.value))}
-                            disabled={!product.isProductSelected || !isEditable}
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            onChange={(e) => handleUnitPriceChange(e, index)}
+                            disabled={!isEditable}
+                            className='text-right font-mono min-w-[120px]'
                           />
                         </FormControl>
                         <FormMessage />
@@ -243,19 +240,43 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ form, products, isEdita
                     )}
                   />
                 </TableCell>
-                <TableCell>{formatAmount(product.productOriginalTotalPrice || 0)}</TableCell>
-                <TableCell>{product["增值税税率 %"]}</TableCell>
-                <TableCell>{product["销售单价(不含税)/元"]}</TableCell>
-                <TableCell>{product["税额/元"]}</TableCell>
-                <TableCell>{formatAmount(product.discountAmount || 0)}</TableCell>
-                <TableCell>{formatAmount(product.totalPrice - (product.discountAmount || 0) || 0)}</TableCell>
+                <TableCell className='text-right font-mono min-w-[120px]'>{product.totalPrice?.toFixed(2)}</TableCell>
+                <TableCell>
+                  <FormField
+                    control={form.control}
+                    name={`data.productDetails.${index}.deliveryDate`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input {...field} disabled={!isEditable} className="min-w-[120px]" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TableCell>
+                <TableCell>
+                  <FormField
+                    control={form.control}
+                    name={`data.productDetails.${index}.remarks`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input {...field} disabled={!isEditable} className="min-w-[150px]" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TableCell>
                 {isEditable && (
                   <TableCell>
                     <Button
-                      variant='ghost'
-                      size='icon'
+                      isIconOnly
+                      color='danger'
+                      variant='light'
                       onClick={() => handleDeleteProduct(index)}
-                      className='text-red-500 hover:text-red-700'
+                      className='w-8 h-8'
                     >
                       <Icon icon='mdi:delete' className='w-5 h-5' />
                     </Button>
@@ -265,69 +286,19 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ form, products, isEdita
             ))}
           </TableBody>
         </Table>
+      </div>
 
-        {isEditable && (
-          <Button onClick={handleAddProduct} variant='outline' className='mt-4' type='button'>
-            <Icon icon='mdi:plus' className='mr-2' />
-            添加产品
-          </Button>
-        )}
-
-        <div className='space-y-2 mt-4'>
-          <div className='flex justify-between items-center'>
-            <p className='font-semibold'>销售原价总额（含税）/元：</p>
-            <p>{formatAmount(totalAmount || 0)}</p>
-          </div>
-          <div className='flex justify-between items-center'>
-            <p className='font-semibold'>销售订单金额（含税）/元：</p>
-            <p>{formatAmount(totalAmount - discountAmount || 0)}</p>
-          </div>
-          <div className='flex justify-between items-center'>
-            <p className='font-semibold'>销售订单金额大写：</p>
-            <p>{form.watch("data.totalAmountInWords")}</p>
-          </div>
-          <div className='flex justify-between items-center'>
-            <p className='font-semibold'>订单毛利率%：</p>
-            <p>{formatAmount(grossProfitRate || 0)}%</p>
-          </div>
-          <div className='flex items-center justify-between space-x-2'>
-            <p className='font-semibold'>优惠金额/元：</p>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <FormField
-                    control={form.control}
-                    name='data.discountAmount'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            type='number'
-                            {...field}
-                            onChange={(e) => handleDiscountCalculation(form, Number(e.target.value))}
-                            disabled={!isEditable}
-                            className='max-w-xs'
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>优惠金额默认按金额比例，均摊到各产品</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className='flex items-center justify-between'>
-            <p className='font-semibold'>整单折扣率%：</p>
-            <p>{formatAmount(discountRate || 0)}%</p>
-          </div>
-          <p className='text-sm text-gray-500'>优惠后的销售订单金额（含税）/销售原价总额（含税）</p>
+      <div className="space-y-2 mt-4">
+        <div className="flex justify-between items-center">
+          <p className="font-semibold">总金额：</p>
+          <p>{form.watch("data.totalAmount")?.toFixed(2)} 元</p>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex justify-between items-center">
+          <p className="font-semibold">金额大写：</p>
+          <p>{form.watch("data.totalAmountInWords")}</p>
+        </div>
+      </div>
+    </div>
   )
 }
 

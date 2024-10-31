@@ -27,7 +27,7 @@ function App() {
   const shouldRedirectToLogin = () => {
     const publicPaths = ['/', '/we-chat-login']
     if (!publicPaths.includes(location.pathname)) {
-      const token = sessionStorage.getItem('x-app-id')
+      const token = localStorage.getItem('model-base-user-token')
       return !token
     }
     return false

@@ -30,25 +30,25 @@ export const outsourcingOrderSchema = z.object({
         z.object({
           id: z.string(),
           productName: z.string().min(1, { message: "请输入产品名称" }),
-          specification: z.string(), // 保留字段保持兼容性
+          specification: z.string(),
           unit: z.string().min(1, { message: "请输入单位" }),
-          outboundQuantity: z.string()
-            .regex(/^\d+$/, "出库数必须是整数")
-            .transform(Number)
-            .refine((n) => n >= 0, "出库数不能为负数"),
-          inboundQuantity: z.string()
-            .regex(/^\d+$/, "入库数必须是整数")
-            .transform(Number)
-            .refine((n) => n >= 0, "入库数不能为负数"),
-          quantity: z.string(), // 保留原字段保持兼容性
-          unitPrice: z.string()
-            .regex(/^\d*\.?\d{0,4}$/, "单价最多支持4位小数")
-            .transform(Number)
-            .refine((n) => n >= 0, "单价不能为负数"),
-          totalPrice: z.number()
-            .min(0, "总价不能为负数"),
-          processingRequirements: z.string(), // 保留字段保持兼容性
+          outboundQuantity: z.coerce.number().min(0, "不能为空"),
+          inboundQuantity: z.coerce.number().min(0, "不能为空"),
+          quantity: z.coerce.number().min(0, "不能为空"),
+          unitPrice: z.coerce.number().min(0, "不能为空"),
+          totalPrice: z.number().min(0, "总价不能为负数"),
+          processingRequirements: z.string(),
           remarks: z.string(),
+          serviceItems: z.array(z.string()).optional(),
+          defectiveCount: z.coerce.number().min(0, "不良数不能为负数").optional(),
+          squareMeters: z.coerce.number().min(0, "平方数不能为负数").optional(),
+          invoiceNumber: z.string().optional(),
+          invoiceDate: z.string().optional(),
+          cadAttachment: z.object({
+            fileId: z.string(),
+            fileName: z.string(),
+            fileUrl: z.string(),
+          }).optional(),
         })
       )
       .min(1, { message: "请至少添加一个产品" }),
@@ -56,7 +56,7 @@ export const outsourcingOrderSchema = z.object({
     totalAmountInWords: z.string(),
     processConfirmations: z
       .object({
-        warehouseOutbound: z
+        warehouseConfirm: z
           .object({
             confirmed: z.boolean().optional(),
             confirmer: z.string().optional(),
@@ -64,7 +64,7 @@ export const outsourcingOrderSchema = z.object({
             comments: z.string().optional(),
           })
           .optional(),
-        manufacturerReceipt: z
+        purchaseConfirm: z
           .object({
             confirmed: z.boolean().optional(),
             confirmer: z.string().optional(),
@@ -72,52 +72,12 @@ export const outsourcingOrderSchema = z.object({
             comments: z.string().optional(),
           })
           .optional(),
-        processingComplete: z
-          .object({
-            confirmed: z.boolean().optional(),
-            confirmer: z.string().optional(),
-            confirmationDate: z.string().optional(),
-            deliveryInfo: z
-              .object({
-                plateNumber: z.string().optional(),
-                driverName: z.string().optional(),
-                driverContact: z.string().optional(),
-              })
-              .optional(),
-            comments: z.string().optional(),
-          })
-          .optional(),
-        warehouseInbound: z
-          .object({
-            confirmed: z.boolean().optional(),
-            confirmer: z.string().optional(),
-            confirmationDate: z.string().optional(),
-            comments: z.string().optional(),
-          })
-          .optional(),
-        financeAmountConfirm: z
+        financeConfirm: z
           .object({
             confirmed: z.boolean().optional(),
             confirmer: z.string().optional(),
             confirmationDate: z.string().optional(),
             confirmedAmount: z.string().optional(),
-            comments: z.string().optional(),
-          })
-          .optional(),
-        financePayment: z
-          .object({
-            confirmed: z.boolean().optional(),
-            confirmer: z.string().optional(),
-            confirmationDate: z.string().optional(),
-            paymentAmount: z.string().optional(),
-            comments: z.string().optional(),
-          })
-          .optional(),
-        manufacturerPaymentReceipt: z
-          .object({
-            confirmed: z.boolean().optional(),
-            confirmer: z.string().optional(),
-            confirmationDate: z.string().optional(),
             comments: z.string().optional(),
           })
           .optional(),

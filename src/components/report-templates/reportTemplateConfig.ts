@@ -1,6 +1,7 @@
 import SalesOrderReport from "./sales-order-report/SalesOrderReport"
 import SalesOrderProfitReport from "./sales-order-profit-report/SalesOrderProfitReport"
 import ProductPriceFluctuationReport from "./product-price-fluctuation/ProductPriceFluctuationReport"
+import YinlongReport from "./yinlong-report/YinlongReport"
 
 export interface ReportTemplate {
   id: string
@@ -23,6 +24,11 @@ export const reportTemplates: ReportTemplate[] = [
     id: "productPriceFluctuationReport",
     name: "产品销售价格-波动统计/月",
     component: ProductPriceFluctuationReport,
+  },
+  {
+    id: "yinlongReport",
+    name: "银隆外协加工统计报表",
+    component: YinlongReport,
   },
 ]
 

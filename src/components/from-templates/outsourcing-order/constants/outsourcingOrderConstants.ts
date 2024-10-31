@@ -8,7 +8,7 @@ export const INITIAL_BASIC_INFO = {
   manufacturerContact: "",
   contactPhone: "",
   deliveryDate: "",
-  processingProject: "", // 新增加工项目字段的初始值
+  processingProject: "",
 }
 
 export const INITIAL_APPROVAL_INFO = {
@@ -32,6 +32,28 @@ export const INITIAL_APPROVAL_INFO = {
   },
 }
 
+export const INITIAL_PROCESS_CONFIRMATIONS = {
+  warehouseConfirm: {
+    confirmed: false,
+    confirmer: "",
+    confirmationDate: "",
+    comments: "",
+  },
+  purchaseConfirm: {
+    confirmed: false,
+    confirmer: "",
+    confirmationDate: "",
+    comments: "",
+  },
+  financeConfirm: {
+    confirmed: false,
+    confirmer: "",
+    confirmationDate: "",
+    confirmedAmount: "",
+    comments: "",
+  },
+}
+
 export const INITIAL_FORM_VALUES = {
   id: "",
   title: "",
@@ -42,6 +64,7 @@ export const INITIAL_FORM_VALUES = {
     serviceItems: [],
     productDetails: [],
     approvalInfo: INITIAL_APPROVAL_INFO,
+    processConfirmations: INITIAL_PROCESS_CONFIRMATIONS,
     totalAmount: 0,
     totalAmountInWords: "",
   },

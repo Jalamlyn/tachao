@@ -10,11 +10,11 @@ import { format } from "date-fns"
 import { cn } from "@/theme/cn"
 import { Icon } from "@iconify/react"
 import { UseFormReturn } from "react-hook-form"
-import { DeliveryOrderFormValues } from "../schema"
+import { SalesOrderFormValues } from "../schema"
 import ResourceSelectButton from "@/components/common/ResourceSelectButton"
 
 interface BasicInfoFormProps {
-  form: UseFormReturn<DeliveryOrderFormValues>
+  form: UseFormReturn<SalesOrderFormValues>
   isEditable: boolean
 }
 
@@ -23,9 +23,9 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ form, isEditable }) => {
     if (selectedCustomers.length > 0) {
       const customer = selectedCustomers[0]
       form.setValue("data.basicInfo.customerName", customer.客户名称 || "")
-      form.setValue("data.basicInfo.customerAddress", customer.地址 || "")
-      form.setValue("data.basicInfo.customerContact", customer.联系人 || "")
+      form.setValue("data.basicInfo.contactPerson", customer.联系人 || "")
       form.setValue("data.basicInfo.contactPhone", customer.联系电话 || "")
+      form.setValue("data.basicInfo.deliveryAddress", customer.送货地址 || "")
     }
   }
 
@@ -40,7 +40,7 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ form, isEditable }) => {
               name='data.basicInfo.orderDate'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>订单日期</FormLabel>
+                  <FormLabel>申请日期</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -69,36 +69,6 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ form, isEditable }) => {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name='data.basicInfo.customerAddress'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>客户地址</FormLabel>
-                  <FormControl>
-                    <Input {...field} disabled={!isEditable} placeholder='根据客户自动填写' />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name='data.basicInfo.contactPhone'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>联系电话</FormLabel>
-                  <FormControl>
-                    <Input {...field} disabled={!isEditable} placeholder='根据客户自动填写' />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className='space-y-6'>
             <div className='flex gap-2 items-end'>
               <div className='flex-1'>
                 <FormField
@@ -115,10 +85,9 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ form, isEditable }) => {
                   )}
                 />
               </div>
-
               {isEditable && (
                 <ResourceSelectButton
-                  resourceName='客户资料表'
+                  resourceName='银隆加工单位资料表'
                   appId=''
                   selectionMode='single'
                   onSelect={handleSelectCustomer}
@@ -133,12 +102,90 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ form, isEditable }) => {
 
             <FormField
               control={form.control}
-              name='data.basicInfo.customerContact'
+              name='data.basicInfo.customerOrderNumber'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>客户订单号</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled={!isEditable} placeholder='请输入客户订单号' />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='data.basicInfo.deliveryDate'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>预计发货日期</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
+                          disabled={!isEditable}
+                        >
+                          {field.value ? format(new Date(field.value), "PPP") : <span>选择日期</span>}
+                          <CalendarIcon className='ml-auto h-4 w-4 opacity-50' />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className='w-auto p-0' align='start'>
+                      <Calendar
+                        mode='single'
+                        selected={field.value ? new Date(field.value) : undefined}
+                        onSelect={(date) => field.onChange(date?.toISOString())}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className='space-y-6'>
+            <FormField
+              control={form.control}
+              name='data.basicInfo.contactPerson'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>联系人</FormLabel>
                   <FormControl>
-                    <Input {...field} disabled={!isEditable} placeholder='根据客户自动填写' />
+                    <Input {...field} disabled={!isEditable} placeholder='请输入联系人' />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='data.basicInfo.contactPhone'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>联系电话</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled={!isEditable} placeholder='请输入联系电话' />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='data.basicInfo.deliveryAddress'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>送货地址</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled={!isEditable} placeholder='请输入送货地址' />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

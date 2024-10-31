@@ -138,6 +138,7 @@ const ProcessConfirmationStep: React.FC<ProcessConfirmationStepProps> = ({
                     onClick={() => onCancelConfirmation(step)}
                     variant='outline'
                     size='sm'
+                    type='button'
                     className='gap-2 border-red-200 bg-red-50/50 hover:bg-red-100/50 hover:border-red-300 text-red-700
                       transition-all duration-300 hover:scale-105'
                   >
