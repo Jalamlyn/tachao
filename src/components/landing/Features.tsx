@@ -1,8 +1,9 @@
 import React from "react"
-import { motion } from "framer-motion"
+import { motion, useSpring } from "framer-motion"
 import { Card, CardBody, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import ScrollAnimation from "./ScrollAnimation"
+import { useSwipeable } from "react-swipeable"
 
 const features = [
   {
@@ -32,15 +33,38 @@ const features = [
 ]
 
 const Features: React.FC = () => {
+  // 优化动画性能
+  const springConfig = { mass: 1, stiffness: 100, damping: 30 }
+  const scaleSpring = useSpring(1, springConfig)
+
+  // 添加手势支持
+  const handlers = useSwipeable({
+    onSwipedLeft: (eventData) => {
+      // 向左滑动到下一个部分
+      const nextSection = document.getElementById("benefits")
+      nextSection?.scrollIntoView({ behavior: "smooth" })
+    },
+    onSwipedRight: (eventData) => {
+      // 向右滑动到上一个部分
+      const prevSection = document.getElementById("hero")
+      prevSection?.scrollIntoView({ behavior: "smooth" })
+    },
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: true
+  })
+
   return (
-    <div className='py-20 bg-white/10 backdrop-blur-lg'>
+    <div 
+      className='py-12 md:py-20 bg-white/10 backdrop-blur-lg'
+      {...handlers}
+    >
       <div className='container mx-auto px-4'>
-        <ScrollAnimation className='text-center mb-16'>
-          <h2 className='text-3xl md:text-4xl font-bold text-white mb-4'>强大的功能特性</h2>
-          <p className='text-white/80 text-lg max-w-2xl mx-auto'>让企业管理更智能、更高效</p>
+        <ScrollAnimation className='text-center mb-8 md:mb-16'>
+          <h2 className='text-2xl md:text-4xl font-bold text-white mb-4'>强大的功能特性</h2>
+          <p className='text-white/80 text-base md:text-lg max-w-2xl mx-auto'>让企业管理更智能、更高效</p>
         </ScrollAnimation>
 
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-8'>
+        <div className='grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8'>
           {features.map((feature, index) => (
             <ScrollAnimation key={index}>
               <motion.div 
@@ -49,32 +73,35 @@ const Features: React.FC = () => {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
                 <Card className='bg-white/20 backdrop-blur-lg hover:bg-white/30 transition-all duration-300 border border-white/10 hover:border-white/20'>
-                  <CardBody className='p-8'>
+                  <CardBody className='p-4 md:p-8'>
                     <motion.div 
-                      className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${feature.color} ${feature.shadowColor} shadow-lg flex items-center justify-center`}
+                      className={`w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 rounded-2xl bg-gradient-to-br ${feature.color} ${feature.shadowColor} shadow-lg flex items-center justify-center`}
                       whileHover={{ 
                         scale: 1.1,
                         rotate: [0, -5, 5, -5, 0],
-                        transition: { duration: 0.5 }
+                        transition: { duration: 0.3 }
+                      }}
+                      style={{
+                        scale: scaleSpring
                       }}
                     >
                       <Icon 
                         icon={feature.icon} 
-                        className='text-4xl text-white transform transition-all duration-300'
+                        className='text-2xl md:text-4xl text-white transform transition-all duration-300'
                       />
                     </motion.div>
-                    <h3 className='text-2xl font-bold text-white mb-3 text-center'>{feature.title}</h3>
-                    <p className='text-white/80 mb-6 text-center leading-relaxed'>{feature.description}</p>
-                    <ul className='space-y-3'>
+                    <h3 className='text-xl md:text-2xl font-bold text-white mb-2 md:mb-3 text-center'>{feature.title}</h3>
+                    <p className='text-white/80 mb-4 md:mb-6 text-center leading-relaxed text-sm md:text-base'>{feature.description}</p>
+                    <ul className='space-y-2 md:space-y-3'>
                       {feature.details.map((detail, idx) => (
-                        <li key={idx} className='flex items-center text-white/70 text-sm'>
+                        <li key={idx} className='flex items-center text-white/70 text-xs md:text-sm'>
                           <motion.div
                             whileHover={{ scale: 1.2 }}
-                            className="mr-3"
+                            className="mr-2 md:mr-3"
                           >
                             <Icon 
                               icon='mdi:check-circle' 
-                              className='text-green-400 text-lg'
+                              className='text-green-400 text-base md:text-lg'
                             />
                           </motion.div>
                           {detail}
@@ -88,10 +115,10 @@ const Features: React.FC = () => {
           ))}
         </div>
 
-        <ScrollAnimation className='text-center mt-12'>
+        <ScrollAnimation className='text-center mt-8 md:mt-12'>
           <Button
             size='lg'
-            className='bg-white text-primary-dark hover:bg-white/90 font-medium px-8 shadow-lg hover:shadow-xl transition-all duration-300'
+            className='bg-white text-primary-dark hover:bg-white/90 font-medium px-6 md:px-8 shadow-lg hover:shadow-xl transition-all duration-300'
             endContent={
               <motion.div
                 whileHover={{ x: 5 }}

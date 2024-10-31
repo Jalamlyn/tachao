@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
-import { motion, useScroll, useTransform } from "framer-motion"
+import { motion, useScroll, useTransform, useSpring } from "framer-motion"
 import { Button } from "@nextui-org/react"
+import { useSwipeable } from "react-swipeable"
 
 interface HeroProps {
   onGetStarted: () => void
@@ -12,6 +13,11 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   const opacity = useTransform(scrollY, [0, 300], [1, 0])
   
   const [mounted, setMounted] = useState(false)
+  const [touchStart, setTouchStart] = useState(0)
+
+  // 优化动画性能
+  const springConfig = { mass: 1, stiffness: 100, damping: 30 }
+  const scaleSpring = useSpring(1, springConfig)
 
   useEffect(() => {
     setMounted(true)
@@ -22,7 +28,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.3,
+        staggerChildren: 0.2,
         when: "beforeChildren",
       },
     },
@@ -34,16 +40,47 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.8,
+        duration: 0.5,
         ease: "easeOut",
       },
     },
   }
 
+  // 添加手势支持
+  const handlers = useSwipeable({
+    onSwipedUp: () => {
+      // 向上滑动时平滑滚动到下一个部分
+      const nextSection = document.getElementById("features")
+      nextSection?.scrollIntoView({ behavior: "smooth" })
+    },
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: true
+  })
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientY)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touchEnd = e.touches[0].clientY
+    const diff = touchStart - touchEnd
+
+    if (diff > 50) {
+      // 向上滑动超过阈值时滚动到下一部分
+      const nextSection = document.getElementById("features")
+      nextSection?.scrollIntoView({ behavior: "smooth" })
+    }
+  }
+
   if (!mounted) return null
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center relative overflow-hidden">
+    <div 
+      className="min-h-[80vh] md:min-h-[90vh] flex items-center justify-center relative overflow-hidden"
+      {...handlers}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+    >
       <motion.div
         style={{ y, opacity }}
         className="absolute inset-0 pointer-events-none"
@@ -63,43 +100,39 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight">
+          <h1 className="text-3xl md:text-6xl font-bold text-white mb-4 leading-tight">
             沙塔 AI - 智慧企业服务专家
           </h1>
-          <p className="text-xl md:text-2xl text-white/80">
+          <p className="text-lg md:text-2xl text-white/80">
             让 AI 为企业赋能，提升效率，降低成本
           </p>
         </motion.div>
 
         <motion.p
           variants={itemVariants}
-          className="text-lg md:text-xl text-white/70 mb-8 max-w-2xl mx-auto"
+          className="text-base md:text-xl text-white/70 mb-8 max-w-2xl mx-auto"
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
           自动生成单据和报表，智能分析企业经营数据，
-          <br />
+          <br className="hidden md:block" />
           为中小企业提供智能化解决方案
         </motion.p>
 
         <motion.div
           variants={itemVariants}
-          className="flex gap-4 justify-center"
+          className="flex flex-col md:flex-row gap-4 justify-center items-center"
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
           <Button
             size="lg"
-            className="bg-white text-primary-dark hover:bg-white/90 font-medium px-8"
+            className="bg-white text-primary-dark hover:bg-white/90 font-medium px-8 w-full md:w-auto"
             onClick={onGetStarted}
-            onMouseEnter={(e) => {
-              const target = e.target as HTMLElement
-              target.style.transform = "scale(1.05)"
-              target.style.transition = "transform 0.2s ease"
-            }}
-            onMouseLeave={(e) => {
-              const target = e.target as HTMLElement
-              target.style.transform = "scale(1)"
+            onMouseEnter={() => scaleSpring.set(1.05)}
+            onMouseLeave={() => scaleSpring.set(1)}
+            style={{
+              scale: scaleSpring
             }}
           >
             立即开始
@@ -107,7 +140,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           <Button
             size="lg"
             variant="bordered"
-            className="text-white border-white hover:bg-white/10 font-medium px-8"
+            className="text-white border-white hover:bg-white/10 font-medium px-8 w-full md:w-auto"
           >
             了解更多
           </Button>
@@ -120,6 +153,23 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           viewport={{ once: true }}
         >
           <p>已服务超过 1000+ 企业客户</p>
+        </motion.div>
+
+        {/* 添加向下滚动提示 */}
+        <motion.div
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 hidden md:block"
+          animate={{
+            y: [0, 10, 0],
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+        >
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-white/30 rounded-full mt-2" />
+          </div>
         </motion.div>
       </motion.div>
     </div>
