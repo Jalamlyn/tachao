@@ -52,19 +52,29 @@ const LandingPage: React.FC = () => {
         animate={controls} 
         className='relative'
       >
-        <Hero onGetStarted={handleGetStarted} />
-        <Stats />
+        <section id="hero">
+          <Hero onGetStarted={handleGetStarted} />
+        </section>
+        <section id="stats">
+          <Stats />
+        </section>
         
         <Suspense fallback={
           <div className="w-full h-96 flex items-center justify-center">
             <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-white"></div>
           </div>
         }>
-          <Features />
-          <Benefits />
+          <section id="features">
+            <Features />
+          </section>
+          <section id="benefits">
+            <Benefits />
+          </section>
         </Suspense>
 
-        <Contact />
+        <section id="contact">
+          <Contact />
+        </section>
         <Footer />
       </motion.div>
     </div>

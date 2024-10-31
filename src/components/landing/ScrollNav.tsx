@@ -52,6 +52,8 @@ const ScrollNav: React.FC = () => {
       const element = document.getElementById(id)
       if (element) {
         observer.observe(element)
+      } else {
+        console.warn(`Section with id "${id}" not found`)
       }
     })
 
@@ -83,16 +85,29 @@ const ScrollNav: React.FC = () => {
       observer.disconnect()
       window.removeEventListener('scroll', handleScroll)
     }
-  }, [activeSection]) // 添加 activeSection 作为依赖
+  }, [activeSection])
 
   const scrollTo = (sectionId: string) => {
     const element = document.getElementById(sectionId)
     if (element) {
-      const offset = element.offsetTop - 100 // 添加偏移量以考虑固定头部
+      // 获取导航栏高度（如果有的话）
+      const navHeight = document.querySelector('nav')?.offsetHeight || 0
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY
+      const offsetPosition = elementPosition - navHeight - 20 // 添加一些额外的偏移量
+
       window.scrollTo({
-        top: offset,
+        top: offsetPosition,
         behavior: "smooth"
       })
+
+      // 添加点击反馈
+      const button = document.querySelector(`button[data-section="${sectionId}"]`)
+      if (button) {
+        button.classList.add('scale-125')
+        setTimeout(() => button.classList.remove('scale-125'), 200)
+      }
+    } else {
+      console.warn(`Section with id "${sectionId}" not found`)
     }
   }
 
@@ -107,8 +122,9 @@ const ScrollNav: React.FC = () => {
         {sections.map(({ id, label }) => (
           <button
             key={id}
+            data-section={id}
             onClick={() => scrollTo(id)}
-            className="group relative flex items-center"
+            className="group relative flex items-center transition-transform duration-200"
           >
             <span className="hidden group-hover:block absolute right-full mr-2 text-white text-sm whitespace-nowrap bg-primary-dark/80 px-2 py-1 rounded">
               {label}
