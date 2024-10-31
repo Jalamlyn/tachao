@@ -18,6 +18,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   // 优化动画性能
   const springConfig = { mass: 1, stiffness: 100, damping: 30 }
   const scaleSpring = useSpring(1, springConfig)
+  const rotateSpring = useSpring(0, springConfig)
 
   useEffect(() => {
     setMounted(true)
@@ -49,7 +50,6 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   // 添加手势支持
   const handlers = useSwipeable({
     onSwipedUp: () => {
-      // 向上滑动时平滑滚动到下一个部分
       const nextSection = document.getElementById("features")
       nextSection?.scrollIntoView({ behavior: "smooth" })
     },
@@ -66,7 +66,6 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
     const diff = touchStart - touchEnd
 
     if (diff > 50) {
-      // 向上滑动超过阈值时滚动到下一部分
       const nextSection = document.getElementById("features")
       nextSection?.scrollIntoView({ behavior: "smooth" })
     }
@@ -96,10 +95,68 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       >
         <motion.div 
           variants={itemVariants} 
-          className="mb-6"
+          className="mb-8"
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
         >
+          {/* 优化后的 Logo 展示组件 */}
+          <motion.div
+            className="relative group perspective-1000"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            {/* Logo 背景光效 */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-primary/20 to-accent/20 blur-2xl rounded-full transform scale-110 group-hover:scale-125 transition-transform duration-700" />
+            
+            {/* Logo 容器 */}
+            <motion.div
+              className="relative"
+              whileHover={{ 
+                scale: 1.05,
+                rotateY: 10,
+              }}
+              onHoverStart={() => {
+                rotateSpring.set(10)
+                scaleSpring.set(1.05)
+              }}
+              onHoverEnd={() => {
+                rotateSpring.set(0)
+                scaleSpring.set(1)
+              }}
+              style={{
+                scale: scaleSpring,
+                rotateY: rotateSpring,
+                transformStyle: "preserve-3d"
+              }}
+            >
+              <img
+                src="/assets/logo.jpg"
+                alt="ShaTa AI"
+                className="h-24 md:h-32 w-auto mx-auto rounded-lg
+                  shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40
+                  backdrop-blur-sm
+                  border border-white/10 hover:border-white/20
+                  transition-all duration-300
+                  transform-gpu will-change-transform"
+              />
+              
+              {/* Logo 悬停效果 */}
+              <motion.div
+                className="absolute -bottom-12 left-1/2 -translate-x-1/2
+                  opacity-0 group-hover:opacity-100
+                  transition-opacity duration-300"
+                initial={{ y: 10 }}
+                whileHover={{ y: 0 }}
+              >
+                <p className="text-white/80 text-sm font-medium whitespace-nowrap
+                  bg-black/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                  智能企业服务专家
+                </p>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+
           <h1 className="text-3xl md:text-6xl font-bold text-white mb-4 leading-tight">
             沙塔 AI - 智慧企业服务专家
           </h1>
