@@ -14,8 +14,6 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   
   const [mounted, setMounted] = useState(false)
   const [touchStart, setTouchStart] = useState(0)
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isFirstVisit, setIsFirstVisit] = useState(true)
 
   // 优化动画性能
   const springConfig = { mass: 1, stiffness: 100, damping: 30 }
@@ -23,23 +21,6 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
 
   useEffect(() => {
     setMounted(true)
-    
-    // 检查是否是首次访问
-    const hasVisited = localStorage.getItem('hasVisitedBefore')
-    if (hasVisited) {
-      setIsFirstVisit(false)
-    } else {
-      localStorage.setItem('hasVisitedBefore', 'true')
-    }
-
-    // 添加滚动检测
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY
-      setIsScrolled(scrollPosition > 50)
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   const containerVariants = {
@@ -173,32 +154,6 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         >
           <p>已服务超过 1000+ 企业客户</p>
         </motion.div>
-
-        {/* 改进的滚动指示器 */}
-        {isFirstVisit && (
-          <motion.div
-            className="absolute bottom-8 left-1/2 transform -translate-x-1/2 hidden md:block"
-            initial={{ opacity: 0 }}
-            animate={{
-              y: [0, 10, 0],
-              opacity: isScrolled ? 0 : 1
-            }}
-            transition={{
-              y: {
-                duration: 1.5,
-                repeat: Infinity,
-                repeatType: "reverse"
-              },
-              opacity: {
-                duration: 0.3
-              }
-            }}
-          >
-            <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
-              <div className="w-1 h-3 bg-white/30 rounded-full mt-2" />
-            </div>
-          </motion.div>
-        )}
       </motion.div>
     </div>
   )
