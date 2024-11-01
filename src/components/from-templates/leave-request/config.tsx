@@ -54,15 +54,19 @@ export const leaveRequestConfig = {
                   !field.value && "text-muted-foreground"
                 )}
               >
-                {field.value ? format(new Date(field.value), "PPP") : <span>选择开始日期</span>}
+                {field.value ? format(field.value, "PPP") : <span>选择开始日期</span>}
                 <Icon icon="mdi:calendar" className="ml-auto h-4 w-4 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={field.value ? new Date(field.value) : undefined}
-                onSelect={(date) => field.onChange(date?.toISOString())}
+                selected={field.value}
+                onSelect={(date) => {
+                  if (field && typeof field.onChange === 'function') {
+                    field.onChange(date)
+                  }
+                }}
                 disabled={(date) =>
                   date < new Date("2000-01-01")
                 }
@@ -87,15 +91,19 @@ export const leaveRequestConfig = {
                   !field.value && "text-muted-foreground"
                 )}
               >
-                {field.value ? format(new Date(field.value), "PPP") : <span>选择结束日期</span>}
+                {field.value ? format(field.value, "PPP") : <span>选择结束日期</span>}
                 <Icon icon="mdi:calendar" className="ml-auto h-4 w-4 opacity-50" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={field.value ? new Date(field.value) : undefined}
-                onSelect={(date) => field.onChange(date?.toISOString())}
+                selected={field.value}
+                onSelect={(date) => {
+                  if (field && typeof field.onChange === 'function') {
+                    field.onChange(date)
+                  }
+                }}
                 disabled={(date) =>
                   date < new Date("2000-01-01")
                 }
