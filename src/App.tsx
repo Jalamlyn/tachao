@@ -12,6 +12,7 @@ import CreateReportPage from "./components/reports/CreateReportPage"
 import ReadReportRenderer from "./components/reports/ReadReportRenderer"
 import { Toaster } from "./components/ui/toaster"
 import LandingPage from "./pages/LandingPage"
+import CustomFormBuilder from "./components/forms/custom/CustomFormBuilder"
 
 function App() {
   const navigate = useNavigate()
@@ -23,7 +24,6 @@ function App() {
     i18n.changeLanguage(currentLang)
   }, [])
 
-  // 检查是否需要重定向到登录页面
   const shouldRedirectToLogin = () => {
     const publicPaths = ['/', '/we-chat-login']
     if (!publicPaths.includes(location.pathname)) {
@@ -37,9 +37,7 @@ function App() {
     <NextUIProvider navigate={navigate}>
       <div className='min-h-screen'>
         <Routes>
-          {/* 新增路由 - 将根路由指向 LandingPage */}
           <Route path='/' element={<LandingPage />} />
-          {/* 原有路由 */}
           <Route 
             path='/forms' 
             element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <FormsPage />} 
@@ -48,6 +46,10 @@ function App() {
           <Route 
             path='/forms/:id' 
             element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <FormRenderer />} 
+          />
+          <Route 
+            path='/forms/custom/create' 
+            element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <CustomFormBuilder />} 
           />
           <Route 
             path='/forms/analysis' 

@@ -9,6 +9,7 @@ export interface FormTemplate {
   id: string
   name: string
   component: React.ComponentType<any>
+  isCustom?: boolean
 }
 
 export const formTemplates: FormTemplate[] = [
@@ -16,30 +17,36 @@ export const formTemplates: FormTemplate[] = [
     id: "salesOrder",
     name: "销售订单",
     component: SalesOrderContainer,
+    isCustom: false,
   },
   {
     id: "processingOrder",
     name: "委外加工单",
     component: ProcessingOrderContainer,
+    isCustom: false,
   },
   {
     id: "outsourcingOrder",
     name: "银隆委外加工单",
     component: OutsourcingOrderContainer,
+    isCustom: false,
   },
   {
     id: "warehouseReceipt",
     name: "入库单",
     component: WarehouseReceiptContainer,
+    isCustom: false,
   },
   {
     id: "yinlongSalesOrder",
     name: "银隆销售订单申请单",
     component: YinlongSalesOrderContainer,
+    isCustom: false,
   },
   {
     id: "leaveRequest",
     name: "请假申请单",
     component: LeaveRequestContainer,
+    isCustom: false,
   },
 ]
