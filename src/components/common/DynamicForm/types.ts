@@ -1,7 +1,33 @@
 import { ReactNode } from "react"
 import { z } from "zod"
 
-export type FieldType = "text" | "number" | "resource" | "file" | "custom" | "date"
+export type FieldType =
+  // 基础输入
+  | "text"
+  | "number"
+  | "textarea"
+  | "password"
+  | "email"
+  | "tel"
+  | "url"
+  // 选择类型
+  | "select"
+  | "radio"
+  | "checkbox"
+  | "date"
+  | "time"
+  | "datetime"
+  // 上传类型
+  | "file"
+  | "image"
+  // 特殊类型
+  | "resource"
+  | "cascader"
+  | "switch"
+  | "slider"
+  | "rate"
+  // 自定义
+  | "custom"
 
 export interface BaseField {
   name: string
@@ -16,6 +42,23 @@ export interface BaseField {
   validators?: Array<(value: any) => string | undefined>
 }
 
+export interface SelectField extends BaseField {
+  type: "select" | "radio" | "checkbox"
+  options: Array<{
+    label: string
+    value: any
+    disabled?: boolean
+  }>
+  multiple?: boolean
+}
+
+export interface DateField extends BaseField {
+  type: "date" | "time" | "datetime"
+  format?: string
+  showTime?: boolean
+  disabledDate?: (date: Date) => boolean
+}
+
 export interface ResourceField extends BaseField {
   type: "resource"
   resourceName: string
@@ -25,18 +68,10 @@ export interface ResourceField extends BaseField {
 }
 
 export interface FileField extends BaseField {
-  type: "file"
+  type: "file" | "image"
   accept?: string
   maxSize?: number
   onUpload?: (file: File) => Promise<void>
-}
-
-export interface DateField extends BaseField {
-  type: "date"
-  minDate?: Date
-  maxDate?: Date
-  format?: string
-  showTime?: boolean
 }
 
 export interface CustomField extends BaseField {
@@ -44,7 +79,7 @@ export interface CustomField extends BaseField {
   render: (props: any) => ReactNode
 }
 
-export type FormField = BaseField | ResourceField | FileField | DateField | CustomField
+export type FormField = BaseField | SelectField | DateField | ResourceField | FileField | CustomField
 
 export interface TableColumn {
   key: string
