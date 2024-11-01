@@ -8,6 +8,7 @@ import { cn } from "@nextui-org/react"
 
 import PromptInput from "./PromptInput"
 import { useFormSubmission } from "./from-templates/hook/useFormSubmission"
+import { leaveRequestConfig } from "./from-templates/leave-request/config"
 
 // 导入企业微信 JSAPI
 import * as ww from "@wecom/jssdk"
@@ -40,9 +41,23 @@ export default function Component(props: TextAreaProps & { classNames?: Record<"
     if (prompt && !isLoading) {
       try {
         setIsLoading(true)
-        await submitForm(prompt)
-        console.log("Form submitted successfully")
-        setPrompt("") // 清空输入
+        // 临时逻辑：如果命令包含"生成配置"，直接返回请假单配置
+        if (prompt.includes("生成配置")) {
+          const mockFormData = {
+            id: `LEAVE_${Date.now()}`,
+            templateId: "leaveRequest",
+            title: "请假申请单",
+            data: leaveRequestConfig,
+            status: "draft",
+          }
+          await submitForm(JSON.stringify(mockFormData))
+          setPrompt("")
+          message.success("已生成请假单配置")
+        } else {
+          // 保持原有的 AI 生成逻辑
+          await submitForm(prompt)
+          setPrompt("")
+        }
       } catch (error) {
         console.error("Error submitting form:", error)
         message.error("发送指令失败，请稍后重试")
