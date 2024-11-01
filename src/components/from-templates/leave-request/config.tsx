@@ -44,7 +44,7 @@ export const leaveRequestConfig = {
         label: "开始时间",
         type: "custom",
         required: true,
-        render: ({ field }) => (
+        render: ({ field, form }) => (
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -67,7 +67,7 @@ export const leaveRequestConfig = {
                     if (date) {
                       const isoDate = date.toISOString()
                       console.log('Setting start date:', isoDate)
-                      field.onChange(isoDate)
+                      form.setValue('startDate', isoDate)
                     }
                   } catch (error) {
                     console.error('Error setting start date:', error)
@@ -87,7 +87,7 @@ export const leaveRequestConfig = {
         label: "结束时间",
         type: "custom",
         required: true,
-        render: ({ field }) => (
+        render: ({ field, form }) => (
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -110,7 +110,7 @@ export const leaveRequestConfig = {
                     if (date) {
                       const isoDate = date.toISOString()
                       console.log('Setting end date:', isoDate)
-                      field.onChange(isoDate)
+                      form.setValue('endDate', isoDate)
                     }
                   } catch (error) {
                     console.error('Error setting end date:', error)
@@ -139,11 +139,12 @@ export const leaveRequestConfig = {
         label: "请假原因",
         type: "custom",
         required: true,
-        render: ({ field }) => (
+        render: ({ field, form }) => (
           <textarea
             className='w-full rounded-md border border-gray-300 px-3 py-2 min-h-[100px]'
             placeholder='请详细说明请假原因'
-            {...field}
+            value={field.value}
+            onChange={(e) => form.setValue('reason', e.target.value)}
           />
         ),
       },
@@ -166,12 +167,13 @@ export const leaveRequestConfig = {
           name: "directLeaderComments",
           label: "审批意见",
           type: "custom",
-          render: ({ field, isEditable }) => (
+          render: ({ field, form, isEditable }) => (
             <textarea
               className='w-full rounded-md border border-gray-300 px-3 py-2 min-h-[60px]'
               placeholder='请输入审批意见'
               disabled={!isEditable}
-              {...field}
+              value={field.value}
+              onChange={(e) => form.setValue('directLeaderComments', e.target.value)}
             />
           ),
         },
@@ -186,12 +188,13 @@ export const leaveRequestConfig = {
           name: "departmentHeadComments",
           label: "审批意见",
           type: "custom",
-          render: ({ field, isEditable }) => (
+          render: ({ field, form, isEditable }) => (
             <textarea
               className='w-full rounded-md border border-gray-300 px-3 py-2 min-h-[60px]'
               placeholder='请输入审批意见'
               disabled={!isEditable}
-              {...field}
+              value={field.value}
+              onChange={(e) => form.setValue('departmentHeadComments', e.target.value)}
             />
           ),
         },
