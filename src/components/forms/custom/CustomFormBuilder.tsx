@@ -7,6 +7,7 @@ import { useFormMetadata } from "../../from-templates/hook/useFormMetadata"
 import chatMoV2 from "@/service/chat/chat-deepseek"
 import message from "@/components/Message"
 import { DynamicFormConfig } from "../../common/DynamicForm/types"
+import { leaveRequestConfig } from "../../from-templates/leave-request/config"
 
 interface Version {
   code: number
@@ -64,6 +65,17 @@ const CustomFormBuilder: React.FC = () => {
       console.error("AI generation error:", error)
     } finally {
       setIsGenerating(false)
+    }
+  }
+
+  const generateLeaveRequestConfig = () => {
+    try {
+      setFormConfig(leaveRequestConfig)
+      addNewVersion(leaveRequestConfig)
+      message.success("已生成请假单配置")
+    } catch (error) {
+      message.error("生成请假单配置失败")
+      console.error("Leave request config error:", error)
     }
   }
 
@@ -125,14 +137,23 @@ const CustomFormBuilder: React.FC = () => {
               onChange={(e) => setCommand(e.target.value)}
               className="flex-1"
             />
-            <Button
-              color="primary"
-              isLoading={isGenerating}
-              onClick={generateFormConfig}
-              className="self-end"
-            >
-              生成配置
-            </Button>
+            <div className="flex flex-col gap-2 self-end">
+              <Button
+                color="primary"
+                isLoading={isGenerating}
+                onClick={generateFormConfig}
+                className="self-end"
+              >
+                生成配置
+              </Button>
+              <Button
+                color="secondary"
+                onClick={generateLeaveRequestConfig}
+                className="self-end"
+              >
+                使用请假单配置
+              </Button>
+            </div>
           </div>
           {versions.length > 0 && (
             <Select
