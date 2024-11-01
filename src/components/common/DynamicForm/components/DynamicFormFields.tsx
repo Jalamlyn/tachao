@@ -17,6 +17,72 @@ import { Slider } from "@/components/ui/slider"
 import ResourceSelectButton from "../../ResourceSelectButton"
 import { FormField as DynamicFormField } from "../types"
 
+// 动画配置
+const animations = {
+  fieldVariants: {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  },
+}
+
+// 通用的表单字段包装器组件
+const FormFieldWrapper: React.FC<{
+  name: string
+  label: string
+  children: (field: any) => React.ReactNode
+  form: UseFormReturn<any>
+  isEditable?: boolean
+  disabled?: boolean
+}> = ({ name, label, children, form, isEditable = true, disabled }) => {
+  return (
+    <motion.div variants={animations.fieldVariants} initial="hidden" animate="visible">
+      <FormField
+        control={form.control}
+        name={name}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{label}</FormLabel>
+            <FormControl>
+              {children({ ...field, disabled: !isEditable || disabled })}
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </motion.div>
+  )
+}
+
+// 基础输入组件
+const BasicInput: React.FC<{ type: string; field: any }> = ({ type, field }) => (
+  <Input {...field} type={type} className={type === "number" ? "text-right font-mono" : ""} />
+)
+
+// 日期选择组件
+const DateInput: React.FC<{ field: any }> = ({ field }) => (
+  <Popover>
+    <PopoverTrigger asChild>
+      <Button
+        variant={"outline"}
+        className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
+        disabled={field.disabled}
+      >
+        {field.value ? format(new Date(field.value), "PPP") : <span>选择日期</span>}
+        <Icon icon="mdi:calendar" className="ml-auto h-4 w-4 opacity-50" />
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent className="w-auto p-0" align="start">
+      <Calendar
+        mode="single"
+        selected={field.value ? new Date(field.value) : undefined}
+        onSelect={(date) => field.onChange(date?.toISOString())}
+        disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
+        initialFocus
+      />
+    </PopoverContent>
+  </Popover>
+)
+
 interface DynamicFormFieldsProps {
   fields: DynamicFormField[]
   form: UseFormReturn<any>
@@ -27,394 +93,286 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
   const renderField = (field: DynamicFormField) => {
     if (field.hidden) return null
 
-    const fieldVariants = {
-      hidden: { opacity: 0, y: 20 },
-      visible: { opacity: 1, y: 0 },
+    // 基础输入类型映射
+    const basicInputTypes = ["text", "password", "email", "tel", "url"]
+    if (basicInputTypes.includes(field.type)) {
+      return (
+        <FormFieldWrapper
+          name={field.name}
+          label={field.label}
+          form={form}
+          isEditable={isEditable}
+          disabled={field.disabled}
+        >
+          {(formField) => <BasicInput type={field.type} field={formField} />}
+        </FormFieldWrapper>
+      )
     }
 
-    const renderBasicInput = (type: string) => (
-      <FormField
-        control={form.control}
-        name={field.name}
-        render={({ field: formField }) => (
-          <FormItem>
-            <FormLabel>{field.label}</FormLabel>
-            <FormControl>
-              <Input
-                {...formField}
-                type={type}
-                disabled={!isEditable || field.disabled}
-                placeholder={field.placeholder}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    )
-
     switch (field.type) {
-      case "text":
-      case "password":
-      case "email":
-      case "tel":
-      case "url":
-        return (
-          <motion.div variants={fieldVariants} initial="hidden" animate="visible">
-            {renderBasicInput(field.type)}
-          </motion.div>
-        )
-
       case "textarea":
         return (
-          <motion.div variants={fieldVariants} initial="hidden" animate="visible">
-            <FormField
-              control={form.control}
-              name={field.name}
-              render={({ field: formField }) => (
-                <FormItem>
-                  <FormLabel>{field.label}</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...formField}
-                      disabled={!isEditable || field.disabled}
-                      placeholder={field.placeholder}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </motion.div>
+          <FormFieldWrapper
+            name={field.name}
+            label={field.label}
+            form={form}
+            isEditable={isEditable}
+            disabled={field.disabled}
+          >
+            {(formField) => <Textarea {...formField} placeholder={field.placeholder} />}
+          </FormFieldWrapper>
         )
 
       case "number":
         return (
-          <motion.div variants={fieldVariants} initial="hidden" animate="visible">
-            <FormField
-              control={form.control}
-              name={field.name}
-              render={({ field: formField }) => (
-                <FormItem>
-                  <FormLabel>{field.label}</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...formField}
-                      type="number"
-                      disabled={!isEditable || field.disabled}
-                      placeholder={field.placeholder}
-                      className="text-right font-mono"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </motion.div>
+          <FormFieldWrapper
+            name={field.name}
+            label={field.label}
+            form={form}
+            isEditable={isEditable}
+            disabled={field.disabled}
+          >
+            {(formField) => (
+              <Input
+                {...formField}
+                type="number"
+                className="text-right font-mono"
+                placeholder={field.placeholder}
+              />
+            )}
+          </FormFieldWrapper>
         )
 
       case "date":
       case "datetime":
         return (
-          <motion.div variants={fieldVariants} initial="hidden" animate="visible">
-            <FormField
-              control={form.control}
-              name={field.name}
-              render={({ field: formField }) => (
-                <FormItem>
-                  <FormLabel>{field.label}</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !formField.value && "text-muted-foreground"
-                          )}
-                          disabled={!isEditable || field.disabled}
-                        >
-                          {formField.value ? (
-                            format(
-                              new Date(formField.value),
-                              field.type === "datetime" ? "PPP HH:mm:ss" : "PPP"
-                            )
-                          ) : (
-                            <span>选择日期</span>
-                          )}
-                          <Icon icon="mdi:calendar" className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={formField.value ? new Date(formField.value) : undefined}
-                        onSelect={(date) => formField.onChange(date?.toISOString())}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("2000-01-01")
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </motion.div>
+          <FormFieldWrapper
+            name={field.name}
+            label={field.label}
+            form={form}
+            isEditable={isEditable}
+            disabled={field.disabled}
+          >
+            {(formField) => <DateInput field={formField} />}
+          </FormFieldWrapper>
         )
 
       case "select":
         return (
-          <motion.div variants={fieldVariants} initial="hidden" animate="visible">
-            <FormField
-              control={form.control}
-              name={field.name}
-              render={({ field: formField }) => (
-                <FormItem>
-                  <FormLabel>{field.label}</FormLabel>
-                  <FormControl>
-                    <select
-                      className="w-full rounded-md border border-gray-300 px-3 py-2"
-                      {...formField}
-                      disabled={!isEditable || field.disabled}
-                    >
-                      <option value="">{field.placeholder || "请选择"}</option>
-                      {(field as any).options?.map((option: any) => (
-                        <option key={option.value} value={option.value} disabled={option.disabled}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </motion.div>
+          <FormFieldWrapper
+            name={field.name}
+            label={field.label}
+            form={form}
+            isEditable={isEditable}
+            disabled={field.disabled}
+          >
+            {(formField) => (
+              <select
+                className="w-full rounded-md border border-gray-300 px-3 py-2"
+                {...formField}
+                disabled={!isEditable || field.disabled}
+              >
+                <option value="">{field.placeholder || "请选择"}</option>
+                {(field as any).options?.map((option: any) => (
+                  <option key={option.value} value={option.value} disabled={option.disabled}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            )}
+          </FormFieldWrapper>
         )
 
       case "radio":
         return (
-          <motion.div variants={fieldVariants} initial="hidden" animate="visible">
-            <FormField
-              control={form.control}
-              name={field.name}
-              render={({ field: formField }) => (
-                <FormItem>
-                  <FormLabel>{field.label}</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={formField.onChange}
-                      defaultValue={formField.value}
-                      disabled={!isEditable || field.disabled}
-                      className="flex flex-wrap gap-4"
+          <FormFieldWrapper
+            name={field.name}
+            label={field.label}
+            form={form}
+            isEditable={isEditable}
+            disabled={field.disabled}
+          >
+            {(formField) => (
+              <RadioGroup
+                onValueChange={formField.onChange}
+                defaultValue={formField.value}
+                disabled={!isEditable || field.disabled}
+                className="flex flex-wrap gap-4"
+              >
+                {(field as any).options?.map((option: any) => (
+                  <div key={option.value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option.value} id={`${field.name}-${option.value}`} />
+                    <label
+                      htmlFor={`${field.name}-${option.value}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
-                      {(field as any).options?.map((option: any) => (
-                        <div key={option.value} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option.value} id={`${field.name}-${option.value}`} />
-                          <label
-                            htmlFor={`${field.name}-${option.value}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            {option.label}
-                          </label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </motion.div>
+                      {option.label}
+                    </label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+          </FormFieldWrapper>
         )
 
       case "checkbox":
         return (
-          <motion.div variants={fieldVariants} initial="hidden" animate="visible">
-            <FormField
-              control={form.control}
-              name={field.name}
-              render={({ field: formField }) => (
-                <FormItem>
-                  <FormLabel>{field.label}</FormLabel>
-                  <FormControl>
-                    <div className="flex flex-wrap gap-4">
-                      {(field as any).options?.map((option: any) => (
-                        <div key={option.value} className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={formField.value?.includes(option.value)}
-                            onCheckedChange={(checked) => {
-                              const currentValue = formField.value || []
-                              const newValue = checked
-                                ? [...currentValue, option.value]
-                                : currentValue.filter((v: any) => v !== option.value)
-                              formField.onChange(newValue)
-                            }}
-                            disabled={!isEditable || field.disabled || option.disabled}
-                          />
-                          <label className="text-sm font-medium leading-none">
-                            {option.label}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </motion.div>
+          <FormFieldWrapper
+            name={field.name}
+            label={field.label}
+            form={form}
+            isEditable={isEditable}
+            disabled={field.disabled}
+          >
+            {(formField) => (
+              <div className="flex flex-wrap gap-4">
+                {(field as any).options?.map((option: any) => (
+                  <div key={option.value} className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={formField.value?.includes(option.value)}
+                      onCheckedChange={(checked) => {
+                        const currentValue = formField.value || []
+                        const newValue = checked
+                          ? [...currentValue, option.value]
+                          : currentValue.filter((v: any) => v !== option.value)
+                        formField.onChange(newValue)
+                      }}
+                      disabled={!isEditable || field.disabled || option.disabled}
+                    />
+                    <label className="text-sm font-medium leading-none">{option.label}</label>
+                  </div>
+                ))}
+              </div>
+            )}
+          </FormFieldWrapper>
         )
 
       case "switch":
         return (
-          <motion.div variants={fieldVariants} initial="hidden" animate="visible">
-            <FormField
-              control={form.control}
-              name={field.name}
-              render={({ field: formField }) => (
-                <FormItem>
-                  <div className="flex items-center justify-between">
-                    <FormLabel>{field.label}</FormLabel>
-                    <FormControl>
-                      <Switch
-                        checked={formField.value}
-                        onCheckedChange={formField.onChange}
-                        disabled={!isEditable || field.disabled}
-                      />
-                    </FormControl>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </motion.div>
+          <FormFieldWrapper
+            name={field.name}
+            label={field.label}
+            form={form}
+            isEditable={isEditable}
+            disabled={field.disabled}
+          >
+            {(formField) => (
+              <div className="flex items-center justify-between">
+                <Switch
+                  checked={formField.value}
+                  onCheckedChange={formField.onChange}
+                  disabled={!isEditable || field.disabled}
+                />
+              </div>
+            )}
+          </FormFieldWrapper>
         )
 
       case "slider":
         return (
-          <motion.div variants={fieldVariants} initial="hidden" animate="visible">
-            <FormField
-              control={form.control}
-              name={field.name}
-              render={({ field: formField }) => (
-                <FormItem>
-                  <FormLabel>{field.label}</FormLabel>
-                  <FormControl>
-                    <Slider
-                      value={[formField.value]}
-                      onValueChange={(value) => formField.onChange(value[0])}
-                      disabled={!isEditable || field.disabled}
-                      max={100}
-                      step={1}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </motion.div>
+          <FormFieldWrapper
+            name={field.name}
+            label={field.label}
+            form={form}
+            isEditable={isEditable}
+            disabled={field.disabled}
+          >
+            {(formField) => (
+              <Slider
+                value={[formField.value]}
+                onValueChange={(value) => formField.onChange(value[0])}
+                disabled={!isEditable || field.disabled}
+                max={100}
+                step={1}
+              />
+            )}
+          </FormFieldWrapper>
         )
 
       case "resource":
         return (
-          <motion.div variants={fieldVariants} initial="hidden" animate="visible">
-            <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
-              <div className="flex-1">
-                <FormField
-                  control={form.control}
-                  name={field.name}
-                  render={({ field: formField }) => (
-                    <FormItem>
-                      <FormLabel>{field.label}</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...formField}
-                          disabled={!isEditable || field.disabled}
-                          placeholder={field.placeholder}
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <FormFieldWrapper
+            name={field.name}
+            label={field.label}
+            form={form}
+            isEditable={isEditable}
+            disabled={field.disabled}
+          >
+            {(formField) => (
+              <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
+                <div className="flex-1">
+                  <Input
+                    {...formField}
+                    disabled={!isEditable || field.disabled}
+                    placeholder={field.placeholder}
+                    className="w-full"
+                  />
+                </div>
+                {isEditable && !field.disabled && (
+                  <ResourceSelectButton
+                    resourceName={field.resourceName}
+                    appId={field.appId}
+                    selectionMode={field.selectionMode}
+                    onSelect={field.onSelect}
+                    buttonText={`选择${field.label}`}
+                    buttonProps={{
+                      className: "w-full sm:w-auto whitespace-nowrap",
+                      size: "default",
+                    }}
+                  />
+                )}
               </div>
-              {isEditable && !field.disabled && (
-                <ResourceSelectButton
-                  resourceName={field.resourceName}
-                  appId={field.appId}
-                  selectionMode={field.selectionMode}
-                  onSelect={field.onSelect}
-                  buttonText={`选择${field.label}`}
-                  buttonProps={{
-                    className: "w-full sm:w-auto whitespace-nowrap",
-                    size: "default",
-                  }}
-                />
-              )}
-            </div>
-          </motion.div>
+            )}
+          </FormFieldWrapper>
         )
 
       case "file":
       case "image":
         return (
-          <motion.div variants={fieldVariants} initial="hidden" animate="visible">
-            <FormField
-              control={form.control}
-              name={field.name}
-              render={({ field: formField }) => (
-                <FormItem>
-                  <FormLabel>{field.label}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="file"
-                      accept={field.accept}
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0]
-                        if (file && field.onUpload) {
-                          await field.onUpload(file)
-                        }
-                        formField.onChange(e)
-                      }}
-                      disabled={!isEditable || field.disabled}
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0
-                        file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700
-                        hover:file:bg-blue-100"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </motion.div>
+          <FormFieldWrapper
+            name={field.name}
+            label={field.label}
+            form={form}
+            isEditable={isEditable}
+            disabled={field.disabled}
+          >
+            {(formField) => (
+              <Input
+                type="file"
+                accept={field.accept}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (file && field.onUpload) {
+                    await field.onUpload(file)
+                  }
+                  formField.onChange(e)
+                }}
+                disabled={!isEditable || field.disabled}
+                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0
+                  file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700
+                  hover:file:bg-blue-100"
+              />
+            )}
+          </FormFieldWrapper>
         )
 
       case "custom":
         return (
-          <motion.div variants={fieldVariants} initial="hidden" animate="visible">
-            <FormField
-              control={form.control}
-              name={field.name}
-              render={({ field: formField }) => (
-                <FormItem>
-                  <FormLabel>{field.label}</FormLabel>
-                  <FormControl>
-                    {field.render({
-                      field: formField,
-                      form,
-                      isEditable,
-                    })}
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </motion.div>
+          <FormFieldWrapper
+            name={field.name}
+            label={field.label}
+            form={form}
+            isEditable={isEditable}
+            disabled={field.disabled}
+          >
+            {(formField) =>
+              field.render({
+                field: formField,
+                form,
+                isEditable,
+              })
+            }
+          </FormFieldWrapper>
         )
 
       default:
