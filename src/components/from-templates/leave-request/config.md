@@ -1,11 +1,6 @@
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/theme/cn"
-import { format } from "date-fns"
-import { Icon } from "@iconify/react"
-
-export const leaveRequestConfig = {
+```mo
+<mo-ai-form>
+export default {
   formFields: {
     基本信息: [
       {
@@ -199,3 +194,5 @@ export const leaveRequestConfig = {
     },
   },
 }
+</mo-ai-form>
+```
