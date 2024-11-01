@@ -17,6 +17,8 @@ const jsxToJs = async (jsxCode: string): Promise<string> => {
   try {
     return Babel.transform(jsxCode, {
       presets: ["es2017", "react"],
+      auxiliaryCommentBefore: false, // 禁止注入 helper 函数
+      compact: true, // 压缩代码
     }).code
   } catch (error) {
     console.error("Failed to transform JSX:", error)
@@ -32,26 +34,13 @@ const parseConfigObject = (jsCode: string): any => {
     // 移除 export default 并获取对象部分
     const objectCode = jsCode.replace(/export\s+default\s+/, "")
     
-    // 提取实际的配置对象部分
-    const configMatch = objectCode.match(/\{[\s\S]*\}$/);
-    if (!configMatch) {
-      throw new Error("No valid configuration object found");
-    }
-    
     // 创建一个新的 Function 来执行代码
-    const createConfig = new Function(`
-      try {
-        return ${configMatch[0]};
-      } catch (error) {
-        console.error("Error in config creation:", error);
-        throw error;
-      }
-    `)
+    const createConfig = new Function(`return ${objectCode}`)
     
     return createConfig()
   } catch (error) {
     console.error("Failed to parse config object:", error)
-    throw new Error(`Failed to parse config object: ${error.message}`)
+    throw new Error("Failed to parse config object")
   }
 }
 
