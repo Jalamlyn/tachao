@@ -1,19 +1,5 @@
 import { message } from "@/components/Message"
-
-/**
- * 动态加载 Babel
- */
-const loadBabel = async () => {
-  if (!(window as any).Babel) {
-    try {
-      await import("@babel/standalone")
-    } catch (error) {
-      console.error("Failed to load Babel:", error)
-      throw new Error("Failed to load Babel")
-    }
-  }
-  return (window as any).Babel
-}
+import * as Babel from '@babel/standalone'
 
 /**
  * 从 mo-ai-form 标签中提取代码
@@ -28,7 +14,6 @@ const extractCode = (content: string): string | null => {
  * 将 JSX 代码转换为 JavaScript
  */
 const jsxToJs = async (jsxCode: string): Promise<string> => {
-  const Babel = await loadBabel()
   try {
     return Babel.transform(jsxCode, {
       presets: ["es2017", "react"],
