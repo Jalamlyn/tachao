@@ -8,13 +8,74 @@ import chatMoV2 from "@/service/chat/chat-deepseek"
 import message from "@/components/Message"
 import { DynamicFormConfig } from "../../common/DynamicForm/types"
 import { leaveRequestConfig } from "../../from-templates/leave-request/config"
+import { parseFormConfig } from "@/utils/codeParser"
 
-interface Version {
-  code: number
-  config: DynamicFormConfig
-  createdAt: string
-  description: string
+// 模拟的 AI 返回文本
+const mockAIResponse = `
+<mo-ai-form>
+export default {
+  formFields: {
+    基本信息: [
+      {
+        name: "employeeName",
+        label: "申请人",
+        type: "text",
+        required: true,
+        placeholder: "请输入申请人姓名",
+      },
+      {
+        name: "department",
+        label: "所属部门",
+        type: "text",
+        required: true,
+        placeholder: "请输入所属部门",
+      }
+    ],
+    请假信息: [
+      {
+        name: "leaveType",
+        label: "请假类型",
+        type: "custom",
+        required: true,
+        render: ({ field, form }) => (
+          <select className='w-full rounded-md border border-gray-300 px-3 py-2' {...field}>
+            <option value=''>请选择请假类型</option>
+            <option value='annual'>年假</option>
+            <option value='sick'>病假</option>
+            <option value='personal'>事假</option>
+          </select>
+        ),
+      },
+      {
+        name: "startDate",
+        label: "开始时间",
+        type: "date",
+        required: true,
+      },
+      {
+        name: "endDate",
+        label: "结束时间", 
+        type: "date",
+        required: true,
+      }
+    ]
+  },
+  dependencies: {
+    duration: {
+      dependsOn: ["startDate", "endDate"],
+      calculate: (values) => {
+        if (!values.startDate || !values.endDate) return 0
+        const start = new Date(values.startDate)
+        const end = new Date(values.endDate)
+        const diffTime = Math.abs(end.getTime() - start.getTime())
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        return diffDays
+      },
+    },
+  }
 }
+</mo-ai-form>
+`
 
 const CustomFormBuilder: React.FC = () => {
   const [command, setCommand] = useState("")
@@ -68,14 +129,23 @@ const CustomFormBuilder: React.FC = () => {
     }
   }
 
-  const generateLeaveRequestConfig = () => {
+  const generateLeaveRequestConfig = async () => {
     try {
-      setFormConfig(leaveRequestConfig)
-      addNewVersion(leaveRequestConfig)
-      message.success("已生成请假单配置")
+      setIsGenerating(true)
+      // 使用 codeParser 解析模拟的 AI 返回文本
+      const parsedConfig = await parseFormConfig(mockAIResponse)
+      if (parsedConfig) {
+        setFormConfig(parsedConfig)
+        addNewVersion(parsedConfig)
+        message.success("已生成请假单配置")
+      } else {
+        message.error("配置解析失败")
+      }
     } catch (error) {
       message.error("生成请假单配置失败")
       console.error("Leave request config error:", error)
+    } finally {
+      setIsGenerating(false)
     }
   }
 
