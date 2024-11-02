@@ -35,44 +35,42 @@ const LandingPage: React.FC = () => {
     <div className='min-h-screen bg-gradient-to-b from-primary-dark to-primary-light relative'>
       <Helmet>
         <title>沙塔 AI - 智慧企业服务专家</title>
-        <meta name="description" content="让 AI 为企业赋能，提升效率，降低成本" />
-        <meta name="keywords" content="AI,企业服务,效率提升,智能化,沙塔" />
-        <meta property="og:title" content="沙塔 AI - 智慧企业服务专家" />
-        <meta property="og:description" content="让 AI 为企业赋能，提升效率，降低成本" />
-        <meta property="og:type" content="website" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name='description' content='让 AI 为企业赋能，提升效率，降低成本' />
+        <meta name='keywords' content='AI,企业服务,效率提升,智能化,沙塔' />
+        <meta property='og:title' content='沙塔 AI - 智慧企业服务专家' />
+        <meta property='og:description' content='让 AI 为企业赋能，提升效率，降低成本' />
+        <meta property='og:type' content='website' />
+        <meta name='viewport' content='width=device-width, initial-scale=1.0' />
       </Helmet>
 
       <AnimatedBackground />
       <ScrollProgress />
       <ScrollNav />
-      
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }} 
-        animate={controls} 
-        className='relative'
-      >
-        <section id="hero">
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={controls} className='relative'>
+        <section id='hero'>
           <Hero onGetStarted={handleGetStarted} />
         </section>
-        <section id="stats">
+        <section id='stats'>
           <Stats />
         </section>
-        
-        <Suspense fallback={
-          <div className="w-full h-96 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-white"></div>
-          </div>
-        }>
-          <section id="features">
+
+        <Suspense
+          fallback={
+            <div className='w-full h-96 flex items-center justify-center'>
+              <div className='animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-white'></div>
+            </div>
+          }
+        >
+          <section id='features'>
             <Features />
           </section>
-          <section id="benefits">
+          <section id='benefits'>
             <Benefits />
           </section>
         </Suspense>
 
-        <section id="contact">
+        <section id='contact'>
           <Contact />
         </section>
         <Footer />

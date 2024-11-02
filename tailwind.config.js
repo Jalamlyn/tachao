@@ -28,7 +28,7 @@ module.exports = {
         foreground: "hsl(var(--foreground))",
         'primary-dark': '#1E2B8C',
         'primary-light': '#4B9EF4',
-        'accent': '#6C63FF',
+        'accent': '#eee',
       },
       borderRadius: {
         lg: `var(--radius)`,

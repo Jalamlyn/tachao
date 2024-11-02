@@ -1755,6 +1755,11 @@
   dependencies:
     regenerator-runtime "^0.14.0"
 
+"@babel/standalone@^7.26.2":
+  version "7.26.2"
+  resolved "https://registry.yarnpkg.com/@babel/standalone/-/standalone-7.26.2.tgz#a1fdf2d477a1f3d2828f0551b5dc14c44d4e127f"
+  integrity sha512-i2VbegsRfwa9yq3xmfDX3tG2yh9K0cCqwpSyVG2nPxifh0EOnucAZUeO/g4lW2Zfg03aPJNtPfxQbDHzXc7H+w==
+
 "@babel/template@^7.24.7":
   version "7.24.7"
   resolved "https://registry.yarnpkg.com/@babel/template/-/template-7.24.7.tgz#02efcee317d0609d2c07117cb70ef8fb17ab7315"
@@ -18527,6 +18532,11 @@ react-textarea-autosize@^8.5.3:
     "@babel/runtime" "^7.20.13"
     use-composed-ref "^1.3.0"
     use-latest "^1.2.1"
+
+react-to-print@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/react-to-print/-/react-to-print-3.0.2.tgz#3739392fe8d650e3e8a14662d16f16ad57dec050"
+  integrity sha512-FS/Z4LLq0bgWaxd7obygFQ8yRFdKW74iE8fIVjFFsPJWIXmuL8CIO+4me1Hj44lrlxQ00gscSNb3BRM8olbwXg==
 
 react-transition-group@^4.4.5:
   version "4.4.5"

@@ -1,5 +1,6 @@
 import { message } from "@/components/Message"
-import * as Babel from '@babel/standalone'
+import * as Babel from "@babel/standalone"
+import React from "react"
 
 /**
  * 从 mo-ai-form 标签中提取代码
@@ -16,9 +17,7 @@ const extractCode = (content: string): string | null => {
 const jsxToJs = async (jsxCode: string): Promise<string> => {
   try {
     return Babel.transform(jsxCode, {
-      presets: ["es2017", "react"],
-      auxiliaryCommentBefore: false, // 禁止注入 helper 函数
-      compact: true, // 压缩代码
+      presets: ["react"],
     }).code
   } catch (error) {
     console.error("Failed to transform JSX:", error)
@@ -32,12 +31,12 @@ const jsxToJs = async (jsxCode: string): Promise<string> => {
 const parseConfigObject = (jsCode: string): any => {
   try {
     // 移除 export default 并获取对象部分
-    const objectCode = jsCode.replace(/export\s+default\s+/, "")
-    
+    const objectCode = jsCode.replace(/export\s+default\s+/, "return ")
+
     // 创建一个新的 Function 来执行代码
-    const createConfig = new Function(`return ${objectCode}`)
-    
-    return createConfig()
+    const createConfig = new Function("React", `${objectCode}`)
+
+    return createConfig(React)
   } catch (error) {
     console.error("Failed to parse config object:", error)
     throw new Error("Failed to parse config object")

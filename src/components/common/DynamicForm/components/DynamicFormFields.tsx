@@ -10,7 +10,6 @@ import { cn } from "@/theme/cn"
 import { Icon } from "@iconify/react"
 import { motion } from "framer-motion"
 import { Textarea } from "@/components/ui/textarea"
-import ResourceSelectButton from "../../ResourceSelectButton"
 import { FormField as DynamicFormField } from "../types"
 
 // 动画配置

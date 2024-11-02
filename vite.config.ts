@@ -43,6 +43,7 @@ export default defineConfig({
           "react-markdown": ["react-markdown"],
           "@visactor/vtable": ["@visactor/vtable"],
           "@visactor/react-vtable": ["@visactor/react-vtable"],
+          babel: ["@babel/standalone"],
           mermaid: ["mermaid"],
         },
         // manualChunks(id) {
@@ -63,7 +64,7 @@ export default defineConfig({
     proxy: {
       "/dev/": {
         // target: "https://www.mobenai.com.cn/api/",
-        target:"http://106.14.47.161/api/",
+        target: "http://106.14.47.161/api/",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/dev/, ""),
         autoRewrite: true,
