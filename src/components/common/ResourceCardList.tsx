@@ -34,7 +34,6 @@ const ResourceCardList: React.FC<ResourceCardListProps> = ({
   const [itemToDelete, setItemToDelete] = useState<string | null>(null)
   const [internalDeletingId, setInternalDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [isCopying, setIsCopying] = useState(false)
   const { copyForm } = useFormMetadata()
 
   const fetchItems = useCallback(async () => {
@@ -89,29 +88,6 @@ const ResourceCardList: React.FC<ResourceCardListProps> = ({
       setInternalDeletingId(null)
       setIsDeleteModalOpen(false)
       setItemToDelete(null)
-    }
-  }
-
-  const handleCopy = async (item: any) => {
-    if (!appId) return
-    setIsCopying(true)
-    try {
-      await copyForm(item.id, {
-        resetStatus: true,
-        resetDates: true,
-        suffix: '_副本',
-        onBeforeCopy: async (form) => {
-          // 可以在这里添加自定义的复制前处理逻辑
-          return form
-        }
-      })
-      message.success("复制成功")
-      await fetchItems()
-    } catch (error) {
-      console.error("Error copying form:", error)
-      message.error("复制失败")
-    } finally {
-      setIsCopying(false)
     }
   }
 
@@ -190,47 +166,36 @@ const ResourceCardList: React.FC<ResourceCardListProps> = ({
             variants={containerVariants}
             initial='hidden'
             animate='visible'
-            className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3'
+            className='grid grid-cols-1 gap-2'
           >
             {items.map((item) => (
-              <motion.div key={item.id} variants={itemVariants} layout className='h-full'>
-                <Card className='group h-full hover:shadow-md transition-all duration-300 bg-white border border-gray-100'>
-                  <CardHeader className='flex flex-col items-start space-y-1 bg-gradient-to-r from-gray-50 to-white p-2 sm:p-3'>
-                    <h4 className='text-base font-medium text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-2'>
-                      {item.title || item.name}
-                    </h4>
-                  </CardHeader>
-                  <CardBody className='p-2'>
-                    <div className='flex items-center gap-2'>
-                      <Button
-                        size='sm'
-                        color='primary'
-                        variant='light'
-                        onClick={() => onView(item.id)}
-                        startContent={<Icon icon='mdi:eye' className='w-3.5 h-3.5' />}
-                        className='flex-1 bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors duration-300 min-w-0 px-2'
-                      ></Button>
-                      <Button
-                        size='sm'
-                        color='secondary'
-                        variant='light'
-                        onClick={() => handleCopy(item)}
-                        startContent={<Icon icon='mdi:content-copy' className='w-3.5 h-3.5' />}
-                        isLoading={isCopying}
-                        className='flex-1 bg-purple-50 hover:bg-purple-100 text-purple-600 transition-colors duration-300 min-w-0 px-2'
-                      ></Button>
-                      <Button
-                        size='sm'
-                        color='danger'
-                        variant='light'
-                        onClick={() => handleDelete(item.id)}
-                        startContent={<Icon icon='mdi:delete' className='w-3.5 h-3.5' />}
-                        isLoading={internalDeletingId === item.id || externalDeletingId === item.id}
-                        className='flex-1 bg-red-50 hover:bg-red-100 text-red-600 transition-colors duration-300 min-w-0 px-2'
-                      ></Button>
-                    </div>
-                  </CardBody>
-                </Card>
+              <motion.div key={item.id} variants={itemVariants} layout>
+                <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 hover:shadow-sm transition-shadow">
+                  <div className="text-sm font-medium text-gray-700 truncate flex-1">
+                    {item.title || item.name || item.id}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      isIconOnly
+                      variant="light"
+                      className="min-w-0 w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-600"
+                      onClick={() => onView(item.id)}
+                    >
+                      <Icon icon="mdi:eye" className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      isIconOnly
+                      variant="light"
+                      className="min-w-0 w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600"
+                      onClick={() => handleDelete(item.id)}
+                      isLoading={internalDeletingId === item.id || externalDeletingId === item.id}
+                    >
+                      <Icon icon="mdi:delete" className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </motion.div>
