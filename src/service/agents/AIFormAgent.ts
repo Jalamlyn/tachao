@@ -137,26 +137,42 @@ export default getMatchedForms() {
   }
 
   public async analyzeIntent(input: string): Promise<"create" | "search" | "unsupported"> {
-    const prompt = `请分析用户输入"${input}"的意图，判断是创建表单还是检索表单。
-请只返回"create"或"search"。`
+    // 使用 AI 分析指令
+    const aiAnalysisPrompt = `请分析以下用户指令的意图，判断是否是合法的表单操作指令：
+"${input}"
+
+请根据以下规则进行分析：
+1. 如果是创建/新建/生成表单的指令，返回 "create"
+2. 如果是搜索/查找/检索表单或资料的指令，返回 "search"
+3. 如果不是表单相关的指令或指令不明确，返回 "unsupported"
+
+请只返回 "create"、"search" 或 "unsupported"，不要返回其他内容。`
 
     try {
-      const response = await this.processAIResponse(prompt, () => {})
+      // 先尝试使用 AI 分析
+      const aiResponse = await this.processAIResponse(aiAnalysisPrompt, () => {})
+      const cleanResponse = aiResponse.trim().toLowerCase()
       
-      // 检查是否包含创建表单相关的关键词
+      if (cleanResponse === "create" || cleanResponse === "search" || cleanResponse === "unsupported") {
+        if (cleanResponse === "unsupported") {
+          message.warning("不支持的指令，请使用创建表单或检索表单相关的指令。例如：'创建一个请假单'或'查找销售订单'")
+        }
+        return cleanResponse as "create" | "search" | "unsupported"
+      }
+
+      // 如果 AI 分析失败，使用原有的关键词匹配作为备选方案
       const createKeywords = /(创建|新建|生成|制作|添加|建立).*?(表单|单据|模板)/
       if (createKeywords.test(input)) {
         return "create"
       }
       
-      // 检查是否包含检索相关的关键词
       const searchKeywords = /(搜索|查找|检索|查询|寻找|浏览).*?(表单|单据|资料|模板)/
       if (searchKeywords.test(input)) {
         return "search"
       }
 
       // 如果都不匹配，返回不支持的指令
-      message.warning("不支持的指令，请使用创建表单或检索表单相关的指令。")
+      message.warning("不支持的指令，请使用创建表单或检索表单相关的指令。例如：'创建一个请假单'或'查找销售订单'")
       return "unsupported"
     } catch (error) {
       console.error("Error analyzing intent:", error)
