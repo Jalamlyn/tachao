@@ -3,6 +3,7 @@ import { jsonParse, jsonStringify } from "@/utils"
 import DynamicFormConfigStr from "@/components/common/DynamicForm/types.str"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
+import message from "@/components/Message"
 
 interface FormIndex {
   id: string
@@ -18,6 +19,7 @@ export class AIFormAgent {
 检索表单时，你需要根据用户的描述在表单索引中查找匹配的表单。
 
 ${DynamicFormConfigStr}
+不需要生成订单编号，这个表单自动生成
 `
 
   private constructor() {}
@@ -63,7 +65,7 @@ ${description}
 
 请使用如下格式返回：
 <mo-ai-form>
-return {
+export default {
   title: "表单标题",
   config: {
     // 完整的表单配置对象
@@ -74,7 +76,7 @@ return {
     try {
       const response = await this.processAIResponse(prompt, onChunk)
       const parsedConfig = await parseFormConfig(response)
-      
+
       if (!parsedConfig) {
         throw new Error("解析表单配置失败")
       }
@@ -106,9 +108,11 @@ ${jsonStringify(formsIndex)}
 
 请返回匹配的表单数组，格式如下：
 <mo-ai-result>
-return [
-  // 匹配的表单索引数组
-]
+export default getMatchedForms() {
+  return [
+    // 匹配的表单索引数组
+  ]
+}
 </mo-ai-result>
 
 注意：
@@ -132,17 +136,30 @@ return [
     }
   }
 
-  public async analyzeIntent(input: string): Promise<"create" | "search"> {
-    const prompt = `请分析用户输入"${input}"的意图，判断是创建表单还是检索表单。
-请只返回"create"或"search"。`
+  public async analyzeIntent(input: string): Promise<"create" | "search" | "unsupported"> {
+    // 定义支持的指令关键词
+    const createKeywords = ["创建", "生成", "新建", "制作", "设计", "建立", "create", "new", "make"]
+    const searchKeywords = ["搜索", "查找", "检索", "查询", "找到", "search", "find", "query"]
 
-    try {
-      const response = await this.processAIResponse(prompt, () => {})
-      return response.includes("create") ? "create" : "search"
-    } catch (error) {
-      console.error("Error analyzing intent:", error)
-      throw new Error("分析用户意图失败：" + (error as Error).message)
+    // 检查是否包含创建相关关键词
+    const isCreateIntent = createKeywords.some(keyword => input.toLowerCase().includes(keyword))
+    
+    // 检查是否包含搜索相关关键词
+    const isSearchIntent = searchKeywords.some(keyword => input.toLowerCase().includes(keyword))
+
+    // 如果包含创建关键词且内容与表单相关
+    if (isCreateIntent && input.includes("表单")) {
+      return "create"
     }
+
+    // 如果包含搜索关键词且内容与表单或资料相关
+    if (isSearchIntent && (input.includes("表单") || input.includes("资料"))) {
+      return "search"
+    }
+
+    // 对于不支持的指令，显示友好提示
+    message.info("我只能帮您创建表单或搜索表单/资料，其他指令暂不支持。如需帮助，请尝试：\n1. 创建新的表单\n2. 搜索已有表单\n3. 检索相关资料")
+    return "unsupported"
   }
 }
 
