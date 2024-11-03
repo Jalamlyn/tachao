@@ -1,15 +1,10 @@
 import React from "react"
 import { motion } from "framer-motion"
-import { Card, CardHeader, Tabs, Tab } from "@nextui-org/react"
-import { Outlet, useNavigate, useLocation } from "react-router-dom"
-import { Icon } from "@iconify/react"
+import { Card, CardHeader } from "@nextui-org/react"
+import { Outlet } from "react-router-dom"
 import AnimatedBackground from "@/components/landing/AnimatedBackground"
 
 const AIHomePage: React.FC = () => {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const currentPath = location.pathname.split("/").pop()
-
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -20,28 +15,6 @@ const AIHomePage: React.FC = () => {
         ease: [0.6, -0.05, 0.01, 0.99],
       },
     },
-  }
-
-  const tabs = [
-    {
-      key: "management",
-      title: "数据管理",
-      icon: "mdi:database-cog",
-    },
-    {
-      key: "analysis",
-      title: "数据分析",
-      icon: "mdi:chart-box",
-    },
-    {
-      key: "create",
-      title: "智能创建",
-      icon: "mdi:file-document-plus",
-    },
-  ]
-
-  const handleTabChange = (key: string) => {
-    navigate(`/ai/${key}`)
   }
 
   return (
@@ -56,31 +29,7 @@ const AIHomePage: React.FC = () => {
         >
           <Card className='bg-white/10 border border-white/20 shadow-xl backdrop-blur-md'>
             <CardHeader className='flex justify-between items-center p-6'>
-              <h1 className='text-2xl font-bold text-white/90'>沙塔 AI</h1>
-              <Tabs 
-                selectedKey={currentPath} 
-                onSelectionChange={handleTabChange}
-                color="primary"
-                variant="light"
-                classNames={{
-                  tabList: "gap-4 w-full md:w-auto",
-                  cursor: "bg-white/30",
-                  tab: "h-10 px-4",
-                  tabContent: "group-data-[selected=true]:text-white"
-                }}
-              >
-                {tabs.map((tab) => (
-                  <Tab
-                    key={tab.key}
-                    title={
-                      <div className="flex items-center gap-2">
-                        <Icon icon={tab.icon} className="w-4 h-4" />
-                        <span>{tab.title}</span>
-                      </div>
-                    }
-                  />
-                ))}
-              </Tabs>
+              <h2 className="text-xl font-semibold text-white">AI 智能助手</h2>
             </CardHeader>
             <Outlet />
           </Card>
