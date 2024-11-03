@@ -137,29 +137,32 @@ export default getMatchedForms() {
   }
 
   public async analyzeIntent(input: string): Promise<"create" | "search" | "unsupported"> {
-    // 定义支持的指令关键词
-    const createKeywords = ["创建", "生成", "新建", "制作", "设计", "建立", "create", "new", "make"]
-    const searchKeywords = ["搜索", "查找", "检索", "查询", "找到", "search", "find", "query"]
+    const prompt = `请分析用户输入"${input}"的意图，判断是创建表单还是检索表单。
+请只返回"create"或"search"。`
 
-    // 检查是否包含创建相关关键词
-    const isCreateIntent = createKeywords.some(keyword => input.toLowerCase().includes(keyword))
-    
-    // 检查是否包含搜索相关关键词
-    const isSearchIntent = searchKeywords.some(keyword => input.toLowerCase().includes(keyword))
+    try {
+      const response = await this.processAIResponse(prompt, () => {})
+      
+      // 检查是否包含创建表单相关的关键词
+      const createKeywords = /(创建|新建|生成|制作|添加|建立).*?(表单|单据|模板)/
+      if (createKeywords.test(input)) {
+        return "create"
+      }
+      
+      // 检查是否包含检索相关的关键词
+      const searchKeywords = /(搜索|查找|检索|查询|寻找|浏览).*?(表单|单据|资料|模板)/
+      if (searchKeywords.test(input)) {
+        return "search"
+      }
 
-    // 如果包含创建关键词且内容与表单相关
-    if (isCreateIntent && input.includes("表单")) {
-      return "create"
+      // 如果都不匹配，返回不支持的指令
+      message.warning("不支持的指令，请使用创建表单或检索表单相关的指令。")
+      return "unsupported"
+    } catch (error) {
+      console.error("Error analyzing intent:", error)
+      message.error("分析用户意图失败：" + (error as Error).message)
+      return "unsupported"
     }
-
-    // 如果包含搜索关键词且内容与表单或资料相关
-    if (isSearchIntent && (input.includes("表单") || input.includes("资料"))) {
-      return "search"
-    }
-
-    // 对于不支持的指令，显示友好提示
-    message.info("我只能帮您创建表单或搜索表单/资料，其他指令暂不支持。如需帮助，请尝试：\n1. 创建新的表单\n2. 搜索已有表单\n3. 检索相关资料")
-    return "unsupported"
   }
 }
 
