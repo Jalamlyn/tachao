@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
@@ -16,13 +16,23 @@ const DynamicFormTestPage: React.FC = () => {
   const [formConfig, setFormConfig] = useState<any>(null)
   const [templateType, setTemplateType] = useState<"official" | "custom">("custom")
   const [templateName, setTemplateName] = useState("")
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("")
   
-  // 使用新的 useMetadata hook 来管理模板
-  const { create: createTemplate } = useMetadata<{
+  // 使用 useMetadata hook 来管理模板
+  const { 
+    items: templates,
+    load: loadTemplates,
+    create: createTemplate,
+    getDetail: getTemplateDetail
+  } = useMetadata<{
     config: any
     type: "official" | "custom"
     name: string
   }>("template")
+
+  useEffect(() => {
+    loadTemplates()
+  }, [])
 
   const handleConfigChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setConfigInput(e.target.value)
@@ -92,12 +102,34 @@ const DynamicFormTestPage: React.FC = () => {
       if (result) {
         message.success("表单模板保存成功")
         setTemplateName("")
+        loadTemplates() // 重新加载模板列表
       } else {
         message.error("保存失败")
       }
     } catch (error) {
       console.error("保存模板错误:", error)
       message.error("保存模板失败")
+    }
+  }
+
+  const handleTemplateChange = async (templateId: string) => {
+    try {
+      setSelectedTemplateId(templateId)
+      if (!templateId) {
+        setFormConfig(null)
+        return
+      }
+
+      const template = await getTemplateDetail(templateId)
+      if (template && template.data.config) {
+        setFormConfig(template.data.config)
+        message.success("模板加载成功")
+      } else {
+        message.error("模板加载失败")
+      }
+    } catch (error) {
+      console.error("加载模板错误:", error)
+      message.error("加载模板失败")
     }
   }
 
@@ -134,6 +166,24 @@ const DynamicFormTestPage: React.FC = () => {
               <CardTitle>动态表单测试</CardTitle>
             </CardHeader>
             <CardContent className='space-y-4'>
+              {/* 模板选择 */}
+              <div className='space-y-2'>
+                <label className='text-sm font-medium'>选择模板</label>
+                <Select
+                  label="选择已保存的模板"
+                  placeholder="请选择模板"
+                  value={selectedTemplateId}
+                  onChange={(e) => handleTemplateChange(e.target.value)}
+                >
+                  <SelectItem key="" value="">不使用模板</SelectItem>
+                  {templates.map((template) => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.title} ({template.data.type})
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
+
               <div className='space-y-2'>
                 <label className='text-sm font-medium'>表单配置</label>
                 <div className='flex gap-2 mb-2'>
