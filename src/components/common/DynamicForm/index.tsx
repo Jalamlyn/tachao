@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react"
 import { Form } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
+import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { DynamicFormProps } from "./types"
@@ -51,7 +51,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       const result = await form.trigger()
       if (!result) {
         const errors = Object.entries(form.formState.errors)
-          .map(([key, error]) => error.message)
+          .map(([key, error]) => {
+            const fieldName = key.split('.').pop() // 获取字段名
+            const errorMessage = typeof error.message === 'string' ? error.message : '验证失败'
+            return `${fieldName}: ${errorMessage}`
+          })
           .filter(Boolean)
         
         if (errors.length > 0) {
@@ -233,28 +237,34 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               {/* Edit Button */}
               {id && !currentIsEditable && (
                 <Button
-                  type="button"
-                  variant="outline"
+                  color="primary"
+                  variant="flat"
                   onClick={toggleEditMode}
-                  className="gap-2"
+                  startContent={<Icon icon="mdi:pencil" className="w-4 h-4" />}
                 >
-                  <Icon icon="mdi:pencil" className="w-4 h-4" />
                   编辑
                 </Button>
               )}
 
               {/* Submit Button */}
               {currentIsEditable && (
-                <Button type="submit" className="gap-2">
-                  <Icon icon="mdi:content-save" className="w-4 h-4" />
+                <Button
+                  type="submit"
+                  color="primary"
+                  startContent={<Icon icon="mdi:content-save" className="w-4 h-4" />}
+                >
                   {config.form?.submitButton?.text || (id ? "保存" : "创建")}
                 </Button>
               )}
 
               {/* Print Button */}
               {config.print && (
-                <Button type="button" variant="outline" onClick={handlePrint} className="gap-2">
-                  <Icon icon="mdi:printer" className="w-4 h-4" />
+                <Button
+                  color="primary"
+                  variant="flat"
+                  onClick={handlePrint}
+                  startContent={<Icon icon="mdi:printer" className="w-4 h-4" />}
+                >
                   打印
                 </Button>
               )}
@@ -262,12 +272,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               {/* Cancel Edit Button */}
               {id && currentIsEditable && (
                 <Button
-                  type="button"
-                  variant="outline"
+                  color="danger"
+                  variant="flat"
                   onClick={toggleEditMode}
-                  className="gap-2"
+                  startContent={<Icon icon="mdi:close" className="w-4 h-4" />}
                 >
-                  <Icon icon="mdi:close" className="w-4 h-4" />
                   取消编辑
                 </Button>
               )}
