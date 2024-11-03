@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect } from "react"
 import { Navigate, Route, Routes, useNavigate, useLocation } from "react-router-dom"
 import { NextUIProvider } from "@nextui-org/react"
-import FormsPage from "@/pages/FormsPage"
+import FormsPage from "@/pages/DataManagementPage"
 import { useTranslation } from "react-i18next"
 import { getCurrentLanguage } from "./i18n"
 import WeChatLoginPage from "./pages/WeChatLoginPage"
@@ -16,6 +16,8 @@ import CustomFormBuilder from "./components/forms/custom/CustomFormBuilder"
 import AIHomePage from "./pages/AIHomePage"
 import DataManagementPage from "./pages/DataManagementPage"
 import DataAnalysisPage from "./pages/DataAnalysisPage"
+import CreateFormPage from "./pages/CreateFormPage"
+import DynamicFormTestPage from "./pages/DynamicFormTestPage"
 
 function App() {
   const navigate = useNavigate()
@@ -28,9 +30,9 @@ function App() {
   }, [])
 
   const shouldRedirectToLogin = () => {
-    const publicPaths = ['/', '/we-chat-login']
+    const publicPaths = ["/", "/we-chat-login"]
     if (!publicPaths.includes(location.pathname)) {
-      const token = localStorage.getItem('model-base-user-token')
+      const token = localStorage.getItem("model-base-user-token")
       return !token
     }
     return false
@@ -41,39 +43,37 @@ function App() {
       <div className='min-h-screen'>
         <Routes>
           <Route path='/' element={<LandingPage />} />
-          <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <AIHomePage />}>
-            <Route index element={<Navigate to="management" replace />} />
-            <Route path="management" element={<DataManagementPage />} />
-            <Route path="analysis" element={<DataAnalysisPage />} />
+          <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <AIHomePage />}>
+            <Route index element={<Navigate to='management' replace />} />
+            <Route path='management' element={<FormsPage />} />
+            <Route path='create' element={<CreateFormPage />} />
+            <Route path='analysis' element={<DataAnalysisPage />} />
+            <Route path='test-form' element={<DynamicFormTestPage />} />
           </Route>
-          <Route 
-            path='/forms' 
-            element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <FormsPage />} 
-          />
           <Route path='/we-chat-login' element={<WeChatLoginPage />} />
-          <Route 
-            path='/forms/:id' 
-            element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <FormRenderer />} 
+          <Route
+            path='/forms/:id'
+            element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <FormRenderer />}
           />
-          <Route 
-            path='/forms/custom/create' 
-            element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <CustomFormBuilder />} 
+          <Route
+            path='/forms/custom/create'
+            element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <CustomFormBuilder />}
           />
-          <Route 
-            path='/forms/analysis' 
-            element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <AnalysisPage />}
+          <Route
+            path='/forms/analysis'
+            element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <AnalysisPage />}
           />
-          <Route 
-            path='/resources/view/:id' 
-            element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <ResourceDataTable />} 
+          <Route
+            path='/resources/view/:id'
+            element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <ResourceDataTable />}
           />
-          <Route 
-            path='/reports/create' 
-            element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <CreateReportPage />} 
+          <Route
+            path='/reports/create'
+            element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <CreateReportPage />}
           />
-          <Route 
-            path='/reports/view/:id' 
-            element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <ReadReportRenderer />} 
+          <Route
+            path='/reports/view/:id'
+            element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <ReadReportRenderer />}
           />
         </Routes>
         <Toaster />
