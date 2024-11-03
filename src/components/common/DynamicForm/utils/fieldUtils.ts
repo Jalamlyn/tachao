@@ -111,7 +111,11 @@ export const calculateDependentValues = (
   Object.entries(dependencies).forEach(([field, config]) => {
     const shouldUpdate = config.dependsOn.some((dep) => changedFields.includes(dep))
     if (shouldUpdate) {
-      updates[field] = config.calculate(allValues)
+      try {
+        updates[field] = config.calculate(allValues)
+      } catch (error) {
+        console.error(`Error calculating dependent field ${field}:`, error)
+      }
     }
   })
 
@@ -124,7 +128,7 @@ export const validateField = (
   customValidators?: DynamicFormConfig["customValidators"],
   allValues?: any
 ): string | undefined => {
-  // Run built-in validators
+  // 运行内置验证器
   if (field.validators) {
     for (const validator of field.validators) {
       const error = validator(value)
@@ -132,10 +136,33 @@ export const validateField = (
     }
   }
 
-  // Run custom validators
+  // 运行自定义验证器
   if (customValidators && customValidators[field.name]) {
     return customValidators[field.name](value, allValues)
   }
 
   return undefined
+}
+
+export const evaluateShowWhen = (
+  showWhen: FormField["showWhen"],
+  allValues: any
+): boolean => {
+  if (!showWhen) return true
+
+  const dependentValue = allValues[showWhen.field]
+
+  switch (showWhen.operator) {
+    case "neq":
+      return dependentValue !== showWhen.value
+    case "gt":
+      return dependentValue > showWhen.value
+    case "lt":
+      return dependentValue < showWhen.value
+    case "contains":
+      return dependentValue?.includes?.(showWhen.value)
+    case "eq":
+    default:
+      return dependentValue === showWhen.value
+  }
 }
