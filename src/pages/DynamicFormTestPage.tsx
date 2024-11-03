@@ -16,7 +16,7 @@ const DynamicFormTestPage: React.FC = () => {
   const [formConfig, setFormConfig] = useState<any>(null)
   const [templateType, setTemplateType] = useState<"official" | "custom">("custom")
   const [templateName, setTemplateName] = useState("")
-  const { setMetadata } = useMetadata()
+  const { setMetadata, getMetadata, queryMetadataHistory } = useMetadata()
 
   const handleConfigChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setConfigInput(e.target.value)
@@ -73,17 +73,35 @@ const DynamicFormTestPage: React.FC = () => {
       const templateId = `template_${Date.now()}`
       const newTemplate = {
         id: templateId,
-        templateId,
-        title: templateName,
+        type: "template",
+        name: templateName,
+        config: formConfig,
+        templateType,
         status: "active",
-        data: {
-          config: formConfig,
-          type: templateType,
-          name: templateName,
-        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
 
-      await setMetadata(`form_${templateId}`, JSON.stringify(newTemplate))
+      await setMetadata(`template_${templateId}`, JSON.stringify(newTemplate))
+
+      // 获取现有模板列表
+      const result = await getMetadata(["templates"])
+      let templates = []
+      if (result.data && result.data.length > 0 && result.data[0].value) {
+        templates = JSON.parse(result.data[0].value)
+      }
+
+      // 添加新模板到列表
+      templates.push({
+        id: templateId,
+        name: templateName,
+        type: templateType,
+        status: "active"
+      })
+
+      // 更新模板列表
+      await setMetadata("templates", JSON.stringify(templates))
+
       message.success("表单模板保存成功")
       setTemplateName("")
     } catch (error) {
