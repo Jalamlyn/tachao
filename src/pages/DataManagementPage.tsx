@@ -1,156 +1,118 @@
-import React, { useState, useEffect, useCallback } from "react"
-import { motion } from "framer-motion"
-import { Button, Tooltip, CardBody } from "@nextui-org/react"
+import React, { useEffect, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { useNavigate } from "react-router-dom"
+import { Button, Tooltip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import CommandInput from "@/components/CommandInput"
-import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadata"
-import ResourceCardList from "@/components/common/ResourceCardList"
-import TabsContainer from "@/components/forms/TabsContainer"
-import chatMoV2 from "@/service/chat/chat-deepseek"
-import message from "@/components/Message"
+import CreateResourceButton from "../components/resource/CreateResourceButton"
+import ResourceCardList from "../components/common/ResourceCardList"
+import TabsContainer from "../components/forms/TabsContainer"
+import CommandInput from "../components/CommandInput"
+import { getAppId } from "@/utils"
 
-const DataManagementPage: React.FC = () => {
-  const [isDataLoaded, setIsDataLoaded] = useState(false)
-  const { fetchForms } = useFormMetadata()
-  const [error, setError] = useState<string | null>(null)
+const FormsPage: React.FC = () => {
+  const navigate = useNavigate()
+  const [selectedAppId, setSelectedAppId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("forms")
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [searchResults, setSearchResults] = useState<any[]>([])
-  const [isSearching, setIsSearching] = useState(false)
+  const [resourceType, setResourceType] = useState<"forms" | "resources" | "reports">("forms")
 
-  const handleLoadData = async () => {
-    try {
-      const forms = await fetchForms()
-      setIsDataLoaded(true)
-      if (forms && forms.length > 0) {
-        setError(null)
-      } else {
-        setError("没有找到可用的数据，请先创建一些表单")
-      }
-    } catch (error) {
-      console.error("Error loading data:", error)
-      setError("加载数据时发生错误")
-    }
-  }
-
-  const handleSearch = async (command: string) => {
-    if (!command.trim() || !isDataLoaded) return
-
-    setIsSearching(true)
-    try {
-      let aiResponse = ""
-      await chatMoV2(
-        [
-          {
-            role: "system",
-            content: "你是一个数据检索助手，根据用户的自然语言描述，返回相关的数据结果。",
-          },
-          {
-            role: "user",
-            content: command,
-          },
-        ],
-        (chunk) => {
-          aiResponse += chunk
-        },
-        () => {},
-        true,
-        0.7
-      )
-
-      try {
-        const results = JSON.parse(aiResponse)
-        setSearchResults(results)
-        message.success(`找到 ${results.length} 条相关记录`)
-      } catch (error) {
-        message.error("搜索结果解析失败")
-        console.error("Search results parsing error:", error)
-      }
-    } catch (error) {
-      message.error("搜索失败，请稍后重试")
-      console.error("Search error:", error)
-    } finally {
-      setIsSearching(false)
-    }
-  }
+  useEffect(() => {
+    setSelectedAppId(getAppId())
+  }, [])
 
   const handleCreateForm = () => {
-    window.open("/forms/create", "_blank")
+    if (!selectedAppId) return
+    window.open(`/forms/create?appId=${selectedAppId}`, "_blank")
   }
 
   const handleViewForm = (formId: string) => {
-    window.open(`/forms/${formId}`, "_blank")
+    if (!selectedAppId) return
+    window.open(`/forms/${formId}?appId=${selectedAppId}`, "_blank")
+  }
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("x-app-id")
+    sessionStorage.removeItem("x-project-id")
+    navigate("/we-chat-login")
   }
 
   const handleCreateReport = () => {
-    window.open("/reports/create", "_blank")
+    if (!selectedAppId) return
+    window.open(`/reports/create?appId=${selectedAppId}`, "_blank")
   }
 
   const handleViewReport = (reportId: string) => {
-    window.open(`/reports/view/${reportId}`, "_blank")
+    if (!selectedAppId) return
+    window.open(`/reports/view/${reportId}?appId=${selectedAppId}`, "_blank")
+  }
+
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.6, -0.05, 0.01, 0.99],
+        staggerChildren: 0.1,
+      },
+    },
+    exit: {
+      opacity: 0,
+      y: -20,
+      transition: {
+        duration: 0.4,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: "easeOut",
+      },
+    },
   }
 
   return (
-    <CardBody className='p-6'>
-      <div className="flex justify-end mb-4">
-        <Tooltip content={isDataLoaded ? "数据已加载" : "加载数据"}>
-          <Button
-            isIconOnly
-            color={isDataLoaded ? "success" : "primary"}
-            variant='flat'
-            onPress={handleLoadData}
-            className='relative overflow-visible bg-white/20 hover:bg-white/30'
-          >
-            <Icon
-              icon={isDataLoaded ? "mdi:check-circle" : "mdi:database-import"}
-              className={`w-5 h-5 ${isDataLoaded ? "text-green-400" : "text-white/90"}`}
-            />
-            {isDataLoaded && (
-              <motion.div
-                className='absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full'
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.3 }}
-              />
-            )}
-          </Button>
-        </Tooltip>
-      </div>
-
-      {error ? (
-        <div className='text-white/90 bg-red-500/20 border border-red-500/30 p-4 rounded-lg mb-4'>
-          {error}
-        </div>
-      ) : (
-        <div className='text-white/80 mb-4'>
-          {isDataLoaded ? "数据已加载完成，您可以开始查询了" : "请先加载数据，然后再开始查询"}
-        </div>
-      )}
-
+    <motion.div
+      variants={containerVariants}
+      initial='hidden'
+      animate='visible'
+      exit='exit'
+      className='w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 max-h-screen overflow-hidden'
+    >
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        variants={itemVariants}
+        className='bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg border border-gray-100'
       >
-        <CommandInput
-          disabled={!isDataLoaded}
-          placeholder={isDataLoaded ? "请输入您的查询需求，例如：查找与某个客户相关的所有单据..." : "请先加载数据..."}
-          onSubmit={handleSearch}
-          isLoading={isSearching}
-        />
+        <div className='flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6'>
+          <div className='flex sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto'>
+            <Button
+              color='danger'
+              onClick={handleLogout}
+              className='bg-gradient-to-r from-red-500 to-red-600 shadow-lg hover:shadow-xl transition-all duration-300'
+              startContent={<Icon icon='mdi:logout' className='w-4 h-4 sm:w-5 sm:h-5' />}
+              size='sm'
+            ></Button>
+          </div>
+        </div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="mt-6"
-      >
-        <TabsContainer activeTab={activeTab} onTabChange={setActiveTab}>
+      <motion.div variants={itemVariants}>
+        <TabsContainer
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          className='bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden'
+        >
           {activeTab === "forms" && (
             <ResourceCardList
-              resourceType="forms"
-              appId={null}
+              resourceType='forms'
+              appId={selectedAppId}
               onView={handleViewForm}
               onCreate={handleCreateForm}
               isRefreshing={isRefreshing}
@@ -159,8 +121,8 @@ const DataManagementPage: React.FC = () => {
           )}
           {activeTab === "reports" && (
             <ResourceCardList
-              resourceType="reports"
-              appId={null}
+              resourceType='reports'
+              appId={selectedAppId}
               onView={handleViewReport}
               onCreate={handleCreateReport}
               isRefreshing={isRefreshing}
@@ -169,54 +131,33 @@ const DataManagementPage: React.FC = () => {
           )}
           {activeTab === "resources" && (
             <ResourceCardList
-              resourceType="resources"
-              appId={null}
-              onView={(id) => window.open(`/resources/view/${id}`, "_blank")}
+              resourceType='resources'
+              appId={selectedAppId}
+              onView={(id) => window.open(`/resources/view/${id}?appId=${selectedAppId}`, "_blank")}
               onCreate={() => {}}
               isRefreshing={isRefreshing}
               setIsRefreshing={setIsRefreshing}
+              createButton={
+                <CreateResourceButton
+                  appId={selectedAppId}
+                  isDisabled={!selectedAppId}
+                  className='w-full sm:w-auto min-w-[200px]'
+                />
+              }
             />
           )}
         </TabsContainer>
       </motion.div>
 
-      {searchResults.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mt-6"
-        >
-          <h3 className="text-lg font-semibold text-white/90 mb-4">搜索结果</h3>
-          <div className="space-y-2">
-            {searchResults.map((result) => (
-              <motion.div
-                key={result.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="bg-white/10 p-4 rounded-lg"
-              >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h4 className="text-white/90">{result.title}</h4>
-                    <p className="text-white/60 text-sm">{result.description}</p>
-                  </div>
-                  <Button
-                    size="sm"
-                    color="primary"
-                    variant="flat"
-                    onClick={() => handleViewForm(result.id)}
-                  >
-                    查看
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      )}
-    </CardBody>
+      <motion.div variants={itemVariants} className="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-2xl px-4">
+        <CommandInput 
+          resourceType={resourceType}
+          onResourceTypeChange={setResourceType}
+          showResourceTypeSwitch={true}
+        />
+      </motion.div>
+    </motion.div>
   )
 }
 
-export default DataManagementPage
+export default FormsPage
