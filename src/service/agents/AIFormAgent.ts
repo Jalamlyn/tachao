@@ -1,4 +1,4 @@
-import chatChunkClaudeHoray from "../chat/chat-chunk-claude-horay"
+import chatChunkClaude from "../chat/chat-chunk-claude-office"
 import { jsonParse, jsonStringify } from "@/utils"
 import message from "@/components/Message"
 
@@ -26,10 +26,10 @@ export class AIFormAgent {
 
   private async processAIResponse(userInput: string, onChunk: (chunk: string) => void): Promise<string> {
     let response = ""
-    await chatChunkClaudeHoray(
+    await chatChunkClaude(
       [
         { role: "system", content: this.systemPrompt },
-        { role: "user", content: userInput }
+        { role: "user", content: userInput },
       ],
       (chunk: string) => {
         response += chunk
@@ -37,12 +37,15 @@ export class AIFormAgent {
       },
       () => {},
       true,
-      0.7
+      0
     )
     return response
   }
 
-  public async createForm(description: string, onChunk: (chunk: string) => void): Promise<{
+  public async createForm(
+    description: string,
+    onChunk: (chunk: string) => void
+  ): Promise<{
     config: any
     title: string
   }> {
@@ -66,7 +69,7 @@ ${description}
     try {
       const response = await this.processAIResponse(prompt, onChunk)
       const match = response.match(/<mo-ai-form>([\s\S]*?)<\/mo-ai-form>/)
-      
+
       if (!match) {
         throw new Error("AI 响应格式错误")
       }
@@ -74,7 +77,7 @@ ${description}
       const formData = jsonParse(match[1])
       return {
         config: formData.config,
-        title: formData.title
+        title: formData.title,
       }
     } catch (error) {
       console.error("Error creating form:", error)
@@ -105,7 +108,7 @@ ${jsonStringify(formsIndex)}
     try {
       const response = await this.processAIResponse(prompt, onChunk)
       const match = response.match(/<mo-ai-result>([\s\S]*?)<\/mo-ai-result>/)
-      
+
       if (!match) {
         throw new Error("AI 响应格式错误")
       }

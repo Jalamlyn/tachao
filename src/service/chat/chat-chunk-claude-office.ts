@@ -60,21 +60,35 @@ async function handleToolUse(toolUse, onChunk) {
   }
 }
 
-export default async function chatChunkClaudeOffice(messages, onChunk, onCancel, isFirst = true, temperature = 0, overFlag = "YES", baseModel = "claude::claude-3-5-sonnet-20240620") {
+export default async function chatChunkClaudeOffice(
+  messages,
+  onChunk,
+  onCancel,
+  isFirst = true,
+  temperature = 0,
+  overFlag = "YES",
+  baseModel = "claude::claude-3-5-sonnet-20241022"
+) {
   const [provider, model] = baseModel.split("::")
   const modelSupplierData = localDB.getItem("model-supplier-data") || []
-  const supplierInfo = modelSupplierData.find((supplier) => supplier.id === provider)
+  const supplierInfo = modelSupplierData.find((supplier) => supplier.id === provider) || "claude"
 
   if (!supplierInfo) {
     throw new Error(`未找到服务商信息：${provider}`)
   }
 
-  const apiKey = supplierInfo.apiKey
-  const apiEndPoint = supplierInfo.endpoint || "https://api.anthropic.com/v1/messages"
+  const apiKey =
+    supplierInfo.apiKey ||
+    "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"
+  // const apiEndPoint = supplierInfo.endpoint || "https://api.anthropic.com/v1/messages"
+  const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-claude-office"
 
   let _messages
   if (isFirst) {
     _messages = messages.map((msg, index) => {
+      if (!msg.images) {
+        msg.images = []
+      }
       if (msg.role === "system") {
         return msg
       } else {
@@ -118,17 +132,19 @@ export default async function chatChunkClaudeOffice(messages, onChunk, onCancel,
     temperature,
     max_tokens: 8192,
     stream: true,
-    tools: [
-      {
-        name: "download_template",
-        description: "Download template",
-        input_schema: {
-          type: "object",
-          properties: {},
-        },
-      },
-    ],
-    tool_choice: { type: "auto" },
+    apiKey,
+    cid: "Hx9Kp2Qm7Zf3Lw5Ry8Tj6",
+    // tools: [
+    //   {
+    //     name: "download_template",
+    //     description: "Download template",
+    //     input_schema: {
+    //       type: "object",
+    //       properties: {},
+    //     },
+    //   },
+    // ],
+    // tool_choice: { type: "auto" },
   }
 
   let controller = new AbortController()

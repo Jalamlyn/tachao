@@ -284,4 +284,5 @@ export const memHandle = (chatHistory) => {
   return memoryString
 }
 
-export const getAppId = () => new URL(location.href).searchParams.get("appId") || import.meta.env.VITE_SHATA_AI_APP_ID
+export const getAppId = () =>
+  new URL(location.href).searchParams.get("appId") || import.meta.env.VITE_SHATA_AI_APP_ID || "1850871292053880834"

@@ -37,7 +37,7 @@ export interface MetadataDetail<T = any> {
 const generateMetadataId = (type: string, customId?: string): string => {
   // 如果提供了自定义ID，先移除可能存在的type前缀
   if (customId) {
-    const cleanId = customId.replace(new RegExp(`^${type}_`), '')
+    const cleanId = customId.replace(new RegExp(`^${type}_`), "")
     return `${type}_${cleanId}`
   }
   // 生成新的ID
@@ -74,206 +74,227 @@ export function useMetadata<T = any>(type: string) {
   /**
    * 获取详情数据
    */
-  const getDetail = useCallback(async (id: string) => {
-    try {
-      const result = await getMetadata([`${type}_${id}`])
-      if (result.data?.[0]?.value) {
-        return {
-          ...jsonParse(result.data[0].value),
-          versionCode: result.data[0].versionCode
-        } as MetadataDetail<T>
+  const getDetail = useCallback(
+    async (id: string) => {
+      try {
+        const result = await getMetadata([`${id}`])
+        if (result.data?.[0]?.value) {
+          return {
+            ...jsonParse(result.data[0].value),
+            versionCode: result.data[0].versionCode,
+          } as MetadataDetail<T>
+        }
+        return null
+      } catch (error) {
+        console.error(`Error getting ${type} detail:`, error)
+        setError(`Failed to get ${type} detail`)
+        return null
       }
-      return null
-    } catch (error) {
-      console.error(`Error getting ${type} detail:`, error)
-      setError(`Failed to get ${type} detail`)
-      return null
-    }
-  }, [type])
+    },
+    [type]
+  )
 
   /**
    * 保存索引
    */
-  const saveIndex = useCallback(async (indexes: MetadataIndex[]) => {
-    try {
-      await setMetadata(`${type}_index`, jsonStringify(indexes))
-      return true
-    } catch (error) {
-      console.error(`Error saving ${type} index:`, error)
-      setError(`Failed to save ${type} index`)
-      return false
-    }
-  }, [type])
+  const saveIndex = useCallback(
+    async (indexes: MetadataIndex[]) => {
+      try {
+        await setMetadata(`${type}_index`, jsonStringify(indexes))
+        return true
+      } catch (error) {
+        console.error(`Error saving ${type} index:`, error)
+        setError(`Failed to save ${type} index`)
+        return false
+      }
+    },
+    [type]
+  )
 
   /**
    * 保存详情
    */
-  const saveDetail = useCallback(async (detail: MetadataDetail<T>) => {
-    try {
-      await setMetadata(`${type}_${detail.id}`, jsonStringify(detail))
-      return true
-    } catch (error) {
-      console.error(`Error saving ${type} detail:`, error)
-      setError(`Failed to save ${type} detail`)
-      return false
-    }
-  }, [type])
+  const saveDetail = useCallback(
+    async (detail: MetadataDetail<T>) => {
+      try {
+        await setMetadata(`${detail.id}`, jsonStringify(detail))
+        return true
+      } catch (error) {
+        console.error(`Error saving ${type} detail:`, error)
+        setError(`Failed to save ${type} detail`)
+        return false
+      }
+    },
+    [type]
+  )
 
   /**
    * 创建新项目
    */
-  const create = useCallback(async (data: Partial<MetadataDetail<T>>) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const currentUser = await getCurrentAccountInfo()
-      const now = new Date().toISOString()
-      
-      // 生成规范化的ID
-      const normalizedId = generateMetadataId(type, data.id)
-      
-      // 构建完整的详情数据
-      const detail: MetadataDetail<T> = {
-        id: normalizedId,
-        type,
-        title: data.title || '',
-        status: data.status || 'draft',
-        data: data.data as T,
-        versionCode: 1,
-        modifiedBy: currentUser.name || currentUser.email || 'Unknown',
-        createdAt: now,
-        updatedAt: now,
-        ...data,
-        id: normalizedId, // 确保使用规范化的ID
+  const create = useCallback(
+    async (data: Partial<MetadataDetail<T>>) => {
+      setLoading(true)
+      setError(null)
+      try {
+        const currentUser = await getCurrentAccountInfo()
+        const now = new Date().toISOString()
+
+        // 生成规范化的ID
+        const normalizedId = generateMetadataId(type, data.id)
+
+        // 构建完整的详情数据
+        const detail: MetadataDetail<T> = {
+          id: normalizedId,
+          type,
+          title: data.title || "",
+          status: data.status || "draft",
+          data: data.data as T,
+          versionCode: 1,
+          modifiedBy: currentUser.name || currentUser.email || "Unknown",
+          createdAt: now,
+          updatedAt: now,
+          ...data,
+          id: normalizedId, // 确保使用规范化的ID
+        }
+
+        // 保存详情
+        const detailSaved = await saveDetail(detail)
+        if (!detailSaved) throw new Error("Failed to save detail")
+
+        // 更新索引
+        const indexes = await getIndexes()
+        const newIndex: MetadataIndex = {
+          id: normalizedId,
+          type,
+          title: detail.title,
+          status: detail.status,
+          updatedAt: now,
+        }
+        indexes.push(newIndex)
+        const indexSaved = await saveIndex(indexes)
+        if (!indexSaved) throw new Error("Failed to save index")
+
+        setItems((prev) => [...prev, detail])
+        return detail
+      } catch (error) {
+        console.error(`Error creating ${type}:`, error)
+        setError(`Failed to create ${type}`)
+        return null
+      } finally {
+        setLoading(false)
       }
-
-      // 保存详情
-      const detailSaved = await saveDetail(detail)
-      if (!detailSaved) throw new Error('Failed to save detail')
-
-      // 更新索引
-      const indexes = await getIndexes()
-      const newIndex: MetadataIndex = {
-        id: normalizedId,
-        type,
-        title: detail.title,
-        status: detail.status,
-        updatedAt: now
-      }
-      indexes.push(newIndex)
-      const indexSaved = await saveIndex(indexes)
-      if (!indexSaved) throw new Error('Failed to save index')
-
-      setItems(prev => [...prev, detail])
-      return detail
-    } catch (error) {
-      console.error(`Error creating ${type}:`, error)
-      setError(`Failed to create ${type}`)
-      return null
-    } finally {
-      setLoading(false)
-    }
-  }, [type, saveDetail, saveIndex, getIndexes])
+    },
+    [type, saveDetail, saveIndex, getIndexes]
+  )
 
   /**
    * 更新项目
    */
-  const update = useCallback(async (id: string, data: Partial<MetadataDetail<T>>) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const currentDetail = await getDetail(id)
-      if (!currentDetail) throw new Error('Item not found')
+  const update = useCallback(
+    async (id: string, data: Partial<MetadataDetail<T>>) => {
+      setLoading(true)
+      setError(null)
+      try {
+        const currentDetail = await getDetail(id)
+        if (!currentDetail) throw new Error("Item not found")
 
-      const currentUser = await getCurrentAccountInfo()
-      const now = new Date().toISOString()
+        const currentUser = await getCurrentAccountInfo()
+        const now = new Date().toISOString()
 
-      // 构建更新后的详情数据
-      const updatedDetail: MetadataDetail<T> = {
-        ...currentDetail,
-        ...data,
-        updatedAt: now,
-        modifiedBy: currentUser.name || currentUser.email || 'Unknown'
-      }
-
-      // 保存详情
-      const detailSaved = await saveDetail(updatedDetail)
-      if (!detailSaved) throw new Error('Failed to save detail')
-
-      // 更新索引
-      const indexes = await getIndexes()
-      const index = indexes.findIndex(idx => idx.id === id)
-      if (index !== -1) {
-        indexes[index] = {
-          id,
-          type,
-          title: updatedDetail.title,
-          status: updatedDetail.status,
-          updatedAt: now
+        // 构建更新后的详情数据
+        const updatedDetail: MetadataDetail<T> = {
+          ...currentDetail,
+          ...data,
+          updatedAt: now,
+          modifiedBy: currentUser.name || currentUser.email || "Unknown",
         }
-        const indexSaved = await saveIndex(indexes)
-        if (!indexSaved) throw new Error('Failed to save index')
-      }
 
-      setItems(prev => prev.map(item => item.id === id ? updatedDetail : item))
-      return updatedDetail
-    } catch (error) {
-      console.error(`Error updating ${type}:`, error)
-      setError(`Failed to update ${type}`)
-      return null
-    } finally {
-      setLoading(false)
-    }
-  }, [type, getDetail, saveDetail, getIndexes, saveIndex])
+        // 保存详情
+        const detailSaved = await saveDetail(updatedDetail)
+        if (!detailSaved) throw new Error("Failed to save detail")
+
+        // 更新索引
+        const indexes = await getIndexes()
+        const index = indexes.findIndex((idx) => idx.id === id)
+        if (index !== -1) {
+          indexes[index] = {
+            id,
+            type,
+            title: updatedDetail.title,
+            status: updatedDetail.status,
+            updatedAt: now,
+          }
+          const indexSaved = await saveIndex(indexes)
+          if (!indexSaved) throw new Error("Failed to save index")
+        }
+
+        setItems((prev) => prev.map((item) => (item.id === id ? updatedDetail : item)))
+        return updatedDetail
+      } catch (error) {
+        console.error(`Error updating ${type}:`, error)
+        setError(`Failed to update ${type}`)
+        return null
+      } finally {
+        setLoading(false)
+      }
+    },
+    [type, getDetail, saveDetail, getIndexes, saveIndex]
+  )
 
   /**
    * 删除项目
    */
-  const remove = useCallback(async (id: string) => {
-    setLoading(true)
-    setError(null)
-    try {
-      // 删除详情
-      await deleteMetadata({ name: `${type}_${id}` })
+  const remove = useCallback(
+    async (id: string) => {
+      setLoading(true)
+      setError(null)
+      try {
+        // 删除详情
+        await deleteMetadata({ name: `${id}` })
 
-      // 更新索引
-      const indexes = await getIndexes()
-      const filteredIndexes = indexes.filter(idx => idx.id !== id)
-      await saveIndex(filteredIndexes)
+        // 更新索引
+        const indexes = await getIndexes()
+        const filteredIndexes = indexes.filter((idx) => idx.id !== id)
+        await saveIndex(filteredIndexes)
 
-      setItems(prev => prev.filter(item => item.id !== id))
-      return true
-    } catch (error) {
-      console.error(`Error deleting ${type}:`, error)
-      setError(`Failed to delete ${type}`)
-      return false
-    } finally {
-      setLoading(false)
-    }
-  }, [type, getIndexes, saveIndex])
+        setItems((prev) => prev.filter((item) => item.id !== id))
+        return true
+      } catch (error) {
+        console.error(`Error deleting ${type}:`, error)
+        setError(`Failed to delete ${type}`)
+        return false
+      } finally {
+        setLoading(false)
+      }
+    },
+    [type, getIndexes, saveIndex]
+  )
 
   /**
    * 获取历史记录
    */
-  const getHistory = useCallback(async (id: string) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const history = await queryMetadataHistory({ names: [`${type}_${id}`] })
-      return history.data.map(item => ({
-        updatedAt: item.updatedAt,
-        versionCode: item.versionCode,
-        modifiedBy: jsonParse(item.value).modifiedBy || 'Unknown',
-        value: item.value
-      }))
-    } catch (error) {
-      console.error(`Error getting ${type} history:`, error)
-      setError(`Failed to get ${type} history`)
-      return []
-    } finally {
-      setLoading(false)
-    }
-  }, [type])
+  const getHistory = useCallback(
+    async (id: string) => {
+      setLoading(true)
+      setError(null)
+      try {
+        const history = await queryMetadataHistory({ names: [`${id}`] })
+        return history.data.map((item) => ({
+          updatedAt: item.updatedAt,
+          versionCode: item.versionCode,
+          modifiedBy: jsonParse(item.value).modifiedBy || "Unknown",
+          value: item.value,
+        }))
+      } catch (error) {
+        console.error(`Error getting ${type} history:`, error)
+        setError(`Failed to get ${type} history`)
+        return []
+      } finally {
+        setLoading(false)
+      }
+    },
+    [type]
+  )
 
   /**
    * 加载列表
@@ -283,9 +304,7 @@ export function useMetadata<T = any>(type: string) {
     setError(null)
     try {
       const indexes = await getIndexes()
-      const details = await Promise.all(
-        indexes.map(index => getDetail(index.id))
-      )
+      const details = await Promise.all(indexes.map((index) => getDetail(index.id)))
       const validDetails = details.filter((d): d is MetadataDetail<T> => d !== null)
       setItems(validDetails)
       return validDetails
@@ -301,58 +320,59 @@ export function useMetadata<T = any>(type: string) {
   /**
    * 复制项目
    */
-  const copy = useCallback(async (id: string, options: { 
-    resetStatus?: boolean
-    resetDates?: boolean
-    suffix?: string
-    onBeforeCopy?: (detail: MetadataDetail<T>) => Promise<MetadataDetail<T>>
-  } = {}) => {
-    const {
-      resetStatus = true,
-      resetDates = true,
-      suffix = '_copy',
-      onBeforeCopy
-    } = options
+  const copy = useCallback(
+    async (
+      id: string,
+      options: {
+        resetStatus?: boolean
+        resetDates?: boolean
+        suffix?: string
+        onBeforeCopy?: (detail: MetadataDetail<T>) => Promise<MetadataDetail<T>>
+      } = {}
+    ) => {
+      const { resetStatus = true, resetDates = true, suffix = "_copy", onBeforeCopy } = options
 
-    setLoading(true)
-    setError(null)
-    try {
-      // 获取原始数据
-      const originalDetail = await getDetail(id)
-      if (!originalDetail) throw new Error('Original item not found')
+      setLoading(true)
+      setError(null)
+      try {
+        // 获取原始数据
+        const originalDetail = await getDetail(id)
+        if (!originalDetail) throw new Error("Original item not found")
 
-      // 创建新数据
-      let newDetail: MetadataDetail<T> = {
-        ...originalDetail,
-        id: generateMetadataId(type),
-        title: `${originalDetail.title}${suffix}`,
-        status: resetStatus ? 'draft' : originalDetail.status,
+        // 创建新数据
+        let newDetail: MetadataDetail<T> = {
+          ...originalDetail,
+          id: generateMetadataId(type),
+          title: `${originalDetail.title}${suffix}`,
+          status: resetStatus ? "draft" : originalDetail.status,
+        }
+
+        if (resetDates) {
+          const now = new Date().toISOString()
+          newDetail.createdAt = now
+          newDetail.updatedAt = now
+        }
+
+        // 执行复制前的钩子
+        if (onBeforeCopy) {
+          newDetail = await onBeforeCopy(newDetail)
+        }
+
+        // 创建新项目
+        const result = await create(newDetail)
+        if (!result) throw new Error("Failed to create copy")
+
+        return result
+      } catch (error) {
+        console.error(`Error copying ${type}:`, error)
+        setError(`Failed to copy ${type}`)
+        return null
+      } finally {
+        setLoading(false)
       }
-
-      if (resetDates) {
-        const now = new Date().toISOString()
-        newDetail.createdAt = now
-        newDetail.updatedAt = now
-      }
-
-      // 执行复制前的钩子
-      if (onBeforeCopy) {
-        newDetail = await onBeforeCopy(newDetail)
-      }
-
-      // 创建新项目
-      const result = await create(newDetail)
-      if (!result) throw new Error('Failed to create copy')
-
-      return result
-    } catch (error) {
-      console.error(`Error copying ${type}:`, error)
-      setError(`Failed to copy ${type}`)
-      return null
-    } finally {
-      setLoading(false)
-    }
-  }, [type, getDetail, create])
+    },
+    [type, getDetail, create]
+  )
 
   return {
     items,
@@ -364,6 +384,6 @@ export function useMetadata<T = any>(type: string) {
     remove,
     getDetail,
     getHistory,
-    copy
+    copy,
   }
 }
