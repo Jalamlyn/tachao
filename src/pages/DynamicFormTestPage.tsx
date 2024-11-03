@@ -2,14 +2,13 @@ import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { useToast } from "@/components/ui/use-toast"
+import message from "@/components/Message"
 import DynamicForm from "@/components/common/DynamicForm"
 import { motion } from "framer-motion"
 
 const DynamicFormTestPage: React.FC = () => {
   const [configInput, setConfigInput] = useState("")
   const [formConfig, setFormConfig] = useState<any>(null)
-  const { toast } = useToast()
 
   const handleConfigChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setConfigInput(e.target.value)
@@ -23,20 +22,13 @@ const DynamicFormTestPage: React.FC = () => {
       setFormConfig(config)
     } catch (error) {
       console.error("配置解析错误:", error)
-      toast({
-        title: "配置解析错误",
-        description: "请检查输入的配置格式是否正确",
-        variant: "destructive",
-      })
+      message.error("请检查输入的配置格式是否正确")
     }
   }
 
   const handleSubmit = async (values: any) => {
     console.log("表单提交的值:", values)
-    toast({
-      title: "表单提交成功",
-      description: "表单数据已打印到控制台",
-    })
+    message.success("表单数据已打印到控制台")
   }
 
   const containerVariants = {
