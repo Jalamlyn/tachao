@@ -49,13 +49,32 @@ ${DynamicFormConfigStr}
     return response
   }
 
+  private async validateIntent(action: string, input: string): Promise<boolean> {
+    const intent = await this.analyzeIntent(input)
+    if (intent === "unsupported") {
+      message.error(`不支持的指令: ${input}`)
+      return false
+    }
+    if (intent !== action) {
+      message.error(`当前操作需要 ${action} 类型的指令，但收到的是 ${intent} 类型的指令`)
+      return false
+    }
+    return true
+  }
+
   public async createForm(
     description: string,
     onChunk: (chunk: string) => void
   ): Promise<{
     config: DynamicFormConfig
     title: string
-  }> {
+  } | null> {
+    // 验证意图
+    const isValid = await this.validateIntent("create", description)
+    if (!isValid) {
+      return null
+    }
+
     const prompt = `请根据以下描述生成一个表单配置代码：
 ${description}
 
@@ -81,7 +100,6 @@ export default {
         throw new Error("解析表单配置失败")
       }
 
-      // 从解析后的配置中提取 title 和 config
       const { title, config } = parsedConfig
 
       if (!title || !config) {
@@ -103,6 +121,12 @@ export default {
     formsIndex: FormIndex[],
     onChunk: (chunk: string) => void
   ): Promise<FormIndex[]> {
+    // 验证意图
+    const isValid = await this.validateIntent("search", query)
+    if (!isValid) {
+      return []
+    }
+
     const prompt = `请根据用户的查询条件"${query}"，在以下表单索引中查找匹配的表单：
 ${jsonStringify(formsIndex)}
 
