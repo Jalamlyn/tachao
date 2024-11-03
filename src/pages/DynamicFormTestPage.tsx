@@ -21,6 +21,7 @@ const DynamicFormTestPage: React.FC = () => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("")
   const [aiDescription, setAiDescription] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
+  const [generatingCode, setGeneratingCode] = useState("") // 新增状态用于存储生成过程
   const [aiGeneratedConfig, setAiGeneratedConfig] = useState<{
     config: DynamicFormConfig;
     title: string;
@@ -57,9 +58,11 @@ const DynamicFormTestPage: React.FC = () => {
     }
 
     setIsGenerating(true)
+    setGeneratingCode("") // 重置生成代码
     try {
       const result = await AIFormAgent.createForm(aiDescription, (chunk) => {
         console.log("AI Response Chunk:", chunk)
+        setGeneratingCode(prev => prev + chunk) // 实时更新生成的代码
       })
 
       if (result) {
@@ -228,6 +231,23 @@ const DynamicFormTestPage: React.FC = () => {
                   </Button>
                 </div>
               </div>
+
+              {/* AI 生成代码预览区域 */}
+              {generatingCode && (
+                <div className='space-y-2'>
+                  <label className='text-sm font-medium'>AI 生成过程</label>
+                  <div className='relative'>
+                    <pre className='p-4 bg-gray-900 text-gray-100 rounded-lg overflow-auto max-h-[400px] font-mono text-sm'>
+                      <code>{generatingCode}</code>
+                    </pre>
+                    {isGenerating && (
+                      <div className='absolute bottom-4 right-4'>
+                        <Icon icon="mdi:loading" className="w-5 h-5 animate-spin text-blue-500" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* 模板选择 */}
               <div className='space-y-2'>
