@@ -10,13 +10,21 @@ import { parseFormConfig } from "@/utils/codeParser"
 import { warehouseReceiptConfig } from "./mock/warehouse-receipt"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import { Icon } from "@iconify/react"
+import AIFormAgent from "@/service/agents/AIFormAgent"
+import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 
 const DynamicFormTestPage: React.FC = () => {
   const [configInput, setConfigInput] = useState("")
-  const [formConfig, setFormConfig] = useState<any>(null)
+  const [formConfig, setFormConfig] = useState<DynamicFormConfig | null>(null)
   const [templateType, setTemplateType] = useState<"official" | "custom">("custom")
   const [templateName, setTemplateName] = useState("")
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("")
+  const [aiDescription, setAiDescription] = useState("")
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [aiGeneratedConfig, setAiGeneratedConfig] = useState<{
+    config: DynamicFormConfig;
+    title: string;
+  } | null>(null)
   
   // 使用 useMetadata hook 来管理模板
   const { 
@@ -25,7 +33,7 @@ const DynamicFormTestPage: React.FC = () => {
     create: createTemplate,
     getDetail: getTemplateDetail
   } = useMetadata<{
-    config: any
+    config: DynamicFormConfig
     type: "official" | "custom"
     name: string
   }>("template")
@@ -36,6 +44,36 @@ const DynamicFormTestPage: React.FC = () => {
 
   const handleConfigChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setConfigInput(e.target.value)
+  }
+
+  const handleAIDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setAiDescription(e.target.value)
+  }
+
+  const handleGenerateAIForm = async () => {
+    if (!aiDescription.trim()) {
+      message.error("请输入表单描述")
+      return
+    }
+
+    setIsGenerating(true)
+    try {
+      const result = await AIFormAgent.createForm(aiDescription, (chunk) => {
+        console.log("AI Response Chunk:", chunk)
+      })
+
+      if (result) {
+        setAiGeneratedConfig(result)
+        setFormConfig(result.config)
+        setTemplateName(result.title)
+        message.success("AI 生成表单成功")
+      }
+    } catch (error) {
+      console.error("AI 生成表单失败:", error)
+      message.error("AI 生成表单失败，请重试")
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   const handleParseConfig = async () => {
@@ -166,6 +204,31 @@ const DynamicFormTestPage: React.FC = () => {
               <CardTitle>动态表单测试</CardTitle>
             </CardHeader>
             <CardContent className='space-y-4'>
+              {/* AI 生成表单部分 */}
+              <div className='space-y-2'>
+                <label className='text-sm font-medium'>AI 生成表单</label>
+                <div className='flex gap-2'>
+                  <Textarea
+                    value={aiDescription}
+                    onChange={handleAIDescriptionChange}
+                    placeholder='请输入表单描述，AI 将根据描述生成表单配置...'
+                    className='flex-1'
+                  />
+                  <Button 
+                    onClick={handleGenerateAIForm}
+                    disabled={isGenerating}
+                    className='self-start gap-2'
+                  >
+                    {isGenerating ? (
+                      <Icon icon="mdi:loading" className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Icon icon="mdi:robot" className="w-5 h-5" />
+                    )}
+                    AI 生成
+                  </Button>
+                </div>
+              </div>
+
               {/* 模板选择 */}
               <div className='space-y-2'>
                 <label className='text-sm font-medium'>选择模板</label>
