@@ -11,18 +11,16 @@ import DynamicProcessConfirm from "./components/DynamicProcessConfirm"
 import { useReactToPrint } from "react-to-print"
 import message from "@/components/Message"
 import OrderNumberField from "../OrderNumberField"
+import { useMetadata } from "../../from-templates/hook/useMetadata"
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
   config,
-  initialValues,
-  onSubmit,
-  onValuesChange,
-  isEditable = true,
   id,
 }) => {
-  const { form, handleSubmit } = useDynamicForm(config, initialValues, onValuesChange)
+  const { form, loading } = useDynamicForm(config)
   const printRef = useRef<HTMLDivElement>(null)
   const [isEditMode, setIsEditMode] = useState(false)
+  const { create, update } = useMetadata('form')
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
@@ -48,27 +46,44 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (onSubmit) {
-      try {
-        // 执行表单验证
-        const result = await form.trigger()
-        if (!result) {
-          const errors = Object.entries(form.formState.errors)
-            .map(([key, error]) => error.message)
-            .filter(Boolean)
-          
-          if (errors.length > 0) {
-            message.error(errors.join('\n'))
-            return
-          }
+    try {
+      // 执行表单验证
+      const result = await form.trigger()
+      if (!result) {
+        const errors = Object.entries(form.formState.errors)
+          .map(([key, error]) => error.message)
+          .filter(Boolean)
+        
+        if (errors.length > 0) {
+          message.error(errors.join('\n'))
+          return
         }
-
-        const values = form.getValues()
-        await onSubmit(values)
-      } catch (error) {
-        console.error("Form submission error:", error)
-        message.error("提交表单失败")
       }
+
+      const values = form.getValues()
+
+      if (id) {
+        // 更新表单
+        await update(id, {
+          ...values,
+          id,
+          updatedAt: new Date().toISOString()
+        })
+        message.success("表单更新成功")
+        setIsEditMode(false)
+      } else {
+        // 创建新表单
+        await create({
+          ...values,
+          id: Date.now().toString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        })
+        message.success("表单创建成功")
+      }
+    } catch (error) {
+      console.error("Form submission error:", error)
+      message.error("提交表单失败")
     }
   }
 
@@ -76,37 +91,22 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     setIsEditMode(!isEditMode)
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center p-8'>
+        <Icon icon='mdi:loading' className='w-8 h-8 animate-spin' />
+      </div>
+    )
   }
 
-  const sectionVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 15,
-      },
-    },
-  }
-
-  const currentIsEditable = id ? isEditMode : isEditable
+  const currentIsEditable = id ? isEditMode : true
 
   return (
     <Form {...form}>
       <motion.form
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
         onSubmit={handleFormSubmit}
         className="space-y-8"
       >
@@ -244,7 +244,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               )}
 
               {/* Submit Button */}
-              {currentIsEditable && onSubmit && (
+              {currentIsEditable && (
                 <Button type="submit" className="gap-2">
                   <Icon icon="mdi:content-save" className="w-4 h-4" />
                   {config.form?.submitButton?.text || (id ? "保存" : "创建")}
@@ -277,6 +277,19 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       </motion.form>
     </Form>
   )
+}
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15,
+    },
+  },
 }
 
 export default DynamicForm

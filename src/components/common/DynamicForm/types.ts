@@ -215,19 +215,9 @@ export interface DynamicFormConfig {
       position: "left" | "center" | "right"
     }
   }
-  // 新增: 表单编号字段配置
-  orderNumberField?: {
-    prefix?: string
-    fieldName?: string
-    label?: string
-  }
 }
 
 export interface DynamicFormProps {
   config: DynamicFormConfig
-  initialValues?: any
-  onSubmit?: (values: any) => Promise<void>
-  onValuesChange?: (changedValues: any, allValues: any) => void
-  isEditable?: boolean
-  id?: string // 新增: 用于区分编辑/创建模式
+  id?: string
 }
