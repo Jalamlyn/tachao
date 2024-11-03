@@ -12,6 +12,9 @@ import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import { Icon } from "@iconify/react"
 import AIFormAgent from "@/service/agents/AIFormAgent"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
+import { localDB } from "@/utils/localDB"
+
+const LAST_GENERATED_KEY = "dynamic-form-last-generated"
 
 const DynamicFormTestPage: React.FC = () => {
   const [configInput, setConfigInput] = useState("")
@@ -23,16 +26,16 @@ const DynamicFormTestPage: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatingCode, setGeneratingCode] = useState("") // 新增状态用于存储生成过程
   const [aiGeneratedConfig, setAiGeneratedConfig] = useState<{
-    config: DynamicFormConfig;
-    title: string;
+    config: DynamicFormConfig
+    title: string
   } | null>(null)
-  
+
   // 使用 useMetadata hook 来管理模板
-  const { 
+  const {
     items: templates,
     load: loadTemplates,
     create: createTemplate,
-    getDetail: getTemplateDetail
+    getDetail: getTemplateDetail,
   } = useMetadata<{
     config: DynamicFormConfig
     type: "official" | "custom"
@@ -62,13 +65,19 @@ const DynamicFormTestPage: React.FC = () => {
     try {
       const result = await AIFormAgent.createForm(aiDescription, (chunk) => {
         console.log("AI Response Chunk:", chunk)
-        setGeneratingCode(prev => prev + chunk) // 实时更新生成的代码
+        setGeneratingCode((prev) => prev + chunk) // 实时更新生成的代码
       })
 
       if (result) {
         setAiGeneratedConfig(result)
         setFormConfig(result.config)
         setTemplateName(result.title)
+        // 保存最新生成的结果到本地缓存
+        localDB.setItem(LAST_GENERATED_KEY, {
+          config: result.config,
+          title: result.title,
+          timestamp: new Date().toISOString(),
+        })
         message.success("AI 生成表单成功")
       }
     } catch (error) {
@@ -76,6 +85,26 @@ const DynamicFormTestPage: React.FC = () => {
       message.error("AI 生成表单失败，请重试")
     } finally {
       setIsGenerating(false)
+    }
+  }
+
+  const handleLoadLastGenerated = () => {
+    try {
+      const lastGenerated = localDB.getItem(LAST_GENERATED_KEY)
+      if (lastGenerated) {
+        setAiGeneratedConfig({
+          config: lastGenerated.config,
+          title: lastGenerated.title,
+        })
+        setFormConfig(lastGenerated.config)
+        setTemplateName(lastGenerated.title)
+        message.success("已加载最近一次生成的结果")
+      } else {
+        message.info("没有找到最近生成的结果")
+      }
+    } catch (error) {
+      console.error("加载最近生成结果失败:", error)
+      message.error("加载最近生成结果失败")
     }
   }
 
@@ -135,11 +164,11 @@ const DynamicFormTestPage: React.FC = () => {
           config: formConfig,
           type: templateType,
           name: templateName,
-        }
+        },
       }
 
       const result = await createTemplate(templateData)
-      
+
       if (result) {
         message.success("表单模板保存成功")
         setTemplateName("")
@@ -217,18 +246,24 @@ const DynamicFormTestPage: React.FC = () => {
                     placeholder='请输入表单描述，AI 将根据描述生成表单配置...'
                     className='flex-1'
                   />
-                  <Button 
-                    onClick={handleGenerateAIForm}
-                    disabled={isGenerating}
-                    className='self-start gap-2'
-                  >
-                    {isGenerating ? (
-                      <Icon icon="mdi:loading" className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <Icon icon="mdi:robot" className="w-5 h-5" />
-                    )}
-                    AI 生成
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    <Button onClick={handleGenerateAIForm} disabled={isGenerating} className='self-start gap-2'>
+                      {isGenerating ? (
+                        <Icon icon='mdi:loading' className='w-5 h-5 animate-spin' />
+                      ) : (
+                        <Icon icon='mdi:robot' className='w-5 h-5' />
+                      )}
+                      AI 生成
+                    </Button>
+                    <Button 
+                      onClick={handleLoadLastGenerated} 
+                      variant="outline" 
+                      className='self-start gap-2'
+                    >
+                      <Icon icon='mdi:history' className='w-5 h-5' />
+                      加载最近生成
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -242,7 +277,7 @@ const DynamicFormTestPage: React.FC = () => {
                     </pre>
                     {isGenerating && (
                       <div className='absolute bottom-4 right-4'>
-                        <Icon icon="mdi:loading" className="w-5 h-5 animate-spin text-blue-500" />
+                        <Icon icon='mdi:loading' className='w-5 h-5 animate-spin text-blue-500' />
                       </div>
                     )}
                   </div>
@@ -253,12 +288,14 @@ const DynamicFormTestPage: React.FC = () => {
               <div className='space-y-2'>
                 <label className='text-sm font-medium'>选择模板</label>
                 <Select
-                  label="选择已保存的模板"
-                  placeholder="请选择模板"
+                  label='选择已保存的模板'
+                  placeholder='请选择模板'
                   value={selectedTemplateId}
                   onChange={(e) => handleTemplateChange(e.target.value)}
                 >
-                  <SelectItem key="" value="">不使用模板</SelectItem>
+                  <SelectItem key='' value=''>
+                    不使用模板
+                  </SelectItem>
                   {templates.map((template) => (
                     <SelectItem key={template.id} value={template.id}>
                       {template.title} ({template.data.type})
