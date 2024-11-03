@@ -2,7 +2,7 @@ import React from "react"
 import { UseFormReturn } from "react-hook-form"
 import { FormField, FormControl, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { Button } from "@nextui-org/react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
@@ -86,7 +86,7 @@ const DateInput: React.FC<{ field: any }> = ({ field }) => (
   <Popover>
     <PopoverTrigger asChild>
       <Button
-        variant={"outline"}
+        variant="bordered"
         className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
         disabled={field.disabled}
       >

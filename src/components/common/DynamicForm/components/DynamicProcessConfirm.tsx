@@ -1,7 +1,7 @@
 import React from "react"
 import { UseFormReturn } from "react-hook-form"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { format } from "date-fns"
 import { ProcessStep } from "../types"
@@ -113,13 +113,22 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
                 {isEditable && (
                   <div>
                     {!isConfirmed ? (
-                      <Button onClick={() => handleConfirm(step)} variant='outline' size='sm' className='gap-2'>
-                        <Icon icon='mdi:check' className='w-4 h-4' />
+                      <Button
+                        onClick={() => handleConfirm(step)}
+                        variant="bordered"
+                        size="sm"
+                        startContent={<Icon icon='mdi:check' className='w-4 h-4' />}
+                      >
                         {step.confirmation?.confirmButtonText || '确认'}
                       </Button>
                     ) : (
-                      <Button onClick={() => handleCancel(step)} variant='outline' size='sm' className='gap-2'>
-                        <Icon icon='mdi:close' className='w-4 h-4' />
+                      <Button
+                        onClick={() => handleCancel(step)}
+                        variant="bordered"
+                        size="sm"
+                        color="danger"
+                        startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
+                      >
                         {step.confirmation?.cancelButtonText || '取消确认'}
                       </Button>
                     )}
