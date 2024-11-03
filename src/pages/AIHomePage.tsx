@@ -33,6 +33,11 @@ const AIHomePage: React.FC = () => {
       title: "数据分析",
       icon: "mdi:chart-box",
     },
+    {
+      key: "create",
+      title: "智能开单",
+      icon: "mdi:file-document-plus",
+    },
   ]
 
   return (
