@@ -1,178 +1,211 @@
-import React, { useState, useEffect, useCallback } from "react"
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Textarea,
-  ScrollShadow,
-  Spinner,
-  Skeleton,
-  Tooltip,
-} from "@nextui-org/react"
-import { Icon } from "@iconify/react"
+import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import chatMoV2 from "@/service/chat/chat-deepseek"
-import MessageCard from "@/components/MessageCard"
-import mo2 from "../../public/assets/mo-2.png"
-import user from "../../public/assets/user.png"
-import { getMetadata, queryMetadataHistory } from "@/service/apis/api"
-import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadata"
+import { useNavigate } from "react-router-dom"
+import { Button, Card, CardHeader, CardBody, ScrollShadow, Spinner, Tooltip } from "@nextui-org/react"
+import { Icon } from "@iconify/react"
+import CommandInput from "../components/CommandInput"
+import { getAppId } from "@/utils"
+import message from "@/components/Message"
+import { getMetadata, deleteMetadata, setMetadata } from "@/service/apis/api"
 
 const DataManagementPage: React.FC = () => {
-  const [context, setContext] = useState("")
-  const [currentMessage, setCurrentMessage] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
-  const [input, setInput] = useState("")
-  const [processedData, setProcessedData] = useState<any[]>([])
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
+  const [selectedAppId, setSelectedAppId] = useState<string | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { fetchForms } = useFormMetadata()
+  const [items, setItems] = useState<any[]>([])
+  const [currentContext, setCurrentContext] = useState<string>("单据")
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null)
+  const [internalDeletingId, setInternalDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchFormsData()
+    setSelectedAppId(getAppId())
   }, [])
 
-  const fetchFormsData = useCallback(async () => {
-    setIsInitialLoading(true)
+  const handleViewItem = (id: string) => {
+    if (!selectedAppId) return
+    window.open(`/forms/${id}?appId=${selectedAppId}`, "_blank")
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!selectedAppId || !id) return
+
+    setInternalDeletingId(id)
     try {
-      const forms = await fetchForms()
-      setProcessedData(forms)
-
-      const contextData = forms.map((form) => JSON.stringify(form)).join("\n")
-      setContext(contextData)
-
-      if (contextData.trim() === "") {
-        setError("没有可用的数据进行分析。请先添加一些表单数据。")
-      } else {
-        setError(null)
-      }
+      await deleteMetadata({ name: `forms_${id}` })
+      const updatedItems = items.filter((item) => item.id !== id)
+      await setMetadata("forms", JSON.stringify(updatedItems), selectedAppId)
+      message.success("删除成功")
+      setItems(updatedItems)
     } catch (error) {
-      console.error("Error fetching forms data:", error)
-      setError("获取表单数据时发生错误。请稍后再试。")
+      console.error("Error deleting resource:", error)
+      message.error("删除失败")
     } finally {
-      setIsInitialLoading(false)
-    }
-  }, [fetchForms])
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  const handleSendMessage = async () => {
-    if (!input.trim() || isLoading || error) return
-
-    const userMessage = { role: "user", content: input, id: Date.now().toString() }
-    setCurrentMessage(userMessage)
-    setInput("")
-    setIsLoading(true)
-
-    try {
-      const assistantMessage = { role: "assistant", content: "", id: (Date.now() + 1).toString() }
-      setCurrentMessage(assistantMessage)
-
-      await chatMoV2(
-        [
-          {
-            role: "system",
-            content: `你是一个智能查询助手，这是你要查询的单据数据:\n${context}，对于用户的查询，你要言简意赅的回复，尽量直接回复用户结果，不要过多的解释，用户没有要求列出详细数据，就一句话给出直接结果，你只负责帮助用户查询单据数据，其他指令和需求你都一律不接受，礼貌的拒绝用户，如果返回结果包含订单编号，那么就用一个 a 标签包裹，链接地址是"/forms/订单编号" 点击新开一个窗口`,
-          },
-          userMessage,
-        ],
-        (chunk) => {
-          setCurrentMessage((prev: any) => ({
-            ...prev,
-            content: prev.content + chunk,
-          }))
-        },
-        () => {},
-        true,
-        0.7
-      )
-    } catch (error) {
-      console.error("Error in chat:", error)
-      setError("聊天过程中发生错误。")
-    } finally {
-      setIsLoading(false)
+      setInternalDeletingId(null)
     }
   }
 
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault()
-      handleSendMessage()
-    }
+  const handleContextChange = (context: string) => {
+    setCurrentContext(context)
+    setItems([]) // 切换上下文时清空列表
   }
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
+    },
+  }
+
+  // 示例查询
+  const examples = [
+    { icon: "mdi:file-document-outline", text: "查找本月的销售订单" },
+    { icon: "mdi:account-search", text: "搜索客户为沙塔科技的单据" },
+    { icon: "mdi:calendar-clock", text: "显示最近一周的请假单" },
+  ]
 
   return (
-    <div className='container mx-auto p-4 md:p-6 h-screen flex flex-col'>
-      <Card className='w-full h-full shadow-lg rounded-lg flex flex-col'>
-        <CardHeader className='flex justify-between items-center p-4 text-white'>
-          <h1 className='text-2xl font-bold'>数据管理助手</h1>
-        </CardHeader>
-        <CardBody className='p-4 flex-grow flex flex-col'>
-          {isInitialLoading ? (
-            <div className='flex-grow space-y-4'>
-              <Skeleton className='rounded-lg'>
-                <div className='h-24 rounded-lg bg-default-300'></div>
-              </Skeleton>
-              <Skeleton className='rounded-lg'>
-                <div className='h-24 rounded-lg bg-default-300'></div>
-              </Skeleton>
+    <Card className='w-full h-[calc(100vh-16px)] shadow-lg rounded-lg flex flex-col'>
+      <CardHeader className='flex justify-between items-center p-4 text-white'>
+        <div className='flex-1 space-y-4'>
+          {/* 功能说明区域 */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Icon icon="mdi:magnify" className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-medium text-black">智能检索助手</h3>
+              <Tooltip content="支持通过自然语言检索单据和资料">
+                <Button isIconOnly variant="light" className="ml-2">
+                  <Icon icon="mdi:help-circle-outline" className="w-5 h-5" />
+                </Button>
+              </Tooltip>
             </div>
-          ) : error ? (
-            <div className='flex-grow flex items-center justify-center'>
-              <p className='text-danger text-center'>{error}</p>
+            <p className="text-sm text-gray-600 mb-2">
+              您可以通过自然语言来检索单据和资料
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {examples.map((example, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Tooltip content="点击复制示例" placement="bottom">
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      className="bg-default-100"
+                      startContent={<Icon icon={example.icon} className="w-4 h-4" />}
+                      onClick={() => {
+                        navigator.clipboard.writeText(example.text)
+                        message.success("示例已复制")
+                      }}
+                    >
+                      {example.text}
+                    </Button>
+                  </Tooltip>
+                </motion.div>
+              ))}
             </div>
-          ) : (
-            <ScrollShadow className='flex-grow mb-4 pr-2'>
-              <AnimatePresence mode="wait">
-                {currentMessage && (
-                  <motion.div
-                    key={currentMessage.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <MessageCard
-                      avatar={currentMessage.role === "assistant" ? mo2 : user}
-                      message={currentMessage.content}
-                      role={currentMessage.role}
-                      status='success'
-                      className='mb-4'
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <div ref={messagesEndRef} />
-            </ScrollShadow>
-          )}
-          <div className='flex items-center space-x-2 mt-4'>
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder='输入您的问题...'
-              className='flex-grow'
-              minRows={2}
-              maxRows={4}
-              disabled={isLoading || isInitialLoading || error !== null}
-            />
-            <Button
-              color='primary'
-              isLoading={isLoading}
-              onClick={handleSendMessage}
-              isDisabled={isLoading || isInitialLoading || error !== null}
-              className='px-8 h-14'
-            >
-              {isLoading ? <Spinner size='sm' /> : "提问"}
-            </Button>
+          </motion.div>
+
+          <CommandInput
+            placeholder='请输入检索需求，例如：查找本月的销售订单...'
+            disabled={isRefreshing}
+            contexts={["单据", "数据"]}
+            onContextChange={handleContextChange}
+          />
+          <div className='mt-2 text-sm text-black/70'>当前上下文: {currentContext}</div>
+        </div>
+      </CardHeader>
+      <CardBody className='p-4 flex-grow flex flex-col'>
+        {error ? (
+          <div className='flex-grow flex items-center justify-center'>
+            <p className='text-danger text-center'>{error}</p>
           </div>
-        </CardBody>
-      </Card>
-    </div>
+        ) : (
+          <ScrollShadow className='flex-grow mb-4 pr-2'>
+            <AnimatePresence mode='wait'>
+              {items.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className='flex flex-col items-center justify-center h-full text-center p-8'
+                >
+                  <Icon icon='mdi:file-search-outline' className='w-16 h-16 text-gray-400 mb-4' />
+                  <h3 className='text-xl font-semibold text-gray-700 mb-2'>暂无数据</h3>
+                  <p className='text-gray-500'>
+                    请在上方输入框中输入您的检索需求，
+                    <br />
+                    例如："查找本月的销售订单"
+                  </p>
+                </motion.div>
+              ) : (
+                <motion.div
+                  variants={containerVariants}
+                  initial='hidden'
+                  animate='visible'
+                  className='grid grid-cols-1 gap-2'
+                >
+                  {items.map((item) => (
+                    <motion.div key={item.id} variants={itemVariants} layout>
+                      <div className='flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 hover:shadow-sm transition-shadow'>
+                        <div className='text-sm font-medium text-gray-700 truncate flex-1'>
+                          {item.title || item.name || item.id}
+                        </div>
+                        <div className='flex items-center gap-1'>
+                          <Button
+                            size='sm'
+                            isIconOnly
+                            variant='light'
+                            className='min-w-0 w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-600'
+                            onClick={() => handleViewItem(item.id)}
+                          >
+                            <Icon icon='mdi:eye' className='w-3.5 h-3.5' />
+                          </Button>
+                          <Button
+                            size='sm'
+                            isIconOnly
+                            variant='light'
+                            className='min-w-0 w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600'
+                            onClick={() => handleDelete(item.id)}
+                            isLoading={internalDeletingId === item.id}
+                          >
+                            <Icon icon='mdi:delete' className='w-3.5 h-3.5' />
+                          </Button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </ScrollShadow>
+        )}
+      </CardBody>
+    </Card>
   )
 }
 
