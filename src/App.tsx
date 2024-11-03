@@ -14,6 +14,8 @@ import { Toaster } from "./components/ui/toaster"
 import LandingPage from "./pages/LandingPage"
 import CustomFormBuilder from "./components/forms/custom/CustomFormBuilder"
 import AIHomePage from "./pages/AIHomePage"
+import DataManagementPage from "./pages/DataManagementPage"
+import DataAnalysisPage from "./pages/DataAnalysisPage"
 
 function App() {
   const navigate = useNavigate()
@@ -39,7 +41,11 @@ function App() {
       <div className='min-h-screen'>
         <Routes>
           <Route path='/' element={<LandingPage />} />
-          <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <AIHomePage />} />
+          <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <AIHomePage />}>
+            <Route index element={<Navigate to="management" replace />} />
+            <Route path="management" element={<DataManagementPage />} />
+            <Route path="analysis" element={<DataAnalysisPage />} />
+          </Route>
           <Route 
             path='/forms' 
             element={shouldRedirectToLogin() ? <Navigate to="/we-chat-login" /> : <FormsPage />} 
