@@ -8,7 +8,7 @@ import DynamicForm from "@/components/common/DynamicForm"
 import { motion } from "framer-motion"
 import { parseFormConfig } from "@/utils/codeParser"
 import { warehouseReceiptConfig } from "./mock/warehouse-receipt"
-import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadata"
+import { useMetadata } from "@/service/apis/api"
 import { Icon } from "@iconify/react"
 
 const DynamicFormTestPage: React.FC = () => {
@@ -16,7 +16,7 @@ const DynamicFormTestPage: React.FC = () => {
   const [formConfig, setFormConfig] = useState<any>(null)
   const [templateType, setTemplateType] = useState<"official" | "custom">("custom")
   const [templateName, setTemplateName] = useState("")
-  const { addForm } = useFormMetadata()
+  const { setMetadata } = useMetadata()
 
   const handleConfigChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setConfigInput(e.target.value)
@@ -83,13 +83,9 @@ const DynamicFormTestPage: React.FC = () => {
         },
       }
 
-      const result = await addForm(newTemplate)
-      if (result) {
-        message.success("表单模板保存成功")
-        setTemplateName("")
-      } else {
-        message.error("保存失败")
-      }
+      await setMetadata(`form_${templateId}`, JSON.stringify(newTemplate))
+      message.success("表单模板保存成功")
+      setTemplateName("")
     } catch (error) {
       console.error("保存模板错误:", error)
       message.error("保存模板失败")
