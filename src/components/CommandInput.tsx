@@ -16,10 +16,15 @@ import message from "./Message"
 
 interface CommandInputProps extends TextAreaProps {
   classNames?: Record<"button" | "buttonIcon", string>
+  agent?: {
+    analyzeIntent: (input: string) => Promise<string>
+    createForm: (description: string, onChunk: (chunk: string) => void) => Promise<any>
+    searchForms: (query: string, formsIndex: any[], onChunk: (chunk: string) => void) => Promise<any[]>
+  }
 }
 
 export default function Component(props: CommandInputProps) {
-  const { ...restProps } = props
+  const { agent, ...restProps } = props
   const [prompt, setPrompt] = React.useState<string>("")
   const { submitForm } = useFormSubmission()
   const [isRecording, setIsRecording] = React.useState<boolean>(false)
@@ -46,25 +51,38 @@ export default function Component(props: CommandInputProps) {
     if (prompt && !isLoading) {
       try {
         setIsLoading(true)
-        // 临时逻辑：如果命令包含"生成配置"，直接返回请假单配置
-        if (prompt.includes("生成配置")) {
-          const mockFormData = {
-            id: `LEAVE_${Date.now()}`,
-            templateId: "leaveRequest",
-            title: "请假申请单",
-            data: leaveRequestConfig,
-            status: "draft",
+
+        if (agent) {
+          // 使用传入的 AI agent 处理命令
+          const intent = await agent.analyzeIntent(prompt)
+          
+          if (intent === "create") {
+            const result = await agent.createForm(prompt, () => {})
+            message.success("表单创建成功")
+          } else if (intent === "search") {
+            const results = await agent.searchForms(prompt, [], () => {})
+            message.success(`找到 ${results.length} 个匹配的表单`)
           }
-          await submitForm(JSON.stringify(mockFormData))
-          setPrompt("")
-          message.success("已生成请假单配置")
         } else {
-          // 保持原有的 AI 生成逻辑
-          await submitForm(prompt)
-          setPrompt("")
+          // 保持原有的表单提交逻辑
+          if (prompt.includes("生成配置")) {
+            const mockFormData = {
+              id: `LEAVE_${Date.now()}`,
+              templateId: "leaveRequest",
+              title: "请假申请单",
+              data: leaveRequestConfig,
+              status: "draft",
+            }
+            await submitForm(JSON.stringify(mockFormData))
+            message.success("已生成请假单配置")
+          } else {
+            await submitForm(prompt)
+          }
         }
+
+        setPrompt("")
       } catch (error) {
-        console.error("Error submitting form:", error)
+        console.error("Error submitting command:", error)
         message.error("发送指令失败，请稍后重试")
       } finally {
         setIsLoading(false)

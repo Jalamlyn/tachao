@@ -52,72 +52,6 @@ const DataManagementPage: React.FC = () => {
     }
   }
 
-  const handleCommand = async (command: string) => {
-    if (!command.trim() || !selectedAppId || isProcessing) return
-
-    setIsProcessing(true)
-    try {
-      const intent = await AIFormAgent.analyzeIntent(command)
-
-      if (intent === "create") {
-        const loadingId = message.loading("正在创建表单...")
-        const { config, title } = await AIFormAgent.createForm(command, () => {})
-        
-        const newForm = {
-          id: `FORM${Date.now()}`,
-          templateId: "dynamic",
-          title,
-          data: config,
-          status: "draft"
-        }
-
-        await addForm(newForm)
-        message.closeLoading(loadingId, "success", "表单创建成功")
-        setSearchResults([newForm])
-      } else {
-        const loadingId = message.loading("正在搜索表单...")
-        const results = await AIFormAgent.searchForms(command, items, () => {})
-        setSearchResults(results)
-        message.closeLoading(loadingId, "success", `找到 ${results.length} 个匹配的表单`)
-      }
-    } catch (error) {
-      console.error("Error processing command:", error)
-      message.error((error as Error).message)
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  const fetchItems = async () => {
-    if (!selectedAppId) return
-    try {
-      const response = await getMetadata(["forms"], selectedAppId)
-      if (response.data && response.data.length > 0 && response.data[0].value) {
-        const data = JSON.parse(response.data[0].value)
-        setItems(data)
-        if (data.length === 0) {
-          setError("暂无表单数据，请创建新的表单")
-        } else {
-          setError(null)
-        }
-      } else {
-        setItems([])
-        setError("暂无表单数据，请创建新的表单")
-      }
-    } catch (error) {
-      console.error("Error fetching items:", error)
-      setError("获取数据失败，请稍后重试")
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
-
-  useEffect(() => {
-    if (selectedAppId) {
-      fetchItems()
-    }
-  }, [selectedAppId])
-
   return (
     <Card className='w-full h-[calc(100vh-16px)] shadow-lg rounded-lg flex flex-col'>
       <CardHeader className='flex justify-between items-center p-4 text-white'>
@@ -144,7 +78,7 @@ const DataManagementPage: React.FC = () => {
           <CommandInput
             placeholder='请输入您的需求，例如：创建一个请假单...'
             disabled={isProcessing}
-            onCommand={handleCommand}
+            agent={AIFormAgent}
           />
         </div>
       </CardHeader>
