@@ -26,9 +26,17 @@ module.exports = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        'primary-dark': '#4A90E2',  // 更新为蓝白色调
-        'primary-light': '#F5F9FF', // 更新为蓝白色调
-        'accent': '#E8F3FF',        // 更新为蓝白色调
+        // 更新为优雅的蓝白配色方案
+        'primary-dark': '#1E3A8A',    // 深蓝色
+        'primary-light': '#F0F7FF',   // 浅蓝白色
+        'primary-mid': '#3B82F6',     // 中蓝色
+        'accent': '#60A5FA',          // 亮蓝色
+        'text-primary': '#1E293B',    // 主要文字颜色
+        'text-secondary': '#475569',  // 次要文字颜色
+        'text-light': '#94A3B8',      // 浅色文字
+        'surface': '#FFFFFF',         // 表面颜色
+        'surface-hover': '#F8FAFC',   // 悬停表面颜色
+        'divider': '#E2E8F0',         // 分割线颜色
       },
       borderRadius: {
         lg: `var(--radius)`,
