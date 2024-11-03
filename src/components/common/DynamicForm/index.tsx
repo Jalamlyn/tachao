@@ -1,4 +1,4 @@
-import React, { useRef } from "react"
+import React, { useRef, useState } from "react"
 import { Form } from "@/components/ui/form"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@iconify/react"
@@ -10,6 +10,7 @@ import DynamicTable from "./components/DynamicTable"
 import DynamicProcessConfirm from "./components/DynamicProcessConfirm"
 import { useReactToPrint } from "react-to-print"
 import message from "@/components/Message"
+import OrderNumberField from "../OrderNumberField"
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
   config,
@@ -17,9 +18,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   onSubmit,
   onValuesChange,
   isEditable = true,
+  id,
 }) => {
   const { form, handleSubmit } = useDynamicForm(config, initialValues, onValuesChange)
   const printRef = useRef<HTMLDivElement>(null)
+  const [isEditMode, setIsEditMode] = useState(false)
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
@@ -47,13 +50,30 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     e.preventDefault()
     if (onSubmit) {
       try {
+        // 执行表单验证
+        const result = await form.trigger()
+        if (!result) {
+          const errors = Object.entries(form.formState.errors)
+            .map(([key, error]) => error.message)
+            .filter(Boolean)
+          
+          if (errors.length > 0) {
+            message.error(errors.join('\n'))
+            return
+          }
+        }
+
         const values = form.getValues()
         await onSubmit(values)
       } catch (error) {
         console.error("Form submission error:", error)
-        throw error
+        message.error("提交表单失败")
       }
     }
+  }
+
+  const toggleEditMode = () => {
+    setIsEditMode(!isEditMode)
   }
 
   const containerVariants = {
@@ -79,6 +99,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     },
   }
 
+  const currentIsEditable = id ? isEditMode : isEditable
+
   return (
     <Form {...form}>
       <motion.form
@@ -89,6 +111,19 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         className="space-y-8"
       >
         <AnimatePresence>
+          {/* Order Number Field */}
+          {config.orderNumberField && (
+            <motion.div variants={sectionVariants}>
+              <OrderNumberField
+                form={form}
+                prefix={config.orderNumberField.prefix}
+                fieldName={config.orderNumberField.fieldName || "orderNumber"}
+                label={config.orderNumberField.label}
+                disabled={!currentIsEditable}
+              />
+            </motion.div>
+          )}
+
           {/* Form Fields */}
           {Object.entries(config.formFields).map(([section, fields]) => (
             <motion.div
@@ -97,7 +132,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               className="bg-white rounded-lg p-6 shadow-sm"
             >
               <h2 className="text-lg font-semibold mb-6">{section}</h2>
-              <DynamicFormFields fields={fields} form={form} isEditable={isEditable} />
+              <DynamicFormFields fields={fields} form={form} isEditable={currentIsEditable} />
             </motion.div>
           ))}
 
@@ -110,7 +145,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               <DynamicTable
                 config={config.table}
                 form={form}
-                isEditable={isEditable}
+                isEditable={currentIsEditable}
                 fieldName="tableData"
               />
             </motion.div>
@@ -122,7 +157,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               <DynamicProcessConfirm
                 steps={config.processSteps}
                 form={form}
-                isEditable={isEditable}
+                isEditable={currentIsEditable}
               />
             </motion.div>
           )}
@@ -183,32 +218,61 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             </div>
           )}
 
-          {/* Submit Button */}
-          {isEditable && onSubmit && (
-            <motion.div
-              variants={sectionVariants}
-              className={`flex ${
-                config.form?.submitButton?.position === "center"
-                  ? "justify-center"
-                  : config.form?.submitButton?.position === "right"
-                  ? "justify-end"
-                  : "justify-start"
-              }`}
-            >
-              <div className="flex gap-4">
+          {/* Action Buttons */}
+          <motion.div
+            variants={sectionVariants}
+            className={`flex ${
+              config.form?.submitButton?.position === "center"
+                ? "justify-center"
+                : config.form?.submitButton?.position === "right"
+                ? "justify-end"
+                : "justify-start"
+            }`}
+          >
+            <div className="flex gap-4">
+              {/* Edit Button */}
+              {id && !currentIsEditable && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={toggleEditMode}
+                  className="gap-2"
+                >
+                  <Icon icon="mdi:pencil" className="w-4 h-4" />
+                  编辑
+                </Button>
+              )}
+
+              {/* Submit Button */}
+              {currentIsEditable && onSubmit && (
                 <Button type="submit" className="gap-2">
                   <Icon icon="mdi:content-save" className="w-4 h-4" />
-                  {config.form?.submitButton?.text || "保存"}
+                  {config.form?.submitButton?.text || (id ? "保存" : "创建")}
                 </Button>
-                {config.print && (
-                  <Button type="button" variant="outline" onClick={handlePrint} className="gap-2">
-                    <Icon icon="mdi:printer" className="w-4 h-4" />
-                    打印
-                  </Button>
-                )}
-              </div>
-            </motion.div>
-          )}
+              )}
+
+              {/* Print Button */}
+              {config.print && (
+                <Button type="button" variant="outline" onClick={handlePrint} className="gap-2">
+                  <Icon icon="mdi:printer" className="w-4 h-4" />
+                  打印
+                </Button>
+              )}
+
+              {/* Cancel Edit Button */}
+              {id && currentIsEditable && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={toggleEditMode}
+                  className="gap-2"
+                >
+                  <Icon icon="mdi:close" className="w-4 h-4" />
+                  取消编辑
+                </Button>
+              )}
+            </div>
+          </motion.div>
         </AnimatePresence>
       </motion.form>
     </Form>

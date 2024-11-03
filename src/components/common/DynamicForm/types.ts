@@ -33,18 +33,18 @@ export interface BaseField {
   name: string
   label: string
   type: FieldType
-  required?: boolean
-  defaultValue?: any
-  placeholder?: string
-  disabled?: boolean
-  hidden?: boolean
-  customComponent?: ReactNode
-  validators?: Array<(value: any) => string | undefined>
+  required: boolean
+  defaultValue: any
+  placeholder: string
+  disabled: boolean
+  hidden: boolean
+  customComponent: ReactNode
+  validators: Array<(value: any) => string | undefined>
   // 条件显示
-  showWhen?: {
+  showWhen: {
     field: string
     value: any
-    operator?: 'eq' | 'neq' | 'gt' | 'lt' | 'contains'
+    operator: "eq" | "neq" | "gt" | "lt" | "contains"
   }
 }
 
@@ -53,31 +53,31 @@ export interface SelectField extends BaseField {
   options: Array<{
     label: string
     value: any
-    disabled?: boolean
+    disabled: boolean
   }>
-  multiple?: boolean
+  multiple: boolean
 }
 
 export interface DateField extends BaseField {
   type: "date" | "time" | "datetime"
-  format?: string
-  showTime?: boolean
-  disabledDate?: (date: Date) => boolean
+  format: string
+  showTime: boolean
+  disabledDate: (date: Date) => boolean
 }
 
 export interface ResourceField extends BaseField {
   type: "resource"
   resourceName: string
   appId: string
-  selectionMode?: "single" | "multiple"
-  onSelect?: (selected: any[]) => void
+  selectionMode: "single" | "multiple"
+  onSelect: (selected: any[]) => void
 }
 
 export interface FileField extends BaseField {
   type: "file" | "image"
-  accept?: string
-  maxSize?: number
-  onUpload?: (file: File) => Promise<void>
+  accept: string
+  maxSize: number
+  onUpload: (file: File) => Promise<void>
 }
 
 export interface CustomField extends BaseField {
@@ -91,24 +91,24 @@ export interface TableColumn {
   key: string
   title: string
   type: FieldType
-  width?: number | string
-  required?: boolean
-  editable?: boolean
-  render?: (value: any, record: any, index: number) => ReactNode
-  resourceConfig?: {
+  width: number | string
+  required: boolean
+  editable: boolean
+  render: (value: any, record: any, index: number) => ReactNode
+  resourceConfig: {
     resourceName: string
     appId: string
-    selectionMode?: "single" | "multiple"
+    selectionMode: "single" | "multiple"
   }
-  fileConfig?: {
-    accept?: string
-    maxSize?: number
+  fileConfig: {
+    accept: string
+    maxSize: number
   }
-  dateConfig?: {
-    minDate?: Date
-    maxDate?: Date
-    format?: string
-    showTime?: boolean
+  dateConfig: {
+    minDate: Date
+    maxDate: Date
+    format: string
+    showTime: boolean
   }
 }
 
@@ -123,12 +123,12 @@ export interface TableSummary {
 
 export interface TableConfig {
   columns: TableColumn[]
-  summary?: TableSummary
-  rowCalculations?: {
+  summary: TableSummary
+  rowCalculations: {
     [key: string]: (record: any) => number | string
   }
-  toolbar?: ReactNode
-  operations?: {
+  toolbar: ReactNode
+  operations: {
     render: (record: any, index: number) => ReactNode
   }
 }
@@ -136,84 +136,90 @@ export interface TableConfig {
 export interface ProcessStep {
   key: string
   title: string
-  description?: string
-  icon?: string
-  fields?: FormField[]
+  description: string
+  icon: string
+  fields: FormField[]
   // 确认前的校验规则
-  validations?: {
+  validations: {
     rules: Array<(values: any) => string | undefined>
     messages: string[]
   }
   // 确认后的行为
-  onConfirm?: {
+  onConfirm: {
     // 更新其他字段
-    updates?: Array<{
+    updates: Array<{
       field: string
       value: any | ((values: any) => any)
     }>
     // 触发计算
-    calculations?: Array<{
+    calculations: Array<{
       field: string
       formula: (values: any) => any
     }>
   }
   // 确认信息配置
-  confirmation?: {
-    requireComments?: boolean
-    commentLabel?: string
-    confirmButtonText?: string
-    cancelButtonText?: string
+  confirmation: {
+    requireComments: boolean
+    commentLabel: string
+    confirmButtonText: string
+    cancelButtonText: string
   }
 }
 
 export interface PrintConfig {
-  documentTitle?: string
-  pageStyle?: string
+  documentTitle: string
+  pageStyle: string
   // 打印模板配置
-  template?: {
-    header?: {
-      title?: string
-      subtitle?: string
-      logo?: string
+  template: {
+    header: {
+      title: string
+      subtitle: string
+      logo: string
     }
-    content?: {
-      fields?: string[] // 要打印的字段
-      layout?: 'table' | 'form'
-      columns?: number
+    content: {
+      fields: string[] // 要打印的字段
+      layout: "table" | "form"
+      columns: number
     }
-    footer?: {
-      showPageNumber?: boolean
-      showDate?: boolean
-      customText?: string
+    footer: {
+      showPageNumber: boolean
+      showDate: boolean
+      customText: string
     }
   }
   // 打印前的数据转换
-  transform?: (values: any) => any
+  transform: (values: any) => any
 }
 
 export interface DynamicFormConfig {
   formFields: {
     [section: string]: FormField[]
   }
-  table?: TableConfig
-  processSteps?: ProcessStep[]
-  print?: PrintConfig
-  dependencies?: {
+  table: TableConfig
+  processSteps: ProcessStep[]
+  print: PrintConfig
+  dependencies: {
     [fieldName: string]: {
       dependsOn: string[]
       calculate: (values: any) => any
     }
   }
-  customValidators?: {
+  customValidators: {
     [fieldName: string]: (value: any, allValues: any) => string | undefined
   }
-  form?: {
-    layout?: 'horizontal' | 'vertical'
-    labelWidth?: string | number
-    submitButton?: {
-      text?: string
-      position?: 'left' | 'center' | 'right'
+  form: {
+    layout: "horizontal" | "vertical"
+    labelWidth: string | number
+    submitButton: {
+      text: string
+      position: "left" | "center" | "right"
     }
+  }
+  // 新增: 表单编号字段配置
+  orderNumberField?: {
+    prefix?: string
+    fieldName?: string
+    label?: string
   }
 }
 
@@ -223,4 +229,5 @@ export interface DynamicFormProps {
   onSubmit?: (values: any) => Promise<void>
   onValuesChange?: (changedValues: any, allValues: any) => void
   isEditable?: boolean
+  id?: string // 新增: 用于区分编辑/创建模式
 }
