@@ -40,6 +40,12 @@ export interface BaseField {
   hidden?: boolean
   customComponent?: ReactNode
   validators?: Array<(value: any) => string | undefined>
+  // 条件显示
+  showWhen?: {
+    field: string
+    value: any
+    operator?: 'eq' | 'neq' | 'gt' | 'lt' | 'contains'
+  }
 }
 
 export interface SelectField extends BaseField {
@@ -131,9 +137,58 @@ export interface ProcessStep {
   key: string
   title: string
   description?: string
+  icon?: string
   fields?: FormField[]
-  onConfirm?: (data: any) => Promise<void>
-  onCancel?: () => void
+  // 确认前的校验规则
+  validations?: {
+    rules: Array<(values: any) => string | undefined>
+    messages: string[]
+  }
+  // 确认后的行为
+  onConfirm?: {
+    // 更新其他字段
+    updates?: Array<{
+      field: string
+      value: any | ((values: any) => any)
+    }>
+    // 触发计算
+    calculations?: Array<{
+      field: string
+      formula: (values: any) => any
+    }>
+  }
+  // 确认信息配置
+  confirmation?: {
+    requireComments?: boolean
+    commentLabel?: string
+    confirmButtonText?: string
+    cancelButtonText?: string
+  }
+}
+
+export interface PrintConfig {
+  documentTitle?: string
+  pageStyle?: string
+  // 打印模板配置
+  template?: {
+    header?: {
+      title?: string
+      subtitle?: string
+      logo?: string
+    }
+    content?: {
+      fields?: string[] // 要打印的字段
+      layout?: 'table' | 'form'
+      columns?: number
+    }
+    footer?: {
+      showPageNumber?: boolean
+      showDate?: boolean
+      customText?: string
+    }
+  }
+  // 打印前的数据转换
+  transform?: (values: any) => any
 }
 
 export interface DynamicFormConfig {
@@ -142,6 +197,7 @@ export interface DynamicFormConfig {
   }
   table?: TableConfig
   processSteps?: ProcessStep[]
+  print?: PrintConfig
   dependencies?: {
     [fieldName: string]: {
       dependsOn: string[]
@@ -150,6 +206,14 @@ export interface DynamicFormConfig {
   }
   customValidators?: {
     [fieldName: string]: (value: any, allValues: any) => string | undefined
+  }
+  form?: {
+    layout?: 'horizontal' | 'vertical'
+    labelWidth?: string | number
+    submitButton?: {
+      text?: string
+      position?: 'left' | 'center' | 'right'
+    }
   }
 }
 
