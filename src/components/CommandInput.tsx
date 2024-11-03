@@ -34,6 +34,7 @@ export default function Component(props: CommandInputProps) {
     "kgt8ON7yVITDhtdwci0qeUiDs4BGN8Nv1BTeJl6_DRfVMekQi10Szp0kiRDdSZkANokxKITDT4cv1UV6mWuiKA"
   )
   const [showSignatureInput, setShowSignatureInput] = useState<boolean>(false)
+  const [messages, setMessages] = useState<any[]>([])
 
   useEffect(() => {
     // 注册企业微信 JSAPI
@@ -55,6 +56,17 @@ export default function Component(props: CommandInputProps) {
         if (agent) {
           // 使用传入的 AI agent 处理命令
           const intent = await agent.analyzeIntent(prompt)
+          
+          // 构建消息数组
+          const newMessages = [
+            ...messages,
+            {
+              role: "user",
+              content: [{ type: "text", text: prompt }],
+              images: []
+            }
+          ]
+          setMessages(newMessages)
           
           if (intent === "create") {
             const result = await agent.createForm(prompt, () => {})
