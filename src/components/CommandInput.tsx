@@ -2,7 +2,7 @@
 import type { TextAreaProps } from "@nextui-org/react"
 
 import React, { useEffect, useState } from "react"
-import { Button, Tooltip, Input, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react"
+import { Button, Tooltip, Input } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { cn } from "@nextui-org/react"
 
@@ -15,13 +15,11 @@ import * as ww from "@wecom/jssdk"
 import message from "./Message"
 
 interface CommandInputProps extends TextAreaProps {
-  classNames?: Record<"button" | "buttonIcon", string>;
-  contexts?: string[];
-  onContextChange?: (context: string) => void;
+  classNames?: Record<"button" | "buttonIcon", string>
 }
 
 export default function Component(props: CommandInputProps) {
-  const { contexts = [], onContextChange, ...restProps } = props
+  const { ...restProps } = props
   const [prompt, setPrompt] = React.useState<string>("")
   const { submitForm } = useFormSubmission()
   const [isRecording, setIsRecording] = React.useState<boolean>(false)
@@ -31,7 +29,6 @@ export default function Component(props: CommandInputProps) {
     "kgt8ON7yVITDhtdwci0qeUiDs4BGN8Nv1BTeJl6_DRfVMekQi10Szp0kiRDdSZkANokxKITDT4cv1UV6mWuiKA"
   )
   const [showSignatureInput, setShowSignatureInput] = useState<boolean>(false)
-  const [currentContext, setCurrentContext] = useState<string>(contexts[0] || "")
 
   useEffect(() => {
     // 注册企业微信 JSAPI
@@ -109,11 +106,6 @@ export default function Component(props: CommandInputProps) {
     })
   }
 
-  const handleContextChange = (context: string) => {
-    setCurrentContext(context)
-    onContextChange?.(context)
-  }
-
   return (
     <div className='flex flex-col w-full items-start gap-2'>
       <form className='flex w-full items-start gap-2' onSubmit={(e) => e.preventDefault()}>
@@ -160,27 +152,6 @@ export default function Component(props: CommandInputProps) {
                 </Button>
               </Tooltip>
             </div>
-          }
-          startContent={
-            contexts.length > 0 ? (
-              <Dropdown>
-                <DropdownTrigger>
-                  <Button isIconOnly className='p-[10px]' radius='full' variant='light'>
-                    <Icon className='text-default-500' icon='solar:menu-dots-bold' width={20} />
-                  </Button>
-                </DropdownTrigger>
-                <DropdownMenu 
-                  aria-label="上下文选择"
-                  selectedKeys={[currentContext]}
-                  onSelectionChange={(keys) => handleContextChange(Array.from(keys)[0] as string)}
-                  selectionMode="single"
-                >
-                  {contexts.map((context) => (
-                    <DropdownItem key={context}>{context}</DropdownItem>
-                  ))}
-                </DropdownMenu>
-              </Dropdown>
-            ) : null
           }
           value={prompt}
           onValueChange={setPrompt}
