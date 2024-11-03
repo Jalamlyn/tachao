@@ -1,10 +1,10 @@
 import React from "react"
-import { UseFormReturn } from "react-hook-form"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import ResourceSelectButton from "../../ResourceSelectButton"
 import { TableConfig } from "../types"
+import { UseFormReturn } from "react-hook-form"
 
 interface DynamicTableProps {
   config: TableConfig
@@ -15,6 +15,41 @@ interface DynamicTableProps {
 
 const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = true, fieldName }) => {
   const tableData = form.watch(fieldName) || []
+
+  // 默认的计算函数
+  const defaultCalculations = {
+    amount: (row: any) => {
+      const quantity = Number(row.quantity) || 0
+      const unitPrice = Number(row.unitPrice) || 0
+      return Number((quantity * unitPrice).toFixed(2))
+    }
+  }
+
+  // 合并默认计算函数和配置的计算函数
+  const calculations = {
+    ...defaultCalculations,
+    ...(config.rowCalculations || {})
+  }
+
+  const handleCalculateField = (row: any, index: number, changedField: string) => {
+    // 检查是否有依赖关系需要计算
+    if (config.dependencies) {
+      Object.entries(config.dependencies).forEach(([field, dependency]) => {
+        if (dependency.dependsOn?.includes(changedField)) {
+          try {
+            // 优先使用配置的计算函数
+            const calculate = dependency.calculate || calculations[field]
+            if (typeof calculate === 'function') {
+              const value = calculate(row)
+              form.setValue(`${fieldName}.${index}.${field}`, value)
+            }
+          } catch (error) {
+            console.error(`Error calculating field ${field}:`, error)
+          }
+        }
+      })
+    }
+  }
 
   const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
     const cellFieldName = `${fieldName}.${rowIndex}.${column.key}`
@@ -69,7 +104,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                     onChange={(e) => {
                       const file = e.target.files?.[0]
                       if (file) {
-                        // Handle file upload
                         field.onChange({
                           fileName: file.name,
                           fileSize: file.size,
@@ -94,7 +128,16 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input {...field} type='number' className='text-right' disabled={!isEditable || !column.editable} />
+                  <Input
+                    {...field}
+                    type='number'
+                    className='text-right'
+                    disabled={!isEditable || !column.editable}
+                    onChange={(e) => {
+                      field.onChange(e)
+                      handleCalculateField(tableData[rowIndex], rowIndex, column.key)
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -127,12 +170,18 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       <TableRow>
         <TableCell colSpan={config.columns.length}>
           <div className='space-y-2'>
-            {Object.entries(config.summary.fields).map(([key, { label, calculate }]) => (
-              <div key={key} className='flex justify-between'>
-                <span>{label}:</span>
-                <span>{calculate(tableData)}</span>
-              </div>
-            ))}
+            {Object.entries(config.summary.fields).map(([key, { label, calculate }]) => {
+              const value = typeof calculate === 'function'
+                ? calculate(tableData)
+                : tableData.reduce((sum: number, row: any) => sum + (Number(row[key]) || 0), 0)
+              
+              return (
+                <div key={key} className='flex justify-between'>
+                  <span>{label}:</span>
+                  <span>{typeof value === 'number' ? value.toFixed(2) : value}</span>
+                </div>
+              )
+            })}
           </div>
         </TableCell>
       </TableRow>
