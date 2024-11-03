@@ -6,6 +6,7 @@ import { Icon } from "@iconify/react"
 import { format } from "date-fns"
 import { ProcessStep } from "../types"
 import DynamicFormFields from "./DynamicFormFields"
+import message from "@/components/Message"
 
 interface DynamicProcessConfirmProps {
   steps: ProcessStep[]
@@ -24,12 +25,49 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
     if (!step.onConfirm) return
 
     try {
+      // 验证步骤
+      if (step.validations) {
+        const errors: string[] = []
+        for (const rule of step.validations.rules) {
+          const error = rule(form.getValues())
+          if (error) {
+            errors.push(error)
+          }
+        }
+        if (errors.length > 0) {
+          message.error(errors.join('\n'))
+          return
+        }
+      }
+
+      // 执行确认操作
       await step.onConfirm(form.getValues())
+
+      // 更新确认状态
       form.setValue(`${fieldName}.${step.key}.confirmed`, true)
       form.setValue(`${fieldName}.${step.key}.confirmer`, "当前用户") // TODO: 获取当前用户
       form.setValue(`${fieldName}.${step.key}.confirmationDate`, new Date().toISOString())
+
+      // 执行确认后的更新操作
+      if (step.onConfirm.updates) {
+        step.onConfirm.updates.forEach(({ field, value }) => {
+          const finalValue = typeof value === 'function' ? value(form.getValues()) : value
+          form.setValue(field, finalValue)
+        })
+      }
+
+      // 执行确认后的计算
+      if (step.onConfirm.calculations) {
+        step.onConfirm.calculations.forEach(({ field, formula }) => {
+          const calculatedValue = formula(form.getValues())
+          form.setValue(field, calculatedValue)
+        })
+      }
+
+      message.success('确认成功')
     } catch (error) {
       console.error("Error confirming step:", error)
+      message.error('确认失败')
     }
   }
 
@@ -41,8 +79,10 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
       form.setValue(`${fieldName}.${step.key}.confirmed`, false)
       form.setValue(`${fieldName}.${step.key}.confirmer`, "")
       form.setValue(`${fieldName}.${step.key}.confirmationDate`, "")
+      message.success('已取消确认')
     } catch (error) {
       console.error("Error canceling confirmation:", error)
+      message.error('取消确认失败')
     }
   }
 
@@ -62,7 +102,7 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
                       isConfirmed ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-400"
                     }`}
                   >
-                    <Icon icon={isConfirmed ? "mdi:check-circle" : "mdi:clock-outline"} className='w-7 h-7' />
+                    <Icon icon={step.icon || (isConfirmed ? "mdi:check-circle" : "mdi:clock-outline")} className='w-7 h-7' />
                   </div>
                   <div>
                     <h3 className='text-xl font-semibold'>{step.title}</h3>
@@ -75,12 +115,12 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
                     {!isConfirmed ? (
                       <Button onClick={() => handleConfirm(step)} variant='outline' size='sm' className='gap-2'>
                         <Icon icon='mdi:check' className='w-4 h-4' />
-                        确认
+                        {step.confirmation?.confirmButtonText || '确认'}
                       </Button>
                     ) : (
                       <Button onClick={() => handleCancel(step)} variant='outline' size='sm' className='gap-2'>
                         <Icon icon='mdi:close' className='w-4 h-4' />
-                        取消确认
+                        {step.confirmation?.cancelButtonText || '取消确认'}
                       </Button>
                     )}
                   </div>
@@ -105,6 +145,18 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
               {step.fields && (
                 <div className='mt-6'>
                   <DynamicFormFields fields={step.fields} form={form} isEditable={isEditable && !isConfirmed} />
+                </div>
+              )}
+
+              {step.confirmation?.requireComments && (
+                <div className='mt-4'>
+                  <label className='text-sm text-gray-500'>{step.confirmation.commentLabel || '确认意见'}</label>
+                  <textarea
+                    className='w-full mt-1 p-2 border rounded-md'
+                    value={stepData.comments || ''}
+                    onChange={(e) => form.setValue(`${fieldName}.${step.key}.comments`, e.target.value)}
+                    disabled={!isEditable || isConfirmed}
+                  />
                 </div>
               )}
             </CardContent>

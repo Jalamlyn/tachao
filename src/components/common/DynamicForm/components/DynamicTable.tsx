@@ -51,6 +51,15 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     }
   }
 
+  const calculateSummary = (field: string, calculate: (records: any[]) => number | string) => {
+    try {
+      return calculate(tableData)
+    } catch (error) {
+      console.error(`Error calculating summary for ${field}:`, error)
+      return 0
+    }
+  }
+
   const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
     const cellFieldName = `${fieldName}.${rowIndex}.${column.key}`
 
@@ -171,9 +180,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
         <TableCell colSpan={config.columns.length}>
           <div className='space-y-2'>
             {Object.entries(config.summary.fields).map(([key, { label, calculate }]) => {
-              const value = typeof calculate === 'function'
-                ? calculate(tableData)
-                : tableData.reduce((sum: number, row: any) => sum + (Number(row[key]) || 0), 0)
+              const value = calculateSummary(key, calculate)
               
               return (
                 <div key={key} className='flex justify-between'>

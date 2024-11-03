@@ -28,7 +28,35 @@ const FormFieldWrapper: React.FC<{
   form: UseFormReturn<any>
   isEditable?: boolean
   disabled?: boolean
-}> = ({ name, label, children, form, isEditable = true, disabled }) => {
+  showWhen?: {
+    field: string
+    value: any
+    operator?: 'eq' | 'neq' | 'gt' | 'lt' | 'contains'
+  }
+}> = ({ name, label, children, form, isEditable = true, disabled, showWhen }) => {
+  // 处理条件显示逻辑
+  const shouldShow = React.useMemo(() => {
+    if (!showWhen) return true
+
+    const dependentValue = form.watch(showWhen.field)
+    
+    switch (showWhen.operator) {
+      case 'neq':
+        return dependentValue !== showWhen.value
+      case 'gt':
+        return dependentValue > showWhen.value
+      case 'lt':
+        return dependentValue < showWhen.value
+      case 'contains':
+        return dependentValue?.includes?.(showWhen.value)
+      case 'eq':
+      default:
+        return dependentValue === showWhen.value
+    }
+  }, [form, showWhen])
+
+  if (!shouldShow) return null
+
   return (
     <motion.div variants={animations.fieldVariants} initial="hidden" animate="visible">
       <FormField
@@ -98,6 +126,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
           form={form}
           isEditable={isEditable}
           disabled={field.disabled}
+          showWhen={field.showWhen}
         >
           {(formField) => <BasicInput type={field.type} field={formField} />}
         </FormFieldWrapper>
@@ -113,6 +142,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             form={form}
             isEditable={isEditable}
             disabled={field.disabled}
+            showWhen={field.showWhen}
           >
             {(formField) => <Textarea {...formField} placeholder={field.placeholder} />}
           </FormFieldWrapper>
@@ -126,6 +156,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             form={form}
             isEditable={isEditable}
             disabled={field.disabled}
+            showWhen={field.showWhen}
           >
             {(formField) => (
               <Input
@@ -147,6 +178,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             form={form}
             isEditable={isEditable}
             disabled={field.disabled}
+            showWhen={field.showWhen}
           >
             {(formField) => <DateInput field={formField} />}
           </FormFieldWrapper>
@@ -160,6 +192,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             form={form}
             isEditable={isEditable}
             disabled={field.disabled}
+            showWhen={field.showWhen}
           >
             {(formField) => (
               <select
@@ -187,6 +220,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             form={form}
             isEditable={isEditable}
             disabled={field.disabled}
+            showWhen={field.showWhen}
           >
             {(formField) => (
               <Input
@@ -216,6 +250,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             form={form}
             isEditable={isEditable}
             disabled={field.disabled}
+            showWhen={field.showWhen}
           >
             {(formField) =>
               field.render({
