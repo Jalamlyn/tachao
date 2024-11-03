@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from "react"
+import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
-import { Button, Tooltip } from "@nextui-org/react"
+import { Button, Tooltip, Card, CardHeader, CardBody, ScrollShadow, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import CreateResourceButton from "../components/resource/CreateResourceButton"
 import ResourceCardList from "../components/common/ResourceCardList"
 import TabsContainer from "../components/forms/TabsContainer"
 import CommandInput from "../components/CommandInput"
 import { getAppId } from "@/utils"
+import message from "@/components/Message"
 
 const FormsPage: React.FC = () => {
   const navigate = useNavigate()
@@ -15,6 +16,7 @@ const FormsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("forms")
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [resourceType, setResourceType] = useState<"forms" | "resources" | "reports">("forms")
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setSelectedAppId(getAppId())
@@ -30,12 +32,6 @@ const FormsPage: React.FC = () => {
     window.open(`/forms/${formId}?appId=${selectedAppId}`, "_blank")
   }
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("x-app-id")
-    sessionStorage.removeItem("x-project-id")
-    navigate("/we-chat-login")
-  }
-
   const handleCreateReport = () => {
     if (!selectedAppId) return
     window.open(`/reports/create?appId=${selectedAppId}`, "_blank")
@@ -46,117 +42,53 @@ const FormsPage: React.FC = () => {
     window.open(`/reports/view/${reportId}?appId=${selectedAppId}`, "_blank")
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: [0.6, -0.05, 0.01, 0.99],
-        staggerChildren: 0.1,
-      },
-    },
-    exit: {
-      opacity: 0,
-      y: -20,
-      transition: {
-        duration: 0.4,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.4,
-        ease: "easeOut",
-      },
-    },
-  }
-
   return (
-    <motion.div
-      variants={containerVariants}
-      initial='hidden'
-      animate='visible'
-      exit='exit'
-      className='w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 max-h-screen overflow-hidden'
-    >
-      <motion.div
-        variants={itemVariants}
-        className='bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg border border-gray-100'
-      >
-        <div className='flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6'>
-          <div className='flex sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto'>
+    <div className='container mx-auto p-4 md:p-6 h-screen flex flex-col'>
+      <Card className='w-full h-full shadow-lg rounded-lg flex flex-col'>
+        <CardHeader className='flex justify-between items-center p-4 text-white'>
+          <h1 className='text-2xl font-bold'>数据管理助手</h1>
+          <Tooltip content='刷新数据'>
             <Button
-              color='danger'
-              onClick={handleLogout}
-              className='bg-gradient-to-r from-red-500 to-red-600 shadow-lg hover:shadow-xl transition-all duration-300'
-              startContent={<Icon icon='mdi:logout' className='w-4 h-4 sm:w-5 sm:h-5' />}
-              size='sm'
-            ></Button>
-          </div>
-        </div>
-      </motion.div>
-
-      <motion.div variants={itemVariants}>
-        <TabsContainer
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          className='bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden'
-        >
-          {activeTab === "forms" && (
-            <ResourceCardList
-              resourceType='forms'
-              appId={selectedAppId}
-              onView={handleViewForm}
-              onCreate={handleCreateForm}
-              isRefreshing={isRefreshing}
-              setIsRefreshing={setIsRefreshing}
-            />
-          )}
-          {activeTab === "reports" && (
-            <ResourceCardList
-              resourceType='reports'
-              appId={selectedAppId}
-              onView={handleViewReport}
-              onCreate={handleCreateReport}
-              isRefreshing={isRefreshing}
-              setIsRefreshing={setIsRefreshing}
-            />
-          )}
-          {activeTab === "resources" && (
-            <ResourceCardList
-              resourceType='resources'
-              appId={selectedAppId}
-              onView={(id) => window.open(`/resources/view/${id}?appId=${selectedAppId}`, "_blank")}
-              onCreate={() => {}}
-              isRefreshing={isRefreshing}
-              setIsRefreshing={setIsRefreshing}
-              createButton={
-                <CreateResourceButton
+              isIconOnly
+              color='warning'
+              variant='light'
+              onPress={() => setIsRefreshing(true)}
+              className='text-white'
+            >
+              <Icon icon='mdi:refresh' width='24' height='24' />
+            </Button>
+          </Tooltip>
+        </CardHeader>
+        <CardBody className='p-4 flex-grow flex flex-col'>
+          {error ? (
+            <div className='flex-grow flex items-center justify-center'>
+              <p className='text-danger text-center'>{error}</p>
+            </div>
+          ) : (
+            <ScrollShadow className='flex-grow mb-4 pr-2'>
+              <TabsContainer activeTab={activeTab} onTabChange={setActiveTab}>
+                <ResourceCardList
+                  resourceType={resourceType}
                   appId={selectedAppId}
-                  isDisabled={!selectedAppId}
-                  className='w-full sm:w-auto min-w-[200px]'
+                  onView={handleViewForm}
+                  onCreate={handleCreateForm}
+                  isRefreshing={isRefreshing}
+                  setIsRefreshing={setIsRefreshing}
                 />
-              }
-            />
+              </TabsContainer>
+            </ScrollShadow>
           )}
-        </TabsContainer>
-      </motion.div>
-
-      <motion.div variants={itemVariants} className="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-2xl px-4">
-        <CommandInput 
-          resourceType={resourceType}
-          onResourceTypeChange={setResourceType}
-          showResourceTypeSwitch={true}
-        />
-      </motion.div>
-    </motion.div>
+          <div className='flex items-center space-x-2 mt-4'>
+            <CommandInput
+              placeholder='输入您的数据管理需求...'
+              disabled={isRefreshing}
+              resourceType={resourceType}
+              onResourceTypeChange={setResourceType}
+            />
+          </div>
+        </CardBody>
+      </Card>
+    </div>
   )
 }
 
