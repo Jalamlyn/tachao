@@ -117,16 +117,12 @@ const DynamicFormTestPage: React.FC = () => {
         fields: {
           totalAmount: {
             label: "合计金额",
-            calculate: (records: any[]) => {
-              return records.reduce((sum, record) => sum + (record.amount || 0), 0)
-            }
+            calculate: "(records) => records.reduce((sum, record) => sum + (record.amount || 0), 0)"
           }
         }
       },
       rowCalculations: {
-        amount: (record: any) => {
-          return (record.quantity || 0) * (record.unitPrice || 0)
-        }
+        amount: "(record) => (record.quantity || 0) * (record.unitPrice || 0)"
       }
     },
     processSteps: [
@@ -203,22 +199,12 @@ const DynamicFormTestPage: React.FC = () => {
     dependencies: {
       amount: {
         dependsOn: ["quantity", "unitPrice"],
-        calculate: (values: any) => {
-          return (values.quantity || 0) * (values.unitPrice || 0)
-        }
+        calculate: "(values) => (values.quantity || 0) * (values.unitPrice || 0)"
       }
     },
     customValidators: {
-      quantity: (value: number) => {
-        if (value <= 0) {
-          return "数量必须大于0"
-        }
-      },
-      unitPrice: (value: number) => {
-        if (value <= 0) {
-          return "单价必须大于0"
-        }
-      }
+      quantity: "(value) => value <= 0 ? '数量必须大于0' : undefined",
+      unitPrice: "(value) => value <= 0 ? '单价必须大于0' : undefined"
     }
   }
 
@@ -228,10 +214,51 @@ const DynamicFormTestPage: React.FC = () => {
 
   const handleParseConfig = () => {
     try {
-      // 使用 Function 构造器来安全地执行字符串代码
-      const createConfig = new Function(`return ${configInput}`)
-      const config = createConfig()
-      setFormConfig(config)
+      // 将字符串形式的函数转换为实际函数
+      const configObj = JSON.parse(configInput)
+      
+      // 处理 summary.fields 中的 calculate 函数
+      if (configObj.table?.summary?.fields) {
+        Object.keys(configObj.table.summary.fields).forEach(key => {
+          const field = configObj.table.summary.fields[key]
+          if (field.calculate && typeof field.calculate === 'string') {
+            field.calculate = new Function('return ' + field.calculate)()
+          }
+        })
+      }
+
+      // 处理 rowCalculations 中的函数
+      if (configObj.table?.rowCalculations) {
+        Object.keys(configObj.table.rowCalculations).forEach(key => {
+          const calc = configObj.table.rowCalculations[key]
+          if (typeof calc === 'string') {
+            configObj.table.rowCalculations[key] = new Function('return ' + calc)()
+          }
+        })
+      }
+
+      // 处理 dependencies 中的 calculate 函数
+      if (configObj.dependencies) {
+        Object.keys(configObj.dependencies).forEach(key => {
+          const dep = configObj.dependencies[key]
+          if (dep.calculate && typeof dep.calculate === 'string') {
+            dep.calculate = new Function('return ' + dep.calculate)()
+          }
+        })
+      }
+
+      // 处理 customValidators 中的函数
+      if (configObj.customValidators) {
+        Object.keys(configObj.customValidators).forEach(key => {
+          const validator = configObj.customValidators[key]
+          if (typeof validator === 'string') {
+            configObj.customValidators[key] = new Function('return ' + validator)()
+          }
+        })
+      }
+
+      setFormConfig(configObj)
+      message.success("配置解析成功")
     } catch (error) {
       console.error("配置解析错误:", error)
       message.error("请检查输入的配置格式是否正确")
