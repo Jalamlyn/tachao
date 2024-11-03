@@ -2,7 +2,7 @@
 import type { TextAreaProps } from "@nextui-org/react"
 
 import React, { useEffect, useState } from "react"
-import { Button, Tooltip, Input } from "@nextui-org/react"
+import { Button, Tooltip, Input, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { cn } from "@nextui-org/react"
 
@@ -14,7 +14,14 @@ import { leaveRequestConfig } from "./from-templates/leave-request/config"
 import * as ww from "@wecom/jssdk"
 import message from "./Message"
 
-export default function Component(props: TextAreaProps & { classNames?: Record<"button" | "buttonIcon", string> }) {
+interface CommandInputProps extends TextAreaProps {
+  classNames?: Record<"button" | "buttonIcon", string>;
+  contexts?: string[];
+  onContextChange?: (context: string) => void;
+}
+
+export default function Component(props: CommandInputProps) {
+  const { contexts = [], onContextChange, ...restProps } = props
   const [prompt, setPrompt] = React.useState<string>("")
   const { submitForm } = useFormSubmission()
   const [isRecording, setIsRecording] = React.useState<boolean>(false)
@@ -24,6 +31,7 @@ export default function Component(props: TextAreaProps & { classNames?: Record<"
     "kgt8ON7yVITDhtdwci0qeUiDs4BGN8Nv1BTeJl6_DRfVMekQi10Szp0kiRDdSZkANokxKITDT4cv1UV6mWuiKA"
   )
   const [showSignatureInput, setShowSignatureInput] = useState<boolean>(false)
+  const [currentContext, setCurrentContext] = useState<string>(contexts[0] || "")
 
   useEffect(() => {
     // 注册企业微信 JSAPI
@@ -101,19 +109,16 @@ export default function Component(props: TextAreaProps & { classNames?: Record<"
     })
   }
 
-  const handleSignatureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSignature(e.target.value)
-  }
-
-  const toggleSignatureInput = () => {
-    setShowSignatureInput(!showSignatureInput)
+  const handleContextChange = (context: string) => {
+    setCurrentContext(context)
+    onContextChange?.(context)
   }
 
   return (
     <div className='flex flex-col w-full items-start gap-2'>
       <form className='flex w-full items-start gap-2' onSubmit={(e) => e.preventDefault()}>
         <PromptInput
-          {...props}
+          {...restProps}
           classNames={{
             innerWrapper: cn("items-center", props.classNames?.innerWrapper),
             input: cn(
@@ -157,25 +162,31 @@ export default function Component(props: TextAreaProps & { classNames?: Record<"
             </div>
           }
           startContent={
-            <Tooltip showArrow content='Add file'>
-              <Button isIconOnly className='p-[10px]' radius='full' variant='light'>
-                <Icon className='text-default-500' icon='solar:paperclip-linear' width={20} />
-              </Button>
-            </Tooltip>
+            contexts.length > 0 ? (
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button isIconOnly className='p-[10px]' radius='full' variant='light'>
+                    <Icon className='text-default-500' icon='solar:menu-dots-bold' width={20} />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu 
+                  aria-label="上下文选择"
+                  selectedKeys={[currentContext]}
+                  onSelectionChange={(keys) => handleContextChange(Array.from(keys)[0] as string)}
+                  selectionMode="single"
+                >
+                  {contexts.map((context) => (
+                    <DropdownItem key={context}>{context}</DropdownItem>
+                  ))}
+                </DropdownMenu>
+              </Dropdown>
+            ) : null
           }
           value={prompt}
           onValueChange={setPrompt}
           disabled={isLoading}
         />
       </form>
-      <div className='flex items-center gap-2'>
-        <Button size='sm' onClick={toggleSignatureInput}>
-          {showSignatureInput ? "隐藏" : "显示"} ticket
-        </Button>
-        {showSignatureInput && (
-          <Input size='sm' placeholder='输入新的 Signature' value={signature} onChange={handleSignatureChange} />
-        )}
-      </div>
     </div>
   )
 }

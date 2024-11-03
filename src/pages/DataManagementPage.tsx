@@ -17,6 +17,7 @@ const FormsPage: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [resourceType, setResourceType] = useState<"forms" | "resources" | "reports">("forms")
   const [error, setError] = useState<string | null>(null)
+  const [currentContext, setCurrentContext] = useState<string>("单据")
 
   useEffect(() => {
     setSelectedAppId(getAppId())
@@ -42,53 +43,56 @@ const FormsPage: React.FC = () => {
     window.open(`/reports/view/${reportId}?appId=${selectedAppId}`, "_blank")
   }
 
+  const handleContextChange = (context: string) => {
+    setCurrentContext(context)
+    // 这里可以根据上下文切换来获取不同的数据
+    console.log("Context changed to:", context)
+  }
+
   return (
-    <div className='container mx-auto p-4 md:p-6 h-screen flex flex-col'>
-      <Card className='w-full h-full shadow-lg rounded-lg flex flex-col'>
-        <CardHeader className='flex justify-between items-center p-4 text-white'>
-          <h1 className='text-2xl font-bold'>数据管理助手</h1>
-          <Tooltip content='刷新数据'>
-            <Button
-              isIconOnly
-              color='warning'
-              variant='light'
-              onPress={() => setIsRefreshing(true)}
-              className='text-white'
-            >
-              <Icon icon='mdi:refresh' width='24' height='24' />
-            </Button>
-          </Tooltip>
-        </CardHeader>
-        <CardBody className='p-4 flex-grow flex flex-col'>
-          {error ? (
-            <div className='flex-grow flex items-center justify-center'>
-              <p className='text-danger text-center'>{error}</p>
-            </div>
-          ) : (
-            <ScrollShadow className='flex-grow mb-4 pr-2'>
-              <TabsContainer activeTab={activeTab} onTabChange={setActiveTab}>
-                <ResourceCardList
-                  resourceType={resourceType}
-                  appId={selectedAppId}
-                  onView={handleViewForm}
-                  onCreate={handleCreateForm}
-                  isRefreshing={isRefreshing}
-                  setIsRefreshing={setIsRefreshing}
-                />
-              </TabsContainer>
-            </ScrollShadow>
-          )}
-          <div className='flex items-center space-x-2 mt-4'>
-            <CommandInput
-              placeholder='输入您的数据管理需求...'
-              disabled={isRefreshing}
-              resourceType={resourceType}
-              onResourceTypeChange={setResourceType}
-            />
+    <Card className='w-full h-[calc(100vh-280px)] shadow-lg rounded-lg flex flex-col'>
+      <CardHeader className='flex justify-between items-center p-4 text-white'>
+        <CommandInput
+          placeholder='输入您的数据管理需求...'
+          disabled={isRefreshing}
+          resourceType={resourceType}
+          onResourceTypeChange={setResourceType}
+          contexts={["单据", "数据"]}
+          onContextChange={handleContextChange}
+        />
+        <Tooltip content='刷新数据'>
+          <Button
+            isIconOnly
+            color='warning'
+            variant='light'
+            onPress={() => setIsRefreshing(true)}
+            className='text-white'
+          >
+            <Icon icon='mdi:refresh' width='24' height='24' />
+          </Button>
+        </Tooltip>
+      </CardHeader>
+      <CardBody className='p-4 flex-grow flex flex-col'>
+        {error ? (
+          <div className='flex-grow flex items-center justify-center'>
+            <p className='text-danger text-center'>{error}</p>
           </div>
-        </CardBody>
-      </Card>
-    </div>
+        ) : (
+          <ScrollShadow className='flex-grow mb-4 pr-2'>
+            <TabsContainer activeTab={activeTab} onTabChange={setActiveTab}>
+              <ResourceCardList
+                resourceType={resourceType}
+                appId={selectedAppId}
+                onView={handleViewForm}
+                onCreate={handleCreateForm}
+                isRefreshing={isRefreshing}
+                setIsRefreshing={setIsRefreshing}
+              />
+            </TabsContainer>
+          </ScrollShadow>
+        )}
+      </CardBody>
+    </Card>
   )
 }
 
