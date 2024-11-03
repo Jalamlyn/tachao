@@ -26,9 +26,9 @@ module.exports = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        'primary-dark': '#1E2B8C',
-        'primary-light': '#4B9EF4',
-        'accent': '#eee',
+        'primary-dark': '#4A90E2',  // 更新为蓝白色调
+        'primary-light': '#F5F9FF', // 更新为蓝白色调
+        'accent': '#E8F3FF',        // 更新为蓝白色调
       },
       borderRadius: {
         lg: `var(--radius)`,
