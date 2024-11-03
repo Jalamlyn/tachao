@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectItem } from "@nextui-org/react"
 import message from "@/components/Message"
 import DynamicForm from "@/components/common/DynamicForm"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { parseFormConfig } from "@/utils/codeParser"
 import { warehouseReceiptConfig } from "./mock/warehouse-receipt"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
@@ -24,13 +24,12 @@ const DynamicFormTestPage: React.FC = () => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("")
   const [aiDescription, setAiDescription] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generatingCode, setGeneratingCode] = useState("") // 新增状态用于存储生成过程
+  const [generatingCode, setGeneratingCode] = useState("") 
   const [aiGeneratedConfig, setAiGeneratedConfig] = useState<{
     config: DynamicFormConfig
     title: string
   } | null>(null)
 
-  // 使用 useMetadata hook 来管理模板
   const {
     items: templates,
     load: loadTemplates,
@@ -61,18 +60,17 @@ const DynamicFormTestPage: React.FC = () => {
     }
 
     setIsGenerating(true)
-    setGeneratingCode("") // 重置生成代码
+    setGeneratingCode("")
     try {
       const result = await AIFormAgent.createForm(aiDescription, (chunk) => {
         console.log("AI Response Chunk:", chunk)
-        setGeneratingCode((prev) => prev + chunk) // 实时更新生成的代码
+        setGeneratingCode((prev) => prev + chunk)
       })
 
       if (result) {
         setAiGeneratedConfig(result)
         setFormConfig(result.config)
         setTemplateName(result.title)
-        // 保存最新生成的结果到本地缓存
         localDB.setItem(LAST_GENERATED_KEY, {
           config: result.config,
           title: result.title,
@@ -172,7 +170,7 @@ const DynamicFormTestPage: React.FC = () => {
       if (result) {
         message.success("表单模板保存成功")
         setTemplateName("")
-        loadTemplates() // 重新加载模板列表
+        loadTemplates()
       } else {
         message.error("保存失败")
       }
@@ -355,18 +353,26 @@ const DynamicFormTestPage: React.FC = () => {
           </Card>
         </motion.div>
 
-        {formConfig && (
-          <motion.div variants={itemVariants} initial='hidden' animate='visible'>
-            <Card className='bg-white'>
-              <CardHeader>
-                <CardTitle>表单预览</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DynamicForm config={formConfig} onSubmit={handleSubmit} />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+        <AnimatePresence mode="wait">
+          {formConfig && (
+            <motion.div 
+              variants={itemVariants} 
+              initial='hidden' 
+              animate='visible'
+              exit='hidden'
+              key="form-preview"
+            >
+              <Card className='bg-white'>
+                <CardHeader>
+                  <CardTitle>表单预览</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <DynamicForm config={formConfig} onSubmit={handleSubmit} />
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   )
