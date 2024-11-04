@@ -6,19 +6,13 @@ import { Select, SelectItem } from "@nextui-org/react"
 import message from "@/components/Message"
 import DynamicForm from "@/components/common/DynamicForm"
 import { motion, AnimatePresence } from "framer-motion"
-import { parseFormConfig } from "@/utils/codeParser"
-import { warehouseReceiptConfig } from "./mock/warehouse-receipt"
+import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
+import { merge, cloneDeep } from 'lodash'
+import AIFormAgent from "@/service/agents/AIFormAgent"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import { Icon } from "@iconify/react"
-import AIFormAgent from "@/service/agents/AIFormAgent"
-import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
-import { localDB } from "@/utils/localDB"
-import { merge, cloneDeep } from 'lodash'
-
-const LAST_GENERATED_KEY = "dynamic-form-last-generated"
 
 const DynamicFormTestPage: React.FC = () => {
-  const [configInput, setConfigInput] = useState("")
   const [formConfig, setFormConfig] = useState<DynamicFormConfig | null>(null)
   const [templateType, setTemplateType] = useState<"official" | "custom">("custom")
   const [templateName, setTemplateName] = useState("")
@@ -32,7 +26,6 @@ const DynamicFormTestPage: React.FC = () => {
     title: string
   } | null>(null)
   const [editDescription, setEditDescription] = useState("")
-  // 添加 formKey 状态用于强制重新渲染
   const [formKey, setFormKey] = useState(0)
 
   const {
@@ -49,10 +42,6 @@ const DynamicFormTestPage: React.FC = () => {
   useEffect(() => {
     loadTemplates()
   }, [])
-
-  const handleConfigChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setConfigInput(e.target.value)
-  }
 
   const handleAIDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setAiDescription(e.target.value)
@@ -79,13 +68,7 @@ const DynamicFormTestPage: React.FC = () => {
         setAiGeneratedConfig(result)
         setFormConfig(result.config)
         setTemplateName(result.title)
-        // 重置 formKey 触发重新渲染
         setFormKey(prev => prev + 1)
-        localDB.setItem(LAST_GENERATED_KEY, {
-          config: result.config,
-          title: result.title,
-          timestamp: new Date().toISOString(),
-        })
         message.success("AI 生成表单成功")
       }
     } catch (error) {
@@ -116,21 +99,13 @@ const DynamicFormTestPage: React.FC = () => {
       })
       
       if (result) {
-        // 使用 cloneDeep 进行深拷贝，避免修改原对象
         const mergedConfig = merge(cloneDeep(formConfig), result.config)
         setFormConfig(mergedConfig)
-        // 重置 formKey 触发重新渲染
         setFormKey(prev => prev + 1)
         
         if (result.title) {
           setTemplateName(result.title)
         }
-        
-        localDB.setItem(LAST_GENERATED_KEY, {
-          config: mergedConfig,
-          title: result.title || templateName,
-          timestamp: new Date().toISOString(),
-        })
         
         message.success("AI 编辑表单成功")
         setEditDescription("") 
@@ -140,63 +115,6 @@ const DynamicFormTestPage: React.FC = () => {
       message.error("AI 编辑表单失败，请重试")
     } finally {
       setIsEditing(false)
-    }
-  }
-
-  const handleLoadLastGenerated = () => {
-    try {
-      const lastGenerated = localDB.getItem(LAST_GENERATED_KEY)
-      if (lastGenerated) {
-        setAiGeneratedConfig({
-          config: lastGenerated.config,
-          title: lastGenerated.title,
-        })
-        setFormConfig(lastGenerated.config)
-        setTemplateName(lastGenerated.title)
-        // 重置 formKey 触发重新渲染
-        setFormKey(prev => prev + 1)
-        message.success("已加载最近一次生成的结果")
-      } else {
-        message.info("没有找到最近生成的结果")
-      }
-    } catch (error) {
-      console.error("加载最近生成结果失败:", error)
-      message.error("加载最近生成结果失败")
-    }
-  }
-
-  const handleParseConfig = async () => {
-    try {
-      const parsedConfig = await parseFormConfig(configInput)
-      if (parsedConfig) {
-        setFormConfig(parsedConfig)
-        // 重置 formKey 触发重新渲染
-        setFormKey(prev => prev + 1)
-        message.success("配置解析成功")
-      } else {
-        message.error("配置解析失败")
-      }
-    } catch (error) {
-      console.error("配置解析错误:", error)
-      message.error("请检查输入的配置格式是否正确")
-    }
-  }
-
-  const handleLoadExample = async () => {
-    try {
-      setConfigInput(warehouseReceiptConfig)
-      const parsedConfig = await parseFormConfig(warehouseReceiptConfig)
-      if (parsedConfig) {
-        setFormConfig(parsedConfig)
-        // 重置 formKey 触发重新渲染
-        setFormKey(prev => prev + 1)
-        message.success("示例配置加载成功")
-      } else {
-        message.error("示例配置解析失败")
-      }
-    } catch (error) {
-      console.error("加载示例配置错误:", error)
-      message.error("加载示例配置失败")
     }
   }
 
@@ -249,7 +167,6 @@ const DynamicFormTestPage: React.FC = () => {
       const template = await getTemplateDetail(templateId)
       if (template && template.data.config) {
         setFormConfig(template.data.config)
-        // 重置 formKey 触发重新渲染
         setFormKey(prev => prev + 1)
         message.success("模板加载成功")
       } else {
@@ -287,7 +204,7 @@ const DynamicFormTestPage: React.FC = () => {
 
   return (
     <div className='container mx-auto py-8'>
-      <motion.div variants={containerVariants} initial='hidden' animate='visible' className='space-y-8'>
+      <motion.div variants={containerVariants} initial='hidden' animate='visible' className='space-y-8 bg-white'>
         <motion.div variants={itemVariants}>
           <Card>
             <CardHeader>
@@ -304,20 +221,14 @@ const DynamicFormTestPage: React.FC = () => {
                     placeholder='请输入表单描述，AI 将根据描述生成表单配置...'
                     className='flex-1'
                   />
-                  <div className='flex flex-col gap-2'>
-                    <Button onClick={handleGenerateAIForm} disabled={isGenerating} className='self-start gap-2'>
-                      {isGenerating ? (
-                        <Icon icon='mdi:loading' className='w-5 h-5 animate-spin' />
-                      ) : (
-                        <Icon icon='mdi:robot' className='w-5 h-5' />
-                      )}
-                      AI 生成
-                    </Button>
-                    <Button onClick={handleLoadLastGenerated} variant='outline' className='self-start gap-2'>
-                      <Icon icon='mdi:history' className='w-5 h-5' />
-                      加载最近生成
-                    </Button>
-                  </div>
+                  <Button onClick={handleGenerateAIForm} disabled={isGenerating} className='self-start gap-2'>
+                    {isGenerating ? (
+                      <Icon icon='mdi:loading' className='w-5 h-5 animate-spin' />
+                    ) : (
+                      <Icon icon='mdi:robot' className='w-5 h-5' />
+                    )}
+                    AI 生成
+                  </Button>
                 </div>
               </div>
 
@@ -384,20 +295,6 @@ const DynamicFormTestPage: React.FC = () => {
                     </SelectItem>
                   ))}
                 </Select>
-              </div>
-
-              <div className='space-y-2'>
-                <label className='text-sm font-medium'>表单配置</label>
-                <div className='flex gap-2 mb-2'>
-                  <Button onClick={handleLoadExample}>加载示例配置</Button>
-                  <Button onClick={handleParseConfig}>解析配置</Button>
-                </div>
-                <Textarea
-                  value={configInput}
-                  onChange={handleConfigChange}
-                  placeholder='请输入表单配置对象...'
-                  className='min-h-[200px] font-mono'
-                />
               </div>
 
               {formConfig && (
