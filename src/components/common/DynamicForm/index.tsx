@@ -14,12 +14,92 @@ import message from "@/components/Message"
 import OrderNumberField from "../OrderNumberField"
 import { useMetadata } from "../../from-templates/hook/useMetadata"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { merge } from 'lodash'
+
+// 默认配置
+const defaultConfig = {
+  // 表单基础配置
+  form: {
+    layout: "vertical" as const,
+    labelWidth: "120px",
+    submitButton: {
+      text: "保存",
+      position: "right" as const,
+    },
+  },
+  // 工具栏配置
+  toolbar: {
+    print: {
+      enabled: true,
+      text: "打印预览",
+      icon: "mdi:printer",
+    },
+    save: {
+      enabled: true,
+      text: "保存",
+      icon: "mdi:content-save",
+    },
+    edit: {
+      enabled: true,
+      text: "编辑",
+      icon: "mdi:pencil",
+    },
+  },
+  // 打印配置
+  print: {
+    documentTitle: "表单打印",
+    pageStyle: `
+      @page {
+        size: A4;
+        margin: 20mm;
+      }
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact;
+        }
+        html, body {
+          height: 100vh;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden;
+        }
+      }
+    `,
+    template: {
+      header: {
+        title: "",
+        subtitle: "",
+        logo: "",
+      },
+      content: {
+        fields: [],
+        layout: "form" as const,
+        columns: 2,
+      },
+      footer: {
+        showPageNumber: true,
+        showDate: true,
+        customText: "",
+      },
+    },
+  },
+  // 订单号字段配置
+  orderNumberField: {
+    enabled: true,
+    prefix: "ORDER",
+    fieldName: "orderNumber",
+    label: "订单编号",
+  },
+}
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
   config,
   id,
 }) => {
-  const { form, loading } = useDynamicForm(config)
+  // 合并配置
+  const mergedConfig = merge({}, defaultConfig, config)
+  
+  const { form, loading } = useDynamicForm(mergedConfig)
   const printRef = useRef<HTMLDivElement>(null)
   const [isEditMode, setIsEditMode] = useState(false)
   const [showPrintPreview, setShowPrintPreview] = useState(false)
@@ -27,8 +107,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
-    documentTitle: config.print?.documentTitle || "表单打印",
-    pageStyle: config.print?.pageStyle,
+    documentTitle: mergedConfig.print?.documentTitle || "表单打印",
+    pageStyle: mergedConfig.print?.pageStyle,
     onBeforePrint: async () => {
       return new Promise((resolve) => {
         const printId = message.loading("正在准备打印...")
@@ -57,7 +137,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         const errors = Object.entries(form.formState.errors)
           .map(([key, error]) => {
             const fieldName = key.split('.').pop() // 获取字段名
-            const fieldConfig = Object.values(config.formFields || {})
+            const fieldConfig = Object.values(mergedConfig.formFields || {})
               .flat()
               .find((field: any) => field.name === fieldName)
             const label = fieldConfig?.label || fieldName
@@ -134,20 +214,20 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       >
         <AnimatePresence>
           {/* Order Number Field */}
-          {config.orderNumberField && (
+          {mergedConfig.orderNumberField?.enabled && (
             <motion.div variants={sectionVariants}>
               <OrderNumberField
                 form={form}
-                prefix={config.orderNumberField.prefix}
-                fieldName={config.orderNumberField.fieldName || "orderNumber"}
-                label={config.orderNumberField.label}
+                prefix={mergedConfig.orderNumberField.prefix}
+                fieldName={mergedConfig.orderNumberField.fieldName}
+                label={mergedConfig.orderNumberField.label}
                 disabled={!currentIsEditable}
               />
             </motion.div>
           )}
 
           {/* Form Fields */}
-          {Object.entries(config.formFields).map(([section, fields]) => (
+          {Object.entries(mergedConfig.formFields || {}).map(([section, fields]) => (
             <motion.div
               key={section}
               variants={sectionVariants}
@@ -159,13 +239,13 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           ))}
 
           {/* Table */}
-          {config.table && (
+          {mergedConfig.table && (
             <motion.div
               variants={sectionVariants}
               className="bg-white rounded-lg p-6 shadow-sm overflow-hidden"
             >
               <DynamicTable
-                config={config.table}
+                config={mergedConfig.table}
                 form={form}
                 isEditable={currentIsEditable}
                 fieldName="tableData"
@@ -174,10 +254,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           )}
 
           {/* Process Steps */}
-          {config.processSteps && (
+          {mergedConfig.processSteps && (
             <motion.div variants={sectionVariants} className="bg-white rounded-lg p-6 shadow-sm">
               <DynamicProcessConfirm
-                steps={config.processSteps}
+                steps={mergedConfig.processSteps}
                 form={form}
                 isEditable={currentIsEditable}
               />
@@ -188,46 +268,46 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           <motion.div
             variants={sectionVariants}
             className={`flex ${
-              config.form?.submitButton?.position === "center"
+              mergedConfig.form?.submitButton?.position === "center"
                 ? "justify-center"
-                : config.form?.submitButton?.position === "right"
+                : mergedConfig.form?.submitButton?.position === "right"
                 ? "justify-end"
                 : "justify-start"
             }`}
           >
             <div className="flex gap-4">
               {/* Edit Button */}
-              {id && !currentIsEditable && (
+              {id && !currentIsEditable && mergedConfig.toolbar.edit.enabled && (
                 <Button
                   color="primary"
                   variant="flat"
                   onClick={toggleEditMode}
-                  startContent={<Icon icon="mdi:pencil" className="w-4 h-4" />}
+                  startContent={<Icon icon={mergedConfig.toolbar.edit.icon} className="w-4 h-4" />}
                 >
-                  编辑
+                  {mergedConfig.toolbar.edit.text}
                 </Button>
               )}
 
               {/* Submit Button */}
-              {currentIsEditable && (
+              {currentIsEditable && mergedConfig.toolbar.save.enabled && (
                 <Button
                   type="submit"
                   color="primary"
-                  startContent={<Icon icon="mdi:content-save" className="w-4 h-4" />}
+                  startContent={<Icon icon={mergedConfig.toolbar.save.icon} className="w-4 h-4" />}
                 >
-                  {config.form?.submitButton?.text || (id ? "保存" : "创建")}
+                  {mergedConfig.toolbar.save.text}
                 </Button>
               )}
 
               {/* Print Button */}
-              {!currentIsEditable && (
+              {!currentIsEditable && mergedConfig.toolbar.print.enabled && (
                 <Button
                   color="primary"
                   variant="flat"
                   onClick={() => setShowPrintPreview(true)}
-                  startContent={<Icon icon="mdi:printer" className="w-4 h-4" />}
+                  startContent={<Icon icon={mergedConfig.toolbar.print.icon} className="w-4 h-4" />}
                 >
-                  打印预览
+                  {mergedConfig.toolbar.print.text}
                 </Button>
               )}
 
