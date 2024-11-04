@@ -120,6 +120,67 @@ export default {
     }
   }
 
+  public async editForm(
+    currentConfig: DynamicFormConfig,
+    editDescription: string,
+    onChunk: (chunk: string) => void
+  ): Promise<{
+    config: Partial<DynamicFormConfig>
+    title?: string
+  } | null> {
+    // 验证意图
+    const isValid = await this.validateIntent("edit", editDescription)
+    if (!isValid) {
+      return null
+    }
+
+    const prompt = `请根据以下编辑描述，修改现有的表单配置：
+
+当前表单配置:
+${jsonStringify(currentConfig)}
+
+编辑需求:
+${editDescription}
+
+请只返回需要修改的部分配置，使用如下格式：
+<mo-ai-form>
+export default {
+  title: "新的表单标题(如果需要修改)",
+  config: {
+    // 只包含需要修改的配置部分
+  }
+}
+</mo-ai-form>
+
+注意:
+1. 只返回需要修改的部分
+2. 保持与原配置的结构一致
+3. 确保修改符合 DynamicFormConfig 类型定义`
+
+    try {
+      const response = await this.processAIResponse(prompt, onChunk)
+      const parsedConfig = await parseFormConfig(response)
+
+      if (!parsedConfig) {
+        throw new Error("解析表单配置失败")
+      }
+
+      const { title, config } = parsedConfig
+
+      if (!config) {
+        throw new Error("表单配置缺少必要的字段")
+      }
+
+      return {
+        config: config as Partial<DynamicFormConfig>,
+        title: title,
+      }
+    } catch (error) {
+      console.error("Error editing form:", error)
+      throw new Error("编辑表单失败：" + (error as Error).message)
+    }
+  }
+
   public async searchForms(
     query: string,
     formsIndex: FormIndex[],
@@ -164,7 +225,7 @@ export default getMatchedForms() {
     }
   }
 
-  public async analyzeIntent(input: string): Promise<"create" | "search" | "unsupported"> {
+  public async analyzeIntent(input: string): Promise<"create" | "search" | "edit" | "unsupported"> {
     // 使用 AI 分析指令
     const aiAnalysisPrompt = `请分析以下用户指令的意图，判断是否是合法的表单操作指令：
 "${input}"
@@ -172,20 +233,21 @@ export default getMatchedForms() {
 请根据以下规则进行分析：
 1. 如果是创建/新建/生成表单的指令，返回 "create"
 2. 如果是搜索/查找/检索表单或资料的指令，返回 "search"
-3. 如果不是表单相关的指令或指令不明确，返回 "unsupported"
+3. 如果是编辑/修改/更新表单的指令，返回 "edit"
+4. 如果不是表单相关的指令或指令不明确，返回 "unsupported"
 
-请只返回 "create"、"search" 或 "unsupported"，不要返回其他内容。`
+请只返回 "create"、"search"、"edit" 或 "unsupported"，不要返回其他内容。`
 
     try {
       // 先尝试使用 AI 分析
       const aiResponse = await this.processAIResponse(aiAnalysisPrompt, () => {})
       const cleanResponse = aiResponse.trim().toLowerCase()
 
-      if (cleanResponse === "create" || cleanResponse === "search" || cleanResponse === "unsupported") {
+      if (cleanResponse === "create" || cleanResponse === "search" || cleanResponse === "edit" || cleanResponse === "unsupported") {
         if (cleanResponse === "unsupported") {
-          message.warning("不支持的指令，请使用创建表单或检索表单相关的指令。例如：'创建一个请假单'或'查找销售订单'")
+          message.warning("不支持的指令，请使用创建表单、检索表单或编辑表单相关的指令。")
         }
-        return cleanResponse as "create" | "search" | "unsupported"
+        return cleanResponse as "create" | "search" | "edit" | "unsupported"
       }
 
       // 如果 AI 分析失败，使用原有的关键词匹配作为备选方案
@@ -199,8 +261,13 @@ export default getMatchedForms() {
         return "search"
       }
 
+      const editKeywords = /(编辑|修改|更新|调整|改变).*?(表单|单据|模板)/
+      if (editKeywords.test(input)) {
+        return "edit"
+      }
+
       // 如果都不匹配，返回不支持的指令
-      message.warning("不支持的指令，请使用创建表单或检索表单相关的指令。例如：'创建一个请假单'或'查找销售订单'")
+      message.warning("不支持的指令，请使用创建表单、检索表单或编辑表单相关的指令。")
       return "unsupported"
     } catch (error) {
       console.error("Error analyzing intent:", error)

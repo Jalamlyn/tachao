@@ -52,9 +52,6 @@ export interface ProcessStep {
   fields?: FormField[]
   onConfirm?: () => Promise<void>
   onCancel?: () => void
-  validations?: {
-    rules: ((values: any) => string | undefined)[]
-  }
 }
 
 // 元数据配置

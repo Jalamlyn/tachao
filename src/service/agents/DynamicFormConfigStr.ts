@@ -50,7 +50,6 @@ export interface ProcessStep {
   title: string
   description?: string
   icon?: string
-  // 流程步骤的表单字段配置
   fields?: FormField[]
   onConfirm?: () => Promise<void>
   onCancel?: () => void
