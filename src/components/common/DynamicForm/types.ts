@@ -7,7 +7,6 @@ export interface FormField {
   disabled?: boolean
   hidden?: boolean
   required?: boolean
-  validators?: ((value: any) => string | undefined)[]
   options?: { label: string; value: any }[]
 }
 

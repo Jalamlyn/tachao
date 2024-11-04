@@ -8,7 +8,6 @@ export interface FormField {
   disabled?: boolean
   hidden?: boolean
   required?: boolean
-  validators?: ((value: any) => string | undefined)[]
   options?: { label: string; value: any }[]
 }
 
@@ -69,6 +68,7 @@ export interface FormMetadata {
   updatedAt?: string
   createdBy?: string
   updatedBy?: string
+  type?: string
 }
 
 // 渲染配置
@@ -88,6 +88,20 @@ export interface FormRenderConfig {
   processSteps?: ProcessStep[]
 }
 
+// 校验结果类型
+export interface ValidationResult {
+  valid: boolean
+  errors?: string[]
+  warnings?: string[] // 添加警告信息，不阻止提交但需要提示用户
+  fields?: { [key: string]: string } // 字段级别的错误信息
+}
+
+// 校验上下文类型
+export interface ValidationContext {
+  mode?: 'submit' | 'save' | 'custom' // 校验模式
+  customData?: any // 自定义数据
+}
+
 // 动态表单配置
 export interface DynamicFormConfig {
   metadata: FormMetadata
@@ -96,6 +110,15 @@ export interface DynamicFormConfig {
     prefix?: string
     fieldName?: string
     label?: string
+  }
+  // 添加表单级别的校验函数
+  validate?: (values: any, context?: ValidationContext) => Promise<ValidationResult> | ValidationResult
+  // 添加字段依赖关系配置
+  dependencies?: {
+    [key: string]: {
+      dependsOn: string[]
+      calculate: (values: any) => any
+    }
   }
 }
 
