@@ -19,6 +19,15 @@ const animations = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   },
+  containerVariants: {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  },
 }
 
 // 通用的表单字段包装器组件
@@ -64,12 +73,12 @@ const FormFieldWrapper: React.FC<{
         control={form.control}
         name={name}
         render={({ field }) => (
-          <FormItem>
-            <FormLabel>{label}</FormLabel>
+          <FormItem className="w-full">
+            <FormLabel className="text-sm font-medium">{label}</FormLabel>
             <FormControl>
               {children({ ...field, disabled: !isEditable || disabled })}
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs" />
           </FormItem>
         )}
       />
@@ -79,7 +88,10 @@ const FormFieldWrapper: React.FC<{
 
 // 基础输入组件
 const BasicInput: React.FC<{ type: string; field: any }> = ({ type, field }) => (
-  <Input {...field} type={type} className={type === "number" ? "text-right font-mono" : ""} />
+  <Input {...field} type={type} className={cn(
+    type === "number" ? "text-right font-mono" : "",
+    "w-full rounded-md"
+  )} />
 )
 
 // 日期选择组件
@@ -135,7 +147,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
     const basicInputTypes = ["text", "password", "email", "tel", "url"]
     if (basicInputTypes.includes(field.type)) {
       return (
-        <div className={shouldRenderOrderNumber ? "grid grid-cols-2 gap-4" : undefined}>
+        <div className={shouldRenderOrderNumber ? "grid grid-cols-1 md:grid-cols-2 gap-4" : undefined}>
           <FormFieldWrapper
             name={field.name}
             label={field.label}
@@ -170,7 +182,13 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             disabled={field.disabled}
             showWhen={field.showWhen}
           >
-            {(formField) => <Textarea {...formField} placeholder={field.placeholder} />}
+            {(formField) => (
+              <Textarea
+                {...formField}
+                placeholder={field.placeholder}
+                className="min-h-[100px] md:min-h-[80px]"
+              />
+            )}
           </FormFieldWrapper>
         )
 
@@ -188,7 +206,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
               <Input
                 {...formField}
                 type="number"
-                className="text-right font-mono"
+                className="text-right font-mono w-full"
                 placeholder={field.placeholder}
               />
             )}
@@ -262,7 +280,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
                 disabled={!isEditable || field.disabled}
                 className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0
                   file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700
-                  hover:file:bg-blue-100"
+                  hover:file:bg-blue-100 w-full"
               />
             )}
           </FormFieldWrapper>
@@ -294,11 +312,16 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <motion.div
+      variants={animations.containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"
+    >
       {fields.map((field) => (
-        <div key={field.name}>{renderField(field)}</div>
+        <div key={field.name} className="w-full">{renderField(field)}</div>
       ))}
-    </div>
+    </motion.div>
   )
 }
 

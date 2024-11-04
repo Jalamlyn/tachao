@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns"
 import { cn } from "@/theme/cn"
 import { Textarea } from "@/components/ui/textarea"
+import { motion } from "framer-motion"
 
 interface DynamicTableProps {
   config: TableConfig
@@ -21,23 +22,19 @@ interface DynamicTableProps {
 }
 
 const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = true, fieldName }) => {
-  // 使用 useFieldArray 来管理动态表格数据
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: fieldName
   });
 
-  // 使用 useWatch 来监听表格数据变化
   const tableData = useWatch({
     control: form.control,
     name: fieldName,
     defaultValue: []
   });
 
-  // 优化添加行的函数,确保新行数据的完整性
   const handleAddRow = useCallback(() => {
     const newRow = config.columns.reduce((acc, column) => {
-      // 根据字段类型设置合适的默认值
       switch(column.type) {
         case 'number':
           acc[column.key] = 0
@@ -58,12 +55,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     append(newRow)
   }, [config.columns, append])
 
-  // 使用 useCallback 优化删除行的函数
   const handleDeleteRow = useCallback((index: number) => {
     remove(index)
   }, [remove])
 
-  // 默认的计算函数
   const defaultCalculations = {
     amount: (row: any) => {
       const quantity = Number(row.quantity) || 0
@@ -72,19 +67,16 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     }
   }
 
-  // 合并默认计算函数和配置的计算函数
   const calculations = {
     ...defaultCalculations,
     ...(config.rowCalculations || {})
   }
 
   const handleCalculateField = useCallback((row: any, index: number, changedField: string) => {
-    // 检查是否有依赖关系需要计算
     if (config.dependencies) {
       Object.entries(config.dependencies).forEach(([field, dependency]) => {
         if (dependency.dependsOn?.includes(changedField)) {
           try {
-            // 优先使用配置的计算函数
             const calculate = dependency.calculate || calculations[field]
             if (typeof calculate === 'function') {
               const value = calculate(row)
@@ -109,7 +101,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
   const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
     const cellFieldName = `${fieldName}.${rowIndex}.${column.key}`
-    // 修复 editable 判断逻辑
     const isFieldEditable = isEditable && column.editable !== false
 
     if (column.render) {
@@ -201,7 +192,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                   <Textarea
                     {...field}
                     disabled={!isFieldEditable}
-                    className="min-h-[100px]"
+                    className="min-h-[100px] md:min-h-[60px]"
                   />
                 </FormControl>
                 <FormMessage />
@@ -303,56 +294,106 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     )
   }
 
+  // 移动端响应式布局
+  const renderMobileTable = () => {
+    return (
+      <div className="space-y-4 md:hidden">
+        {fields.map((field, rowIndex) => (
+          <motion.div
+            key={field.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="bg-white rounded-lg shadow-sm p-4 space-y-3"
+          >
+            {config.columns.map((column) => (
+              <div key={column.key} className="space-y-1">
+                <div className="text-sm font-medium text-gray-500">{column.title}</div>
+                <div>{renderCell(column, rowIndex)}</div>
+              </div>
+            ))}
+            {isEditable && (
+              <div className="pt-2 flex justify-end">
+                <Button
+                  isIconOnly
+                  color="danger"
+                  variant="light"
+                  size="sm"
+                  onClick={() => handleDeleteRow(rowIndex)}
+                >
+                  <Icon icon="mdi:delete" className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div>
       {config.toolbar}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {config.columns.map((column) => (
-              <TableHead key={column.key} style={{ width: column.width }}>
-                {column.title}
-              </TableHead>
-            ))}
-            {isEditable && <TableHead>操作</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {fields.map((field, rowIndex) => (
-            <TableRow key={field.id}>
+      
+      {/* 桌面端表格 */}
+      <div className="hidden md:block overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
               {config.columns.map((column) => (
-                <TableCell key={column.key}>{renderCell(column, rowIndex)}</TableCell>
+                <TableHead key={column.key} style={{ width: column.width }}>
+                  {column.title}
+                </TableHead>
               ))}
-              {isEditable && (
-                <TableCell>
-                  <Button
-                    isIconOnly
-                    color="danger"
-                    variant="light"
-                    size="sm"
-                    onClick={() => handleDeleteRow(rowIndex)}
-                  >
-                    <Icon icon="mdi:delete" className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              )}
+              {isEditable && <TableHead>操作</TableHead>}
             </TableRow>
-          ))}
-          {renderSummary()}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {fields.map((field, rowIndex) => (
+              <TableRow key={field.id}>
+                {config.columns.map((column) => (
+                  <TableCell key={column.key}>{renderCell(column, rowIndex)}</TableCell>
+                ))}
+                {isEditable && (
+                  <TableCell>
+                    <Button
+                      isIconOnly
+                      color="danger"
+                      variant="light"
+                      size="sm"
+                      onClick={() => handleDeleteRow(rowIndex)}
+                    >
+                      <Icon icon="mdi:delete" className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+            {renderSummary()}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* 移动端卡片式布局 */}
+      {renderMobileTable()}
+
       {isEditable && (
-        <div className="mt-4">
+        <motion.div 
+          className="mt-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <Button
             color="primary"
             variant="flat"
             size="sm"
             onClick={handleAddRow}
             startContent={<Icon icon="mdi:plus" className="w-4 h-4" />}
+            className="w-full md:w-auto"
           >
             添加行
           </Button>
-        </div>
+        </motion.div>
       )}
     </div>
   )
