@@ -8,6 +8,7 @@ import { useDynamicForm } from "./hooks/useDynamicForm"
 import DynamicFormFields from "./components/DynamicFormFields"
 import DynamicTable from "./components/DynamicTable"
 import DynamicProcessConfirm from "./components/DynamicProcessConfirm"
+import OrderNumberField from "../OrderNumberField"
 import message from "@/components/Message"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 
@@ -24,6 +25,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
     try {
       const values = form.getValues()
       
+      // 获取订单编号作为唯一标识
+      const orderNumberFieldName = config.orderNumberConfig?.fieldName || "orderNumber"
+      const orderNumber = values[orderNumberFieldName]
+      
       // 如果提供了自定义的 onSubmit，优先使用它
       if (onSubmit) {
         await onSubmit(values)
@@ -35,7 +40,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
       if (id) {
         // 更新现有数据
         const result = await updateMetadata(id, {
-          title: config.metadata.title,
+          title: orderNumber || config.metadata.title, // 使用订单编号作为标题
           status: "submitted",
           data: values
         })
@@ -47,7 +52,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
       } else {
         // 创建新数据
         const result = await createMetadata({
-          title: config.metadata.title,
+          title: orderNumber || config.metadata.title, // 使用订单编号作为标题
           status: "submitted",
           data: values
         })
@@ -78,6 +83,13 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
   }
 
   const { metadata, renderConfig } = config
+
+  // 默认的订单编号配置
+  const orderNumberConfig = {
+    prefix: config.orderNumberConfig?.prefix || "ORDER",
+    fieldName: config.orderNumberConfig?.fieldName || "orderNumber",
+    label: config.orderNumberConfig?.label || "订单编号"
+  }
 
   return (
     <Form {...form}>
@@ -111,6 +123,16 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
           className="bg-white rounded-lg p-6 shadow-sm"
         >
           <h2 className="text-lg font-semibold mb-6">基本信息</h2>
+          <div className="grid grid-cols-2 gap-6">
+            {/* 默认添加订单编号字段 */}
+            <OrderNumberField
+              form={form}
+              prefix={orderNumberConfig.prefix}
+              fieldName={orderNumberConfig.fieldName}
+              label={orderNumberConfig.label}
+              disabled={!metadata.permissions?.edit}
+            />
+          </div>
           <DynamicFormFields
             fields={renderConfig.basicFields}
             form={form}

@@ -1,6 +1,3 @@
-import { ReactNode } from "react"
-import { UseFormReturn } from "react-hook-form"
-
 // 基础字段类型
 export interface FormField {
   name: string
@@ -48,7 +45,7 @@ export interface FormMetadata {
     delete?: boolean
     print?: boolean
   }
-  status?: 'draft' | 'submitted' | 'approved' | 'rejected'
+  status?: "draft" | "submitted" | "approved" | "rejected"
   createdAt?: string
   updatedAt?: string
   createdBy?: string
@@ -59,7 +56,7 @@ export interface FormMetadata {
 export interface FormRenderConfig {
   // 基本信息字段
   basicFields: FormField[]
-  
+
   // 表格配置
   table?: {
     columns: TableColumn[]
@@ -72,7 +69,7 @@ export interface FormRenderConfig {
       }
     }
   }
-  
+
   // 流程步骤
   processSteps?: ProcessStep[]
 }
@@ -81,6 +78,11 @@ export interface FormRenderConfig {
 export interface DynamicFormConfig {
   metadata: FormMetadata
   renderConfig: FormRenderConfig
+  orderNumberConfig?: {
+    prefix?: string
+    fieldName?: string
+    label?: string
+  }
 }
 
 // 动态表单组件Props
