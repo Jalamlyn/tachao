@@ -1,310 +1,152 @@
-import React, { useRef, useState } from "react"
+import React from "react"
 import { Form } from "@/components/ui/form"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { DynamicFormProps } from "./types"
 import { useDynamicForm } from "./hooks/useDynamicForm"
 import DynamicFormFields from "./components/DynamicFormFields"
 import DynamicTable from "./components/DynamicTable"
 import DynamicProcessConfirm from "./components/DynamicProcessConfirm"
-import PrintableContent from "./components/PrintableContent"
-import { useReactToPrint } from "react-to-print"
 import message from "@/components/Message"
-import OrderNumberField from "../OrderNumberField"
-import { useMetadata } from "../../from-templates/hook/useMetadata"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { merge } from "lodash"
 
-// 默认配置
-const defaultConfig = {
-  // 表单基础配置
-  form: {
-    layout: "vertical" as const,
-    labelWidth: "120px",
-    submitButton: {
-      text: "保存",
-      position: "right" as const,
-    },
-  },
-  // 工具栏配置
-  toolbar: {
-    print: {
-      enabled: true,
-      text: "打印预览",
-      icon: "mdi:printer",
-    },
-    save: {
-      enabled: true,
-      text: "保存",
-      icon: "mdi:content-save",
-    },
-    edit: {
-      enabled: true,
-      text: "编辑",
-      icon: "mdi:pencil",
-    },
-  },
-  // 打印配置
-  print: {
-    documentTitle: "表单打印",
-    pageStyle: `
-      @page {
-        size: A4;
-        margin: 20mm;
-      }
-      @media print {
-        body {
-          -webkit-print-color-adjust: exact;
-        }
-        html, body {
-          height: 100vh;
-          margin: 0 !important;
-          padding: 0 !important;
-          overflow: hidden;
-        }
-      }
-    `,
-    template: {
-      header: {
-        title: "",
-        subtitle: "",
-        logo: "",
-      },
-      content: {
-        fields: [],
-        layout: "form" as const,
-        columns: 2,
-      },
-      footer: {
-        showPageNumber: true,
-        showDate: true,
-        customText: "",
-      },
-    },
-  },
-  // 订单号字段配置
-  orderNumberField: {
-    enabled: true,
-    prefix: "ORDER",
-    fieldName: "orderNumber",
-    label: "订单编号",
-  },
-}
+const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCancel }) => {
+  const { form } = useDynamicForm(config)
 
-const DynamicForm: React.FC<DynamicFormProps> = ({ config, id }) => {
-  // 合并配置
-  const mergedConfig = merge({}, defaultConfig, config)
-
-  const { form, loading } = useDynamicForm(mergedConfig)
-  const printRef = useRef<HTMLDivElement>(null)
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [showPrintPreview, setShowPrintPreview] = useState(false)
-  const { create, update } = useMetadata("form")
-
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: mergedConfig.print?.documentTitle || "表单打印",
-    pageStyle: mergedConfig.print?.pageStyle,
-    onBeforePrint: async () => {
-      return new Promise((resolve) => {
-        const printId = message.loading("正在准备打印...")
-        setTimeout(() => {
-          message.closeLoading(printId)
-          resolve()
-        }, 500)
-      })
-    },
-    onAfterPrint: () => {
-      message.success("打印完成")
-      setShowPrintPreview(false)
-    },
-    onPrintError: (error) => {
-      console.error("Print error:", error)
-      message.error("打印失败，请重试")
-    },
-  })
-
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       const values = form.getValues()
-
-      if (id) {
-        // 更新表单
-        await update(id, {
-          ...values,
-          id,
-          updatedAt: new Date().toISOString(),
-        })
-        message.success("表单更新成功")
-        setIsEditMode(false)
-      } else {
-        // 创建新表单
-        await create({
-          ...values,
-          id: Date.now().toString(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        })
-        message.success("表单创建成功")
+      if (onSubmit) {
+        await onSubmit(values)
+        message.success("提交成功")
       }
     } catch (error) {
       console.error("Form submission error:", error)
-      message.error("提交表单失败")
+      message.error("提交失败")
     }
   }
 
-  const toggleEditMode = () => {
-    setIsEditMode(!isEditMode)
+  // 动画配置
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
+    },
   }
 
-  if (loading) {
-    return (
-      <div className='flex items-center justify-center p-8'>
-        <Icon icon='mdi:loading' className='w-8 h-8 animate-spin' />
-      </div>
-    )
-  }
-
-  const currentIsEditable = isEditMode
+  const { metadata, renderConfig } = config
 
   return (
     <Form {...form}>
-      <motion.form
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        onSubmit={handleFormSubmit}
-        className='space-y-8'
-      >
-        <AnimatePresence>
-          {/* Order Number Field */}
-          {mergedConfig.orderNumberField?.enabled && (
-            <motion.div variants={sectionVariants}>
-              <OrderNumberField
-                form={form}
-                prefix={mergedConfig.orderNumberField.prefix}
-                fieldName={mergedConfig.orderNumberField.fieldName}
-                label={mergedConfig.orderNumberField.label}
-                disabled={!currentIsEditable}
-              />
-            </motion.div>
-          )}
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* 表单标题 */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">{metadata.title}</h1>
+            {metadata.description && (
+              <p className="text-gray-500 mt-1">{metadata.description}</p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {metadata.permissions?.print && (
+              <Button
+                variant="flat"
+                color="primary"
+                startContent={<Icon icon="mdi:printer" className="w-4 h-4" />}
+              >
+                打印
+              </Button>
+            )}
+          </div>
+        </div>
 
-          {/* Form Fields */}
-          {Object.entries(mergedConfig.formFields || {}).map(([section, fields]) => (
-            <motion.div key={section} variants={sectionVariants} className='bg-white rounded-lg p-6 shadow-sm'>
-              <h2 className='text-lg font-semibold mb-6'>{section}</h2>
-              <DynamicFormFields fields={fields} form={form} isEditable={currentIsEditable} />
-            </motion.div>
-          ))}
+        {/* 基本信息 */}
+        <motion.div
+          variants={sectionVariants}
+          initial="hidden"
+          animate="visible"
+          className="bg-white rounded-lg p-6 shadow-sm"
+        >
+          <h2 className="text-lg font-semibold mb-6">基本信息</h2>
+          <DynamicFormFields
+            fields={renderConfig.basicFields}
+            form={form}
+            isEditable={metadata.permissions?.edit}
+          />
+        </motion.div>
 
-          {/* Table */}
-          {mergedConfig.table && (
-            <motion.div variants={sectionVariants} className='bg-white rounded-lg p-6 shadow-sm overflow-hidden'>
-              <DynamicTable
-                config={mergedConfig.table}
-                form={form}
-                isEditable={currentIsEditable}
-                fieldName='tableData'
-              />
-            </motion.div>
-          )}
-
-          {/* Process Steps */}
-          {mergedConfig.processSteps && (
-            <motion.div variants={sectionVariants} className='bg-white rounded-lg p-6 shadow-sm'>
-              <DynamicProcessConfirm steps={mergedConfig.processSteps} form={form} isEditable={currentIsEditable} />
-            </motion.div>
-          )}
-
-          {/* Action Buttons */}
+        {/* 表格 */}
+        {renderConfig.table && (
           <motion.div
             variants={sectionVariants}
-            className={`flex ${
-              mergedConfig.form?.submitButton?.position === "center"
-                ? "justify-center"
-                : mergedConfig.form?.submitButton?.position === "right"
-                ? "justify-end"
-                : "justify-start"
-            }`}
+            initial="hidden"
+            animate="visible"
+            className="bg-white rounded-lg p-6 shadow-sm"
           >
-            <div className='flex gap-4'>
-              {/* Edit Button */}
-              {mergedConfig.toolbar.edit.enabled && (
-                <Button
-                  color='primary'
-                  variant='flat'
-                  onClick={toggleEditMode}
-                  startContent={<Icon icon={isEditMode ? "mdi:close" : "mdi:pencil"} className='w-4 h-4' />}
-                >
-                  {isEditMode ? "取消编辑" : "编辑"}
-                </Button>
-              )}
-
-              {/* Submit Button */}
-              {currentIsEditable && mergedConfig.toolbar.save.enabled && (
-                <Button
-                  type='submit'
-                  color='primary'
-                  startContent={<Icon icon={mergedConfig.toolbar.save.icon} className='w-4 h-4' />}
-                >
-                  {mergedConfig.toolbar.save.text}
-                </Button>
-              )}
-
-              {/* Print Button */}
-              {mergedConfig.toolbar.print.enabled && (
-                <Button
-                  color='primary'
-                  variant='flat'
-                  onClick={() => setShowPrintPreview(true)}
-                  startContent={<Icon icon={mergedConfig.toolbar.print.icon} className='w-4 h-4' />}
-                >
-                  {mergedConfig.toolbar.print.text}
-                </Button>
-              )}
-            </div>
+            <h2 className="text-lg font-semibold mb-6">明细信息</h2>
+            <DynamicTable
+              config={renderConfig.table}
+              form={form}
+              isEditable={metadata.permissions?.edit}
+              fieldName="tableData"
+            />
           </motion.div>
-        </AnimatePresence>
-      </motion.form>
+        )}
 
-      {/* Print Preview Dialog */}
-      <Dialog open={showPrintPreview} onOpenChange={setShowPrintPreview}>
-        <DialogContent className='max-w-4xl'>
-          <DialogHeader>
-            <DialogTitle>打印预览</DialogTitle>
-          </DialogHeader>
-          <div className='max-h-[60vh] overflow-y-auto'>
-            <PrintableContent ref={printRef} formData={form.getValues()} />
-          </div>
-          <DialogFooter className='flex justify-between items-center'>
-            <Button variant='outline' onClick={() => setShowPrintPreview(false)}>
-              关闭
+        {/* 流程确认 */}
+        {renderConfig.processSteps && (
+          <motion.div
+            variants={sectionVariants}
+            initial="hidden"
+            animate="visible"
+            className="bg-white rounded-lg p-6 shadow-sm"
+          >
+            <h2 className="text-lg font-semibold mb-6">流程确认</h2>
+            <DynamicProcessConfirm
+              steps={renderConfig.processSteps}
+              form={form}
+              isEditable={metadata.permissions?.edit}
+            />
+          </motion.div>
+        )}
+
+        {/* 操作按钮 */}
+        {metadata.permissions?.edit && (
+          <motion.div
+            variants={sectionVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex justify-end gap-4"
+          >
+            {onCancel && (
+              <Button
+                variant="flat"
+                color="default"
+                onClick={onCancel}
+                startContent={<Icon icon="mdi:close" className="w-4 h-4" />}
+              >
+                取消
+              </Button>
+            )}
+            <Button
+              type="submit"
+              color="primary"
+              startContent={<Icon icon="mdi:content-save" className="w-4 h-4" />}
+            >
+              保存
             </Button>
-            <Button onClick={handlePrint} className='gap-2'>
-              <Icon icon='mdi:printer' className='w-4 h-4' />
-              打印
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </motion.div>
+        )}
+      </form>
     </Form>
   )
-}
-
-const sectionVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 15,
-    },
-  },
 }
 
 export default DynamicForm

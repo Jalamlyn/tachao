@@ -1,7 +1,7 @@
-import { UseFormReturn } from "react-hook-form"
 import { ReactNode } from "react"
+import { UseFormReturn } from "react-hook-form"
 
-// 表单字段基础类型
+// 基础字段类型
 export interface FormField {
   name: string
   label: string
@@ -9,161 +9,84 @@ export interface FormField {
   placeholder?: string
   disabled?: boolean
   hidden?: boolean
-  editable?: boolean
+  required?: boolean
   validators?: ((value: any) => string | undefined)[]
-  accept?: string
-  onUpload?: (file: File) => Promise<void>
-  render?: (props: { field: any; form: UseFormReturn<any>; isEditable: boolean }) => ReactNode
-  options?: { label: string; value: any; disabled?: boolean }[]
-  showWhen?: {
-    field: string
-    value: any
-    operator?: 'eq' | 'neq' | 'gt' | 'lt' | 'contains'
-  }
+  options?: { label: string; value: any }[]
 }
 
-// 表格配置类型
-export interface TableConfig {
-  columns: {
-    key: string
-    title: string
-    type: string
-    width?: string | number
-    editable?: boolean
-    placeholder?: string
-    resourceConfig?: {
-      resourceName: string
-      appId: string
-      selectionMode: 'single' | 'multiple'
-    }
-    options?: { label: string; value: any; disabled?: boolean }[]
-    render?: (value: any, record: any, index: number) => ReactNode
-  }[]
-  rowCalculations?: {
-    [field: string]: (row: any) => any
-  }
-  dependencies?: {
-    [field: string]: {
-      dependsOn: string[]
-      calculate: (values: any) => any
-    }
-  }
-  summary?: {
-    fields: {
-      [key: string]: {
-        label: string
-        calculate: (records: any[]) => number | string
-      }
-    }
-  }
-  toolbar?: ReactNode
+// 表格列配置
+export interface TableColumn {
+  key: string
+  title: string
+  type: string
+  width?: string | number
+  editable?: boolean
+  required?: boolean
+  options?: { label: string; value: any }[]
 }
 
-// 流程步骤配置类型
+// 流程步骤
 export interface ProcessStep {
   key: string
   title: string
   description?: string
   icon?: string
   fields?: FormField[]
-  onConfirm?: {
-    action: (values: any) => Promise<void>
-    updates?: { field: string; value: string | ((values: any) => any) }[]
-    calculations?: { field: string; formula: (values: any) => any }[]
-  }
+  onConfirm?: () => Promise<void>
   onCancel?: () => void
   validations?: {
     rules: ((values: any) => string | undefined)[]
   }
-  confirmation?: {
-    confirmButtonText?: string
-    cancelButtonText?: string
-    requireComments?: boolean
-    commentLabel?: string
-  }
 }
 
-// 动态表单配置类型
-export interface DynamicFormConfig {
-  // 表单基础配置
-  form?: {
-    layout?: 'vertical' | 'horizontal'
-    labelWidth?: string
-    submitButton?: {
-      text?: string
-      position?: 'left' | 'center' | 'right'
-    }
+// 元数据配置
+export interface FormMetadata {
+  title: string
+  description?: string
+  permissions?: {
+    edit?: boolean
+    delete?: boolean
+    print?: boolean
   }
-  // 工具栏配置
-  toolbar?: {
-    print?: {
-      enabled?: boolean
-      text?: string
-      icon?: string
-    }
-    save?: {
-      enabled?: boolean
-      text?: string
-      icon?: string
-    }
-    edit?: {
-      enabled?: boolean
-      text?: string
-      icon?: string
-    }
-  }
-  // 打印配置
-  print?: {
-    documentTitle?: string
-    pageStyle?: string
-    template?: {
-      header?: {
-        title?: string
-        subtitle?: string
-        logo?: string
-      }
-      content?: {
-        fields?: string[]
-        layout?: 'form' | 'table'
-        columns?: number
-      }
-      footer?: {
-        showPageNumber?: boolean
-        showDate?: boolean
-        customText?: string
-      }
-    }
-  }
-  // 订单号字段配置
-  orderNumberField?: {
-    enabled?: boolean
-    prefix?: string
-    fieldName?: string
-    label?: string
-  }
-  // 表单字段配置
-  formFields?: {
-    [section: string]: FormField[]
-  }
+  status?: 'draft' | 'submitted' | 'approved' | 'rejected'
+  createdAt?: string
+  updatedAt?: string
+  createdBy?: string
+  updatedBy?: string
+}
+
+// 渲染配置
+export interface FormRenderConfig {
+  // 基本信息字段
+  basicFields: FormField[]
+  
   // 表格配置
-  table?: TableConfig
-  // 流程步骤配置
-  processSteps?: ProcessStep[]
-  // 依赖关系配置
-  dependencies?: {
-    [field: string]: {
-      dependsOn: string[]
-      calculate: (values: any) => any
+  table?: {
+    columns: TableColumn[]
+    summary?: {
+      fields: {
+        [key: string]: {
+          label: string
+          calculate: (records: any[]) => number | string
+        }
+      }
     }
   }
-  // 自定义验证器
-  customValidators?: {
-    [field: string]: (value: any, allValues: any) => string | undefined
-  }
+  
+  // 流程步骤
+  processSteps?: ProcessStep[]
 }
 
-// 动态表单组件Props类型
+// 动态表单配置
+export interface DynamicFormConfig {
+  metadata: FormMetadata
+  renderConfig: FormRenderConfig
+}
+
+// 动态表单组件Props
 export interface DynamicFormProps {
   config: DynamicFormConfig
   id?: string
+  onSubmit?: (values: any) => Promise<void>
+  onCancel?: () => void
 }
