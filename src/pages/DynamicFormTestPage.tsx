@@ -11,8 +11,13 @@ import { merge, cloneDeep } from 'lodash'
 import AIFormAgent from "@/service/agents/AIFormAgent"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import { Icon } from "@iconify/react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Tooltip } from "@/components/ui/tooltip"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const DynamicFormTestPage: React.FC = () => {
+  // 保持原有状态管理
   const [formConfig, setFormConfig] = useState<DynamicFormConfig | null>(null)
   const [templateType, setTemplateType] = useState<"official" | "custom">("custom")
   const [templateName, setTemplateName] = useState("")
@@ -27,6 +32,7 @@ const DynamicFormTestPage: React.FC = () => {
   } | null>(null)
   const [editDescription, setEditDescription] = useState("")
   const [formKey, setFormKey] = useState(0)
+  const [activeTab, setActiveTab] = useState("generate")
 
   const {
     items: templates,
@@ -39,10 +45,12 @@ const DynamicFormTestPage: React.FC = () => {
     name: string
   }>("template")
 
+  // 保持原有副作用
   useEffect(() => {
     loadTemplates()
   }, [])
 
+  // 保持原有事件处理函数
   const handleAIDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setAiDescription(e.target.value)
   }
@@ -70,6 +78,7 @@ const DynamicFormTestPage: React.FC = () => {
         setTemplateName(result.title)
         setFormKey(prev => prev + 1)
         message.success("AI 生成表单成功")
+        setActiveTab("preview") // 自动切换到预览标签
       }
     } catch (error) {
       console.error("AI 生成表单失败:", error)
@@ -108,7 +117,8 @@ const DynamicFormTestPage: React.FC = () => {
         }
         
         message.success("AI 编辑表单成功")
-        setEditDescription("") 
+        setEditDescription("")
+        setActiveTab("preview") // 自动切换到预览标签
       }
     } catch (error) {
       console.error("AI 编辑表单失败:", error)
@@ -147,6 +157,7 @@ const DynamicFormTestPage: React.FC = () => {
         message.success("表单模板保存成功")
         setTemplateName("")
         loadTemplates()
+        setActiveTab("templates") // 保存成功后切换到模板标签
       } else {
         message.error("保存失败")
       }
@@ -169,6 +180,7 @@ const DynamicFormTestPage: React.FC = () => {
         setFormConfig(template.data.config)
         setFormKey(prev => prev + 1)
         message.success("模板加载成功")
+        setActiveTab("preview") // 加载成功后切换到预览标签
       } else {
         message.error("模板加载失败")
       }
@@ -178,6 +190,7 @@ const DynamicFormTestPage: React.FC = () => {
     }
   }
 
+  // 保持原有动画配置
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -203,151 +216,222 @@ const DynamicFormTestPage: React.FC = () => {
   }
 
   return (
-    <div className='container mx-auto py-8'>
-      <motion.div variants={containerVariants} initial='hidden' animate='visible' className='space-y-8 bg-white'>
+    <div className="container mx-auto py-8">
+      <motion.div 
+        variants={containerVariants} 
+        initial="hidden" 
+        animate="visible" 
+        className="space-y-8"
+      >
         <motion.div variants={itemVariants}>
-          <Card>
-            <CardHeader>
-              <CardTitle>动态表单测试</CardTitle>
-            </CardHeader>
-            <CardContent className='space-y-4'>
-              {/* AI 生成表单部分 */}
-              <div className='space-y-2'>
-                <label className='text-sm font-medium'>AI 生成表单</label>
-                <div className='flex gap-2'>
-                  <Textarea
-                    value={aiDescription}
-                    onChange={handleAIDescriptionChange}
-                    placeholder='请输入表单描述，AI 将根据描述生成表单配置...'
-                    className='flex-1'
-                  />
-                  <Button onClick={handleGenerateAIForm} disabled={isGenerating} className='self-start gap-2'>
-                    {isGenerating ? (
-                      <Icon icon='mdi:loading' className='w-5 h-5 animate-spin' />
-                    ) : (
-                      <Icon icon='mdi:robot' className='w-5 h-5' />
-                    )}
-                    AI 生成
-                  </Button>
-                </div>
+          <Card className="bg-white shadow-lg">
+            <CardHeader className="border-b">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-2xl font-bold">动态表单设计器</CardTitle>
+                <Badge variant="outline" className="text-sm">
+                  {formConfig ? "已创建" : "未创建"}
+                </Badge>
               </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+                <TabsList className="grid w-full grid-cols-3 gap-4">
+                  <TabsTrigger value="generate" className="flex items-center gap-2">
+                    <Icon icon="mdi:robot" className="w-4 h-4" />
+                    AI 生成
+                  </TabsTrigger>
+                  <TabsTrigger value="templates" className="flex items-center gap-2">
+                    <Icon icon="mdi:template" className="w-4 h-4" />
+                    模板
+                  </TabsTrigger>
+                  <TabsTrigger value="preview" className="flex items-center gap-2">
+                    <Icon icon="mdi:eye" className="w-4 h-4" />
+                    预览
+                  </TabsTrigger>
+                </TabsList>
 
-              {/* AI 编辑表单部分 */}
-              {formConfig && (
-                <div className='space-y-2'>
-                  <label className='text-sm font-medium'>AI 编辑表单</label>
-                  <div className='flex gap-2'>
-                    <Textarea
-                      value={editDescription}
-                      onChange={handleEditDescriptionChange}
-                      placeholder='请输入编辑描述，AI 将根据描述修改当前表单...'
-                      className='flex-1'
-                    />
-                    <Button 
-                      onClick={handleEditAIForm} 
-                      disabled={isEditing} 
-                      className='self-start gap-2'
-                      variant='secondary'
-                    >
-                      {isEditing ? (
-                        <Icon icon='mdi:loading' className='w-5 h-5 animate-spin' />
-                      ) : (
-                        <Icon icon='mdi:pencil' className='w-5 h-5' />
-                      )}
-                      AI 编辑
-                    </Button>
-                  </div>
-                </div>
-              )}
+                <TabsContent value="generate" className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Icon icon="mdi:pencil" className="w-4 h-4" />
+                        AI 表单描述
+                      </label>
+                      <div className="flex gap-2">
+                        <Textarea
+                          value={aiDescription}
+                          onChange={handleAIDescriptionChange}
+                          placeholder="请描述您需要的表单,AI 将为您生成相应的配置..."
+                          className="flex-1 min-h-[120px]"
+                        />
+                        <Tooltip content="使用 AI 生成表单配置">
+                          <Button 
+                            onClick={handleGenerateAIForm} 
+                            disabled={isGenerating} 
+                            className="self-start gap-2"
+                          >
+                            {isGenerating ? (
+                              <Icon icon="mdi:loading" className="w-5 h-5 animate-spin" />
+                            ) : (
+                              <Icon icon="mdi:robot" className="w-5 h-5" />
+                            )}
+                            生成表单
+                          </Button>
+                        </Tooltip>
+                      </div>
+                    </div>
 
-              {/* AI 生成代码预览区域 */}
-              {generatingCode && (
-                <div className='space-y-2'>
-                  <label className='text-sm font-medium'>AI 生成过程</label>
-                  <div className='relative'>
-                    <pre className='p-4 bg-gray-900 text-gray-100 rounded-lg overflow-auto max-h-[400px] font-mono text-sm'>
-                      <code>{generatingCode}</code>
-                    </pre>
-                    {(isGenerating || isEditing) && (
-                      <div className='absolute bottom-4 right-4'>
-                        <Icon icon='mdi:loading' className='w-5 h-5 animate-spin text-blue-500' />
+                    {formConfig && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium flex items-center gap-2">
+                          <Icon icon="mdi:edit" className="w-4 h-4" />
+                          AI 编辑描述
+                        </label>
+                        <div className="flex gap-2">
+                          <Textarea
+                            value={editDescription}
+                            onChange={handleEditDescriptionChange}
+                            placeholder="请描述需要修改的内容,AI 将帮您调整当前表单..."
+                            className="flex-1"
+                          />
+                          <Tooltip content="使用 AI 编辑当前表单">
+                            <Button 
+                              onClick={handleEditAIForm} 
+                              disabled={isEditing} 
+                              className="self-start gap-2"
+                              variant="secondary"
+                            >
+                              {isEditing ? (
+                                <Icon icon="mdi:loading" className="w-5 h-5 animate-spin" />
+                              ) : (
+                                <Icon icon="mdi:pencil" className="w-5 h-5" />
+                              )}
+                              编辑表单
+                            </Button>
+                          </Tooltip>
+                        </div>
+                      </div>
+                    )}
+
+                    {generatingCode && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium flex items-center gap-2">
+                          <Icon icon="mdi:code" className="w-4 h-4" />
+                          AI 生成过程
+                        </label>
+                        <ScrollArea className="h-[200px] rounded-md border">
+                          <div className="p-4">
+                            <pre className="text-sm font-mono">
+                              <code>{generatingCode}</code>
+                            </pre>
+                          </div>
+                        </ScrollArea>
                       </div>
                     )}
                   </div>
-                </div>
-              )}
+                </TabsContent>
 
-              {/* 模板选择 */}
-              <div className='space-y-2'>
-                <label className='text-sm font-medium'>选择模板</label>
-                <Select
-                  label='选择已保存的模板'
-                  placeholder='请选择模板'
-                  value={selectedTemplateId}
-                  onChange={(e) => handleTemplateChange(e.target.value)}
-                >
-                  <SelectItem key='' value=''>
-                    不使用模板
-                  </SelectItem>
-                  {templates.map((template) => (
-                    <SelectItem key={template.id} value={template.id}>
-                      {template.title} ({template.data.type})
-                    </SelectItem>
-                  ))}
-                </Select>
-              </div>
-
-              {formConfig && (
-                <div className='space-y-4 pt-4 border-t'>
-                  <div className='flex gap-4 items-end'>
-                    <div className='flex-1'>
-                      <label className='text-sm font-medium mb-2 block'>模板名称</label>
-                      <input
-                        type='text'
-                        value={templateName}
-                        onChange={(e) => setTemplateName(e.target.value)}
-                        placeholder='请输入模板名称'
-                        className='w-full px-3 py-2 border rounded-md'
-                      />
+                <TabsContent value="templates" className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Icon icon="mdi:template" className="w-4 h-4" />
+                        选择模板
+                      </label>
+                      <Select
+                        label="选择已保存的模板"
+                        placeholder="请选择模板"
+                        value={selectedTemplateId}
+                        onChange={(e) => handleTemplateChange(e.target.value)}
+                      >
+                        <SelectItem key="" value="">
+                          不使用模板
+                        </SelectItem>
+                        {templates.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.title} ({template.data.type})
+                          </SelectItem>
+                        ))}
+                      </Select>
                     </div>
-                    <Select
-                      label='模板类型'
-                      value={templateType}
-                      onChange={(e) => setTemplateType(e.target.value as "official" | "custom")}
-                      className='w-48'
-                    >
-                      <SelectItem key='official' value='official'>
-                        官方模板
-                      </SelectItem>
-                      <SelectItem key='custom' value='custom'>
-                        自定义模板
-                      </SelectItem>
-                    </Select>
-                    <Button onClick={handleSaveTemplate} className='gap-2'>
-                      <Icon icon='mdi:content-save' className='w-4 h-4' />
-                      保存为模板
-                    </Button>
+
+                    {formConfig && (
+                      <div className="space-y-4 pt-4 border-t">
+                        <div className="flex gap-4 items-end">
+                          <div className="flex-1">
+                            <label className="text-sm font-medium mb-2 block">
+                              模板名称
+                            </label>
+                            <input
+                              type="text"
+                              value={templateName}
+                              onChange={(e) => setTemplateName(e.target.value)}
+                              placeholder="请输入模板名称"
+                              className="w-full px-3 py-2 border rounded-md"
+                            />
+                          </div>
+                          <Select
+                            label="模板类型"
+                            value={templateType}
+                            onChange={(e) => setTemplateType(e.target.value as "official" | "custom")}
+                            className="w-48"
+                          >
+                            <SelectItem key="official" value="official">
+                              官方模板
+                            </SelectItem>
+                            <SelectItem key="custom" value="custom">
+                              自定义模板
+                            </SelectItem>
+                          </Select>
+                          <Tooltip content="保存当前表单为模板">
+                            <Button onClick={handleSaveTemplate} className="gap-2">
+                              <Icon icon="mdi:content-save" className="w-4 h-4" />
+                              保存模板
+                            </Button>
+                          </Tooltip>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                </TabsContent>
+
+                <TabsContent value="preview">
+                  <AnimatePresence mode="wait">
+                    {formConfig ? (
+                      <motion.div
+                        variants={itemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="hidden"
+                        key="form-preview"
+                        className="border rounded-lg p-6"
+                      >
+                        <div className="mb-4">
+                          <h3 className="text-lg font-medium">表单预览</h3>
+                          <p className="text-sm text-gray-500">
+                            以下是生成的表单预览效果
+                          </p>
+                        </div>
+                        <DynamicForm key={formKey} config={formConfig} />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        variants={itemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="hidden"
+                        className="text-center py-12 text-gray-500"
+                      >
+                        <Icon icon="mdi:form" className="w-12 h-12 mx-auto mb-4" />
+                        <p>请先生成或选择一个表单模板</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </motion.div>
-
-        <AnimatePresence mode='wait'>
-          {formConfig && (
-            <motion.div variants={itemVariants} initial='hidden' animate='visible' exit='hidden' key='form-preview'>
-              <Card className='bg-white'>
-                <CardHeader>
-                  <CardTitle>表单预览</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <DynamicForm key={formKey} config={formConfig} />
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
     </div>
   )
