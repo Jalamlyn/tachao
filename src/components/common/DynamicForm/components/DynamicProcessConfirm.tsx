@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { UseFormReturn } from "react-hook-form"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@nextui-org/react"
@@ -6,6 +6,7 @@ import { Icon } from "@iconify/react"
 import { format } from "date-fns"
 import { ProcessStep } from "../types"
 import message from "@/components/Message"
+import { getCurrentAccountInfo } from "@/service/apis/user"
 
 interface DynamicProcessConfirmProps {
   steps: ProcessStep[]
@@ -20,6 +21,27 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
   isEditable = true,
   fieldName = "processConfirmations",
 }) => {
+  // 添加用户信息状态
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isConfirming, setIsConfirming] = useState<string>("");
+
+  // 获取用户信息
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await getCurrentAccountInfo();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('Failed to fetch user info:', error);
+        message.error('获取用户信息失败');
+      }
+    };
+
+    if (!currentUser) {
+      fetchUser();
+    }
+  }, []);
+
   // 初始化状态
   useEffect(() => {
     const currentValues = form.getValues(fieldName) || {}
@@ -45,11 +67,17 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
   }, [steps, fieldName, form])
 
   // 简化的确认处理
-  const handleConfirm = (step: ProcessStep) => {
+  const handleConfirm = async (step: ProcessStep) => {
+    if (!currentUser) {
+      message.error('未能获取用户信息');
+      return;
+    }
+
+    setIsConfirming(step.key);
     try {
       const updates = {
         [`${fieldName}.${step.key}.confirmed`]: true,
-        [`${fieldName}.${step.key}.confirmer`]: "当前用户",
+        [`${fieldName}.${step.key}.confirmer`]: currentUser.name || currentUser.email,
         [`${fieldName}.${step.key}.confirmationDate`]: new Date().toISOString(),
       }
 
@@ -63,6 +91,8 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
     } catch (error) {
       console.error("Error confirming step:", error)
       message.error("确认失败")
+    } finally {
+      setIsConfirming("");
     }
   }
 
@@ -92,6 +122,7 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
       {steps.map((step) => {
         const stepData = form.watch(`${fieldName}.${step.key}`) || {}
         const isConfirmed = stepData.confirmed
+        const isLoading = isConfirming === step.key;
 
         return (
           <Card key={step.key}>
@@ -121,7 +152,8 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
                         onClick={() => handleConfirm(step)}
                         variant='bordered'
                         size='sm'
-                        startContent={<Icon icon='mdi:check' className='w-4 h-4' />}
+                        isLoading={isLoading}
+                        startContent={!isLoading && <Icon icon='mdi:check' className='w-4 h-4' />}
                       >
                         确认
                       </Button>
