@@ -13,7 +13,7 @@ import { Icon } from "@iconify/react"
 import AIFormAgent from "@/service/agents/AIFormAgent"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { localDB } from "@/utils/localDB"
-import { merge } from 'lodash'
+import { merge, cloneDeep } from 'lodash'
 
 const LAST_GENERATED_KEY = "dynamic-form-last-generated"
 
@@ -116,7 +116,8 @@ const DynamicFormTestPage: React.FC = () => {
       })
       
       if (result) {
-        const mergedConfig = merge({}, formConfig, result.config)
+        // 使用 cloneDeep 进行深拷贝，避免修改原对象
+        const mergedConfig = merge(cloneDeep(formConfig), result.config)
         setFormConfig(mergedConfig)
         // 重置 formKey 触发重新渲染
         setFormKey(prev => prev + 1)
