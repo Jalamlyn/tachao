@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import { UseFormReturn } from "react-hook-form"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@nextui-org/react"
@@ -21,6 +21,37 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
   isEditable = true,
   fieldName = "processConfirmations",
 }) => {
+  // 添加状态初始化
+  useEffect(() => {
+    // 检查并初始化每个步骤的状态
+    const currentValues = form.getValues(fieldName) || {}
+    const updates: Record<string, any> = {}
+    let needsUpdate = false
+
+    steps.forEach((step) => {
+      if (!currentValues[step.key]) {
+        updates[`${fieldName}.${step.key}`] = {
+          confirmed: false,
+          confirmer: "",
+          confirmationDate: "",
+          comments: ""
+        }
+        needsUpdate = true
+      }
+    })
+
+    // 只在需要时进行批量更新
+    if (needsUpdate) {
+      Object.entries(updates).forEach(([field, value]) => {
+        form.setValue(field, value, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false
+        })
+      })
+    }
+  }, [steps, fieldName, form])
+
   const handleConfirm = async (step: ProcessStep) => {
     if (!step.onConfirm) return
 
@@ -43,10 +74,21 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
       // 执行确认操作
       await step.onConfirm(form.getValues())
 
-      // 更新确认状态
-      form.setValue(`${fieldName}.${step.key}.confirmed`, true)
-      form.setValue(`${fieldName}.${step.key}.confirmer`, "当前用户") // TODO: 获取当前用户
-      form.setValue(`${fieldName}.${step.key}.confirmationDate`, new Date().toISOString())
+      // 批量更新确认状态
+      const updates = {
+        [`${fieldName}.${step.key}.confirmed`]: true,
+        [`${fieldName}.${step.key}.confirmer`]: "当前用户",
+        [`${fieldName}.${step.key}.confirmationDate`]: new Date().toISOString()
+      }
+
+      // 使用批量更新并确保触发重新渲染
+      Object.entries(updates).forEach(([field, value]) => {
+        form.setValue(field, value, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true
+        })
+      })
 
       // 执行确认后的更新操作
       if (step.onConfirm.updates) {
@@ -64,6 +106,9 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
         })
       }
 
+      // 强制触发重新渲染
+      form.trigger(`${fieldName}.${step.key}`)
+
       message.success('确认成功')
     } catch (error) {
       console.error("Error confirming step:", error)
@@ -76,9 +121,27 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
 
     try {
       step.onCancel()
-      form.setValue(`${fieldName}.${step.key}.confirmed`, false)
-      form.setValue(`${fieldName}.${step.key}.confirmer`, "")
-      form.setValue(`${fieldName}.${step.key}.confirmationDate`, "")
+      
+      // 批量更新取消状态
+      const updates = {
+        [`${fieldName}.${step.key}.confirmed`]: false,
+        [`${fieldName}.${step.key}.confirmer`]: "",
+        [`${fieldName}.${step.key}.confirmationDate`]: "",
+        [`${fieldName}.${step.key}.comments`]: ""
+      }
+
+      // 使用批量更新并确保触发重新渲染
+      Object.entries(updates).forEach(([field, value]) => {
+        form.setValue(field, value, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true
+        })
+      })
+
+      // 强制触发重新渲染
+      form.trigger(`${fieldName}.${step.key}`)
+
       message.success('已取消确认')
     } catch (error) {
       console.error("Error canceling confirmation:", error)
