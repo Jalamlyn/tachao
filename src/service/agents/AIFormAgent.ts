@@ -1,6 +1,6 @@
 import chatChunkClaude from "../chat/chat-chunk-claude-office"
 import { jsonParse, jsonStringify } from "@/utils"
-import DynamicFormConfigStr from "@/components/common/DynamicForm/types.str"
+import DynamicFormConfigStr from "./DynamicFormConfigStr"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
@@ -19,7 +19,12 @@ export class AIFormAgent {
 检索表单时，你需要根据用户的描述在表单索引中查找匹配的表单。
 
 ${DynamicFormConfigStr}
-不需要生成订单编号，这个表单自动生成
+不要生成 订单编号 的配置，系统会自动生成。
+生成的表单必须包含3个部分
+- 基本信息
+- 明细信息
+- 流程信息
+生成明细信息如果涉及到计算的，要生成正确的行计算和合计计算逻辑
 `
 
   private constructor() {}
@@ -52,7 +57,6 @@ ${DynamicFormConfigStr}
   private async validateIntent(action: string, input: string): Promise<boolean> {
     const intent = await this.analyzeIntent(input)
     if (intent === "unsupported") {
-      message.error(`不支持的指令: ${input}`)
       return false
     }
     if (intent !== action) {
@@ -176,7 +180,7 @@ export default getMatchedForms() {
       // 先尝试使用 AI 分析
       const aiResponse = await this.processAIResponse(aiAnalysisPrompt, () => {})
       const cleanResponse = aiResponse.trim().toLowerCase()
-      
+
       if (cleanResponse === "create" || cleanResponse === "search" || cleanResponse === "unsupported") {
         if (cleanResponse === "unsupported") {
           message.warning("不支持的指令，请使用创建表单或检索表单相关的指令。例如：'创建一个请假单'或'查找销售订单'")
@@ -189,7 +193,7 @@ export default getMatchedForms() {
       if (createKeywords.test(input)) {
         return "create"
       }
-      
+
       const searchKeywords = /(搜索|查找|检索|查询|寻找|浏览).*?(表单|单据|资料|模板)/
       if (searchKeywords.test(input)) {
         return "search"

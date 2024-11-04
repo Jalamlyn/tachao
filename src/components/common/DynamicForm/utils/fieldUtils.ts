@@ -45,10 +45,7 @@ export const validateField = (
   return undefined
 }
 
-export const evaluateShowWhen = (
-  showWhen: FormField["showWhen"],
-  allValues: any
-): boolean => {
+export const evaluateShowWhen = (showWhen: FormField["showWhen"], allValues: any): boolean => {
   if (!showWhen) return true
 
   const dependentValue = allValues[showWhen.field]

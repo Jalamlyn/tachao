@@ -24,7 +24,7 @@ const DynamicFormTestPage: React.FC = () => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("")
   const [aiDescription, setAiDescription] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generatingCode, setGeneratingCode] = useState("") 
+  const [generatingCode, setGeneratingCode] = useState("")
   const [aiGeneratedConfig, setAiGeneratedConfig] = useState<{
     config: DynamicFormConfig
     title: string
@@ -66,7 +66,6 @@ const DynamicFormTestPage: React.FC = () => {
         console.log("AI Response Chunk:", chunk)
         setGeneratingCode((prev) => prev + chunk)
       })
-
       if (result) {
         setAiGeneratedConfig(result)
         setFormConfig(result.config)
@@ -135,11 +134,6 @@ const DynamicFormTestPage: React.FC = () => {
       console.error("加载示例配置错误:", error)
       message.error("加载示例配置失败")
     }
-  }
-
-  const handleSubmit = async (values: any) => {
-    console.log("表单提交的值:", values)
-    message.success("表单数据已打印到控制台")
   }
 
   const handleSaveTemplate = async () => {
@@ -244,7 +238,7 @@ const DynamicFormTestPage: React.FC = () => {
                     placeholder='请输入表单描述，AI 将根据描述生成表单配置...'
                     className='flex-1'
                   />
-                  <div className="flex flex-col gap-2">
+                  <div className='flex flex-col gap-2'>
                     <Button onClick={handleGenerateAIForm} disabled={isGenerating} className='self-start gap-2'>
                       {isGenerating ? (
                         <Icon icon='mdi:loading' className='w-5 h-5 animate-spin' />
@@ -253,11 +247,7 @@ const DynamicFormTestPage: React.FC = () => {
                       )}
                       AI 生成
                     </Button>
-                    <Button 
-                      onClick={handleLoadLastGenerated} 
-                      variant="outline" 
-                      className='self-start gap-2'
-                    >
+                    <Button onClick={handleLoadLastGenerated} variant='outline' className='self-start gap-2'>
                       <Icon icon='mdi:history' className='w-5 h-5' />
                       加载最近生成
                     </Button>
@@ -353,21 +343,15 @@ const DynamicFormTestPage: React.FC = () => {
           </Card>
         </motion.div>
 
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode='wait'>
           {formConfig && (
-            <motion.div 
-              variants={itemVariants} 
-              initial='hidden' 
-              animate='visible'
-              exit='hidden'
-              key="form-preview"
-            >
+            <motion.div variants={itemVariants} initial='hidden' animate='visible' exit='hidden' key='form-preview'>
               <Card className='bg-white'>
                 <CardHeader>
                   <CardTitle>表单预览</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <DynamicForm config={formConfig} onSubmit={handleSubmit} />
+                  <DynamicForm config={formConfig} />
                 </CardContent>
               </Card>
             </motion.div>
