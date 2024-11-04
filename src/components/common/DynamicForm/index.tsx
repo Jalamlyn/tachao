@@ -14,7 +14,7 @@ import message from "@/components/Message"
 import OrderNumberField from "../OrderNumberField"
 import { useMetadata } from "../../from-templates/hook/useMetadata"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { merge } from 'lodash'
+import { merge } from "lodash"
 
 // 默认配置
 const defaultConfig = {
@@ -92,18 +92,15 @@ const defaultConfig = {
   },
 }
 
-const DynamicForm: React.FC<DynamicFormProps> = ({
-  config,
-  id,
-}) => {
+const DynamicForm: React.FC<DynamicFormProps> = ({ config, id }) => {
   // 合并配置
   const mergedConfig = merge({}, defaultConfig, config)
-  
+
   const { form, loading } = useDynamicForm(mergedConfig)
   const printRef = useRef<HTMLDivElement>(null)
   const [isEditMode, setIsEditMode] = useState(false)
   const [showPrintPreview, setShowPrintPreview] = useState(false)
-  const { create, update } = useMetadata('form')
+  const { create, update } = useMetadata("form")
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
@@ -131,37 +128,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      // 执行表单验证
-      const result = await form.trigger()
-      if (!result) {
-        const errors = Object.entries(form.formState.errors)
-          .map(([key, error]) => {
-            const fieldName = key.split('.').pop() // 获取字段名
-            const fieldConfig = Object.values(mergedConfig.formFields || {})
-              .flat()
-              .find((field: any) => field.name === fieldName)
-            const label = fieldConfig?.label || fieldName
-            const errorMessage = typeof error.message === 'string' ? error.message : '验证失败'
-            return `${label}: ${errorMessage}`
-          })
-          .filter(Boolean)
-        
-        if (errors.length > 0) {
-          message.error(
-            <div className='space-y-1'>
-              <div className='font-medium'>表单验证失败:</div>
-              {errors.map((error, index) => (
-                <div key={index} className='flex items-start text-sm'>
-                  <span className='mr-2'>•</span>
-                  <span>{error}</span>
-                </div>
-              ))}
-            </div>
-          )
-          return
-        }
-      }
-
       const values = form.getValues()
 
       if (id) {
@@ -169,7 +135,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         await update(id, {
           ...values,
           id,
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         })
         message.success("表单更新成功")
         setIsEditMode(false)
@@ -179,7 +145,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           ...values,
           id: Date.now().toString(),
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         })
         message.success("表单创建成功")
       }
@@ -201,7 +167,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     )
   }
 
-  const currentIsEditable = id ? isEditMode : true
+  const currentIsEditable = isEditMode
 
   return (
     <Form {...form}>
@@ -210,7 +176,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
         onSubmit={handleFormSubmit}
-        className="space-y-8"
+        className='space-y-8'
       >
         <AnimatePresence>
           {/* Order Number Field */}
@@ -228,39 +194,28 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
           {/* Form Fields */}
           {Object.entries(mergedConfig.formFields || {}).map(([section, fields]) => (
-            <motion.div
-              key={section}
-              variants={sectionVariants}
-              className="bg-white rounded-lg p-6 shadow-sm"
-            >
-              <h2 className="text-lg font-semibold mb-6">{section}</h2>
+            <motion.div key={section} variants={sectionVariants} className='bg-white rounded-lg p-6 shadow-sm'>
+              <h2 className='text-lg font-semibold mb-6'>{section}</h2>
               <DynamicFormFields fields={fields} form={form} isEditable={currentIsEditable} />
             </motion.div>
           ))}
 
           {/* Table */}
           {mergedConfig.table && (
-            <motion.div
-              variants={sectionVariants}
-              className="bg-white rounded-lg p-6 shadow-sm overflow-hidden"
-            >
+            <motion.div variants={sectionVariants} className='bg-white rounded-lg p-6 shadow-sm overflow-hidden'>
               <DynamicTable
                 config={mergedConfig.table}
                 form={form}
                 isEditable={currentIsEditable}
-                fieldName="tableData"
+                fieldName='tableData'
               />
             </motion.div>
           )}
 
           {/* Process Steps */}
           {mergedConfig.processSteps && (
-            <motion.div variants={sectionVariants} className="bg-white rounded-lg p-6 shadow-sm">
-              <DynamicProcessConfirm
-                steps={mergedConfig.processSteps}
-                form={form}
-                isEditable={currentIsEditable}
-              />
+            <motion.div variants={sectionVariants} className='bg-white rounded-lg p-6 shadow-sm'>
+              <DynamicProcessConfirm steps={mergedConfig.processSteps} form={form} isEditable={currentIsEditable} />
             </motion.div>
           )}
 
@@ -275,51 +230,39 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                 : "justify-start"
             }`}
           >
-            <div className="flex gap-4">
+            <div className='flex gap-4'>
               {/* Edit Button */}
-              {id && !currentIsEditable && mergedConfig.toolbar.edit.enabled && (
+              {mergedConfig.toolbar.edit.enabled && (
                 <Button
-                  color="primary"
-                  variant="flat"
+                  color='primary'
+                  variant='flat'
                   onClick={toggleEditMode}
-                  startContent={<Icon icon={mergedConfig.toolbar.edit.icon} className="w-4 h-4" />}
+                  startContent={<Icon icon={isEditMode ? "mdi:close" : "mdi:pencil"} className='w-4 h-4' />}
                 >
-                  {mergedConfig.toolbar.edit.text}
+                  {isEditMode ? "取消编辑" : "编辑"}
                 </Button>
               )}
 
               {/* Submit Button */}
               {currentIsEditable && mergedConfig.toolbar.save.enabled && (
                 <Button
-                  type="submit"
-                  color="primary"
-                  startContent={<Icon icon={mergedConfig.toolbar.save.icon} className="w-4 h-4" />}
+                  type='submit'
+                  color='primary'
+                  startContent={<Icon icon={mergedConfig.toolbar.save.icon} className='w-4 h-4' />}
                 >
                   {mergedConfig.toolbar.save.text}
                 </Button>
               )}
 
               {/* Print Button */}
-              {!currentIsEditable && mergedConfig.toolbar.print.enabled && (
+              {mergedConfig.toolbar.print.enabled && (
                 <Button
-                  color="primary"
-                  variant="flat"
+                  color='primary'
+                  variant='flat'
                   onClick={() => setShowPrintPreview(true)}
-                  startContent={<Icon icon={mergedConfig.toolbar.print.icon} className="w-4 h-4" />}
+                  startContent={<Icon icon={mergedConfig.toolbar.print.icon} className='w-4 h-4' />}
                 >
                   {mergedConfig.toolbar.print.text}
-                </Button>
-              )}
-
-              {/* Cancel Edit Button */}
-              {id && currentIsEditable && (
-                <Button
-                  color="danger"
-                  variant="flat"
-                  onClick={toggleEditMode}
-                  startContent={<Icon icon="mdi:close" className="w-4 h-4" />}
-                >
-                  取消编辑
                 </Button>
               )}
             </div>
