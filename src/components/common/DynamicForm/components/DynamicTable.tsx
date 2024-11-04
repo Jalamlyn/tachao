@@ -7,6 +7,11 @@ import { TableConfig } from "../types"
 import { UseFormReturn, useFieldArray, useWatch } from "react-hook-form"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { format } from "date-fns"
+import { cn } from "@/theme/cn"
+import { Textarea } from "@/components/ui/textarea"
 
 interface DynamicTableProps {
   config: TableConfig
@@ -127,7 +132,49 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
           </div>
         )
 
-      case "file":
+      case "date":
+      case "datetime":
+        return (
+          <FormField
+            control={form.control}
+            name={cellFieldName}
+            render={({ field }) => (
+              <FormItem>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                        disabled={!isEditable || !column.editable}
+                      >
+                        {field.value ? format(new Date(field.value), "PPP") : <span>选择日期</span>}
+                        <Icon icon="mdi:calendar" className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value ? new Date(field.value) : undefined}
+                      onSelect={(date) => field.onChange(date?.toISOString())}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("2000-01-01")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )
+
+      case "textarea":
         return (
           <FormField
             control={form.control}
@@ -135,21 +182,38 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input
-                    type='file'
-                    accept={column.fileConfig?.accept}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) {
-                        field.onChange({
-                          fileName: file.name,
-                          fileSize: file.size,
-                          fileType: file.type,
-                        })
-                      }
-                    }}
+                  <Textarea
+                    {...field}
                     disabled={!isEditable || !column.editable}
+                    className="min-h-[100px]"
                   />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )
+
+      case "select":
+        return (
+          <FormField
+            control={form.control}
+            name={cellFieldName}
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <select
+                    {...field}
+                    disabled={!isEditable || !column.editable}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2"
+                  >
+                    <option value="">{column.placeholder || "请选择"}</option>
+                    {column.options?.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -167,9 +231,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                 <FormControl>
                   <Input
                     {...field}
-                    type='number'
-                    className='text-right'
+                    type="number"
                     disabled={!isEditable || !column.editable}
+                    className="text-right font-mono"
                     onChange={(e) => {
                       field.onChange(e)
                       handleCalculateField(tableData[rowIndex], rowIndex, column.key)
