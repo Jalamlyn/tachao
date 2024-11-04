@@ -23,50 +23,18 @@ export interface TableColumn {
 }
 
 // 表格汇总计算函数类型
-/**
- * @deprecated 使用 TableNumericCalculator 替代，确保计算结果为数字类型
- */
-export type TableSummaryCalculator = (records: any[]) => number | string
-
-/**
- * 数值计算函数 - 用于表格汇总等需要进行数值计算的场景
- */
-export type TableNumericCalculator = (records: any[]) => number
+export type TableSummaryCalculator = (records: any[]) => number
 
 // 表格汇总字段配置
-/**
- * @deprecated 使用 TableNumericSummaryField 替代，提供更好的类型安全性
- */
 export interface TableSummaryField {
   label: string
   calculate: TableSummaryCalculator
 }
 
-/**
- * 改进的表格汇总字段配置 - 分离计算和格式化逻辑
- */
-export interface TableNumericSummaryField {
-  label: string
-  calculate: TableNumericCalculator
-  format?: (value: number) => string // 可选的格式化函数
-}
-
 // 表格汇总配置
-/**
- * @deprecated 使用 TableNumericSummary 替代
- */
 export interface TableSummary {
   fields: {
     [key: string]: TableSummaryField
-  }
-}
-
-/**
- * 改进的表格汇总配置 - 使用更严格的数值类型
- */
-export interface TableNumericSummary {
-  fields: {
-    [key: string]: TableNumericSummaryField
   }
 }
 
@@ -108,7 +76,7 @@ export interface FormRenderConfig {
   // 表格配置
   table?: {
     columns: TableColumn[]
-    summary?: TableNumericSummary | TableSummary // 支持新旧两种类型，保持向后兼容
+    summary?: TableSummary
     rowCalculations?: {
       [key: string]: (row: any) => any
     }
