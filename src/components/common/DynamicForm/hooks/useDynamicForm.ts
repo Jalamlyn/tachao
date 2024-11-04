@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form"
 import { DynamicFormConfig, ValidationResult, ValidationContext } from "../types"
 import { calculateDependentValues } from "../utils/fieldUtils"
 import message from "@/components/Message"
+import { ValidationManager } from "../validation/ValidationManager"
 
 export const useDynamicForm = (
   config: DynamicFormConfig,
@@ -64,44 +65,21 @@ export const useDynamicForm = (
         }
       }
 
-      // 如果配置了自定义校验函数，则执行
-      if (config.validate) {
-        const values = form.getValues()
-        const result = await Promise.resolve(config.validate(values, context))
-        
-        // 如果有字段级错误，设置到表单状态
-        if (result.fields) {
-          Object.entries(result.fields).forEach(([field, error]) => {
-            form.setError(field, { 
-              type: 'custom', 
-              message: error,
-            })
+      // 使用 ValidationManager 进行统一校验
+      const values = form.getValues()
+      const validationResult = await ValidationManager.validateForm(values, config)
+      
+      // 如果有字段级错误，设置到表单状态
+      if (validationResult.fields) {
+        Object.entries(validationResult.fields).forEach(([field, error]) => {
+          form.setError(field, { 
+            type: 'custom', 
+            message: error,
           })
-        }
-
-        // 分类处理错误信息
-        if (result.errors) {
-          const categorizedErrors = result.errors.reduce((acc: any, error: string) => {
-            if (error.toLowerCase().includes('required')) {
-              acc.required = acc.required || []
-              acc.required.push(error)
-            } else if (error.toLowerCase().includes('invalid')) {
-              acc.invalid = acc.invalid || []
-              acc.invalid.push(error)
-            } else {
-              acc.other = acc.other || []
-              acc.other.push(error)
-            }
-            return acc
-          }, {})
-
-          result.categorizedErrors = categorizedErrors
-        }
-        
-        return result
+        })
       }
 
-      return { valid: true }
+      return validationResult
     } catch (error) {
       console.error("Form validation error:", error)
       return {
@@ -110,7 +88,7 @@ export const useDynamicForm = (
         fields: {}
       }
     }
-  }, [config.validate, form, config.renderConfig.basicFields])
+  }, [config, form, config.renderConfig.basicFields])
 
   const handleSubmit = useCallback(async (onSubmit: (values: any) => Promise<void>) => {
     try {
