@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { Form } from "@/components/ui/form"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
@@ -14,6 +14,7 @@ import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 
 const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCancel }) => {
   const { form } = useDynamicForm(config)
+  const [isEditing, setIsEditing] = useState(false)
 
   // 使用 useMetadata hook 处理数据
   const { create: createMetadata, update: updateMetadata } = useMetadata(config.metadata?.type || "form")
@@ -31,6 +32,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
       if (onSubmit) {
         await onSubmit(values)
         message.success("提交成功")
+        setIsEditing(false)
         return
       }
 
@@ -44,6 +46,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
         })
         if (result) {
           message.success("更新成功")
+          setIsEditing(false)
         } else {
           throw new Error("更新失败")
         }
@@ -56,6 +59,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
         })
         if (result) {
           message.success("创建成功")
+          setIsEditing(false)
         } else {
           throw new Error("创建失败")
         }
@@ -104,6 +108,16 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
                 打印
               </Button>
             )}
+            {metadata.permissions?.edit && (
+              <Button
+                variant='flat'
+                color={isEditing ? 'warning' : 'primary'}
+                startContent={<Icon icon={isEditing ? 'mdi:pencil-off' : 'mdi:pencil'} className='w-4 h-4' />}
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                {isEditing ? '取消编辑' : '编辑'}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -122,10 +136,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
               prefix={orderNumberConfig.prefix}
               fieldName={orderNumberConfig.fieldName}
               label={orderNumberConfig.label}
-              disabled={!metadata.permissions?.edit}
+              disabled={!isEditing}
             />
           </div>
-          <DynamicFormFields fields={renderConfig.basicFields} form={form} isEditable={metadata.permissions?.edit} />
+          <DynamicFormFields fields={renderConfig.basicFields} form={form} isEditable={isEditing} />
         </motion.div>
 
         {/* 表格 */}
@@ -140,7 +154,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
             <DynamicTable
               config={renderConfig.table}
               form={form}
-              isEditable={metadata.permissions?.edit}
+              isEditable={isEditing}
               fieldName='tableData'
             />
           </motion.div>
@@ -158,13 +172,13 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
             <DynamicProcessConfirm
               steps={renderConfig.processSteps}
               form={form}
-              isEditable={metadata.permissions?.edit}
+              isEditable={isEditing}
             />
           </motion.div>
         )}
 
         {/* 操作按钮 */}
-        {metadata.permissions?.edit && (
+        {isEditing && (
           <motion.div variants={sectionVariants} initial='hidden' animate='visible' className='flex justify-end gap-4'>
             {onCancel && (
               <Button
