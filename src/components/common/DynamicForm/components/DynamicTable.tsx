@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input"
 import ResourceSelectButton from "../../ResourceSelectButton"
 import { TableConfig } from "../types"
 import { UseFormReturn } from "react-hook-form"
+import { Button } from "@nextui-org/react"
+import { Icon } from "@iconify/react"
 
 interface DynamicTableProps {
   config: TableConfig
@@ -58,6 +60,21 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       console.error(`Error calculating summary for ${field}:`, error)
       return 0
     }
+  }
+
+  const handleAddRow = () => {
+    const newRow = config.columns.reduce((acc, column) => {
+      acc[column.key] = ""
+      return acc
+    }, {} as Record<string, any>)
+    
+    form.setValue(fieldName, [...tableData, newRow])
+  }
+
+  const handleDeleteRow = (index: number) => {
+    const newData = [...tableData]
+    newData.splice(index, 1)
+    form.setValue(fieldName, newData)
   }
 
   const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
@@ -177,7 +194,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
     return (
       <TableRow>
-        <TableCell colSpan={config.columns.length}>
+        <TableCell colSpan={config.columns.length + (isEditable ? 1 : 0)}>
           <div className='space-y-2'>
             {Object.entries(config.summary.fields).map(([key, { label, calculate }]) => {
               const value = calculateSummary(key, calculate)
@@ -206,7 +223,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                 {column.title}
               </TableHead>
             ))}
-            {config.operations && <TableHead>操作</TableHead>}
+            {isEditable && <TableHead>操作</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -215,12 +232,37 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
               {config.columns.map((column) => (
                 <TableCell key={column.key}>{renderCell(column, rowIndex)}</TableCell>
               ))}
-              {config.operations && <TableCell>{config.operations.render(row, rowIndex)}</TableCell>}
+              {isEditable && (
+                <TableCell>
+                  <Button
+                    isIconOnly
+                    color="danger"
+                    variant="light"
+                    size="sm"
+                    onClick={() => handleDeleteRow(rowIndex)}
+                  >
+                    <Icon icon="mdi:delete" className="w-4 h-4" />
+                  </Button>
+                </TableCell>
+              )}
             </TableRow>
           ))}
           {renderSummary()}
         </TableBody>
       </Table>
+      {isEditable && (
+        <div className="mt-4">
+          <Button
+            color="primary"
+            variant="flat"
+            size="sm"
+            onClick={handleAddRow}
+            startContent={<Icon icon="mdi:plus" className="w-4 h-4" />}
+          >
+            添加行
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
