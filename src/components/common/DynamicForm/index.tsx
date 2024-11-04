@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useRef } from "react"
 import { Form } from "@/components/ui/form"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
@@ -11,13 +11,63 @@ import DynamicProcessConfirm from "./components/DynamicProcessConfirm"
 import OrderNumberField from "../OrderNumberField"
 import message from "@/components/Message"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import PrintableTemplate from "./components/PrintableTemplate"
+import { useReactToPrint } from "react-to-print"
 
 const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCancel }) => {
   const { form } = useDynamicForm(config)
   const [isEditing, setIsEditing] = useState(false)
+  const [showPrintPreview, setShowPrintPreview] = useState(false)
+  const printRef = useRef<HTMLDivElement>(null)
+  const printId = useRef<string>()
 
   // 使用 useMetadata hook 处理数据
   const { create: createMetadata, update: updateMetadata } = useMetadata(config.metadata?.type || "form")
+
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: config.metadata.title || "表单打印",
+    onBeforePrint: () => {
+      return new Promise((resolve) => {
+        const values = form.getValues()
+        if (!values) {
+          message.error("没有可打印的内容")
+          resolve(false)
+          return
+        }
+        printId.current = message.loading("正在准备打印...")
+        setTimeout(resolve, 500)
+      })
+    },
+    onAfterPrint: () => {
+      message.closeLoading(printId.current)
+      message.success("打印完成")
+      setShowPrintPreview(false)
+    },
+    onPrintError: (error) => {
+      message.closeLoading(printId.current)
+      console.error("Print error:", error)
+      message.error("打印失败，请重试")
+    },
+    pageStyle: `
+      @page {
+        size: A4;
+        margin: 20mm;
+      }
+      @media print {
+        body {
+          -webkit-print-color-adjust: exact;
+        }
+        html, body {
+          height: 100vh;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden;
+        }
+      }
+    `,
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -104,8 +154,13 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
           </div>
           <div className='flex gap-2'>
             {metadata.permissions?.print && (
-              <Button variant='flat' color='primary' startContent={<Icon icon='mdi:printer' className='w-4 h-4' />}>
-                打印
+              <Button
+                variant='flat'
+                color='primary'
+                onClick={() => setShowPrintPreview(true)}
+                startContent={<Icon icon='mdi:printer' className='w-4 h-4' />}
+              >
+                打印预览
               </Button>
             )}
             {metadata.permissions?.edit && (
@@ -196,6 +251,27 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
           </motion.div>
         )}
       </form>
+
+      {/* 打印预览对话框 */}
+      <Dialog open={showPrintPreview} onOpenChange={setShowPrintPreview}>
+        <DialogContent className='max-w-4xl'>
+          <DialogHeader>
+            <DialogTitle>打印预览</DialogTitle>
+          </DialogHeader>
+          <div className='max-h-[60vh] overflow-y-auto'>
+            <PrintableTemplate ref={printRef} config={config} data={form.getValues()} />
+          </div>
+          <DialogFooter className='flex justify-between items-center'>
+            <Button variant='flat' color='default' onClick={() => setShowPrintPreview(false)}>
+              关闭
+            </Button>
+            <Button onClick={handlePrint} className='gap-2' color='primary'>
+              <Icon icon='mdi:printer' className='w-4 h-4' />
+              打印
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Form>
   )
 }
