@@ -11,6 +11,21 @@ interface PrintableTemplateProps {
 const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ config, data }, ref) => {
   const { metadata, renderConfig } = config
 
+  // 格式化字段值
+  const formatFieldValue = (type: string, value: any) => {
+    if (value === undefined || value === null || value === "") return "-"
+
+    switch (type) {
+      case "date":
+      case "datetime":
+        return format(new Date(value), "yyyy-MM-dd HH:mm:ss")
+      case "number":
+        return typeof value === "number" ? value.toFixed(2) : value
+      default:
+        return value
+    }
+  }
+
   // 渲染基本信息字段
   const renderBasicFields = () => {
     return (
@@ -102,26 +117,52 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
       <div className="mt-6 space-y-4">
         {renderConfig.processSteps.map((step) => {
           const stepData = data.processConfirmations[step.key]
-          if (!stepData?.confirmed) return null
 
           return (
-            <div key={step.key} className="border-b border-gray-200 pb-4">
+            <div key={step.key} className="process-step border-b border-gray-200 pb-4">
               <div className="flex justify-between mb-2">
-                <span className="font-medium">{step.title}</span>
-                <span className="text-gray-500">
-                  {stepData.confirmationDate &&
-                    format(new Date(stepData.confirmationDate), "yyyy-MM-dd HH:mm:ss")}
-                </span>
+                <div>
+                  <span className="font-medium">{step.title}</span>
+                  {step.description && (
+                    <p className="text-gray-500 text-sm mt-1">{step.description}</p>
+                  )}
+                </div>
+                <div className="text-sm">
+                  {stepData?.confirmed ? (
+                    <span className="text-green-600">已确认</span>
+                  ) : (
+                    <span className="text-gray-400">未确认</span>
+                  )}
+                </div>
               </div>
-              <div className="text-sm text-gray-500">确认人: {stepData.confirmer}</div>
-              {step.fields && (
-                <div className="mt-2 grid grid-cols-2 gap-4">
-                  {step.fields.map((field) => (
-                    <div key={field.name} className="flex justify-between">
-                      <span>{field.label}:</span>
-                      <span>{formatFieldValue(field.type, stepData.formData?.[field.name])}</span>
+
+              {stepData?.confirmed && (
+                <div className="step-content">
+                  <div className="grid grid-cols-2 gap-4 text-sm mt-2">
+                    <div>
+                      <span className="text-gray-500">确认人：</span>
+                      <span>{stepData.confirmer}</span>
                     </div>
-                  ))}
+                    <div>
+                      <span className="text-gray-500">确认时间：</span>
+                      <span>
+                        {stepData.confirmationDate &&
+                          format(new Date(stepData.confirmationDate), "yyyy-MM-dd HH:mm:ss")}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 渲染步骤表单字段 */}
+                  {step.fields && stepData.formData && (
+                    <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
+                      {step.fields.map((field) => (
+                        <div key={field.name}>
+                          <span className="text-gray-500">{field.label}：</span>
+                          <span>{formatFieldValue(field.type, stepData.formData[field.name])}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -129,21 +170,6 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
         })}
       </div>
     )
-  }
-
-  // 格式化字段值
-  const formatFieldValue = (type: string, value: any) => {
-    if (value === undefined || value === null || value === "") return "-"
-
-    switch (type) {
-      case "date":
-      case "datetime":
-        return format(new Date(value), "yyyy-MM-dd HH:mm:ss")
-      case "number":
-        return typeof value === "number" ? value.toFixed(2) : value
-      default:
-        return value
-    }
   }
 
   return (
@@ -176,18 +202,6 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
         </div>
       )}
 
-      {/* 签字栏 */}
-      <div className="mt-8 flex justify-between text-sm">
-        <div>
-          <p>制单人：________________</p>
-          <p className="mt-2">日期：________________</p>
-        </div>
-        <div>
-          <p>审核人：________________</p>
-          <p className="mt-2">日期：________________</p>
-        </div>
-      </div>
-
       {/* 打印样式 */}
       <style type="text/css" media="print">{`
         @page {
@@ -203,6 +217,12 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
           }
           body {
             -webkit-print-color-adjust: exact;
+          }
+          .process-step {
+            break-inside: avoid;
+          }
+          .step-content {
+            margin-bottom: 1rem;
           }
           table { page-break-inside: auto }
           tr { page-break-inside: avoid; page-break-after: auto }
