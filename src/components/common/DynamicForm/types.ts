@@ -38,6 +38,11 @@ export interface TableSummary {
   }
 }
 
+// 行级计算配置
+export interface TableRowCalculations {
+  [key: string]: (row: any) => any
+}
+
 // 流程步骤
 export interface ProcessStep {
   key: string
@@ -77,9 +82,8 @@ export interface FormRenderConfig {
   table?: {
     columns: TableColumn[]
     summary?: TableSummary
-    rowCalculations?: {
-      [key: string]: (row: any) => any
-    }
+    // 添加行级计算配置
+    rowCalculations?: TableRowCalculations
   }
 
   // 流程步骤

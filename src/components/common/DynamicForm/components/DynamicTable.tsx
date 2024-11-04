@@ -72,23 +72,19 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     ...(config.rowCalculations || {})
   }
 
+  // 处理字段值变化和计算
   const handleCalculateField = useCallback((row: any, index: number, changedField: string) => {
-    if (config.dependencies) {
-      Object.entries(config.dependencies).forEach(([field, dependency]) => {
-        if (dependency.dependsOn?.includes(changedField)) {
-          try {
-            const calculate = dependency.calculate || calculations[field]
-            if (typeof calculate === 'function') {
-              const value = calculate(row)
-              form.setValue(`${fieldName}.${index}.${field}`, value)
-            }
-          } catch (error) {
-            console.error(`Error calculating field ${field}:`, error)
-          }
+    if (config.rowCalculations) {
+      Object.entries(config.rowCalculations).forEach(([field, calculate]) => {
+        try {
+          const value = calculate(row)
+          form.setValue(`${fieldName}.${index}.${field}`, value)
+        } catch (error) {
+          console.error(`Error calculating field ${field}:`, error)
         }
       })
     }
-  }, [config.dependencies, calculations, fieldName, form])
+  }, [config.rowCalculations, fieldName, form])
 
   const calculateSummary = useCallback((field: string, calculate: (records: any[]) => number | string) => {
     try {
@@ -243,7 +239,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                     className="text-right font-mono"
                     onChange={(e) => {
                       field.onChange(e)
-                      handleCalculateField(tableData[rowIndex], rowIndex, column.key)
+                      // 触发行级计算
+                      const row = form.getValues(`${fieldName}.${rowIndex}`)
+                      handleCalculateField(row, rowIndex, column.key)
                     }}
                   />
                 </FormControl>
