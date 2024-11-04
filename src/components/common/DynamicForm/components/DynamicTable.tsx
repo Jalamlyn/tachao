@@ -34,10 +34,24 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     defaultValue: []
   });
 
-  // 使用 useCallback 优化添加行的函数
+  // 优化添加行的函数,确保新行数据的完整性
   const handleAddRow = useCallback(() => {
     const newRow = config.columns.reduce((acc, column) => {
-      acc[column.key] = ""
+      // 根据字段类型设置合适的默认值
+      switch(column.type) {
+        case 'number':
+          acc[column.key] = 0
+          break
+        case 'select':
+          acc[column.key] = column.options?.[0]?.value || ''
+          break
+        case 'date':
+        case 'datetime':
+          acc[column.key] = ''
+          break
+        default:
+          acc[column.key] = ''
+      }
       return acc
     }, {} as Record<string, any>)
     
@@ -95,6 +109,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
   const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
     const cellFieldName = `${fieldName}.${rowIndex}.${column.key}`
+    // 修复 editable 判断逻辑
+    const isFieldEditable = isEditable && column.editable !== false
 
     if (column.render) {
       return column.render(form.getValues(cellFieldName), tableData[rowIndex], rowIndex)
@@ -110,13 +126,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
               render={({ field }) => (
                 <FormItem className='flex-1'>
                   <FormControl>
-                    <Input {...field} disabled={!isEditable || !column.editable} />
+                    <Input {...field} disabled={!isFieldEditable} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            {isEditable && column.editable && column.resourceConfig && (
+            {isFieldEditable && column.resourceConfig && (
               <ResourceSelectButton
                 resourceName={column.resourceConfig.resourceName}
                 appId={column.resourceConfig.appId}
@@ -149,7 +165,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                           "w-full pl-3 text-left font-normal",
                           !field.value && "text-muted-foreground"
                         )}
-                        disabled={!isEditable || !column.editable}
+                        disabled={!isFieldEditable}
                       >
                         {field.value ? format(new Date(field.value), "PPP") : <span>选择日期</span>}
                         <Icon icon="mdi:calendar" className="ml-auto h-4 w-4 opacity-50" />
@@ -184,7 +200,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                 <FormControl>
                   <Textarea
                     {...field}
-                    disabled={!isEditable || !column.editable}
+                    disabled={!isFieldEditable}
                     className="min-h-[100px]"
                   />
                 </FormControl>
@@ -204,7 +220,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                 <FormControl>
                   <select
                     {...field}
-                    disabled={!isEditable || !column.editable}
+                    disabled={!isFieldEditable}
                     className="w-full rounded-md border border-gray-300 px-3 py-2"
                   >
                     <option value="">{column.placeholder || "请选择"}</option>
@@ -232,7 +248,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                   <Input
                     {...field}
                     type="number"
-                    disabled={!isEditable || !column.editable}
+                    disabled={!isFieldEditable}
                     className="text-right font-mono"
                     onChange={(e) => {
                       field.onChange(e)
@@ -254,7 +270,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input {...field} disabled={!isEditable || !column.editable} />
+                  <Input {...field} disabled={!isFieldEditable} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
