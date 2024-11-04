@@ -1,8 +1,6 @@
 import { useEffect } from "react"
 import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
 import { DynamicFormConfig } from "../types"
-import { useDynamicSchema } from "./useDynamicSchema"
 import { calculateDependentValues } from "../utils/fieldUtils"
 import message from "@/components/Message"
 
@@ -11,10 +9,7 @@ export const useDynamicForm = (
   initialValues?: any,
   onValuesChange?: (changedValues: any, allValues: any) => void
 ) => {
-  const schema = useDynamicSchema(config)
-
   const form = useForm({
-    resolver: zodResolver(schema),
     defaultValues: initialValues,
   })
 
@@ -69,19 +64,6 @@ export const useDynamicForm = (
   const handleSubmit = async (onSubmit: (values: any) => Promise<void>) => {
     try {
       const values = form.getValues()
-
-      // 验证表单
-      const result = await form.trigger()
-      if (!result) {
-        const errors = Object.entries(form.formState.errors)
-          .map(([key, error]) => error.message)
-          .filter(Boolean)
-        
-        if (errors.length > 0) {
-          message.error(errors.join('\n'))
-          return
-        }
-      }
 
       // 提交表单
       await onSubmit(values)
