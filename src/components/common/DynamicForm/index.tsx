@@ -12,6 +12,117 @@ import { useReactToPrint } from "react-to-print"
 import message from "@/components/Message"
 import OrderNumberField from "../OrderNumberField"
 import { useMetadata } from "../../from-templates/hook/useMetadata"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+
+// 打印内容组件
+const PrintableContent = React.forwardRef<HTMLDivElement, { formData: any }>(({ formData }, ref) => {
+  if (!formData) return null
+
+  return (
+    <div ref={ref} className='p-8 print:p-4 bg-white'>
+      {/* 标题 */}
+      <div className='text-center mb-8'>
+        <h1 className='text-2xl font-bold'>{formData.title || "表单详情"}</h1>
+      </div>
+
+      {/* 基本信息 */}
+      {Object.entries(formData.formFields || {}).map(([section, fields]: [string, any]) => (
+        <div key={section} className='mb-8'>
+          <h2 className='text-lg font-semibold mb-4'>{section}</h2>
+          <div className='grid grid-cols-2 gap-4'>
+            {fields.map((field: any) => (
+              <div key={field.name} className='flex justify-between'>
+                <span className='font-medium'>{field.label}:</span>
+                <span>{formData[field.name]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {/* 表格数据 */}
+      {formData.table && (
+        <div className='mb-8'>
+          <h2 className='text-lg font-semibold mb-4'>表格数据</h2>
+          <table className='w-full border-collapse'>
+            <thead>
+              <tr className='bg-gray-50'>
+                {formData.table.columns.map((column: any) => (
+                  <th key={column.key} className='border border-gray-300 p-2 text-sm font-medium text-left'>
+                    {column.title}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {(formData.tableData || []).map((row: any, index: number) => (
+                <tr key={index} className='border-b border-gray-200'>
+                  {formData.table.columns.map((column: any) => (
+                    <td key={column.key} className='border border-gray-300 p-2 text-sm'>
+                      {row[column.key]}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* 流程确认信息 */}
+      {formData.processSteps && (
+        <div className='mb-8'>
+          <h2 className='text-lg font-semibold mb-4'>流程确认</h2>
+          <div className='space-y-4'>
+            {formData.processSteps.map((step: any) => (
+              <div key={step.key} className='border rounded p-4'>
+                <h3 className='font-medium'>{step.title}</h3>
+                <p className='text-gray-600 text-sm'>{step.description}</p>
+                {formData.processConfirmations?.[step.key]?.confirmed && (
+                  <div className='mt-2 text-sm'>
+                    <div>确认人: {formData.processConfirmations[step.key].confirmer}</div>
+                    <div>确认时间: {formData.processConfirmations[step.key].confirmationDate}</div>
+                    {formData.processConfirmations[step.key].comments && (
+                      <div>确认意见: {formData.processConfirmations[step.key].comments}</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 打印页脚 */}
+      <div className='mt-8 text-sm text-gray-500'>
+        <div>打印时间: {new Date().toLocaleString()}</div>
+      </div>
+
+      {/* 打印样式 */}
+      <style type='text/css' media='print'>{`
+        @page {
+          size: A4;
+          margin: 20mm;
+        }
+        @media print {
+          body {
+            -webkit-print-color-adjust: exact;
+          }
+          .print-header {
+            position: fixed;
+            top: 0;
+          }
+          .print-footer {
+            position: fixed;
+            bottom: 0;
+          }
+        }
+      `}</style>
+    </div>
+  )
+})
+
+PrintableContent.displayName = "PrintableContent"
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
   config,
@@ -20,11 +131,12 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   const { form, loading } = useDynamicForm(config)
   const printRef = useRef<HTMLDivElement>(null)
   const [isEditMode, setIsEditMode] = useState(false)
+  const [showPrintPreview, setShowPrintPreview] = useState(false)
   const { create, update } = useMetadata('form')
 
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
-    documentTitle: config.print?.documentTitle,
+    documentTitle: config.print?.documentTitle || "表单打印",
     pageStyle: config.print?.pageStyle,
     onBeforePrint: async () => {
       return new Promise((resolve) => {
@@ -37,6 +149,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     },
     onAfterPrint: () => {
       message.success("打印完成")
+      setShowPrintPreview(false)
     },
     onPrintError: (error) => {
       console.error("Print error:", error)
@@ -53,13 +166,27 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         const errors = Object.entries(form.formState.errors)
           .map(([key, error]) => {
             const fieldName = key.split('.').pop() // 获取字段名
+            const fieldConfig = Object.values(config.formFields || {})
+              .flat()
+              .find((field: any) => field.name === fieldName)
+            const label = fieldConfig?.label || fieldName
             const errorMessage = typeof error.message === 'string' ? error.message : '验证失败'
-            return `${fieldName}: ${errorMessage}`
+            return `${label}: ${errorMessage}`
           })
           .filter(Boolean)
         
         if (errors.length > 0) {
-          message.error(errors.join('\n'))
+          message.error(
+            <div className='space-y-1'>
+              <div className='font-medium'>表单验证失败:</div>
+              {errors.map((error, index) => (
+                <div key={index} className='flex items-start text-sm'>
+                  <span className='mr-2'>•</span>
+                  <span>{error}</span>
+                </div>
+              ))}
+            </div>
+          )
           return
         }
       }
@@ -166,62 +293,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             </motion.div>
           )}
 
-          {/* Print Content */}
-          {config.print && (
-            <div style={{ display: "none" }}>
-              <div ref={printRef}>
-                {config.print.template && (
-                  <div className="p-8">
-                    {/* Header */}
-                    {config.print.template.header && (
-                      <div className="text-center mb-8">
-                        <h1 className="text-2xl font-bold">{config.print.template.header.title}</h1>
-                        {config.print.template.header.subtitle && (
-                          <div className="mt-2">{config.print.template.header.subtitle}</div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Content */}
-                    {config.print.template.content && (
-                      <div
-                        className={`grid gap-4 ${
-                          config.print.template.content.columns
-                            ? `grid-cols-${config.print.template.content.columns}`
-                            : "grid-cols-1"
-                        }`}
-                      >
-                        {config.print.template.content.fields?.map((fieldName) => {
-                          const value = form.getValues(fieldName)
-                          return (
-                            <div key={fieldName} className="flex justify-between">
-                              <span className="font-medium">{fieldName}:</span>
-                              <span>{value}</span>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-
-                    {/* Footer */}
-                    {config.print.template.footer && (
-                      <div className="mt-8 text-sm">
-                        {config.print.template.footer.customText && (
-                          <div>{config.print.template.footer.customText}</div>
-                        )}
-                        {config.print.template.footer.showDate && (
-                          <div className="mt-2">
-                            日期：{new Date().toLocaleDateString()}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* Action Buttons */}
           <motion.div
             variants={sectionVariants}
@@ -258,14 +329,14 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               )}
 
               {/* Print Button */}
-              {config.print && (
+              {!currentIsEditable && (
                 <Button
                   color="primary"
                   variant="flat"
-                  onClick={handlePrint}
+                  onClick={() => setShowPrintPreview(true)}
                   startContent={<Icon icon="mdi:printer" className="w-4 h-4" />}
                 >
-                  打印
+                  打印预览
                 </Button>
               )}
 
@@ -284,6 +355,27 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           </motion.div>
         </AnimatePresence>
       </motion.form>
+
+      {/* Print Preview Dialog */}
+      <Dialog open={showPrintPreview} onOpenChange={setShowPrintPreview}>
+        <DialogContent className='max-w-4xl'>
+          <DialogHeader>
+            <DialogTitle>打印预览</DialogTitle>
+          </DialogHeader>
+          <div className='max-h-[60vh] overflow-y-auto'>
+            <PrintableContent ref={printRef} formData={form.getValues()} />
+          </div>
+          <DialogFooter className='flex justify-between items-center'>
+            <Button variant='outline' onClick={() => setShowPrintPreview(false)}>
+              关闭
+            </Button>
+            <Button onClick={handlePrint} className='gap-2'>
+              <Icon icon='mdi:printer' className='w-4 h-4' />
+              打印
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Form>
   )
 }
