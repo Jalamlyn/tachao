@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useCallback } from "react"
 import { Form } from "@/components/ui/form"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
@@ -16,7 +16,7 @@ import PrintableTemplate from "./components/PrintableTemplate"
 import { useReactToPrint } from "react-to-print"
 
 const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCancel }) => {
-  const { form } = useDynamicForm(config)
+  const { form, handleSubmit, validateForm } = useDynamicForm(config)
   const [isEditing, setIsEditing] = useState(false)
   const [showPrintPreview, setShowPrintPreview] = useState(false)
   const printRef = useRef<HTMLDivElement>(null)
@@ -69,56 +69,72 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
     `,
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const values = form.getValues()
-
-      // 获取订单编号作为唯一标识
-      const orderNumberFieldName = config.orderNumberConfig?.fieldName || "orderNumber"
-      const orderNumber = values[orderNumberFieldName]
-
-      // 如果提供了自定义的 onSubmit，优先使用它
-      if (onSubmit) {
-        await onSubmit(values)
-        message.success("提交成功")
-        setIsEditing(false)
-        return
-      }
-
-      // 使用内置的提交处理
-      if (id) {
-        // 更新现有数据
-        const result = await updateMetadata(id, {
-          title: orderNumber || config.metadata.title, // 使用订单编号作为标题
-          status: "submitted",
-          data: values,
-        })
-        if (result) {
-          message.success("更新成功")
+      // 使用 handleSubmit 包装提交函数
+      await handleSubmit(async (values) => {
+        // 如果提供了自定义的 onSubmit，优先使用它
+        if (onSubmit) {
+          await onSubmit(values)
+          message.success("提交成功")
           setIsEditing(false)
-        } else {
-          throw new Error("更新失败")
+          return
         }
-      } else {
-        // 创建新数据
-        const result = await createMetadata({
-          title: orderNumber || config.metadata.title, // 使用订单编号作为标题
-          status: "submitted",
-          data: values,
-        })
-        if (result) {
-          message.success("创建成功")
-          setIsEditing(false)
+
+        // 获取订单编号作为唯一标识
+        const orderNumberFieldName = config.orderNumberConfig?.fieldName || "orderNumber"
+        const orderNumber = values[orderNumberFieldName]
+
+        // 使用内置的提交处理
+        if (id) {
+          // 更新现有数据
+          const result = await updateMetadata(id, {
+            title: orderNumber || config.metadata.title,
+            status: "submitted",
+            data: values,
+          })
+          if (result) {
+            message.success("更新成功")
+            setIsEditing(false)
+          } else {
+            throw new Error("更新失败")
+          }
         } else {
-          throw new Error("创建失败")
+          // 创建新数据
+          const result = await createMetadata({
+            title: orderNumber || config.metadata.title,
+            status: "submitted",
+            data: values,
+          })
+          if (result) {
+            message.success("创建成功")
+            setIsEditing(false)
+          } else {
+            throw new Error("创建失败")
+          }
         }
-      }
+      })
     } catch (error) {
       console.error("Form submission error:", error)
-      message.error(error instanceof Error ? error.message : "提交失败")
+      // 错误处理已经在 handleSubmit 中完成，这里不需要重复处理
     }
-  }
+  }, [config.metadata.title, config.orderNumberConfig?.fieldName, handleSubmit, id, onSubmit, updateMetadata, createMetadata])
+
+  // 手动触发校验的函数
+  const handleValidate = useCallback(async () => {
+    const result = await validateForm({ mode: 'custom' })
+    if (!result.valid) {
+      if (result.errors && result.errors.length > 0) {
+        message.error(result.errors.join("\n"))
+      }
+      return false
+    }
+    if (result.warnings && result.warnings.length > 0) {
+      message.warning(result.warnings.join("\n"))
+    }
+    return true
+  }, [validateForm])
 
   // 动画配置
   const sectionVariants = {
@@ -145,7 +161,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className='space-y-8'>
+      <form onSubmit={handleFormSubmit} className='space-y-8'>
         {/* 表单标题 */}
         <div className='flex justify-between items-center'>
           <div>
@@ -173,6 +189,14 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
                 {isEditing ? '取消编辑' : '编辑'}
               </Button>
             )}
+            <Button
+              variant='flat'
+              color='secondary'
+              onClick={handleValidate}
+              startContent={<Icon icon='mdi:check-circle' className='w-4 h-4' />}
+            >
+              校验
+            </Button>
           </div>
         </div>
 
