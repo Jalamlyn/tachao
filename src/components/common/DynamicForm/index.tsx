@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import PrintableTemplate from "./components/PrintableTemplate"
 import { useReactToPrint } from "react-to-print"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { ValidationManager } from "./validation/ValidationManager"
 
 const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCancel }) => {
   const { form, handleSubmit, validateForm } = useDynamicForm(config)
@@ -80,8 +81,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
     try {
       // 使用 handleSubmit 包装提交函数,并在提交前进行校验
       await handleSubmit(async (values) => {
-        // 先进行表单校验
-        const validationResult = await validateForm({ mode: 'submit' })
+        // 使用 ValidationManager 进行统一校验
+        const validationResult = await ValidationManager.validateForm(values, config)
         if (!validationResult.valid) {
           if (validationResult.categorizedErrors) {
             setValidationErrors(validationResult.categorizedErrors)
@@ -146,7 +147,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
       console.error("Form submission error:", error)
       message.error("提交失败，请重试")
     }
-  }, [config.metadata.title, config.orderNumberConfig?.fieldName, handleSubmit, id, onSubmit, updateMetadata, createMetadata, validateForm])
+  }, [config, handleSubmit, id, onSubmit, updateMetadata, createMetadata])
 
   // 动画配置
   const sectionVariants = {
