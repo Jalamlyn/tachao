@@ -22,6 +22,22 @@ export interface TableColumn {
   options?: { label: string; value: any }[]
 }
 
+// 表格汇总计算函数类型
+export type TableSummaryCalculator = (records: any[]) => number | string
+
+// 表格汇总字段配置
+export interface TableSummaryField {
+  label: string
+  calculate: TableSummaryCalculator
+}
+
+// 表格汇总配置
+export interface TableSummary {
+  fields: {
+    [key: string]: TableSummaryField
+  }
+}
+
 // 流程步骤
 export interface ProcessStep {
   key: string
@@ -60,13 +76,9 @@ export interface FormRenderConfig {
   // 表格配置
   table?: {
     columns: TableColumn[]
-    summary?: {
-      fields: {
-        [key: string]: {
-          label: string
-          calculate: (records: any[]) => number | string
-        }
-      }
+    summary?: TableSummary
+    rowCalculations?: {
+      [key: string]: (row: any) => any
     }
   }
 
