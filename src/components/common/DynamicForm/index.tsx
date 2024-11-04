@@ -14,11 +14,17 @@ import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import PrintableTemplate from "./components/PrintableTemplate"
 import { useReactToPrint } from "react-to-print"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 
 const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCancel }) => {
   const { form, handleSubmit, validateForm } = useDynamicForm(config)
   const [isEditing, setIsEditing] = useState(false)
   const [showPrintPreview, setShowPrintPreview] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<{
+    required?: string[];
+    invalid?: string[];
+    other?: string[];
+  }>({})
   const printRef = useRef<HTMLDivElement>(null)
   const printId = useRef<string>()
 
@@ -77,10 +83,12 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
         // 先进行表单校验
         const validationResult = await validateForm({ mode: 'submit' })
         if (!validationResult.valid) {
-          if (validationResult.errors && validationResult.errors.length > 0) {
-            message.error(validationResult.errors.join("\n"))
-            return
+          if (validationResult.categorizedErrors) {
+            setValidationErrors(validationResult.categorizedErrors)
           }
+          return
+        } else {
+          setValidationErrors({})
         }
 
         // 如果有警告信息，显示确认对话框
@@ -163,6 +171,68 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
     label: config.orderNumberConfig?.label || "订单编号",
   }
 
+  // 渲染验证错误信息
+  const renderValidationErrors = () => {
+    if (!Object.keys(validationErrors).length) return null;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="space-y-4 mb-6"
+      >
+        {validationErrors.required && validationErrors.required.length > 0 && (
+          <Alert variant="destructive">
+            <AlertTitle className="flex items-center gap-2">
+              <Icon icon="mdi:alert-circle" className="w-5 h-5" />
+              必填项未填写
+            </AlertTitle>
+            <AlertDescription>
+              <ul className="list-disc list-inside mt-2">
+                {validationErrors.required.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {validationErrors.invalid && validationErrors.invalid.length > 0 && (
+          <Alert variant="destructive">
+            <AlertTitle className="flex items-center gap-2">
+              <Icon icon="mdi:alert-circle" className="w-5 h-5" />
+              格式错误
+            </AlertTitle>
+            <AlertDescription>
+              <ul className="list-disc list-inside mt-2">
+                {validationErrors.invalid.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {validationErrors.other && validationErrors.other.length > 0 && (
+          <Alert variant="destructive">
+            <AlertTitle className="flex items-center gap-2">
+              <Icon icon="mdi:alert-circle" className="w-5 h-5" />
+              其他错误
+            </AlertTitle>
+            <AlertDescription>
+              <ul className="list-disc list-inside mt-2">
+                {validationErrors.other.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+      </motion.div>
+    );
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={handleFormSubmit} className='space-y-8'>
@@ -195,6 +265,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
             )}
           </div>
         </div>
+
+        {/* 验证错误信息展示 */}
+        {renderValidationErrors()}
 
         {/* 基本信息 */}
         <motion.div

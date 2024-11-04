@@ -35,31 +35,15 @@ export const useDynamicForm = (
     return () => subscription.unsubscribe()
   }, [config.dependencies, form, onValuesChange])
 
-  // 处理表格数据变化
-  useEffect(() => {
-    if (!config.table) return
-
-    const subscription = form.watch((value, { name }) => {
-      if (name?.startsWith("tableData.")) {
-        const [, rowIndex, field] = name.split(".")
-        const row = form.getValues(`tableData.${rowIndex}`)
-
-        // 处理行级计算
-        if (config.table.rowCalculations) {
-          Object.entries(config.table.rowCalculations).forEach(([calcField, calculate]) => {
-            try {
-              const calcValue = calculate(row)
-              form.setValue(`tableData.${rowIndex}.${calcField}`, calcValue)
-            } catch (error) {
-              console.error(`Error calculating field ${calcField}:`, error)
-            }
-          })
-        }
-      }
+  // 优化错误信息处理
+  const formatValidationErrors = (errors: Record<string, any>): string[] => {
+    return Object.entries(errors).map(([field, error]) => {
+      // 获取字段配置以获取标签名
+      const fieldConfig = config.renderConfig.basicFields.find(f => f.name === field)
+      const label = fieldConfig?.label || field
+      return `${label}: ${error.message}`
     })
-
-    return () => subscription.unsubscribe()
-  }, [config.table, form])
+  }
 
   // 表单级别校验函数
   const validateForm = useCallback(async (context?: ValidationContext): Promise<ValidationResult> => {
@@ -67,14 +51,13 @@ export const useDynamicForm = (
       // 首先执行 react-hook-form 的内置校验
       const isValid = await form.trigger()
       if (!isValid) {
-        const errors = Object.entries(form.formState.errors).map(([field, error]) => {
-          return `${error.message || `${field}字段有误`}`
-        })
+        const formErrors = form.formState.errors
+        const errorMessages = formatValidationErrors(formErrors)
         
         return {
           valid: false,
-          errors,
-          fields: Object.entries(form.formState.errors).reduce((acc, [field, error]) => {
+          errors: errorMessages,
+          fields: Object.entries(formErrors).reduce((acc, [field, error]) => {
             acc[field] = error.message as string
             return acc
           }, {} as { [key: string]: string })
@@ -89,8 +72,30 @@ export const useDynamicForm = (
         // 如果有字段级错误，设置到表单状态
         if (result.fields) {
           Object.entries(result.fields).forEach(([field, error]) => {
-            form.setError(field, { type: 'custom', message: error })
+            form.setError(field, { 
+              type: 'custom', 
+              message: error,
+            })
           })
+        }
+
+        // 分类处理错误信息
+        if (result.errors) {
+          const categorizedErrors = result.errors.reduce((acc: any, error: string) => {
+            if (error.toLowerCase().includes('required')) {
+              acc.required = acc.required || []
+              acc.required.push(error)
+            } else if (error.toLowerCase().includes('invalid')) {
+              acc.invalid = acc.invalid || []
+              acc.invalid.push(error)
+            } else {
+              acc.other = acc.other || []
+              acc.other.push(error)
+            }
+            return acc
+          }, {})
+
+          result.categorizedErrors = categorizedErrors
         }
         
         return result
@@ -105,7 +110,7 @@ export const useDynamicForm = (
         fields: {}
       }
     }
-  }, [config.validate, form])
+  }, [config.validate, form, config.renderConfig.basicFields])
 
   const handleSubmit = useCallback(async (onSubmit: (values: any) => Promise<void>) => {
     try {
@@ -115,7 +120,21 @@ export const useDynamicForm = (
       if (!validationResult.valid) {
         // 如果校验失败，显示错误信息
         if (validationResult.errors && validationResult.errors.length > 0) {
-          message.error(validationResult.errors.join("\n"))
+          // 使用分类后的错误信息
+          if (validationResult.categorizedErrors) {
+            const { required, invalid, other } = validationResult.categorizedErrors
+            if (required?.length) {
+              message.error("必填项未填写：\n" + required.join("\n"))
+            }
+            if (invalid?.length) {
+              message.error("格式错误：\n" + invalid.join("\n"))
+            }
+            if (other?.length) {
+              message.error("其他错误：\n" + other.join("\n"))
+            }
+          } else {
+            message.error(validationResult.errors.join("\n"))
+          }
         }
         return
       }
