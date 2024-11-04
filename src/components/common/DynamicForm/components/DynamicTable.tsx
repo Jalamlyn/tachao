@@ -1,10 +1,10 @@
-import React from "react"
+import React, { useCallback } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import ResourceSelectButton from "../../ResourceSelectButton"
 import { TableConfig } from "../types"
-import { UseFormReturn } from "react-hook-form"
+import { UseFormReturn, useFieldArray, useWatch } from "react-hook-form"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 
@@ -16,7 +16,33 @@ interface DynamicTableProps {
 }
 
 const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = true, fieldName }) => {
-  const tableData = form.watch(fieldName) || []
+  // 使用 useFieldArray 来管理动态表格数据
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: fieldName
+  });
+
+  // 使用 useWatch 来监听表格数据变化
+  const tableData = useWatch({
+    control: form.control,
+    name: fieldName,
+    defaultValue: []
+  });
+
+  // 使用 useCallback 优化添加行的函数
+  const handleAddRow = useCallback(() => {
+    const newRow = config.columns.reduce((acc, column) => {
+      acc[column.key] = ""
+      return acc
+    }, {} as Record<string, any>)
+    
+    append(newRow)
+  }, [config.columns, append])
+
+  // 使用 useCallback 优化删除行的函数
+  const handleDeleteRow = useCallback((index: number) => {
+    remove(index)
+  }, [remove])
 
   // 默认的计算函数
   const defaultCalculations = {
@@ -33,7 +59,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     ...(config.rowCalculations || {})
   }
 
-  const handleCalculateField = (row: any, index: number, changedField: string) => {
+  const handleCalculateField = useCallback((row: any, index: number, changedField: string) => {
     // 检查是否有依赖关系需要计算
     if (config.dependencies) {
       Object.entries(config.dependencies).forEach(([field, dependency]) => {
@@ -51,31 +77,16 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
         }
       })
     }
-  }
+  }, [config.dependencies, calculations, fieldName, form])
 
-  const calculateSummary = (field: string, calculate: (records: any[]) => number | string) => {
+  const calculateSummary = useCallback((field: string, calculate: (records: any[]) => number | string) => {
     try {
       return calculate(tableData)
     } catch (error) {
       console.error(`Error calculating summary for ${field}:`, error)
       return 0
     }
-  }
-
-  const handleAddRow = () => {
-    const newRow = config.columns.reduce((acc, column) => {
-      acc[column.key] = ""
-      return acc
-    }, {} as Record<string, any>)
-    
-    form.setValue(fieldName, [...tableData, newRow])
-  }
-
-  const handleDeleteRow = (index: number) => {
-    const newData = [...tableData]
-    newData.splice(index, 1)
-    form.setValue(fieldName, newData)
-  }
+  }, [tableData])
 
   const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
     const cellFieldName = `${fieldName}.${rowIndex}.${column.key}`
@@ -227,8 +238,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tableData.map((row: any, rowIndex: number) => (
-            <TableRow key={rowIndex}>
+          {fields.map((field, rowIndex) => (
+            <TableRow key={field.id}>
               {config.columns.map((column) => (
                 <TableCell key={column.key}>{renderCell(column, rowIndex)}</TableCell>
               ))}
