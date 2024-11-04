@@ -72,8 +72,27 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
   const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      // 使用 handleSubmit 包装提交函数
+      // 使用 handleSubmit 包装提交函数,并在提交前进行校验
       await handleSubmit(async (values) => {
+        // 先进行表单校验
+        const validationResult = await validateForm({ mode: 'submit' })
+        if (!validationResult.valid) {
+          if (validationResult.errors && validationResult.errors.length > 0) {
+            message.error(validationResult.errors.join("\n"))
+            return
+          }
+        }
+
+        // 如果有警告信息，显示确认对话框
+        if (validationResult.warnings && validationResult.warnings.length > 0) {
+          const confirmed = window.confirm(
+            `警告:\n${validationResult.warnings.join("\n")}\n\n是否继续提交？`
+          )
+          if (!confirmed) {
+            return
+          }
+        }
+
         // 如果提供了自定义的 onSubmit，优先使用它
         if (onSubmit) {
           await onSubmit(values)
@@ -117,24 +136,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
       })
     } catch (error) {
       console.error("Form submission error:", error)
-      // 错误处理已经在 handleSubmit 中完成，这里不需要重复处理
+      message.error("提交失败，请重试")
     }
-  }, [config.metadata.title, config.orderNumberConfig?.fieldName, handleSubmit, id, onSubmit, updateMetadata, createMetadata])
-
-  // 手动触发校验的函数
-  const handleValidate = useCallback(async () => {
-    const result = await validateForm({ mode: 'custom' })
-    if (!result.valid) {
-      if (result.errors && result.errors.length > 0) {
-        message.error(result.errors.join("\n"))
-      }
-      return false
-    }
-    if (result.warnings && result.warnings.length > 0) {
-      message.warning(result.warnings.join("\n"))
-    }
-    return true
-  }, [validateForm])
+  }, [config.metadata.title, config.orderNumberConfig?.fieldName, handleSubmit, id, onSubmit, updateMetadata, createMetadata, validateForm])
 
   // 动画配置
   const sectionVariants = {
@@ -189,14 +193,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
                 {isEditing ? '取消编辑' : '编辑'}
               </Button>
             )}
-            <Button
-              variant='flat'
-              color='secondary'
-              onClick={handleValidate}
-              startContent={<Icon icon='mdi:check-circle' className='w-4 h-4' />}
-            >
-              校验
-            </Button>
           </div>
         </div>
 
