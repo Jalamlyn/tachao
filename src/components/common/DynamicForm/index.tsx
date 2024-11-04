@@ -9,21 +9,57 @@ import DynamicFormFields from "./components/DynamicFormFields"
 import DynamicTable from "./components/DynamicTable"
 import DynamicProcessConfirm from "./components/DynamicProcessConfirm"
 import message from "@/components/Message"
+import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 
 const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCancel }) => {
   const { form } = useDynamicForm(config)
+  
+  // 使用 useMetadata hook 处理数据
+  const { create: createMetadata, update: updateMetadata } = useMetadata(
+    config.metadata?.type || "form"
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       const values = form.getValues()
+      
+      // 如果提供了自定义的 onSubmit，优先使用它
       if (onSubmit) {
         await onSubmit(values)
         message.success("提交成功")
+        return
+      }
+
+      // 使用内置的提交处理
+      if (id) {
+        // 更新现有数据
+        const result = await updateMetadata(id, {
+          title: config.metadata.title,
+          status: "submitted",
+          data: values
+        })
+        if (result) {
+          message.success("更新成功")
+        } else {
+          throw new Error("更新失败")
+        }
+      } else {
+        // 创建新数据
+        const result = await createMetadata({
+          title: config.metadata.title,
+          status: "submitted",
+          data: values
+        })
+        if (result) {
+          message.success("创建成功")
+        } else {
+          throw new Error("创建失败")
+        }
       }
     } catch (error) {
       console.error("Form submission error:", error)
-      message.error("提交失败")
+      message.error(error instanceof Error ? error.message : "提交失败")
     }
   }
 
