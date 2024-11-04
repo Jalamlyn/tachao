@@ -1,19 +1,19 @@
 import { ReactNode } from "react"
-import { z } from "zod"
+import { UseFormReturn } from "react-hook-form"
 
 // 基础字段类型定义
 export type FieldType =
   // 基础输入
   | "text"
   | "number"
-  | "textarea"
+  | "textarea" 
   | "password"
   | "email"
   | "tel"
   | "url"
   // 选择类型
   | "select"
-  | "radio"
+  | "radio" 
   | "checkbox"
   | "date"
   | "time"
@@ -89,7 +89,11 @@ export interface FileField extends BaseField {
 // 自定义字段接口
 export interface CustomField extends BaseField {
   type: "custom"
-  render: (props: any) => ReactNode
+  render: (props: {
+    field: any
+    form: UseFormReturn<any>
+    isEditable: boolean
+  }) => ReactNode
 }
 
 // 组合所有字段类型
@@ -119,6 +123,12 @@ export interface TableColumn {
     format: string
     showTime: boolean
   }
+  options?: Array<{
+    label: string
+    value: any
+    disabled?: boolean
+  }>
+  placeholder?: string
 }
 
 // 表格汇总配置
@@ -174,7 +184,7 @@ export interface ProcessStep {
       field: string
       formula: (values: any) => any
     }>
-  }
+  } & (() => Promise<void>)
   onCancel?: () => void
   // 确认信息配置
   confirmation?: {
