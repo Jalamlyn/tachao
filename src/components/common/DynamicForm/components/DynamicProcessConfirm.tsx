@@ -7,6 +7,7 @@ import { format } from "date-fns"
 import { ProcessStep } from "../types"
 import message from "@/components/Message"
 import { getCurrentAccountInfo } from "@/service/apis/user"
+import DynamicFormFields from "./DynamicFormFields"
 
 interface DynamicProcessConfirmProps {
   steps: ProcessStep[]
@@ -54,6 +55,7 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
           confirmed: false,
           confirmer: "",
           confirmationDate: "",
+          formData: {} // 添加表单数据的初始值
         }
         needsUpdate = true
       }
@@ -71,6 +73,16 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
     if (!currentUser) {
       message.error('未能获取用户信息');
       return;
+    }
+
+    // 如果有表单字段，先验证
+    if (step.fields) {
+      const formDataPath = `${fieldName}.${step.key}.formData`;
+      const isValid = await form.trigger(formDataPath);
+      if (!isValid) {
+        message.error("请完成必填字段");
+        return;
+      }
     }
 
     setIsConfirming(step.key);
@@ -171,6 +183,18 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* 添加流程表单字段 */}
+              {step.fields && (
+                <div className='mt-4 border-t pt-4'>
+                  <DynamicFormFields
+                    fields={step.fields}
+                    form={form}
+                    isEditable={isEditable && !isConfirmed}
+                    orderNumberFieldConfig={undefined}
+                  />
+                </div>
+              )}
 
               {isConfirmed && (
                 <div className='grid grid-cols-2 gap-6 mt-4'>
