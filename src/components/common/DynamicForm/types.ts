@@ -6,14 +6,14 @@ export type FieldType =
   // 基础输入
   | "text"
   | "number"
-  | "textarea" 
+  | "textarea"
   | "password"
   | "email"
   | "tel"
   | "url"
   // 选择类型
   | "select"
-  | "radio" 
+  | "radio"
   | "checkbox"
   | "date"
   | "time"
@@ -89,11 +89,7 @@ export interface FileField extends BaseField {
 // 自定义字段接口
 export interface CustomField extends BaseField {
   type: "custom"
-  render: (props: {
-    field: any
-    form: UseFormReturn<any>
-    isEditable: boolean
-  }) => ReactNode
+  render: (props: any) => ReactNode
 }
 
 // 组合所有字段类型
@@ -184,7 +180,7 @@ export interface ProcessStep {
       field: string
       formula: (values: any) => any
     }>
-  } & (() => Promise<void>)
+  }
   onCancel?: () => void
   // 确认信息配置
   confirmation?: {
