@@ -31,9 +31,12 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     return (
       <div className="grid grid-cols-2 gap-4">
         {renderConfig.basicFields.map((field) => (
-          <div key={field.name} className="flex justify-between border-b border-gray-200 py-2">
-            <span className="font-medium">{field.label}:</span>
-            <span className="min-w-[200px] text-right">
+          <div key={field.name} className={cn(
+            "flex justify-between border-b border-gray-200 py-2",
+            "print:break-inside-avoid"
+          )}>
+            <span className="font-medium text-gray-700">{field.label}:</span>
+            <span className="min-w-[200px] text-right text-gray-900">
               {formatFieldValue(field.type, data?.basicInfo?.[field.name])}
             </span>
           </div>
@@ -47,16 +50,17 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     if (!renderConfig.table || !data?.tableData?.length) return null
 
     return (
-      <div className="mt-6">
-        <table className="w-full border-collapse">
-          <thead>
+      <div className="mt-6 print:break-inside-avoid-page">
+        <table className="w-full border-collapse print:break-inside-auto">
+          <thead className="print:break-inside-avoid print:break-after-auto">
             <tr className="bg-gray-50">
               {renderConfig.table.columns.map((column) => (
                 <th
                   key={column.key}
                   className={cn(
                     "border border-gray-300 p-2 text-sm font-medium text-left",
-                    column.type === "number" && "text-right"
+                    column.type === "number" && "text-right",
+                    "print:break-inside-avoid"
                   )}
                   style={{ width: column.width }}
                 >
@@ -67,13 +71,14 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
           </thead>
           <tbody>
             {data.tableData.map((row: any, index: number) => (
-              <tr key={index} className="border-b border-gray-200">
+              <tr key={index} className="border-b border-gray-200 print:break-inside-avoid">
                 {renderConfig.table!.columns.map((column) => (
                   <td
                     key={column.key}
                     className={cn(
                       "border border-gray-300 p-2 text-sm",
-                      column.type === "number" && "text-right font-mono"
+                      column.type === "number" && "text-right font-mono",
+                      "print:break-inside-avoid"
                     )}
                   >
                     {formatFieldValue(column.type, row[column.key])}
@@ -83,19 +88,21 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
             ))}
           </tbody>
           {renderConfig.table.summary && (
-            <tfoot>
+            <tfoot className="print:break-inside-avoid-page">
               <tr>
                 <td
                   colSpan={renderConfig.table.columns.length}
-                  className="border border-gray-300 p-2 text-sm"
+                  className="border border-gray-300 p-2 text-sm bg-gray-50"
                 >
                   <div className="space-y-1">
                     {Object.entries(renderConfig.table.summary.fields).map(([key, { label, calculate }]) => {
                       const value = calculate(data.tableData)
                       return (
                         <div key={key} className="flex justify-between">
-                          <span className="font-medium">{label}:</span>
-                          <span>{typeof value === "number" ? value.toFixed(2) : value}</span>
+                          <span className="font-medium text-gray-700">{label}:</span>
+                          <span className="font-mono">
+                            {typeof value === "number" ? value.toFixed(2) : value}
+                          </span>
                         </div>
                       )
                     })}
@@ -114,15 +121,15 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     if (!renderConfig.processSteps || !data?.processConfirmations) return null
 
     return (
-      <div className="mt-6 space-y-4">
+      <div className="mt-6 space-y-4 print:break-inside-avoid-page">
         {renderConfig.processSteps.map((step) => {
           const stepData = data.processConfirmations[step.key]
 
           return (
-            <div key={step.key} className="process-step border-b border-gray-200 pb-4">
+            <div key={step.key} className="process-step border-b border-gray-200 pb-4 print:break-inside-avoid">
               <div className="flex justify-between mb-2">
                 <div>
-                  <span className="font-medium">{step.title}</span>
+                  <span className="font-medium text-gray-900">{step.title}</span>
                   {step.description && (
                     <p className="text-gray-500 text-sm mt-1">{step.description}</p>
                   )}
@@ -141,11 +148,11 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
                   <div className="grid grid-cols-2 gap-4 text-sm mt-2">
                     <div>
                       <span className="text-gray-500">确认人：</span>
-                      <span>{stepData.confirmer}</span>
+                      <span className="text-gray-900">{stepData.confirmer}</span>
                     </div>
                     <div>
                       <span className="text-gray-500">确认时间：</span>
-                      <span>
+                      <span className="text-gray-900">
                         {stepData.confirmationDate &&
                           format(new Date(stepData.confirmationDate), "yyyy-MM-dd HH:mm:ss")}
                       </span>
@@ -158,7 +165,9 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
                       {step.fields.map((field) => (
                         <div key={field.name}>
                           <span className="text-gray-500">{field.label}：</span>
-                          <span>{formatFieldValue(field.type, stepData.formData[field.name])}</span>
+                          <span className="text-gray-900">
+                            {formatFieldValue(field.type, stepData.formData[field.name])}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -174,22 +183,24 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
 
   return (
     <div ref={ref} className="p-8 print:p-4 bg-white">
-      {/* 标题 */}
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold">{metadata.title}</h1>
-        {metadata.description && <p className="text-gray-500 mt-1">{metadata.description}</p>}
+      {/* 表单标题 */}
+      <div className="text-center mb-8 print:break-inside-avoid">
+        <h1 className="text-2xl font-bold text-gray-900">{metadata.title}</h1>
+        {metadata.description && (
+          <p className="text-gray-500 mt-1 text-sm">{metadata.description}</p>
+        )}
       </div>
 
       {/* 基本信息 */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4">基本信息</h2>
+      <div className="mb-8 print:break-inside-avoid">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">基本信息</h2>
         {renderBasicFields()}
       </div>
 
       {/* 表格数据 */}
       {renderConfig.table && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">明细信息</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">明细信息</h2>
           {renderTable()}
         </div>
       )}
@@ -197,7 +208,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
       {/* 流程确认 */}
       {renderConfig.processSteps && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">流程确认</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">流程确认</h2>
           {renderProcessSteps()}
         </div>
       )}
