@@ -20,6 +20,7 @@ interface DynamicTableProps {
 const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = true, fieldName }) => {
   const deletedRowsRef = useRef<any[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
+  const [rowToDelete, setRowToDelete] = useState<number | null>(null)
   
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -30,6 +31,26 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
   useEffect(() => {
     console.log('Current table fields:', fields)
   }, [fields])
+
+  // 处理删除操作的副作用
+  useEffect(() => {
+    if (rowToDelete !== null && !isProcessing) {
+      try {
+        setIsProcessing(true)
+        const deletedRow = fields[rowToDelete]
+        if (deletedRow) {
+          deletedRowsRef.current.push(deletedRow)
+          if (deletedRowsRef.current.length > 50) {
+            deletedRowsRef.current = deletedRowsRef.current.slice(-50)
+          }
+          remove(rowToDelete)
+        }
+      } finally {
+        setIsProcessing(false)
+        setRowToDelete(null)
+      }
+    }
+  }, [rowToDelete, fields, remove, isProcessing])
 
   // 生成新行数据
   const generateNewRow = useCallback(() => {
@@ -67,7 +88,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
       const newRow = {
         ...generateNewRow(),
-        id: `row-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         timestamp: Date.now(),
         rowIndex: fields.length + 1
       }
@@ -85,27 +105,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
   const handleDeleteRow = useCallback(
     (index: number) => {
       if (isProcessing) return
-
-      try {
-        setIsProcessing(true)
-        console.log('Deleting row at index:', index)
-        
-        // 保存被删除的行数据
-        const deletedRow = fields[index]
-        deletedRowsRef.current.push(deletedRow)
-
-        if (deletedRowsRef.current.length > 50) {
-          deletedRowsRef.current = deletedRowsRef.current.slice(-50)
-        }
-
-        // 直接使用 remove 方法删除行
-        remove(index)
-        
-      } finally {
-        setIsProcessing(false)
-      }
+      setRowToDelete(index)
     },
-    [remove, fields, isProcessing]
+    [isProcessing]
   )
 
   // 处理字段值变化
@@ -116,7 +118,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
         Object.entries(config.rowCalculations).forEach(([field, calculate]) => {
           try {
             const calculatedValue = calculate({ ...row, [columnKey]: value })
-            form.setValue(`${fieldName}.${rowIndex}.${field}`, calculatedValue)
+            form.setValue(`${fieldName}.${rowIndex}.${field}` as const, calculatedValue)
           } catch (error) {
             console.error(`Error calculating field ${field}:`, error)
           }
