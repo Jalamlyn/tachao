@@ -1,4 +1,4 @@
-import React, { useCallback } from "react"
+import React, { useCallback, useEffect, useRef } from "react"
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
@@ -8,6 +8,7 @@ import { UseFormReturn, useFieldArray } from "react-hook-form"
 import DTableRow from "./TableRow"
 import TableSummary from "./TableSummary"
 import MobileTable from "./MobileTable"
+import message from "@/components/Message"
 
 interface DynamicTableProps {
   config: TableConfig
@@ -17,14 +18,22 @@ interface DynamicTableProps {
 }
 
 const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = true, fieldName }) => {
+  // 使用 ref 来存储删除的行，以便在需要时恢复
+  const deletedRowsRef = useRef<any[]>([])
+  
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: fieldName,
   })
 
-  // 添加新行
-  const handleAddRow = useCallback(() => {
-    const newRow = config.columns.reduce((acc, column) => {
+  // 监控字段变化
+  useEffect(() => {
+    console.log('Current table fields:', fields)
+  }, [fields])
+
+  // 生成新行数据
+  const generateNewRow = useCallback(() => {
+    return config.columns.reduce((acc, column) => {
       switch (column.type) {
         case "number":
           acc[column.key] = 0
@@ -41,16 +50,56 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       }
       return acc
     }, {} as Record<string, any>)
+  }, [config.columns])
+
+  // 添加新行
+  const handleAddRow = useCallback(() => {
+    // 检查是否有最大行数限制
+    const maxRows = config.maxRows || 100 // 默认最大100行
+    if (fields.length >= maxRows) {
+      message.warning(`最多只能添加${maxRows}行`)
+      return
+    }
+
+    const newRow = generateNewRow()
+    // 添加唯一ID和时间戳
+    newRow.id = `row-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    newRow.timestamp = Date.now()
 
     append(newRow)
-  }, [config.columns, append])
+
+    // 触发表单验证
+    form.trigger(`${fieldName}`)
+  }, [config, fields.length, generateNewRow, append, form, fieldName])
 
   // 删除行
   const handleDeleteRow = useCallback(
     (index: number) => {
+      // 保存被删除的行数据
+      const deletedRow = fields[index]
+      deletedRowsRef.current.push(deletedRow)
+
+      // 如果保存的删除历史过多，只保留最近的50条
+      if (deletedRowsRef.current.length > 50) {
+        deletedRowsRef.current = deletedRowsRef.current.slice(-50)
+      }
+
       remove(index)
+
+      // 触发表单验证
+      form.trigger(`${fieldName}`)
+
+      // 更新所有行的索引
+      const currentValues = form.getValues(fieldName)
+      if (currentValues) {
+        currentValues.forEach((row: any, idx: number) => {
+          if (row) {
+            form.setValue(`${fieldName}.${idx}.rowIndex`, idx + 1)
+          }
+        })
+      }
     },
-    [remove]
+    [remove, form, fieldName, fields]
   )
 
   // 处理字段值变化
