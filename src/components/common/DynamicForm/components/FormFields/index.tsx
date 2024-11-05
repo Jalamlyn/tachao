@@ -1,6 +1,5 @@
 import React from "react"
 import { UseFormReturn } from "react-hook-form"
-import { motion } from "framer-motion"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { FormField as DynamicFormField } from "../../types"
@@ -8,19 +7,7 @@ import FormFieldWrapper from "./FormFieldWrapper"
 import BasicInput from "./BasicInput"
 import DateInput from "./DateInput"
 import OrderNumberField from "@/components/common/OrderNumberField"
-
-// 动画配置
-const animations = {
-  containerVariants: {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  },
-}
+import { cn } from "@/theme/cn"
 
 interface DynamicFormFieldsProps {
   fields: DynamicFormField[]
@@ -50,7 +37,10 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
     const basicInputTypes = ["text", "password", "email", "tel", "url"]
     if (basicInputTypes.includes(field.type)) {
       return (
-        <div className={shouldRenderOrderNumber ? "grid grid-cols-1 md:grid-cols-2 gap-4" : undefined}>
+        <div className={cn(
+          shouldRenderOrderNumber ? "grid grid-cols-1 md:grid-cols-2 gap-4" : undefined,
+          "form-field-container"
+        )}>
           <FormFieldWrapper
             name={field.name}
             label={field.label}
@@ -89,7 +79,12 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
               <Textarea
                 {...formField}
                 placeholder={field.placeholder}
-                className="min-h-[100px] md:min-h-[80px]"
+                className={cn(
+                  "min-h-[100px] md:min-h-[80px]",
+                  "w-full rounded-md border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+                  "resize-none transition-colors",
+                  "placeholder:text-gray-400"
+                )}
               />
             )}
           </FormFieldWrapper>
@@ -109,7 +104,12 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
               <Input
                 {...formField}
                 type="number"
-                className="text-right font-mono w-full"
+                className={cn(
+                  "text-right font-mono w-full",
+                  "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+                  "transition-colors",
+                  "placeholder:text-gray-400"
+                )}
                 placeholder={field.placeholder}
               />
             )}
@@ -143,7 +143,15 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
           >
             {(formField) => (
               <select
-                className="w-full rounded-md border border-gray-300 px-3 py-2"
+                className={cn(
+                  "w-full rounded-md",
+                  "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+                  "transition-colors",
+                  "py-2 px-3",
+                  "text-gray-900",
+                  "placeholder:text-gray-400",
+                  "disabled:bg-gray-50 disabled:text-gray-500"
+                )}
                 {...formField}
                 disabled={!isEditable || field.disabled}
               >
@@ -181,9 +189,14 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
                   formField.onChange(e)
                 }}
                 disabled={!isEditable || field.disabled}
-                className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0
-                  file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700
-                  hover:file:bg-blue-100 w-full"
+                className={cn(
+                  "file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0",
+                  "file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700",
+                  "hover:file:bg-blue-100",
+                  "w-full",
+                  "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+                  "transition-colors"
+                )}
               />
             )}
           </FormFieldWrapper>
@@ -215,18 +228,21 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
   }
 
   return (
-    <motion.div
-      variants={animations.containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"
-    >
+    <div className={cn(
+      "grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6",
+      "form-fields-container"
+    )}>
       {fields.map((field) => (
-        <div key={field.name} className="w-full">
+        <div key={field.name} className={cn(
+          "w-full",
+          "form-field-wrapper",
+          "hover:bg-gray-50/50 rounded-lg p-2 -m-2",
+          "transition-colors duration-200"
+        )}>
           {renderField(field)}
         </div>
       ))}
-    </motion.div>
+    </div>
   )
 }
 
