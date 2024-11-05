@@ -2,7 +2,15 @@ import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { Select, SelectItem } from "@nextui-org/react"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import message from "@/components/Message"
 import DynamicForm from "@/components/common/DynamicForm"
 import { motion, AnimatePresence } from "framer-motion"
@@ -16,7 +24,6 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
 const DynamicFormTestPage: React.FC = () => {
-  // 保持原有状态管理
   const [formConfig, setFormConfig] = useState<DynamicFormConfig | null>(null)
   const [templateType, setTemplateType] = useState<"official" | "custom">("custom")
   const [templateName, setTemplateName] = useState("")
@@ -44,12 +51,10 @@ const DynamicFormTestPage: React.FC = () => {
     name: string
   }>("template")
 
-  // 保持原有副作用
   useEffect(() => {
     loadTemplates()
   }, [])
 
-  // 保持原有事件处理函数
   const handleAIDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setAiDescription(e.target.value)
   }
@@ -77,7 +82,7 @@ const DynamicFormTestPage: React.FC = () => {
         setTemplateName(result.title)
         setFormKey((prev) => prev + 1)
         message.success("AI 生成表单成功")
-        setActiveTab("preview") // 自动切换到预览标签
+        setActiveTab("preview")
       }
     } catch (error) {
       console.error("AI 生成表单失败:", error)
@@ -117,7 +122,7 @@ const DynamicFormTestPage: React.FC = () => {
 
         message.success("AI 编辑表单成功")
         setEditDescription("")
-        setActiveTab("preview") // 自动切换到预览标签
+        setActiveTab("preview")
       }
     } catch (error) {
       console.error("AI 编辑表单失败:", error)
@@ -156,7 +161,7 @@ const DynamicFormTestPage: React.FC = () => {
         message.success("表单模板保存成功")
         setTemplateName("")
         loadTemplates()
-        setActiveTab("templates") // 保存成功后切换到模板标签
+        setActiveTab("templates")
       } else {
         message.error("保存失败")
       }
@@ -166,20 +171,20 @@ const DynamicFormTestPage: React.FC = () => {
     }
   }
 
-  const handleTemplateChange = async (templateId: string) => {
+  const handleTemplateChange = async (value: string) => {
     try {
-      setSelectedTemplateId(templateId)
-      if (!templateId) {
+      setSelectedTemplateId(value)
+      if (!value) {
         setFormConfig(null)
         return
       }
 
-      const template = await getTemplateDetail(templateId)
+      const template = await getTemplateDetail(value)
       if (template && template.data.config) {
         setFormConfig(template.data.config)
         setFormKey((prev) => prev + 1)
         message.success("模板加载成功")
-        setActiveTab("preview") // 加载成功后切换到预览标签
+        setActiveTab("preview")
       } else {
         message.error("模板加载失败")
       }
@@ -189,7 +194,6 @@ const DynamicFormTestPage: React.FC = () => {
     }
   }
 
-  // 保持原有动画配置
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -326,20 +330,21 @@ const DynamicFormTestPage: React.FC = () => {
                         <Icon icon='mdi:template' className='w-4 h-4' />
                         选择模板
                       </label>
-                      <Select
-                        label='选择已保存的模板'
-                        placeholder='请选择模板'
-                        value={selectedTemplateId}
-                        onChange={(e) => handleTemplateChange(e.target.value)}
-                      >
-                        <SelectItem key='' value=''>
-                          不使用模板
-                        </SelectItem>
-                        {templates.map((template) => (
-                          <SelectItem key={template.id} value={template.id}>
-                            {template.title} ({template.data.type})
-                          </SelectItem>
-                        ))}
+                      <Select value={selectedTemplateId} onValueChange={handleTemplateChange}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="请选择模板" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>可用模板</SelectLabel>
+                            <SelectItem value="">不使用模板</SelectItem>
+                            {templates.map((template) => (
+                              <SelectItem key={template.id} value={template.id}>
+                                {template.title} ({template.data.type})
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
                       </Select>
                     </div>
 
@@ -356,18 +361,17 @@ const DynamicFormTestPage: React.FC = () => {
                               className='w-full px-3 py-2 border rounded-md'
                             />
                           </div>
-                          <Select
-                            label='模板类型'
-                            value={templateType}
-                            onChange={(e) => setTemplateType(e.target.value as "official" | "custom")}
-                            className='w-48'
-                          >
-                            <SelectItem key='official' value='official'>
-                              官方模板
-                            </SelectItem>
-                            <SelectItem key='custom' value='custom'>
-                              自定义模板
-                            </SelectItem>
+                          <Select value={templateType} onValueChange={(value) => setTemplateType(value as "official" | "custom")}>
+                            <SelectTrigger className="w-48">
+                              <SelectValue placeholder="选择类型" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                <SelectLabel>模板类型</SelectLabel>
+                                <SelectItem value="official">官方模板</SelectItem>
+                                <SelectItem value="custom">自定义模板</SelectItem>
+                              </SelectGroup>
+                            </SelectContent>
                           </Select>
 
                           <Button onClick={handleSaveTemplate} className='gap-2'>
