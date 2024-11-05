@@ -221,7 +221,7 @@ const DynamicFormTestPage: React.FC = () => {
           <Card className='bg-white shadow-lg'>
             <CardHeader className='border-b'>
               <div className='flex justify-between items-center'>
-                <CardTitle className='text-2xl font-bold'>动态表单设计器</CardTitle>
+                <CardTitle className='text-2xl font-bold'>AI生成表单测试工具</CardTitle>
                 <Badge variant='outline' className='text-sm'>
                   {formConfig ? "已创建" : "未创建"}
                 </Badge>
