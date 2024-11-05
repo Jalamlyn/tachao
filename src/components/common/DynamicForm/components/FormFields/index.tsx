@@ -8,6 +8,14 @@ import BasicInput from "./BasicInput"
 import DateInput from "./DateInput"
 import OrderNumberField from "@/components/common/OrderNumberField"
 import { cn } from "@/theme/cn"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { motion } from "framer-motion"
 
 interface DynamicFormFieldsProps {
   fields: DynamicFormField[]
@@ -142,26 +150,44 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             showWhen={field.showWhen}
           >
             {(formField) => (
-              <select
-                className={cn(
-                  "w-full rounded-md",
+              <Select
+                disabled={!isEditable || field.disabled}
+                onValueChange={formField.onChange}
+                value={formField.value || ""}
+              >
+                <SelectTrigger className={cn(
+                  "w-full",
                   "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
                   "transition-colors",
-                  "py-2 px-3",
-                  "text-gray-900",
-                  "placeholder:text-gray-400",
-                  "disabled:bg-gray-50 disabled:text-gray-500"
-                )}
-                {...formField}
-                disabled={!isEditable || field.disabled}
-              >
-                <option value="">{field.placeholder || "请选择"}</option>
-                {(field as any).options?.map((option: any) => (
-                  <option key={option.value} value={option.value} disabled={option.disabled}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                  "placeholder:text-gray-400"
+                )}>
+                  <SelectValue placeholder={field.placeholder || "请选择"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {field.options?.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        disabled={option.disabled}
+                        className={cn(
+                          "cursor-pointer transition-colors",
+                          "hover:bg-blue-50 hover:text-blue-600",
+                          "focus:bg-blue-50 focus:text-blue-600",
+                          option.disabled && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </motion.div>
+                </SelectContent>
+              </Select>
             )}
           </FormFieldWrapper>
         )
