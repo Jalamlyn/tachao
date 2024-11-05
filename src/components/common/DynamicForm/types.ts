@@ -134,6 +134,28 @@ export interface FormMetadata {
   type?: string
 }
 
+// 工具栏按钮类型
+export interface ToolbarButton {
+  key: string
+  label: string
+  icon?: string
+  color?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger'
+  variant?: 'solid' | 'bordered' | 'light' | 'flat' | 'faded' | 'shadow'
+  disabled?: boolean
+  loading?: boolean
+  onClick?: () => void
+  className?: string
+  startContent?: React.ReactNode
+  endContent?: React.ReactNode
+  size?: 'sm' | 'md' | 'lg'
+  isIconOnly?: boolean
+  showWhen?: {
+    field: string
+    value: any
+    operator?: 'eq' | 'neq' | 'gt' | 'lt' | 'contains'
+  }
+}
+
 // 渲染配置
 export interface FormRenderConfig {
   // 基本信息字段
