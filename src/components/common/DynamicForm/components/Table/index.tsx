@@ -1,17 +1,11 @@
 import React, { useCallback } from "react"
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion } from "framer-motion"
 import { TableConfig } from "../../types"
 import { UseFormReturn, useFieldArray } from "react-hook-form"
-import TableRow from "./TableRow"
+import DTableRow from "./TableRow"
 import TableSummary from "./TableSummary"
 import MobileTable from "./MobileTable"
 
@@ -22,12 +16,7 @@ interface DynamicTableProps {
   fieldName: string
 }
 
-const DynamicTable: React.FC<DynamicTableProps> = ({
-  config,
-  form,
-  isEditable = true,
-  fieldName,
-}) => {
+const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = true, fieldName }) => {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: fieldName,
@@ -94,36 +83,52 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   }
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible">
+    <motion.div variants={containerVariants} initial='hidden' animate='visible'>
       {/* 桌面端表格 */}
-      <div className="hidden md:block overflow-x-auto">
+      <div className='hidden md:block overflow-x-auto rounded-lg border border-gray-200'>
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-gray-50 hover:bg-gray-50/80">
               {config.columns.map((column) => (
-                <TableHead key={column.key} style={{ width: column.width }}>
+                <TableHead 
+                  key={column.key} 
+                  style={{ width: column.width }}
+                  className="py-3 px-4 text-sm font-medium text-gray-700"
+                >
                   {column.title}
                 </TableHead>
               ))}
-              {isEditable && <TableHead>操作</TableHead>}
+              {isEditable && <TableHead className="w-[100px]">操作</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {fields.map((field, index) => (
-              <TableRow
-                key={field.id}
-                columns={config.columns}
-                rowIndex={index}
-                fieldName={fieldName}
-                form={form}
-                isEditable={isEditable}
-                onDelete={() => handleDeleteRow(index)}
-                onValueChange={(columnKey, value) =>
-                  handleValueChange(index, columnKey, value)
-                }
-              />
-            ))}
-            {config.summary && (
+            {fields.length === 0 ? (
+              <TableRow>
+                <td 
+                  colSpan={config.columns.length + (isEditable ? 1 : 0)}
+                  className="text-center py-8 text-gray-500"
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <Icon icon="mdi:table-empty" className="w-8 h-8 text-gray-400" />
+                    <span>暂无数据</span>
+                  </div>
+                </td>
+              </TableRow>
+            ) : (
+              fields.map((field, index) => (
+                <DTableRow
+                  key={field.id}
+                  columns={config.columns}
+                  rowIndex={index}
+                  fieldName={fieldName}
+                  form={form}
+                  isEditable={isEditable}
+                  onDelete={() => handleDeleteRow(index)}
+                  onValueChange={(columnKey, value) => handleValueChange(index, columnKey, value)}
+                />
+              ))
+            )}
+            {config.summary && fields.length > 0 && (
               <TableSummary
                 summary={config.summary}
                 data={form.getValues(fieldName) || []}
@@ -136,22 +141,24 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       </div>
 
       {/* 移动端表格 */}
-      <MobileTable
-        columns={config.columns}
-        fieldName={fieldName}
-        form={form}
-        isEditable={isEditable}
-        fields={fields}
-        onDelete={handleDeleteRow}
-        onValueChange={handleValueChange}
-      />
+      <div className="md:hidden">
+        <MobileTable
+          columns={config.columns}
+          fieldName={fieldName}
+          form={form}
+          isEditable={isEditable}
+          fields={fields}
+          onDelete={handleDeleteRow}
+          onValueChange={handleValueChange}
+        />
+      </div>
 
       {/* 添加行按钮 */}
       {isEditable && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-4"
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="mt-4 flex justify-center md:justify-start"
         >
           <Button
             color="primary"
@@ -159,7 +166,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
             size="sm"
             onClick={handleAddRow}
             startContent={<Icon icon="mdi:plus" className="w-4 h-4" />}
-            className="w-full md:w-auto"
+            className="w-full md:w-auto shadow-sm hover:shadow-md transition-shadow"
           >
             添加行
           </Button>
