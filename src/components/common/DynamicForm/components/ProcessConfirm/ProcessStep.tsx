@@ -38,8 +38,8 @@ const ProcessStep: React.FC<ProcessStepProps> = ({
         isConfirmed ? "border-l-blue-500" : "border-l-gray-200"
       )}
     >
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-6">
+      <CardContent className="p-4 md:p-6">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 mb-4 md:mb-6">
           <div className="flex items-start gap-4">
             <div
               className={cn(
@@ -54,17 +54,17 @@ const ProcessStep: React.FC<ProcessStepProps> = ({
                 className="w-5 h-5"
               />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <h3
                 className={cn(
-                  "text-lg font-semibold",
+                  "text-lg font-semibold break-all",
                   isConfirmed ? "text-blue-600" : "text-gray-900"
                 )}
               >
                 {step.title}
               </h3>
               {step.description && (
-                <p className="text-gray-500 mt-1 text-sm leading-relaxed">
+                <p className="text-gray-500 mt-1 text-sm leading-relaxed break-all">
                   {step.description}
                 </p>
               )}
@@ -72,7 +72,7 @@ const ProcessStep: React.FC<ProcessStepProps> = ({
           </div>
 
           {isEditable && (
-            <div>
+            <div className="flex w-full md:w-auto">
               {!isConfirmed ? (
                 <Button
                   onClick={() => onConfirm(step)}
@@ -80,12 +80,12 @@ const ProcessStep: React.FC<ProcessStepProps> = ({
                   size="sm"
                   isLoading={isLoading}
                   className={cn(
-                    "font-medium",
+                    "font-medium w-full md:w-auto",
                     isLoading ? "opacity-70" : "hover:bg-blue-50 hover:text-blue-600"
                   )}
                   startContent={!isLoading && <Icon icon="mdi:check" className="w-4 h-4" />}
                 >
-                  确认
+                  <span className="hidden md:inline">确认</span>
                 </Button>
               ) : (
                 <Button
@@ -93,10 +93,10 @@ const ProcessStep: React.FC<ProcessStepProps> = ({
                   variant="bordered"
                   size="sm"
                   color="danger"
-                  className="font-medium hover:bg-red-50"
+                  className="font-medium hover:bg-red-50 w-full md:w-auto"
                   startContent={<Icon icon="mdi:close" className="w-4 h-4" />}
                 >
-                  取消确认
+                  <span className="hidden md:inline">取消确认</span>
                 </Button>
               )}
             </div>
