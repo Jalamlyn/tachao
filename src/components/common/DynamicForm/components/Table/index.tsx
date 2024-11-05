@@ -32,7 +32,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     console.log('Current table fields:', fields)
   }, [fields])
 
-  // 处理删除操作的副作用
+  // 处理删除操作的副作用 - 保留以兼容旧版本
   useEffect(() => {
     if (rowToDelete !== null && !isProcessing) {
       try {
@@ -51,6 +51,33 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       }
     }
   }, [rowToDelete, fields, remove, isProcessing])
+
+  // 新增: 直接删除行的处理函数
+  const handleDeleteRow = useCallback(
+    (index: number) => {
+      if (isProcessing) return
+      
+      try {
+        setIsProcessing(true)
+        const deletedRow = fields[index]
+        if (deletedRow) {
+          // 保存删除历史
+          deletedRowsRef.current.push(deletedRow)
+          if (deletedRowsRef.current.length > 50) {
+            deletedRowsRef.current = deletedRowsRef.current.slice(-50)
+          }
+        }
+        remove(index)
+        message.success("删除成功")
+      } catch (error) {
+        console.error("Delete row error:", error)
+        message.error("删除失败")
+      } finally {
+        setIsProcessing(false)
+      }
+    },
+    [fields, remove, isProcessing]
+  )
 
   // 生成新行数据
   const generateNewRow = useCallback(() => {
@@ -100,15 +127,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       setIsProcessing(false)
     }
   }, [config.maxRows, fields.length, generateNewRow, append, form, fieldName, isProcessing])
-
-  // 删除行
-  const handleDeleteRow = useCallback(
-    (index: number) => {
-      if (isProcessing) return
-      setRowToDelete(index)
-    },
-    [isProcessing]
-  )
 
   // 处理字段值变化
   const handleValueChange = useCallback(
