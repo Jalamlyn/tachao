@@ -10,7 +10,6 @@ import DynamicProcessConfirm from "./components/ProcessConfirm"
 import OrderNumberField from "../OrderNumberField"
 import message from "@/components/Message"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import PrintableTemplate from "./components/PrintableTemplate"
 import { useReactToPrint } from "react-to-print"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
@@ -25,7 +24,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
   
   const { form, handleSubmit, validateForm } = useDynamicForm(config)
   const [isEditing, setIsEditing] = useState(false)
-  const [showPrintPreview, setShowPrintPreview] = useState(false)
   const [validationErrors, setValidationErrors] = useState<{
     required?: string[]
     invalid?: string[]
@@ -54,7 +52,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
     onAfterPrint: () => {
       message.closeLoading(printId.current)
       message.success("打印完成")
-      setShowPrintPreview(false)
     },
     onPrintError: (error) => {
       message.closeLoading(printId.current)
@@ -226,11 +223,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
               <Button
                 variant="flat"
                 color="primary"
-                onClick={() => setShowPrintPreview(true)}
+                onClick={handlePrint}
                 className="w-full md:w-auto"
               >
                 <Icon icon="mdi:printer" className="w-4 h-4" />
-                <span className="hidden md:inline ml-1">打印预览</span>
+                <span className="hidden md:inline ml-1">打印</span>
               </Button>
             )}
             {metadata.permissions?.edit && (
@@ -317,29 +314,12 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
             </Button>
           </div>
         )}
-      </form>
 
-      {/* 打印预览对话框 */}
-      <Dialog open={showPrintPreview} onOpenChange={setShowPrintPreview}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold break-all">打印预览</DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 overflow-y-auto">
-            <PrintableTemplate ref={printRef} config={config} data={form.getValues()} />
-          </div>
-          <DialogFooter className="flex justify-between items-center border-t pt-4">
-            <Button variant="flat" color="default" onClick={() => setShowPrintPreview(false)}>
-              <Icon icon="mdi:close" className="w-4 h-4" />
-              <span className="hidden md:inline ml-1">关闭</span>
-            </Button>
-            <Button onClick={handlePrint} color="primary">
-              <Icon icon="mdi:printer" className="w-4 h-4" />
-              <span className="hidden md:inline ml-1">打印</span>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        {/* 隐藏的打印内容 */}
+        <div style={{ display: "none" }}>
+          <PrintableTemplate ref={printRef} config={config} data={form.getValues()} />
+        </div>
+      </form>
     </Form>
   )
 }
