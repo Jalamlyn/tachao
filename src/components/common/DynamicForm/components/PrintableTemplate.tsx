@@ -52,7 +52,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     return (
       <div className="mt-6 print:break-inside-avoid-page">
         <table className="w-full border-collapse print:break-inside-auto">
-          <thead className="print:break-inside-avoid print:break-after-auto">
+          <thead className="print:table-header-group">
             <tr className="bg-gray-50">
               {renderConfig.table.columns.map((column) => (
                 <th
@@ -88,7 +88,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
             ))}
           </tbody>
           {renderConfig.table.summary && (
-            <tfoot className="print:break-inside-avoid-page">
+            <tfoot className="print:table-footer-group">
               <tr>
                 <td
                   colSpan={renderConfig.table.columns.length}
@@ -192,14 +192,14 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
       </div>
 
       {/* 基本信息 */}
-      <div className="mb-8 print:break-inside-avoid">
+      <div className="mb-8 print:break-inside-avoid print-page">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">基本信息</h2>
         {renderBasicFields()}
       </div>
 
       {/* 表格数据 */}
       {renderConfig.table && (
-        <div className="mb-8">
+        <div className="mb-8 print-page">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">明细信息</h2>
           {renderTable()}
         </div>
@@ -207,7 +207,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
 
       {/* 流程确认 */}
       {renderConfig.processSteps && (
-        <div className="mb-8">
+        <div className="mb-8 print-page">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">流程确认</h2>
           {renderProcessSteps()}
         </div>
@@ -224,21 +224,23 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
             height: 100vh;
             margin: 0 !important;
             padding: 0 !important;
-            overflow: hidden;
-          }
-          body {
+            overflow: initial !important;
             -webkit-print-color-adjust: exact;
           }
+          .print-page {
+            page-break-after: always;
+            margin-bottom: 0;
+          }
+          table { page-break-inside: auto }
+          tr    { page-break-inside: avoid; page-break-after: auto }
+          thead { display: table-header-group }
+          tfoot { display: table-footer-group }
           .process-step {
             break-inside: avoid;
           }
           .step-content {
             margin-bottom: 1rem;
           }
-          table { page-break-inside: auto }
-          tr { page-break-inside: avoid; page-break-after: auto }
-          thead { display: table-header-group }
-          tfoot { display: table-footer-group }
         }
       `}</style>
     </div>
