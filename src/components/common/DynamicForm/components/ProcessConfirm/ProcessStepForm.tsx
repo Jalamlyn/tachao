@@ -1,8 +1,8 @@
 import React from "react"
 import { UseFormReturn } from "react-hook-form"
 import { cn } from "@/theme/cn"
-import DynamicFormFields from "../../DynamicFormFields"
-import { ProcessStep } from "../../../types"
+import DynamicFormFields from "../DynamicFormFields"
+import { ProcessStep } from "../../types"
 
 interface ProcessStepFormProps {
   step: ProcessStep
@@ -22,12 +22,7 @@ const ProcessStepForm: React.FC<ProcessStepFormProps> = ({
   if (!step.fields) return null
 
   return (
-    <div
-      className={cn(
-        "mt-4 pt-4 border-t",
-        isConfirmed ? "opacity-70" : ""
-      )}
-    >
+    <div className={cn("mt-4 pt-4 border-t", isConfirmed ? "opacity-70" : "")}>
       <DynamicFormFields
         fields={step.fields}
         form={form}

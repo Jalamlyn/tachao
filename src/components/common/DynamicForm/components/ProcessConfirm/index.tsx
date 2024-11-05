@@ -1,6 +1,6 @@
 import React from "react"
 import { UseFormReturn } from "react-hook-form"
-import { ProcessStep as ProcessStepType } from "../../../types"
+import { ProcessStep as ProcessStepType } from "../../types"
 import { useProcessConfirm } from "./hooks/useProcessConfirm"
 import ProcessStep from "./ProcessStep"
 
@@ -17,11 +17,7 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
   isEditable = true,
   fieldName = "processConfirmations",
 }) => {
-  const {
-    isConfirming,
-    handleConfirm,
-    handleCancel,
-  } = useProcessConfirm({
+  const { isConfirming, handleConfirm, handleCancel } = useProcessConfirm({
     steps,
     form,
     fieldName,
@@ -29,7 +25,7 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
   })
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {steps.map((step) => (
         <ProcessStep
           key={step.key}

@@ -1,25 +1,86 @@
 export default `
+// 字段类型枚举
+export type FormFieldType = 
+  | 'text'          // 文本输入
+  | 'password'      // 密码输入
+  | 'number'        // 数字输入
+  | 'email'         // 邮箱输入
+  | 'tel'           // 电话输入
+  | 'url'           // URL输入
+  | 'textarea'      // 多行文本
+  | 'select'        // 下拉选择
+  | 'date'          // 日期选择
+  | 'datetime'      // 日期时间选择
+  | 'file'          // 文件上传
+  | 'image'         // 图片上传
+  | 'custom'        // 自定义组件
+  | 'resource'      // 资源选择
+
 // 基础字段类型
 export interface FormField {
   name: string
   label: string
-  type: string
+  type: FormFieldType
   placeholder?: string
   disabled?: boolean
   hidden?: boolean
   required?: boolean
-  options?: { label: string; value: any }[]
+  options?: Array<{
+    label: string
+    value: string | number
+    disabled?: boolean
+  }>
+  // 验证规则
+  validators?: Array<(value: any, allValues?: any) => string | undefined>
+  // 条件显示
+  showWhen?: {
+    field: string
+    value: any
+    operator?: 'eq' | 'neq' | 'gt' | 'lt' | 'contains'
+  }
+  // 资源选择配置
+  resourceConfig?: {
+    resourceName: string
+    appId?: string
+    selectionMode?: 'single' | 'multiple'
+  }
+  // 自定义渲染
+  render?: (props: {
+    field: any
+    form: any
+    isEditable: boolean
+  }) => React.ReactNode
 }
+
+// 表格列类型
+export type TableColumnType = 
+  | 'text'
+  | 'number'
+  | 'date'
+  | 'datetime'
+  | 'select'
+  | 'resource'
+  | 'custom'
 
 // 表格列配置
 export interface TableColumn {
   key: string
   title: string
-  type: string
+  type: TableColumnType
   width?: string | number
   editable?: boolean
   required?: boolean
-  options?: { label: string; value: any }[]
+  options?: Array<{
+    label: string
+    value: string | number
+    disabled?: boolean
+  }>
+  resourceConfig?: {
+    resourceName: string
+    appId?: string
+    selectionMode?: 'single' | 'multiple'
+  }
+  render?: (value: any, record: any, index: number) => React.ReactNode
 }
 
 // 表格汇总计算函数类型
@@ -54,6 +115,9 @@ export interface ProcessStep {
   onCancel?: () => void
 }
 
+// 表单状态
+export type FormStatus = 'draft' | 'submitted' | 'approved' | 'rejected'
+
 // 元数据配置
 export interface FormMetadata {
   title: string
@@ -63,7 +127,7 @@ export interface FormMetadata {
     delete?: boolean
     print?: boolean
   }
-  status?: "draft" | "submitted" | "approved" | "rejected"
+  status?: FormStatus
   createdAt?: string
   updatedAt?: string
   createdBy?: string
@@ -88,18 +152,29 @@ export interface FormRenderConfig {
   processSteps?: ProcessStep[]
 }
 
+// 校验模式
+export type ValidationMode = 'submit' | 'save' | 'custom'
+
+// 校验上下文类型
+export interface ValidationContext {
+  mode?: ValidationMode
+  customData?: any
+}
+
+// 校验错误分类
+export interface CategorizedErrors {
+  required?: string[]
+  invalid?: string[]
+  other?: string[]
+}
+
 // 校验结果类型
 export interface ValidationResult {
   valid: boolean
   errors?: string[]
-  warnings?: string[] // 添加警告信息，不阻止提交但需要提示用户
-  fields?: { [key: string]: string } // 字段级别的错误信息
-}
-
-// 校验上下文类型
-export interface ValidationContext {
-  mode?: 'submit' | 'save' | 'custom' // 校验模式
-  customData?: any // 自定义数据
+  warnings?: string[]
+  fields?: { [key: string]: string }
+  categorizedErrors?: CategorizedErrors
 }
 
 // 动态表单配置
