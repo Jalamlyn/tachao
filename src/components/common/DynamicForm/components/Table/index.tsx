@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect } from "react"
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
@@ -18,66 +18,16 @@ interface DynamicTableProps {
 }
 
 const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = true, fieldName }) => {
-  const deletedRowsRef = useRef<any[]>([])
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [rowToDelete, setRowToDelete] = useState<number | null>(null)
-  
-  const { fields, append, remove } = useFieldArray({
+  // 使用 useFieldArray 来管理表格数据
+  const { fields, append, remove, move } = useFieldArray({
     control: form.control,
-    name: fieldName
+    name: fieldName,
   })
 
   // 监控字段变化
   useEffect(() => {
-    console.log('Current table fields:', fields)
+    console.log("Current table fields:", fields)
   }, [fields])
-
-  // 处理删除操作的副作用 - 保留以兼容旧版本
-  useEffect(() => {
-    if (rowToDelete !== null && !isProcessing) {
-      try {
-        setIsProcessing(true)
-        const deletedRow = fields[rowToDelete]
-        if (deletedRow) {
-          deletedRowsRef.current.push(deletedRow)
-          if (deletedRowsRef.current.length > 50) {
-            deletedRowsRef.current = deletedRowsRef.current.slice(-50)
-          }
-          remove(rowToDelete)
-        }
-      } finally {
-        setIsProcessing(false)
-        setRowToDelete(null)
-      }
-    }
-  }, [rowToDelete, fields, remove, isProcessing])
-
-  // 新增: 直接删除行的处理函数
-  const handleDeleteRow = useCallback(
-    (index: number) => {
-      if (isProcessing) return
-      
-      try {
-        setIsProcessing(true)
-        const deletedRow = fields[index]
-        if (deletedRow) {
-          // 保存删除历史
-          deletedRowsRef.current.push(deletedRow)
-          if (deletedRowsRef.current.length > 50) {
-            deletedRowsRef.current = deletedRowsRef.current.slice(-50)
-          }
-        }
-        remove(index)
-        message.success("删除成功")
-      } catch (error) {
-        console.error("Delete row error:", error)
-        message.error("删除失败")
-      } finally {
-        setIsProcessing(false)
-      }
-    },
-    [fields, remove, isProcessing]
-  )
 
   // 生成新行数据
   const generateNewRow = useCallback(() => {
@@ -102,31 +52,36 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
   // 添加新行
   const handleAddRow = useCallback(async () => {
-    if (isProcessing) return
-
-    try {
-      setIsProcessing(true)
-      
-      const maxRows = config.maxRows || 100
-      if (fields.length >= maxRows) {
-        message.warning(`最多只能添加${maxRows}行`)
-        return
-      }
-
-      const newRow = {
-        ...generateNewRow(),
-        timestamp: Date.now(),
-        rowIndex: fields.length + 1
-      }
-
-      console.log('Adding new row:', newRow)
-      append(newRow)
-      await form.trigger(fieldName)
-
-    } finally {
-      setIsProcessing(false)
+    const maxRows = config.maxRows || 100
+    if (fields.length >= maxRows) {
+      message.warning(`最多只能添加${maxRows}行`)
+      return
     }
-  }, [config.maxRows, fields.length, generateNewRow, append, form, fieldName, isProcessing])
+
+    const newRow = {
+      ...generateNewRow(),
+      timestamp: Date.now(),
+      rowIndex: fields.length,
+    }
+
+    console.log("Adding new row:", newRow)
+    append(newRow)
+    await form.trigger(fieldName)
+  }, [config.maxRows, fields.length, generateNewRow, append, form, fieldName])
+
+  // 删除行
+  const handleDeleteRow = useCallback(
+    (index: number) => {
+      try {
+        remove(index)
+        message.success("删除成功")
+      } catch (error) {
+        console.error("Delete row error:", error)
+        message.error("删除失败")
+      }
+    },
+    [remove]
+  )
 
   // 处理字段值变化
   const handleValueChange = useCallback(
@@ -163,28 +118,25 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       <div className='hidden md:block overflow-x-auto rounded-lg border border-gray-200'>
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50 hover:bg-gray-50/80">
+            <TableRow className='bg-gray-50 hover:bg-gray-50/80'>
               {config.columns.map((column) => (
-                <TableHead 
-                  key={column.key} 
+                <TableHead
+                  key={column.key}
                   style={{ width: column.width }}
-                  className="py-3 px-4 text-sm font-medium text-gray-700"
+                  className='py-3 px-4 text-sm font-medium text-gray-700'
                 >
                   {column.title}
                 </TableHead>
               ))}
-              {isEditable && <TableHead className="w-[100px]">操作</TableHead>}
+              {isEditable && <TableHead className='w-[100px]'>操作</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {fields.length === 0 ? (
               <TableRow>
-                <td 
-                  colSpan={config.columns.length + (isEditable ? 1 : 0)}
-                  className="text-center py-8 text-gray-500"
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <Icon icon="mdi:table-empty" className="w-8 h-8 text-gray-400" />
+                <td colSpan={config.columns.length + (isEditable ? 1 : 0)} className='text-center py-8 text-gray-500'>
+                  <div className='flex flex-col items-center gap-2'>
+                    <Icon icon='mdi:table-empty' className='w-8 h-8 text-gray-400' />
                     <span>暂无数据</span>
                   </div>
                 </td>
@@ -216,7 +168,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       </div>
 
       {/* 移动端表格 */}
-      <div className="md:hidden">
+      <div className='md:hidden'>
         <MobileTable
           columns={config.columns}
           fieldName={fieldName}
@@ -230,19 +182,18 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
       {/* 添加行按钮 */}
       {isEditable && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          className="mt-4 flex justify-center md:justify-start"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className='mt-4 flex justify-center md:justify-start'
         >
           <Button
-            color="primary"
-            variant="flat"
-            size="sm"
+            color='primary'
+            variant='flat'
+            size='sm'
             onClick={handleAddRow}
-            startContent={<Icon icon="mdi:plus" className="w-4 h-4" />}
-            className="w-full md:w-auto shadow-sm hover:shadow-md transition-shadow"
-            isDisabled={isProcessing}
+            startContent={<Icon icon='mdi:plus' className='w-4 h-4' />}
+            className='w-full md:w-auto shadow-sm hover:shadow-md transition-shadow'
           >
             添加行
           </Button>
