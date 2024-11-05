@@ -2,8 +2,9 @@ import chatChunkClaude from "../chat/chat-chunk-claude-office"
 import { jsonParse, jsonStringify } from "@/utils"
 import DynamicFormConfigStr from "./DynamicFormConfigStr"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
-import { parseFormConfig } from "@/utils/codeParser"
+import { parseFormConfig, parseFormEditOperations } from "@/utils/codeParser"
 import message from "@/components/Message"
+import { set, cloneDeep } from 'lodash'
 
 interface FormIndex {
   id: string
@@ -90,10 +91,9 @@ ${description}
 请使用如下格式返回：
 <mo-ai-form>
 export default {
-  title: "表单标题",
-  config: {
-    // 完整的表单配置对象
-  }
+
+  // 完整的表单配置对象
+
 }
 </mo-ai-form>`
 
@@ -126,7 +126,7 @@ export default {
     editDescription: string,
     onChunk: (chunk: string) => void
   ): Promise<{
-    config: Partial<DynamicFormConfig>
+    config: DynamicFormConfig
     title?: string
   } | null> {
     // 验证意图
@@ -135,7 +135,7 @@ export default {
       return null
     }
 
-    const prompt = `请根据以下编辑描述，修改现有的表单配置：
+    const prompt = `请根据以下编辑描述,生成精确的表单配置修改代码:
 
 当前表单配置:
 ${jsonStringify(currentConfig)}
@@ -143,38 +143,36 @@ ${jsonStringify(currentConfig)}
 编辑需求:
 ${editDescription}
 
-请只返回需要修改的部分配置，使用如下格式：
-<mo-ai-form>
-export default {
-  title: "新的表单标题(如果需要修改)",
-  config: {
-    // 只包含需要修改的配置部分
-  }
-}
-</mo-ai-form>
+请生成使用 lodash 的 set 函数的修改代码,使用如下格式:
+<mo-ai-edit>
+// 使用 set(config, path, value) 进行精确修改
+set(config, 'formFields.basicInfo[0].label', '新的标签');
+set(config, 'formFields.basicInfo[0].required', true);
+// 如果需要修改标题
+config.title = "新的标题";
+</mo-ai-edit>
 
 注意:
-1. 只返回需要修改的部分
-2. 保持与原配置的结构一致
-3. 确保修改符合 DynamicFormConfig 类型定义`
+1. 只生成需要修改的部分
+2. 使用精确的对象路径
+3. 每个修改使用单独的 set 语句
+4. 确保路径正确且存在`
 
     try {
       const response = await this.processAIResponse(prompt, onChunk)
-      const parsedConfig = await parseFormConfig(response)
-
-      if (!parsedConfig) {
-        throw new Error("解析表单配置失败")
-      }
-
-      const { title, config } = parsedConfig
-
-      if (!config) {
-        throw new Error("表单配置缺少必要的字段")
-      }
+      
+      // 解析编辑操作
+      const editOperation = await parseFormEditOperations(response)
+      
+      // 克隆当前配置
+      const newConfig = cloneDeep(currentConfig)
+      
+      // 执行编辑操作
+      editOperation(newConfig, set)
 
       return {
-        config: config as Partial<DynamicFormConfig>,
-        title: title,
+        config: newConfig,
+        title: newConfig.title
       }
     } catch (error) {
       console.error("Error editing form:", error)

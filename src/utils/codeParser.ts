@@ -12,6 +12,15 @@ const extractCode = (content: string): string | null => {
 }
 
 /**
+ * 从 mo-ai-edit 标签中提取编辑操作代码
+ */
+const extractEditCode = (content: string): string | null => {
+  const regex = /<mo-ai-edit>([\s\S]*?)<\/mo-ai-edit>/
+  const match = content.match(regex)
+  return match ? match[1].trim() : null
+}
+
+/**
  * 将 JSX 代码转换为 JavaScript
  */
 const jsxToJs = async (jsxCode: string): Promise<string> => {
@@ -40,6 +49,25 @@ const parseConfigObject = (jsCode: string): any => {
   } catch (error) {
     console.error("Failed to parse config object:", error)
     throw new Error("Failed to parse config object")
+  }
+}
+
+/**
+ * 解析表单编辑操作代码
+ */
+export const parseFormEditOperations = async (content: string): Promise<(config: any, set: Function) => void> => {
+  try {
+    const code = extractEditCode(content)
+    if (!code) {
+      throw new Error("No valid edit operations found")
+    }
+
+    // 创建一个新的 Function 来执行编辑操作
+    return new Function('config', 'set', code) as (config: any, set: Function) => void
+  } catch (error) {
+    console.error("Failed to parse edit operations:", error)
+    message.error("编辑操作解析失败，请检查格式是否正确")
+    throw error
   }
 }
 
