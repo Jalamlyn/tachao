@@ -16,8 +16,13 @@ import { useReactToPrint } from "react-to-print"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { ValidationManager } from "./validation/ValidationManager"
 import { cn } from "@/theme/cn"
+import { defaultFormConfig } from "./defaultConfig"
+import { merge } from "lodash"
 
-const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCancel }) => {
+const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSubmit, onCancel }) => {
+  // 合并默认配置和用户配置
+  const config = merge({}, defaultFormConfig, userConfig)
+  
   const { form, handleSubmit, validateForm } = useDynamicForm(config)
   const [isEditing, setIsEditing] = useState(false)
   const [showPrintPreview, setShowPrintPreview] = useState(false)
