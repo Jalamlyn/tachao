@@ -29,7 +29,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
   const printRef = useRef<HTMLDivElement>(null)
   const printId = useRef<string>()
 
-  // 使用 useMetadata hook 处理数据
   const { create: createMetadata, update: updateMetadata } = useMetadata(config.metadata?.type || "form")
 
   const handlePrint = useReactToPrint({
@@ -164,7 +163,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
             <AlertDescription>
               <ul className="list-disc list-inside mt-2">
                 {validationErrors.required.map((error, index) => (
-                  <li key={index}>{error}</li>
+                  <li key={index} className="break-all">{error}</li>
                 ))}
               </ul>
             </AlertDescription>
@@ -180,7 +179,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
             <AlertDescription>
               <ul className="list-disc list-inside mt-2">
                 {validationErrors.invalid.map((error, index) => (
-                  <li key={index}>{error}</li>
+                  <li key={index} className="break-all">{error}</li>
                 ))}
               </ul>
             </AlertDescription>
@@ -196,7 +195,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
             <AlertDescription>
               <ul className="list-disc list-inside mt-2">
                 {validationErrors.other.map((error, index) => (
-                  <li key={index}>{error}</li>
+                  <li key={index} className="break-all">{error}</li>
                 ))}
               </ul>
             </AlertDescription>
@@ -208,36 +207,36 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
 
   return (
     <Form {...form}>
-      <form onSubmit={handleFormSubmit} className="space-y-8">
+      <form onSubmit={handleFormSubmit} className="space-y-6 md:space-y-8">
         {/* 表单标题 */}
-        <div className="flex justify-between items-center border-b pb-4">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center border-b pb-4 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{metadata.title}</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 break-all">{metadata.title}</h1>
             {metadata.description && (
-              <p className="text-gray-500 mt-1 text-sm">{metadata.description}</p>
+              <p className="text-gray-500 mt-1 text-sm break-all">{metadata.description}</p>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {metadata.permissions?.print && (
               <Button
                 variant="flat"
                 color="primary"
                 onClick={() => setShowPrintPreview(true)}
-                className="gap-2 font-medium"
+                className="w-full md:w-auto"
               >
                 <Icon icon="mdi:printer" className="w-4 h-4" />
-                打印预览
+                <span className="hidden md:inline ml-1">打印预览</span>
               </Button>
             )}
             {metadata.permissions?.edit && (
               <Button
                 variant="flat"
                 color={isEditing ? "warning" : "primary"}
-                className="gap-2 font-medium"
+                className="w-full md:w-auto"
                 onClick={() => setIsEditing(!isEditing)}
               >
                 <Icon icon={isEditing ? "mdi:pencil-off" : "mdi:pencil"} className="w-4 h-4" />
-                {isEditing ? "取消编辑" : "编辑"}
+                <span className="hidden md:inline ml-1">{isEditing ? "取消编辑" : "编辑"}</span>
               </Button>
             )}
           </div>
@@ -248,12 +247,12 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
 
         {/* 基本信息 */}
         <div className={cn(
-          "bg-white rounded-lg p-6 shadow-sm",
+          "bg-white rounded-lg p-4 md:p-6 shadow-sm",
           "border border-gray-100",
           "hover:border-gray-200 transition-colors"
         )}>
-          <h2 className="text-lg font-semibold text-gray-900 mb-6 pb-2 border-b">基本信息</h2>
-          <div className="grid grid-cols-2 gap-6 mb-2">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 md:mb-6 pb-2 border-b break-all">基本信息</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-2">
             <OrderNumberField
               form={form}
               prefix={orderNumberConfig.prefix}
@@ -268,11 +267,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
         {/* 表格 */}
         {renderConfig.table && (
           <div className={cn(
-            "bg-white rounded-lg p-6 shadow-sm",
+            "bg-white rounded-lg p-4 md:p-6 shadow-sm",
             "border border-gray-100",
             "hover:border-gray-200 transition-colors"
           )}>
-            <h2 className="text-lg font-semibold text-gray-900 mb-6 pb-2 border-b">明细信息</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 md:mb-6 pb-2 border-b break-all">明细信息</h2>
             <DynamicTable config={renderConfig.table} form={form} isEditable={isEditing} fieldName="tableData" />
           </div>
         )}
@@ -280,36 +279,36 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
         {/* 流程确认 */}
         {renderConfig.processSteps && (
           <div className={cn(
-            "bg-white rounded-lg p-6 shadow-sm",
+            "bg-white rounded-lg p-4 md:p-6 shadow-sm",
             "border border-gray-100",
             "hover:border-gray-200 transition-colors"
           )}>
-            <h2 className="text-lg font-semibold text-gray-900 mb-6 pb-2 border-b">流程确认</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 md:mb-6 pb-2 border-b break-all">流程确认</h2>
             <DynamicProcessConfirm steps={renderConfig.processSteps} form={form} isEditable={isEditing} />
           </div>
         )}
 
         {/* 操作按钮 */}
         {isEditing && (
-          <div className="flex justify-end gap-4 pt-4 border-t">
+          <div className="flex flex-col md:flex-row md:justify-end gap-4 pt-4 border-t">
             {onCancel && (
               <Button
                 variant="flat"
                 color="default"
                 onClick={onCancel}
-                className="gap-2 font-medium"
+                className="w-full md:w-auto order-2 md:order-1"
               >
                 <Icon icon="mdi:close" className="w-4 h-4" />
-                取消
+                <span className="hidden md:inline ml-1">取消</span>
               </Button>
             )}
             <Button 
               type="submit" 
               color="primary"
-              className="gap-2 font-medium shadow-sm hover:shadow-md transition-shadow"
+              className="w-full md:w-auto order-1 md:order-2"
             >
               <Icon icon="mdi:content-save" className="w-4 h-4" />
-              保存
+              <span className="hidden md:inline ml-1">保存</span>
             </Button>
           </div>
         )}
@@ -317,20 +316,21 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config, id, onSubmit, onCance
 
       {/* 打印预览对话框 */}
       <Dialog open={showPrintPreview} onOpenChange={setShowPrintPreview}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">打印预览</DialogTitle>
+            <DialogTitle className="text-lg font-semibold break-all">打印预览</DialogTitle>
           </DialogHeader>
-          <div className="max-h-[60vh] overflow-y-auto">
+          <div className="flex-1 overflow-y-auto">
             <PrintableTemplate ref={printRef} config={config} data={form.getValues()} />
           </div>
           <DialogFooter className="flex justify-between items-center border-t pt-4">
             <Button variant="flat" color="default" onClick={() => setShowPrintPreview(false)}>
-              关闭
+              <Icon icon="mdi:close" className="w-4 h-4" />
+              <span className="hidden md:inline ml-1">关闭</span>
             </Button>
-            <Button onClick={handlePrint} className="gap-2" color="primary">
+            <Button onClick={handlePrint} color="primary">
               <Icon icon="mdi:printer" className="w-4 h-4" />
-              打印
+              <span className="hidden md:inline ml-1">打印</span>
             </Button>
           </DialogFooter>
         </DialogContent>
