@@ -76,7 +76,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     ...(config.rowCalculations || {}),
   }
 
-  // 处理字段值变化和计算
   const handleCalculateField = useCallback(
     (row: any, index: number, changedField: string) => {
       if (config.rowCalculations) {
@@ -123,7 +122,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
               render={({ field }) => (
                 <FormItem className='flex-1'>
                   <FormControl>
-                    <Input {...field} disabled={!isFieldEditable} />
+                    <Input {...field} disabled={!isFieldEditable} className="min-w-[120px]" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -140,6 +139,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                   }
                 }}
                 buttonText='选择'
+                buttonProps={{
+                  size: "sm",
+                  className: "px-2 py-1 h-8"
+                }}
               />
             )}
           </div>
@@ -245,7 +248,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                     className='text-right font-mono'
                     onChange={(e) => {
                       field.onChange(e)
-                      // 触发行级计算
                       const row = form.getValues(`${fieldName}.${rowIndex}`)
                       handleCalculateField(row, rowIndex, column.key)
                     }}
@@ -298,7 +300,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     )
   }
 
-  // 移动端响应式布局
   const renderMobileTable = () => {
     return (
       <div className='space-y-4 md:hidden'>
@@ -333,7 +334,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     <div>
       {config.toolbar}
 
-      {/* 桌面端表格 */}
       <div className='hidden md:block overflow-x-auto'>
         <Table>
           <TableHeader>
@@ -372,7 +372,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
         </Table>
       </div>
 
-      {/* 移动端卡片式布局 */}
       {renderMobileTable()}
 
       {isEditable && (
