@@ -18,14 +18,12 @@ interface DynamicTableProps {
 }
 
 const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = true, fieldName }) => {
-  // 使用 ref 来存储删除的行，以便在需要时恢复
   const deletedRowsRef = useRef<any[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
   
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: fieldName,
-    keyName: "id"
+    name: fieldName
   })
 
   // 监控字段变化
@@ -61,7 +59,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     try {
       setIsProcessing(true)
       
-      // 检查是否有最大行数限制
       const maxRows = config.maxRows || 100
       if (fields.length >= maxRows) {
         message.warning(`最多只能添加${maxRows}行`)
@@ -76,8 +73,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       }
 
       console.log('Adding new row:', newRow)
-      await append(newRow)
-      await form.trigger(`${fieldName}`)
+      append(newRow)
+      await form.trigger(fieldName)
 
     } finally {
       setIsProcessing(false)
@@ -86,7 +83,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
   // 删除行
   const handleDeleteRow = useCallback(
-    async (index: number) => {
+    (index: number) => {
       if (isProcessing) return
 
       try {
@@ -97,28 +94,18 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
         const deletedRow = fields[index]
         deletedRowsRef.current.push(deletedRow)
 
-        // 如果保存的删除历史过多，只保留最近的50条
         if (deletedRowsRef.current.length > 50) {
           deletedRowsRef.current = deletedRowsRef.current.slice(-50)
         }
 
-        await remove(index)
-        await form.trigger(`${fieldName}`)
-
-        // 更新所有行的索引
-        const currentValues = form.getValues(fieldName)
-        if (currentValues) {
-          currentValues.forEach((row: any, idx: number) => {
-            if (row) {
-              form.setValue(`${fieldName}.${idx}.rowIndex`, idx + 1)
-            }
-          })
-        }
+        // 直接使用 remove 方法删除行
+        remove(index)
+        
       } finally {
         setIsProcessing(false)
       }
     },
-    [remove, form, fieldName, fields, isProcessing]
+    [remove, fields, isProcessing]
   )
 
   // 处理字段值变化
