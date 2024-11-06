@@ -138,13 +138,6 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
                   </h4>
                 </div>
                 <div className='flex justify-between items-center w-full'>
-                  <span className='text-sm text-default-500 flex items-center gap-1'>
-                    <Icon
-                      icon={template.status === "active" ? "mdi:check-circle" : "mdi:clock-outline"}
-                      className='w-4 h-4'
-                    />
-                    {template.status === "active" ? "已启用" : "未启用"}
-                  </span>
                   <div className='flex gap-1'>
                     <Button
                       isIconOnly
@@ -169,6 +162,18 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
                       }}
                     >
                       <Icon icon='mdi:pencil' className='w-4 h-4' />
+                    </Button>
+                    <Button
+                      isIconOnly
+                      size='sm'
+                      variant='light'
+                      className='text-default-400 hover:text-primary'
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // AI 编辑逻辑
+                      }}
+                    >
+                      <Icon icon='mdi:robot' className='w-4 h-4' />
                     </Button>
                     <Button
                       isIconOnly
