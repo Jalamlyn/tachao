@@ -38,13 +38,11 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isOpen: isPreviewOpen, onOpen: onPreviewOpen, onClose: onPreviewClose } = useDisclosure()
-  const { isOpen: isAIEditOpen, onOpen: onAIEditOpen, onClose: onAIEditClose } = useDisclosure()
   const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(null)
   const [previewConfig, setPreviewConfig] = React.useState<DynamicFormConfig | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [internalTemplates, setInternalTemplates] = useState<Template[]>([])
-  const { remove, load, getDetail, update } = useMetadata("template")
-  const [isAIEditing, setIsAIEditing] = useState(false)
+  const { remove, load, getDetail } = useMetadata("template")
 
   // 使用内部状态或 props 的模板列表
   const templates = internalTemplates.length > 0 ? internalTemplates : propTemplates || []
@@ -133,55 +131,11 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
     }
   }
 
-  // 处理 AI 编辑点击
+  // 处理 AI 编辑点击 - 修改为导航到编辑页面
   const handleAIEditClick = async (template: Template, e: React.MouseEvent) => {
     e.stopPropagation()
-    try {
-      const detail = await getDetail(template.id)
-      if (detail && detail.data.config) {
-        setSelectedTemplate(template)
-        setPreviewConfig(detail.data.config)
-        onAIEditOpen()
-      }
-    } catch (error) {
-      console.error("加载模板详情失败:", error)
-      message.error("加载模板详情失败")
-    }
+    navigate(`/we-chat-app/admin/documents/edit/${template.id}`)
   }
-
-  // 处理 AI 编辑命令
-  const handleAICommand = useCallback(
-    async (result: { config: DynamicFormConfig; title?: string }) => {
-      if (!selectedTemplate) return
-
-      try {
-        setIsAIEditing(true)
-        await update(selectedTemplate.id, {
-          data: {
-            config: result.config,
-            type: "custom",
-            name: result.title || selectedTemplate.title,
-          },
-          title: result.title || selectedTemplate.title,
-        })
-        message.success("模板更新成功")
-        onAIEditClose()
-        loadTemplates()
-      } catch (error) {
-        console.error("更新模板失败:", error)
-        message.error("更新模板失败")
-      } finally {
-        setIsAIEditing(false)
-      }
-    },
-    [selectedTemplate, update, onAIEditClose, loadTemplates]
-  )
-
-  // 处理 AI 编辑过程中的块更新
-  const handleChunk = useCallback((chunk: string) => {
-    // 可以在这里添加处理每个块的逻辑
-    console.log("AI 编辑进度:", chunk)
-  }, [])
 
   return (
     <>
@@ -284,35 +238,6 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
           <ModalFooter>
             <Button color='primary' onPress={onPreviewClose}>
               关闭
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* AI 编辑 Modal */}
-      <Modal className='max-h-screen' size='4xl' isOpen={isAIEditOpen} onClose={onAIEditClose}>
-        <ModalContent>
-          <ModalHeader className='flex flex-col gap-1'>AI 编辑模式</ModalHeader>
-          <ModalBody className='overflow-y-auto'>
-            <div className='space-y-4'>
-              {previewConfig && (
-                <div className='border rounded-lg p-6'>
-                  <DynamicForm config={previewConfig} />
-                </div>
-              )}
-              <div className='mt-4'>
-                <CommandInput
-                  disabled={isAIEditing}
-                  agent={AIFormAgent}
-                  onCommand={handleAICommand}
-                  onChunk={handleChunk}
-                />
-              </div>
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button color='primary' onPress={onAIEditClose}>
-              完成编辑
             </Button>
           </ModalFooter>
         </ModalContent>
