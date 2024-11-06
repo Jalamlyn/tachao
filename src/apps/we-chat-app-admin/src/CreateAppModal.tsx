@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Modal,
   Input,
@@ -9,7 +9,11 @@ import {
   ModalFooter,
   useDisclosure,
   Spacer,
+  Card,
 } from "@nextui-org/react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Icon } from "@iconify/react"
+import { useNavigate } from "react-router-dom"
 
 interface CreateAppModalProps {
   isOpen: boolean
@@ -21,6 +25,7 @@ interface CreateAppModalProps {
 const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose, onCreateApp, appType }) => {
   const [appName, setAppName] = useState("")
   const { onOpen, onClose: handleClose } = useDisclosure()
+  const navigate = useNavigate()
 
   const handleCreate = () => {
     if (appName.trim()) {
@@ -30,6 +35,11 @@ const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose, onCrea
     }
   }
 
+  const handleCreateTemplate = () => {
+    onClose()
+    navigate("/we-chat-app/admin/documents/create")
+  }
+
   React.useEffect(() => {
     if (isOpen) {
       onOpen()
@@ -37,6 +47,39 @@ const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose, onCrea
       handleClose()
     }
   }, [isOpen, onOpen, handleClose])
+
+  const EmptyTemplateState = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className="p-6 bg-default-50">
+        <div className="text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 20 }}
+          >
+            <Icon icon="solar:document-add-bold-duotone" className="w-16 h-16 text-default-400 mb-4" />
+          </motion.div>
+          <h3 className="text-lg font-semibold mb-2">还没有可用的模板</h3>
+          <p className="text-sm text-default-500 mb-6">
+            创建您的第一个单据模板，开始使用强大的单据管理功能
+          </p>
+          <Button
+            color="primary"
+            endContent={<Icon icon="solar:add-circle-bold-duotone" />}
+            onClick={handleCreateTemplate}
+            size="lg"
+          >
+            创建单据模板
+          </Button>
+        </div>
+      </Card>
+    </motion.div>
+  )
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size='lg' scrollBehavior='inside'>
@@ -57,17 +100,16 @@ const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose, onCrea
               />
               <Spacer y={2} />
               {appType === "install" && (
-                <div className='bg-gray-100 p-4 rounded-md'>
-                  <h4 className='text-md font-medium mb-2'>已选择的模板</h4>
-                  <p className='text-sm text-gray-600'>离散制造业ERP</p>
-                </div>
+                <AnimatePresence mode="wait">
+                  <EmptyTemplateState />
+                </AnimatePresence>
               )}
             </ModalBody>
             <ModalFooter>
               <Button color='danger' variant='flat' onPress={onClose}>
                 取消
               </Button>
-              <Button onPress={handleCreate} color='primary'>
+              <Button onPress={handleCreate} color='primary' isDisabled={appType === "install"}>
                 创建应用
               </Button>
             </ModalFooter>
