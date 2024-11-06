@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react"
+import React, { useState, useCallback, useEffect } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Icon } from "@iconify/react"
 import {
@@ -15,18 +15,22 @@ import {
 import FormList from "./components/FormList"
 import SearchInput from "./components/SearchInput"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
-import FormPreview from "../FormTempManager/components/FormPreview"
 import { useNavigate } from "react-router-dom"
 import message from "@/components/Message"
 
 const FormManager: React.FC = () => {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
-  const { items: forms, load: loadForms, create: createForm, getIndexes } = useMetadata("form")
+  const { items: forms, load: loadForms } = useMetadata("form")
   const { items: templates, load: loadTemplates, getDetail: getTemplateDetail } = useMetadata("template")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [selectedTemplateId, setSelectedTemplateId] = useState("")
   const [isRefreshing, setIsRefreshing] = useState(false)
+
+  // 初始化时加载表单数据
+  useEffect(() => {
+    loadForms()
+  }, [loadForms])
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
@@ -64,7 +68,7 @@ const FormManager: React.FC = () => {
   const handleRefresh = async () => {
     try {
       setIsRefreshing(true)
-      const indexes = await getIndexes()
+      const indexes = await loadForms()
       if (indexes) {
         message.success("刷新成功")
       }
@@ -92,12 +96,7 @@ const FormManager: React.FC = () => {
           </div>
           <div className='flex gap-2'>
             {/* 添加刷新按钮 */}
-            <Button 
-              isIconOnly 
-              variant="light" 
-              onClick={handleRefresh} 
-              isLoading={isRefreshing}
-            >
+            <Button isIconOnly variant='light' onClick={handleRefresh} isLoading={isRefreshing}>
               <Icon icon='mdi:refresh' className='w-5 h-5' />
             </Button>
             <Button onClick={handleCreateDocument} color='primary'>
