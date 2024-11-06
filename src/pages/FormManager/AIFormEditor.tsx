@@ -26,15 +26,13 @@ const AIFormEditor: React.FC = () => {
   } = useFormState()
 
   const [isGenerationDialogOpen, setIsGenerationDialogOpen] = useState(false)
-  const [showGenerationProcess, setShowGenerationProcess] = useState(false)
 
   const handleAIResponse = useCallback(
     (result: { type: string; data: any }) => {
-      if (result.type === "create" && result.data) {
+      if ((result.type === "create" || result.type === "edit") && result.data) {
         setFormConfig(result.data.config)
-        addToHistory(result.data.title, result.data.config)
+        addToHistory(result.data.title || "编辑更新", result.data.config)
         stopGenerating()
-        setShowGenerationProcess(false)
       }
     },
     [setFormConfig, addToHistory, stopGenerating]
@@ -56,7 +54,6 @@ const AIFormEditor: React.FC = () => {
     (chunk: string) => {
       appendGenerationProcess(chunk)
       setIsGenerationDialogOpen(true)
-      setShowGenerationProcess(true)
     },
     [appendGenerationProcess]
   )
@@ -118,25 +115,6 @@ const AIFormEditor: React.FC = () => {
 
         <CardContent>
           <AnimatePresence mode='wait'>
-            {showGenerationProcess ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className='space-y-4 mb-4'
-              >
-                <div className='bg-gray-50 rounded-lg p-4'>
-                  <div className='flex items-center gap-2 mb-2'>
-                    <Icon icon='mdi:robot' className='w-5 h-5 text-blue-500' />
-                    <span className='font-medium text-blue-500'>AI 助手正在生成...</span>
-                  </div>
-                  <pre className='whitespace-pre-wrap font-mono text-sm overflow-auto max-h-[200px]'>
-                    {formState.generationProcess}
-                  </pre>
-                </div>
-              </motion.div>
-            ) : null}
-
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
