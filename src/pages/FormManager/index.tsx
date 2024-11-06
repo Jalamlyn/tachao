@@ -164,6 +164,29 @@ const DynamicFormTestPage: React.FC = () => {
               className='transition-all duration-300'
             />
           </div>
+
+          {/* AI 生成过程显示区域 */}
+          <AnimatePresence>
+            {formState.markdownContent && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className='mt-6'
+              >
+                <Card>
+                  <CardHeader>
+                    <h3 className='text-lg font-semibold'>AI 生成过程</h3>
+                  </CardHeader>
+                  <CardContent>
+                    <div className='bg-gray-50 rounded-lg p-4 max-h-[400px] overflow-auto'>
+                      <pre className='whitespace-pre-wrap font-mono text-sm'>{formState.markdownContent}</pre>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </CardContent>
       </Card>
     </div>
