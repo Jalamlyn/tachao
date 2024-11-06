@@ -13,12 +13,21 @@ interface Template {
   };
 }
 
+interface TemplateIndex {
+  id: string;
+  type: string;
+  title: string;
+  status: string;
+  updatedAt: string;
+}
+
 export const useTemplates = () => {
   const {
     items: templates,
     load: loadTemplates,
     create: createTemplate,
     getDetail: getTemplateDetail,
+    getIndexes,
   } = useMetadata<{
     config: DynamicFormConfig;
     type: 'official' | 'custom';
@@ -33,17 +42,22 @@ export const useTemplates = () => {
   const loadTemplateIndexes = useCallback(async () => {
     try {
       setIsLoadingIndexes(true);
-      const items = await loadTemplates();
-      // 只提取需要的索引信息
-      const indexes = items.map(({ id, title }) => ({ id, title }));
-      setTemplateIndexes(indexes);
+      // 使用 getIndexes 获取索引数据
+      const result = await getMetadata(['template_index']);
+      if (result.data?.[0]?.value) {
+        const indexes = JSON.parse(result.data[0].value) as TemplateIndex[];
+        // 只提取需要的索引信息
+        setTemplateIndexes(indexes.map(({ id, title }) => ({ id, title })));
+      } else {
+        setTemplateIndexes([]);
+      }
     } catch (error) {
       console.error('加载模板索引错误:', error);
       message.error('加载模板列表失败');
     } finally {
       setIsLoadingIndexes(false);
     }
-  }, [loadTemplates]);
+  }, []);
 
   // 初始加载索引
   useEffect(() => {
