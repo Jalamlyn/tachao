@@ -69,15 +69,17 @@ const FormManager: React.FC = () => {
     try {
       setIsRefreshing(true)
       const indexes = await loadForms()
-      if (indexes) {
-        message.success("刷新成功")
-      }
     } catch (error) {
       console.error("Failed to refresh forms:", error)
       message.error("刷新失败")
     } finally {
       setIsRefreshing(false)
     }
+  }
+
+  // 添加跳转到分析页面的函数
+  const handleAnalyze = () => {
+    navigate("/we-chat-app/admin/forms/analysis")
   }
 
   return (
@@ -99,6 +101,14 @@ const FormManager: React.FC = () => {
             <Button isIconOnly variant='light' onClick={handleRefresh} isLoading={isRefreshing}>
               <Icon icon='mdi:refresh' className='w-5 h-5' />
             </Button>
+            {/* 添加分析按钮 */}
+            <Button
+              onClick={handleAnalyze}
+              color='secondary'
+              startContent={<Icon icon='solar:chart-2-bold' className='w-4 h-4' />}
+            >
+              数据分析
+            </Button>
             <Button onClick={handleCreateDocument} color='primary'>
               <Icon icon='mdi:file-document-plus' className='w-4 h-4 mr-2' />
               创建单据
@@ -109,7 +119,7 @@ const FormManager: React.FC = () => {
         <CardContent>
           <div className='space-y-4'>
             <SearchInput onSearch={handleSearch} />
-            <FormList forms={filteredForms} />
+            <FormList forms={filteredForms} onDelete={handleRefresh} />
           </div>
         </CardContent>
       </Card>
