@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@nextui-org/react";
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Spinner } from "@nextui-org/react";
+import { useParams } from "react-router-dom";
 import DynamicForm from "@/components/common/DynamicForm";
 import type { DynamicFormConfig } from "@/components/common/DynamicForm/types";
 import message from "@/components/Message";
+import { useMetadata } from "@/components/from-templates/hook/useMetadata";
 
 interface FormPreviewProps {
   config: DynamicFormConfig | null;
@@ -16,10 +18,50 @@ const deviceSizes = {
   mobile: { width: "375px" }
 };
 
-const FormPreview: React.FC<FormPreviewProps> = ({ config }) => {
+const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig }) => {
   const [selectedDevice, setSelectedDevice] = useState<keyof typeof deviceSizes>("pc");
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const shareLink = `${window.location.origin}/form-preview/${config?.id || ""}`;
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loadedConfig, setLoadedConfig] = useState<DynamicFormConfig | null>(null);
+  const { formId } = useParams<{ formId: string }>();
+  const { getDetail } = useMetadata<{ config: DynamicFormConfig }>("template");
+
+  // 使用 URL 参数加载表单配置
+  useEffect(() => {
+    const loadFormConfig = async () => {
+      // 如果有传入的配置，优先使用传入的配置
+      if (propConfig) {
+        setLoadedConfig(propConfig);
+        return;
+      }
+
+      // 如果有 formId，尝试加载配置
+      if (formId) {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const result = await getDetail(formId);
+          if (result && result.data.config) {
+            setLoadedConfig(result.data.config);
+          } else {
+            setError("未找到表单配置");
+          }
+        } catch (err) {
+          console.error("加载表单配置失败:", err);
+          setError("加载表单配置失败");
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadFormConfig();
+  }, [formId, propConfig, getDetail]);
+
+  // 使用合并后的配置（优先使用 props 传入的配置）
+  const config = propConfig || loadedConfig;
+  const shareLink = `${window.location.origin}/we-chat-app/admin/form-preview/${config?.id || ""}`;
 
   const handleCopyLink = async () => {
     try {
@@ -62,6 +104,23 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config }) => {
       </Button>
     </div>
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Spinner label="加载中..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-danger">
+        <Icon icon="mdi:alert-circle" className="w-12 h-12 mb-4" />
+        <p>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <motion.div
