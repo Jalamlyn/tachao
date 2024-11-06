@@ -3,6 +3,8 @@ import { Card, CardBody, CardFooter, Button, useDisclosure, Modal, ModalContent,
 import { motion } from "framer-motion"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
+import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import message from "@/components/Message"
 
 interface Template {
   id: string
@@ -21,6 +23,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates, onTemplate
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(null)
+  const { remove } = useMetadata("template")
 
   // 动画配置
   const container = {
@@ -48,9 +51,17 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates, onTemplate
   }
 
   // 处理删除确认
-  const handleDeleteConfirm = () => {
-    // 这里添加删除逻辑
-    onClose()
+  const handleDeleteConfirm = async () => {
+    if (selectedTemplate) {
+      try {
+        await remove(selectedTemplate.id)
+        message.success("模板删除成功")
+        onClose()
+      } catch (error) {
+        console.error("删除模板失败:", error)
+        message.error("删除模板失败")
+      }
+    }
   }
 
   // 打开删除确认框
