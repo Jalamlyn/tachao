@@ -9,6 +9,8 @@ import {
   Chip,
   Breadcrumbs,
   BreadcrumbItem,
+  Button,
+  Input,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -16,6 +18,11 @@ import FormAnalysisAgent from "@/service/agents/FormAnalysisAgent"
 import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadata"
 import message from "@/components/Message"
 import CommandInput from "@/components/CommandInput"
+import MessageCard from "@/components/MessageCard"
+
+// 导入头像
+import mo2 from "/assets/mo-2.png"
+import user from "/assets/user.png"
 
 const FormAnalysis: React.FC = () => {
   const [messages, setMessages] = useState<any[]>([])
@@ -24,10 +31,14 @@ const FormAnalysis: React.FC = () => {
   const [chatCount, setChatCount] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { fetchForms } = useFormMetadata()
+  const formsRef = useRef(null)
 
   useEffect(() => {
-    fetchForms()
-  }, [fetchForms])
+    async function fetchData() {
+      formsRef.current = await fetchForms()
+    }
+    fetchData()
+  }, [])
 
   useEffect(() => {
     scrollToBottom()
@@ -46,7 +57,6 @@ const FormAnalysis: React.FC = () => {
     setIsLoading(true)
 
     try {
-      const forms = await fetchForms()
       const result = await FormAnalysisAgent.processCommand(
         input,
         (chunk) => {
@@ -58,7 +68,7 @@ const FormAnalysis: React.FC = () => {
             return [...prev, { role: "assistant", content: chunk, id: Date.now().toString() }]
           })
         },
-        forms
+        formsRef.current
       )
 
       setChatCount((prev) => prev + 1)
@@ -87,7 +97,7 @@ const FormAnalysis: React.FC = () => {
               <BreadcrumbItem href='/we-chat-app/admin/forms'>单据管理</BreadcrumbItem>
               <BreadcrumbItem>数据分析</BreadcrumbItem>
             </Breadcrumbs>
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-2 mt-2'>
               <Icon icon='solar:chart-2-bold' className='w-6 h-6' />
               <h2 className='text-2xl font-bold'>AI 智能数据分析</h2>
             </div>
@@ -122,15 +132,14 @@ const FormAnalysis: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
-                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} mb-4`}
                 >
-                  <div
-                    className={`max-w-[80%] p-4 rounded-lg ${
-                      message.role === "user" ? "bg-primary text-white ml-4" : "bg-default-100 text-foreground mr-4"
-                    }`}
-                  >
-                    <div className='prose prose-sm max-w-none' dangerouslySetInnerHTML={{ __html: message.content }} />
-                  </div>
+                  <MessageCard
+                    avatar={message.role === "assistant" ? mo2 : user}
+                    message={message.content}
+                    role={message.role}
+                    status='success'
+                    className='mb-4'
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -141,11 +150,10 @@ const FormAnalysis: React.FC = () => {
             <CommandInput
               value={input}
               agent={FormAnalysisAgent}
-              onChange={(value) => setInput(value)}
+              data={formsRef}
               onKeyDown={handleKeyDown}
               placeholder='输入分析指令，例如: "统计所有单据的状态分布"'
               className='flex-grow'
-              isLoading={isLoading}
               onSubmit={handleSendMessage}
             />
           </div>
