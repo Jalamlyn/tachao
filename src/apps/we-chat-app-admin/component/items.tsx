@@ -8,15 +8,15 @@ export const items: SidebarItem[] = [
   //   title: "应用列表",
   // },
   {
-    key: "settings",
-    href: "/we-chat-app/admin/settings",
-    icon: "solar:settings-outline",
-    title: "企业设置",
-  },
-  {
     key: "documents",
     href: "/we-chat-app/admin/documents",
     icon: "solar:document-outline",
     title: "单据管理",
+  },
+  {
+    key: "settings",
+    href: "/we-chat-app/admin/settings",
+    icon: "solar:settings-outline",
+    title: "企业设置",
   },
 ]

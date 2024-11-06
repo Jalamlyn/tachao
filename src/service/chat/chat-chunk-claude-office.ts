@@ -67,7 +67,8 @@ export default async function chatChunkClaudeOffice(
   isFirst = true,
   temperature = 0,
   overFlag = "YES",
-  baseModel = "claude::claude-3-5-sonnet-20241022"
+  // baseModel = "claude::claude-3-5-sonnet-20241022"
+  baseModel = "claude::claude-3-5-haiku-20241022"
 ) {
   const [provider, model] = baseModel.split("::")
   const modelSupplierData = localDB.getItem("model-supplier-data") || []

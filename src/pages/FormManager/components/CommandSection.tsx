@@ -2,8 +2,6 @@ import React from "react"
 import { motion } from "framer-motion"
 import CommandInput from "@/components/CommandInput"
 import TemplateSelect from "./TemplateSelect"
-import AIFormAgent from "@/service/agents/AIFormAgent"
-import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { Progress } from "@nextui-org/react"
 
 interface Template {
@@ -48,18 +46,6 @@ const CommandSection: React.FC<CommandSectionProps> = ({
   }
 
   // 处理AI命令
-  const handleCommand = async (command: string) => {
-    try {
-      const result = await AIFormAgent.processCommand(command, handleChunk)
-      if (result) {
-        onAIResponse(result)
-        onProgressUpdate(100)
-      }
-    } catch (error) {
-      console.error("Error in AI form generation:", error)
-      throw error
-    }
-  }
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`space-y-4 ${className}`}>
@@ -74,11 +60,7 @@ const CommandSection: React.FC<CommandSectionProps> = ({
 
       {error && <div className='text-red-500 text-sm bg-red-50 p-2 rounded'>{error}</div>}
 
-      <CommandInput 
-        disabled={disabled} 
-        onCommand={handleCommand}
-        onChunk={handleChunk}
-      />
+      <CommandInput disabled={disabled} onChunk={handleChunk} />
     </motion.div>
   )
 }

@@ -150,29 +150,32 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
   }
 
   // 处理 AI 编辑命令
-  const handleAICommand = useCallback(async (result: { config: DynamicFormConfig; title?: string }) => {
-    if (!selectedTemplate) return
+  const handleAICommand = useCallback(
+    async (result: { config: DynamicFormConfig; title?: string }) => {
+      if (!selectedTemplate) return
 
-    try {
-      setIsAIEditing(true)
-      await update(selectedTemplate.id, {
-        data: {
-          config: result.config,
-          type: "custom",
-          name: result.title || selectedTemplate.title,
-        },
-        title: result.title || selectedTemplate.title,
-      })
-      message.success("模板更新成功")
-      onAIEditClose()
-      loadTemplates()
-    } catch (error) {
-      console.error("更新模板失败:", error)
-      message.error("更新模板失败")
-    } finally {
-      setIsAIEditing(false)
-    }
-  }, [selectedTemplate, update, onAIEditClose, loadTemplates])
+      try {
+        setIsAIEditing(true)
+        await update(selectedTemplate.id, {
+          data: {
+            config: result.config,
+            type: "custom",
+            name: result.title || selectedTemplate.title,
+          },
+          title: result.title || selectedTemplate.title,
+        })
+        message.success("模板更新成功")
+        onAIEditClose()
+        loadTemplates()
+      } catch (error) {
+        console.error("更新模板失败:", error)
+        message.error("更新模板失败")
+      } finally {
+        setIsAIEditing(false)
+      }
+    },
+    [selectedTemplate, update, onAIEditClose, loadTemplates]
+  )
 
   // 处理 AI 编辑过程中的块更新
   const handleChunk = useCallback((chunk: string) => {
@@ -225,19 +228,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
                       className='text-default-400 hover:text-primary'
                       onClick={(e) => handleAIEditClick(template, e)}
                     >
-                      <Icon icon='mdi:robot' className='w-4 h-4' />
-                    </Button>
-                    <Button
-                      isIconOnly
-                      size='sm'
-                      variant='light'
-                      className='text-default-400 hover:text-primary'
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onTemplateSelect(template.id)
-                      }}
-                    >
-                      <Icon icon='mdi:pencil' className='w-4 h-4' />
+                      <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4 text-blue-500' />
                     </Button>
                     <Button
                       isIconOnly

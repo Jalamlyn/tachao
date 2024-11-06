@@ -60,10 +60,14 @@ export default function Component() {
           </div>
           <Spacer y={6} />
           <div className='flex items-center gap-3 px-3'>
-            <Avatar isBordered size='sm' src={userInfo?.avatar || 'https://picsum.photos/300'} />
+            <Avatar isBordered size='sm' src={userInfo?.avatar || "https://picsum.photos/300"} />
             <div className={cn("flex max-w-full flex-col", { hidden: isCollapsed })}>
-              <p className='text-small font-medium text-foreground'>{loading ? 'Loading...' : userInfo?.name || 'Unknown User'}</p>
-              <p className='text-tiny font-medium text-default-400'>{loading ? 'Loading...' : userInfo?.role || 'Unknown Role'}</p>
+              <p className='text-small font-medium text-foreground'>
+                {loading ? "Loading..." : userInfo?.name || "Unknown User"}
+              </p>
+              <p className='text-tiny font-medium text-default-400'>
+                {loading ? "Loading..." : userInfo?.userRoles[0].keyz || "Unknown Role"}
+              </p>
             </div>
           </div>
 
@@ -150,7 +154,7 @@ export default function Component() {
       </SidebarDrawer>
 
       {/*  Content */}
-      <div className='w-full md:max-w-[calc(100%-288px)] flex-1 p-4'>
+      <div className='w-full max-h-screen overflow-auto md:max-w-[calc(100%-288px)] flex-1 p-4'>
         <Outlet />
       </div>
     </div>

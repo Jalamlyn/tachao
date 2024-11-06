@@ -17,6 +17,8 @@ import AIHomePage from "./pages/AIHomePage"
 import DataAnalysisPage from "./pages/DataAnalysisPage"
 import CreateFormPage from "./pages/CreateFormPage"
 import DynamicFormTestPage from "./pages/DynamicFormTestPage"
+import renderWeChatApp from "./apps/we-chat-app-admin/renderWeChatApp"
+import FormPreview from "./pages/FormManager/components/FormPreview"
 
 function App() {
   const navigate = useNavigate()
@@ -50,6 +52,7 @@ function App() {
             <Route path='test-form' element={<DynamicFormTestPage />} />
           </Route>
           <Route path='/we-chat-login' element={<WeChatLoginPage />} />
+          <Route path='/form-preview/:formId' element={<FormPreview />} />
           <Route
             path='/forms/:id'
             element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <FormRenderer />}
@@ -74,6 +77,7 @@ function App() {
             path='/reports/view/:id'
             element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <ReadReportRenderer />}
           />
+          {renderWeChatApp()}
         </Routes>
         <Toaster />
       </div>
