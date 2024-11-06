@@ -10,14 +10,12 @@ import {
   Breadcrumbs,
   BreadcrumbItem,
   Button,
-  Input,
+  Textarea,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
-import FormAnalysisAgent from "@/service/agents/FormAnalysisAgent"
 import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadata"
 import message from "@/components/Message"
-import CommandInput from "@/components/CommandInput"
 import MessageCard from "@/components/MessageCard"
 import chatChunkClaude from "@/service/chat/chat-chunk-claude-office"
 
@@ -52,30 +50,30 @@ const FormAnalysis: React.FC = () => {
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return
 
-    const userMessage = { 
-      role: "user", 
-      content: input, 
+    const userMessage = {
+      role: "user",
+      content: input,
       id: Date.now().toString(),
-      timestamp: new Date().toLocaleTimeString()
+      timestamp: new Date().toLocaleTimeString(),
     }
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsLoading(true)
 
     try {
-      const assistantMessage = { 
-        role: "assistant", 
-        content: "", 
+      const assistantMessage = {
+        role: "assistant",
+        content: "",
         id: (Date.now() + 1).toString(),
-        timestamp: new Date().toLocaleTimeString()
+        timestamp: new Date().toLocaleTimeString(),
       }
       setMessages((prev) => [...prev, assistantMessage])
 
       // 直接使用 chatChunkClaude 处理消息
       await chatChunkClaude(
         [
-          { 
-            role: "system", 
+          {
+            role: "system",
             content: `你是沙塔 AI 的智能数据分析助手，负责帮助用户分析和查询表单数据。
 你需要理解用户的查询意图，从提供的数据中找出相关信息并给出准确的回答。
 你只能回答与提供的数据相关的问题，对于超出数据范围的问题，你需要礼貌地拒绝回答。
@@ -94,10 +92,10 @@ const FormAnalysis: React.FC = () => {
 - 如果数据不存在或查询条件不明确，要明确告知用户
 - 如果用户询问的内容超出数据范围，要礼貌拒绝并说明原因
 
-这是你要分析的数据:\n${JSON.stringify(formsRef.current)}\n\n`
+这是你要分析的数据:\n${JSON.stringify(formsRef.current)}\n\n`,
           },
           ...messages,
-          userMessage
+          userMessage,
         ],
         (chunk) => {
           setMessages((prev) => {
@@ -112,53 +110,6 @@ const FormAnalysis: React.FC = () => {
         () => {},
         true,
         0.7
-      )
-
-      setChatCount((prev) => prev + 1)
-    } catch (error) {
-      console.error("Error in chat:", error)
-      message.error("分析过程中发生错误")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // 保留原有的 Agent 调用方式作为备选
-  const handleSendMessageWithAgent = async () => {
-    if (!input.trim() || isLoading) return
-
-    const userMessage = { 
-      role: "user", 
-      content: input, 
-      id: Date.now().toString(),
-      timestamp: new Date().toLocaleTimeString()
-    }
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-    setIsLoading(true)
-
-    try {
-      const assistantMessage = { 
-        role: "assistant", 
-        content: "", 
-        id: (Date.now() + 1).toString(),
-        timestamp: new Date().toLocaleTimeString()
-      }
-      setMessages((prev) => [...prev, assistantMessage])
-
-      await FormAnalysisAgent.streamResponse(
-        input,
-        (chunk) => {
-          setMessages((prev) => {
-            const newMessages = [...prev]
-            const lastMessage = newMessages[newMessages.length - 1]
-            if (lastMessage.role === "assistant") {
-              lastMessage.content += chunk
-            }
-            return newMessages
-          })
-        },
-        formsRef.current
       )
 
       setChatCount((prev) => prev + 1)
@@ -237,14 +188,44 @@ const FormAnalysis: React.FC = () => {
           </ScrollShadow>
 
           <div className='flex items-end gap-2'>
-            <CommandInput
+            <Textarea
               value={input}
-              agent={FormAnalysisAgent}
-              data={formsRef}
+              onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder='输入分析指令，例如: "统计所有单据的状态分布"'
               className='flex-grow'
-              onSubmit={handleSendMessage}
+              classNames={{
+                input: "py-2 text-medium",
+                inputWrapper: "bg-default-100",
+              }}
+              minRows={1}
+              maxRows={4}
+              endContent={
+                <div className='flex items-center gap-2 pr-2'>
+                  <Tooltip content='发送指令' placement='top'>
+                    <Button
+                      isIconOnly
+                      className={!input || isLoading ? "" : "bg-primary"}
+                      color={!input || isLoading ? "default" : "primary"}
+                      isDisabled={!input || isLoading}
+                      radius='full'
+                      variant={!input || isLoading ? "flat" : "solid"}
+                      onClick={handleSendMessage}
+                      isLoading={isLoading}
+                    >
+                      {isLoading ? (
+                        <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
+                      ) : (
+                        <Icon
+                          className={!input ? "text-default-500" : "text-white"}
+                          icon='solar:arrow-up-linear'
+                          width={20}
+                        />
+                      )}
+                    </Button>
+                  </Tooltip>
+                </div>
+              }
             />
           </div>
         </CardBody>
