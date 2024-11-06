@@ -51,21 +51,36 @@ const FormAnalysis: React.FC = () => {
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return
 
-    const userMessage = { role: "user", content: input, id: Date.now().toString() }
+    const userMessage = { 
+      role: "user", 
+      content: input, 
+      id: Date.now().toString(),
+      timestamp: new Date().toLocaleTimeString()
+    }
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsLoading(true)
 
     try {
-      const result = await FormAnalysisAgent.processCommand(
+      const assistantMessage = { 
+        role: "assistant", 
+        content: "", 
+        id: (Date.now() + 1).toString(),
+        timestamp: new Date().toLocaleTimeString()
+      }
+      setMessages((prev) => [...prev, assistantMessage])
+
+      // 使用新的 streamResponse 方法
+      await FormAnalysisAgent.streamResponse(
         input,
         (chunk) => {
           setMessages((prev) => {
-            const lastMessage = prev[prev.length - 1]
+            const newMessages = [...prev]
+            const lastMessage = newMessages[newMessages.length - 1]
             if (lastMessage.role === "assistant") {
-              return prev.map((msg) => (msg.id === lastMessage.id ? { ...msg, content: msg.content + chunk } : msg))
+              lastMessage.content += chunk
             }
-            return [...prev, { role: "assistant", content: chunk, id: Date.now().toString() }]
+            return newMessages
           })
         },
         formsRef.current
@@ -73,7 +88,7 @@ const FormAnalysis: React.FC = () => {
 
       setChatCount((prev) => prev + 1)
     } catch (error) {
-      console.error("Analysis error:", error)
+      console.error("Error in chat:", error)
       message.error("分析过程中发生错误")
     } finally {
       setIsLoading(false)

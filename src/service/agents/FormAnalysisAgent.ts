@@ -2,11 +2,11 @@ import chatChunkClaude from "../chat/chat-chunk-claude-office"
 import message from "@/components/Message"
 import { MetadataDetail } from "@/components/from-templates/hook/useMetadata"
 import { jsonStringify } from "@/utils"
-import { getMetadata } from "@/service/apis/api"
 
 export type AnalysisResult = {
   type: "query" | "analysis"
   data: any
+  rawContent?: string
   generationProcess?: string
 }
 
@@ -24,7 +24,7 @@ const formatTime = () => {
 export class FormAnalysisAgent {
   private static instance: FormAnalysisAgent
   private _currentData: MetadataDetail[] | null = null
-  private systemPrompt = `你是沙塔 AI 的智能数据分析助手，负责帮助用户分析和查询表单数据。
+  private systemPrompt = (data) => `你是沙塔 AI 的智能数据分析助手，负责帮助用户分析和查询表单数据。
 你需要理解用户的查询意图，从提供的数据中找出相关信息并给出准确的回答。
 你只能回答与提供的数据相关的问题，对于超出数据范围的问题，你需要礼貌地拒绝回答。
 
@@ -42,28 +42,10 @@ export class FormAnalysisAgent {
 - 如果数据不存在或查询条件不明确，要明确告知用户
 - 如果用户询问的内容超出数据范围，要礼貌拒绝并说明原因
 
-这是你要分析的数据:\n${jsonStringify(this._currentData)}\n\n
+这是你要分析的数据:\n${jsonStringify(data)}\n\n
 `
 
-  private constructor() {
-    this.fetchForms()
-  }
-
-  private async fetchForms() {
-    try {
-      const result = await getMetadata(["form_index"])
-      if (result.data?.[0]?.value) {
-        const forms = JSON.parse(result.data[0].value) as MetadataDetail[]
-        this._currentData = forms
-        return forms
-      }
-      return []
-    } catch (error) {
-      console.error("Failed to fetch forms:", error)
-      message.error("获取表单数据失败")
-      return []
-    }
-  }
+  private constructor() {}
 
   public static getInstance(): FormAnalysisAgent {
     if (!FormAnalysisAgent.instance) {
@@ -80,61 +62,61 @@ export class FormAnalysisAgent {
     this._currentData = data
   }
 
-  public async processCommand(
+  // 新增: 处理流式响应的方法
+  public async streamResponse(
     command: string,
-    onChunk?: (chunk: string) => void,
+    onChunk: (chunk: string) => void,
     data?: MetadataDetail[]
-  ): Promise<AnalysisResult> {
-    let generationProcess = ""
-
-    // 记录用户输入和时间
-    const userInputTime = formatTime()
-    generationProcess += `[${userInputTime}] 👤 用户: ${command}\n\n`
-
-    const updateGenerationProcess = (chunk: string) => {
-      // 如果是新的AI回复开始,添加时间戳
-      if (
-        chunk.startsWith("🤖") ||
-        chunk.startsWith("📊") ||
-        chunk.startsWith("🔍") ||
-        chunk.startsWith("📈") ||
-        chunk.startsWith("💡") ||
-        chunk.startsWith("✨")
-      ) {
-        const timestamp = formatTime()
-        generationProcess += `[${timestamp}] `
-      }
-      generationProcess += chunk
-      onChunk?.(chunk)
-    }
-
-    // 如果外部传入数据，则使用外部数据（保持兼容性）
+  ): Promise<void> {
     if (data) {
       this.setCurrentData(data)
     }
 
     if (!this._currentData) {
-      // 如果没有数据，尝试重新获取
-      await this.fetchForms()
-      if (!this._currentData) {
-        throw new Error("没有可分析的数据，请先提供数据")
-      }
+      throw new Error("没有可分析的数据，请先提供数据")
     }
 
-    updateGenerationProcess("🤖 AI助手正在分析您的查询...\n")
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
     try {
-      let response = ""
-
       await chatChunkClaude(
         [
-          { role: "system", content: this.systemPrompt },
-          { role: "user", content: `用户查询: ${command}` },
+          { role: "system", content: this.systemPrompt(this._currentData) },
+          { role: "user", content: command }
+        ],
+        onChunk,
+        () => {},
+        true,
+        0.7
+      )
+    } catch (error) {
+      console.error("Stream response error:", error)
+      throw error
+    }
+  }
+
+  // 修改: 保持向后兼容的 processCommand 方法
+  public async processCommand(
+    command: string,
+    onChunk?: (chunk: string) => void,
+    data?: MetadataDetail[]
+  ): Promise<AnalysisResult> {
+    if (data) {
+      this.setCurrentData(data)
+    }
+
+    if (!this._currentData) {
+      throw new Error("没有可分析的数据，请先提供数据")
+    }
+
+    let response = ""
+    try {
+      await chatChunkClaude(
+        [
+          { role: "system", content: this.systemPrompt(this._currentData) },
+          { role: "user", content: command }
         ],
         (chunk: string) => {
           response += chunk
-          updateGenerationProcess(chunk)
+          onChunk?.(chunk)
         },
         () => {},
         true,
@@ -144,64 +126,7 @@ export class FormAnalysisAgent {
       return {
         type: "query",
         data: response,
-        generationProcess,
-      }
-    } catch (error) {
-      console.error("Error in analysis:", error)
-      message.error("分析过程中发生错误：" + (error as Error).message)
-      throw error
-    }
-  }
-
-  public async analyzeData(
-    data: MetadataDetail[],
-    analysisType: string,
-    onChunk?: (chunk: string) => void
-  ): Promise<AnalysisResult> {
-    let generationProcess = ""
-
-    const userInputTime = formatTime()
-    generationProcess += `[${userInputTime}] 📊 开始${analysisType}分析\n\n`
-
-    const updateGenerationProcess = (chunk: string) => {
-      if (chunk.startsWith("🤖") || chunk.startsWith("📊") || chunk.startsWith("📈")) {
-        const timestamp = formatTime()
-        generationProcess += `[${timestamp}] `
-      }
-      generationProcess += chunk
-      onChunk?.(chunk)
-    }
-
-    this.setCurrentData(data)
-
-    updateGenerationProcess("📊 正在进行数据分析...\n")
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    try {
-      const dataContext = JSON.stringify(data)
-      let response = ""
-
-      await chatChunkClaude(
-        [
-          { role: "system", content: this.systemPrompt },
-          {
-            role: "user",
-            content: `请对以下数据进行${analysisType}分析，给出关键发现和洞察:\n${dataContext}`,
-          },
-        ],
-        (chunk: string) => {
-          response += chunk
-          updateGenerationProcess(chunk)
-        },
-        () => {},
-        true,
-        0
-      )
-
-      return {
-        type: "analysis",
-        data: response,
-        generationProcess,
+        rawContent: response
       }
     } catch (error) {
       console.error("Error in analysis:", error)
