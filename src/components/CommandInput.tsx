@@ -18,7 +18,6 @@ interface CommandInputProps extends TextAreaProps {
   classNames?: Record<"button" | "buttonIcon", string>
   onChunk?: (chunk: string) => void
   onCommand?: any
-  data
   agent?: {
     processCommand: (description: string, onChunk: (chunk: string) => void) => Promise<any>
   }
@@ -53,7 +52,7 @@ export default function Component(props: CommandInputProps) {
         setIsLoading(true)
 
         if (agent) {
-          const result = await agent.processCommand(prompt, onChunk, data.current)
+          const result = await agent.processCommand(prompt, onChunk)
           console.log(result)
           onCommand && onCommand(result)
         }
