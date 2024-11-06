@@ -1,6 +1,8 @@
 import chatChunkClaude from "../chat/chat-chunk-claude-office"
 import message from "@/components/Message"
 import { MetadataDetail } from "@/components/from-templates/hook/useMetadata"
+import { jsonStringify } from "@/utils"
+import { getMetadata } from "@/service/apis/api"
 
 export type AnalysisResult = {
   type: "query" | "analysis"
@@ -38,9 +40,30 @@ export class FormAnalysisAgent {
 - 如果涉及日期，使用标准格式
 - 如果需要返回表单链接，使用 <a target="_blank" href="/form/表单ID">表单标题</a> 格式
 - 如果数据不存在或查询条件不明确，要明确告知用户
-- 如果用户询问的内容超出数据范围，要礼貌拒绝并说明原因`
+- 如果用户询问的内容超出数据范围，要礼貌拒绝并说明原因
 
-  private constructor() {}
+这是你要分析的数据:\n${jsonStringify(this._currentData)}\n\n
+`
+
+  private constructor() {
+    this.fetchForms()
+  }
+
+  private async fetchForms() {
+    try {
+      const result = await getMetadata(["form_index"])
+      if (result.data?.[0]?.value) {
+        const forms = JSON.parse(result.data[0].value) as MetadataDetail[]
+        this._currentData = forms
+        return forms
+      }
+      return []
+    } catch (error) {
+      console.error("Failed to fetch forms:", error)
+      message.error("获取表单数据失败")
+      return []
+    }
+  }
 
   public static getInstance(): FormAnalysisAgent {
     if (!FormAnalysisAgent.instance) {
@@ -85,25 +108,29 @@ export class FormAnalysisAgent {
       onChunk?.(chunk)
     }
 
+    // 如果外部传入数据，则使用外部数据（保持兼容性）
     if (data) {
       this.setCurrentData(data)
     }
 
     if (!this._currentData) {
-      throw new Error("没有可分析的数据，请先提供数据")
+      // 如果没有数据，尝试重新获取
+      await this.fetchForms()
+      if (!this._currentData) {
+        throw new Error("没有可分析的数据，请先提供数据")
+      }
     }
 
     updateGenerationProcess("🤖 AI助手正在分析您的查询...\n")
     await new Promise((resolve) => setTimeout(resolve, 500))
 
     try {
-      const dataContext = JSON.stringify(this._currentData)
       let response = ""
 
       await chatChunkClaude(
         [
           { role: "system", content: this.systemPrompt },
-          { role: "user", content: `这是要分析的数据:\n${dataContext}\n\n用户查询: ${command}` },
+          { role: "user", content: `用户查询: ${command}` },
         ],
         (chunk: string) => {
           response += chunk
