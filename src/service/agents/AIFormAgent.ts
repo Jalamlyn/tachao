@@ -19,6 +19,17 @@ export type CommandResult = {
   generationProcess?: string
 }
 
+// 添加格式化时间的辅助函数
+const formatTime = () => {
+  const now = new Date()
+  return now.toLocaleTimeString('zh-CN', { 
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
+}
+
 export class AIFormAgent {
   private static instance: AIFormAgent
   private _currentConfig: DynamicFormConfig | null = null
@@ -45,25 +56,38 @@ ${DynamicFormConfigStr}
     return AIFormAgent.instance
   }
 
-  // 获取当前配置
   public getCurrentConfig(): DynamicFormConfig | null {
     return this._currentConfig
   }
 
-  // 设置当前配置
   private setCurrentConfig(config: DynamicFormConfig | null): void {
     this._currentConfig = config
   }
 
-  // 统一的命令处理入口
-  public async processCommand(command: string, onChunk?: (chunk: string) => void, config?: DynamicFormConfig): Promise<CommandResult> {
+  public async processCommand(
+    command: string,
+    onChunk?: (chunk: string) => void,
+    config?: DynamicFormConfig
+  ): Promise<CommandResult> {
     let generationProcess = ""
+    
+    // 记录用户输入和时间
+    const userInputTime = formatTime()
+    generationProcess += `[${userInputTime}] 👤 用户: ${command}\n\n`
+    
     const updateGenerationProcess = (chunk: string) => {
+      // 如果是新的AI回复开始,添加时间戳
+      if (chunk.startsWith("🤖") || chunk.startsWith("📝") || chunk.startsWith("✏️") || 
+          chunk.startsWith("🔍") || chunk.startsWith("⚡") || chunk.startsWith("✨") || 
+          chunk.startsWith("🎨") || chunk.startsWith("🛠️") || chunk.startsWith("✅") || 
+          chunk.startsWith("📋")) {
+        const timestamp = formatTime()
+        generationProcess += `[${timestamp}] `
+      }
       generationProcess += chunk
       onChunk?.(chunk)
     }
 
-    // 设置初始配置
     if (config) {
       this.setCurrentConfig(config)
     }
@@ -71,10 +95,9 @@ ${DynamicFormConfigStr}
     const intent = await this.analyzeIntent(command)
 
     if (intent === "unsupported") {
-      throw new Error("不支持的指令，请使用创建表单、检索表单或编辑表单相关的指令。")
+      throw new Error("不支持的指令，请使用"创建"、"检索"或"编辑"开头的指令，让我更好的理解您的意图。")
     }
 
-    // 添加动画效果的工作流展示
     updateGenerationProcess("🤖 AI助手正在分析您的需求...\n")
     await new Promise((resolve) => setTimeout(resolve, 500))
 
