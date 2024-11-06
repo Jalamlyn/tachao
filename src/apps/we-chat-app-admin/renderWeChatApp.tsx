@@ -3,9 +3,9 @@ import AdminPage from "./src/App"
 import ApplicationList from "./src/ApplicationList"
 import EnterpriseSettings from "./src/EnterpriseSettings"
 import AppDetail from "./src/AppDetail"
-import FormManager from "@/pages/FormManager"
-import FormPreview from "@/pages/FormManager/components/FormPreview"
-import AIFormEditor from "@/pages/FormManager/AIFormEditor"
+import FormManager from "@/pages/FormTempManager"
+import FormPreview from "@/pages/FormTempManager/components/FormPreview"
+import AIFormEditor from "@/pages/FormTempManager/AIFormEditor"
 
 export default function renderWeChatApp() {
   return (
@@ -17,6 +17,7 @@ export default function renderWeChatApp() {
       <Route path='documents/create' element={<AIFormEditor />} />
       <Route path='documents/edit/:templateId' element={<AIFormEditor />} />
       <Route path='form-preview/:formId' element={<FormPreview />} />
+      <Route path='documents/preview/:templateId' element={<FormPreview />} />
     </Route>
   )
 }
