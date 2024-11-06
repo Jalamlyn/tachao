@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Icon } from "@iconify/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Tabs, Tab } from "@nextui-org/react"
 
 import FormPreview from "./components/FormPreview"
 import CommandSection from "./components/CommandSection"
+import TemplateGallery from "./components/TemplateGallery"
 
 import { useFormState } from "./hooks/useFormState"
 import { useTemplates } from "./hooks/useTemplates"
@@ -63,15 +65,19 @@ const DynamicFormTestPage: React.FC = () => {
 
     try {
       await saveTemplate(formState.formConfig)
-      message.success("模板保存成功")
     } catch (error) {
       handleError(error)
     }
   }
 
-  const handleChunk = useCallback((chunk: string) => {
-    appendGenerationProcess(chunk)
-  }, [appendGenerationProcess])
+  const handleChunk = useCallback(
+    (chunk: string) => {
+      appendGenerationProcess(chunk)
+    },
+    [appendGenerationProcess]
+  )
+
+  const [selectedTab, setSelectedTab] = React.useState("gallery")
 
   return (
     <div className='container mx-auto py-8'>
@@ -122,53 +128,84 @@ const DynamicFormTestPage: React.FC = () => {
         </CardHeader>
 
         <CardContent>
-          <AnimatePresence mode='wait'>
-            {formState.isGenerating ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className='space-y-4'
-              >
-                <div className='w-full space-y-2'>
-                  <Progress
-                    size='sm'
-                    value={formState.generationProgress}
-                    color='primary'
-                    className='max-w-md'
-                  />
-                  <p className='text-sm text-gray-500'>正在生成表单... {formState.generationProgress}%</p>
+          <Tabs
+            selectedKey={selectedTab}
+            onSelectionChange={(key) => setSelectedTab(key.toString())}
+            aria-label='表单管理选项卡'
+          >
+            <Tab
+              key='gallery'
+              title={
+                <div className='flex items-center gap-2'>
+                  <Icon icon='mdi:view-gallery' className='w-4 h-4' />
+                  <span>模板库</span>
                 </div>
-                <div className='bg-gray-50 rounded-lg p-4'>
-                  <pre className='whitespace-pre-wrap font-mono text-sm'>{formState.generationProcess}</pre>
+              }
+            >
+              <TemplateGallery
+                templates={templates}
+                onTemplateSelect={onTemplateChange}
+                className='mt-4'
+              />
+            </Tab>
+            <Tab
+              key='editor'
+              title={
+                <div className='flex items-center gap-2'>
+                  <Icon icon='mdi:pencil' className='w-4 h-4' />
+                  <span>表单编辑</span>
                 </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <FormPreview config={formState.formConfig} />
-              </motion.div>
-            )}
-          </AnimatePresence>
+              }
+            >
+              <AnimatePresence mode='wait'>
+                {formState.isGenerating ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className='space-y-4'
+                  >
+                    <div className='w-full space-y-2'>
+                      <Progress
+                        size='sm'
+                        value={formState.generationProgress}
+                        color='primary'
+                        className='max-w-md'
+                      />
+                      <p className='text-sm text-gray-500'>正在生成表单... {formState.generationProgress}%</p>
+                    </div>
+                    <div className='bg-gray-50 rounded-lg p-4'>
+                      <pre className='whitespace-pre-wrap font-mono text-sm'>{formState.generationProcess}</pre>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <FormPreview config={formState.formConfig} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-          <div className='mt-6'>
-            <CommandSection
-              disabled={formState.isGenerating}
-              selectedTemplate={formState.selectedTemplate}
-              templates={templates}
-              onTemplateChange={onTemplateChange}
-              isGenerating={formState.isGenerating}
-              generationProgress={formState.generationProgress}
-              error={formState.error}
-              onAIResponse={handleAIResponse}
-              onProgressUpdate={updateGenerationProgress}
-              onChunk={handleChunk}
-              className='transition-all duration-300'
-            />
-          </div>
+              <div className='mt-6'>
+                <CommandSection
+                  disabled={formState.isGenerating}
+                  selectedTemplate={formState.selectedTemplate}
+                  templates={templates}
+                  onTemplateChange={onTemplateChange}
+                  isGenerating={formState.isGenerating}
+                  generationProgress={formState.generationProgress}
+                  error={formState.error}
+                  onAIResponse={handleAIResponse}
+                  onProgressUpdate={updateGenerationProgress}
+                  onChunk={handleChunk}
+                  className='transition-all duration-300'
+                />
+              </div>
+            </Tab>
+          </Tabs>
 
           {/* AI 生成过程显示区域 */}
           <AnimatePresence>
