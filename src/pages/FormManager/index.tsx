@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@iconify/react"
 import { AnimatePresence } from "framer-motion"
-import { AIFormAgent } from "@/service/agents/AIFormAgent"
 
 // 导入新组件
 import FormPreview from "./components/FormPreview"
@@ -43,26 +42,6 @@ const DynamicFormTestPage: React.FC = () => {
       handleError(error)
     }
   }
-
-  // 处理AI命令
-  const handleCommand = useCallback(
-    async (command: string) => {
-      if (!command.trim()) return
-
-      startGenerating()
-      try {
-        // 使用 AIFormAgent 处理命令
-        const result = await AIFormAgent.createForm(command)
-        setFormConfig(result.config)
-        setMarkdownContent(result.markdown)
-      } catch (error) {
-        handleError(error)
-      } finally {
-        stopGenerating()
-      }
-    },
-    [startGenerating, stopGenerating, handleError, setFormConfig, setMarkdownContent]
-  )
 
   // 保存模板
   const handleSaveTemplate = async () => {
@@ -128,7 +107,6 @@ const DynamicFormTestPage: React.FC = () => {
               disabled={formState.isGenerating}
               selectedTemplate={formState.selectedTemplate}
               templates={templates}
-              onCommand={handleCommand}
               onTemplateChange={onTemplateChange}
               className='transition-all duration-300'
             />
