@@ -297,9 +297,41 @@ export function useMetadata<T = any>(type: string) {
   )
 
   /**
-   * 加载列表
+   * 加载列表 - 只加载索引数据
    */
   const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const indexes = await getIndexes()
+      // 将索引数据转换为简化的 MetadataDetail 格式
+      const simpleDetails = indexes.map(index => ({
+        id: index.id,
+        type: index.type,
+        title: index.title,
+        status: index.status,
+        updatedAt: index.updatedAt,
+        // 添加必要的默认值以符合 MetadataDetail 接口
+        data: {} as T,
+        versionCode: 0,
+        modifiedBy: "",
+        createdAt: index.updatedAt,
+      }))
+      setItems(simpleDetails)
+      return simpleDetails
+    } catch (error) {
+      console.error(`Error loading ${type} list:`, error)
+      setError(`Failed to load ${type} list`)
+      return []
+    } finally {
+      setLoading(false)
+    }
+  }, [type, getIndexes])
+
+  /**
+   * 加载列表(包含详情) - 用于兼容原有逻辑
+   */
+  const loadWithDetails = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -309,81 +341,24 @@ export function useMetadata<T = any>(type: string) {
       setItems(validDetails)
       return validDetails
     } catch (error) {
-      console.error(`Error loading ${type} list:`, error)
-      setError(`Failed to load ${type} list`)
+      console.error(`Error loading ${type} list with details:`, error)
+      setError(`Failed to load ${type} list with details`)
       return []
     } finally {
       setLoading(false)
     }
   }, [type, getIndexes, getDetail])
 
-  /**
-   * 复制项目
-   */
-  const copy = useCallback(
-    async (
-      id: string,
-      options: {
-        resetStatus?: boolean
-        resetDates?: boolean
-        suffix?: string
-        onBeforeCopy?: (detail: MetadataDetail<T>) => Promise<MetadataDetail<T>>
-      } = {}
-    ) => {
-      const { resetStatus = true, resetDates = true, suffix = "_copy", onBeforeCopy } = options
-
-      setLoading(true)
-      setError(null)
-      try {
-        // 获取原始数据
-        const originalDetail = await getDetail(id)
-        if (!originalDetail) throw new Error("Original item not found")
-
-        // 创建新数据
-        let newDetail: MetadataDetail<T> = {
-          ...originalDetail,
-          id: generateMetadataId(type),
-          title: `${originalDetail.title}${suffix}`,
-          status: resetStatus ? "draft" : originalDetail.status,
-        }
-
-        if (resetDates) {
-          const now = new Date().toISOString()
-          newDetail.createdAt = now
-          newDetail.updatedAt = now
-        }
-
-        // 执行复制前的钩子
-        if (onBeforeCopy) {
-          newDetail = await onBeforeCopy(newDetail)
-        }
-
-        // 创建新项目
-        const result = await create(newDetail)
-        if (!result) throw new Error("Failed to create copy")
-
-        return result
-      } catch (error) {
-        console.error(`Error copying ${type}:`, error)
-        setError(`Failed to copy ${type}`)
-        return null
-      } finally {
-        setLoading(false)
-      }
-    },
-    [type, getDetail, create]
-  )
-
   return {
     items,
     loading,
     error,
     load,
+    loadWithDetails,
     create,
     update,
     remove,
     getDetail,
     getHistory,
-    copy,
   }
 }
