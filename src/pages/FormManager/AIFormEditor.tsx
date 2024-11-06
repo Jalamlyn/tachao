@@ -125,8 +125,20 @@ const AIFormEditor: React.FC = () => {
                 </div>
               </motion.div>
             ) : (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                <FormPreview config={formState.formConfig} />
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-4"
+              >
+                {formState.formConfig ? (
+                  <FormPreview config={formState.formConfig} />
+                ) : (
+                  <div className='text-center py-12 text-gray-500'>
+                    <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
+                    <p>请输入您的需求,AI将为您生成表单</p>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
