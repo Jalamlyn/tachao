@@ -17,6 +17,7 @@ import SearchInput from "./components/SearchInput"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import { useNavigate } from "react-router-dom"
 import message from "@/components/Message"
+import { motion, AnimatePresence } from "framer-motion"
 
 const FormManager: React.FC = () => {
   const navigate = useNavigate()
@@ -26,11 +27,24 @@ const FormManager: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [selectedTemplateId, setSelectedTemplateId] = useState("")
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(true)
 
   // 初始化时加载表单数据
   useEffect(() => {
     loadForms()
+    loadTemplateData()
   }, [loadForms])
+
+  const loadTemplateData = async () => {
+    setIsLoadingTemplates(true)
+    try {
+      await loadTemplates()
+    } catch (error) {
+      console.error("Failed to load templates:", error)
+    } finally {
+      setIsLoadingTemplates(false)
+    }
+  }
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
@@ -39,7 +53,6 @@ const FormManager: React.FC = () => {
   const filteredForms = forms.filter((form) => form.title.toLowerCase().includes(searchQuery.toLowerCase()))
 
   const handleCreateDocument = () => {
-    loadTemplates()
     setIsCreateModalOpen(true)
   }
 
@@ -68,7 +81,7 @@ const FormManager: React.FC = () => {
   const handleRefresh = async () => {
     try {
       setIsRefreshing(true)
-      const indexes = await loadForms()
+      await loadForms()
     } catch (error) {
       console.error("Failed to refresh forms:", error)
       message.error("刷新失败")
@@ -82,8 +95,43 @@ const FormManager: React.FC = () => {
     navigate("/we-chat-app/admin/forms/analysis")
   }
 
+  // 添加跳转到创建模板页面的函数
+  const handleCreateTemplate = () => {
+    navigate("/we-chat-app/admin/documents/create")
+  }
+
+  const EmptyTemplateState = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+      className="flex flex-col items-center justify-center p-8 bg-default-50 rounded-lg"
+    >
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 20 }}
+      >
+        <Icon icon="solar:document-add-bold-duotone" className="w-24 h-24 text-default-400 mb-4" />
+      </motion.div>
+      <h3 className="text-xl font-semibold mb-2">还没有可用的单据模板</h3>
+      <p className="text-sm text-default-500 mb-6 text-center max-w-md">
+        在创建单据之前，您需要先创建一个单据模板。单据模板将帮助您标准化数据录入和管理流程。
+      </p>
+      <Button
+        color="primary"
+        size="lg"
+        endContent={<Icon icon="solar:add-circle-bold-duotone" />}
+        onClick={handleCreateTemplate}
+      >
+        创建单据模板
+      </Button>
+    </motion.div>
+  )
+
   return (
-    <div className='container mx-auto py-8'>
+    <div className='container mx-auto px-4'>
       <Card style={{ border: "none" }}>
         <CardHeader className='flex flex-row justify-between items-start'>
           <div className='flex flex-col gap-2'>
@@ -126,30 +174,47 @@ const FormManager: React.FC = () => {
 
       <Modal isOpen={isCreateModalOpen} onClose={handleModalClose} size='2xl'>
         <ModalContent>
-          <ModalHeader>选择单据模板</ModalHeader>
-          <ModalBody>
-            <div className='grid grid-cols-3 gap-4'>
-              {templates?.map((template) => (
-                <div
-                  key={template.id}
-                  className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${
-                    selectedTemplateId === template.id ? "border-primary bg-primary/10" : ""
-                  }`}
-                  onClick={() => handleTemplateSelect(template.id)}
-                >
-                  <div className='flex items-center gap-2'>
-                    <Icon icon='mdi:file-document-outline' className='w-5 h-5' />
-                    <span className='font-medium truncate'>{template.title}</span>
-                  </div>
-                </div>
-              ))}
+          {isLoadingTemplates ? (
+            <div className="flex items-center justify-center p-8">
+              <Spinner label="加载模板中..." />
             </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button color='danger' variant='light' onClick={handleModalClose}>
-              取消
-            </Button>
-          </ModalFooter>
+          ) : templates && templates.length > 0 ? (
+            <>
+              <ModalHeader>选择单据模板</ModalHeader>
+              <ModalBody>
+                <div className='grid grid-cols-3 gap-4'>
+                  {templates?.map((template) => (
+                    <motion.div
+                      key={template.id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${
+                        selectedTemplateId === template.id ? "border-primary bg-primary/10" : ""
+                      }`}
+                      onClick={() => setSelectedTemplateId(template.id)}
+                    >
+                      <div className='flex items-center gap-2'>
+                        <Icon icon='mdi:file-document-outline' className='w-5 h-5' />
+                        <span className='font-medium truncate'>{template.title}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button color='danger' variant='light' onClick={handleModalClose}>
+                  取消
+                </Button>
+                <Button color='primary' onClick={() => handleTemplateSelect(selectedTemplateId)} isDisabled={!selectedTemplateId}>
+                  确认
+                </Button>
+              </ModalFooter>
+            </>
+          ) : (
+            <ModalBody>
+              <EmptyTemplateState />
+            </ModalBody>
+          )}
         </ModalContent>
       </Modal>
     </div>
