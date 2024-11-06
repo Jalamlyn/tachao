@@ -4,6 +4,7 @@ import { DynamicFormConfig, ValidationResult, ValidationContext } from "../types
 import { calculateDependentValues } from "../utils/fieldUtils"
 import message from "@/components/Message"
 import { ValidationManager } from "../validation/ValidationManager"
+import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 
 export const useDynamicForm = (
   config: DynamicFormConfig,
@@ -11,8 +12,15 @@ export const useDynamicForm = (
   onValuesChange?: (changedValues: any, allValues: any) => void
 ) => {
   const form = useForm({
-    defaultValues: initialValues,
+    defaultValues: initialValues || {},
   })
+
+  // 当 initialValues 变化时重置表单
+  useEffect(() => {
+    if (initialValues) {
+      form.reset(initialValues)
+    }
+  }, [initialValues, form])
 
   // 处理字段依赖关系
   useEffect(() => {
