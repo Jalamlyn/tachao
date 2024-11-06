@@ -5,9 +5,6 @@ import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig, parseFormEditOperations } from "@/utils/codeParser"
 import message from "@/components/Message"
 import { set, cloneDeep } from "lodash"
-import AIGenerationDialog from "@/components/AIGenerationDialog"
-import { createRoot } from 'react-dom/client'
-import FormPreview from "@/pages/FormManager/components/FormPreview"
 
 interface FormIndex {
   id: string
@@ -24,10 +21,7 @@ export type CommandResult = {
 
 export class AIFormAgent {
   private static instance: AIFormAgent
-  private dialogRoot: any = null
-  private dialogContainer: HTMLDivElement | null = null
-  private isDialogMounted: boolean = false
-
+  private _currentConfig: DynamicFormConfig | null = null
   private systemPrompt = `你是一个智能表单助手，负责帮助用户创建和检索表单。
 创建表单时，你需要生成一个符合 DynamicFormConfig 类型的配置对象。
 检索表单时，你需要根据用户的描述在表单索引中查找匹配的表单。
@@ -42,12 +36,7 @@ ${DynamicFormConfigStr}
 生成必要的校验逻辑函数，用于保存的时候对表单数据进行校验
 `
 
-  private constructor() {
-    // 创建对话框容器
-    this.dialogContainer = document.createElement('div')
-    document.body.appendChild(this.dialogContainer)
-    this.dialogRoot = createRoot(this.dialogContainer)
-  }
+  private constructor() {}
 
   public static getInstance(): AIFormAgent {
     if (!AIFormAgent.instance) {
@@ -56,94 +45,75 @@ ${DynamicFormConfigStr}
     return AIFormAgent.instance
   }
 
-  private showGenerationDialog(isOpen: boolean, generationContent: string = "", resultProps?: any) {
-    if (!this.dialogContainer || !this.dialogRoot) return
+  // 获取当前配置
+  public getCurrentConfig(): DynamicFormConfig | null {
+    return this._currentConfig
+  }
 
-    this.dialogRoot.render(
-      <AIGenerationDialog
-        isOpen={isOpen}
-        onClose={() => this.showGenerationDialog(false)}
-        generationContent={generationContent}
-        ResultComponent={resultProps ? FormPreview : undefined}
-        resultProps={resultProps}
-      />
-    )
-    this.isDialogMounted = isOpen
+  // 设置当前配置
+  private setCurrentConfig(config: DynamicFormConfig | null): void {
+    this._currentConfig = config
   }
 
   // 统一的命令处理入口
-  public async processCommand(command: string, onChunk?: (chunk: string) => void): Promise<CommandResult> {
+  public async processCommand(command: string, onChunk?: (chunk: string) => void, config?: DynamicFormConfig): Promise<CommandResult> {
     let generationProcess = ""
     const updateGenerationProcess = (chunk: string) => {
       generationProcess += chunk
       onChunk?.(chunk)
-      // 更新对话框内容
-      if (this.isDialogMounted) {
-        this.showGenerationDialog(true, generationProcess)
-      }
+    }
+
+    // 设置初始配置
+    if (config) {
+      this.setCurrentConfig(config)
     }
 
     const intent = await this.analyzeIntent(command)
-    
+
     if (intent === "unsupported") {
       throw new Error("不支持的指令，请使用创建表单、检索表单或编辑表单相关的指令。")
     }
 
-    // 显示生成对话框
-    this.showGenerationDialog(true, "")
-
     // 添加动画效果的工作流展示
     updateGenerationProcess("🤖 AI助手正在分析您的需求...\n")
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
-    try {
-      let result: CommandResult
-      switch (intent) {
-        case "create":
-          updateGenerationProcess("📝 开始创建表单...\n")
-          const createResult = await this.createForm(command, updateGenerationProcess)
-          result = {
-            type: "create",
-            data: createResult,
-            generationProcess
-          }
-          // 更新对话框，显示预览结果
-          if (createResult) {
-            this.showGenerationDialog(true, generationProcess, { config: createResult.config })
-          }
-          return result
-
-        case "edit":
-          updateGenerationProcess("✏️ 开始编辑表单...\n")
-          const editResult = await this.editForm(null as any, command, updateGenerationProcess)
-          result = {
-            type: "edit",
-            data: editResult,
-            generationProcess
-          }
-          // 更新对话框，显示预览结果
-          if (editResult) {
-            this.showGenerationDialog(true, generationProcess, { config: editResult.config })
-          }
-          return result
-
-        case "search":
-          updateGenerationProcess("🔍 开始搜索表单...\n")
-          const searchResult = await this.searchForms(command, [], updateGenerationProcess)
-          result = {
-            type: "search",
-            data: searchResult,
-            generationProcess
-          }
-          return result
-
-        default:
-          throw new Error("未知的指令类型")
-      }
-    } catch (error) {
-      // 发生错误时关闭对话框
-      this.showGenerationDialog(false)
-      throw error
+    switch (intent) {
+      case "create":
+        updateGenerationProcess("📝 开始创建表单...\n")
+        const createResult = await this.createForm(command, updateGenerationProcess)
+        if (createResult) {
+          this.setCurrentConfig(createResult.config)
+        }
+        return {
+          type: "create",
+          data: createResult,
+          generationProcess,
+        }
+      case "edit":
+        if (!this._currentConfig) {
+          throw new Error("没有可编辑的表单配置，请先创建或加载一个表单")
+        }
+        updateGenerationProcess("✏️ 开始编辑表单...\n")
+        const editResult = await this.editForm(this._currentConfig, command, updateGenerationProcess)
+        if (editResult) {
+          this.setCurrentConfig(editResult.config)
+        }
+        return {
+          type: "edit",
+          data: editResult,
+          generationProcess,
+        }
+      case "search":
+        updateGenerationProcess("🔍 开始搜索表单...\n")
+        const searchResult = await this.searchForms(command, [], updateGenerationProcess)
+        return {
+          type: "search",
+          data: searchResult,
+          generationProcess,
+        }
+      default:
+        throw new Error("未知的指令类型")
     }
   }
 
@@ -225,7 +195,7 @@ ${DynamicFormConfigStr}
     title: string
   } | null> {
     onChunk("🎨 正在设计表单结构...\n")
-    await new Promise(resolve => setTimeout(resolve, 300))
+    await new Promise((resolve) => setTimeout(resolve, 300))
 
     const prompt = `请根据以下描述生成一个表单配置代码：
 ${description}
@@ -237,7 +207,10 @@ ${description}
 请使用如下格式返回：
 <mo-ai-form>
 export default {
-  // 完整的表单配置对象
+  title,
+  config:{
+    // 完整的表单配置对象
+  }
 }
 </mo-ai-form>`
 
@@ -276,7 +249,7 @@ export default {
     title?: string
   } | null> {
     onChunk("🔄 正在分析编辑需求...\n")
-    await new Promise(resolve => setTimeout(resolve, 300))
+    await new Promise((resolve) => setTimeout(resolve, 300))
 
     const prompt = `请根据以下编辑描述,生成精确的表单配置修改代码:
 
@@ -325,7 +298,7 @@ config.title = "新的标题";
     onChunk: (chunk: string) => void
   ): Promise<FormIndex[]> {
     onChunk("🔍 正在搜索匹配的表单...\n")
-    await new Promise(resolve => setTimeout(resolve, 300))
+    await new Promise((resolve) => setTimeout(resolve, 300))
 
     const prompt = `请根据用户的查询条件"${query}"，在以下表单索引中查找匹配的表单：
 ${jsonStringify(formsIndex)}
@@ -359,16 +332,6 @@ export default getMatchedForms() {
     } catch (error) {
       console.error("Error searching forms:", error)
       throw new Error("搜索表单失败：" + (error as Error).message)
-    }
-  }
-
-  // 清理方法
-  public cleanup() {
-    if (this.dialogContainer) {
-      document.body.removeChild(this.dialogContainer)
-      this.dialogContainer = null
-      this.dialogRoot = null
-      this.isDialogMounted = false
     }
   }
 }
