@@ -1,5 +1,16 @@
-import React from "react"
-import { Card, CardBody, CardFooter, Button, useDisclosure, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
+import React, { useEffect, useState } from "react"
+import {
+  Card,
+  CardBody,
+  CardFooter,
+  Button,
+  useDisclosure,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@nextui-org/react"
 import { motion } from "framer-motion"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -14,16 +25,42 @@ interface Template {
 }
 
 interface TemplateGalleryProps {
-  templates: Template[]
+  templates?: Template[] // 改为可选
   onTemplateSelect: (templateId: string) => void
   className?: string
 }
 
-const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates, onTemplateSelect, className }) => {
+const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTemplates, onTemplateSelect, className }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(null)
   const { remove, load } = useMetadata("template")
+  const [internalTemplates, setInternalTemplates] = useState<Template[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  // 使用内部状态或 props 的模板列表
+  const templates = internalTemplates.length > 0 ? internalTemplates : propTemplates || []
+
+  // 加载模板列表
+  const loadTemplates = async () => {
+    try {
+      setIsLoading(true)
+      const result = await load()
+      if (result) {
+        setInternalTemplates(result)
+      }
+    } catch (error) {
+      console.error("加载模板列表失败:", error)
+      message.error("加载模板列表失败")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // 组件挂载时加载数据
+  useEffect(() => {
+    loadTemplates()
+  }, [])
 
   // 动画配置
   const container = {
@@ -57,8 +94,8 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates, onTemplate
         await remove(selectedTemplate.id)
         message.success("模板删除成功")
         onClose()
-        // 使用 load 方法刷新列表
-        await load()
+        // 重新加载列表
+        await loadTemplates()
       } catch (error) {
         console.error("删除模板失败:", error)
         message.error("删除模板失败")
@@ -102,7 +139,10 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates, onTemplate
                 </div>
                 <div className='flex justify-between items-center w-full'>
                   <span className='text-sm text-default-500 flex items-center gap-1'>
-                    <Icon icon={template.status === "active" ? "mdi:check-circle" : "mdi:clock-outline"} className='w-4 h-4' />
+                    <Icon
+                      icon={template.status === "active" ? "mdi:check-circle" : "mdi:clock-outline"}
+                      className='w-4 h-4'
+                    />
                     {template.status === "active" ? "已启用" : "未启用"}
                   </span>
                   <div className='flex gap-1'>
@@ -150,17 +190,15 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates, onTemplate
       {/* 删除确认 Modal */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">确认删除</ModalHeader>
+          <ModalHeader className='flex flex-col gap-1'>确认删除</ModalHeader>
           <ModalBody>
-            <p>
-              确定要删除模板 "{selectedTemplate?.title}" 吗？此操作不可撤销。
-            </p>
+            <p>确定要删除模板 "{selectedTemplate?.title}" 吗？此操作不可撤销。</p>
           </ModalBody>
           <ModalFooter>
-            <Button color="default" variant="light" onPress={onClose}>
+            <Button color='default' variant='light' onPress={onClose}>
               取消
             </Button>
-            <Button color="danger" onPress={handleDeleteConfirm}>
+            <Button color='danger' onPress={handleDeleteConfirm}>
               删除
             </Button>
           </ModalFooter>
