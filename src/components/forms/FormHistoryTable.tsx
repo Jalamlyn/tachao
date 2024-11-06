@@ -45,7 +45,7 @@ const FormHistoryTable: React.FC<FormHistoryTableProps> = ({ formId }) => {
       try {
         setIsLoading(true)
         setError(null)
-        const formHistory = await getFormHistory([`form_${formId}`])
+        const formHistory = await getFormHistory([`${formId}`])
         setHistory(formHistory)
       } catch (err) {
         console.error("获取历史记录失败:", err)
