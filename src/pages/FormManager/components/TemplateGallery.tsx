@@ -1,5 +1,5 @@
 import React from "react"
-import { Card, CardBody, CardFooter, Image, Button, useDisclosure } from "@nextui-org/react"
+import { Card, CardBody, CardFooter, Button, useDisclosure } from "@nextui-org/react"
 import { motion } from "framer-motion"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -19,6 +19,7 @@ interface TemplateGalleryProps {
 
 const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates, onTemplateSelect, className }) => {
   const navigate = useNavigate()
+  console.log(templates)
 
   // 动画配置
   const container = {
@@ -34,18 +35,6 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates, onTemplate
   const item = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 },
-  }
-
-  // 生成随机背景色
-  const getRandomGradient = () => {
-    const gradients = [
-      "linear-gradient(to right, #4facfe 0%, #00f2fe 100%)",
-      "linear-gradient(to right, #43e97b 0%, #38f9d7 100%)",
-      "linear-gradient(to right, #fa709a 0%, #fee140 100%)",
-      "linear-gradient(to right, #6a11cb 0%, #2575fc 100%)",
-      "linear-gradient(to right, #ff0844 0%, #ffb199 100%)",
-    ]
-    return gradients[Math.floor(Math.random() * gradients.length)]
   }
 
   // 格式化日期
@@ -69,20 +58,15 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates, onTemplate
           <Card
             isPressable
             isHoverable
-            className='h-full'
+            className='h-full bg-white border border-default-200 hover:border-primary transition-colors duration-150'
             onPress={() => onTemplateSelect(template.id)}
           >
             <CardBody className='p-0'>
-              <div
-                className='w-full h-48 flex items-center justify-center'
-                style={{
-                  background: getRandomGradient(),
-                }}
-              >
-                <Icon icon='mdi:file-document-outline' className='w-16 h-16 text-white' />
+              <div className='w-full h-48 flex items-center justify-center bg-default-50'>
+                <Icon icon='mdi:file-document-outline' className='w-16 h-16 text-default-400' />
               </div>
             </CardBody>
-            <CardFooter className='flex flex-col items-start gap-2 px-4 py-4'>
+            <CardFooter className='flex flex-col items-start gap-2 px-4 py-4 bg-white'>
               <div className='flex justify-between items-center w-full'>
                 <h4 className='text-lg font-semibold text-foreground'>{template.title}</h4>
                 <span className='text-xs text-default-400'>{formatDate(template.updatedAt)}</span>
