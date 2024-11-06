@@ -1,4 +1,4 @@
-import React, { useCallback } from "react"
+import React, { useCallback, useState } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@iconify/react"
@@ -12,18 +12,20 @@ import { formatDistanceToNow } from "date-fns"
 import { zhCN } from "date-fns/locale"
 import CommandInput from "@/components/CommandInput"
 import AIFormAgent from "@/service/agents/AIFormAgent"
+import AIGenerationDialog from "@/components/AIGenerationDialog"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
   const {
     state: formState,
     setFormConfig,
-    updateGenerationProgress,
     stopGenerating,
     addToHistory,
     handleError,
     appendGenerationProcess,
   } = useFormState()
+
+  const [isGenerationDialogOpen, setIsGenerationDialogOpen] = useState(false)
 
   const handleAIResponse = useCallback(
     (result: { type: string; data: any }) => {
@@ -50,8 +52,8 @@ const AIFormEditor: React.FC = () => {
 
   const handleChunk = useCallback(
     (chunk: string) => {
-      console.log(chunk)
       appendGenerationProcess(chunk)
+      setIsGenerationDialogOpen(true)
     },
     [appendGenerationProcess]
   )
@@ -125,11 +127,11 @@ const AIFormEditor: React.FC = () => {
                 </div>
               </motion.div>
             ) : (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }} 
-                animate={{ opacity: 1, y: 0 }} 
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="space-y-4"
+                className='space-y-4'
               >
                 {formState.formConfig ? (
                   <FormPreview config={formState.formConfig} />
@@ -154,6 +156,14 @@ const AIFormEditor: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      <AIGenerationDialog
+        isOpen={isGenerationDialogOpen}
+        onClose={() => setIsGenerationDialogOpen(false)}
+        generationContent={formState.generationProcess}
+        ResultComponent={formState.formConfig ? FormPreview : undefined}
+        resultProps={formState.formConfig ? { config: formState.formConfig } : undefined}
+      />
     </div>
   )
 }

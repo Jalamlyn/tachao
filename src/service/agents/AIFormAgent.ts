@@ -93,7 +93,7 @@ ${DynamicFormConfigStr}
     return response
   }
 
-  private async analyzeIntent(input: string): Promise<"create" | "search" | "edit" | "unsupported"> {
+  public async analyzeIntent(input: string): Promise<"create" | "search" | "edit" | "unsupported"> {
     const aiAnalysisPrompt = `请分析以下用户指令的意图，判断是否是合法的表单操作指令：
 "${input}"
 
