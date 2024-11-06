@@ -9,7 +9,6 @@ import { cn } from "@nextui-org/react"
 import PromptInput from "./PromptInput"
 import { useFormSubmission } from "./from-templates/hook/useFormSubmission"
 import { leaveRequestConfig } from "./from-templates/leave-request/config"
-import { AIFormAgent } from "@/service/agents/AIFormAgent"
 
 // 导入企业微信 JSAPI
 import * as ww from "@wecom/jssdk"
@@ -17,16 +16,16 @@ import message from "./Message"
 
 interface CommandInputProps extends TextAreaProps {
   classNames?: Record<"button" | "buttonIcon", string>
+  onChunk?: (chunk: string) => void
   agent?: {
     analyzeIntent: (input: string) => Promise<string>
     createForm: (description: string, onChunk: (chunk: string) => void) => Promise<any>
     searchForms: (query: string, formsIndex: any[], onChunk: (chunk: string) => void) => Promise<any[]>
   }
-  onCommand?: (command: string) => void
 }
 
 export default function Component(props: CommandInputProps) {
-  const { agent, onCommand, ...restProps } = props
+  const { agent, onChunk = () => {}, ...restProps } = props
   const [prompt, setPrompt] = React.useState<string>("")
   const { submitForm } = useFormSubmission()
   const [isRecording, setIsRecording] = React.useState<boolean>(false)
@@ -35,7 +34,6 @@ export default function Component(props: CommandInputProps) {
   const [signature, setSignature] = useState<string>(
     "kgt8ON7yVITDhtdwci0qeUiDs4BGN8Nv1BTeJl6_DRfVMekQi10Szp0kiRDdSZkANokxKITDT4cv1UV6mWuiKA"
   )
-  const [showSignatureInput, setShowSignatureInput] = useState<boolean>(false)
   const [messages, setMessages] = useState<any[]>([])
 
   useEffect(() => {
@@ -55,29 +53,28 @@ export default function Component(props: CommandInputProps) {
       try {
         setIsLoading(true)
 
-        // 如果提供了 onCommand 回调，优先使用它
-        if (onCommand) {
-          await onCommand(prompt)
-        } else if (agent) {
+        if (agent) {
           // 使用传入的 AI agent 处理命令
           const intent = await agent.analyzeIntent(prompt)
-          
+
           // 构建消息数组
           const newMessages = [
             ...messages,
             {
               role: "user",
               content: [{ type: "text", text: prompt }],
-              images: []
-            }
+              images: [],
+            },
           ]
           setMessages(newMessages)
-          
+
           if (intent === "create") {
-            const result = await agent.createForm(prompt, () => {})
-            message.success("表单创建成功")
+            const result = await agent.createForm(prompt, onChunk)
+            if (props.onCommand) {
+              props.onCommand(result)
+            }
           } else if (intent === "search") {
-            const results = await agent.searchForms(prompt, [], () => {})
+            const results = await agent.searchForms(prompt, [], onChunk)
             message.success(`找到 ${results.length} 个匹配的表单`)
           }
         } else {
