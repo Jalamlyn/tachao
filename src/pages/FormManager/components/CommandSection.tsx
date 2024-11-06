@@ -20,7 +20,7 @@ interface CommandSectionProps {
   isGenerating: boolean
   generationProgress: number
   error: string | null
-  onAIResponse: (result: { config: DynamicFormConfig; title: string }) => void
+  onAIResponse: (result: any) => void
   onProgressUpdate: (progress: number) => void
   onChunk: (chunk: string) => void
 }
@@ -48,8 +48,9 @@ const CommandSection: React.FC<CommandSectionProps> = ({
   }
 
   // 处理AI命令
-  const handleCommand = async (result: any) => {
+  const handleCommand = async (command: string) => {
     try {
+      const result = await AIFormAgent.processCommand(command, handleChunk)
       if (result) {
         onAIResponse(result)
         onProgressUpdate(100)
@@ -75,7 +76,6 @@ const CommandSection: React.FC<CommandSectionProps> = ({
 
       <CommandInput 
         disabled={disabled} 
-        agent={AIFormAgent} 
         onCommand={handleCommand}
         onChunk={handleChunk}
       />

@@ -44,10 +44,10 @@ const AIFormEditor: React.FC = () => {
   }
 
   const handleAIResponse = useCallback(
-    (result: { config: any; title: string }) => {
-      if (result) {
-        setFormConfig(result.config)
-        addToHistory(result.title, result.config)
+    (result: { type: string; data: any }) => {
+      if (result.type === "create" && result.data) {
+        setFormConfig(result.data.config)
+        addToHistory(result.data.title, result.data.config)
         stopGenerating()
       }
     },
