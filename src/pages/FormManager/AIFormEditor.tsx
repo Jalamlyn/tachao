@@ -6,42 +6,24 @@ import { AnimatePresence, motion } from "framer-motion"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useNavigate } from "react-router-dom"
 import { Breadcrumbs, BreadcrumbItem } from "@nextui-org/react"
-import CommandSection from "./components/CommandSection"
 import FormPreview from "./components/FormPreview"
 import { useFormState } from "./hooks/useFormState"
-import { useTemplates } from "./hooks/useTemplates"
 import { formatDistanceToNow } from "date-fns"
 import { zhCN } from "date-fns/locale"
+import CommandInput from "@/components/CommandInput"
+import AIFormAgent from "@/service/agents/AIFormAgent"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
   const {
     state: formState,
     setFormConfig,
-    setSelectedTemplate,
     updateGenerationProgress,
     stopGenerating,
     addToHistory,
     handleError,
     appendGenerationProcess,
-    startGenerating,
   } = useFormState()
-
-  const { templates, handleTemplateChange, saveTemplate } = useTemplates()
-
-  const onTemplateChange = async (templateId: string) => {
-    try {
-      setSelectedTemplate(templateId)
-      const config = await handleTemplateChange(templateId)
-      if (config) {
-        setFormConfig(config)
-      } else {
-        setFormConfig(null)
-      }
-    } catch (error) {
-      handleError(error)
-    }
-  }
 
   const handleAIResponse = useCallback(
     (result: { type: string; data: any }) => {
@@ -60,7 +42,6 @@ const AIFormEditor: React.FC = () => {
     }
 
     try {
-      await saveTemplate(formState.formConfig)
       navigate("/we-chat-app/admin/documents")
     } catch (error) {
       handleError(error)
@@ -69,6 +50,7 @@ const AIFormEditor: React.FC = () => {
 
   const handleChunk = useCallback(
     (chunk: string) => {
+      console.log(chunk)
       appendGenerationProcess(chunk)
     },
     [appendGenerationProcess]
@@ -77,7 +59,7 @@ const AIFormEditor: React.FC = () => {
   return (
     <div className='container mx-auto py-8'>
       <Card>
-        <CardHeader className='flex justify-between items-center'>
+        <CardHeader className='flex flex-row justify-between items-start'>
           <div className='flex flex-col gap-2'>
             <Breadcrumbs>
               <BreadcrumbItem href='/we-chat-app/admin'>首页</BreadcrumbItem>
@@ -143,28 +125,18 @@ const AIFormEditor: React.FC = () => {
                 </div>
               </motion.div>
             ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                 <FormPreview config={formState.formConfig} />
               </motion.div>
             )}
           </AnimatePresence>
 
           <div className='mt-6'>
-            <CommandSection
+            <CommandInput
+              agent={AIFormAgent}
               disabled={formState.isGenerating}
-              selectedTemplate={formState.selectedTemplate}
-              templates={templates}
-              onTemplateChange={onTemplateChange}
-              isGenerating={formState.isGenerating}
-              generationProgress={formState.generationProgress}
-              error={formState.error}
-              onAIResponse={handleAIResponse}
-              onProgressUpdate={updateGenerationProgress}
               onChunk={handleChunk}
+              onCommand={handleAIResponse}
               className='transition-all duration-300'
             />
           </div>
