@@ -1,7 +1,7 @@
 import React, { useState } from "react"
-import { Select, SelectItem, Button } from "@nextui-org/react"
+import { Select, SelectItem, Button, Card, CardBody } from "@nextui-org/react"
 import { formTemplates } from "../from-templates/formTemplateConfig"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
 
@@ -21,6 +21,45 @@ const CreateFormRenderer: React.FC = () => {
   const handleCreateCustomForm = () => {
     navigate("/forms/custom/create")
   }
+
+  const handleCreateTemplate = () => {
+    navigate("/we-chat-app/admin/documents/create")
+  }
+
+  const renderEmptyState = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+      className="flex flex-col items-center justify-center p-8 text-center"
+    >
+      <Card className="w-full max-w-2xl bg-gradient-to-br from-blue-50 to-purple-50">
+        <CardBody className="flex flex-col items-center gap-6 p-8">
+          <div className="rounded-full bg-primary/10 p-4">
+            <Icon icon="solar:file-text-bold-duotone" className="h-12 w-12 text-primary" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold text-foreground">还没有可用的表单模板</h3>
+            <p className="text-sm text-foreground-500">
+              创建一个表单模板来开始。您可以使用我们的 AI 助手来帮助您快速创建模板。
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              color="primary"
+              variant="shadow"
+              startContent={<Icon icon="solar:wand-star-bold-duotone" className="h-5 w-5" />}
+              onClick={handleCreateTemplate}
+              className="font-medium"
+            >
+              使用 AI 创建模板
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
+    </motion.div>
+  )
 
   const renderTemplateSelector = () => (
     <motion.div
@@ -94,8 +133,16 @@ const CreateFormRenderer: React.FC = () => {
   return (
     <div className="p-4 min-h-screen">
       <div className="rounded-lg p-4">
-        {renderTemplateSelector()}
-        {renderFormComponent()}
+        <AnimatePresence mode="wait">
+          {formTemplates.length === 0 ? (
+            renderEmptyState()
+          ) : (
+            <>
+              {renderTemplateSelector()}
+              {renderFormComponent()}
+            </>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )
