@@ -16,6 +16,8 @@ import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
+import DynamicForm from "@/components/common/DynamicForm"
+import type { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 
 interface Template {
   id: string
@@ -33,8 +35,10 @@ interface TemplateGalleryProps {
 const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTemplates, onTemplateSelect, className }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const { isOpen: isPreviewOpen, onOpen: onPreviewOpen, onClose: onPreviewClose } = useDisclosure()
   const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(null)
-  const { remove, load } = useMetadata("template")
+  const [previewConfig, setPreviewConfig] = React.useState<DynamicFormConfig | null>(null)
+  const { remove, load, getDetail } = useMetadata("template")
   const [internalTemplates, setInternalTemplates] = useState<Template[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
@@ -110,6 +114,21 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
     onOpen()
   }
 
+  // 处理预览点击
+  const handlePreviewClick = async (template: Template, e: React.MouseEvent) => {
+    e.stopPropagation()
+    try {
+      const detail = await getDetail(template.id)
+      if (detail && detail.data.config) {
+        setPreviewConfig(detail.data.config)
+        onPreviewOpen()
+      }
+    } catch (error) {
+      console.error("加载模板详情失败:", error)
+      message.error("加载模板详情失败")
+    }
+  }
+
   return (
     <>
       <motion.div
@@ -144,10 +163,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
                       size='sm'
                       variant='light'
                       className='text-default-400 hover:text-primary'
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onTemplateSelect(template.id)
-                      }}
+                      onClick={(e) => handlePreviewClick(template, e)}
                     >
                       <Icon icon='mdi:eye' className='w-4 h-4' />
                     </Button>
@@ -158,22 +174,10 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
                       className='text-default-400 hover:text-primary'
                       onClick={(e) => {
                         e.stopPropagation()
-                        // 编辑逻辑
+                        onTemplateSelect(template.id)
                       }}
                     >
                       <Icon icon='mdi:pencil' className='w-4 h-4' />
-                    </Button>
-                    <Button
-                      isIconOnly
-                      size='sm'
-                      variant='light'
-                      className='text-default-400 hover:text-primary'
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        // AI 编辑逻辑
-                      }}
-                    >
-                      <Icon icon='mdi:robot' className='w-4 h-4' />
                     </Button>
                     <Button
                       isIconOnly
@@ -205,6 +209,30 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
             </Button>
             <Button color='danger' onPress={handleDeleteConfirm}>
               删除
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* 预览 Modal */}
+      <Modal size="4xl" isOpen={isPreviewOpen} onClose={onPreviewClose}>
+        <ModalContent>
+          <ModalHeader className='flex flex-col gap-1'>模板预览</ModalHeader>
+          <ModalBody>
+            {previewConfig ? (
+              <div className="border rounded-lg p-6">
+                <DynamicForm config={previewConfig} />
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <Icon icon="mdi:form" className="w-12 h-12 mx-auto mb-4" />
+                <p>加载模板内容中...</p>
+              </div>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button color='primary' onPress={onPreviewClose}>
+              关闭
             </Button>
           </ModalFooter>
         </ModalContent>
