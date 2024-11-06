@@ -12,14 +12,7 @@ interface FormPreviewProps {
   config: DynamicFormConfig | null;
 }
 
-const deviceSizes = {
-  pc: { width: "100%", maxWidth: "1200px" },
-  pad: { width: "768px" },
-  mobile: { width: "375px" }
-};
-
 const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig }) => {
-  const [selectedDevice, setSelectedDevice] = useState<keyof typeof deviceSizes>("pc");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,39 +65,6 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig }) => {
     }
   };
 
-  const renderDeviceButtons = () => (
-    <div className="flex gap-2 mb-4">
-      <Button
-        isIconOnly
-        variant={selectedDevice === "pc" ? "solid" : "light"}
-        onClick={() => setSelectedDevice("pc")}
-      >
-        <Icon icon="mdi:desktop" className="w-5 h-5" />
-      </Button>
-      <Button
-        isIconOnly
-        variant={selectedDevice === "pad" ? "solid" : "light"}
-        onClick={() => setSelectedDevice("pad")}
-      >
-        <Icon icon="mdi:tablet" className="w-5 h-5" />
-      </Button>
-      <Button
-        isIconOnly
-        variant={selectedDevice === "mobile" ? "solid" : "light"}
-        onClick={() => setSelectedDevice("mobile")}
-      >
-        <Icon icon="mdi:cellphone" className="w-5 h-5" />
-      </Button>
-      <Button
-        isIconOnly
-        variant="light"
-        onClick={onOpen}
-      >
-        <Icon icon="mdi:share" className="w-5 h-5" />
-      </Button>
-    </div>
-  );
-
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -131,14 +91,17 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig }) => {
     >
       {config ? (
         <>
-          {renderDeviceButtons()}
+          <div className="flex gap-2 mb-4">
+            <Button
+              isIconOnly
+              variant="light"
+              onClick={onOpen}
+            >
+              <Icon icon="mdi:share" className="w-5 h-5" />
+            </Button>
+          </div>
           <div 
-            style={{ 
-              width: deviceSizes[selectedDevice].width,
-              maxWidth: deviceSizes[selectedDevice].maxWidth,
-              transition: "width 0.3s ease"
-            }}
-            className="border rounded-lg p-6 mx-auto"
+            className="border rounded-lg p-6 mx-auto w-full max-w-[1200px]"
           >
             <DynamicForm config={config} />
           </div>
