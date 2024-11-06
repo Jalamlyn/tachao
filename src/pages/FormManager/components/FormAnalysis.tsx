@@ -3,7 +3,6 @@ import {
   Card,
   CardHeader,
   CardBody,
-  Button,
   ScrollShadow,
   Spinner,
   Tooltip,
@@ -14,7 +13,7 @@ import {
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
 import FormAnalysisAgent from "@/service/agents/FormAnalysisAgent"
-import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadata"
 import message from "@/components/Message"
 import CommandInput from "@/components/CommandInput"
 
@@ -24,11 +23,11 @@ const FormAnalysis: React.FC = () => {
   const [input, setInput] = useState("")
   const [chatCount, setChatCount] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const { items: forms, load: loadForms } = useMetadata("form")
+  const { fetchForms } = useFormMetadata()
 
   useEffect(() => {
-    loadForms()
-  }, [loadForms])
+    fetchForms()
+  }, [fetchForms])
 
   useEffect(() => {
     scrollToBottom()
@@ -47,17 +46,20 @@ const FormAnalysis: React.FC = () => {
     setIsLoading(true)
 
     try {
-      const result = await FormAnalysisAgent.processQuery(input, (chunk) => {
-        setMessages((prev) => {
-          const lastMessage = prev[prev.length - 1]
-          if (lastMessage.role === "assistant") {
-            return prev.map((msg) =>
-              msg.id === lastMessage.id ? { ...msg, content: msg.content + chunk } : msg
-            )
-          }
-          return [...prev, { role: "assistant", content: chunk, id: Date.now().toString() }]
-        })
-      }, forms)
+      const forms = await fetchForms()
+      const result = await FormAnalysisAgent.processCommand(
+        input,
+        (chunk) => {
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1]
+            if (lastMessage.role === "assistant") {
+              return prev.map((msg) => (msg.id === lastMessage.id ? { ...msg, content: msg.content + chunk } : msg))
+            }
+            return [...prev, { role: "assistant", content: chunk, id: Date.now().toString() }]
+          })
+        },
+        forms
+      )
 
       setChatCount((prev) => prev + 1)
     } catch (error) {
@@ -76,7 +78,7 @@ const FormAnalysis: React.FC = () => {
   }
 
   return (
-    <div className='container mx-auto py-8'>
+    <div className='container mx-auto pt-10 pl-2'>
       <Card className='w-full shadow-lg'>
         <CardHeader className='flex justify-between items-center'>
           <div className='flex flex-col gap-2'>
@@ -87,7 +89,7 @@ const FormAnalysis: React.FC = () => {
             </Breadcrumbs>
             <div className='flex items-center gap-2'>
               <Icon icon='solar:chart-2-bold' className='w-6 h-6' />
-              <h2 className='text-2xl font-bold'>数据分析</h2>
+              <h2 className='text-2xl font-bold'>AI 智能数据分析</h2>
             </div>
           </div>
           <motion.div
@@ -124,15 +126,10 @@ const FormAnalysis: React.FC = () => {
                 >
                   <div
                     className={`max-w-[80%] p-4 rounded-lg ${
-                      message.role === "user"
-                        ? "bg-primary text-white ml-4"
-                        : "bg-default-100 text-foreground mr-4"
+                      message.role === "user" ? "bg-primary text-white ml-4" : "bg-default-100 text-foreground mr-4"
                     }`}
                   >
-                    <div
-                      className='prose prose-sm max-w-none'
-                      dangerouslySetInnerHTML={{ __html: message.content }}
-                    />
+                    <div className='prose prose-sm max-w-none' dangerouslySetInnerHTML={{ __html: message.content }} />
                   </div>
                 </motion.div>
               ))}
@@ -143,6 +140,7 @@ const FormAnalysis: React.FC = () => {
           <div className='flex items-end gap-2'>
             <CommandInput
               value={input}
+              agent={FormAnalysisAgent}
               onChange={(value) => setInput(value)}
               onKeyDown={handleKeyDown}
               placeholder='输入分析指令，例如: "统计所有单据的状态分布"'
@@ -150,15 +148,6 @@ const FormAnalysis: React.FC = () => {
               isLoading={isLoading}
               onSubmit={handleSendMessage}
             />
-            <Button
-              color='primary'
-              isLoading={isLoading}
-              onClick={handleSendMessage}
-              className='h-14'
-              startContent={!isLoading && <Icon icon='solar:command-square-bold' />}
-            >
-              发送
-            </Button>
           </div>
         </CardBody>
       </Card>

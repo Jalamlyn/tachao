@@ -1,5 +1,4 @@
 import chatChunkClaude from "../chat/chat-chunk-claude-office"
-import { jsonParse } from "@/utils"
 import message from "@/components/Message"
 import { MetadataDetail } from "@/components/from-templates/hook/useMetadata"
 
@@ -12,32 +11,34 @@ export type AnalysisResult = {
 // 添加格式化时间的辅助函数
 const formatTime = () => {
   const now = new Date()
-  return now.toLocaleTimeString('zh-CN', { 
+  return now.toLocaleTimeString("zh-CN", {
     hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
   })
 }
 
 export class FormAnalysisAgent {
   private static instance: FormAnalysisAgent
   private _currentData: MetadataDetail[] | null = null
-  private systemPrompt = `你是一个智能数据分析助手，负责帮助用户分析和查询表单数据。
+  private systemPrompt = `你是沙塔 AI 的智能数据分析助手，负责帮助用户分析和查询表单数据。
 你需要理解用户的查询意图，从提供的数据中找出相关信息并给出准确的回答。
+你只能回答与提供的数据相关的问题，对于超出数据范围的问题，你需要礼貌地拒绝回答。
 
 分析原则：
 1. 直接回答：直接给出用户想要的结果，不要过多解释
 2. 数据准确：确保计算和统计的准确性
 3. 简明扼要：使用简洁的语言表达结果
 4. 灵活查询：支持多维度的数据查询和分析
+5. 严格限制：只能回答数据集内的问题，拒绝回答超出范围的问题
 
 注意事项：
 - 如果涉及金额，保留两位小数
 - 如果涉及日期，使用标准格式
-- 如果需要返回表单链接，使用 <a target="_blank" href="/forms/表单ID">表单标题</a> 格式
+- 如果需要返回表单链接，使用 <a target="_blank" href="/form/表单ID">表单标题</a> 格式
 - 如果数据不存在或查询条件不明确，要明确告知用户
-`
+- 如果用户询问的内容超出数据范围，要礼貌拒绝并说明原因`
 
   private constructor() {}
 
@@ -56,21 +57,27 @@ export class FormAnalysisAgent {
     this._currentData = data
   }
 
-  public async processQuery(
-    query: string,
+  public async processCommand(
+    command: string,
     onChunk?: (chunk: string) => void,
     data?: MetadataDetail[]
   ): Promise<AnalysisResult> {
     let generationProcess = ""
-    
+
     // 记录用户输入和时间
     const userInputTime = formatTime()
-    generationProcess += `[${userInputTime}] 👤 用户: ${query}\n\n`
-    
+    generationProcess += `[${userInputTime}] 👤 用户: ${command}\n\n`
+
     const updateGenerationProcess = (chunk: string) => {
       // 如果是新的AI回复开始,添加时间戳
-      if (chunk.startsWith("🤖") || chunk.startsWith("📊") || chunk.startsWith("🔍") || 
-          chunk.startsWith("📈") || chunk.startsWith("💡") || chunk.startsWith("✨")) {
+      if (
+        chunk.startsWith("🤖") ||
+        chunk.startsWith("📊") ||
+        chunk.startsWith("🔍") ||
+        chunk.startsWith("📈") ||
+        chunk.startsWith("💡") ||
+        chunk.startsWith("✨")
+      ) {
         const timestamp = formatTime()
         generationProcess += `[${timestamp}] `
       }
@@ -96,7 +103,7 @@ export class FormAnalysisAgent {
       await chatChunkClaude(
         [
           { role: "system", content: this.systemPrompt },
-          { role: "user", content: `这是要分析的数据:\n${dataContext}\n\n用户查询: ${query}` }
+          { role: "user", content: `这是要分析的数据:\n${dataContext}\n\n用户查询: ${command}` },
         ],
         (chunk: string) => {
           response += chunk
@@ -110,7 +117,7 @@ export class FormAnalysisAgent {
       return {
         type: "query",
         data: response,
-        generationProcess
+        generationProcess,
       }
     } catch (error) {
       console.error("Error in analysis:", error)
@@ -125,10 +132,10 @@ export class FormAnalysisAgent {
     onChunk?: (chunk: string) => void
   ): Promise<AnalysisResult> {
     let generationProcess = ""
-    
+
     const userInputTime = formatTime()
     generationProcess += `[${userInputTime}] 📊 开始${analysisType}分析\n\n`
-    
+
     const updateGenerationProcess = (chunk: string) => {
       if (chunk.startsWith("🤖") || chunk.startsWith("📊") || chunk.startsWith("📈")) {
         const timestamp = formatTime()
@@ -150,10 +157,10 @@ export class FormAnalysisAgent {
       await chatChunkClaude(
         [
           { role: "system", content: this.systemPrompt },
-          { 
-            role: "user", 
-            content: `请对以下数据进行${analysisType}分析，给出关键发现和洞察:\n${dataContext}` 
-          }
+          {
+            role: "user",
+            content: `请对以下数据进行${analysisType}分析，给出关键发现和洞察:\n${dataContext}`,
+          },
         ],
         (chunk: string) => {
           response += chunk
@@ -161,13 +168,13 @@ export class FormAnalysisAgent {
         },
         () => {},
         true,
-        0.7
+        0
       )
 
       return {
         type: "analysis",
         data: response,
-        generationProcess
+        generationProcess,
       }
     } catch (error) {
       console.error("Error in analysis:", error)
