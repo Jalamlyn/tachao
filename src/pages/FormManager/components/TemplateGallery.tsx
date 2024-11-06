@@ -51,24 +51,26 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates, onTemplate
       variants={container}
       initial='hidden'
       animate='show'
-      className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 ${className}`}
+      className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 ${className}`}
     >
       {templates.map((template) => (
         <motion.div key={template.id} variants={item} className='h-full'>
           <Card
             isPressable
             isHoverable
-            className='h-full bg-white border border-default-200 hover:border-primary transition-colors duration-150'
+            className='w-[320px] h-[200px] bg-white border border-default-200 hover:border-primary transition-colors duration-150'
             onPress={() => onTemplateSelect(template.id)}
           >
             <CardBody className='p-0'>
-              <div className='w-full h-40 flex items-center justify-center bg-default-50'>
+              <div className='w-full h-[120px] flex items-center justify-center bg-default-50'>
                 <Icon icon='mdi:file-document-outline' className='w-12 h-12 text-default-400' />
               </div>
             </CardBody>
             <CardFooter className='flex flex-col gap-2 px-4 py-3 bg-white'>
               <div className='flex justify-between items-center w-full'>
-                <h4 className='text-base font-medium text-foreground truncate max-w-[70%]'>{template.title}</h4>
+                <h4 className='text-base font-medium text-foreground truncate max-w-[200px]' title={template.title}>
+                  {template.title}
+                </h4>
                 <span className='text-xs text-default-400 whitespace-nowrap'>{formatDate(template.updatedAt)}</span>
               </div>
               <div className='flex justify-between items-center w-full'>
