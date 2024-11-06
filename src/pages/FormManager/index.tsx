@@ -1,13 +1,11 @@
 import React, { useCallback } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@iconify/react"
-import { AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import FormPreview from "./components/FormPreview"
-import MarkdownPreview from "./components/MarkdownPreview"
 import CommandSection from "./components/CommandSection"
 
 import { useFormState } from "./hooks/useFormState"
@@ -15,10 +13,9 @@ import { useTemplates } from "./hooks/useTemplates"
 import { formatDistanceToNow } from "date-fns"
 import { zhCN } from "date-fns/locale"
 import message from "@/components/Message"
+import { Progress } from "@nextui-org/react"
 
 const DynamicFormTestPage: React.FC = () => {
-  const [activeTab, setActiveTab] = React.useState<string>("preview")
-
   const {
     state: formState,
     setFormConfig,
@@ -27,8 +24,8 @@ const DynamicFormTestPage: React.FC = () => {
     stopGenerating,
     addToHistory,
     handleError,
-    appendGenerationProcess, // 新增：使用生成过程更新方法
-    startGenerating, // 新增：使用开始生成方法
+    appendGenerationProcess,
+    startGenerating,
   } = useFormState()
 
   const { templates, handleTemplateChange, saveTemplate } = useTemplates()
@@ -52,11 +49,10 @@ const DynamicFormTestPage: React.FC = () => {
       if (result) {
         setFormConfig(result.config)
         addToHistory(result.title, result.config)
-        setActiveTab("preview")
         stopGenerating()
       }
     },
-    [setFormConfig, addToHistory, stopGenerating, setActiveTab]
+    [setFormConfig, addToHistory, stopGenerating]
   )
 
   const handleSaveTemplate = async () => {
@@ -73,18 +69,10 @@ const DynamicFormTestPage: React.FC = () => {
     }
   }
 
-  const handleCopy = () => {
-    message.success("复制成功")
-  }
-
   return (
     <div className='container mx-auto py-8'>
       <Card>
         <CardHeader className='flex justify-between items-center'>
-          <div className='flex items-center gap-2'>
-            <Icon icon='mdi:form-select' className='w-6 h-6' />
-            <h2 className='text-2xl font-bold'>动态表单生成器</h2>
-          </div>
           <div className='flex gap-2'>
             <Popover>
               <PopoverTrigger asChild>
@@ -101,7 +89,6 @@ const DynamicFormTestPage: React.FC = () => {
                       className='p-2 hover:bg-gray-100 rounded cursor-pointer'
                       onClick={() => {
                         setFormConfig(item.result)
-                        setActiveTab("preview")
                       }}
                     >
                       <div className='text-sm font-medium'>{item.command}</div>
@@ -131,31 +118,37 @@ const DynamicFormTestPage: React.FC = () => {
         </CardHeader>
 
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value='preview' className='flex items-center gap-2'>
-                <Icon icon='mdi:eye' className='w-4 h-4' />
-                表单预览
-              </TabsTrigger>
-              <TabsTrigger value='markdown' className='flex items-center gap-2'>
-                <Icon icon='mdi:markdown' className='w-4 h-4' />
-                生成过程
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value='preview'>
-              <AnimatePresence mode='wait'>
+          <AnimatePresence mode='wait'>
+            {formState.isGenerating ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className='space-y-4'
+              >
+                <div className='w-full space-y-2'>
+                  <Progress
+                    size='sm'
+                    value={formState.generationProgress}
+                    color='primary'
+                    className='max-w-md'
+                  />
+                  <p className='text-sm text-gray-500'>正在生成表单... {formState.generationProgress}%</p>
+                </div>
+                <div className='bg-gray-50 rounded-lg p-4'>
+                  <pre className='whitespace-pre-wrap font-mono text-sm'>{formState.generationProcess}</pre>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
                 <FormPreview config={formState.formConfig} />
-              </AnimatePresence>
-            </TabsContent>
-
-            <TabsContent value='markdown'>
-              <MarkdownPreview 
-                content={formState.generationProcess} // 修改：使用 generationProcess
-                onCopy={handleCopy}
-              />
-            </TabsContent>
-          </Tabs>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className='mt-6'>
             <CommandSection
