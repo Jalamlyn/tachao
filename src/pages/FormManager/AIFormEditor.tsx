@@ -26,6 +26,7 @@ const AIFormEditor: React.FC = () => {
   } = useFormState()
 
   const [isGenerationDialogOpen, setIsGenerationDialogOpen] = useState(false)
+  const [showGenerationProcess, setShowGenerationProcess] = useState(false)
 
   const handleAIResponse = useCallback(
     (result: { type: string; data: any }) => {
@@ -33,6 +34,7 @@ const AIFormEditor: React.FC = () => {
         setFormConfig(result.data.config)
         addToHistory(result.data.title, result.data.config)
         stopGenerating()
+        setShowGenerationProcess(false)
       }
     },
     [setFormConfig, addToHistory, stopGenerating]
@@ -54,6 +56,7 @@ const AIFormEditor: React.FC = () => {
     (chunk: string) => {
       appendGenerationProcess(chunk)
       setIsGenerationDialogOpen(true)
+      setShowGenerationProcess(true)
     },
     [appendGenerationProcess]
   )
@@ -115,34 +118,40 @@ const AIFormEditor: React.FC = () => {
 
         <CardContent>
           <AnimatePresence mode='wait'>
-            {formState.isGenerating ? (
+            {showGenerationProcess ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className='space-y-4'
+                className='space-y-4 mb-4'
               >
                 <div className='bg-gray-50 rounded-lg p-4'>
-                  <pre className='whitespace-pre-wrap font-mono text-sm'>{formState.generationProcess}</pre>
+                  <div className='flex items-center gap-2 mb-2'>
+                    <Icon icon='mdi:robot' className='w-5 h-5 text-blue-500' />
+                    <span className='font-medium text-blue-500'>AI 助手正在生成...</span>
+                  </div>
+                  <pre className='whitespace-pre-wrap font-mono text-sm overflow-auto max-h-[200px]'>
+                    {formState.generationProcess}
+                  </pre>
                 </div>
               </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className='space-y-4'
-              >
-                {formState.formConfig ? (
-                  <FormPreview config={formState.formConfig} />
-                ) : (
-                  <div className='text-center py-12 text-gray-500'>
-                    <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
-                    <p>请输入您的需求,AI将为您生成表单</p>
-                  </div>
-                )}
-              </motion.div>
-            )}
+            ) : null}
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className='space-y-4'
+            >
+              {formState.formConfig ? (
+                <FormPreview config={formState.formConfig} />
+              ) : (
+                <div className='text-center py-12 text-gray-500'>
+                  <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
+                  <p>请输入您的需求,AI将为您生成表单</p>
+                </div>
+              )}
+            </motion.div>
           </AnimatePresence>
 
           <div className='mt-6'>
