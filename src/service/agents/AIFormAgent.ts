@@ -5,6 +5,7 @@ import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig, parseFormEditOperations } from "@/utils/codeParser"
 import message from "@/components/Message"
 import { set, cloneDeep } from "lodash"
+import AIGenerationDialog from "@/components/AIGenerationDialog"
 
 interface FormIndex {
   id: string
@@ -16,6 +17,7 @@ interface FormIndex {
 export type CommandResult = {
   type: "create" | "edit" | "search"
   data: any
+  generationProcess?: string
 }
 
 export class AIFormAgent {
@@ -45,30 +47,46 @@ ${DynamicFormConfigStr}
 
   // 统一的命令处理入口
   public async processCommand(command: string, onChunk?: (chunk: string) => void): Promise<CommandResult> {
+    let generationProcess = ""
+    const updateGenerationProcess = (chunk: string) => {
+      generationProcess += chunk
+      onChunk?.(chunk)
+    }
+
     const intent = await this.analyzeIntent(command)
     
     if (intent === "unsupported") {
       throw new Error("不支持的指令，请使用创建表单、检索表单或编辑表单相关的指令。")
     }
 
+    // 添加动画效果的工作流展示
+    updateGenerationProcess("🤖 AI助手正在分析您的需求...\n")
+    await new Promise(resolve => setTimeout(resolve, 500))
+
     switch (intent) {
       case "create":
-        const createResult = await this.createForm(command, onChunk || (() => {}))
+        updateGenerationProcess("📝 开始创建表单...\n")
+        const createResult = await this.createForm(command, updateGenerationProcess)
         return {
           type: "create",
-          data: createResult
+          data: createResult,
+          generationProcess
         }
       case "edit":
-        const editResult = await this.editForm(null as any, command, onChunk || (() => {}))
+        updateGenerationProcess("✏️ 开始编辑表单...\n")
+        const editResult = await this.editForm(null as any, command, updateGenerationProcess)
         return {
           type: "edit",
-          data: editResult
+          data: editResult,
+          generationProcess
         }
       case "search":
-        const searchResult = await this.searchForms(command, [], onChunk || (() => {}))
+        updateGenerationProcess("🔍 开始搜索表单...\n")
+        const searchResult = await this.searchForms(command, [], updateGenerationProcess)
         return {
           type: "search",
-          data: searchResult
+          data: searchResult,
+          generationProcess
         }
       default:
         throw new Error("未知的指令类型")
@@ -152,6 +170,9 @@ ${DynamicFormConfigStr}
     config: DynamicFormConfig
     title: string
   } | null> {
+    onChunk("🎨 正在设计表单结构...\n")
+    await new Promise(resolve => setTimeout(resolve, 300))
+
     const prompt = `请根据以下描述生成一个表单配置代码：
 ${description}
 
@@ -162,13 +183,12 @@ ${description}
 请使用如下格式返回：
 <mo-ai-form>
 export default {
-
   // 完整的表单配置对象
-
 }
 </mo-ai-form>`
 
     try {
+      onChunk("⚡ 正在生成表单配置...\n")
       const response = await this.processAIResponse(prompt, onChunk)
       const parsedConfig = await parseFormConfig(response)
 
@@ -182,6 +202,7 @@ export default {
         throw new Error("表单配置缺少必要的字段")
       }
 
+      onChunk("✨ 表单生成完成！\n")
       return {
         config: config as DynamicFormConfig,
         title: title as string,
@@ -200,6 +221,9 @@ export default {
     config: DynamicFormConfig
     title?: string
   } | null> {
+    onChunk("🔄 正在分析编辑需求...\n")
+    await new Promise(resolve => setTimeout(resolve, 300))
+
     const prompt = `请根据以下编辑描述,生成精确的表单配置修改代码:
 
 当前表单配置:
@@ -224,14 +248,13 @@ config.title = "新的标题";
 4. 确保路径正确且存在`
 
     try {
+      onChunk("🛠️ 正在应用修改...\n")
       const response = await this.processAIResponse(prompt, onChunk)
-
       const editOperation = await parseFormEditOperations(response)
-
       const newConfig = cloneDeep(currentConfig)
-
       editOperation(newConfig, set)
 
+      onChunk("✅ 表单修改完成！\n")
       return {
         config: newConfig,
         title: newConfig.title,
@@ -247,6 +270,9 @@ config.title = "新的标题";
     formsIndex: FormIndex[],
     onChunk: (chunk: string) => void
   ): Promise<FormIndex[]> {
+    onChunk("🔍 正在搜索匹配的表单...\n")
+    await new Promise(resolve => setTimeout(resolve, 300))
+
     const prompt = `请根据用户的查询条件"${query}"，在以下表单索引中查找匹配的表单：
 ${jsonStringify(formsIndex)}
 
@@ -267,6 +293,8 @@ export default getMatchedForms() {
     try {
       const response = await this.processAIResponse(prompt, onChunk)
       const match = response.match(/<mo-ai-result>([\s\S]*?)<\/mo-ai-result>/)
+
+      onChunk("📋 搜索完成！\n")
 
       if (!match) {
         throw new Error("AI 响应格式错误")
