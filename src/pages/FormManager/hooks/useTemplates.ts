@@ -19,7 +19,6 @@ export const useTemplates = () => {
     load: loadTemplates,
     create: createTemplate,
     getDetail: getTemplateDetail,
-    getIndexes,
   } = useMetadata<{
     config: DynamicFormConfig;
     type: 'official' | 'custom';
@@ -34,15 +33,17 @@ export const useTemplates = () => {
   const loadTemplateIndexes = useCallback(async () => {
     try {
       setIsLoadingIndexes(true);
-      const indexes = await getIndexes();
-      setTemplateIndexes(indexes.map(({ id, title }) => ({ id, title })));
+      const items = await loadTemplates();
+      // 只提取需要的索引信息
+      const indexes = items.map(({ id, title }) => ({ id, title }));
+      setTemplateIndexes(indexes);
     } catch (error) {
       console.error('加载模板索引错误:', error);
       message.error('加载模板列表失败');
     } finally {
       setIsLoadingIndexes(false);
     }
-  }, [getIndexes]);
+  }, [loadTemplates]);
 
   // 初始加载索引
   useEffect(() => {
