@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import { Spinner } from "@nextui-org/react"
+import { Spinner, Tabs, Tab } from "@nextui-org/react"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import DynamicForm from "@/components/common/DynamicForm"
+import FormHistoryTable from "@/components/forms/FormHistoryTable"
 import message from "@/components/Message"
 import { motion } from "framer-motion"
+import { Icon } from "@iconify/react"
 
 const Form: React.FC = () => {
   const { formId } = useParams<{ formId: string }>()
@@ -12,6 +14,7 @@ const Form: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [formConfig, setFormConfig] = useState<any>(null)
   const [templateId, setTemplateId] = useState<string | null>(null)
+  const [selectedTab, setSelectedTab] = useState("form")
 
   const { getDetail: getFormDetail } = useMetadata("form")
   const { getDetail: getTemplateDetail } = useMetadata("template")
@@ -96,7 +99,44 @@ const Form: React.FC = () => {
       className='container mx-auto py-8 px-4'
     >
       <div className='max-w-[1200px] mx-auto'>
-        <DynamicForm config={formConfig} id={formId} templateId={templateId} />
+        <Tabs
+          selectedKey={selectedTab}
+          onSelectionChange={(key) => setSelectedTab(key.toString())}
+          className='w-full'
+          classNames={{
+            tabList: "gap-2 sm:gap-4 relative rounded-xl p-1 sm:p-2 bg-gray-100/50 flex-wrap",
+            cursor: "bg-white shadow-md",
+            tab: "max-w-fit px-2 sm:px-4 h-8 sm:h-10 text-xs sm:text-sm",
+            tabContent: "group-data-[selected=true]:text-blue-600",
+          }}
+        >
+          <Tab
+            key="form"
+            title={
+              <div className='flex items-center space-x-1 sm:space-x-2'>
+                <Icon icon='mdi:form-select' className='w-4 h-4 sm:w-5 sm:h-5' />
+                <span>表单内容</span>
+              </div>
+            }
+          >
+            <div className='mt-4'>
+              <DynamicForm config={formConfig} id={formId} templateId={templateId} />
+            </div>
+          </Tab>
+          <Tab
+            key="history"
+            title={
+              <div className='flex items-center space-x-1 sm:space-x-2'>
+                <Icon icon='mdi:history' className='w-4 h-4 sm:w-5 sm:h-5' />
+                <span>修改记录</span>
+              </div>
+            }
+          >
+            <div className='mt-4'>
+              <FormHistoryTable formId={formId} />
+            </div>
+          </Tab>
+        </Tabs>
       </div>
     </motion.div>
   )
