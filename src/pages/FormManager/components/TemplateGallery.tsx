@@ -17,14 +17,13 @@ interface TemplateGalleryProps {
   templates: Template[]
   onTemplateSelect: (templateId: string) => void
   className?: string
-  onRefresh?: () => void // 添加刷新函数属性
 }
 
-const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates, onTemplateSelect, className, onRefresh }) => {
+const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates, onTemplateSelect, className }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(null)
-  const { remove } = useMetadata("template")
+  const { remove, load } = useMetadata("template")
 
   // 动画配置
   const container = {
@@ -58,8 +57,8 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates, onTemplate
         await remove(selectedTemplate.id)
         message.success("模板删除成功")
         onClose()
-        // 调用刷新函数
-        onRefresh?.()
+        // 使用 load 方法刷新列表
+        await load()
       } catch (error) {
         console.error("删除模板失败:", error)
         message.error("删除模板失败")
