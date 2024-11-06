@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useCallback } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Icon } from "@iconify/react"
 import {
@@ -10,6 +10,7 @@ import {
   ModalBody,
   ModalFooter,
   Button,
+  Spinner,
 } from "@nextui-org/react"
 import FormList from "./components/FormList"
 import SearchInput from "./components/SearchInput"
@@ -21,10 +22,11 @@ import message from "@/components/Message"
 const FormManager: React.FC = () => {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
-  const { items: forms, load: loadForms, create: createForm } = useMetadata("form")
+  const { items: forms, load: loadForms, create: createForm, getIndexes } = useMetadata("form")
   const { items: templates, load: loadTemplates, getDetail: getTemplateDetail } = useMetadata("template")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [selectedTemplateId, setSelectedTemplateId] = useState("")
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
@@ -48,14 +50,29 @@ const FormManager: React.FC = () => {
       const template = await getTemplateDetail(templateId)
       if (template && template.data.config) {
         // 直接导航到预览页面
-        navigate(`/we-chat-app/admin/forms/create/${templateId}`)
-        handleModalClose()
+        window.open(`/form-preview/${templateId}`, "_blank")
       } else {
         message.error("加载模板失败")
       }
     } catch (error) {
       console.error("Failed to load template:", error)
       message.error("加载模板失败")
+    }
+  }
+
+  // 添加刷新函数
+  const handleRefresh = async () => {
+    try {
+      setIsRefreshing(true)
+      const indexes = await getIndexes()
+      if (indexes) {
+        message.success("刷新成功")
+      }
+    } catch (error) {
+      console.error("Failed to refresh forms:", error)
+      message.error("刷新失败")
+    } finally {
+      setIsRefreshing(false)
     }
   }
 
@@ -74,6 +91,15 @@ const FormManager: React.FC = () => {
             </div>
           </div>
           <div className='flex gap-2'>
+            {/* 添加刷新按钮 */}
+            <Button 
+              isIconOnly 
+              variant="light" 
+              onClick={handleRefresh} 
+              isLoading={isRefreshing}
+            >
+              <Icon icon='mdi:refresh' className='w-5 h-5' />
+            </Button>
             <Button onClick={handleCreateDocument} color='primary'>
               <Icon icon='mdi:file-document-plus' className='w-4 h-4 mr-2' />
               创建单据
