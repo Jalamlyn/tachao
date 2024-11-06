@@ -3,36 +3,25 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@iconify/react"
 import { AnimatePresence, motion } from "framer-motion"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Tabs, Tab } from "@nextui-org/react"
+import { useNavigate } from "react-router-dom"
+import { Breadcrumbs, BreadcrumbItem } from "@nextui-org/react"
 
 import FormPreview from "./components/FormPreview"
-import CommandSection from "./components/CommandSection"
 import TemplateGallery from "./components/TemplateGallery"
-
 import { useFormState } from "./hooks/useFormState"
 import { useTemplates } from "./hooks/useTemplates"
-import { formatDistanceToNow } from "date-fns"
-import { zhCN } from "date-fns/locale"
-import message from "@/components/Message"
-import { Progress } from "@nextui-org/react"
 
-const DynamicFormTestPage: React.FC = () => {
+const FormManager: React.FC = () => {
+  const navigate = useNavigate()
   const {
     state: formState,
     setFormConfig,
     setSelectedTemplate,
-    updateGenerationProgress,
-    stopGenerating,
-    addToHistory,
-    handleError,
-    appendGenerationProcess,
-    startGenerating,
   } = useFormState()
 
-  const { templates, handleTemplateChange, saveTemplate } = useTemplates()
+  const { templates, handleTemplateChange } = useTemplates()
 
-  const onTemplateChange = async (templateId: string) => {
+  const onTemplateSelect = async (templateId: string) => {
     try {
       setSelectedTemplate(templateId)
       const config = await handleTemplateChange(templateId)
@@ -42,197 +31,71 @@ const DynamicFormTestPage: React.FC = () => {
         setFormConfig(null)
       }
     } catch (error) {
-      handleError(error)
+      console.error("Error loading template:", error)
     }
   }
 
-  const handleAIResponse = useCallback(
-    (result: { config: any; title: string }) => {
-      if (result) {
-        setFormConfig(result.config)
-        addToHistory(result.title, result.config)
-        stopGenerating()
-      }
-    },
-    [setFormConfig, addToHistory, stopGenerating]
-  )
-
-  const handleSaveTemplate = async () => {
-    if (!formState.formConfig) {
-      message.error("请先生成表单")
-      return
-    }
-
-    try {
-      await saveTemplate(formState.formConfig)
-    } catch (error) {
-      handleError(error)
-    }
+  const handleCreateTemplate = () => {
+    navigate("/we-chat-app/admin/documents/create")
   }
-
-  const handleChunk = useCallback(
-    (chunk: string) => {
-      appendGenerationProcess(chunk)
-    },
-    [appendGenerationProcess]
-  )
-
-  const [selectedTab, setSelectedTab] = React.useState("gallery")
 
   return (
     <div className='container mx-auto py-8'>
       <Card>
         <CardHeader className='flex justify-between items-center'>
+          <div className='flex flex-col gap-2'>
+            <Breadcrumbs>
+              <BreadcrumbItem href='/we-chat-app/admin'>首页</BreadcrumbItem>
+              <BreadcrumbItem>单据管理</BreadcrumbItem>
+            </Breadcrumbs>
+            <div className='flex items-center gap-2'>
+              <Icon icon='mdi:form-select' className='w-6 h-6' />
+              <h2 className='text-2xl font-bold'>单据模板管理</h2>
+            </div>
+          </div>
           <div className='flex gap-2'>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant='outline'>
-                  <Icon icon='mdi:history' className='w-4 h-4 mr-2' />
-                  生成历史
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className='w-80'>
-                <div className='space-y-2'>
-                  {formState.generationHistory.map((item, index) => (
-                    <div
-                      key={item.timestamp}
-                      className='p-2 hover:bg-gray-100 rounded cursor-pointer'
-                      onClick={() => {
-                        setFormConfig(item.result)
-                      }}
-                    >
-                      <div className='text-sm font-medium'>{item.command}</div>
-                      <div className='text-xs text-gray-500'>
-                        {formatDistanceToNow(item.timestamp, {
-                          addSuffix: true,
-                          locale: zhCN,
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                  {formState.generationHistory.length === 0 && (
-                    <div className='text-sm text-gray-500 text-center py-2'>暂无生成历史</div>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-            <Button
-              onClick={handleSaveTemplate}
-              disabled={!formState.formConfig}
-              className='transition-all duration-200 hover:scale-105'
-            >
-              <Icon icon='mdi:content-save' className='w-4 h-4 mr-2' />
-              保存模板
+            <Button onClick={handleCreateTemplate}>
+              <Icon icon='mdi:plus' className='w-4 h-4 mr-2' />
+              创建模板
             </Button>
           </div>
         </CardHeader>
 
         <CardContent>
-          <Tabs
-            selectedKey={selectedTab}
-            onSelectionChange={(key) => setSelectedTab(key.toString())}
-            aria-label='表单管理选项卡'
-          >
-            <Tab
-              key='gallery'
-              title={
-                <div className='flex items-center gap-2'>
-                  <Icon icon='mdi:view-gallery' className='w-4 h-4' />
-                  <span>模板库</span>
-                </div>
-              }
-            >
-              <TemplateGallery
-                templates={templates}
-                onTemplateSelect={onTemplateChange}
-                className='mt-4'
-              />
-            </Tab>
-            <Tab
-              key='editor'
-              title={
-                <div className='flex items-center gap-2'>
-                  <Icon icon='mdi:pencil' className='w-4 h-4' />
-                  <span>表单编辑</span>
-                </div>
-              }
-            >
-              <AnimatePresence mode='wait'>
-                {formState.isGenerating ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className='space-y-4'
-                  >
-                    <div className='w-full space-y-2'>
-                      <Progress
-                        size='sm'
-                        value={formState.generationProgress}
-                        color='primary'
-                        className='max-w-md'
-                      />
-                      <p className='text-sm text-gray-500'>正在生成表单... {formState.generationProgress}%</p>
-                    </div>
-                    <div className='bg-gray-50 rounded-lg p-4'>
-                      <pre className='whitespace-pre-wrap font-mono text-sm'>{formState.generationProcess}</pre>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                  >
-                    <FormPreview config={formState.formConfig} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className='mt-6'>
-                <CommandSection
-                  disabled={formState.isGenerating}
-                  selectedTemplate={formState.selectedTemplate}
-                  templates={templates}
-                  onTemplateChange={onTemplateChange}
-                  isGenerating={formState.isGenerating}
-                  generationProgress={formState.generationProgress}
-                  error={formState.error}
-                  onAIResponse={handleAIResponse}
-                  onProgressUpdate={updateGenerationProgress}
-                  onChunk={handleChunk}
-                  className='transition-all duration-300'
-                />
-              </div>
-            </Tab>
-          </Tabs>
-
-          {/* AI 生成过程显示区域 */}
-          <AnimatePresence>
-            {formState.markdownContent && (
+          <AnimatePresence mode='wait'>
+            {formState.formConfig ? (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className='mt-6'
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className='border rounded-lg p-6'
               >
-                <Card>
-                  <CardHeader>
-                    <h3 className='text-lg font-semibold'>AI 生成过程</h3>
-                  </CardHeader>
-                  <CardContent>
-                    <div className='bg-gray-50 rounded-lg p-4 max-h-[400px] overflow-auto'>
-                      <pre className='whitespace-pre-wrap font-mono text-sm'>{formState.markdownContent}</pre>
-                    </div>
-                  </CardContent>
-                </Card>
+                <FormPreview config={formState.formConfig} />
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className='text-center py-12 text-gray-500'
+              >
+                <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
+                <p>请选择一个表单模板</p>
               </motion.div>
             )}
           </AnimatePresence>
+
+          <div className='mt-6'>
+            <TemplateGallery
+              templates={templates}
+              onTemplateSelect={onTemplateSelect}
+              className='transition-all duration-300'
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
   )
 }
 
-export default DynamicFormTestPage
+export default FormManager
