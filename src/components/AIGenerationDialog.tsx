@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from "react"
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  useDisclosure,
-} from "@nextui-org/react"
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure } from "@nextui-org/react"
 import { motion, AnimatePresence } from "framer-motion"
 
 interface AIGenerationDialogProps {
@@ -23,7 +15,7 @@ const AIGenerationDialog: React.FC<AIGenerationDialogProps> = ({
   isOpen,
   onClose,
   generationContent,
-  title = "AI 生成过程",
+  title = "沙塔 AI",
   ResultComponent,
   resultProps = {},
 }) => {
@@ -39,8 +31,8 @@ const AIGenerationDialog: React.FC<AIGenerationDialogProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="4xl"
-      scrollBehavior="inside"
+      size='4xl'
+      scrollBehavior='inside'
       classNames={{
         base: "max-h-[80vh]",
       }}
@@ -48,15 +40,15 @@ const AIGenerationDialog: React.FC<AIGenerationDialogProps> = ({
       <ModalContent>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody>
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode='wait'>
             {!showResult ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="bg-gray-50 rounded-lg p-4"
+                className='bg-gray-50 rounded-lg p-4'
               >
-                <pre className="whitespace-pre-wrap font-mono text-sm">{generationContent}</pre>
+                <pre className='whitespace-pre-wrap font-mono text-sm'>{generationContent}</pre>
               </motion.div>
             ) : (
               ResultComponent && (
@@ -64,7 +56,7 @@ const AIGenerationDialog: React.FC<AIGenerationDialogProps> = ({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="border rounded-lg p-4"
+                  className='border rounded-lg p-4'
                 >
                   <ResultComponent {...resultProps} />
                 </motion.div>
@@ -73,12 +65,7 @@ const AIGenerationDialog: React.FC<AIGenerationDialogProps> = ({
           </AnimatePresence>
         </ModalBody>
         <ModalFooter>
-          {ResultComponent && (
-            <Button color="primary" variant="light" onPress={() => setShowResult(!showResult)}>
-              {showResult ? "查看生成过程" : "查看生成结果"}
-            </Button>
-          )}
-          <Button color="danger" variant="light" onPress={onClose}>
+          <Button color='danger' variant='light' onPress={onClose}>
             关闭
           </Button>
         </ModalFooter>

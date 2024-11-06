@@ -145,6 +145,7 @@ export function useMetadata<T = any>(type: string) {
         // 构建完整的详情数据
         const detail: MetadataDetail<T> = {
           id: normalizedId,
+          templateId: data.templateId,
           type,
           title: data.title || "",
           status: data.status || "draft",
@@ -154,7 +155,6 @@ export function useMetadata<T = any>(type: string) {
           createdAt: now,
           updatedAt: now,
           ...data,
-          id: normalizedId, // 确保使用规范化的ID
         }
 
         // 保存详情
@@ -305,7 +305,7 @@ export function useMetadata<T = any>(type: string) {
     try {
       const indexes = await getIndexes()
       // 将索引数据转换为简化的 MetadataDetail 格式
-      const simpleDetails = indexes.map(index => ({
+      const simpleDetails = indexes.map((index) => ({
         id: index.id,
         type: index.type,
         title: index.title,

@@ -26,7 +26,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadedConfig, setLoadedConfig] = useState<DynamicFormConfig | null>(null)
-  const { formId } = useParams<{ formId: string }>()
+  const { templateId } = useParams<any>()
   const { getDetail } = useMetadata<{ config: DynamicFormConfig }>("template")
 
   // 使用 URL 参数加载表单配置
@@ -38,12 +38,12 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig }) => {
         return
       }
 
-      // 如果有 formId，尝试加载配置
-      if (formId) {
+      // 如果有 templateId，尝试加载配置
+      if (templateId) {
         setIsLoading(true)
         setError(null)
         try {
-          const result = await getDetail(formId)
+          const result = await getDetail(templateId)
           if (result && result.data.config) {
             setLoadedConfig(result.data.config)
           } else {
@@ -59,11 +59,11 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig }) => {
     }
 
     loadFormConfig()
-  }, [formId, propConfig, getDetail])
+  }, [templateId, propConfig, getDetail])
 
   // 使用合并后的配置（优先使用 props 传入的配置）
   const config = propConfig || loadedConfig
-  const shareLink = `${window.location.origin}/we-chat-app/admin/form-preview/${config?.id || ""}`
+  const shareLink = `${window.location.origin}/form-preview/${config?.id || ""}`
 
   const handleCopyLink = async () => {
     try {
@@ -100,13 +100,8 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig }) => {
     >
       {config ? (
         <>
-          <div className='flex gap-2 mb-4'>
-            <Button isIconOnly variant='light' onClick={onOpen}>
-              <Icon icon='mdi:share' className='w-5 h-5' />
-            </Button>
-          </div>
           <div className='border rounded-lg p-6 mx-auto w-full max-w-[1200px]'>
-            <DynamicForm config={config} />
+            <DynamicForm config={config} templateId={templateId} />
           </div>
         </>
       ) : (

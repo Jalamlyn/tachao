@@ -25,7 +25,7 @@ export default function Component() {
   }, [])
 
   return (
-    <div className='flex h-dvh w-full gap-4'>
+    <div className='flex h-dvh w-full gap-4 overflow-hidden'>
       {/* Sidebar */}
       <SidebarDrawer
         className={cn("min-w-[288px] rounded-lg h-[calc(100vh-24px)] m-3", { "min-w-[76px]": isCollapsed })}

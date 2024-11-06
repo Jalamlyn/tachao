@@ -107,7 +107,7 @@ const FormManager: React.FC = () => {
               color='secondary'
               startContent={<Icon icon='solar:chart-2-bold' className='w-4 h-4' />}
             >
-              数据分析
+              AI 数据分析
             </Button>
             <Button onClick={handleCreateDocument} color='primary'>
               <Icon icon='mdi:file-document-plus' className='w-4 h-4 mr-2' />

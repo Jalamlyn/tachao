@@ -3,6 +3,7 @@ import { motion } from "framer-motion"
 import CommandInput from "@/components/CommandInput"
 import TemplateSelect from "./TemplateSelect"
 import { Progress } from "@nextui-org/react"
+import AIFormAgent from "@/service/agents/AIFormAgent"
 
 interface Template {
   id: string
@@ -32,7 +33,6 @@ const CommandSection: React.FC<CommandSectionProps> = ({
   isGenerating,
   generationProgress,
   error,
-  onAIResponse,
   onProgressUpdate,
   onChunk,
 }) => {
@@ -60,7 +60,7 @@ const CommandSection: React.FC<CommandSectionProps> = ({
 
       {error && <div className='text-red-500 text-sm bg-red-50 p-2 rounded'>{error}</div>}
 
-      <CommandInput disabled={disabled} onChunk={handleChunk} />
+      <CommandInput agent={AIFormAgent} disabled={disabled} onChunk={handleChunk} />
     </motion.div>
   )
 }

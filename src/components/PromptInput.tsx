@@ -18,7 +18,7 @@ const PromptInput = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(({ clas
         input: cn("py-0 text-black", classNames?.input),
       }}
       minRows={1}
-      placeholder='请输入您的指令'
+      placeholder='请输入您的指令,例如 创建 xxx，编辑 xxx 必须是和表单相关的指令，不然 AI 会拒绝您的指令'
       radius='lg'
       variant='bordered'
       {...props}

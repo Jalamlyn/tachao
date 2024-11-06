@@ -12,7 +12,7 @@ const Form: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [formConfig, setFormConfig] = useState<any>(null)
   const [templateId, setTemplateId] = useState<string | null>(null)
-  
+
   const { getDetail: getFormDetail } = useMetadata("form")
   const { getDetail: getTemplateDetail } = useMetadata("template")
 
@@ -65,16 +65,16 @@ const Form: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner label="加载中..." />
+      <div className='flex items-center justify-center min-h-screen'>
+        <Spinner label='加载中...' />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen text-danger">
-        <p className="text-xl font-bold mb-2">错误</p>
+      <div className='flex flex-col items-center justify-center min-h-screen text-danger'>
+        <p className='text-xl font-bold mb-2'>错误</p>
         <p>{error}</p>
       </div>
     )
@@ -82,7 +82,7 @@ const Form: React.FC = () => {
 
   if (!formConfig) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-gray-500">
+      <div className='flex items-center justify-center min-h-screen text-gray-500'>
         <p>未找到表单配置</p>
       </div>
     )
@@ -93,14 +93,10 @@ const Form: React.FC = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="container mx-auto py-8 px-4"
+      className='container mx-auto py-8 px-4'
     >
-      <div className="max-w-[1200px] mx-auto">
-        <DynamicForm
-          config={formConfig}
-          formId={formId}
-          templateId={templateId || undefined}
-        />
+      <div className='max-w-[1200px] mx-auto'>
+        <DynamicForm config={formConfig} id={formId} templateId={templateId} />
       </div>
     </motion.div>
   )

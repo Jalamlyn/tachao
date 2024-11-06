@@ -1,19 +1,19 @@
 // 字段类型枚举
-export type FormFieldType = 
-  | 'text'          // 文本输入
-  | 'password'      // 密码输入
-  | 'number'        // 数字输入
-  | 'email'         // 邮箱输入
-  | 'tel'           // 电话输入
-  | 'url'           // URL输入
-  | 'textarea'      // 多行文本
-  | 'select'        // 下拉选择
-  | 'date'          // 日期选择
-  | 'datetime'      // 日期时间选择
-  | 'file'          // 文件上传
-  | 'image'         // 图片上传
-  | 'custom'        // 自定义组件
-  | 'resource'      // 资源选择
+export type FormFieldType =
+  | "text" // 文本输入
+  | "password" // 密码输入
+  | "number" // 数字输入
+  | "email" // 邮箱输入
+  | "tel" // 电话输入
+  | "url" // URL输入
+  | "textarea" // 多行文本
+  | "select" // 下拉选择
+  | "date" // 日期选择
+  | "datetime" // 日期时间选择
+  | "file" // 文件上传
+  | "image" // 图片上传
+  | "custom" // 自定义组件
+  | "resource" // 资源选择
 
 // 基础字段类型
 export interface FormField {
@@ -35,31 +35,20 @@ export interface FormField {
   showWhen?: {
     field: string
     value: any
-    operator?: 'eq' | 'neq' | 'gt' | 'lt' | 'contains'
+    operator?: "eq" | "neq" | "gt" | "lt" | "contains"
   }
   // 资源选择配置
   resourceConfig?: {
     resourceName: string
     appId?: string
-    selectionMode?: 'single' | 'multiple'
+    selectionMode?: "single" | "multiple"
   }
   // 自定义渲染
-  render?: (props: {
-    field: any
-    form: any
-    isEditable: boolean
-  }) => React.ReactNode
+  render?: (props: { field: any; form: any; isEditable: boolean }) => React.ReactNode
 }
 
 // 表格列类型
-export type TableColumnType = 
-  | 'text'
-  | 'number'
-  | 'date'
-  | 'datetime'
-  | 'select'
-  | 'resource'
-  | 'custom'
+export type TableColumnType = "text" | "number" | "date" | "datetime" | "select" | "resource" | "custom"
 
 // 表格列配置
 export interface TableColumn {
@@ -77,7 +66,7 @@ export interface TableColumn {
   resourceConfig?: {
     resourceName: string
     appId?: string
-    selectionMode?: 'single' | 'multiple'
+    selectionMode?: "single" | "multiple"
   }
   render?: (value: any, record: any, index: number) => React.ReactNode
 }
@@ -114,9 +103,6 @@ export interface ProcessStep {
   onCancel?: () => void
 }
 
-// 表单状态
-export type FormStatus = 'draft' | 'submitted' | 'approved' | 'rejected'
-
 // 元数据配置
 export interface FormMetadata {
   title: string
@@ -126,7 +112,6 @@ export interface FormMetadata {
     delete?: boolean
     print?: boolean
   }
-  status?: FormStatus
   createdAt?: string
   updatedAt?: string
   createdBy?: string
@@ -139,20 +124,20 @@ export interface ToolbarButton {
   key: string
   label: string
   icon?: string
-  color?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger'
-  variant?: 'solid' | 'bordered' | 'light' | 'flat' | 'faded' | 'shadow'
+  color?: "default" | "primary" | "secondary" | "success" | "warning" | "danger"
+  variant?: "solid" | "bordered" | "light" | "flat" | "faded" | "shadow"
   disabled?: boolean
   loading?: boolean
   onClick?: () => void
   className?: string
   startContent?: React.ReactNode
   endContent?: React.ReactNode
-  size?: 'sm' | 'md' | 'lg'
+  size?: "sm" | "md" | "lg"
   isIconOnly?: boolean
   showWhen?: {
     field: string
     value: any
-    operator?: 'eq' | 'neq' | 'gt' | 'lt' | 'contains'
+    operator?: "eq" | "neq" | "gt" | "lt" | "contains"
   }
 }
 
@@ -174,7 +159,7 @@ export interface FormRenderConfig {
 }
 
 // 校验模式
-export type ValidationMode = 'submit' | 'save' | 'custom'
+export type ValidationMode = "submit" | "save" | "custom"
 
 // 校验上下文类型
 export interface ValidationContext {
@@ -222,6 +207,7 @@ export interface DynamicFormConfig {
 export interface DynamicFormProps {
   config: DynamicFormConfig
   id?: string
+  templateId: string
   onSubmit?: (values: any) => Promise<void>
   onCancel?: () => void
 }

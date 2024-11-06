@@ -17,9 +17,6 @@ import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
-import type { DynamicFormConfig } from "@/components/common/DynamicForm/types"
-import CommandInput from "@/components/CommandInput"
-import AIFormAgent from "@/service/agents/AIFormAgent"
 
 interface Template {
   id: string
@@ -84,13 +81,6 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
   }
 
   // 格式化日期
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
 
   // 处理删除确认
   const handleDeleteConfirm = async () => {
@@ -125,7 +115,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
   // 处理复制分享链接
   const handleCopyShareLink = async () => {
     if (selectedTemplate) {
-      const shareLink = `${window.location.origin}/we-chat-app/admin/form-preview/${selectedTemplate.id}`
+      const shareLink = `${window.location.origin}/form-preview/${selectedTemplate.id}`
       try {
         await navigator.clipboard.writeText(shareLink)
         message.success("链接已复制到剪贴板")
@@ -153,15 +143,10 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
       >
         {templates.map((template) => (
           <motion.div key={template.id} variants={item} className='h-full'>
-            <Card
-              isPressable
-              isHoverable
-              className='w-48 h-[200px] bg-white border border-default-200 hover:border-primary transition-colors duration-150'
-              onPress={() => onTemplateSelect(template.id)}
-            >
+            <Card isPressable isHoverable className='w-48 h-[200px] ' onPress={() => onTemplateSelect(template.id)}>
               <CardBody className='p-0'>
-                <div className='w-full h-[120px] flex items-center justify-center bg-default-50'>
-                  <Icon icon='mdi:file-document-outline' className='w-12 h-12 text-default-400' />
+                <div className='w-full h-[120px] flex items-center justify-center bg-black'>
+                  <Icon icon='fluent:form-28-filled' className='w-12 h-12 text-default-400' />
                 </div>
               </CardBody>
               <CardFooter className='flex flex-col gap-2 px-4 py-3 bg-white'>
@@ -234,7 +219,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
               <p>复制以下链接分享模板：</p>
               <Input
                 readOnly
-                value={`${window.location.origin}/we-chat-app/admin/form-preview/${selectedTemplate?.id || ""}`}
+                value={`${window.location.origin}/form-preview/${selectedTemplate?.id || ""}`}
                 endContent={
                   <Button size='sm' variant='light' onClick={handleCopyShareLink}>
                     <Icon icon='mdi:content-copy' className='w-4 h-4' />

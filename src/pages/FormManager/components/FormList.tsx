@@ -27,7 +27,7 @@ interface FormListProps {
 
 const FormList: React.FC<FormListProps> = ({ forms, onDelete }) => {
   const navigate = useNavigate()
-  const { remove } = useMetadata("form")
+  const { remove, load } = useMetadata("form")
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [formToDelete, setFormToDelete] = useState<string | null>(null)
 
@@ -40,8 +40,8 @@ const FormList: React.FC<FormListProps> = ({ forms, onDelete }) => {
       try {
         const success = await remove(formToDelete)
         if (success) {
-          message.success("删除成功")
           onDelete?.()
+          message.success("删除成功")
         } else {
           message.error("删除失败")
         }
@@ -85,12 +85,12 @@ const FormList: React.FC<FormListProps> = ({ forms, onDelete }) => {
                       <Icon icon='mdi:eye' className='w-4 h-4' />
                     </Button>
                   </Tooltip>
-                  <Tooltip content='删除' color="danger">
+                  <Tooltip content='删除' color='danger'>
                     <Button
                       isIconOnly
                       size='sm'
                       variant='light'
-                      color="danger"
+                      color='danger'
                       onClick={() => openDeleteModal(form.id)}
                     >
                       <Icon icon='mdi:delete' className='w-4 h-4' />
@@ -106,14 +106,12 @@ const FormList: React.FC<FormListProps> = ({ forms, onDelete }) => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalContent>
           <ModalHeader>确认删除</ModalHeader>
-          <ModalBody>
-            确定要删除这个单据吗？此操作不可恢复。
-          </ModalBody>
+          <ModalBody>确定要删除这个单据吗？此操作不可恢复。</ModalBody>
           <ModalFooter>
-            <Button variant="light" onPress={onClose}>
+            <Button variant='light' onPress={onClose}>
               取消
             </Button>
-            <Button color="danger" onPress={handleDelete}>
+            <Button color='danger' onPress={handleDelete}>
               删除
             </Button>
           </ModalFooter>

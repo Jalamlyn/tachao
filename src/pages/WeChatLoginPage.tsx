@@ -1,11 +1,5 @@
 import React, { useState, useRef, useEffect } from "react"
-import {
-  Button,
-  Input,
-  Checkbox,
-  Card,
-  CardBody,
-} from "@nextui-org/react"
+import { Button, Input, Checkbox, Card, CardBody } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { login } from "@/service/apis/api"
@@ -92,7 +86,7 @@ export default function WeChatLoginPage() {
         if (callback) {
           window.location.href = callback
         } else {
-          navigate("/forms")
+          navigate("/we-chat-app/admin/documents")
         }
       } else {
         message.error(t("login_failed"))

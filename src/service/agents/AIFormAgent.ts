@@ -95,7 +95,7 @@ ${DynamicFormConfigStr}
     const intent = await this.analyzeIntent(command)
 
     if (intent === "unsupported") {
-      throw new Error("不支持的指令，请使用"创建"、"检索"或"编辑"开头的指令，让我更好的理解您的意图。")
+      throw new Error("不支持的指令，请使用'创建'、'检索'或'编辑'开头的指令，让我更好的理解您的意图。")
     }
 
     updateGenerationProcess("🤖 AI助手正在分析您的需求...\n")

@@ -17,15 +17,15 @@ import message from "./Message"
 interface CommandInputProps extends TextAreaProps {
   classNames?: Record<"button" | "buttonIcon", string>
   onChunk?: (chunk: string) => void
+  onCommand?: any
+  data
   agent?: {
-    analyzeIntent: (input: string) => Promise<string>
-    createForm: (description: string, onChunk: (chunk: string) => void) => Promise<any>
-    searchForms: (query: string, formsIndex: any[], onChunk: (chunk: string) => void) => Promise<any[]>
+    processCommand: (description: string, onChunk: (chunk: string) => void) => Promise<any>
   }
 }
 
 export default function Component(props: CommandInputProps) {
-  const { agent, onChunk = () => {}, ...restProps } = props
+  const { agent, onChunk = () => {}, onCommand, data, ...restProps } = props
   const [prompt, setPrompt] = React.useState<string>("")
   const { submitForm } = useFormSubmission()
   const [isRecording, setIsRecording] = React.useState<boolean>(false)
@@ -34,7 +34,6 @@ export default function Component(props: CommandInputProps) {
   const [signature, setSignature] = useState<string>(
     "kgt8ON7yVITDhtdwci0qeUiDs4BGN8Nv1BTeJl6_DRfVMekQi10Szp0kiRDdSZkANokxKITDT4cv1UV6mWuiKA"
   )
-  const [messages, setMessages] = useState<any[]>([])
 
   useEffect(() => {
     // 注册企业微信 JSAPI
@@ -54,46 +53,10 @@ export default function Component(props: CommandInputProps) {
         setIsLoading(true)
 
         if (agent) {
-          // 使用传入的 AI agent 处理命令
-          const intent = await agent.analyzeIntent(prompt)
-
-          // 构建消息数组
-          const newMessages = [
-            ...messages,
-            {
-              role: "user",
-              content: [{ type: "text", text: prompt }],
-              images: [],
-            },
-          ]
-          setMessages(newMessages)
-
-          if (intent === "create") {
-            const result = await agent.createForm(prompt, onChunk)
-            if (props.onCommand) {
-              props.onCommand(result)
-            }
-          } else if (intent === "search") {
-            const results = await agent.searchForms(prompt, [], onChunk)
-            message.success(`找到 ${results.length} 个匹配的表单`)
-          }
-        } else {
-          // 保持原有的表单提交逻辑
-          if (prompt.includes("生成配置")) {
-            const mockFormData = {
-              id: `LEAVE_${Date.now()}`,
-              templateId: "leaveRequest",
-              title: "请假申请单",
-              data: leaveRequestConfig,
-              status: "draft",
-            }
-            await submitForm(JSON.stringify(mockFormData))
-            message.success("已生成请假单配置")
-          } else {
-            await submitForm(prompt)
-          }
+          const result = await agent.processCommand(prompt, onChunk, data.current)
+          console.log(result)
+          onCommand && onCommand(result)
         }
-
         setPrompt("")
       } catch (error) {
         console.error("Error submitting command:", error)
@@ -152,11 +115,11 @@ export default function Component(props: CommandInputProps) {
           }}
           endContent={
             <div className='flex gap-2'>
-              <Tooltip showArrow content={isRecording ? "停止录音" : "开始录音"}>
+              {/* <Tooltip showArrow content={isRecording ? "停止录音" : "开始录音"}>
                 <Button isIconOnly radius='full' variant='light' onClick={isRecording ? stopRecording : startRecording}>
                   <Icon icon={isRecording ? "solar:stop-circle-linear" : "solar:microphone-3-linear"} width={20} />
                 </Button>
-              </Tooltip>
+              </Tooltip> */}
               <Tooltip showArrow content='发送指令'>
                 <Button
                   isIconOnly

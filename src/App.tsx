@@ -1,7 +1,6 @@
 import React, { createContext, useState, useEffect } from "react"
 import { Navigate, Route, Routes, useNavigate, useLocation } from "react-router-dom"
 import { NextUIProvider } from "@nextui-org/react"
-import FormsPage from "@/pages/DataManagementPage"
 import { useTranslation } from "react-i18next"
 import { getCurrentLanguage } from "./i18n"
 import WeChatLoginPage from "./pages/WeChatLoginPage"
@@ -12,13 +11,13 @@ import CreateReportPage from "./components/reports/CreateReportPage"
 import ReadReportRenderer from "./components/reports/ReadReportRenderer"
 import { Toaster } from "./components/ui/toaster"
 import LandingPage from "./pages/LandingPage"
-import CustomFormBuilder from "./components/forms/custom/CustomFormBuilder"
 import AIHomePage from "./pages/AIHomePage"
 import DataAnalysisPage from "./pages/DataAnalysisPage"
 import CreateFormPage from "./pages/CreateFormPage"
 import DynamicFormTestPage from "./pages/DynamicFormTestPage"
 import renderWeChatApp from "./apps/we-chat-app-admin/renderWeChatApp"
-import FormPreview from "./pages/FormManager/components/FormPreview"
+import FormPreview from "./pages/FormTempManager/components/FormPreview"
+import Form from "./pages/Form"
 
 function App() {
   const navigate = useNavigate()
@@ -46,20 +45,16 @@ function App() {
           <Route path='/' element={<LandingPage />} />
           <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <AIHomePage />}>
             <Route index element={<Navigate to='management' replace />} />
-            <Route path='management' element={<FormsPage />} />
             <Route path='create' element={<CreateFormPage />} />
             <Route path='analysis' element={<DataAnalysisPage />} />
             <Route path='test-form' element={<DynamicFormTestPage />} />
           </Route>
           <Route path='/we-chat-login' element={<WeChatLoginPage />} />
-          <Route path='/form-preview/:formId' element={<FormPreview />} />
+          <Route path='/form-preview/:templateId' element={<FormPreview />} />
+          <Route path='/form/:formId' element={<Form />} />
           <Route
             path='/forms/:id'
             element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <FormRenderer />}
-          />
-          <Route
-            path='/forms/custom/create'
-            element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <CustomFormBuilder />}
           />
           <Route
             path='/forms/analysis'

@@ -4,7 +4,6 @@ import {
   CardHeader,
   CardBody,
   ScrollShadow,
-  Spinner,
   Tooltip,
   Chip,
   Breadcrumbs,
@@ -86,11 +85,14 @@ const FormAnalysis: React.FC = () => {
 5. 严格限制：只能回答数据集内的问题，拒绝回答超出范围的问题
 
 注意事项：
+- 所有单据都是系统自动生成的编号，不需要考虑编号的合理性
 - 如果涉及金额，保留两位小数
 - 如果涉及日期，使用标准格式
-- 如果需要返回表单链接，使用 <a target="_blank" href="/form/表单ID">表单标题</a> 格式
+- 输出单据编号，订单号的时候，使用 <a target="_blank" href="/form/这里是单据编号">单据编号</a> 格式
 - 如果数据不存在或查询条件不明确，要明确告知用户
 - 如果用户询问的内容超出数据范围，要礼貌拒绝并说明原因
+
+当前的时间是: ${new Date().toLocaleTimeString()}\n
 
 这是你要分析的数据:\n${JSON.stringify(formsRef.current)}\n\n`,
           },
@@ -164,7 +166,7 @@ const FormAnalysis: React.FC = () => {
         </CardHeader>
 
         <CardBody className='p-4 flex flex-col gap-4'>
-          <ScrollShadow className='flex-grow h-[500px] mb-4'>
+          <ScrollShadow className='flex-grow h-[calc(100vh-400px)] mb-4'>
             <AnimatePresence>
               {messages.map((message) => (
                 <motion.div

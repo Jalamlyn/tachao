@@ -4,7 +4,15 @@ import { Button } from "@/components/ui/button"
 import { Icon } from "@iconify/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
-import { Breadcrumbs, BreadcrumbItem, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
+import {
+  Breadcrumbs,
+  BreadcrumbItem,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@nextui-org/react"
 
 import FormPreview from "./components/FormPreview"
 import TemplateGallery from "./components/TemplateGallery"
@@ -71,10 +79,6 @@ const FormManager: React.FC = () => {
             </div>
           </div>
           <div className='flex gap-2'>
-            <Button onClick={handleCreateDocument} variant="outline">
-              <Icon icon='mdi:file-document-plus' className='w-4 h-4 mr-2' />
-              创建单据
-            </Button>
             <Button onClick={handleCreateTemplate}>
               <Icon icon='mdi:plus' className='w-4 h-4 mr-2' />
               生成单据模板
@@ -87,36 +91,32 @@ const FormManager: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Modal 
-        isOpen={isCreateModalOpen} 
-        onClose={handleModalClose}
-        size="2xl"
-      >
+      <Modal isOpen={isCreateModalOpen} onClose={handleModalClose} size='2xl'>
         <ModalContent>
           <ModalHeader>选择单据模板</ModalHeader>
           <ModalBody>
-            <div className="grid grid-cols-3 gap-4">
+            <div className='grid grid-cols-3 gap-4'>
               {templates?.map((template) => (
                 <div
                   key={template.id}
                   className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${
-                    selectedTemplateId === template.id ? 'border-primary bg-primary/10' : ''
+                    selectedTemplateId === template.id ? "border-primary bg-primary/10" : ""
                   }`}
                   onClick={() => setSelectedTemplateId(template.id)}
                 >
-                  <div className="flex items-center gap-2">
-                    <Icon icon="mdi:file-document-outline" className="w-5 h-5" />
-                    <span className="font-medium truncate">{template.title}</span>
+                  <div className='flex items-center gap-2'>
+                    <Icon icon='mdi:file-document-outline' className='w-5 h-5' />
+                    <span className='font-medium truncate'>{template.title}</span>
                   </div>
                 </div>
               ))}
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="danger" variant="light" onClick={handleModalClose}>
+            <Button color='danger' variant='light' onClick={handleModalClose}>
               取消
             </Button>
-            <Button color="primary" onClick={handleTemplateConfirm} isDisabled={!selectedTemplateId}>
+            <Button color='primary' onClick={handleTemplateConfirm} isDisabled={!selectedTemplateId}>
               确认
             </Button>
           </ModalFooter>

@@ -33,12 +33,12 @@ export const useFormMetadata = () => {
 
   const fetchForms = useCallback(async () => {
     try {
-      const result = await getMetadata(["forms"])
+      const result = await getMetadata(["form_index"])
       if (result.data && result.data.length > 0 && result.data[0].value) {
         const formIndexes: FormIndex[] = jsonParse(result.data[0].value)
 
         const formDetailsPromises = formIndexes.map(async (formIndex) => {
-          const formDetailResult = await getMetadata([`form_${formIndex.id}`])
+          const formDetailResult = await getMetadata([`${formIndex.id}`])
           if (formDetailResult.data && formDetailResult.data.length > 0 && formDetailResult.data[0].value) {
             const formData: FormData = jsonParse(formDetailResult.data[0].value)
             return {
@@ -193,55 +193,53 @@ export const useFormMetadata = () => {
     }
   }, [])
 
-  const copyForm = useCallback(async (formId: string, options: CopyFormOptions = {}) => {
-    const {
-      resetStatus = true,
-      resetDates = true,
-      suffix = '_副本',
-      onBeforeCopy
-    } = options;
+  const copyForm = useCallback(
+    async (formId: string, options: CopyFormOptions = {}) => {
+      const { resetStatus = true, resetDates = true, suffix = "_副本", onBeforeCopy } = options
 
-    try {
-      // 1. 获取原始表单数据
-      const originalForm = await getFormById(formId)
-      if (!originalForm) {
-        throw new Error("Original form not found")
-      }
-
-      // 2. 创建新的表单数据
-      let newForm = {
-        ...originalForm,
-        id: Date.now().toString(),
-        orderNumber: generateOrderNumber(),
-        title: `${originalForm.title}${suffix}`,
-        createdAt: new Date().toISOString(),
-        status: resetStatus ? "draft" : originalForm.status,
-        data: {
-          ...originalForm.data,
-          basicInfo: {
-            ...originalForm.data.basicInfo,
-            orderNumber: generateOrderNumber(),
-          }
+      try {
+        // 1. 获取原始表单数据
+        const originalForm = await getFormById(formId)
+        if (!originalForm) {
+          throw new Error("Original form not found")
         }
-      }
 
-      // 3. 如果提供了 onBeforeCopy 钩子，执行它
-      if (onBeforeCopy) {
-        newForm = await onBeforeCopy(newForm)
-      }
+        // 2. 创建新的表单数据
+        let newForm = {
+          ...originalForm,
+          id: Date.now().toString(),
+          orderNumber: generateOrderNumber(),
+          title: `${originalForm.title}${suffix}`,
+          createdAt: new Date().toISOString(),
+          status: resetStatus ? "draft" : originalForm.status,
+          data: {
+            ...originalForm.data,
+            basicInfo: {
+              ...originalForm.data.basicInfo,
+              orderNumber: generateOrderNumber(),
+            },
+          },
+        }
 
-      // 4. 使用现有的 addForm 方法保存新表单
-      const result = await addForm(newForm)
-      if (!result) {
-        throw new Error("Failed to copy form")
-      }
+        // 3. 如果提供了 onBeforeCopy 钩子，执行它
+        if (onBeforeCopy) {
+          newForm = await onBeforeCopy(newForm)
+        }
 
-      return result
-    } catch (error) {
-      console.error("Error copying form:", error)
-      throw error
-    }
-  }, [getFormById, addForm])
+        // 4. 使用现有的 addForm 方法保存新表单
+        const result = await addForm(newForm)
+        if (!result) {
+          throw new Error("Failed to copy form")
+        }
+
+        return result
+      } catch (error) {
+        console.error("Error copying form:", error)
+        throw error
+      }
+    },
+    [getFormById, addForm]
+  )
 
   const updateFormStatus = useCallback(
     async (formId: string, newStatus: string) => {
