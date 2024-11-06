@@ -4,7 +4,6 @@ import {
   CardHeader,
   CardBody,
   Button,
-  Textarea,
   ScrollShadow,
   Spinner,
   Tooltip,
@@ -17,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import FormAnalysisAgent from "@/service/agents/FormAnalysisAgent"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
+import CommandInput from "@/components/CommandInput"
 
 const FormAnalysis: React.FC = () => {
   const [messages, setMessages] = useState<any[]>([])
@@ -113,7 +113,7 @@ const FormAnalysis: React.FC = () => {
         <CardBody className='p-4 flex flex-col gap-4'>
           <ScrollShadow className='flex-grow h-[500px] mb-4'>
             <AnimatePresence>
-              {messages.map((message, index) => (
+              {messages.map((message) => (
                 <motion.div
                   key={message.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -141,14 +141,14 @@ const FormAnalysis: React.FC = () => {
           </ScrollShadow>
 
           <div className='flex items-end gap-2'>
-            <Textarea
+            <CommandInput
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(value) => setInput(value)}
               onKeyDown={handleKeyDown}
               placeholder='输入分析指令，例如: "统计所有单据的状态分布"'
-              minRows={2}
-              maxRows={4}
               className='flex-grow'
+              isLoading={isLoading}
+              onSubmit={handleSendMessage}
             />
             <Button
               color='primary'
