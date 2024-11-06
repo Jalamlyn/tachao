@@ -9,6 +9,7 @@ import { cn } from "@nextui-org/react"
 import PromptInput from "./PromptInput"
 import { useFormSubmission } from "./from-templates/hook/useFormSubmission"
 import { leaveRequestConfig } from "./from-templates/leave-request/config"
+import { AIFormAgent } from "@/service/agents/AIFormAgent"
 
 // 导入企业微信 JSAPI
 import * as ww from "@wecom/jssdk"
@@ -21,10 +22,11 @@ interface CommandInputProps extends TextAreaProps {
     createForm: (description: string, onChunk: (chunk: string) => void) => Promise<any>
     searchForms: (query: string, formsIndex: any[], onChunk: (chunk: string) => void) => Promise<any[]>
   }
+  onCommand?: (command: string) => void
 }
 
 export default function Component(props: CommandInputProps) {
-  const { agent, ...restProps } = props
+  const { agent, onCommand, ...restProps } = props
   const [prompt, setPrompt] = React.useState<string>("")
   const { submitForm } = useFormSubmission()
   const [isRecording, setIsRecording] = React.useState<boolean>(false)
@@ -53,7 +55,10 @@ export default function Component(props: CommandInputProps) {
       try {
         setIsLoading(true)
 
-        if (agent) {
+        // 如果提供了 onCommand 回调，优先使用它
+        if (onCommand) {
+          await onCommand(prompt)
+        } else if (agent) {
           // 使用传入的 AI agent 处理命令
           const intent = await agent.analyzeIntent(prompt)
           
