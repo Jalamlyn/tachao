@@ -10,13 +10,13 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Input,
 } from "@nextui-org/react"
 import { motion } from "framer-motion"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
-import DynamicForm from "@/components/common/DynamicForm"
 import type { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import CommandInput from "@/components/CommandInput"
 import AIFormAgent from "@/service/agents/AIFormAgent"
@@ -37,12 +37,11 @@ interface TemplateGalleryProps {
 const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTemplates, onTemplateSelect, className }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { isOpen: isPreviewOpen, onOpen: onPreviewOpen, onClose: onPreviewClose } = useDisclosure()
+  const { isOpen: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure()
   const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(null)
-  const [previewConfig, setPreviewConfig] = React.useState<DynamicFormConfig | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [internalTemplates, setInternalTemplates] = useState<Template[]>([])
-  const { remove, load, getDetail } = useMetadata("template")
+  const { remove, load } = useMetadata("template")
 
   // 使用内部状态或 props 的模板列表
   const templates = internalTemplates.length > 0 ? internalTemplates : propTemplates || []
@@ -116,18 +115,25 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
     onOpen()
   }
 
-  // 处理预览点击
-  const handlePreviewClick = async (template: Template, e: React.MouseEvent) => {
+  // 处理分享点击
+  const handleShareClick = (template: Template, e: React.MouseEvent) => {
     e.stopPropagation()
-    try {
-      const detail = await getDetail(template.id)
-      if (detail && detail.data.config) {
-        setPreviewConfig(detail.data.config)
-        onPreviewOpen()
+    setSelectedTemplate(template)
+    onShareOpen()
+  }
+
+  // 处理复制分享链接
+  const handleCopyShareLink = async () => {
+    if (selectedTemplate) {
+      const shareLink = `${window.location.origin}/we-chat-app/admin/form-preview/${selectedTemplate.id}`
+      try {
+        await navigator.clipboard.writeText(shareLink)
+        message.success("链接已复制到剪贴板")
+        onShareClose()
+      } catch (error) {
+        console.error("复制链接失败:", error)
+        message.error("复制链接失败")
       }
-    } catch (error) {
-      console.error("加载模板详情失败:", error)
-      message.error("加载模板详情失败")
     }
   }
 
@@ -171,9 +177,9 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
                       size='sm'
                       variant='light'
                       className='text-default-400 hover:text-primary'
-                      onClick={(e) => handlePreviewClick(template, e)}
+                      onClick={(e) => handleShareClick(template, e)}
                     >
-                      <Icon icon='mdi:eye' className='w-4 h-4' />
+                      <Icon icon='mdi:share' className='w-4 h-4' />
                     </Button>
                     <Button
                       isIconOnly
@@ -219,24 +225,26 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
         </ModalContent>
       </Modal>
 
-      {/* 预览 Modal */}
-      <Modal className='max-h-screen' size='4xl' isOpen={isPreviewOpen} onClose={onPreviewClose}>
+      {/* 分享 Modal */}
+      <Modal isOpen={isShareOpen} onClose={onShareClose}>
         <ModalContent>
-          <ModalHeader className='flex flex-col gap-1'>模板预览</ModalHeader>
-          <ModalBody className='overflow-y-auto'>
-            {previewConfig ? (
-              <div className='border rounded-lg p-6'>
-                <DynamicForm config={previewConfig} />
-              </div>
-            ) : (
-              <div className='text-center py-12 text-gray-500'>
-                <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
-                <p>加载模板内容中...</p>
-              </div>
-            )}
+          <ModalHeader className='flex flex-col gap-1'>分享模板</ModalHeader>
+          <ModalBody>
+            <div className='flex flex-col gap-2'>
+              <p>复制以下链接分享模板：</p>
+              <Input
+                readOnly
+                value={`${window.location.origin}/we-chat-app/admin/form-preview/${selectedTemplate?.id || ""}`}
+                endContent={
+                  <Button size='sm' variant='light' onClick={handleCopyShareLink}>
+                    <Icon icon='mdi:content-copy' className='w-4 h-4' />
+                  </Button>
+                }
+              />
+            </div>
           </ModalBody>
           <ModalFooter>
-            <Button color='primary' onPress={onPreviewClose}>
+            <Button color='primary' onPress={onShareClose}>
               关闭
             </Button>
           </ModalFooter>
