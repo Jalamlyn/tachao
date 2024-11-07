@@ -137,7 +137,7 @@ export default function WeChatLoginPage() {
                   transition={{ duration: 1 }}
                   className='text-white/90 text-lg mb-6 drop-shadow'
                 >
-                  沙塔 AI，您身边的表单管理专家
+                  沙塔 AI，智能统计单据
                 </motion.p>
               </motion.div>
 

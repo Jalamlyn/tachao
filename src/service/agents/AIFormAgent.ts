@@ -22,11 +22,11 @@ export type CommandResult = {
 // 添加格式化时间的辅助函数
 const formatTime = () => {
   const now = new Date()
-  return now.toLocaleTimeString('zh-CN', { 
+  return now.toLocaleTimeString("zh-CN", {
     hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
   })
 }
 
@@ -43,6 +43,7 @@ ${DynamicFormConfigStr}
 - 基本信息
 - 明细信息
 - 流程信息
+生成默认的 calculate 计算逻辑，如果没有可计算的字段就默认返回 0
 生成明细信息如果涉及到计算的，要生成正确的行计算和合计计算逻辑
 生成必要的校验逻辑函数，用于保存的时候对表单数据进行校验
 `
@@ -70,17 +71,25 @@ ${DynamicFormConfigStr}
     config?: DynamicFormConfig
   ): Promise<CommandResult> {
     let generationProcess = ""
-    
+
     // 记录用户输入和时间
     const userInputTime = formatTime()
     generationProcess += `[${userInputTime}] 👤 用户: ${command}\n\n`
-    
+
     const updateGenerationProcess = (chunk: string) => {
       // 如果是新的AI回复开始,添加时间戳
-      if (chunk.startsWith("🤖") || chunk.startsWith("📝") || chunk.startsWith("✏️") || 
-          chunk.startsWith("🔍") || chunk.startsWith("⚡") || chunk.startsWith("✨") || 
-          chunk.startsWith("🎨") || chunk.startsWith("🛠️") || chunk.startsWith("✅") || 
-          chunk.startsWith("📋")) {
+      if (
+        chunk.startsWith("🤖") ||
+        chunk.startsWith("📝") ||
+        chunk.startsWith("✏️") ||
+        chunk.startsWith("🔍") ||
+        chunk.startsWith("⚡") ||
+        chunk.startsWith("✨") ||
+        chunk.startsWith("🎨") ||
+        chunk.startsWith("🛠️") ||
+        chunk.startsWith("✅") ||
+        chunk.startsWith("📋")
+      ) {
         const timestamp = formatTime()
         generationProcess += `[${timestamp}] `
       }

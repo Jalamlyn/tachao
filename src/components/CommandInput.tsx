@@ -7,8 +7,6 @@ import { Icon } from "@iconify/react"
 import { cn } from "@nextui-org/react"
 
 import PromptInput from "./PromptInput"
-import { useFormSubmission } from "./from-templates/hook/useFormSubmission"
-import { leaveRequestConfig } from "./from-templates/leave-request/config"
 
 // 导入企业微信 JSAPI
 import * as ww from "@wecom/jssdk"
@@ -18,15 +16,15 @@ interface CommandInputProps extends TextAreaProps {
   classNames?: Record<"button" | "buttonIcon", string>
   onChunk?: (chunk: string) => void
   onCommand?: any
+  config?: any
   agent?: {
     processCommand: (description: string, onChunk: (chunk: string) => void) => Promise<any>
   }
 }
 
 export default function Component(props: CommandInputProps) {
-  const { agent, onChunk = () => {}, onCommand, data, ...restProps } = props
+  const { agent, onChunk = () => {}, onCommand, config, ...restProps } = props
   const [prompt, setPrompt] = React.useState<string>("")
-  const { submitForm } = useFormSubmission()
   const [isRecording, setIsRecording] = React.useState<boolean>(false)
   const [localId, setLocalId] = React.useState<string>("")
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
@@ -35,7 +33,7 @@ export default function Component(props: CommandInputProps) {
   )
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
+  console.log("config", config)
   useEffect(() => {
     // 注册企业微信 JSAPI
     ww.register({
@@ -58,7 +56,7 @@ export default function Component(props: CommandInputProps) {
           if (uploadedImage) {
             commandContent += ` [Uploaded Image: ${uploadedImage}]`
           }
-          const result = await agent.processCommand(commandContent, onChunk)
+          const result = await agent.processCommand(commandContent, onChunk, config)
           console.log(result)
           onCommand && onCommand(result)
         }
@@ -74,6 +72,9 @@ export default function Component(props: CommandInputProps) {
   }
 
   const startRecording = () => {
+    if (!ww.isWeixinJSBridgeReady) {
+      return message.error("只支持在企业微信中使用语音对话")
+    }
     ww.startRecord({
       fail(res) {
         setIsRecording(false)
@@ -151,15 +152,15 @@ export default function Component(props: CommandInputProps) {
               </Tooltip>
               <Tooltip showArrow content='上传图片'>
                 <Button isIconOnly radius='full' variant='light' onClick={triggerImageUpload}>
-                  <Icon icon="mdi:image-plus" width={20} />
+                  <Icon icon='mdi:image-plus' width={20} />
                 </Button>
               </Tooltip>
               <input
-                type="file"
+                type='file'
                 ref={fileInputRef}
-                style={{ display: 'none' }}
+                style={{ display: "none" }}
                 onChange={handleImageUpload}
-                accept="image/*"
+                accept='image/*'
               />
               <Tooltip showArrow content='发送指令'>
                 <Button
@@ -195,17 +196,17 @@ export default function Component(props: CommandInputProps) {
         />
       </form>
       {uploadedImage && (
-        <div className="mt-2 relative">
-          <img src={uploadedImage} alt="Uploaded" className="max-w-xs max-h-32 rounded-lg" />
+        <div className='mt-2 relative'>
+          <img src={uploadedImage} alt='Uploaded' className='max-w-xs max-h-32 rounded-lg' />
           <Button
             isIconOnly
-            size="sm"
-            color="danger"
-            variant="flat"
-            className="absolute top-1 right-1"
+            size='sm'
+            color='danger'
+            variant='flat'
+            className='absolute top-1 right-1'
             onClick={() => setUploadedImage(null)}
           >
-            <Icon icon="mdi:close" width={16} />
+            <Icon icon='mdi:close' width={16} />
           </Button>
         </div>
       )}

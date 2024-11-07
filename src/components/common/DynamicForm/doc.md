@@ -1,4 +1,3 @@
-export default `
 # 动态表单配置指南
 
 ## 目录
@@ -315,7 +314,7 @@ interface DependencyConfig {
 const dependencies = {
   fullName: {
     dependsOn: ["firstName", "lastName"],
-    calculate: (values) => \`\${values.firstName} \${values.lastName}\`
+    calculate: (values) => `${values.firstName} ${values.lastName}`
   },
   totalAmount: {
     dependsOn: ["quantity", "unitPrice"],
@@ -448,5 +447,3 @@ Q: 如何处理文件上传？ A: 使用 file 或 image 类型的字段，并在
 Q: 如何实现多语言支持？ A: 将所有文本内容（如标签、错误信息等）存储在语言文件中，并使用国际化库（如 i18next）来动态加载文本。
 
 记住，动态表单配置是一个强大而灵活的工具。通过合理的配置和使用，您可以创建出复杂、高效且用户友好的表单。如果遇到特殊需求，不要犹豫寻求帮助或查阅更多文档。
-
-`

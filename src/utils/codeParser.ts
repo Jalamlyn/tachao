@@ -3,19 +3,19 @@ import * as Babel from "@babel/standalone"
 import React from "react"
 
 /**
- * 从 mo-ai-form 标签中提取代码
+ * 从 shata-ai-form 标签中提取代码
  */
 const extractCode = (content: string): string | null => {
-  const regex = /<mo-ai-form>([\s\S]*?)<\/mo-ai-form>/
+  const regex = /<shata-ai-form>([\s\S]*?)<\/shata-ai-form>/
   const match = content.match(regex)
   return match ? match[1].trim() : null
 }
 
 /**
- * 从 mo-ai-edit 标签中提取编辑操作代码
+ * 从 shata-ai-edit 标签中提取编辑操作代码
  */
 const extractEditCode = (content: string): string | null => {
-  const regex = /<mo-ai-edit>([\s\S]*?)<\/mo-ai-edit>/
+  const regex = /<shata-ai-edit>([\s\S]*?)<\/shata-ai-edit>/
   const match = content.match(regex)
   return match ? match[1].trim() : null
 }
@@ -63,7 +63,7 @@ export const parseFormEditOperations = async (content: string): Promise<(config:
     }
 
     // 创建一个新的 Function 来执行编辑操作
-    return new Function('config', 'set', code) as (config: any, set: Function) => void
+    return new Function("config", "set", code) as (config: any, set: Function) => void
   } catch (error) {
     console.error("Failed to parse edit operations:", error)
     message.error("编辑操作解析失败，请检查格式是否正确")

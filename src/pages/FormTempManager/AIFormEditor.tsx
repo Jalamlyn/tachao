@@ -187,6 +187,7 @@ const AIFormEditor: React.FC = () => {
               onChunk={handleChunk}
               onCommand={handleAIResponse}
               className='transition-all duration-300'
+              config={formState.formConfig}
             />
           </div>
         </CardContent>
