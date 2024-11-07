@@ -130,14 +130,14 @@ export default function WeChatLoginPage() {
                 transition={{ delay: 0.2 }}
                 className='text-center'
               >
-                <h2 className='text-2xl font-bold text-white mb-2 drop-shadow-lg'>欢迎登录 沙塔 智慧数字系统</h2>
+                <h2 className='text-2xl font-bold text-white mb-2 drop-shadow-lg'>欢迎登录</h2>
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: sloganVisible ? 1 : 0 }}
                   transition={{ duration: 1 }}
                   className='text-white/90 text-lg mb-6 drop-shadow'
                 >
-                  AI 帮你管单据，工作从未如此轻松
+                  沙塔 AI，您身边的表单管理专家
                 </motion.p>
               </motion.div>
 

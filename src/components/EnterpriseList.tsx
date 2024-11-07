@@ -62,7 +62,6 @@ export default ({ loginData }) => {
       <Autocomplete
         variant='bordered'
         className='w-full'
-        size='sm'
         value={value}
         onSelectionChange={onSelectionChange}
         onInputChange={onInputChange}

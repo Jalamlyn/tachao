@@ -45,7 +45,6 @@ ${DynamicFormConfigStr}
 - 流程信息
 生成明细信息如果涉及到计算的，要生成正确的行计算和合计计算逻辑
 生成必要的校验逻辑函数，用于保存的时候对表单数据进行校验
-生成的代码不要有 \`\`\`
 `
 
   private constructor() {}
@@ -229,14 +228,17 @@ ${description}
 2. 表单配置(config)：一个符合 DynamicFormConfig 类型的配置 js 对象
 
 请使用如下格式返回：
-<mo-ai-form>
+\`\`\`
+<shata-ai-form>
 export default {
   title,
   config:{
     // 完整的表单配置对象
   }
 }
-</mo-ai-form>`
+</shata-ai-form>
+\`\`\`
+`
 
     try {
       onChunk("⚡ 正在生成表单配置...\n")
@@ -284,13 +286,15 @@ ${jsonStringify(currentConfig)}
 ${editDescription}
 
 请生成使用 lodash 的 set 函数的修改代码,使用如下格式:
-<mo-ai-edit>
+\`\`\`
+<shata-ai-edit>
 // 使用 set(config, path, value) 进行精确修改
 set(config, 'formFields.basicInfo[0].label', '新的标签');
 set(config, 'formFields.basicInfo[0].required', true);
 // 如果需要修改标题
 config.title = "新的标题";
-</mo-ai-edit>
+</shata-ai-edit>
+\`\`\`
 
 注意:
 1. 只生成需要修改的部分
@@ -328,14 +332,15 @@ config.title = "新的标题";
 ${jsonStringify(formsIndex)}
 
 请返回匹配的表单数组，格式如下：
-<mo-ai-result>
+\`\`\`
+<shata-ai-result>
 export default getMatchedForms() {
   return [
     // 匹配的表单索引数组
   ]
 }
-</mo-ai-result>
-
+</shata-ai-result>
+\`\`\`
 注意：
 1. 只返回与查询条件相关的表单
 2. 如果没有匹配的表单，返回空数组
@@ -343,7 +348,7 @@ export default getMatchedForms() {
 
     try {
       const response = await this.processAIResponse(prompt, onChunk)
-      const match = response.match(/<mo-ai-result>([\s\S]*?)<\/mo-ai-result>/)
+      const match = response.match(/<shata-ai-result>([\s\S]*?)<\/shata-ai-result>/)
 
       onChunk("📋 搜索完成！\n")
 

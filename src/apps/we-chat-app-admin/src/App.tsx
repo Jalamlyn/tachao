@@ -23,9 +23,11 @@ export default function Component() {
   const onToggle = React.useCallback(() => {
     setIsCollapsed((prev) => !prev)
   }, [])
-
+  const handleLogout = () => {
+    navigate("/we-chat-login")
+  }
   return (
-    <div className='flex h-[calc(100vh-24px)] w-full gap-4 overflow-hidden'>
+    <div className='flex h-screen w-full gap-4 overflow-hidden'>
       {/* Sidebar */}
       <SidebarDrawer
         className={cn("min-w-[288px] rounded-lg h-[calc(100vh-24px)] m-3", { "min-w-[76px]": isCollapsed })}
@@ -66,7 +68,7 @@ export default function Component() {
                 {loading ? "Loading..." : userInfo?.name || "Unknown User"}
               </p>
               <p className='text-tiny font-medium text-default-400'>
-                {loading ? "Loading..." : userInfo?.userRoles[0].keyz || "Unknown Role"}
+                {loading ? "Loading..." : userInfo?.userRoles[0]?.keyz || "Unknown Role"}
               </p>
             </div>
           </div>
@@ -130,6 +132,7 @@ export default function Component() {
                 className={cn("justify-start text-default-500 data-[hover=true]:text-foreground", {
                   "justify-center": isCollapsed,
                 })}
+                onClick={handleLogout}
                 isIconOnly={isCollapsed}
                 startContent={
                   isCollapsed ? null : (
