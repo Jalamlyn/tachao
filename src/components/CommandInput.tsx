@@ -1,7 +1,7 @@
 "use client"
 import type { TextAreaProps } from "@nextui-org/react"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { Button, Tooltip, Input } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { cn } from "@nextui-org/react"
@@ -33,6 +33,8 @@ export default function Component(props: CommandInputProps) {
   const [signature, setSignature] = useState<string>(
     "kgt8ON7yVITDhtdwci0qeUiDs4BGN8Nv1BTeJl6_DRfVMekQi10Szp0kiRDdSZkANokxKITDT4cv1UV6mWuiKA"
   )
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     // 注册企业微信 JSAPI
@@ -47,16 +49,21 @@ export default function Component(props: CommandInputProps) {
   }, [signature])
 
   const handleSendCommand = async () => {
-    if (prompt && !isLoading) {
+    if ((prompt || uploadedImage) && !isLoading) {
       try {
         setIsLoading(true)
 
         if (agent) {
-          const result = await agent.processCommand(prompt, onChunk)
+          let commandContent = prompt
+          if (uploadedImage) {
+            commandContent += ` [Uploaded Image: ${uploadedImage}]`
+          }
+          const result = await agent.processCommand(commandContent, onChunk)
           console.log(result)
           onCommand && onCommand(result)
         }
         setPrompt("")
+        setUploadedImage(null)
       } catch (error) {
         console.error("Error submitting command:", error)
         message.error("发送指令失败，请稍后重试")
@@ -100,6 +107,29 @@ export default function Component(props: CommandInputProps) {
     })
   }
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        message.error("图片大小不能超过5MB")
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setUploadedImage(e.target?.result as string)
+      }
+      reader.onerror = () => {
+        message.error("图片上传失败，请重试")
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const triggerImageUpload = () => {
+    fileInputRef.current?.click()
+  }
+
   return (
     <div className='flex flex-col w-full items-start gap-2'>
       <form className='flex w-full items-start gap-2' onSubmit={(e) => e.preventDefault()}>
@@ -114,19 +144,31 @@ export default function Component(props: CommandInputProps) {
           }}
           endContent={
             <div className='flex gap-2'>
-              {/* <Tooltip showArrow content={isRecording ? "停止录音" : "开始录音"}>
+              <Tooltip showArrow content={isRecording ? "停止录音" : "开始录音"}>
                 <Button isIconOnly radius='full' variant='light' onClick={isRecording ? stopRecording : startRecording}>
                   <Icon icon={isRecording ? "solar:stop-circle-linear" : "solar:microphone-3-linear"} width={20} />
                 </Button>
-              </Tooltip> */}
+              </Tooltip>
+              <Tooltip showArrow content='上传图片'>
+                <Button isIconOnly radius='full' variant='light' onClick={triggerImageUpload}>
+                  <Icon icon="mdi:image-plus" width={20} />
+                </Button>
+              </Tooltip>
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleImageUpload}
+                accept="image/*"
+              />
               <Tooltip showArrow content='发送指令'>
                 <Button
                   isIconOnly
                   className={props?.classNames?.button || ""}
-                  color={!prompt || isLoading ? "default" : "primary"}
-                  isDisabled={!prompt || isLoading}
+                  color={(!prompt && !uploadedImage) || isLoading ? "default" : "primary"}
+                  isDisabled={(!prompt && !uploadedImage) || isLoading}
                   radius='full'
-                  variant={!prompt || isLoading ? "flat" : "solid"}
+                  variant={(!prompt && !uploadedImage) || isLoading ? "flat" : "solid"}
                   onClick={handleSendCommand}
                   isLoading={isLoading}
                 >
@@ -136,7 +178,7 @@ export default function Component(props: CommandInputProps) {
                     <Icon
                       className={cn(
                         "[&>path]:stroke-[2px]",
-                        !prompt ? "text-default-500" : "text-primary-foreground",
+                        !prompt && !uploadedImage ? "text-default-500" : "text-primary-foreground",
                         props?.classNames?.buttonIcon || ""
                       )}
                       icon='solar:arrow-up-linear'
@@ -152,6 +194,21 @@ export default function Component(props: CommandInputProps) {
           disabled={isLoading}
         />
       </form>
+      {uploadedImage && (
+        <div className="mt-2 relative">
+          <img src={uploadedImage} alt="Uploaded" className="max-w-xs max-h-32 rounded-lg" />
+          <Button
+            isIconOnly
+            size="sm"
+            color="danger"
+            variant="flat"
+            className="absolute top-1 right-1"
+            onClick={() => setUploadedImage(null)}
+          >
+            <Icon icon="mdi:close" width={16} />
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
