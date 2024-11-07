@@ -19,6 +19,8 @@ interface CommandInputProps extends TextAreaProps {
   config?: any
   agent?: {
     processCommand: (description: string, onChunk: (chunk: string) => void) => Promise<any>
+    cacheImage: (imageData: string) => void
+    clearCachedImage: () => void
   }
 }
 
@@ -32,8 +34,9 @@ export default function Component(props: CommandInputProps) {
     "kgt8ON7yVITDhtdwci0qeUiDs4BGN8Nv1BTeJl6_DRfVMekQi10Szp0kiRDdSZkANokxKITDT4cv1UV6mWuiKA"
   )
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef= useRef<HTMLInputElement>(null)
   console.log("config", config)
+
   useEffect(() => {
     // 注册企业微信 JSAPI
     ww.register({
@@ -54,14 +57,16 @@ export default function Component(props: CommandInputProps) {
         if (agent) {
           let commandContent = prompt
           if (uploadedImage) {
-            commandContent += ` [Uploaded Image: ${uploadedImage}]`
+            agent.cacheImage(uploadedImage)
+            commandContent += ` [Uploaded Image]`
           }
-          const result = await agent.processCommand(commandContent, onChunk, config)
+          const result = await agent.processCommand(commandContent, onChunk)
           console.log(result)
           onCommand && onCommand(result)
         }
         setPrompt("")
         setUploadedImage(null)
+        agent?.clearCachedImage()
       } catch (error) {
         console.error("Error submitting command:", error)
         message.error("发送指令失败，请稍后重试")

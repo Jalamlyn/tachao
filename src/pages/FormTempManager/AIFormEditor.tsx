@@ -55,6 +55,8 @@ const AIFormEditor: React.FC = () => {
     }
 
     loadTemplateData()
+    // 清空缓存的图片
+    AIFormAgent.clearCachedImage()
   }, [templateId, isEditMode])
 
   const handleAIResponse = useCallback(

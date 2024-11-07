@@ -33,6 +33,7 @@ const formatTime = () => {
 export class AIFormAgent {
   private static instance: AIFormAgent
   private _currentConfig: DynamicFormConfig | null = null
+  private _cachedImage: string | null = null
   private systemPrompt = `你是一个智能表单助手，负责帮助用户创建和检索表单。
 创建表单时，你需要生成一个符合 DynamicFormConfig 类型的配置对象。
 检索表单时，你需要根据用户的描述在表单索引中查找匹配的表单。
@@ -63,6 +64,14 @@ ${DynamicFormConfigStr}
 
   private setCurrentConfig(config: DynamicFormConfig | null): void {
     this._currentConfig = config
+  }
+
+  public cacheImage(imageData: string): void {
+    this._cachedImage = imageData
+  }
+
+  public clearCachedImage(): void {
+    this._cachedImage = null
   }
 
   public async processCommand(
@@ -151,11 +160,17 @@ ${DynamicFormConfigStr}
 
   private async processAIResponse(userInput: string, onChunk: (chunk: string) => void): Promise<string> {
     let response = ""
+    const messages = [
+      { role: "system", content: this.systemPrompt },
+      { role: "user", content: userInput },
+    ]
+
+    if (this._cachedImage) {
+      messages.push({ role: "user", content: `[Uploaded Image: ${this._cachedImage}]` })
+    }
+
     await chatChunkClaude(
-      [
-        { role: "system", content: this.systemPrompt },
-        { role: "user", content: userInput },
-      ],
+      messages,
       (chunk: string) => {
         response += chunk
         onChunk(chunk)
