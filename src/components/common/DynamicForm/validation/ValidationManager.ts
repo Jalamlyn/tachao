@@ -50,30 +50,31 @@ export class ValidationManager {
     // 校验表格字段
     if (config.renderConfig.table?.columns) {
       const tableData = values.tableData || []
-      tableData.forEach((row: any, index: number) => {
-        config.renderConfig.table!.columns.forEach(column => {
-          const error = this.validateTableCell(column, row[column.key], row)
+      for (let index = 0; index < tableData.length; index++) {
+        const row = tableData[index]
+        for (const column of config.renderConfig.table.columns) {
+          const error = await this.validateTableCell(column, row[column.key], row)
           if (error) {
             errors[`tableData.${index}.${column.key}`] = error
           }
-        })
-      })
+        }
+      }
     }
 
     // 校验流程确认字段
     if (config.renderConfig.processSteps) {
       const processConfirmations = values.processConfirmations || {}
-      config.renderConfig.processSteps.forEach(step => {
+      for (const step of config.renderConfig.processSteps) {
         if (step.fields) {
-          step.fields.forEach(field => {
+          for (const field of step.fields) {
             const stepData = processConfirmations[step.key]?.formData || {}
-            const error = this.validateField(field, stepData[field.name], stepData)
+            const error = await this.validateField(field, stepData[field.name], stepData)
             if (error) {
               errors[`processConfirmations.${step.key}.formData.${field.name}`] = error
             }
-          })
+          }
         }
-      })
+      }
     }
 
     return errors
@@ -99,9 +100,14 @@ export class ValidationManager {
     // 自定义校验
     if (field.validators) {
       for (const validator of field.validators) {
-        const error = await validator(value, allValues)
-        if (error) {
-          return error
+        try {
+          const error = await Promise.resolve(validator(value, allValues))
+          if (error) {
+            return error
+          }
+        } catch (error) {
+          console.error(`Validation error for field ${field.name}:`, error)
+          return `${field.label}校验出错`
         }
       }
     }
@@ -110,11 +116,11 @@ export class ValidationManager {
   }
 
   // 统一处理表格单元格校验
-  static validateTableCell(
+  static async validateTableCell(
     column: TableColumn,
     value: any,
     row: any
-  ): string | undefined {
+  ): Promise<string | undefined> {
     if (column.required && (value === undefined || value === null || value === "")) {
       return `${column.title}不能为空`
     }
