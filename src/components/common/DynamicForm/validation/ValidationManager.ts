@@ -61,21 +61,7 @@ export class ValidationManager {
       }
     }
 
-    // 校验流程确认字段
-    if (config.renderConfig.processSteps) {
-      const processConfirmations = values.processConfirmations || {}
-      for (const step of config.renderConfig.processSteps) {
-        if (step.fields) {
-          for (const field of step.fields) {
-            const stepData = processConfirmations[step.key]?.formData || {}
-            const error = await this.validateField(field, stepData[field.name], stepData)
-            if (error) {
-              errors[`processConfirmations.${step.key}.formData.${field.name}`] = error
-            }
-          }
-        }
-      }
-    }
+    // 注意：流程确认相关的校验已被移除
 
     return errors
   }
