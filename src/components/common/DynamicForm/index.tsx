@@ -109,23 +109,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
       e.preventDefault()
       try {
         await handleSubmit(async (values) => {
-          const validationResult = await ValidationManager.validateForm(values, config)
-          if (!validationResult.valid) {
-            if (validationResult.categorizedErrors) {
-              setValidationErrors(validationResult.categorizedErrors)
-            }
-            return
-          } else {
-            setValidationErrors({})
-          }
-
-          if (validationResult.warnings && validationResult.warnings.length > 0) {
-            const confirmed = window.confirm(`警告:\n${validationResult.warnings.join("\n")}\n\n是否继续提交？`)
-            if (!confirmed) {
-              return
-            }
-          }
-
           if (onSubmit) {
             await onSubmit(values)
             message.success("提交成功")

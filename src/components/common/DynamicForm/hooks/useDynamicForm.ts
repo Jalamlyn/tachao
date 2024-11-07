@@ -100,8 +100,8 @@ export const useDynamicForm = (
 
   const handleSubmit = useCallback(async (onSubmit: (values: any) => Promise<void>) => {
     try {
-      // 执行表单校验
-      const validationResult = await validateForm({ mode: 'submit' })
+      const values = form.getValues()
+      const validationResult = await ValidationManager.validateForm(values, config)
       
       if (!validationResult.valid) {
         // 如果校验失败，显示错误信息
@@ -135,8 +135,6 @@ export const useDynamicForm = (
         }
       }
 
-      const values = form.getValues()
-
       // 提交表单
       await onSubmit(values)
     } catch (error) {
@@ -144,7 +142,7 @@ export const useDynamicForm = (
       message.error("提交表单失败")
       throw error
     }
-  }, [form, validateForm])
+  }, [config, form])
 
   const setFieldValue = useCallback((name: string, value: any) => {
     form.setValue(name, value)
