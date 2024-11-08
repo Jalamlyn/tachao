@@ -153,6 +153,7 @@
     "rimraf": "^6.0.1",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
+    "vite-plugin-markdown": "^2.2.0",
     "vite-plugin-pwa": "^0.20.0",
     "vite-tsconfig-paths": "^4.3.2"
   }

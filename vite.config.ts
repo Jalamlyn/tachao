@@ -4,22 +4,14 @@ import react from "@vitejs/plugin-react-swc"
 import million from "million/compiler"
 import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa"
+import mdPlugin, { Mode } from "vite-plugin-markdown"
 
+console.log(mdPlugin.default)
 export default defineConfig({
   define: {
     __API_BASE_URL__: JSON.stringify(process.env.NODE_ENV === "production" ? "/api" : "/dev"),
   },
-  plugins: [
-    million.vite({ auto: true }),
-    react(),
-    tsconfigPaths(),
-    // VitePWA({
-    //   registerType: "autoUpdate",
-    //   workbox: {
-    //     maximumFileSizeToCacheInBytes: 30000000,
-    //   },
-    // }),
-  ],
+  plugins: [million.vite({ auto: true }), react(), tsconfigPaths(), mdPlugin.default({ mode: [Mode.MARKDOWN] })],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

@@ -1,11 +1,11 @@
 import chatChunkClaude from "../chat/chat-chunk-claude-office"
 import { jsonParse, jsonStringify } from "@/utils"
-import DynamicFormConfigStr from "./DynamicFormConfigStr"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig, parseFormEditOperations } from "@/utils/codeParser"
 import message from "@/components/Message"
 import { set, cloneDeep } from "lodash"
 import React from "react"
+import doc from "@/components/common/DynamicForm/docs"
 
 // 导入 shadcn UI 组件
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
@@ -67,7 +67,7 @@ export class AIFormAgent {
 创建表单时，你需要生成一个符合 DynamicFormConfig 类型的配置对象。
 检索表单时，你需要根据用户的描述在表单索引中查找匹配的表单。
 
-${DynamicFormConfigStr}
+${doc}
 不要生成 订单编号 的配置，系统会自动生成。
 生成的表单必须包含2个部分
 - 基本信息
