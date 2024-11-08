@@ -16,6 +16,7 @@ import message from "@/components/Message"
 import MessageCard from "@/components/MessageCard"
 import chatChunkClaude from "@/service/chat/chat-chunk-claude-office"
 import { useBreadcrumb } from '@/contexts/BreadcrumbContext'
+import PageLayout from "@/components/PageLayout"
 
 // 导入头像
 import mo2 from "/assets/mo-2.png"
@@ -37,7 +38,6 @@ const FormAnalysis: React.FC = () => {
     }
     fetchData()
     
-    // 更新面包屑
     updateBreadcrumbs([
       { label: '首页', href: '/we-chat-app/admin' },
       { label: '单据管理', href: '/we-chat-app/admin/forms' },
@@ -76,7 +76,6 @@ const FormAnalysis: React.FC = () => {
       }
       setMessages((prev) => [...prev, assistantMessage])
 
-      // 直接使用 chatChunkClaude 处理消息
       await chatChunkClaude(
         [
           {
@@ -138,36 +137,34 @@ const FormAnalysis: React.FC = () => {
     }
   }
 
-  return (
-    <div className='container mx-auto pt-10 pl-2'>
-      <Card className='w-full shadow-lg'>
-        <CardHeader className='flex justify-between items-center'>
-          <div className='flex flex-col gap-2'>
-            <div className='flex items-center gap-2 mt-2'>
-              <Icon icon='solar:chart-2-bold' className='w-6 h-6' />
-              <h2 className='text-2xl font-bold'>AI 智能数据分析</h2>
-            </div>
-          </div>
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          >
-            <Tooltip content='对话次数' placement='left'>
-              <Chip
-                variant='shadow'
-                classNames={{
-                  base: "bg-gradient-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30",
-                  content: "drop-shadow shadow-black text-white",
-                }}
-                startContent={<Icon icon='solar:chat-round-dots-bold' className='text-white' />}
-              >
-                {chatCount}
-              </Chip>
-            </Tooltip>
-          </motion.div>
-        </CardHeader>
+  const pageActions = (
+    <motion.div
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ type: "spring", stiffness: 260, damping: 20 }}
+    >
+      <Tooltip content='对话次数' placement='left'>
+        <Chip
+          variant='shadow'
+          classNames={{
+            base: "bg-gradient-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30",
+            content: "drop-shadow shadow-black text-white",
+          }}
+          startContent={<Icon icon='solar:chat-round-dots-bold' className='text-white' />}
+        >
+          {chatCount}
+        </Chip>
+      </Tooltip>
+    </motion.div>
+  )
 
+  return (
+    <PageLayout
+      title="AI 智能数据分析"
+      titleIcon="solar:chart-2-bold"
+      actions={pageActions}
+    >
+      <Card className='w-full shadow-lg'>
         <CardBody className='p-4 flex flex-col gap-4'>
           <ScrollShadow className='flex-grow h-[calc(100vh-400px)] mb-4'>
             <AnimatePresence>
@@ -235,7 +232,7 @@ const FormAnalysis: React.FC = () => {
           </div>
         </CardBody>
       </Card>
-    </div>
+    </PageLayout>
   )
 }
 

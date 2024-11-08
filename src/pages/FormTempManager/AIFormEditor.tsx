@@ -19,6 +19,7 @@ import AIGenerationDialog from "@/components/AIGenerationDialog"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
 import { useBreadcrumb } from '@/contexts/BreadcrumbContext'
+import PageLayout from "@/components/PageLayout"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -32,10 +33,8 @@ const AIFormEditor: React.FC = () => {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
   const [savedTemplateId, setSavedTemplateId] = useState<string | null>(null)
 
-  // 使用 useMetadata hook 来处理模板的保存和加载
   const { create: createTemplate, getDetail: getTemplateDetail, update: updateTemplate } = useMetadata("template")
 
-  // 加载模板数据
   useEffect(() => {
     const loadTemplateData = async () => {
       if (isEditMode && templateId) {
@@ -55,26 +54,14 @@ const AIFormEditor: React.FC = () => {
     }
 
     loadTemplateData()
-    // 清空缓存的图片
     AIFormAgent.clearCachedImage()
 
-    // 更新面包屑
     updateBreadcrumbs([
       { label: '首页', href: '/we-chat-app/admin' },
       { label: '单据模板管理', href: '/we-chat-app/admin/documents' },
       { label: isEditMode ? '编辑单据模板' : '创建单据模板', href: isEditMode ? `/we-chat-app/admin/documents/edit/${templateId}` : '/we-chat-app/admin/documents/create' }
     ])
   }, [templateId, isEditMode])
-
-  const handleAIResponse = useCallback(
-    (result: { type: string; data: any }) => {
-      if ((result.type === "create" || result.type === "edit") && result.data) {
-        setFormConfig(result.data.config)
-        stopGenerating()
-      }
-    },
-    [setFormConfig, stopGenerating]
-  )
 
   const handleSaveTemplate = async () => {
     if (!formState.formConfig) {
@@ -95,7 +82,6 @@ const AIFormEditor: React.FC = () => {
       }
 
       if (isEditMode && templateId) {
-        // 更新现有模板
         const result = await updateTemplate(templateId, templateData)
         if (result) {
           setSavedTemplateId(templateId)
@@ -104,7 +90,6 @@ const AIFormEditor: React.FC = () => {
           message.error("更新模板失败")
         }
       } else {
-        // 创建新模板
         const result = await createTemplate(templateData)
         if (result) {
           setSavedTemplateId(result.id)
@@ -118,14 +103,6 @@ const AIFormEditor: React.FC = () => {
       message.error("保存模板失败")
     }
   }
-
-  const handleChunk = useCallback(
-    (chunk: string) => {
-      appendGenerationProcess(chunk)
-      setIsGenerationDialogOpen(true)
-    },
-    [appendGenerationProcess]
-  )
 
   const handleViewGenerationProcess = () => {
     if (formState.generationProcess) {
@@ -143,28 +120,26 @@ const AIFormEditor: React.FC = () => {
     navigate("/we-chat-app/admin/documents")
   }
 
-  return (
-    <div className='container mx-auto py-8'>
-      <Card style={{ border: "none" }}>
-        <CardHeader className='flex flex-row justify-between items-start'>
-          <div className='flex flex-col gap-2'>
-            <div className='flex items-center gap-2'>
-              <Icon icon='mdi:form-select' className='w-6 h-6' />
-              <h2 className='text-2xl font-bold'>AI 单据助手</h2>
-            </div>
-          </div>
-          <div className='flex gap-2'>
-            <Button variant='outline' onClick={handleViewGenerationProcess} disabled={!formState.generationProcess}>
-              <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4 mr-2' />
-              查看对话历史
-            </Button>
-            <Button onClick={handleSaveTemplate} disabled={!formState.formConfig}>
-              <Icon icon='mdi:content-save' className='w-4 h-4 mr-2' />
-              {isEditMode ? "更新单据模板" : "保存单据模板"}
-            </Button>
-          </div>
-        </CardHeader>
+  const pageActions = (
+    <div className='flex gap-2'>
+      <Button variant='outline' onClick={handleViewGenerationProcess} disabled={!formState.generationProcess}>
+        <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4 mr-2' />
+        查看对话历史
+      </Button>
+      <Button onClick={handleSaveTemplate} disabled={!formState.formConfig}>
+        <Icon icon='mdi:content-save' className='w-4 h-4 mr-2' />
+        {isEditMode ? "更新单据模板" : "保存单据模板"}
+      </Button>
+    </div>
+  )
 
+  return (
+    <PageLayout
+      title="AI 单据助手"
+      titleIcon="mdi:form-select"
+      actions={pageActions}
+    >
+      <Card style={{ border: "none" }}>
         <CardContent>
           <AnimatePresence mode='wait'>
             <motion.div
@@ -188,8 +163,7 @@ const AIFormEditor: React.FC = () => {
             <CommandInput
               agent={AIFormAgent}
               disabled={formState.isGenerating}
-              onChunk={handleChunk}
-              onCommand={handleAIResponse}
+              onChunk={appendGenerationProcess}
               className='transition-all duration-300'
               config={formState.formConfig}
             />
@@ -205,7 +179,6 @@ const AIFormEditor: React.FC = () => {
         resultProps={formState.formConfig ? { config: formState.formConfig } : undefined}
       />
 
-      {/* 成功提示对话框 */}
       <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} size='lg' placement='center'>
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>
@@ -254,7 +227,7 @@ const AIFormEditor: React.FC = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </div>
+    </PageLayout>
   )
 }
 
