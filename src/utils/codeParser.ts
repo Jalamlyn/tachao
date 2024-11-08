@@ -2,6 +2,34 @@ import { message } from "@/components/Message"
 import * as Babel from "@babel/standalone"
 import React from "react"
 
+// 导入 shadcn UI 组件
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Calendar } from "@/components/ui/calendar"
+
+// shadcn UI 组件映射
+const shadcnComponents = {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  Button,
+  Card,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+  Calendar,
+}
+
 /**
  * 从 shata-ai-form 标签中提取代码
  */
@@ -21,10 +49,34 @@ const extractEditCode = (content: string): string | null => {
 }
 
 /**
+ * 验证自定义组件是否只使用了 shadcn UI 组件
+ */
+const validateCustomComponents = (jsxCode: string): boolean => {
+  // 简单的正则匹配检查是否使用了非 shadcn 组件
+  const componentPattern = /<([A-Z][a-zA-Z0-9]*)/g
+  const matches = jsxCode.match(componentPattern) || []
+  
+  for (const match of matches) {
+    const componentName = match.slice(1) // 移除 < 符号
+    if (!shadcnComponents[componentName]) {
+      message.error(`不支持的组件: ${componentName}，请只使用 shadcn UI 组件`)
+      return false
+    }
+  }
+  
+  return true
+}
+
+/**
  * 将 JSX 代码转换为 JavaScript
  */
 const jsxToJs = async (jsxCode: string): Promise<string> => {
   try {
+    // 验证自定义组件
+    if (!validateCustomComponents(jsxCode)) {
+      throw new Error("自定义组件验证失败")
+    }
+
     return Babel.transform(jsxCode, {
       presets: ["react"],
     }).code
@@ -42,10 +94,17 @@ const parseConfigObject = (jsCode: string): any => {
     // 移除 export default 并获取对象部分
     const objectCode = jsCode.replace(/export\s+default\s+/, "return ")
 
-    // 创建一个新的 Function 来执行代码
-    const createConfig = new Function("React", `${objectCode}`)
+    // 创建一个新的 Function 来执行代码，传入 React 和 shadcn 组件
+    const createConfig = new Function(
+      "React",
+      ...Object.keys(shadcnComponents),
+      `${objectCode}`
+    )
 
-    return createConfig(React)
+    return createConfig(
+      React,
+      ...Object.values(shadcnComponents)
+    )
   } catch (error) {
     console.error("Failed to parse config object:", error)
     throw new Error("Failed to parse config object")
@@ -55,7 +114,9 @@ const parseConfigObject = (jsCode: string): any => {
 /**
  * 解析表单编辑操作代码
  */
-export const parseFormEditOperations = async (content: string): Promise<(config: any, set: Function) => void> => {
+export const parseFormEditOperations = async (
+  content: string
+): Promise<(config: any, set: Function, React: any) => void> => {
   try {
     const code = extractEditCode(content)
     if (!code) {
@@ -66,8 +127,14 @@ export const parseFormEditOperations = async (content: string): Promise<(config:
     const jsCode = await jsxToJs(code)
 
     // 创建一个新的 Function 来执行编辑操作
-    // 注意:这里需要传入 React 作为参数,因为编译后的代码可能会用到
-    return new Function("config", "set", "React", `${jsCode}`) as (config: any, set: Function) => void
+    // 注意:这里需要传入 React 和 shadcn 组件作为参数
+    return new Function(
+      "config",
+      "set",
+      "React",
+      ...Object.keys(shadcnComponents),
+      `${jsCode}`
+    ) as (config: any, set: Function, React: any) => void
   } catch (error) {
     console.error("Failed to parse edit operations:", error)
     message.error("编辑操作解析失败，请检查格式是否正确")
