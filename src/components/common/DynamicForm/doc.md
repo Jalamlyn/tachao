@@ -105,6 +105,49 @@ interface FormField {
 - date：日期选择
 - datetime：日期时间选择
 - custom：自定义组件
+- resource：资源选择
+
+### 自定义组件渲染
+
+要使用自定义组件渲染，需要同时满足两个条件：
+1. 设置字段类型为 "custom"
+2. 提供 render 函数
+
+示例：
+```javascript
+{
+  name: "applicant",
+  label: "申请人",
+  type: "custom",  // 必须设置为 custom
+  render: ({ field, form, isEditable }) => (
+    <div className="flex items-center space-x-2">
+      <Input 
+        {...field}
+        disabled={!isEditable} 
+        className="flex-grow" 
+      />
+      <Button 
+        color="primary" 
+        variant="solid" 
+        size="sm"
+        isDisabled={!isEditable}
+        onClick={() => {
+          // 自定义按钮点击逻辑
+          console.log('验证申请人', field.value);
+        }}
+      >
+        核验
+      </Button>
+    </div>
+  )
+}
+```
+
+注意事项：
+1. 如果没有设置 type: "custom"，即使提供了 render 函数也不会被调用
+2. render 函数接收 { field, form, isEditable } 作为参数
+3. 自定义组件只能使用 shadcn UI 组件库中的组件，Button 组件必须使用 NextUI 的 Button
+4. 要考虑表单的可编辑状态，使用 isEditable 控制组件的禁用状态
 
 示例：
 ```javascript
@@ -132,80 +175,6 @@ const basicFields = [
   }
 ];
 ```
-
-#### 自定义渲染
-
-字段可以通过 `render` 属性来自定义渲染内容。
-
-```typescript
-interface RenderProps {
-  field: any;                 // 字段相关的属性和方法
-  form: UseFormReturn<any>;   // react-hook-form 表单实例
-  isEditable: boolean;        // 当前字段是否可编辑
-}
-```
-
-示例：
-
-1. 基本自定义输入框：
-```javascript
-{
-  name: "username",
-  label: "用户名",
-  type: "custom",
-  render: ({ field, form, isEditable }) => (
-    <Input 
-      {...field} 
-      disabled={!isEditable}
-      placeholder="请输入用户名" 
-    />
-  )
-}
-```
-
-2. 带验证按钮的输入框：
-```javascript
-{
-  name: "applicant",
-  label: "申请人",
-  type: "custom",
-  render: ({ field, form, isEditable }) => (
-    <div className="flex items-center space-x-2">
-      <Input 
-        {...field}
-        disabled={!isEditable} 
-        className="flex-grow" 
-      />
-      <Button 
-        color="primary" 
-        variant="solid" 
-        size="sm"
-        isDisabled={!isEditable}
-        onClick={() => {
-          console.log('验证申请人', field.value);
-        }}
-      >
-        核验
-      </Button>
-    </div>
-  )
-}
-```
-
-注意事项：
-
-1. **Props 解构**
-   - render 函数接收 `{ field, form, isEditable }` 作为参数
-   - 必须正确解构这些 props 以访问相关属性和方法
-
-2. **可编辑状态**
-   - 使用 `isEditable` 控制表单元素的禁用状态
-   - 对于自定义按钮等交互元素，也应该考虑禁用状态
-
-3. **UI组件使用**
-   - 表单中只能使用 shadcn UI 组件库中的组件
-   - Button 组件必须使用 NextUI 的 Button
-   - 确保正确导入所需的组件
 
 #### 表格配置
 
@@ -513,37 +482,22 @@ const formConfig = {
   },
   validate: async (values) => {
     const errors = [];
-    const warnings = [];
-
-    if (values.endDate && values.startDate) {
-      if (new Date(values.endDate) < new Date(values.startDate)) {
-        errors.push("结束日期不能早于开始日期");
-      }
+    if (values.orderDate && new Date(values.orderDate) < new Date()) {
+      errors.push("订单日期不能早于今天");
     }
-
-    if (values.leaveType === 'sick' && !values.attachment) {
-      warnings.push("建议上传病假证明");
-    }
-
     return {
       valid: errors.length === 0,
       errors,
-      warnings,
       fields: {
-        endDate: new Date(values.endDate) < new Date(values.startDate) 
-          ? "结束日期不能早于开始日期" 
-          : undefined
+        orderDate: values.orderDate && new Date(values.orderDate) < new Date() ? "订单日期不能早于今天" : undefined
       }
     };
   },
   dependencies: {
-    totalDays: {
-      dependsOn: ["startDate", "endDate"],
+    totalAmount: {
+      dependsOn: ["table"],
       calculate: (values) => {
-        if (!values.startDate || !values.endDate) return 0;
-        const start = new Date(values.startDate);
-        const end = new Date(values.endDate);
-        return Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        return values.table.reduce((sum, row) => sum + (row.quantity * row.price), 0);
       }
     }
   }
