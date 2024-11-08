@@ -16,45 +16,38 @@ import { cn } from "@/theme/cn"
 import { defaultFormConfig } from "./defaultConfig"
 import { merge } from "lodash"
 
-const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSubmit, onCancel, templateId }) => {
+const DynamicForm: React.FC<DynamicFormProps> = ({
+  config: userConfig,
+  id,
+  onSubmit,
+  onCancel,
+  templateId,
+  initialValues,
+}) => {
   // 合并默认配置和用户配置
   const config = merge({}, defaultFormConfig, userConfig)
 
   // 添加状态管理
   const [isLoading, setIsLoading] = useState(false)
-  const [initialValues, setInitialValues] = useState<any>(null)
   const { getDetail, create: createMetadata, update: updateMetadata } = useMetadata("form")
+  const { getDetail: getTemplateDetail } = useMetadata("template")
+  const [formValues, setFormValues] = useState<any>(null)
 
-  // 获取模板详情
-  const getTemplateDetail = useCallback(async (templateId: string) => {
-    try {
-      const { getDetail: getTemplateDetail } = useMetadata("template")
-      const template = await getTemplateDetail(templateId)
-      if (!template) {
-        throw new Error("Template not found")
-      }
-      return {
-        id: template.id,
-        title: template.title,
-        type: template.type || "custom",
-        data: template.data,
-      }
-    } catch (error) {
-      console.error("Failed to get template detail:", error)
-      message.error("获取模板详情失败")
-      return null
-    }
-  }, [])
-
-  // 加载表单数据
   useEffect(() => {
     const loadFormData = async () => {
+      // 优先使用外部传入的 initialValues
+      if (initialValues) {
+        setFormValues(initialValues)
+        return
+      }
+
+      // 没有外部初始值时才获取数据
       if (id) {
         setIsLoading(true)
         try {
           const formData = await getDetail(id)
           if (formData) {
-            setInitialValues(formData.data)
+            setFormValues(formData.data)
           }
         } catch (error) {
           console.error("Failed to load form data:", error)
@@ -66,7 +59,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
     }
 
     loadFormData()
-  }, [id, getDetail])
+  }, [id, getDetail, initialValues])
 
   const { form, handleSubmit, validateForm } = useDynamicForm(config, initialValues)
   const [isEditing, setIsEditing] = useState(false)
@@ -139,18 +132,16 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
           if (validationResult.errors?.length > 0) {
             // 设置验证错误状态
             setValidationErrors({
-              required: validationResult.errors.filter(err => err.includes('不能为空')),
-              invalid: validationResult.errors.filter(err => 
-                err.includes('格式错误') || err.includes('不能早于')),
-              other: validationResult.errors.filter(err => 
-                !err.includes('不能为空') && !err.includes('格式错误'))
+              required: validationResult.errors.filter((err) => err.includes("不能为空")),
+              invalid: validationResult.errors.filter((err) => err.includes("格式错误") || err.includes("不能早于")),
+              other: validationResult.errors.filter((err) => !err.includes("不能为空") && !err.includes("格式错误")),
             })
 
             // 显示错误消息
             message.error(
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 {validationResult.errors.map((error, index) => (
-                  <div key={index} className="flex items-center gap-2">
+                  <div key={index} className='flex items-center gap-2'>
                     <Icon icon='mdi:alert-circle' className='w-4 h-4' />
                     <span>{error}</span>
                   </div>
@@ -172,7 +163,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
                 templateInfo = {
                   id: template.id,
                   title: template.title,
-                  type: template.type,
+                  type: template.type || "custom",
                 }
               }
             } catch (error) {
@@ -216,7 +207,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
             }
           }
         })()
-
       } catch (error) {
         console.error("Form submission error:", error)
         message.error("提交失败，请重试")
