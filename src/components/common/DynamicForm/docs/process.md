@@ -5,12 +5,30 @@
 ### 配置结构
 
 ```typescript
-interface ProcessStep {
-  key: string;         // 步骤唯一标识
-  title: string;       // 步骤标题
-  description?: string;// 步骤描述
-  icon?: string;       // 步骤图标(使用iconify图标)
-  fields?: FormField[]; // 步骤表单字段
+// ✅ 正确的配置结构
+const config = {
+  metadata: {
+    title: "表单标题",
+    description: "表单描述"
+  },
+  renderConfig: {
+    basicFields: [...],
+    // processSteps 必须放在 renderConfig 下
+    processSteps: [
+      {
+        key: string;         // 步骤唯一标识
+        title: string;       // 步骤标题
+        description?: string;// 步骤描述
+        icon?: string;       // 步骤图标(使用iconify图标)
+        fields?: FormField[]; // 步骤表单字段
+      }
+    ]
+  },
+  // watch 函数放在配置对象顶层
+  watch: (form) => {
+    // watch 逻辑
+    return () => {}
+  }
 }
 ```
 
@@ -18,7 +36,19 @@ interface ProcessStep {
 
 ```typescript
 const config = {
+  metadata: {
+    title: "请假申请",
+    description: "员工请假申请流程"
+  },
   renderConfig: {
+    basicFields: [
+      {
+        name: "name",
+        label: "姓名",
+        type: "text",
+        required: true
+      }
+    ],
     processSteps: [
       {
         key: "deptApproval",
@@ -141,18 +171,24 @@ processWatch.batchUpdateSteps([
 1. 请假审批
 ```typescript
 const leaveApprovalConfig = {
-  processSteps: [
-    {
-      key: "deptApproval",
-      title: "部门审批",
-      fields: [/*...*/]
-    },
-    {
-      key: "hrApproval",
-      title: "人事审批",
-      fields: [/*...*/]
-    }
-  ],
+  metadata: {
+    title: "请假审批"
+  },
+  renderConfig: {
+    basicFields: [...],
+    processSteps: [
+      {
+        key: "deptApproval",
+        title: "部门审批",
+        fields: [/*...*/]
+      },
+      {
+        key: "hrApproval",
+        title: "人事审批",
+        fields: [/*...*/]
+      }
+    ]
+  },
   watch: (form) => {
     const processWatch = createProcessWatch(form, 'processConfirmations')
     
@@ -176,16 +212,22 @@ const leaveApprovalConfig = {
 2. 报销审批
 ```typescript
 const expenseApprovalConfig = {
-  processSteps: [
-    {
-      key: "managerApproval",
-      title: "经理审批"
-    },
-    {
-      key: "financeApproval",
-      title: "财务审批"
-    }
-  ],
+  metadata: {
+    title: "报销审批"
+  },
+  renderConfig: {
+    basicFields: [...],
+    processSteps: [
+      {
+        key: "managerApproval",
+        title: "经理审批"
+      },
+      {
+        key: "financeApproval",
+        title: "财务审批"
+      }
+    ]
+  },
   watch: (form) => {
     const processWatch = createProcessWatch(form, 'processConfirmations')
     
@@ -211,20 +253,26 @@ const expenseApprovalConfig = {
 3. 项目审批
 ```typescript
 const projectApprovalConfig = {
-  processSteps: [
-    {
-      key: "techReview",
-      title: "技术评审"
-    },
-    {
-      key: "businessReview",
-      title: "业务评审"
-    },
-    {
-      key: "finalApproval",
-      title: "最终审批"
-    }
-  ],
+  metadata: {
+    title: "项目审批"
+  },
+  renderConfig: {
+    basicFields: [...],
+    processSteps: [
+      {
+        key: "techReview",
+        title: "技术评审"
+      },
+      {
+        key: "businessReview",
+        title: "业务评审"
+      },
+      {
+        key: "finalApproval",
+        title: "最终审批"
+      }
+    ]
+  },
   watch: (form) => {
     const processWatch = createProcessWatch(form, 'processConfirmations')
     
