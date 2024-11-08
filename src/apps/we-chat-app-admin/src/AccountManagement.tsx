@@ -30,6 +30,7 @@ import {
   updateRamAccount,
   queryRamAccountDetail,
 } from "@/service/apis/api"
+import { useBreadcrumb } from '@/contexts/BreadcrumbContext'
 
 const AccountManagement: React.FC = () => {
   const [accounts, setAccounts] = useState([])
@@ -42,10 +43,18 @@ const AccountManagement: React.FC = () => {
   const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
   const { isOpen: isRoleModalOpen, onOpen: onRoleModalOpen, onClose: onRoleModalClose } = useDisclosure()
   const { isOpen: isDetailModalOpen, onOpen: onDetailModalOpen, onClose: onDetailModalClose } = useDisclosure()
+  const { updateBreadcrumbs } = useBreadcrumb()
 
   useEffect(() => {
     fetchAccounts()
     fetchRoles()
+    
+    // 更新面包屑
+    updateBreadcrumbs([
+      { label: '首页', href: '/we-chat-app/admin' },
+      { label: '企业设置', href: '/we-chat-app/admin/settings' },
+      { label: '账号管理', href: '/we-chat-app/admin/settings#accounts' }
+    ])
   }, [])
 
   const fetchAccounts = async () => {
