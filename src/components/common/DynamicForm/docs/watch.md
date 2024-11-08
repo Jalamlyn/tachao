@@ -1,167 +1,104 @@
 ## Watch 函数配置
 
-watch 函数是处理表单动态逻辑的核心机制，它提供了一种统一的方式来处理字段依赖、条件显示和计算等动态行为。
+watch 函数是处理表单动态逻辑的核心机制，提供了统一的方式来处理字段依赖、条件显示和计算等动态行为。
 
 ### 基本用法
 
-推荐使用单个 watch 监听所有字段变化的方式:
-
 ```typescript
 const config: DynamicFormConfig = {
-  // ... 其他配置
   watch: (form) => {
     const subscription = form.watch((value, { name }) => {
       // 通过 name 判断是哪个字段发生变化
-      if (name === 'startDate' || name === 'endDate') {
-        const { startDate, endDate } = form.getValues();
-        if (startDate && endDate) {
-          const start = new Date(startDate);
-          const end = new Date(endDate);
-          const diffTime = Math.abs(end - start);
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-          form.setValue("duration", diffDays);
-        }
+      switch(name) {
+        case 'startDate':
+        case 'endDate':
+          const { startDate, endDate } = form.getValues();
+          if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            form.setValue("duration", diffDays);
+          }
+          break;
+          
+        case 'type':
+          const { type } = form.getValues();
+          form.setValue('extraField.hidden', type !== 'special');
+          break;
       }
     });
 
-    // 返回清理函数
-    return () => {
-      if (subscription && typeof subscription.unsubscribe === 'function') {
-        subscription.unsubscribe();
-      }
-    };
+    return () => subscription.unsubscribe();
   }
 };
 ```
 
-### 最佳实践
+### 高级功能
 
-1. 使用单个 watch:
+1. 批量更新
 ```typescript
-// ✅ 推荐: 使用单个 watch 监听所有字段
 watch: (form) => {
   const subscription = form.watch((value, { name }) => {
-    switch(name) {
-      case 'price':
-      case 'quantity':
-        const { price, quantity } = form.getValues();
-        form.setValue('amount', (price || 0) * (quantity || 0));
-        break;
-      case 'type':
-        const { type } = form.getValues();
-        form.setValue('extraField.hidden', type !== 'special');
-        break;
+    if (name === 'template') {
+      // 批量更新多个字段
+      form.batch(() => {
+        form.setValue('field1', value.field1);
+        form.setValue('field2', value.field2);
+        form.setValue('field3', value.field3);
+      });
     }
   });
-
+  
   return () => subscription.unsubscribe();
 }
 ```
 
-2. 正确处理清理函数:
+2. 条件显示
 ```typescript
 watch: (form) => {
   const subscription = form.watch((value, { name }) => {
-    // 处理逻辑
-  });
-
-  return () => {
-    if (subscription && typeof subscription.unsubscribe === 'function') {
-      subscription.unsubscribe();
-    }
-  };
-}
-```
-
-3. 添加错误处理:
-```typescript
-watch: (form) => {
-  const subscription = form.watch((value, { name }) => {
-    try {
-      // 处理逻辑
-    } catch (error) {
-      console.error(`Watch error for field ${name}:`, error);
+    if (name === 'type') {
+      const type = form.getValues('type');
+      // 控制多个字段的显示/隐藏
+      ['field1', 'field2', 'field3'].forEach(field => {
+        form.setValue(`${field}.hidden`, type !== 'advanced');
+      });
     }
   });
-
+  
   return () => subscription.unsubscribe();
 }
 ```
 
-4. 使用 TypeScript 类型:
+3. 联动计算
 ```typescript
-watch: (form: UseFormReturn<any>) => {
-  const subscription = form.watch((
-    value: any, 
-    { name, type }: { name: string; type: string }
-  ) => {
-    // 处理逻辑
+watch: (form) => {
+  const subscription = form.watch((value, { name }) => {
+    if (name.startsWith('tableData')) {
+      const tableData = form.getValues('tableData') || [];
+      // 计算表格汇总数据
+      const total = tableData.reduce((sum, row) => {
+        return sum + (Number(row.amount) || 0);
+      }, 0);
+      form.setValue('totalAmount', total);
+    }
   });
-
+  
   return () => subscription.unsubscribe();
 }
 ```
 
 ### 注意事项
 
-1. 避免在 watch 回调中进行复杂计算
-2. 考虑使用防抖处理频繁变化
-3. 不要在 watch 中直接修改其他组件的状态
-4. 确保正确处理清理函数
-5. 添加适当的错误处理
-
-### 调试技巧
-
-1. 添加日志:
+1. 性能优化
 ```typescript
-watch: (form) => {
-  const subscription = form.watch((value, { name, type }) => {
-    console.log('Watch triggered:', { field: name, type, value });
-    // ... 处理逻辑
-  });
-
-  return () => subscription.unsubscribe();
-}
-```
-
-2. 使用开发工具:
-```typescript
-if (process.env.NODE_ENV === 'development') {
-  console.log('Form values:', form.getValues());
-}
-```
-
-### 常见问题
-
-1. 订阅未清理导致的内存泄漏
-2. 监听过多字段导致的性能问题
-3. 缺少错误处理导致的异常
-4. 重复设置值导致的死循环
-
-### 性能优化
-
-1. 使用条件判断避免不必要的计算:
-```typescript
-watch: (form) => {
-  const subscription = form.watch((value, { name }) => {
-    // 只处理关心的字段
-    if (!['price', 'quantity', 'type'].includes(name)) {
-      return;
-    }
-    // ... 处理逻辑
-  });
-
-  return () => subscription.unsubscribe();
-}
-```
-
-2. 使用防抖处理频繁变化:
-```typescript
+// 使用防抖处理频繁变化
 import { debounce } from 'lodash';
 
 watch: (form) => {
   const handleChange = debounce((name: string) => {
-    // ... 处理逻辑
+    // 处理逻辑
   }, 300);
 
   const subscription = form.watch((value, { name }) => {
@@ -172,5 +109,167 @@ watch: (form) => {
     subscription.unsubscribe();
     handleChange.cancel();
   };
+}
+```
+
+2. 错误处理
+```typescript
+watch: (form) => {
+  const subscription = form.watch((value, { name }) => {
+    try {
+      // 处理逻辑
+    } catch (error) {
+      console.error(`Watch error for field ${name}:`, error);
+      // 可以显示错误提示
+      message.error(`字段 ${name} 更新失败`);
+    }
+  });
+
+  return () => subscription.unsubscribe();
+}
+```
+
+3. 清理订阅
+```typescript
+watch: (form) => {
+  const subscriptions = [
+    form.watch('field1', handleField1Change),
+    form.watch('field2', handleField2Change),
+    form.watch('field3', handleField3Change)
+  ];
+
+  return () => {
+    subscriptions.forEach(subscription => {
+      if (subscription?.unsubscribe) {
+        subscription.unsubscribe();
+      }
+    });
+  };
+}
+```
+
+### 最佳实践
+
+1. 组织 watch 逻辑
+```typescript
+// 将相关的 watch 逻辑组织在一起
+watch: (form) => {
+  // 1. 基础字段联动
+  const basicFieldsSubscription = watchBasicFields(form);
+  
+  // 2. 表格数据处理
+  const tableSubscription = watchTableData(form);
+  
+  // 3. 流程状态处理
+  const processSubscription = watchProcessStatus(form);
+
+  return () => {
+    basicFieldsSubscription.unsubscribe();
+    tableSubscription.unsubscribe();
+    processSubscription.unsubscribe();
+  };
+}
+```
+
+2. 使用工具函数
+```typescript
+// 创建通用的 watch 工具
+const createFieldWatch = (form: UseFormReturn<any>) => ({
+  // 监听单个字段
+  watchField: (name: string, callback: (value: any) => void) => {
+    return form.watch(name, callback);
+  },
+
+  // 监听多个字段
+  watchFields: (names: string[], callback: (values: any[]) => void) => {
+    return form.watch(names, callback);
+  },
+
+  // 批量更新
+  batchUpdate: (updates: Array<{ field: string; value: any }>) => {
+    form.batch(() => {
+      updates.forEach(({ field, value }) => {
+        form.setValue(field, value);
+      });
+    });
+  }
+});
+```
+
+3. 调试技巧
+```typescript
+watch: (form) => {
+  const subscription = form.watch((value, { name, type }) => {
+    // 添加调试日志
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Watch triggered:', {
+        field: name,
+        type,
+        value,
+        allValues: form.getValues()
+      });
+    }
+    
+    // 处理逻辑
+  });
+
+  return () => subscription.unsubscribe();
+}
+```
+
+### 常见问题
+
+1. 如何处理循环依赖?
+```typescript
+// 使用标记避免循环
+let isUpdating = false;
+
+watch: (form) => {
+  const subscription = form.watch((value, { name }) => {
+    if (isUpdating) return;
+    
+    isUpdating = true;
+    try {
+      // 处理逻辑
+    } finally {
+      isUpdating = false;
+    }
+  });
+
+  return () => subscription.unsubscribe();
+}
+```
+
+2. 如何处理异步操作?
+```typescript
+watch: (form) => {
+  const subscription = form.watch(async (value, { name }) => {
+    if (name === 'userId') {
+      try {
+        const userInfo = await fetchUserInfo(value);
+        form.setValue('userInfo', userInfo);
+      } catch (error) {
+        console.error('Failed to fetch user info:', error);
+      }
+    }
+  });
+
+  return () => subscription.unsubscribe();
+}
+```
+
+3. 如何优化性能?
+```typescript
+watch: (form) => {
+  const subscription = form.watch((value, { name }) => {
+    // 只处理关心的字段
+    if (!['price', 'quantity', 'type'].includes(name)) {
+      return;
+    }
+    
+    // 处理逻辑
+  });
+
+  return () => subscription.unsubscribe();
 }
 ```
