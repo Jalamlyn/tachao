@@ -100,7 +100,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig }) => {
     >
       {config ? (
         <>
-          <div className='border rounded-lg p-6 mx-auto w-full max-w-[1200px]'>
+          <div className='border rounded-lg p-6 mx-auto w-full max-w-[1200px] bg-white'>
             <DynamicForm config={config} templateId={templateId} />
           </div>
         </>
