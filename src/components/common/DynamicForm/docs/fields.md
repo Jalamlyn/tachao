@@ -35,6 +35,48 @@ interface FormField {
 - custom：自定义组件
 - resource：资源选择
 
+### 自定义组件渲染
+
+要使用自定义组件渲染，需要同时满足两个条件：
+1. 设置字段类型为 "custom"
+2. 提供 render 函数
+
+示例：
+```javascript
+{
+  name: "applicant",
+  label: "申请人",
+  type: "custom",  // 必须设置为 custom
+  render: ({ field, form, isEditable }) => (
+    <div className="flex items-center space-x-2">
+      <Input 
+        {...field}
+        disabled={!isEditable} 
+        className="flex-grow" 
+      />
+      <Button 
+        color="primary" 
+        variant="solid" 
+        size="sm"
+        isDisabled={!isEditable}
+        onClick={() => {
+          // 自定义按钮点击逻辑
+          console.log('验证申请人', field.value);
+        }}
+      >
+        核验
+      </Button>
+    </div>
+  )
+}
+```
+
+注意事项：
+1. 如果没有设置 type: "custom"，即使提供了 render 函数也不会被调用
+2. render 函数接收 { field, form, isEditable } 作为参数
+3. 自定义组件只能使用 shadcn UI 组件库中的组件，Button 组件必须使用 NextUI 的 Button
+4. 要考虑表单的可编辑状态，使用 isEditable 控制组件的禁用状态
+
 示例：
 ```javascript
 const basicFields = [

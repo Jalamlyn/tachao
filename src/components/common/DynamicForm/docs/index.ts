@@ -8,6 +8,8 @@ import { markdown as dependencies } from "./dependencies.md"
 import { markdown as examples } from "./examples.md"
 import { markdown as bestPractices } from "./best-practices.md"
 import { markdown as faq } from "./faq.md"
+import { markdown as tooltip } from "./tooltip.md"
+import { markdown as scroll } from "./scroll.md"
 
 export const docs = {
   introduction,
@@ -20,6 +22,8 @@ export const docs = {
   examples,
   bestPractices,
   faq,
+  tooltip,
+  scroll,
 }
 
 export default docs.introduction + "\n" +
@@ -31,4 +35,6 @@ export default docs.introduction + "\n" +
   docs.dependencies + "\n" +
   docs.examples + "\n" +
   docs.bestPractices + "\n" +
+  docs.tooltip + "\n" +
+  docs.scroll + "\n" +
   docs.faq
