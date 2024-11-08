@@ -19,6 +19,7 @@ import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { MetadataDetail, useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
+import { useAsyncButton } from "@/hooks/useAsyncButton"
 
 interface FormListProps {
   forms: MetadataDetail[]
@@ -35,9 +36,9 @@ const FormList: React.FC<FormListProps> = ({ forms, onDelete }) => {
     navigate(`/form/${formId}`)
   }
 
-  const handleDelete = async () => {
-    if (formToDelete) {
-      try {
+  const { isLoading: isDeleting, handleClick: handleDelete } = useAsyncButton(
+    async () => {
+      if (formToDelete) {
         const success = await remove(formToDelete)
         if (success) {
           onDelete?.()
@@ -45,14 +46,14 @@ const FormList: React.FC<FormListProps> = ({ forms, onDelete }) => {
         } else {
           message.error("删除失败")
         }
-      } catch (error) {
-        console.error("删除失败:", error)
-        message.error("删除失败")
+        onClose()
+        setFormToDelete(null)
       }
-      onClose()
-      setFormToDelete(null)
+    },
+    {
+      errorMessage: "删除失败"
     }
-  }
+  )
 
   const openDeleteModal = (formId: string) => {
     setFormToDelete(formId)
@@ -111,7 +112,11 @@ const FormList: React.FC<FormListProps> = ({ forms, onDelete }) => {
             <Button variant='light' onPress={onClose}>
               取消
             </Button>
-            <Button color='danger' onPress={handleDelete}>
+            <Button 
+              color='danger' 
+              onPress={handleDelete}
+              isLoading={isDeleting}
+            >
               删除
             </Button>
           </ModalFooter>

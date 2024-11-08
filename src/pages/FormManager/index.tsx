@@ -1,28 +1,14 @@
 import React, { useState, useCallback, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import {
-  Button,
-  Modal,
-  Card,
-  CardContent,
-  CardHeader,
-  ModalHeader,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  Input,
-  useDisclosure,
-  Image,
-  Tooltip,
-} from "@nextui-org/react"
+import { Button, Modal, ModalHeader, ModalBody, ModalContent, ModalFooter } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import FormList from "./components/FormList"
 import SearchInput from "./components/SearchInput"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
-import { motion, AnimatePresence } from "framer-motion"
-import { useBreadcrumb } from '../../contexts/BreadcrumbContext'
+import { useBreadcrumb } from "../../contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
+import { useAsyncButton } from "@/hooks/useAsyncButton"
 
 const FormManager: React.FC = () => {
   const navigate = useNavigate()
@@ -30,10 +16,7 @@ const FormManager: React.FC = () => {
   const { items: forms, load: loadForms } = useMetadata("form")
   const { items: templates, load: loadTemplates, getDetail: getTemplateDetail } = useMetadata("template")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [isAppTypeModalOpen, setIsAppTypeModalOpen] = useState(false)
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false)
   const [selectedTemplateId, setSelectedTemplateId] = useState("")
-  const [isRefreshing, setIsRefreshing] = useState(false)
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(true)
   const { updateBreadcrumbs } = useBreadcrumb()
 
@@ -41,8 +24,8 @@ const FormManager: React.FC = () => {
     loadForms()
     loadTemplateData()
     updateBreadcrumbs([
-      { label: '首页', href: '/we-chat-app/admin' },
-      { label: '单据管理', href: '/we-chat-app/admin/forms' }
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "单据管理", href: "/we-chat-app/admin/forms" },
     ])
   }, [])
 
@@ -72,39 +55,36 @@ const FormManager: React.FC = () => {
     setSelectedTemplateId("")
   }
 
-  const handleTemplateSelect = async (templateId: string) => {
-    setSelectedTemplateId(templateId)
-    try {
-      const template = await getTemplateDetail(templateId)
-      if (template && template.data.config) {
-        window.open(`/form-preview/${templateId}`, "_blank")
-      } else {
-        message.error("加载模板失败")
+  const { isLoading: isTemplateLoading, handleClick: handleTemplateSelect } = useAsyncButton(
+    async (templateId: string) => {
+      try {
+        const template = await getTemplateDetail(templateId)
+        if (template && template.data.config) {
+          window.open(`/form-preview/${templateId}`, "_blank")
+        } else {
+          message.error("加载模板失败")
+        }
+      } catch (error) {
+        console.error("Failed to load template:", error)
+        throw error
       }
-    } catch (error) {
-      console.error("Failed to load template:", error)
-      message.error("加载模板失败")
+    },
+    {
+      errorMessage: "加载模板失败"
     }
-  }
+  )
 
-  const handleRefresh = async () => {
-    try {
-      setIsRefreshing(true)
+  const { isLoading: isRefreshing, handleClick: handleRefresh } = useAsyncButton(
+    async () => {
       await loadForms()
-    } catch (error) {
-      console.error("Failed to refresh forms:", error)
-      message.error("刷新失败")
-    } finally {
-      setIsRefreshing(false)
+    },
+    {
+      errorMessage: "刷新失败"
     }
-  }
+  )
 
   const handleAnalyze = () => {
     navigate("/we-chat-app/admin/forms/analysis")
-  }
-
-  const handleCreateTemplate = () => {
-    navigate("/we-chat-app/admin/documents/create")
   }
 
   const pageActions = (
@@ -127,11 +107,7 @@ const FormManager: React.FC = () => {
   )
 
   return (
-    <PageLayout
-      title="单据管理"
-      titleIcon="mdi:file-document"
-      actions={pageActions}
-    >
+    <PageLayout title='单据管理' titleIcon='mdi:file-document' actions={pageActions}>
       <div className='space-y-4'>
         <SearchInput onSearch={handleSearch} />
         <FormList forms={filteredForms} onDelete={handleRefresh} />
@@ -162,7 +138,12 @@ const FormManager: React.FC = () => {
             <Button color='danger' variant='light' onClick={handleModalClose}>
               取消
             </Button>
-            <Button color='primary' onClick={() => handleTemplateSelect(selectedTemplateId)} isDisabled={!selectedTemplateId}>
+            <Button
+              color='primary'
+              onClick={() => handleTemplateSelect(selectedTemplateId)}
+              isDisabled={!selectedTemplateId}
+              isLoading={isTemplateLoading}
+            >
               确认
             </Button>
           </ModalFooter>

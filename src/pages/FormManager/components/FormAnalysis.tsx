@@ -17,6 +17,7 @@ import MessageCard from "@/components/MessageCard"
 import chatChunkClaude from "@/service/chat/chat-chunk-claude-office"
 import { useBreadcrumb } from '@/contexts/BreadcrumbContext'
 import PageLayout from "@/components/PageLayout"
+import { useAsyncButton } from "@/hooks/useAsyncButton"
 
 // 导入头像
 import mo2 from "/assets/mo-2.png"
@@ -24,7 +25,6 @@ import user from "/assets/user.png"
 
 const FormAnalysis: React.FC = () => {
   const [messages, setMessages] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(false)
   const [input, setInput] = useState("")
   const [chatCount, setChatCount] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -53,9 +53,9 @@ const FormAnalysis: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  const handleSendMessage = async () => {
+  const { isLoading, handleClick: handleSendMessage } = useAsyncButton(async () => {
     if (formsRef.current?.length === 0) return message.error("数据为空，请先创建单据，不然 AI 无法为您工作")
-    if (!input.trim() || isLoading) return
+    if (!input.trim()) return
 
     const userMessage = {
       role: "user",
@@ -65,7 +65,6 @@ const FormAnalysis: React.FC = () => {
     }
     setMessages((prev) => [...prev, userMessage])
     setInput("")
-    setIsLoading(true)
 
     try {
       const assistantMessage = {
@@ -125,10 +124,10 @@ const FormAnalysis: React.FC = () => {
     } catch (error) {
       console.error("Error in chat:", error)
       message.error("分析过程中发生错误")
-    } finally {
-      setIsLoading(false)
     }
-  }
+  }, {
+    errorMessage: "分析过程中发生错误"
+  })
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Enter" && !event.shiftKey) {
