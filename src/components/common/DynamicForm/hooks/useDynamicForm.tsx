@@ -1,9 +1,46 @@
 import { useEffect, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { DynamicFormConfig, ValidationResult, ValidationContext } from "../types"
-import { calculateDependentValues } from "../utils/fieldUtils"
 import message from "@/components/Message"
 import { ValidationManager } from "../validation/ValidationManager"
+import { debounce } from "lodash"
+
+// 创建带防抖的 watch
+export const createDebouncedWatch = (form: UseFormReturn<any>, delay = 300) => {
+  return (fields: string | string[], callback: (values: any) => void) => {
+    const debouncedCallback = debounce(callback, delay);
+    
+    return form.watch(fields, (...args) => {
+      debouncedCallback(...args);
+    });
+  };
+};
+
+// 创建表格专用的 watch 工具函数
+export const createTableWatch = (form: UseFormReturn<any>) => {
+  return {
+    // 监听整个表格数据
+    onTableDataChange: (callback: (data: any[]) => void) => 
+      form.watch("tableData", callback),
+      
+    // 监听特定行
+    onRowChange: (rowIndex: number, callback: (row: any) => void) => 
+      form.watch(`tableData.${rowIndex}`, callback),
+      
+    // 监听特定单元格
+    onCellChange: (rowIndex: number, field: string, callback: (value: any) => void) => 
+      form.watch(`tableData.${rowIndex}.${field}`, callback),
+      
+    // 批量更新工具
+    batchUpdate: (updates: Array<{path: string, value: any}>) => {
+      form.batch(() => {
+        updates.forEach(({path, value}) => {
+          form.setValue(path, value);
+        });
+      });
+    }
+  };
+};
 
 export const useDynamicForm = (
   config: DynamicFormConfig,
@@ -12,36 +49,19 @@ export const useDynamicForm = (
 ) => {
   const form = useForm({
     defaultValues: initialValues || {},
-  })
+  });
 
-  // 当 initialValues 变化时重置表单
+  // 设置 watch 函数
   useEffect(() => {
-    if (initialValues) {
-      form.reset(initialValues)
-    }
-  }, [initialValues, form])
+    if (!config.watch) return;
 
-  // 处理字段依赖关系
-  useEffect(() => {
-    const subscription = form.watch((value, { name, type }) => {
-      if (type === "change" && name) {
-        // 计算依赖值
-        const updates = calculateDependentValues(config.dependencies, [name], value)
+    // 直接使用 watch 函数，让 React Hook Form 处理清理
+    // React Hook Form 会在组件卸载时自动清理所有订阅
+    config.watch(form);
 
-        // 更新依赖字段
-        Object.entries(updates).forEach(([field, value]) => {
-          form.setValue(field, value)
-        })
-
-        // 触发值变化回调
-        if (onValuesChange) {
-          onValuesChange({ [name]: value }, form.getValues())
-        }
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [config.dependencies, form, onValuesChange])
+    // 返回空的清理函数
+    return () => {};
+  }, [config.watch, form]);
 
   // 优化错误信息处理
   const formatValidationErrors = (errors: Record<string, any>): string[] => {
@@ -267,14 +287,8 @@ export const useDynamicForm = (
   const setFieldValue = useCallback(
     (name: string, value: any) => {
       form.setValue(name, value)
-
-      // 触发依赖计算
-      const updates = calculateDependentValues(config.dependencies, [name], form.getValues())
-      Object.entries(updates).forEach(([field, value]) => {
-        form.setValue(field, value)
-      })
     },
-    [config.dependencies, form]
+    [form]
   )
 
   const resetForm = useCallback(

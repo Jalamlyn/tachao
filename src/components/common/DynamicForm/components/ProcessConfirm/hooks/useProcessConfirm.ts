@@ -62,6 +62,19 @@ export const useProcessConfirm = ({
     }
   }, [steps, fieldName, form])
 
+  // 修改 watch 处理
+  useEffect(() => {
+    // 直接使用 watch，让 React Hook Form 处理清理
+    steps.forEach(step => 
+      form.watch(`${fieldName}.${step.key}`, (value) => {
+        // ... 处理逻辑
+      })
+    );
+
+    // 返回空的清理函数
+    return () => {};
+  }, [steps, fieldName, form]);
+
   // 确认步骤
   const handleConfirm = async (step: ProcessStep) => {
     if (!currentUser) {
