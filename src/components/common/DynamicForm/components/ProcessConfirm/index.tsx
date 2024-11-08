@@ -26,18 +26,23 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
 
   return (
     <div className='space-y-6'>
-      {steps.map((step) => (
-        <ProcessStep
-          key={step.key}
-          step={step}
-          form={form}
-          isEditable={isEditable}
-          fieldName={fieldName}
-          isConfirming={isConfirming === step.key}
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />
-      ))}
+      {steps.map((step) => {
+        const stepData = form.watch(`${fieldName}.${step.key}`) || {}
+        if (stepData.hidden) return null
+
+        return (
+          <ProcessStep
+            key={step.key}
+            step={step}
+            form={form}
+            isEditable={isEditable}
+            fieldName={fieldName}
+            isConfirming={isConfirming === step.key}
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+          />
+        )
+      })}
     </div>
   )
 }
