@@ -33,6 +33,7 @@ export default async function chatChunkClaudeHoray(
   baseModel = "hooray::claude-3-5-sonnet@20241022"
 ) {
   const [provider, model] = baseModel.split("::")
+  console.log("chatChunkClaudeHoray", baseModel)
   const modelSupplierData = localDB.getItem("model-supplier-data") || [
     {
       id: "hooray",

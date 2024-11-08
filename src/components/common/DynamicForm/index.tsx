@@ -13,7 +13,6 @@ import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import PrintableTemplate from "./components/PrintableTemplate"
 import { useReactToPrint } from "react-to-print"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { ValidationManager } from "./validation/ValidationManager"
 import { cn } from "@/theme/cn"
 import { defaultFormConfig } from "./defaultConfig"
 import { merge } from "lodash"
@@ -21,11 +20,32 @@ import { merge } from "lodash"
 const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSubmit, onCancel, templateId }) => {
   // 合并默认配置和用户配置
   const config = merge({}, defaultFormConfig, userConfig)
-  
+
   // 添加状态管理
   const [isLoading, setIsLoading] = useState(false)
   const [initialValues, setInitialValues] = useState<any>(null)
-  const { getDetail } = useMetadata("form")
+  const { getDetail, create: createMetadata, update: updateMetadata } = useMetadata("form")
+
+  // 获取模板详情
+  const getTemplateDetail = useCallback(async (templateId: string) => {
+    try {
+      const { getDetail: getTemplateDetail } = useMetadata("template")
+      const template = await getTemplateDetail(templateId)
+      if (!template) {
+        throw new Error("Template not found")
+      }
+      return {
+        id: template.id,
+        title: template.title,
+        type: template.type || "custom",
+        data: template.data,
+      }
+    } catch (error) {
+      console.error("Failed to get template detail:", error)
+      message.error("获取模板详情失败")
+      return null
+    }
+  }, [])
 
   // 加载表单数据
   useEffect(() => {
@@ -58,8 +78,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
   }>({})
   const printRef = useRef<HTMLDivElement>(null)
   const printId = useRef<string>()
-
-  const { create: createMetadata, update: updateMetadata } = useMetadata("form")
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -125,7 +143,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
                 templateInfo = {
                   id: template.id,
                   title: template.title,
-                  type: template.type
+                  type: template.type,
                 }
               }
             } catch (error) {
@@ -150,7 +168,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
               templateType: templateInfo?.type,
               orderNumber: orderNumber,
               createdAt: new Date().toISOString(),
-            }
+            },
           }
 
           if (id) {
@@ -251,8 +269,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <Spinner label="加载中..." />
+      <div className='flex items-center justify-center min-h-[200px]'>
+        <Spinner label='加载中...' />
       </div>
     )
   }

@@ -1,16 +1,9 @@
 import React, { useCallback, useState, useEffect } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Icon } from "@iconify/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useNavigate, useParams } from "react-router-dom"
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-} from "@nextui-org/react"
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react"
 import FormPreview from "./components/FormPreview"
 import { useFormState } from "./hooks/useFormState"
 import CommandInput from "@/components/CommandInput"
@@ -18,7 +11,7 @@ import AIFormAgent from "@/service/agents/AIFormAgent"
 import AIGenerationDialog from "@/components/AIGenerationDialog"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
-import { useBreadcrumb } from '@/contexts/BreadcrumbContext'
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
 
@@ -58,54 +51,60 @@ const AIFormEditor: React.FC = () => {
     AIFormAgent.clearCachedImage()
 
     updateBreadcrumbs([
-      { label: '首页', href: '/we-chat-app/admin' },
-      { label: '单据模板管理', href: '/we-chat-app/admin/documents' },
-      { label: isEditMode ? '编辑单据模板' : '创建单据模板', href: isEditMode ? `/we-chat-app/admin/documents/edit/${templateId}` : '/we-chat-app/admin/documents/create' }
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "单据模板管理", href: "/we-chat-app/admin/documents" },
+      {
+        label: isEditMode ? "编辑单据模板" : "创建单据模板",
+        href: isEditMode ? `/we-chat-app/admin/documents/edit/${templateId}` : "/we-chat-app/admin/documents/create",
+      },
     ])
   }, [templateId, isEditMode])
 
-  const { isLoading: isSaving, handleClick: handleSaveTemplate } = useAsyncButton(async () => {
-    if (!formState.formConfig) {
-      message.error("请先生成表单")
-      return
-    }
+  const { isLoading: isSaving, handleClick: handleSaveTemplate } = useAsyncButton(
+    async () => {
+      if (!formState.formConfig) {
+        message.error("请先生成表单")
+        return
+      }
 
-    try {
-      const templateData = {
-        title: formState.formConfig.metadata?.title || "新建模板",
-        type: "custom",
-        status: "active",
-        data: {
-          config: formState.formConfig,
+      try {
+        const templateData = {
+          title: formState.formConfig.metadata?.title || "新建模板",
           type: "custom",
-          name: formState.formConfig.metadata?.title || "新建模板",
-        },
-      }
+          status: "active",
+          data: {
+            config: formState.formConfig,
+            type: "custom",
+            name: formState.formConfig.metadata?.title || "新建模板",
+          },
+        }
 
-      if (isEditMode && templateId) {
-        const result = await updateTemplate(templateId, templateData)
-        if (result) {
-          setSavedTemplateId(templateId)
-          setIsSuccessModalOpen(true)
+        if (isEditMode && templateId) {
+          const result = await updateTemplate(templateId, templateData)
+          if (result) {
+            setSavedTemplateId(templateId)
+            setIsSuccessModalOpen(true)
+          } else {
+            throw new Error("更新模板失败")
+          }
         } else {
-          throw new Error("更新模板失败")
+          const result = await createTemplate(templateData)
+          if (result) {
+            setSavedTemplateId(result.id)
+            setIsSuccessModalOpen(true)
+          } else {
+            throw new Error("保存模板失败")
+          }
         }
-      } else {
-        const result = await createTemplate(templateData)
-        if (result) {
-          setSavedTemplateId(result.id)
-          setIsSuccessModalOpen(true)
-        } else {
-          throw new Error("保存模板失败")
-        }
+      } catch (error) {
+        handleError(error)
+        throw error
       }
-    } catch (error) {
-      handleError(error)
-      throw error
+    },
+    {
+      errorMessage: "保存模板失败",
     }
-  }, {
-    errorMessage: "保存模板失败"
-  })
+  )
 
   const handleViewGenerationProcess = () => {
     if (formState.generationProcess) {
@@ -124,40 +123,44 @@ const AIFormEditor: React.FC = () => {
   }
 
   // 新增: 处理命令执行结果
-  const handleCommand = useCallback((result: any) => {
-    if (result.type === "create" || result.type === "edit") {
-      if (result.data?.config) {
-        setFormConfig(result.data.config)
+  const handleCommand = useCallback(
+    (result: any) => {
+      if (result.type === "create" || result.type === "edit") {
+        if (result.data?.config) {
+          setFormConfig(result.data.config)
+        }
       }
-    }
-    if (result.generationProcess) {
-      appendGenerationProcess(result.generationProcess)
-    }
-  }, [setFormConfig, appendGenerationProcess])
+      if (result.generationProcess) {
+        appendGenerationProcess(result.generationProcess)
+      }
+    },
+    [setFormConfig, appendGenerationProcess]
+  )
 
   const pageActions = (
     <div className='flex gap-2'>
-      <Button variant='outline' onClick={handleViewGenerationProcess} disabled={!formState.generationProcess}>
-        <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4 mr-2' />
+      <Button
+        variant='bordered'
+        onClick={handleViewGenerationProcess}
+        isDisabled={!formState.generationProcess}
+        startContent={<Icon icon='hugeicons:ai-chat-02' className='w-4 h-4 mr-2' />}
+      >
         查看对话历史
       </Button>
-      <Button 
-        onClick={handleSaveTemplate} 
-        disabled={!formState.formConfig || isSaving}
+      <Button
+        color='primary'
+        onClick={handleSaveTemplate}
+        isDisabled={!formState.formConfig || isSaving}
         isLoading={isSaving}
+        startContent={<Icon icon='mdi:content-save' className='w-4 h-4 mr-2' />}
       >
-        <Icon icon='mdi:content-save' className='w-4 h-4 mr-2' />
         {isEditMode ? "更新单据模板" : "保存单据模板"}
       </Button>
     </div>
   )
 
   return (
-    <PageLayout
-      title="AI 单据助手"
-      titleIcon="mdi:form-select"
-      actions={pageActions}
-    >
+    <PageLayout title='AI 单据助手' titleIcon='mdi:form-select' actions={pageActions}>
       <Card style={{ border: "none" }}>
         <CardContent>
           <AnimatePresence mode='wait'>

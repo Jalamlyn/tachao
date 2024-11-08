@@ -425,6 +425,56 @@ const formConfig = {
     }
   }
 };
+### Tooltip 配置
+
+字段可以配置 tooltip 来显示帮助信息或详细说明。
+
+interface TooltipConfig {
+  content: React.ReactNode;  // tooltip 内容，支持 React 组件
+  placement?: 'top' | 'bottom' | 'left' | 'right';  // 显示位置
+}
+
+使用示例：
+
+const formConfig = {
+  renderConfig: {
+    basicFields: [
+      {
+        name: "leaveType",
+        label: "请假类型",
+        type: "select",
+        options: [
+          { label: "年假", value: "annual" },
+          { label: "事假", value: "personal" },
+          { label: "病假", value: "sick" }
+        ],
+        tooltip: {
+          content: (
+            <div className="space-y-2">
+              <h4 className="font-medium text-gray-900">请假类型说明</h4>
+              <div className="space-y-1">
+                <div>• 年假：按照工龄和公司政策计算</div>
+                <div>• 事假：需提前申请，扣除工资</div>
+                <div>• 病假：需提供医疗证明</div>
+              </div>
+            </div>
+          ),
+          placement: "right"
+        },
+        required: true
+      }
+    ]
+  }
+}
+
+tooltip 特性：
+
+1. 支持富文本内容
+2. 可自定义显示位置
+3. 响应式设计
+4. 支持键盘导航
+5. 适配移动设备
+
 最佳实践
 字段命名：使用清晰、描述性的名称，遵循驼峰命名法。
 验证：对重要字段使用多重验证，包括前端和后端验证。
@@ -448,5 +498,4 @@ Q: 如何处理文件上传？ A: 使用 file 或 image 类型的字段，并在
 Q: 如何实现多语言支持？ A: 将所有文本内容（如标签、错误信息等）存储在语言文件中，并使用国际化库（如 i18next）来动态加载文本。
 
 记住，动态表单配置是一个强大而灵活的工具。通过合理的配置和使用，您可以创建出复杂、高效且用户友好的表单。如果遇到特殊需求，不要犹豫寻求帮助或查阅更多文档。
-
 `

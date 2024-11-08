@@ -45,7 +45,7 @@ const ApplicationList: React.FC = () => {
       { label: '首页', href: '/we-chat-app/admin' },
       { label: '应用列表', href: '/we-chat-app/admin/applications' }
     ])
-  }, [updateBreadcrumbs])
+  }, [])
 
   const fetchApps = async () => {
     try {

@@ -51,7 +51,7 @@ const FormList: React.FC<FormListProps> = ({ forms, onDelete }) => {
       }
     },
     {
-      errorMessage: "删除失败"
+      errorMessage: "删除失败",
     }
   )
 
@@ -112,11 +112,7 @@ const FormList: React.FC<FormListProps> = ({ forms, onDelete }) => {
             <Button variant='light' onPress={onClose}>
               取消
             </Button>
-            <Button 
-              color='danger' 
-              onPress={handleDelete}
-              isLoading={isDeleting}
-            >
+            <Button color='danger' onPress={handleDelete} isLoading={isDeleting}>
               删除
             </Button>
           </ModalFooter>

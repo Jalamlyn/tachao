@@ -1,27 +1,12 @@
 import React, { useCallback, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import {
-  Button,
-  Modal,
-  Card,
-  CardContent,
-  CardHeader,
-  ModalHeader,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  Input,
-  useDisclosure,
-  Image,
-  Tooltip,
-} from "@nextui-org/react"
+import { Button, Modal, ModalHeader, ModalBody, ModalContent, ModalFooter } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { motion, AnimatePresence } from "framer-motion"
 
 import CreateAppModal from "./CreateAppModal"
 import AppTypeCard from "./AppTypeCard"
 import TemplateGallery from "./components/TemplateGallery"
-import { useBreadcrumb } from '../../contexts/BreadcrumbContext'
+import { useBreadcrumb } from "../../contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 
 const FormManager: React.FC = () => {
@@ -34,8 +19,8 @@ const FormManager: React.FC = () => {
 
   useEffect(() => {
     updateBreadcrumbs([
-      { label: '首页', href: '/we-chat-app/admin' },
-      { label: '单据模板管理', href: '/we-chat-app/admin/documents' }
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "单据模板管理", href: "/we-chat-app/admin/documents" },
     ])
   }, [])
 
@@ -61,11 +46,7 @@ const FormManager: React.FC = () => {
   )
 
   return (
-    <PageLayout
-      title="单据模板管理"
-      titleIcon="mdi:form-select"
-      actions={pageActions}
-    >
+    <PageLayout title='单据模板管理' titleIcon='mdi:form-select' actions={pageActions}>
       <TemplateGallery onTemplateSelect={handleTemplateSelect} className='transition-all duration-300' />
 
       <Modal isOpen={isAppTypeModalOpen} onClose={() => setIsAppTypeModalOpen(false)} size='xl'>

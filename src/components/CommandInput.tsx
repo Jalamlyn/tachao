@@ -34,8 +34,7 @@ export default function Component(props: CommandInputProps) {
     "kgt8ON7yVITDhtdwci0qeUiDs4BGN8Nv1BTeJl6_DRfVMekQi10Szp0kiRDdSZkANokxKITDT4cv1UV6mWuiKA"
   )
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
-  const fileInputRef= useRef<HTMLInputElement>(null)
-  console.log("config", config)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     // 注册企业微信 JSAPI
@@ -60,8 +59,8 @@ export default function Component(props: CommandInputProps) {
             agent.cacheImage(uploadedImage)
             commandContent += ` [Uploaded Image]`
           }
-          const result = await agent.processCommand(commandContent, onChunk)
-          console.log(result)
+          const result = await agent.processCommand(commandContent, onChunk, config)
+          debugger
           onCommand && onCommand(result)
         }
         setPrompt("")
