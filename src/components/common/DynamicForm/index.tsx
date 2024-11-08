@@ -35,13 +35,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
   useEffect(() => {
     const loadFormData = async () => {
-      // 优先使用外部传入的 initialValues
       if (initialValues) {
         setFormValues(initialValues)
         return
       }
 
-      // 没有外部初始值时才获取数据
       if (id) {
         setIsLoading(true)
         try {
@@ -61,7 +59,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     loadFormData()
   }, [id, getDetail, initialValues])
 
-  const { form, handleSubmit, validateForm } = useDynamicForm(config, initialValues)
+  const { form, submitForm } = useDynamicForm(config, initialValues)
   const [isEditing, setIsEditing] = useState(false)
   const [validationErrors, setValidationErrors] = useState<{
     required?: string[]
@@ -70,6 +68,68 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   }>({})
   const printRef = useRef<HTMLDivElement>(null)
   const printId = useRef<string>()
+
+  // 获取模板信息的函数
+  const getTemplateInfo = async (templateId: string | undefined) => {
+    if (!templateId) return null
+    
+    try {
+      const template = await getTemplateDetail(templateId)
+      if (!template) return null
+      
+      return {
+        id: template.id,
+        title: template.title,
+        type: template.type || "custom",
+      }
+    } catch (error) {
+      console.error("Failed to get template info:", error)
+      return null
+    }
+  }
+
+  // 准备表单数据的函数
+  const prepareFormData = (formValues: any, templateInfo: any) => {
+    const orderNumberFieldName = config.orderNumberConfig?.fieldName || "orderNumber"
+    const orderNumber = formValues[orderNumberFieldName]
+
+    return {
+      title: orderNumber || config.metadata.title,
+      status: "submitted",
+      data: formValues,
+      templateId: templateId,
+      template: templateInfo,
+      indexFields: {
+        templateId: templateId,
+        templateTitle: templateInfo?.title,
+        templateType: templateInfo?.type,
+        orderNumber: orderNumber,
+        createdAt: new Date().toISOString(),
+      },
+    }
+  }
+
+  // 处理验证错误的函数
+  const handleValidationErrors = (errors?: string[]) => {
+    if (!errors?.length) return
+
+    setValidationErrors({
+      required: errors.filter((err) => err.includes("不能为空")),
+      invalid: errors.filter((err) => err.includes("格式错误") || err.includes("不能早于")),
+      other: errors.filter((err) => !err.includes("不能为空") && !err.includes("格式错误")),
+    })
+
+    message.error(
+      <div className='space-y-2'>
+        {errors.map((error, index) => (
+          <div key={index} className='flex items-center gap-2'>
+            <Icon icon='mdi:alert-circle' className='w-4 h-4' />
+            <span>{error}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -114,106 +174,56 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     `,
   })
 
-  const handleFormSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault()
-      try {
-        // 1. 执行验证
-        const validationResult = await validateForm()
-
-        // 2. 如果有外部提交处理函数,则调用它
-        if (onSubmit) {
-          await onSubmit(validationResult, form.getValues())
-          return
+  const handleFormSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      // 提交处理
+      const { success, validationResult, values, error } = await submitForm(form.getValues())
+      
+      if (!success) {
+        if (validationResult) {
+          handleValidationErrors(validationResult.errors)
         }
-
-        // 3. 如果验证不通过,显示错误信息并返回
-        if (!validationResult.valid) {
-          if (validationResult.errors?.length > 0) {
-            // 设置验证错误状态
-            setValidationErrors({
-              required: validationResult.errors.filter((err) => err.includes("不能为空")),
-              invalid: validationResult.errors.filter((err) => err.includes("格式错误") || err.includes("不能早于")),
-              other: validationResult.errors.filter((err) => !err.includes("不能为空") && !err.includes("格式错误")),
-            })
-
-            // 显示错误消息
-            message.error(
-              <div className='space-y-2'>
-                {validationResult.errors.map((error, index) => (
-                  <div key={index} className='flex items-center gap-2'>
-                    <Icon icon='mdi:alert-circle' className='w-4 h-4' />
-                    <span>{error}</span>
-                  </div>
-                ))}
-              </div>
-            )
-            return
-          }
-        }
-
-        // 4. 执行默认的提交逻辑
-        await handleSubmit(async () => {
-          // 获取模板信息
-          let templateInfo = null
-          if (templateId) {
-            try {
-              const template = await getTemplateDetail(templateId)
-              if (template) {
-                templateInfo = {
-                  id: template.id,
-                  title: template.title,
-                  type: template.type || "custom",
-                }
-              }
-            } catch (error) {
-              console.error("Failed to get template info:", error)
-            }
-          }
-
-          const orderNumberFieldName = config.orderNumberConfig?.fieldName || "orderNumber"
-          const orderNumber = form.getValues()[orderNumberFieldName]
-
-          const formData = {
-            title: orderNumber || config.metadata.title,
-            status: "submitted",
-            data: form.getValues(),
-            templateId: templateId,
-            template: templateInfo,
-            indexFields: {
-              templateId: templateId,
-              templateTitle: templateInfo?.title,
-              templateType: templateInfo?.type,
-              orderNumber: orderNumber,
-              createdAt: new Date().toISOString(),
-            },
-          }
-
-          if (id) {
-            const result = await updateMetadata(id, formData)
-            if (result) {
-              message.success("更新成功")
-              setIsEditing(false)
-            } else {
-              throw new Error("更新失败")
-            }
-          } else {
-            const result = await createMetadata(formData)
-            if (result) {
-              message.success("创建成功")
-              setIsEditing(false)
-            } else {
-              throw new Error("创建失败")
-            }
-          }
-        })()
-      } catch (error) {
-        console.error("Form submission error:", error)
-        message.error("提交失败，请重试")
+        return
       }
-    },
-    [config, handleSubmit, id, onSubmit, updateMetadata, createMetadata, templateId, getTemplateDetail, validateForm]
-  )
+
+      // 如果有外部提交处理函数
+      if (onSubmit) {
+        await onSubmit(validationResult!, values)
+        return
+      }
+
+      // 获取模板信息
+      const templateInfo = await getTemplateInfo(templateId)
+      
+      // 准备表单数据
+      const formData = prepareFormData(values, templateInfo)
+      
+      // 提交到服务器
+      if (id) {
+        const result = await updateMetadata(id, formData)
+        if (result) {
+          message.success("更新成功")
+          setIsEditing(false)
+        } else {
+          throw new Error("更新失败")
+        }
+      } else {
+        const result = await createMetadata(formData)
+        if (result) {
+          message.success("创建成功")
+          setIsEditing(false)
+        } else {
+          throw new Error("创建失败")
+        }
+      }
+      
+    } catch (error) {
+      console.error("Form submission error:", error)
+      message.error("提交失败，请重试")
+    }
+  }, [form, id, onSubmit, templateId, updateMetadata, createMetadata])
 
   const { metadata, renderConfig } = config
 
