@@ -20,6 +20,7 @@ import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
 import { useBreadcrumb } from '@/contexts/BreadcrumbContext'
 import PageLayout from "@/components/PageLayout"
+import { useAsyncButton } from "@/hooks/useAsyncButton"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -63,7 +64,7 @@ const AIFormEditor: React.FC = () => {
     ])
   }, [templateId, isEditMode])
 
-  const handleSaveTemplate = async () => {
+  const { isLoading: isSaving, handleClick: handleSaveTemplate } = useAsyncButton(async () => {
     if (!formState.formConfig) {
       message.error("请先生成表单")
       return
@@ -87,7 +88,7 @@ const AIFormEditor: React.FC = () => {
           setSavedTemplateId(templateId)
           setIsSuccessModalOpen(true)
         } else {
-          message.error("更新模板失败")
+          throw new Error("更新模板失败")
         }
       } else {
         const result = await createTemplate(templateData)
@@ -95,14 +96,16 @@ const AIFormEditor: React.FC = () => {
           setSavedTemplateId(result.id)
           setIsSuccessModalOpen(true)
         } else {
-          message.error("保存模板失败")
+          throw new Error("保存模板失败")
         }
       }
     } catch (error) {
       handleError(error)
-      message.error("保存模板失败")
+      throw error
     }
-  }
+  }, {
+    errorMessage: "保存模板失败"
+  })
 
   const handleViewGenerationProcess = () => {
     if (formState.generationProcess) {
@@ -138,7 +141,11 @@ const AIFormEditor: React.FC = () => {
         <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4 mr-2' />
         查看对话历史
       </Button>
-      <Button onClick={handleSaveTemplate} disabled={!formState.formConfig}>
+      <Button 
+        onClick={handleSaveTemplate} 
+        disabled={!formState.formConfig || isSaving}
+        isLoading={isSaving}
+      >
         <Icon icon='mdi:content-save' className='w-4 h-4 mr-2' />
         {isEditMode ? "更新单据模板" : "保存单据模板"}
       </Button>
