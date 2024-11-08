@@ -56,6 +56,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             isEditable={isEditable}
             disabled={field.disabled}
             showWhen={field.showWhen}
+            tooltip={field.tooltip}
           >
             {(formField) => <BasicInput type={field.type} field={formField} />}
           </FormFieldWrapper>
@@ -82,6 +83,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             isEditable={isEditable}
             disabled={field.disabled}
             showWhen={field.showWhen}
+            tooltip={field.tooltip}
           >
             {(formField) => (
               <Textarea
@@ -107,6 +109,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             isEditable={isEditable}
             disabled={field.disabled}
             showWhen={field.showWhen}
+            tooltip={field.tooltip}
           >
             {(formField) => (
               <Input
@@ -134,6 +137,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             isEditable={isEditable}
             disabled={field.disabled}
             showWhen={field.showWhen}
+            tooltip={field.tooltip}
           >
             {(formField) => <DateInput field={formField} />}
           </FormFieldWrapper>
@@ -148,6 +152,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             isEditable={isEditable}
             disabled={field.disabled}
             showWhen={field.showWhen}
+            tooltip={field.tooltip}
           >
             {(formField) => (
               <Select
@@ -202,6 +207,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             isEditable={isEditable}
             disabled={field.disabled}
             showWhen={field.showWhen}
+            tooltip={field.tooltip}
           >
             {(formField) => (
               <Input
@@ -237,6 +243,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             isEditable={isEditable}
             disabled={field.disabled}
             showWhen={field.showWhen}
+            tooltip={field.tooltip}
           >
             {(formField) =>
               field.render({
