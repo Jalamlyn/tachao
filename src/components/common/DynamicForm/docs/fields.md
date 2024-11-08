@@ -13,11 +13,6 @@ interface FormField {
   required?: boolean;          // 是否必填
   tooltip?: TooltipConfig;     // 提示信息配置
   validators?: Array<(value: any, allValues?: any) => string | undefined>;  // 验证器
-  showWhen?: {                // 条件显示配置
-    field: string;
-    value: any;
-    operator?: "eq" | "neq" | "gt" | "lt" | "contains";
-  };
 }
 ```
 
@@ -34,6 +29,42 @@ interface FormField {
 - datetime：日期时间选择
 - custom：自定义组件
 - resource：资源选择
+
+### 字段联动
+
+使用 watch 函数来实现字段联动：
+
+```typescript
+const config: DynamicFormConfig = {
+  watch: (form) => {
+    // 使用单个 watch 处理所有字段变化
+    const subscription = form.watch((value, { name }) => {
+      // 根据字段名称处理不同的联动逻辑
+      switch(name) {
+        case 'type':
+          // 根据类型控制字段显示
+          form.setValue("extraField.hidden", value !== "special");
+          break;
+          
+        case 'needApproval':
+          // 根据条件设置必填
+          form.setValue("approver.required", value === true);
+          break;
+          
+        case 'price':
+        case 'quantity':
+          // 自动计算金额
+          const price = form.getValues('price') || 0;
+          const quantity = form.getValues('quantity') || 0;
+          form.setValue("amount", price * quantity);
+          break;
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }
+};
+```
 
 ### 自定义组件渲染
 
