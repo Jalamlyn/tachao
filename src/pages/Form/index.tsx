@@ -13,6 +13,7 @@ const Form: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [formConfig, setFormConfig] = useState<any>(null)
+  const [formData, setFormData] = useState<any>(null)  // 新增 formData state
   const [templateId, setTemplateId] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState("form")
 
@@ -39,6 +40,9 @@ const Form: React.FC = () => {
           throw new Error("未找到表单数据")
         }
 
+        // 保存表单数据
+        setFormData(formDetail.data)
+
         // 获取模板ID
         const formTemplateId = formDetail.templateId
         console.log("[Form] Template ID from form:", formTemplateId)
@@ -64,7 +68,6 @@ const Form: React.FC = () => {
           ...template.data.config,
           formId,
           templateId: formTemplateId,
-          data: formDetail.data || {}, // 使用表单数据填充
         }
         console.log("[Form] Setting form config:", newFormConfig)
         setFormConfig(newFormConfig)
@@ -98,10 +101,10 @@ const Form: React.FC = () => {
     )
   }
 
-  if (!formConfig) {
+  if (!formConfig || !formData) {
     return (
       <div className='flex items-center justify-center min-h-screen text-gray-500'>
-        <p>未找到表单配置</p>
+        <p>未找到表单配置或数据</p>
       </div>
     )
   }
@@ -135,7 +138,12 @@ const Form: React.FC = () => {
             }
           >
             <div className='mt-4'>
-              <DynamicForm config={formConfig} id={formId} templateId={templateId} />
+              <DynamicForm 
+                config={formConfig} 
+                id={formId} 
+                templateId={templateId}
+                initialValues={formData}  // 直接传递 formData 作为初始值
+              />
             </div>
           </Tab>
           <Tab
