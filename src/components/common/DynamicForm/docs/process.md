@@ -63,26 +63,24 @@ const config = {
   watch: (form) => {
     const processWatch = createProcessWatch(form, 'processConfirmations')
     
-    const subscriptions = [
-      // 根据请假类型控制医疗审批步骤
-      form.watch('leaveType', (value) => {
-        processWatch.setStepVisibility('medicalApproval', value === 'sick')
-      }),
-      
-      // 监听部门审批状态,控制人事审批步骤
-      form.watch('processConfirmations.deptApproval.status', (status) => {
-        processWatch.setStepVisibility('hrApproval', status === 'approved')
-      }),
-      
-      // 金额超过 10000 时需要财务审批
-      form.watch('amount', (value) => {
-        processWatch.setStepVisibility('financeApproval', value > 10000)
-      })
-    ]
+    const subscription = form.watch((value, { name }) => {
+      // 使用单个 watch 处理所有字段变化
+      switch(name) {
+        case 'leaveType':
+          processWatch.setStepVisibility('medicalApproval', value === 'sick')
+          break
+          
+        case 'processConfirmations.deptApproval.status':
+          processWatch.setStepVisibility('hrApproval', value === 'approved')
+          break
+          
+        case 'amount':
+          processWatch.setStepVisibility('financeApproval', value > 10000)
+          break
+      }
+    })
     
-    return () => {
-      subscriptions.forEach(sub => sub.unsubscribe())
-    }
+    return () => subscription.unsubscribe()
   }
 }
 ```
@@ -124,7 +122,7 @@ processWatch.batchUpdateSteps([
 - 适当的图标提示
 
 2. 状态管理
-- 使用 watch 机制控制流程
+- 使用单个 watch 处理所有字段变化
 - 合理设置步骤依赖
 - 处理异常情况
 
@@ -158,13 +156,19 @@ const leaveApprovalConfig = {
   watch: (form) => {
     const processWatch = createProcessWatch(form, 'processConfirmations')
     
-    const subscriptions = [
-      form.watch('leaveType', (value) => {
-        processWatch.setStepVisibility('medicalApproval', value === 'sick')
-      })
-    ]
+    const subscription = form.watch((value, { name }) => {
+      switch(name) {
+        case 'leaveType':
+          processWatch.setStepVisibility('medicalApproval', value === 'sick')
+          break
+          
+        case 'processConfirmations.deptApproval.status':
+          processWatch.setStepVisibility('hrApproval', value === 'approved')
+          break
+      }
+    })
     
-    return () => subscriptions.forEach(sub => sub.unsubscribe())
+    return () => subscription.unsubscribe()
   }
 }
 ```
@@ -185,13 +189,21 @@ const expenseApprovalConfig = {
   watch: (form) => {
     const processWatch = createProcessWatch(form, 'processConfirmations')
     
-    const subscriptions = [
-      form.watch('amount', (value) => {
-        processWatch.setStepVisibility('financeApproval', value > 5000)
-      })
-    ]
+    const subscription = form.watch((value, { name }) => {
+      switch(name) {
+        case 'amount':
+          processWatch.setStepVisibility('financeApproval', value > 5000)
+          break
+          
+        case 'processConfirmations.managerApproval.status':
+          if (value === 'rejected') {
+            processWatch.setStepVisibility('financeApproval', false)
+          }
+          break
+      }
+    })
     
-    return () => subscriptions.forEach(sub => sub.unsubscribe())
+    return () => subscription.unsubscribe()
   }
 }
 ```
@@ -216,16 +228,72 @@ const projectApprovalConfig = {
   watch: (form) => {
     const processWatch = createProcessWatch(form, 'processConfirmations')
     
-    const subscriptions = [
-      form.watch('processConfirmations.techReview.status', (status) => {
-        processWatch.setStepVisibility('finalApproval', status === 'approved')
-      }),
-      form.watch('processConfirmations.businessReview.status', (status) => {
-        processWatch.setStepVisibility('finalApproval', status === 'approved')
-      })
-    ]
+    const subscription = form.watch((value, { name }) => {
+      switch(name) {
+        case 'processConfirmations.techReview.status':
+        case 'processConfirmations.businessReview.status':
+          const techStatus = form.getValues('processConfirmations.techReview.status')
+          const businessStatus = form.getValues('processConfirmations.businessReview.status')
+          const showFinal = techStatus === 'approved' && businessStatus === 'approved'
+          processWatch.setStepVisibility('finalApproval', showFinal)
+          break
+      }
+    })
     
-    return () => subscriptions.forEach(sub => sub.unsubscribe())
+    return () => subscription.unsubscribe()
   }
 }
+```
+
+### Watch 性能优化
+
+1. 使用单个 watch
+```typescript
+// 推荐: 使用单个 watch 处理所有变化
+const subscription = form.watch((value, { name }) => {
+  switch(name) {
+    case 'field1':
+      // 处理 field1 变化
+      break
+    case 'field2':
+      // 处理 field2 变化
+      break
+  }
+})
+
+// 不推荐: 使用多个独立的 watch
+const sub1 = form.watch('field1', (value) => {/*...*/})
+const sub2 = form.watch('field2', (value) => {/*...*/})
+```
+
+2. 批量更新
+```typescript
+// 推荐: 使用 batchUpdateSteps 批量更新
+processWatch.batchUpdateSteps([
+  { stepKey: 'step1', updates: { hidden: false } },
+  { stepKey: 'step2', updates: { required: true } }
+])
+
+// 不推荐: 多次单独更新
+processWatch.setStepVisibility('step1', false)
+processWatch.setStepRequired('step2', true)
+```
+
+3. 避免不必要的状态更新
+```typescript
+const subscription = form.watch((value, { name }) => {
+  // 只处理关心的字段
+  if (!['field1', 'field2'].includes(name)) {
+    return
+  }
+  
+  switch(name) {
+    case 'field1':
+      // 处理 field1 变化
+      break
+    case 'field2':
+      // 处理 field2 变化
+      break
+  }
+})
 ```
