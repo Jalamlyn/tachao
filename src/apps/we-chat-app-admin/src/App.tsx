@@ -11,8 +11,8 @@ import Sidebar from "../component/sidebar"
 import { useGlobalUser } from "@/hooks/useGlobalUser"
 import { items } from "../component/items"
 import Logo from "../component/logo/Logo"
-import { BreadcrumbProvider } from '../../../contexts/BreadcrumbContext'
-import GlobalBreadcrumb from '../../../components/GlobalBreadcrumb'
+import { BreadcrumbProvider } from "../../../contexts/BreadcrumbContext"
+import GlobalBreadcrumb from "../../../components/GlobalBreadcrumb"
 
 export default function Component() {
   const { isOpen, onOpenChange } = useDisclosure()
@@ -160,9 +160,9 @@ export default function Component() {
         </SidebarDrawer>
 
         {/*  Content */}
-        <div className='w-full max-h-screen overflow-auto md:max-w-[calc(100%-288px)] flex-1 p-4'>
+        <div className='w-full max-h-screen overflow-hidden md:max-w-[calc(100%-288px)] flex-1 p-4'>
           <GlobalBreadcrumb />
-          <div className="content-container">
+          <div className='content-container'>
             <Outlet />
           </div>
         </div>

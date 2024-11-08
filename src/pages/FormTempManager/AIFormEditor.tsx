@@ -1,29 +1,44 @@
-import React, { useCallback, useState, useEffect } from "react"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import React, { useCallback, useState, useEffect, useRef } from "react"
+import { Card, CardBody, ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useNavigate, useParams } from "react-router-dom"
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react"
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  Textarea,
+  Tooltip,
+  Chip,
+} from "@nextui-org/react"
 import FormPreview from "./components/FormPreview"
 import { useFormState } from "./hooks/useFormState"
-import CommandInput from "@/components/CommandInput"
 import AIFormAgent from "@/service/agents/AIFormAgent"
-import AIGenerationDialog from "@/components/AIGenerationDialog"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
+import MessageCard from "@/components/MessageCard"
+
+// 导入头像
+import mo2 from "/assets/mo-2.png"
+import user from "/assets/user.png"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
   const { templateId } = useParams<{ templateId: string }>()
   const isEditMode = Boolean(templateId)
   const { updateBreadcrumbs } = useBreadcrumb()
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [input, setInput] = useState("")
+  const [messages, setMessages] = useState<any[]>([])
 
-  const { state: formState, setFormConfig, stopGenerating, handleError, appendGenerationProcess } = useFormState()
+  const { state: formState, setFormConfig, handleError, appendGenerationProcess } = useFormState()
 
-  const [isGenerationDialogOpen, setIsGenerationDialogOpen] = useState(false)
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
   const [savedTemplateId, setSavedTemplateId] = useState<string | null>(null)
 
@@ -59,6 +74,14 @@ const AIFormEditor: React.FC = () => {
       },
     ])
   }, [templateId, isEditMode])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
 
   const { isLoading: isSaving, handleClick: handleSaveTemplate } = useAsyncButton(
     async () => {
@@ -106,12 +129,6 @@ const AIFormEditor: React.FC = () => {
     }
   )
 
-  const handleViewGenerationProcess = () => {
-    if (formState.generationProcess) {
-      setIsGenerationDialogOpen(true)
-    }
-  }
-
   const handleCreateDocument = () => {
     if (savedTemplateId) {
       navigate(`/form-preview/${savedTemplateId}`)
@@ -122,85 +139,167 @@ const AIFormEditor: React.FC = () => {
     navigate("/we-chat-app/admin/documents")
   }
 
-  // 新增: 处理命令执行结果
-  const handleCommand = useCallback(
-    (result: any) => {
-      if (result.type === "create" || result.type === "edit") {
-        if (result.data?.config) {
-          setFormConfig(result.data.config)
-        }
+  const { isLoading, handleClick: handleSendMessage } = useAsyncButton(
+    async () => {
+      if (!input.trim()) return
+
+      const userMessage = {
+        role: "user",
+        content: input,
+        id: Date.now().toString(),
+        timestamp: new Date().toLocaleTimeString(),
       }
-      if (result.generationProcess) {
-        appendGenerationProcess(result.generationProcess)
+      setMessages((prev) => [...prev, userMessage])
+      setInput("")
+
+      try {
+        const assistantMessage = {
+          role: "assistant",
+          content: "",
+          id: (Date.now() + 1).toString(),
+          timestamp: new Date().toLocaleTimeString(),
+        }
+        setMessages((prev) => [...prev, assistantMessage])
+
+        const result = await AIFormAgent.processCommand(
+          input,
+          (chunk) => {
+            setMessages((prev) => {
+              const newMessages = [...prev]
+              const lastMessage = newMessages[newMessages.length - 1]
+              if (lastMessage.role === "assistant") {
+                lastMessage.content += chunk
+              }
+              return [...newMessages]
+            })
+            appendGenerationProcess(chunk)
+          },
+          formState.formConfig
+        )
+
+        if (result.type === "create" || result.type === "edit") {
+          if (result.data?.config) {
+            setFormConfig(result.data.config)
+          }
+        }
+      } catch (error) {
+        console.error("Error in chat:", error)
+        message.error("生成过程中发生错误")
       }
     },
-    [setFormConfig, appendGenerationProcess]
+    {
+      errorMessage: "生成过程中发生错误",
+    }
   )
 
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault()
+      handleSendMessage()
+    }
+  }
+
   const pageActions = (
-    <div className='flex gap-2'>
-      <Button
-        variant='bordered'
-        onClick={handleViewGenerationProcess}
-        isDisabled={!formState.generationProcess}
-        startContent={<Icon icon='hugeicons:ai-chat-02' className='w-4 h-4 mr-2' />}
-      >
-        查看对话历史
-      </Button>
-      <Button
-        color='primary'
-        onClick={handleSaveTemplate}
-        isDisabled={!formState.formConfig || isSaving}
-        isLoading={isSaving}
-        startContent={<Icon icon='mdi:content-save' className='w-4 h-4 mr-2' />}
-      >
-        {isEditMode ? "更新单据模板" : "保存单据模板"}
-      </Button>
-    </div>
+    <Button
+      color='primary'
+      onClick={handleSaveTemplate}
+      isDisabled={!formState.formConfig || isSaving}
+      isLoading={isSaving}
+      startContent={<Icon icon='mdi:content-save' className='w-4 h-4 mr-2' />}
+    >
+      {isEditMode ? "更新单据模板" : "保存单据模板"}
+    </Button>
   )
 
   return (
-    <PageLayout title='AI 单据助手' titleIcon='mdi:form-select' actions={pageActions}>
-      <Card style={{ border: "none" }}>
-        <CardContent>
-          <AnimatePresence mode='wait'>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className='space-y-4'
-            >
-              {formState.formConfig ? (
-                <FormPreview config={formState.formConfig} />
-              ) : (
-                <div className='text-center py-12 text-gray-500'>
-                  <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
-                  <p>请输入您的需求,AI将为您生成表单</p>
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
+    <PageLayout title={isEditMode ? "AI 更新单据模板" : "AI 保存单据模板"} titleIcon='mdi:form-select' actions={pageActions}>
+      <div className='grid grid-cols-2 gap-4 h-[calc(100vh-200px)]'>
+        {/* 左侧对话区域 */}
+        <Card className='w-full shadow-lg'>
+          <CardBody className='p-4 flex flex-col gap-4 h-full'>
+            <AnimatePresence>
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <MessageCard
+                    avatar={message.role === "assistant" ? mo2 : user}
+                    message={message.content}
+                    role={message.role}
+                    status='success'
+                    className='mb-4'
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            <div ref={messagesEndRef} />
 
-          <div className='mt-6'>
-            <CommandInput
-              agent={AIFormAgent}
-              disabled={formState.isGenerating}
-              onChunk={appendGenerationProcess}
-              onCommand={handleCommand}
-              className='transition-all duration-300'
-              config={formState.formConfig}
-            />
-          </div>
-        </CardContent>
-      </Card>
+            <div className='flex items-end gap-2'>
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder='输入您的需求，AI 将为您生成表单'
+                className='flex-grow'
+                classNames={{
+                  input: "py-2 text-medium",
+                  inputWrapper: "bg-default-100",
+                }}
+                minRows={1}
+                maxRows={4}
+                endContent={
+                  <div className='flex items-center gap-2 pr-2'>
+                    <Tooltip content='发送指令' placement='top'>
+                      <Button
+                        isIconOnly
+                        className={!input || isLoading ? "" : "bg-primary"}
+                        color={!input || isLoading ? "default" : "primary"}
+                        isDisabled={!input || isLoading}
+                        radius='full'
+                        variant={!input || isLoading ? "flat" : "solid"}
+                        onClick={handleSendMessage}
+                        isLoading={isLoading}
+                      >
+                        {isLoading ? (
+                          <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
+                        ) : (
+                          <Icon
+                            className={!input ? "text-default-500" : "text-white"}
+                            icon='solar:arrow-up-linear'
+                            width={20}
+                          />
+                        )}
+                      </Button>
+                    </Tooltip>
+                  </div>
+                }
+              />
+            </div>
+          </CardBody>
+        </Card>
 
-      <AIGenerationDialog
-        isOpen={isGenerationDialogOpen}
-        onClose={() => setIsGenerationDialogOpen(false)}
-        generationContent={formState.generationProcess}
-        ResultComponent={formState.formConfig ? FormPreview : undefined}
-        resultProps={formState.formConfig ? { config: formState.formConfig } : undefined}
-      />
+        {/* 右侧预览区域 */}
+        <Card className='w-full shadow-lg overflow-auto'>
+          <CardBody className='p-4'>
+            <AnimatePresence mode='wait'>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                {formState.formConfig ? (
+                  <FormPreview config={formState.formConfig} />
+                ) : (
+                  <div className='text-center py-12 text-gray-500'>
+                    <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
+                    <p>请输入您的需求,AI将为您生成表单</p>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </CardBody>
+        </Card>
+      </div>
 
       <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} size='lg' placement='center'>
         <ModalContent>

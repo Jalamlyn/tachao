@@ -14,7 +14,6 @@ import LandingPage from "./pages/LandingPage"
 import AIHomePage from "./pages/AIHomePage"
 import DataAnalysisPage from "./pages/DataAnalysisPage"
 import CreateFormPage from "./pages/CreateFormPage"
-import DynamicFormTestPage from "./pages/DynamicFormTestPage"
 import renderWeChatApp from "./apps/we-chat-app-admin/renderWeChatApp"
 import FormPreview from "./pages/FormTempManager/components/FormPreview"
 import Form from "./pages/Form"
@@ -46,8 +45,6 @@ function App() {
           <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <AIHomePage />}>
             <Route index element={<Navigate to='management' replace />} />
             <Route path='create' element={<CreateFormPage />} />
-            <Route path='analysis' element={<DataAnalysisPage />} />
-            <Route path='test-form' element={<DynamicFormTestPage />} />
           </Route>
           <Route path='/we-chat-login' element={<WeChatLoginPage />} />
           <Route path='/form-preview/:templateId' element={<FormPreview />} />
