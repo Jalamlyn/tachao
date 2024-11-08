@@ -1,7 +1,6 @@
 .page-container {
   width: 100%;
   min-height: calc(100vh - 180px);
-  padding: 24px;
   background: var(--background);
   transition: all 0.3s ease-in-out;
 }

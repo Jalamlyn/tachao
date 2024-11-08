@@ -94,10 +94,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
   const calculateSummary = useCallback(
     (field: string, calculate: (records: any[]) => number | string) => {
-      try {
+      if (calculate) {
         return calculate(tableData)
-      } catch (error) {
-        console.error(`Error calculating summary for ${field}:`, error)
+      } else {
         return 0
       }
     },
@@ -122,7 +121,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
               render={({ field }) => (
                 <FormItem className='flex-1'>
                   <FormControl>
-                    <Input {...field} disabled={!isFieldEditable} className="min-w-[120px]" />
+                    <Input {...field} disabled={!isFieldEditable} className='min-w-[120px]' />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -141,7 +140,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                 buttonText='选择'
                 buttonProps={{
                   size: "sm",
-                  className: "px-2 py-1 h-8"
+                  className: "px-2 py-1 h-8",
                 }}
               />
             )}
