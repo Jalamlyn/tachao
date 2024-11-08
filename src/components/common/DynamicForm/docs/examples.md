@@ -59,55 +59,137 @@ const formConfig: DynamicFormConfig = {
           form.setValue("totalAmount", total);
         }
 
-        // 处理日期验证
-        if (name === 'startDate' || name === 'endDate') {
-          const { startDate, endDate } = form.getValues();
-          if (startDate && endDate) {
-            if (new Date(endDate) < new Date(startDate)) {
-              form.setError("endDate", {
-                type: "custom",
-                message: "结束日期不能早于开始日期"
-              });
-            } else {
-              form.clearErrors("endDate");
-            }
-          }
-        }
-
-        // 处理搜索关键词
-        if (name === 'searchKeyword') {
-          const value = form.getValues('searchKeyword');
-          if (!value) return;
-          
-          // 使用防抖处理搜索
-          const debouncedSearch = debounce(async () => {
-            try {
-              const results = await searchProducts(value);
-              form.setValue("searchResults", results);
-            } catch (error) {
-              console.error("Search failed:", error);
-            }
-          }, 300);
-
-          debouncedSearch();
-        }
       } catch (error) {
         console.error(`Watch error for field ${name}:`, error);
       }
     });
 
-    return () => {
-      if (subscription && typeof subscription.unsubscribe === 'function') {
-        subscription.unsubscribe();
-      }
-    };
+    return () => subscription.unsubscribe();
   },
   validate: async (values) => {
     const errors = [];
-    // ... 验证逻辑
+    const warnings = [];
+
+    // 1. 字段间验证
+    if (values.endDate && values.startDate) {
+      if (new Date(values.endDate) < new Date(values.startDate)) {
+        errors.push("结束日期不能早于开始日期");
+      }
+    }
+
+    // 2. 业务规则验证
+    if (values.leaveType === 'sick') {
+      if (!values.reason) {
+        errors.push("病假必须填写请假原因");
+      }
+      if (!values.attachment) {
+        warnings.push("建议上传病假证明");
+      }
+    }
+
+    // 3. 表格数据验证
+    if (values.tableData) {
+      values.tableData.forEach((row, index) => {
+        if (row.quantity <= 0) {
+          errors.push(`第 ${index + 1} 行的数量必须大于0`);
+        }
+        if (row.price <= 0) {
+          errors.push(`第 ${index + 1} 行的单价必须大于0`);
+        }
+      });
+    }
+
     return {
       valid: errors.length === 0,
-      errors
+      errors,
+      warnings,
+      fields: {
+        endDate: new Date(values.endDate) < new Date(values.startDate) 
+          ? "结束日期不能早于开始日期" 
+          : undefined,
+        reason: values.leaveType === 'sick' && !values.reason
+          ? "病假必须填写请假原因"
+          : undefined
+      },
+      // 新增: 分类后的错误信息
+      categorizedErrors: {
+        required: errors.filter(err => err.includes('不能为空')),
+        invalid: errors.filter(err => 
+          err.includes('格式错误') || err.includes('不能早于')),
+        other: errors.filter(err => 
+          !err.includes('不能为空') && !err.includes('格式错误'))
+      }
+    };
+  }
+};
+```
+
+### 请假申请单示例
+
+```javascript
+const formConfig = {
+  metadata: {
+    title: "请假申请单"
+  },
+  renderConfig: {
+    basicFields: [
+      {
+        name: "startDate",
+        label: "开始日期",
+        type: "date",
+        required: true
+      },
+      {
+        name: "endDate",
+        label: "结束日期",
+        type: "date",
+        required: true
+      },
+      {
+        name: "leaveType",
+        label: "请假类型",
+        type: "select",
+        options: [
+          { label: "年假", value: "annual" },
+          { label: "病假", value: "sick" }
+        ],
+        required: true
+      }
+    ]
+  },
+  validate: async (values) => {
+    const errors = [];
+    const warnings = [];
+
+    // 日期验证
+    if (values.startDate && values.endDate) {
+      if (new Date(values.endDate) < new Date(values.startDate)) {
+        errors.push("结束日期不能早于开始日期");
+      }
+    }
+
+    // 业务规则验证
+    if (values.leaveType === 'sick') {
+      if (!values.reason) {
+        errors.push("病假必须填写请假原因");
+      }
+      if (!values.attachment) {
+        warnings.push("建议上传病假证明");
+      }
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings,
+      fields: {
+        endDate: new Date(values.endDate) < new Date(values.startDate) 
+          ? "结束日期不能早于开始日期" 
+          : undefined,
+        reason: values.leaveType === 'sick' && !values.reason
+          ? "病假必须填写请假原因"
+          : undefined
+      }
     };
   }
 };
