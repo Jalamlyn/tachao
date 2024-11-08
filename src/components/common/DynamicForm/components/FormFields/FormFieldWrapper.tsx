@@ -3,16 +3,16 @@ import { UseFormReturn } from "react-hook-form"
 import { FormField, FormControl, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Icon } from "@iconify/react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/theme/cn"
 import { TooltipConfig } from "../../types"
 
 // 动画配置
-const animations = {
-  fieldVariants: {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  },
+const tooltipAnimation = {
+  initial: { opacity: 0, scale: 0.95, y: -4 },
+  animate: { opacity: 1, scale: 1, y: 0 },
+  exit: { opacity: 0, scale: 0.95, y: -4 },
+  transition: { duration: 0.15, ease: "easeOut" }
 }
 
 interface FormFieldWrapperProps {
@@ -64,7 +64,11 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
   if (!shouldShow) return null
 
   return (
-    <motion.div variants={animations.fieldVariants} initial="hidden" animate="visible">
+    <motion.div 
+      variants={tooltipAnimation}
+      initial="hidden"
+      animate="visible"
+    >
       <FormField
         control={form.control}
         name={name}
@@ -80,27 +84,35 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
                       className={cn(
                         "inline-flex items-center justify-center rounded-full",
                         "w-4 h-4 text-gray-400 hover:text-gray-500",
-                        "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
+                        "transition-colors duration-200"
                       )}
                     >
                       <Icon icon="mdi:help-circle-outline" className="w-4 h-4" />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent
-                    side={tooltip.placement || "top"}
-                    className={cn(
-                      "z-50 max-w-sm px-4 py-3",
-                      "bg-white rounded-lg shadow-lg",
-                      "border border-gray-200",
-                      "text-sm text-gray-600 leading-relaxed"
-                    )}
-                  >
-                    {typeof tooltip.content === 'string' ? (
-                      <div className="whitespace-pre-wrap">{tooltip.content}</div>
-                    ) : (
-                      tooltip.content
-                    )}
-                  </PopoverContent>
+                  <AnimatePresence>
+                    <PopoverContent
+                      side={tooltip.placement || "top"}
+                      className={cn(
+                        "z-50 max-w-sm px-4 py-3",
+                        "bg-white rounded-lg shadow-lg",
+                        "border border-gray-200",
+                        "text-sm text-gray-600 leading-relaxed"
+                      )}
+                      asChild
+                    >
+                      <motion.div
+                        {...tooltipAnimation}
+                      >
+                        {typeof tooltip.content === 'string' ? (
+                          <div className="whitespace-pre-wrap">{tooltip.content}</div>
+                        ) : (
+                          tooltip.content
+                        )}
+                      </motion.div>
+                    </PopoverContent>
+                  </AnimatePresence>
                 </Popover>
               )}
             </div>
