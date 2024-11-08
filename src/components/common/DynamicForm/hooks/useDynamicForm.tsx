@@ -79,28 +79,52 @@ export const useDynamicForm = (
 
   // 设置 watch 函数
   useEffect(() => {
-    if (!config.watch) return
+    if (!config.watch) {
+      console.log('[useDynamicForm] No watch function provided')
+      return
+    }
 
+    console.log('[useDynamicForm] Setting up watch function')
     let subscription: { unsubscribe: () => void } | null = null
 
     try {
-      // 使用新的 watch API
+      // 添加日志来追踪 watch 的设置
+      console.log('[useDynamicForm] Before setting up watch, form values:', form.getValues())
+      console.log('[useDynamicForm] Registered fields:', Object.keys(form.getValues()))
+      
       subscription = config.watch(form)
+      console.log('[useDynamicForm] After setting up watch, subscription:', subscription)
 
       if (!subscription || typeof subscription.unsubscribe !== 'function') {
-        console.warn('Watch function should return a subscription with unsubscribe method')
+        console.warn('[useDynamicForm] Watch function should return a subscription with unsubscribe method')
       }
     } catch (error) {
-      console.error('Error in watch setup:', error)
+      console.error('[useDynamicForm] Error in watch setup:', error)
     }
 
     // 返回清理函数
     return () => {
+      console.log('[useDynamicForm] Cleaning up watch subscriptions')
       if (subscription?.unsubscribe) {
-        subscription.unsubscribe()
+        try {
+          subscription.unsubscribe()
+          console.log('[useDynamicForm] Successfully unsubscribed watch')
+        } catch (error) {
+          console.error('[useDynamicForm] Error unsubscribing watch:', error)
+        }
       }
     }
   }, [config.watch, form])
+
+  // 监听表单值变化
+  useEffect(() => {
+    const subscription = form.watch((value, { name, type }) => {
+      console.log('[useDynamicForm] Form value changed:', { field: name, type, value })
+      console.log('[useDynamicForm] Current form values:', form.getValues())
+    })
+
+    return () => subscription.unsubscribe()
+  }, [form])
 
   // 优化错误信息处理
   const formatValidationErrors = (errors: Record<string, any>): string[] => {
@@ -333,6 +357,7 @@ export const useDynamicForm = (
 
   const setFieldValue = useCallback(
     (name: string, value: any) => {
+      console.log('[useDynamicForm] Setting field value:', { field: name, value })
       form.setValue(name, value)
     },
     [form]
@@ -340,6 +365,7 @@ export const useDynamicForm = (
 
   const resetForm = useCallback(
     (values?: any) => {
+      console.log('[useDynamicForm] Resetting form with values:', values)
       form.reset(values)
     },
     [form]
@@ -347,6 +373,7 @@ export const useDynamicForm = (
 
   const validateField = useCallback(
     async (name: string) => {
+      console.log('[useDynamicForm] Validating field:', name)
       return form.trigger(name)
     },
     [form]
