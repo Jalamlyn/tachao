@@ -1,27 +1,22 @@
-// 字段类型枚举
+import { UseFormReturn } from "react-hook-form"
+import { ReactNode } from "react"
+
 export type FormFieldType =
-  | "text" // 文本输入
-  | "password" // 密码输入
-  | "number" // 数字输入
-  | "email" // 邮箱输入
-  | "tel" // 电话输入
-  | "url" // URL输入
-  | "textarea" // 多行文本
-  | "select" // 下拉选择
-  | "date" // 日期选择
-  | "datetime" // 日期时间选择
-  | "file" // 文件上传
-  | "image" // 图片上传
-  | "custom" // 自定义组件
-  | "resource" // 资源选择
+  | "text"
+  | "password"
+  | "number"
+  | "email"
+  | "tel"
+  | "url"
+  | "textarea"
+  | "select"
+  | "date"
+  | "datetime"
+  | "file"
+  | "image"
+  | "custom"
+  | "resource"
 
-// Tooltip配置类型
-export interface TooltipConfig {
-  content: React.ReactNode
-  placement?: 'top' | 'bottom' | 'left' | 'right'
-}
-
-// 基础字段类型
 export interface FormField {
   name: string
   label: string
@@ -31,87 +26,64 @@ export interface FormField {
   hidden?: boolean
   required?: boolean
   tooltip?: TooltipConfig
+  validators?: Array<(value: any, allValues?: any) => string | undefined>
   options?: Array<{
     label: string
     value: string | number
     disabled?: boolean
   }>
-  // 验证规则
-  validators?: Array<(value: any, allValues?: any) => string | undefined>
-  // 条件显示
-  showWhen?: {
-    field: string
-    value: any
-    operator?: "eq" | "neq" | "gt" | "lt" | "contains"
-  }
-  // 资源选择配置
+  accept?: string
   resourceConfig?: {
     resourceName: string
-    appId?: string
+    appId: string
     selectionMode?: "single" | "multiple"
   }
-  // 自定义渲染
-  render?: (props: { field: any; form: any; isEditable: boolean }) => React.ReactNode
+  onUpload?: (file: File) => Promise<void>
+  render?: (props: {
+    field: any
+    form: UseFormReturn<any>
+    isEditable: boolean
+  }) => ReactNode
 }
 
-// 表格列类型
-export type TableColumnType = "text" | "number" | "date" | "datetime" | "select" | "resource" | "custom"
-
-// 表格列配置
 export interface TableColumn {
   key: string
   title: string
-  type: TableColumnType
+  type: FormFieldType
   width?: string | number
   editable?: boolean
   required?: boolean
-  tooltip?: TooltipConfig
+  placeholder?: string
   options?: Array<{
     label: string
     value: string | number
-    disabled?: boolean
   }>
   resourceConfig?: {
     resourceName: string
-    appId?: string
+    appId: string
     selectionMode?: "single" | "multiple"
   }
-  render?: (value: any, record: any, index: number) => React.ReactNode
+  render?: (value: any, record: any, index: number) => ReactNode
 }
 
-// 表格汇总计算函数类型
-export type TableSummaryCalculator = (records: any[]) => number
-
-// 表格汇总字段配置
-export interface TableSummaryField {
-  label: string
-  calculate: TableSummaryCalculator
+export interface TableConfig {
+  columns: TableColumn[]
+  toolbar?: ReactNode
 }
 
-// 表格汇总配置
-export interface TableSummary {
-  fields: {
-    [key: string]: TableSummaryField
-  }
-}
-
-// 行级计算配置
-export interface TableRowCalculations {
-  [key: string]: (row: any) => any
-}
-
-// 流程步骤
 export interface ProcessStep {
   key: string
   title: string
   description?: string
   icon?: string
   fields?: FormField[]
-  onConfirm?: () => Promise<void>
-  onCancel?: () => void
 }
 
-// 元数据配置
+export interface TooltipConfig {
+  content: ReactNode
+  placement?: "top" | "bottom" | "left" | "right"
+}
+
 export interface FormMetadata {
   title: string
   description?: string
@@ -120,78 +92,33 @@ export interface FormMetadata {
     delete?: boolean
     print?: boolean
   }
-  createdAt?: string
-  updatedAt?: string
-  createdBy?: string
-  updatedBy?: string
-  type?: string
 }
 
-// 工具栏按钮类型
-export interface ToolbarButton {
-  key: string
-  label: string
-  icon?: string
-  color?: "default" | "primary" | "secondary" | "success" | "warning" | "danger"
-  variant?: "solid" | "bordered" | "light" | "flat" | "faded" | "shadow"
-  disabled?: boolean
-  loading?: boolean
-  onClick?: () => void
-  className?: string
-  startContent?: React.ReactNode
-  endContent?: React.ReactNode
-  size?: "sm" | "md" | "lg"
-  isIconOnly?: boolean
-  showWhen?: {
-    field: string
-    value: any
-    operator?: "eq" | "neq" | "gt" | "lt" | "contains"
-  }
-}
-
-// 渲染配置
 export interface FormRenderConfig {
-  // 基本信息字段
   basicFields: FormField[]
-
-  // 表格配置
-  table?: {
-    columns: TableColumn[]
-    summary?: TableSummary
-    // 添加行级计算配置
-    rowCalculations?: TableRowCalculations
-  }
-
-  // 流程步骤
+  table?: TableConfig
   processSteps?: ProcessStep[]
 }
 
-// 校验模式
-export type ValidationMode = "submit" | "save" | "custom"
-
-// 校验上下文类型
 export interface ValidationContext {
-  mode?: ValidationMode
-  customData?: any
+  mode?: "create" | "edit"
+  user?: any
 }
 
-// 校验错误分类
-export interface CategorizedErrors {
-  required?: string[]
-  invalid?: string[]
-  other?: string[]
-}
-
-// 校验结果类型
 export interface ValidationResult {
   valid: boolean
   errors?: string[]
   warnings?: string[]
-  fields?: { [key: string]: string }
-  categorizedErrors?: CategorizedErrors
+  fields?: {
+    [key: string]: string
+  }
+  categorizedErrors?: {
+    required?: string[]
+    invalid?: string[]
+    other?: string[]
+  }
 }
 
-// 动态表单配置
 export interface DynamicFormConfig {
   metadata: FormMetadata
   renderConfig: FormRenderConfig
@@ -200,22 +127,21 @@ export interface DynamicFormConfig {
     fieldName?: string
     label?: string
   }
-  // 添加表单级别的校验函数
+  watch?: (form: UseFormReturn<any>) => (() => void)
   validate?: (values: any, context?: ValidationContext) => Promise<ValidationResult> | ValidationResult
-  // 添加字段依赖关系配置
-  dependencies?: {
-    [key: string]: {
-      dependsOn: string[]
-      calculate: (values: any) => any
-    }
-  }
 }
 
-// 动态表单组件Props
 export interface DynamicFormProps {
   config: DynamicFormConfig
   id?: string
-  templateId: string
   onSubmit?: (values: any) => Promise<void>
   onCancel?: () => void
+  templateId?: string
+}
+
+export interface WatchUtils {
+  watchField: (fieldName: string, callback: (value: any) => void) => () => void
+  watchFields: (fieldNames: string[], callback: (values: any[]) => void) => () => void
+  batchUpdate: (updates: Array<{ field: string; value: any }>) => void
+  setFieldVisibility: (fieldName: string, visible: boolean) => void
 }
