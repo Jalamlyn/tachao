@@ -134,7 +134,7 @@ export interface DynamicFormConfig {
 export interface DynamicFormProps {
   config: DynamicFormConfig
   id?: string
-  onSubmit?: (values: any) => Promise<void>
+  onSubmit?: (validationResult: ValidationResult, values: any) => Promise<void>
   onCancel?: () => void
   templateId?: string
 }
