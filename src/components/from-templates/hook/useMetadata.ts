@@ -12,6 +12,22 @@ export interface MetadataIndex {
   title: string
   status: string
   updatedAt: string
+  // 新增: 模板相关字段
+  template?: {
+    id: string
+    title: string
+    type: string
+  }
+  // 新增: 索引字段
+  indexFields?: {
+    templateId?: string
+    templateTitle?: string
+    templateType?: string
+    orderNumber?: string
+    createdAt: string
+    updatedAt?: string
+    [key: string]: any
+  }
   [key: string]: any // 支持扩展字段
 }
 
@@ -28,6 +44,20 @@ export interface MetadataDetail<T = any> {
   modifiedBy: string
   createdAt: string
   updatedAt: string
+  template?: {
+    id: string
+    title: string
+    type: string
+  }
+  indexFields?: {
+    templateId?: string
+    templateTitle?: string
+    templateType?: string
+    orderNumber?: string
+    createdAt: string
+    updatedAt?: string
+    [key: string]: any
+  }
   [key: string]: any
 }
 
@@ -35,19 +65,15 @@ export interface MetadataDetail<T = any> {
  * 生成规范化的元数据ID
  */
 const generateMetadataId = (type: string, customId?: string): string => {
-  // 如果提供了自定义ID，先移除可能存在的type前缀
   if (customId) {
     const cleanId = customId.replace(new RegExp(`^${type}_`), "")
     return `${type}_${cleanId}`
   }
-  // 生成新的ID
   return `${type}_${Date.now()}`
 }
 
 /**
  * 元数据管理 Hook
- * @param type 数据类型
- * @returns 元数据操作方法集合
  */
 export function useMetadata<T = any>(type: string) {
   const [items, setItems] = useState<MetadataDetail<T>[]>([])
@@ -145,7 +171,6 @@ export function useMetadata<T = any>(type: string) {
         // 构建完整的详情数据
         const detail: MetadataDetail<T> = {
           id: normalizedId,
-          templateId: data.templateId,
           type,
           title: data.title || "",
           status: data.status || "draft",
@@ -154,6 +179,17 @@ export function useMetadata<T = any>(type: string) {
           modifiedBy: currentUser.name || currentUser.email || "Unknown",
           createdAt: now,
           updatedAt: now,
+          // 保存模板信息
+          template: data.template,
+          // 保存索引字段
+          indexFields: {
+            ...(data.indexFields || {}),
+            createdAt: now,
+            updatedAt: now,
+            templateId: data.template?.id,
+            templateTitle: data.template?.title,
+            templateType: data.template?.type,
+          },
           ...data,
         }
 
@@ -169,6 +205,10 @@ export function useMetadata<T = any>(type: string) {
           title: detail.title,
           status: detail.status,
           updatedAt: now,
+          // 在索引中保存模板信息
+          template: detail.template,
+          // 在索引中保存索引字段
+          indexFields: detail.indexFields,
         }
         indexes.push(newIndex)
         const indexSaved = await saveIndex(indexes)
@@ -207,6 +247,17 @@ export function useMetadata<T = any>(type: string) {
           ...data,
           updatedAt: now,
           modifiedBy: currentUser.name || currentUser.email || "Unknown",
+          // 更新模板信息
+          template: data.template || currentDetail.template,
+          // 更新索引字段
+          indexFields: {
+            ...(currentDetail.indexFields || {}),
+            ...(data.indexFields || {}),
+            updatedAt: now,
+            templateId: (data.template || currentDetail.template)?.id,
+            templateTitle: (data.template || currentDetail.template)?.title,
+            templateType: (data.template || currentDetail.template)?.type,
+          },
         }
 
         // 保存详情
@@ -223,6 +274,10 @@ export function useMetadata<T = any>(type: string) {
             title: updatedDetail.title,
             status: updatedDetail.status,
             updatedAt: now,
+            // 更新索引中的模板信息
+            template: updatedDetail.template,
+            // 更新索引中的索引字段
+            indexFields: updatedDetail.indexFields,
           }
           const indexSaved = await saveIndex(indexes)
           if (!indexSaved) throw new Error("Failed to save index")
@@ -297,25 +352,25 @@ export function useMetadata<T = any>(type: string) {
   )
 
   /**
-   * 加载列表 - 只加载索引数据
+   * 加载列表
    */
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
       const indexes = await getIndexes()
-      // 将索引数据转换为简化的 MetadataDetail 格式
       const simpleDetails = indexes.map((index) => ({
         id: index.id,
         type: index.type,
         title: index.title,
         status: index.status,
         updatedAt: index.updatedAt,
-        // 添加必要的默认值以符合 MetadataDetail 接口
+        template: index.template,
+        indexFields: index.indexFields,
         data: {} as T,
         versionCode: 0,
         modifiedBy: "",
-        createdAt: index.updatedAt,
+        createdAt: index.indexFields?.createdAt || index.updatedAt,
       }))
       setItems(simpleDetails)
       return simpleDetails
@@ -329,7 +384,7 @@ export function useMetadata<T = any>(type: string) {
   }, [type, getIndexes])
 
   /**
-   * 加载列表(包含详情) - 用于兼容原有逻辑
+   * 加载列表(包含详情)
    */
   const loadWithDetails = useCallback(async () => {
     setLoading(true)
