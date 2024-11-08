@@ -126,6 +126,135 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
     async (e: React.FormEvent) => {
       e.preventDefault()
       try {
+        // 1. 先执行表单验证
+        const validationResult = await validateForm()
+        
+        // 2. 如果验证不通过,显示错误信息并返回
+        if (!validationResult.valid) {
+          if (validationResult.errors?.length > 0) {
+            // 设置验证错误状态
+            setValidationErrors({
+              required: validationResult.errors.filter(err => err.includes('不能为空')),
+              invalid: validationResult.errors.filter(err => 
+                err.includes('格式错误') || err.includes('不能早于')),
+              other: validationResult.errors.filter(err => 
+                !err.includes('不能为空') && !err.includes('格式错误'))
+            })
+
+            // 显示错误消息
+            message.error(
+              <div className="space-y-2">
+                {validationResult.errors.map((error, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Icon icon="mdi:alert-circle" className="w-4 h-4" />
+                    <span>{error}</span>
+                  </div>
+                ))}
+              </div>
+            )
+            return
+          }
+        }
+
+        // 3. 如果有警告信息,显示警告对话框
+        if (validationResult.warnings?.length > 0) {
+          const warningId = Math.random().toString(36).substr(2, 9)
+          message.warning(
+            <div className="space-y-4">
+              <div className="space-y-2">
+                {validationResult.warnings.map((warning, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Icon icon="mdi:alert" className="w-4 h-4" />
+                    <span>{warning}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button 
+                  size="sm" 
+                  variant="light"
+                  onClick={() => message.dismiss(warningId)}
+                >
+                  取消
+                </Button>
+                <Button
+                  size="sm"
+                  color="primary"
+                  onClick={async () => {
+                    message.dismiss(warningId)
+                    await handleSubmit(async (values) => {
+                      if (onSubmit) {
+                        await onSubmit(values)
+                        message.success("提交成功")
+                        setIsEditing(false)
+                        return
+                      }
+
+                      // 获取模板信息
+                      let templateInfo = null
+                      if (templateId) {
+                        try {
+                          const template = await getTemplateDetail(templateId)
+                          if (template) {
+                            templateInfo = {
+                              id: template.id,
+                              title: template.title,
+                              type: template.type,
+                            }
+                          }
+                        } catch (error) {
+                          console.error("Failed to get template info:", error)
+                        }
+                      }
+
+                      const orderNumberFieldName = config.orderNumberConfig?.fieldName || "orderNumber"
+                      const orderNumber = values[orderNumberFieldName]
+
+                      const formData = {
+                        title: orderNumber || config.metadata.title,
+                        status: "submitted",
+                        data: values,
+                        templateId: templateId,
+                        template: templateInfo,
+                        indexFields: {
+                          templateId: templateId,
+                          templateTitle: templateInfo?.title,
+                          templateType: templateInfo?.type,
+                          orderNumber: orderNumber,
+                          createdAt: new Date().toISOString(),
+                        },
+                      }
+
+                      if (id) {
+                        const result = await updateMetadata(id, formData)
+                        if (result) {
+                          message.success("更新成功")
+                          setIsEditing(false)
+                        } else {
+                          throw new Error("更新失败")
+                        }
+                      } else {
+                        const result = await createMetadata(formData)
+                        if (result) {
+                          message.success("创建成功")
+                          setIsEditing(false)
+                        } else {
+                          throw new Error("创建失败")
+                        }
+                      }
+                    })()
+                  }}
+                >
+                  继续提交
+                </Button>
+              </div>
+            </div>,
+            { id: warningId, duration: 0 }
+          )
+          return
+        }
+
+        // 4. 验证通过,执行提交
         await handleSubmit(async (values) => {
           if (onSubmit) {
             await onSubmit(values)
@@ -159,9 +288,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
             status: "submitted",
             data: values,
             templateId: templateId,
-            // 添加模板信息
             template: templateInfo,
-            // 添加索引字段
             indexFields: {
               templateId: templateId,
               templateTitle: templateInfo?.title,
@@ -188,13 +315,13 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
               throw new Error("创建失败")
             }
           }
-        })
+        })()
       } catch (error) {
         console.error("Form submission error:", error)
         message.error("提交失败，请重试")
       }
     },
-    [config, handleSubmit, id, onSubmit, updateMetadata, createMetadata, templateId, getTemplateDetail]
+    [config, handleSubmit, id, onSubmit, updateMetadata, createMetadata, templateId, getTemplateDetail, validateForm]
   )
 
   const { metadata, renderConfig } = config
