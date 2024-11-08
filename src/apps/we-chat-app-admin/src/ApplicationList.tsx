@@ -21,6 +21,7 @@ import { Icon } from "@iconify/react"
 import CreateAppModal from "./CreateAppModal"
 import AppTypeCard from "./AppTypeCard"
 import { queryApps, deleteApp, updateApps } from "@/service/apis/api" // 假设这些API函数已经存在
+import { useBreadcrumb } from '../../../contexts/BreadcrumbContext'
 
 const ApplicationList: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -36,9 +37,15 @@ const ApplicationList: React.FC = () => {
 
   const projectId = "1843156386865152001" // 固定的 project ID
 
+  const { updateBreadcrumbs } = useBreadcrumb()
+
   useEffect(() => {
     fetchApps()
-  }, [])
+    updateBreadcrumbs([
+      { label: '首页', href: '/we-chat-app/admin' },
+      { label: '应用列表', href: '/we-chat-app/admin/applications' }
+    ])
+  }, [updateBreadcrumbs])
 
   const fetchApps = async () => {
     try {
