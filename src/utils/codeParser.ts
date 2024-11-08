@@ -4,7 +4,6 @@ import React from "react"
 
 // 导入 shadcn UI 组件
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,12 +11,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 
-// shadcn UI 组件映射
-const shadcnComponents = {
+// 导入 NextUI Button
+import { Button } from "@nextui-org/react"
+
+// shadcn UI 和 NextUI 组件映射
+const uiComponents = {
   Alert,
   AlertTitle,
   AlertDescription,
-  Button,
+  Button, // NextUI Button
   Card,
   Input,
   Label,
@@ -49,17 +51,17 @@ const extractEditCode = (content: string): string | null => {
 }
 
 /**
- * 验证自定义组件是否只使用了 shadcn UI 组件
+ * 验证自定义组件是否只使用了允许的 UI 组件
  */
 const validateCustomComponents = (jsxCode: string): boolean => {
-  // 简单的正则匹配检查是否使用了非 shadcn 组件
+  // 简单的正则匹配检查是否使用了非允许的组件
   const componentPattern = /<([A-Z][a-zA-Z0-9]*)/g
   const matches = jsxCode.match(componentPattern) || []
   
   for (const match of matches) {
     const componentName = match.slice(1) // 移除 < 符号
-    if (!shadcnComponents[componentName]) {
-      message.error(`不支持的组件: ${componentName}，请只使用 shadcn UI 组件`)
+    if (!uiComponents[componentName]) {
+      message.error(`不支持的组件: ${componentName}，请只使用允许的 UI 组件`)
       return false
     }
   }
@@ -94,16 +96,16 @@ const parseConfigObject = (jsCode: string): any => {
     // 移除 export default 并获取对象部分
     const objectCode = jsCode.replace(/export\s+default\s+/, "return ")
 
-    // 创建一个新的 Function 来执行代码，传入 React 和 shadcn 组件
+    // 创建一个新的 Function 来执行代码，传入 React 和 UI 组件
     const createConfig = new Function(
       "React",
-      ...Object.keys(shadcnComponents),
+      ...Object.keys(uiComponents),
       `${objectCode}`
     )
 
     return createConfig(
       React,
-      ...Object.values(shadcnComponents)
+      ...Object.values(uiComponents)
     )
   } catch (error) {
     console.error("Failed to parse config object:", error)
@@ -127,12 +129,11 @@ export const parseFormEditOperations = async (
     const jsCode = await jsxToJs(code)
 
     // 创建一个新的 Function 来执行编辑操作
-    // 注意:这里需要传入 React 和 shadcn 组件作为参数
     return new Function(
       "config",
       "set",
       "React",
-      ...Object.keys(shadcnComponents),
+      ...Object.keys(uiComponents),
       `${jsCode}`
     ) as (config: any, set: Function, React: any) => void
   } catch (error) {
