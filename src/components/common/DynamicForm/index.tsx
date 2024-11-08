@@ -12,7 +12,6 @@ import message from "@/components/Message"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import PrintableTemplate from "./components/PrintableTemplate"
 import { useReactToPrint } from "react-to-print"
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { cn } from "@/theme/cn"
 import { defaultFormConfig } from "./defaultConfig"
 import { merge } from "lodash"
@@ -146,7 +145,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
               <div className="space-y-2">
                 {validationResult.errors.map((error, index) => (
                   <div key={index} className="flex items-center gap-2">
-                    <Icon icon="mdi:alert-circle" className="w-4 h-4" />
+                    <Icon icon='mdi:alert-circle' className='w-4 h-4' />
                     <span>{error}</span>
                   </div>
                 ))}
@@ -164,7 +163,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
               <div className="space-y-2">
                 {validationResult.warnings.map((warning, index) => (
                   <div key={index} className="flex items-center gap-2">
-                    <Icon icon="mdi:alert" className="w-4 h-4" />
+                    <Icon icon='mdi:alert' className='w-4 h-4' />
                     <span>{warning}</span>
                   </div>
                 ))}
@@ -332,68 +331,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
     label: config.orderNumberConfig?.label || "订单编号",
   }
 
-  const renderValidationErrors = () => {
-    if (!Object.keys(validationErrors).length) return null
-
-    return (
-      <div className='space-y-4 mb-6'>
-        {validationErrors.required && validationErrors.required.length > 0 && (
-          <Alert variant='destructive'>
-            <AlertTitle className='flex items-center gap-2'>
-              <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-              必填项未填写
-            </AlertTitle>
-            <AlertDescription>
-              <ul className='list-disc list-inside mt-2'>
-                {validationErrors.required.map((error, index) => (
-                  <li key={index} className='break-all'>
-                    {error}
-                  </li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {validationErrors.invalid && validationErrors.invalid.length > 0 && (
-          <Alert variant='destructive'>
-            <AlertTitle className='flex items-center gap-2'>
-              <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-              格式错误
-            </AlertTitle>
-            <AlertDescription>
-              <ul className='list-disc list-inside mt-2'>
-                {validationErrors.invalid.map((error, index) => (
-                  <li key={index} className='break-all'>
-                    {error}
-                  </li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {validationErrors.other && validationErrors.other.length > 0 && (
-          <Alert variant='destructive'>
-            <AlertTitle className='flex items-center gap-2'>
-              <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-              其他错误
-            </AlertTitle>
-            <AlertDescription>
-              <ul className='list-disc list-inside mt-2'>
-                {validationErrors.other.map((error, index) => (
-                  <li key={index} className='break-all'>
-                    {error}
-                  </li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        )}
-      </div>
-    )
-  }
-
   if (isLoading) {
     return (
       <div className='flex items-center justify-center min-h-[200px]'>
@@ -431,9 +368,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
             )}
           </div>
         </div>
-
-        {/* 验证错误信息展示 */}
-        {renderValidationErrors()}
 
         {/* 基本信息 */}
         <div
