@@ -5,8 +5,6 @@ import { Icon } from "@iconify/react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useNavigate, useParams } from "react-router-dom"
 import {
-  Breadcrumbs,
-  BreadcrumbItem,
   Modal,
   ModalContent,
   ModalHeader,
@@ -20,11 +18,13 @@ import AIFormAgent from "@/service/agents/AIFormAgent"
 import AIGenerationDialog from "@/components/AIGenerationDialog"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
+import { useBreadcrumb } from '@/contexts/BreadcrumbContext'
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
   const { templateId } = useParams<{ templateId: string }>()
   const isEditMode = Boolean(templateId)
+  const { updateBreadcrumbs } = useBreadcrumb()
 
   const { state: formState, setFormConfig, stopGenerating, handleError, appendGenerationProcess } = useFormState()
 
@@ -57,6 +57,13 @@ const AIFormEditor: React.FC = () => {
     loadTemplateData()
     // 清空缓存的图片
     AIFormAgent.clearCachedImage()
+
+    // 更新面包屑
+    updateBreadcrumbs([
+      { label: '首页', href: '/we-chat-app/admin' },
+      { label: '单据模板管理', href: '/we-chat-app/admin/documents' },
+      { label: isEditMode ? '编辑单据模板' : '创建单据模板', href: isEditMode ? `/we-chat-app/admin/documents/edit/${templateId}` : '/we-chat-app/admin/documents/create' }
+    ])
   }, [templateId, isEditMode])
 
   const handleAIResponse = useCallback(
@@ -141,11 +148,6 @@ const AIFormEditor: React.FC = () => {
       <Card style={{ border: "none" }}>
         <CardHeader className='flex flex-row justify-between items-start'>
           <div className='flex flex-col gap-2'>
-            <Breadcrumbs>
-              <BreadcrumbItem href='/we-chat-app/admin'>首页</BreadcrumbItem>
-              <BreadcrumbItem href='/we-chat-app/admin/documents'>单据模板管理</BreadcrumbItem>
-              <BreadcrumbItem>{isEditMode ? "编辑单据" : "生成单据"}</BreadcrumbItem>
-            </Breadcrumbs>
             <div className='flex items-center gap-2'>
               <Icon icon='mdi:form-select' className='w-6 h-6' />
               <h2 className='text-2xl font-bold'>AI 单据助手</h2>

@@ -6,8 +6,6 @@ import {
   ScrollShadow,
   Tooltip,
   Chip,
-  Breadcrumbs,
-  BreadcrumbItem,
   Button,
   Textarea,
 } from "@nextui-org/react"
@@ -17,6 +15,7 @@ import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadat
 import message from "@/components/Message"
 import MessageCard from "@/components/MessageCard"
 import chatChunkClaude from "@/service/chat/chat-chunk-claude-office"
+import { useBreadcrumb } from '@/contexts/BreadcrumbContext'
 
 // 导入头像
 import mo2 from "/assets/mo-2.png"
@@ -30,12 +29,20 @@ const FormAnalysis: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { fetchForms } = useFormMetadata()
   const formsRef = useRef(null)
+  const { updateBreadcrumbs } = useBreadcrumb()
 
   useEffect(() => {
     async function fetchData() {
       formsRef.current = await fetchForms()
     }
     fetchData()
+    
+    // 更新面包屑
+    updateBreadcrumbs([
+      { label: '首页', href: '/we-chat-app/admin' },
+      { label: '单据管理', href: '/we-chat-app/admin/forms' },
+      { label: '数据分析', href: '/we-chat-app/admin/forms/analysis' }
+    ])
   }, [])
 
   useEffect(() => {
@@ -136,11 +143,6 @@ const FormAnalysis: React.FC = () => {
       <Card className='w-full shadow-lg'>
         <CardHeader className='flex justify-between items-center'>
           <div className='flex flex-col gap-2'>
-            <Breadcrumbs>
-              <BreadcrumbItem href='/we-chat-app/admin'>首页</BreadcrumbItem>
-              <BreadcrumbItem href='/we-chat-app/admin/forms'>单据管理</BreadcrumbItem>
-              <BreadcrumbItem>数据分析</BreadcrumbItem>
-            </Breadcrumbs>
             <div className='flex items-center gap-2 mt-2'>
               <Icon icon='solar:chart-2-bold' className='w-6 h-6' />
               <h2 className='text-2xl font-bold'>AI 智能数据分析</h2>
