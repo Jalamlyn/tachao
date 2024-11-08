@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react"
+import React, { useState, useCallback, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button, Modal, ModalHeader, ModalBody, ModalContent, ModalFooter } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
@@ -16,7 +16,7 @@ const FormManager: React.FC = () => {
   const { items: forms, load: loadForms } = useMetadata("form")
   const { items: templates, load: loadTemplates, getDetail: getTemplateDetail } = useMetadata("template")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [selectedTemplateId, setSelectedTemplateId] = useState("")
+  const selectedTemplateIdRef = useRef<string>("")
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(true)
   const { updateBreadcrumbs } = useBreadcrumb()
 
@@ -52,11 +52,34 @@ const FormManager: React.FC = () => {
 
   const handleModalClose = () => {
     setIsCreateModalOpen(false)
-    setSelectedTemplateId("")
+    selectedTemplateIdRef.current = ""
+    // 清除所有选中状态
+    const templates = document.querySelectorAll('.template-item');
+    templates.forEach(template => {
+      template.classList.remove('border-primary', 'bg-primary/10');
+    });
   }
 
+  const handleTemplateClick = (templateId: string) => {
+    selectedTemplateIdRef.current = templateId;
+    
+    // 使用 DOM 操作来更新视觉效果
+    const templates = document.querySelectorAll('.template-item');
+    templates.forEach(template => {
+      template.classList.remove('border-primary', 'bg-primary/10');
+    });
+    
+    const selectedTemplate = document.querySelector(`[data-template-id="${templateId}"]`);
+    selectedTemplate?.classList.add('border-primary', 'bg-primary/10');
+  };
+
   const { isLoading: isTemplateLoading, handleClick: handleTemplateSelect } = useAsyncButton(
-    async (templateId: string) => {
+    async () => {
+      const templateId = selectedTemplateIdRef.current;
+      if (!templateId) {
+        message.error("请先选择模板");
+        return;
+      }
       try {
         const template = await getTemplateDetail(templateId)
         if (template && template.data.config) {
@@ -121,10 +144,9 @@ const FormManager: React.FC = () => {
               {templates?.map((template) => (
                 <div
                   key={template.id}
-                  className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${
-                    selectedTemplateId === template.id ? "border-primary bg-primary/10" : ""
-                  }`}
-                  onClick={() => setSelectedTemplateId(template.id)}
+                  data-template-id={template.id}
+                  className={`template-item p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors`}
+                  onClick={() => handleTemplateClick(template.id)}
                 >
                   <div className='flex items-center gap-2'>
                     <Icon icon='mdi:file-document-outline' className='w-5 h-5' />
@@ -140,8 +162,8 @@ const FormManager: React.FC = () => {
             </Button>
             <Button
               color='primary'
-              onClick={() => handleTemplateSelect(selectedTemplateId)}
-              isDisabled={!selectedTemplateId}
+              onClick={handleTemplateSelect}
+              isDisabled={!selectedTemplateIdRef.current}
               isLoading={isTemplateLoading}
             >
               确认
