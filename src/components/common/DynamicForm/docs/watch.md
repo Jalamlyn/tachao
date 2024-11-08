@@ -56,16 +56,6 @@ watch: (form) => {
 
   return () => subscription.unsubscribe();
 }
-
-// ❌ 不推荐: 使用多个 watch
-watch: (form) => {
-  const subscription1 = form.watch('price', () => {/*...*/});
-  const subscription2 = form.watch('quantity', () => {/*...*/});
-  return () => {
-    subscription1.unsubscribe();
-    subscription2.unsubscribe();
-  }
-}
 ```
 
 2. 正确处理清理函数:
