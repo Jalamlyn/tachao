@@ -15,6 +15,12 @@ export type FormFieldType =
   | "custom" // 自定义组件
   | "resource" // 资源选择
 
+// Tooltip配置类型
+export interface TooltipConfig {
+  content: React.ReactNode
+  placement?: 'top' | 'bottom' | 'left' | 'right'
+}
+
 // 基础字段类型
 export interface FormField {
   name: string
@@ -24,6 +30,7 @@ export interface FormField {
   disabled?: boolean
   hidden?: boolean
   required?: boolean
+  tooltip?: TooltipConfig
   options?: Array<{
     label: string
     value: string | number
@@ -58,6 +65,7 @@ export interface TableColumn {
   width?: string | number
   editable?: boolean
   required?: boolean
+  tooltip?: TooltipConfig
   options?: Array<{
     label: string
     value: string | number
