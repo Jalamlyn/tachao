@@ -62,8 +62,12 @@ export const parseFormEditOperations = async (content: string): Promise<(config:
       throw new Error("No valid edit operations found")
     }
 
+    // 首先编译 JSX
+    const jsCode = await jsxToJs(code)
+
     // 创建一个新的 Function 来执行编辑操作
-    return new Function("config", "set", code) as (config: any, set: Function) => void
+    // 注意:这里需要传入 React 作为参数,因为编译后的代码可能会用到
+    return new Function("config", "set", "React", `${jsCode}`) as (config: any, set: Function) => void
   } catch (error) {
     console.error("Failed to parse edit operations:", error)
     message.error("编辑操作解析失败，请检查格式是否正确")
