@@ -5,6 +5,35 @@ import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig, parseFormEditOperations } from "@/utils/codeParser"
 import message from "@/components/Message"
 import { set, cloneDeep } from "lodash"
+import React from "react"
+
+// 导入 shadcn UI 组件
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Calendar } from "@/components/ui/calendar"
+
+// shadcn UI 组件映射
+const shadcnComponents = {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  Button,
+  Card,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Textarea,
+  Calendar,
+}
 
 interface FormIndex {
   id: string
@@ -40,13 +69,24 @@ export class AIFormAgent {
 
 ${DynamicFormConfigStr}
 不要生成 订单编号 的配置，系统会自动生成。
-生成的表单必须包含3个部分
+生成的表单必须包含2个部分
 - 基本信息
-- 明细信息
 - 流程信息
+明细信息部分根据表单的实际类型生成，是可选的
 生成默认的 calculate 计算逻辑，如果没有可计算的字段就默认返回 0
 生成明细信息如果涉及到计算的，要生成正确的行计算和合计计算逻辑
 生成必要的校验逻辑函数，用于保存的时候对表单数据进行校验
+只返回生成的代码，开头不要解释，结尾不要说明
+
+注意：自定义组件只能使用 shadcn UI 组件库中的组件，包括：
+- Alert, AlertTitle, AlertDescription
+- Button
+- Card
+- Input
+- Label
+- Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+- Textarea
+- Calendar
 `
 
   private constructor() {}
@@ -324,14 +364,17 @@ config.title = "新的标题";
 1. 只生成需要修改的部分
 2. 使用精确的对象路径
 3. 每个修改使用单独的 set 语句
-4. 确保路径正确且存在`
+4. 确保路径正确且存在
+5. 自定义组件只能使用 shadcn UI 组件库中的组件`
 
     try {
       onChunk("🛠️ 正在应用修改...\n")
       const response = await this.processAIResponse(prompt, onChunk)
       const editOperation = await parseFormEditOperations(response)
       const newConfig = cloneDeep(currentConfig)
-      editOperation(newConfig, set)
+      
+      // 传入 React 和 shadcn 组件
+      editOperation(newConfig, set, React, ...Object.values(shadcnComponents))
 
       onChunk("✅ 表单修改完成！\n")
       return {
