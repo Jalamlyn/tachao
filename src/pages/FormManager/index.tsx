@@ -44,7 +44,14 @@ const FormManager: React.FC = () => {
     setSearchQuery(query)
   }
 
-  const filteredForms = forms.filter((form) => form.title.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredForms = forms.filter((form) => {
+    const searchLower = searchQuery.toLowerCase()
+    return (
+      form.title.toLowerCase().includes(searchLower) ||
+      form.template?.title?.toLowerCase().includes(searchLower) ||
+      form.indexFields?.orderNumber?.toLowerCase().includes(searchLower)
+    )
+  })
 
   const handleCreateDocument = () => {
     setIsCreateModalOpen(true)
@@ -54,31 +61,31 @@ const FormManager: React.FC = () => {
     setIsCreateModalOpen(false)
     selectedTemplateIdRef.current = ""
     // 清除所有选中状态
-    const templates = document.querySelectorAll('.template-item');
-    templates.forEach(template => {
-      template.classList.remove('border-primary', 'bg-primary/10');
-    });
+    const templates = document.querySelectorAll(".template-item")
+    templates.forEach((template) => {
+      template.classList.remove("border-primary", "bg-primary/10")
+    })
   }
 
   const handleTemplateClick = (templateId: string) => {
-    selectedTemplateIdRef.current = templateId;
-    
+    selectedTemplateIdRef.current = templateId
+
     // 使用 DOM 操作来更新视觉效果
-    const templates = document.querySelectorAll('.template-item');
-    templates.forEach(template => {
-      template.classList.remove('border-primary', 'bg-primary/10');
-    });
-    
-    const selectedTemplate = document.querySelector(`[data-template-id="${templateId}"]`);
-    selectedTemplate?.classList.add('border-primary', 'bg-primary/10');
-  };
+    const templates = document.querySelectorAll(".template-item")
+    templates.forEach((template) => {
+      template.classList.remove("border-primary", "bg-primary/10")
+    })
+
+    const selectedTemplate = document.querySelector(`[data-template-id="${templateId}"]`)
+    selectedTemplate?.classList.add("border-primary", "bg-primary/10")
+  }
 
   const { isLoading: isTemplateLoading, handleClick: handleTemplateSelect } = useAsyncButton(
     async () => {
-      const templateId = selectedTemplateIdRef.current;
+      const templateId = selectedTemplateIdRef.current
       if (!templateId) {
-        message.error("请先选择模板");
-        return;
+        message.error("请先选择模板")
+        return
       }
       try {
         const template = await getTemplateDetail(templateId)
@@ -93,7 +100,7 @@ const FormManager: React.FC = () => {
       }
     },
     {
-      errorMessage: "加载模板失败"
+      errorMessage: "加载模板失败",
     }
   )
 
@@ -102,7 +109,7 @@ const FormManager: React.FC = () => {
       await loadForms()
     },
     {
-      errorMessage: "刷新失败"
+      errorMessage: "刷新失败",
     }
   )
 
@@ -133,7 +140,15 @@ const FormManager: React.FC = () => {
     <PageLayout title='单据管理' titleIcon='mdi:file-document' actions={pageActions}>
       <div className='space-y-4'>
         <SearchInput onSearch={handleSearch} />
-        <FormList forms={filteredForms} onDelete={handleRefresh} />
+        {filteredForms.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-8 text-gray-500">
+            <Icon icon="mdi:file-search-outline" className="w-12 h-12 mb-2" />
+            <p>未找到匹配的单据</p>
+            <p className="text-sm">试试使用其他关键词搜索</p>
+          </div>
+        ) : (
+          <FormList forms={filteredForms} onDelete={handleRefresh} />
+        )}
       </div>
 
       <Modal isOpen={isCreateModalOpen} onClose={handleModalClose} size='2xl'>
@@ -160,12 +175,7 @@ const FormManager: React.FC = () => {
             <Button color='danger' variant='light' onClick={handleModalClose}>
               取消
             </Button>
-            <Button
-              color='primary'
-              onClick={handleTemplateSelect}
-              isDisabled={!selectedTemplateIdRef.current}
-              isLoading={isTemplateLoading}
-            >
+            <Button color='primary' onClick={handleTemplateSelect} isLoading={isTemplateLoading}>
               确认
             </Button>
           </ModalFooter>
