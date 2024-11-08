@@ -5,13 +5,17 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
   // 修改 useEffect 中的 watch 处理
   useEffect(() => {
-    // 直接使用 watch，让 React Hook Form 处理清理
-    form.watch(`${fieldName}`, (value) => {
-      // ... 处理逻辑
+    // 使用新的 watch API
+    const subscription = form.watch((value, { name }) => {
+      if (name?.startsWith(fieldName)) {
+        // 处理表格数据变化
+        const tableData = form.getValues(fieldName);
+        // ... 处理逻辑
+      }
     });
 
-    // 返回空的清理函数
-    return () => {};
+    // 返回清理函数
+    return () => subscription.unsubscribe();
   }, [fieldName, form]);
 
   // ... 保留其他代码
