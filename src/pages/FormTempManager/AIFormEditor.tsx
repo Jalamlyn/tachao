@@ -120,6 +120,18 @@ const AIFormEditor: React.FC = () => {
     navigate("/we-chat-app/admin/documents")
   }
 
+  // 新增: 处理命令执行结果
+  const handleCommand = useCallback((result: any) => {
+    if (result.type === "create" || result.type === "edit") {
+      if (result.data?.config) {
+        setFormConfig(result.data.config)
+      }
+    }
+    if (result.generationProcess) {
+      appendGenerationProcess(result.generationProcess)
+    }
+  }, [setFormConfig, appendGenerationProcess])
+
   const pageActions = (
     <div className='flex gap-2'>
       <Button variant='outline' onClick={handleViewGenerationProcess} disabled={!formState.generationProcess}>
@@ -164,6 +176,7 @@ const AIFormEditor: React.FC = () => {
               agent={AIFormAgent}
               disabled={formState.isGenerating}
               onChunk={appendGenerationProcess}
+              onCommand={handleCommand}
               className='transition-all duration-300'
               config={formState.formConfig}
             />
