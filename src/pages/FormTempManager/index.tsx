@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react"
+import React, { useCallback, useState, useEffect } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@iconify/react"
@@ -19,6 +19,7 @@ import TemplateGallery from "./components/TemplateGallery"
 import { useFormState } from "./hooks/useFormState"
 import { useTemplates } from "./hooks/useTemplates"
 import DynamicForm from "@/components/common/DynamicForm"
+import { useBreadcrumb } from '../../contexts/BreadcrumbContext'
 
 const FormManager: React.FC = () => {
   const navigate = useNavigate()
@@ -26,6 +27,14 @@ const FormManager: React.FC = () => {
   const { templates, handleTemplateChange } = useTemplates()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [selectedTemplateId, setSelectedTemplateId] = useState("")
+  const { updateBreadcrumbs } = useBreadcrumb()
+
+  useEffect(() => {
+    updateBreadcrumbs([
+      { label: '首页', href: '/we-chat-app/admin' },
+      { label: '单据模板管理', href: '/we-chat-app/admin/documents' }
+    ])
+  }, [updateBreadcrumbs])
 
   const onTemplateSelect = async (templateId: string) => {
     try {
@@ -69,10 +78,6 @@ const FormManager: React.FC = () => {
       <Card style={{ border: "none" }}>
         <CardHeader className='flex flex-row justify-between items-start'>
           <div className='flex flex-col gap-2'>
-            <Breadcrumbs>
-              <BreadcrumbItem href='/we-chat-app/admin'>首页</BreadcrumbItem>
-              <BreadcrumbItem>单据模板管理</BreadcrumbItem>
-            </Breadcrumbs>
             <div className='flex items-center gap-2'>
               <Icon icon='mdi:form-select' className='w-6 h-6' />
               <h2 className='text-2xl font-bold'>单据模板管理</h2>

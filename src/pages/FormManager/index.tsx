@@ -18,6 +18,7 @@ import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import { useNavigate } from "react-router-dom"
 import message from "@/components/Message"
 import { motion, AnimatePresence } from "framer-motion"
+import { useBreadcrumb } from '../../contexts/BreadcrumbContext'
 
 const FormManager: React.FC = () => {
   const navigate = useNavigate()
@@ -28,12 +29,16 @@ const FormManager: React.FC = () => {
   const [selectedTemplateId, setSelectedTemplateId] = useState("")
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(true)
+  const { updateBreadcrumbs } = useBreadcrumb()
 
-  // 初始化时加载表单数据
   useEffect(() => {
     loadForms()
     loadTemplateData()
-  }, [loadForms])
+    updateBreadcrumbs([
+      { label: '首页', href: '/we-chat-app/admin' },
+      { label: '单据管理', href: '/we-chat-app/admin/forms' }
+    ])
+  }, [loadForms, updateBreadcrumbs])
 
   const loadTemplateData = async () => {
     setIsLoadingTemplates(true)
@@ -66,7 +71,6 @@ const FormManager: React.FC = () => {
     try {
       const template = await getTemplateDetail(templateId)
       if (template && template.data.config) {
-        // 直接导航到预览页面
         window.open(`/form-preview/${templateId}`, "_blank")
       } else {
         message.error("加载模板失败")
@@ -77,7 +81,6 @@ const FormManager: React.FC = () => {
     }
   }
 
-  // 添加刷新函数
   const handleRefresh = async () => {
     try {
       setIsRefreshing(true)
@@ -90,12 +93,10 @@ const FormManager: React.FC = () => {
     }
   }
 
-  // 添加跳转到分析页面的函数
   const handleAnalyze = () => {
     navigate("/we-chat-app/admin/forms/analysis")
   }
 
-  // 添加跳转到创建模板页面的函数
   const handleCreateTemplate = () => {
     navigate("/we-chat-app/admin/documents/create")
   }
@@ -135,21 +136,15 @@ const FormManager: React.FC = () => {
       <Card style={{ border: "none" }}>
         <CardHeader className='flex flex-row justify-between items-start'>
           <div className='flex flex-col gap-2'>
-            <Breadcrumbs>
-              <BreadcrumbItem href='/we-chat-app/admin'>首页</BreadcrumbItem>
-              <BreadcrumbItem>单据管理</BreadcrumbItem>
-            </Breadcrumbs>
             <div className='flex items-center gap-2'>
               <Icon icon='mdi:file-document' className='w-6 h-6' />
               <h2 className='text-2xl font-bold'>单据管理</h2>
             </div>
           </div>
           <div className='flex gap-2'>
-            {/* 添加刷新按钮 */}
             <Button isIconOnly variant='light' onClick={handleRefresh} isLoading={isRefreshing}>
               <Icon icon='mdi:refresh' className='w-5 h-5' />
             </Button>
-            {/* 添加分析按钮 */}
             <Button
               onClick={handleAnalyze}
               color='secondary'
@@ -184,10 +179,8 @@ const FormManager: React.FC = () => {
               <ModalBody>
                 <div className='grid grid-cols-3 gap-4'>
                   {templates?.map((template) => (
-                    <motion.div
+                    <div
                       key={template.id}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
                       className={`p-4 border rounded-lg cursor-pointer hover:border-primary transition-colors ${
                         selectedTemplateId === template.id ? "border-primary bg-primary/10" : ""
                       }`}
@@ -197,7 +190,7 @@ const FormManager: React.FC = () => {
                         <Icon icon='mdi:file-document-outline' className='w-5 h-5' />
                         <span className='font-medium truncate'>{template.title}</span>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </ModalBody>

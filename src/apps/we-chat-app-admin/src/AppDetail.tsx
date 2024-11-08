@@ -1,19 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Breadcrumbs, BreadcrumbItem, Tabs, Tab } from "@nextui-org/react";
 import DocumentContent from "./DocumentContent";
 import TableContent from "./TableContent";
 import ReportContent from "./ReportContent";
 import { Icon } from "@iconify/react";
+import { useBreadcrumb } from '../../../contexts/BreadcrumbContext';
 
 const AppDetail: React.FC = () => {
+  const { updateBreadcrumbs } = useBreadcrumb();
+
+  useEffect(() => {
+    updateBreadcrumbs([
+      { label: '首页', href: '/we-chat-app/admin' },
+      { label: '应用列表', href: '/we-chat-app/admin/applications' },
+      { label: '应用详情', href: '#' }
+    ]);
+  }, [updateBreadcrumbs]);
+
   return (
     <div className="p-4">
-      <Breadcrumbs className="mb-4">
-        <BreadcrumbItem href="/we-chat-app/admin">首页</BreadcrumbItem>
-        <BreadcrumbItem href="/we-chat-app/admin/applications">应用列表</BreadcrumbItem>
-        <BreadcrumbItem>应用详情</BreadcrumbItem>
-      </Breadcrumbs>
-
       <h1 className="text-2xl font-bold mb-4">应用详情</h1>
 
       <Tabs aria-label="应用详情标签页" color="primary" variant="bordered">
