@@ -64,46 +64,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     [remove]
   )
 
-  const defaultCalculations = {
-    amount: (row: any) => {
-      const quantity = Number(row.quantity) || 0
-      const unitPrice = Number(row.unitPrice) || 0
-      return Number((quantity * unitPrice).toFixed(2))
-    },
-  }
-
-  const calculations = {
-    ...defaultCalculations,
-    ...(config.rowCalculations || {}),
-  }
-
-  const handleCalculateField = useCallback(
-    (row: any, index: number, changedField: string) => {
-      if (config.rowCalculations) {
-        Object.entries(config.rowCalculations).forEach(([field, calculate]) => {
-          try {
-            const value = calculate(row)
-            form.setValue(`${fieldName}.${index}.${field}`, value)
-          } catch (error) {
-            console.error(`Error calculating field ${field}:`, error)
-          }
-        })
-      }
-    },
-    [config.rowCalculations, fieldName, form]
-  )
-
-  const calculateSummary = useCallback(
-    (field: string, calculate: (records: any[]) => number | string) => {
-      if (calculate) {
-        return calculate(tableData)
-      } else {
-        return 0
-      }
-    },
-    [tableData]
-  )
-
   const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
     const cellFieldName = `${fieldName}.${rowIndex}.${column.key}`
     const isFieldEditable = isEditable && column.editable !== false
@@ -248,8 +208,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                     className='text-right font-mono'
                     onChange={(e) => {
                       field.onChange(e)
-                      const row = form.getValues(`${fieldName}.${rowIndex}`)
-                      handleCalculateField(row, rowIndex, column.key)
                     }}
                   />
                 </FormControl>
@@ -275,59 +233,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
           />
         )
     }
-  }
-
-  const renderSummary = () => {
-    if (!config.summary) return null
-
-    return (
-      <TableRow>
-        <TableCell colSpan={config.columns.length + (isEditable ? 1 : 0)}>
-          <div className='space-y-2'>
-            {Object.entries(config.summary.fields).map(([key, { label, calculate }]) => {
-              const value = calculateSummary(key, calculate)
-
-              return (
-                <div key={key} className='flex justify-between'>
-                  <span>{label}:</span>
-                  <span>{typeof value === "number" ? value.toFixed(2) : value}</span>
-                </div>
-              )
-            })}
-          </div>
-        </TableCell>
-      </TableRow>
-    )
-  }
-
-  const renderMobileTable = () => {
-    return (
-      <div className='space-y-4 md:hidden'>
-        {fields.map((field, rowIndex) => (
-          <motion.div
-            key={field.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className='bg-white rounded-lg shadow-sm p-4 space-y-3'
-          >
-            {config.columns.map((column) => (
-              <div key={column.key} className='space-y-1'>
-                <div className='text-sm font-medium text-gray-500'>{column.title}</div>
-                <div>{renderCell(column, rowIndex)}</div>
-              </div>
-            ))}
-            {isEditable && (
-              <div className='pt-2 flex justify-end'>
-                <Button isIconOnly color='danger' variant='light' size='sm' onClick={() => handleDeleteRow(rowIndex)}>
-                  <Icon icon='mdi:delete' className='w-4 h-4' />
-                </Button>
-              </div>
-            )}
-          </motion.div>
-        ))}
-      </div>
-    )
   }
 
   return (
@@ -367,12 +272,35 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                 )}
               </TableRow>
             ))}
-            {renderSummary()}
           </TableBody>
         </Table>
       </div>
 
-      {renderMobileTable()}
+      <div className='space-y-4 md:hidden'>
+        {fields.map((field, rowIndex) => (
+          <motion.div
+            key={field.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className='bg-white rounded-lg shadow-sm p-4 space-y-3'
+          >
+            {config.columns.map((column) => (
+              <div key={column.key} className='space-y-1'>
+                <div className='text-sm font-medium text-gray-500'>{column.title}</div>
+                <div>{renderCell(column, rowIndex)}</div>
+              </div>
+            ))}
+            {isEditable && (
+              <div className='pt-2 flex justify-end'>
+                <Button isIconOnly color='danger' variant='light' size='sm' onClick={() => handleDeleteRow(rowIndex)}>
+                  <Icon icon='mdi:delete' className='w-4 h-4' />
+                </Button>
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </div>
 
       {isEditable && (
         <motion.div className='mt-4' initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
