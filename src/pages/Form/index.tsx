@@ -22,43 +22,58 @@ const Form: React.FC = () => {
   useEffect(() => {
     const loadFormData = async () => {
       if (!formId) {
+        console.log("[Form] No formId provided")
         setError("表单ID不能为空")
         setIsLoading(false)
         return
       }
 
       try {
+        console.log("[Form] Start loading form data for formId:", formId)
         // 获取表单详情
         const formDetail = await getFormDetail(formId)
+        console.log("[Form] Form detail loaded:", formDetail)
+        
         if (!formDetail) {
+          console.log("[Form] Form detail not found")
           throw new Error("未找到表单数据")
         }
 
         // 获取模板ID
         const formTemplateId = formDetail.templateId
+        console.log("[Form] Template ID from form:", formTemplateId)
+        
         if (!formTemplateId) {
+          console.log("[Form] No template ID found in form detail")
           throw new Error("未找到模板ID")
         }
         setTemplateId(formTemplateId)
 
         // 获取模板配置
+        console.log("[Form] Loading template detail for templateId:", formTemplateId)
         const template = await getTemplateDetail(formTemplateId)
+        console.log("[Form] Template detail loaded:", template)
+        
         if (!template || !template.data.config) {
+          console.log("[Form] Template config not found")
           throw new Error("未找到模板配置")
         }
 
         // 设置表单配置
-        setFormConfig({
+        const newFormConfig = {
           ...template.data.config,
           formId,
           templateId: formTemplateId,
           data: formDetail.data || {}, // 使用表单数据填充
-        })
+        }
+        console.log("[Form] Setting form config:", newFormConfig)
+        setFormConfig(newFormConfig)
       } catch (err) {
-        console.error("加载表单数据失败:", err)
+        console.error("[Form] Error loading form data:", err)
         setError(err instanceof Error ? err.message : "加载表单数据失败")
         message.error("加载表单数据失败")
       } finally {
+        console.log("[Form] Form loading completed")
         setIsLoading(false)
       }
     }

@@ -73,6 +73,9 @@ export const useDynamicForm = (
   initialValues?: any,
   onValuesChange?: (changedValues: any, allValues: any) => void
 ) => {
+  console.log("[useDynamicForm] Initializing with config:", config)
+  console.log("[useDynamicForm] Initial values:", initialValues)
+
   const form = useForm({
     defaultValues: initialValues || {},
   })
@@ -118,6 +121,7 @@ export const useDynamicForm = (
 
   // 监听表单值变化
   useEffect(() => {
+    console.log('[useDynamicForm] Setting up form value change listener')
     const subscription = form.watch((value, { name, type }) => {
       console.log('[useDynamicForm] Form value changed:', { field: name, type, value })
       console.log('[useDynamicForm] Current form values:', form.getValues())
@@ -142,11 +146,15 @@ export const useDynamicForm = (
   // 表单级别校验函数
   const validateForm = useCallback(
     async (context?: ValidationContext): Promise<ValidationResult> => {
+      console.log('[useDynamicForm] Starting form validation')
       try {
         // 首先执行 react-hook-form 的内置校验
         const isValid = await form.trigger()
+        console.log('[useDynamicForm] Built-in validation result:', isValid)
+        
         if (!isValid) {
           const formErrors = form.formState.errors
+          console.log('[useDynamicForm] Validation errors:', formErrors)
           const errorMessages = formatValidationErrors(formErrors)
 
           // 优化错误分类
@@ -177,7 +185,9 @@ export const useDynamicForm = (
 
         // 使用 ValidationManager 进行统一校验
         const values = form.getValues()
+        console.log('[useDynamicForm] Running ValidationManager with values:', values)
         const validationResult = await ValidationManager.validateForm(values, config)
+        console.log('[useDynamicForm] ValidationManager result:', validationResult)
 
         // 如果有字段级错误，设置到表单状态
         if (validationResult.fields) {
@@ -208,7 +218,7 @@ export const useDynamicForm = (
 
         return validationResult
       } catch (error) {
-        console.error("Form validation error:", error)
+        console.error("[useDynamicForm] Form validation error:", error)
         return {
           valid: false,
           errors: ["表单校验出错，请重试"],
@@ -224,11 +234,16 @@ export const useDynamicForm = (
 
   const handleSubmit = useCallback(
     async (onSubmit: (values: any) => Promise<void>) => {
+      console.log('[useDynamicForm] Handling form submit')
       try {
         const values = form.getValues()
+        console.log('[useDynamicForm] Form values before validation:', values)
+        
         const validationResult = await ValidationManager.validateForm(values, config)
+        console.log('[useDynamicForm] Validation result:', validationResult)
 
         if (!validationResult.valid) {
+          console.log('[useDynamicForm] Form validation failed')
           // 如果校验失败，显示错误信息
           if (validationResult.errors && validationResult.errors.length > 0) {
             // 使用分类后的错误信息
@@ -287,6 +302,7 @@ export const useDynamicForm = (
 
         // 如果有警告信息，显示警告提示
         if (validationResult.warnings && validationResult.warnings.length > 0) {
+          console.log('[useDynamicForm] Form has warnings:', validationResult.warnings)
           const warningContent = (
             <div className='space-y-2'>
               <div className='font-medium'>警告：</div>
@@ -340,9 +356,10 @@ export const useDynamicForm = (
         }
 
         // 提交表单
+        console.log('[useDynamicForm] Submitting form with values:', values)
         await onSubmit(values)
       } catch (error) {
-        console.error("Form submission error:", error)
+        console.error("[useDynamicForm] Form submission error:", error)
         message.error(
           <div className='space-y-2'>
             <div className='font-medium'>提交表单失败</div>
