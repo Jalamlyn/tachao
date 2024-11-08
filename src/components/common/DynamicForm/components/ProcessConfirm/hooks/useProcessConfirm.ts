@@ -55,10 +55,9 @@ export const useProcessConfirm = ({
     })
 
     if (needsUpdate) {
-      form.batch(() => {
-        Object.entries(updates).forEach(([field, value]) => {
-          form.setValue(field, value)
-        })
+      // 使用连续的 setValue 调用，React 会自动进行批处理
+      Object.entries(updates).forEach(([field, value]) => {
+        form.setValue(field, value)
       })
     }
   }, [steps, fieldName, form])
@@ -80,11 +79,10 @@ export const useProcessConfirm = ({
 
     setIsConfirming(step.key)
     try {
-      form.batch(() => {
-        form.setValue(`${fieldName}.${step.key}.confirmed`, true)
-        form.setValue(`${fieldName}.${step.key}.confirmer`, currentUser.name || currentUser.email)
-        form.setValue(`${fieldName}.${step.key}.confirmationDate`, new Date().toISOString())
-      })
+      // 使用连续的 setValue 调用，React 会自动进行批处理
+      form.setValue(`${fieldName}.${step.key}.confirmed`, true)
+      form.setValue(`${fieldName}.${step.key}.confirmer`, currentUser.name || currentUser.email)
+      form.setValue(`${fieldName}.${step.key}.confirmationDate`, new Date().toISOString())
 
       form.trigger(`${fieldName}.${step.key}`)
       message.success("确认成功")
@@ -98,11 +96,10 @@ export const useProcessConfirm = ({
 
   const handleCancel = (step: ProcessStep) => {
     try {
-      form.batch(() => {
-        form.setValue(`${fieldName}.${step.key}.confirmed`, false)
-        form.setValue(`${fieldName}.${step.key}.confirmer`, "")
-        form.setValue(`${fieldName}.${step.key}.confirmationDate`, "")
-      })
+      // 使用连续的 setValue 调用，React 会自动进行批处理
+      form.setValue(`${fieldName}.${step.key}.confirmed`, false)
+      form.setValue(`${fieldName}.${step.key}.confirmer`, "")
+      form.setValue(`${fieldName}.${step.key}.confirmationDate`, "")
 
       form.trigger(`${fieldName}.${step.key}`)
       message.success("已取消确认")
@@ -138,11 +135,10 @@ export const createProcessWatch = (form: UseFormReturn<any>, fieldName: string) 
       stepKey: string, 
       updates: Record<string, any> 
     }>) => {
-      form.batch(() => {
-        updates.forEach(({ stepKey, updates }) => {
-          Object.entries(updates).forEach(([key, value]) => {
-            form.setValue(`${fieldName}.${stepKey}.${key}`, value)
-          })
+      // 使用连续的 setValue 调用，React 会自动进行批处理
+      updates.forEach(({ stepKey, updates }) => {
+        Object.entries(updates).forEach(([key, value]) => {
+          form.setValue(`${fieldName}.${stepKey}.${key}`, value)
         })
       })
     }
