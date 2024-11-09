@@ -37,7 +37,7 @@ const AIFormEditor: React.FC = () => {
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<any[]>([])
 
-  const { state: formState, setFormConfig, handleError, appendGenerationProcess } = useFormState()
+  const { state: formState, setFormConfig, setRawConfig, handleError, appendGenerationProcess } = useFormState()
 
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
   const [savedTemplateId, setSavedTemplateId] = useState<string | null>(null)
@@ -49,8 +49,15 @@ const AIFormEditor: React.FC = () => {
       if (isEditMode && templateId) {
         try {
           const template = await getTemplateDetail(templateId)
-          if (template && template.data.config) {
-            setFormConfig(template.data.config)
+          if (template && template.data.rawConfig) {
+            const parsedConfig = await AIFormAgent.parseConfig(template.data.rawConfig)
+            if (parsedConfig) {
+              setFormConfig(parsedConfig.config)
+              setRawConfig(template.data.rawConfig)
+            } else {
+              message.error("模板解析失败")
+              navigate("/we-chat-app/admin/documents")
+            }
           } else {
             message.error("模板加载失败")
             navigate("/we-chat-app/admin/documents")
@@ -77,7 +84,7 @@ const AIFormEditor: React.FC = () => {
 
   const { isLoading: isSaving, handleClick: handleSaveTemplate } = useAsyncButton(
     async () => {
-      if (!formState.formConfig) {
+      if (!formState.formConfig || !formState.rawConfig) {
         message.error("请先生成表单")
         return
       }
@@ -88,7 +95,7 @@ const AIFormEditor: React.FC = () => {
           type: "custom",
           status: "active",
           data: {
-            config: formState.formConfig,
+            rawConfig: formState.rawConfig,
             type: "custom",
             name: formState.formConfig.metadata?.title || "新建模板",
           },
@@ -172,6 +179,7 @@ const AIFormEditor: React.FC = () => {
         if (result.type === "create" || result.type === "edit") {
           if (result.data?.config) {
             setFormConfig(result.data.config)
+            setRawConfig(result.data.rawConfig)
           }
         }
       } catch (error) {
@@ -273,7 +281,7 @@ const AIFormEditor: React.FC = () => {
             <AnimatePresence mode='wait'>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                 {formState.formConfig ? (
-                  <FormPreview config={formState.formConfig} />
+                  <FormPreview previewMode config={formState.formConfig} />
                 ) : (
                   <div className='text-center py-12 text-gray-500 h-[calc(100vh-200px)] flex flex-col justify-center items-center'>
                     <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />

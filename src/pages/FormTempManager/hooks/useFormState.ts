@@ -4,6 +4,7 @@ import message from "@/components/Message"
 
 interface FormState {
   formConfig: DynamicFormConfig | null
+  rawConfig: string | null
   markdownContent: string
   selectedTemplate: string
   isGenerating: boolean
@@ -14,18 +15,19 @@ interface FormState {
     result: DynamicFormConfig | null
   }>
   error: string | null
-  generationProcess: string // 新增：用于存储生成过程
+  generationProcess: string
 }
 
 const initialState: FormState = {
   formConfig: null,
+  rawConfig: null,
   markdownContent: "",
   selectedTemplate: "",
   isGenerating: false,
   generationProgress: 0,
   generationHistory: [],
   error: null,
-  generationProcess: "", // 新增：初始化生成过程
+  generationProcess: "",
 }
 
 export const useFormState = () => {
@@ -33,6 +35,10 @@ export const useFormState = () => {
 
   const setFormConfig = useCallback((config: DynamicFormConfig | null) => {
     setState((prev) => ({ ...prev, formConfig: config }))
+  }, [])
+
+  const setRawConfig = useCallback((config: string | null) => {
+    setState((prev) => ({ ...prev, rawConfig: config }))
   }, [])
 
   const setMarkdownContent = useCallback((content: string) => {
@@ -49,7 +55,7 @@ export const useFormState = () => {
       isGenerating: true,
       generationProgress: 0,
       error: null,
-      generationProcess: "", // 新增：重置生成过程
+      generationProcess: "",
     }))
   }, [])
 
@@ -71,7 +77,7 @@ export const useFormState = () => {
           result,
         },
         ...prev.generationHistory,
-      ].slice(0, 10), // Keep only last 10 items
+      ].slice(0, 10),
     }))
   }, [])
 
@@ -83,7 +89,6 @@ export const useFormState = () => {
     setState(initialState)
   }, [])
 
-  // 新增：更新生成过程的方法
   const appendGenerationProcess = useCallback((chunk: string) => {
     setState((prev) => ({
       ...prev,
@@ -106,6 +111,7 @@ export const useFormState = () => {
   return {
     state,
     setFormConfig,
+    setRawConfig,
     setMarkdownContent,
     setSelectedTemplate,
     startGenerating,
@@ -115,6 +121,6 @@ export const useFormState = () => {
     setError,
     resetState,
     handleError,
-    appendGenerationProcess, // 新增：导出新方法
+    appendGenerationProcess,
   }
 }
