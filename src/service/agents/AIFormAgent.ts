@@ -73,6 +73,7 @@ ${doc}
   }
 
   public getRawConfig(): string | null {
+    console.log("[AIFormAgent] getRawConfig called, returning:", this._rawConfig?.substring(0, 100) + "...")
     return this._rawConfig
   }
 
@@ -81,6 +82,7 @@ ${doc}
   }
 
   private setRawConfig(rawConfig: string | null): void {
+    console.log("[AIFormAgent] setRawConfig called with:", rawConfig?.substring(0, 100) + "...")
     this._rawConfig = rawConfig
   }
 
@@ -98,6 +100,7 @@ ${doc}
     config?: DynamicFormConfig,
     rawConfig?: string  // 新增参数
   ): Promise<CommandResult> {
+    console.log("[AIFormAgent] processCommand started with rawConfig:", rawConfig?.substring(0, 100) + "...")
     let generationProcess = ""
 
     const updateGenerationProcess = (chunk: string) => {
@@ -110,6 +113,7 @@ ${doc}
     }
     
     if (rawConfig) {
+      console.log("[AIFormAgent] Setting new rawConfig in processCommand")
       this.setRawConfig(rawConfig)
     }
 
@@ -128,6 +132,7 @@ ${doc}
       if (createResult) {
         this.setCurrentConfig(createResult.config)
         if (createResult.rawConfig) {
+          console.log("[AIFormAgent] Setting new rawConfig from createResult")
           this.setRawConfig(createResult.rawConfig)
         }
       }
@@ -142,6 +147,7 @@ ${doc}
   }
 
   private async processAIResponse(userInput: string, onChunk: (chunk: string) => void): Promise<string> {
+    console.log("[AIFormAgent] processAIResponse started with current rawConfig:", this._rawConfig?.substring(0, 100) + "...")
     let response = ""
     const messages = [
       { role: "system", content: this.systemPrompt },
@@ -209,6 +215,7 @@ ${doc}
     rawConfig: string
     title: string
   } | null> {
+    console.log("[AIFormAgent] createForm started with current rawConfig:", this._rawConfig?.substring(0, 100) + "...")
     onChunk("🎨 正在设计表单结构...\n")
     await new Promise((resolve) => setTimeout(resolve, 300))
 
@@ -246,6 +253,7 @@ export default {
     try {
       onChunk("⚡ 正在生成表单配置...\n")
       const response = await this.processAIResponse(prompt, onChunk)
+      console.log("[AIFormAgent] Received AI response, length:", response.length)
       const parsedConfig = await parseFormConfig(response)
 
       if (!parsedConfig) {
@@ -259,6 +267,7 @@ export default {
       }
 
       onChunk("✨ 表单生成完成！\n")
+      console.log("[AIFormAgent] Form generation completed, returning new rawConfig")
       return {
         config: config as DynamicFormConfig,
         rawConfig: response,
