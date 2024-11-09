@@ -28,9 +28,8 @@ const FormManager: React.FC = () => {
     navigate("/we-chat-app/admin/documents/create")
   }
 
-  const handleTemplateSelect = () => {
-    setIsTemplateModalOpen(false)
-    setIsCreateModalOpen(true)
+  const handleTemplateSelect = (templateId: string) => {
+    navigate(`/form-preview/${templateId}`)
   }
 
   const handleTemplateCancel = () => {
@@ -86,7 +85,7 @@ const FormManager: React.FC = () => {
                 title='离散制造业ERP'
                 headerTitle='模板'
                 icon='mdi:application-cog'
-                onClick={handleTemplateSelect}
+                onClick={() => handleTemplateSelect("")}
                 description='适用于离散制造业的ERP系统模板'
                 imageSrc='https://picsum.photos/seed/erp/300/200'
               />
