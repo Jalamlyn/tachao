@@ -316,7 +316,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             tooltip={field.tooltip}
           >
             {(formField) =>
-              field.render({
+              field?.render({
                 field: formField,
                 form,
                 isEditable,

@@ -203,10 +203,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         const formData = prepareFormData(values, templateInfo)
 
         // 如果是预览模式,只显示校验成功消息,不执行实际提交
-        if (previewMode) {
-          message.success("表单校验通过，预览模式下无法保存数据")
-          return
-        }
+        // if (previewMode) {
+        //   message.success("表单校验通过，预览模式下无法保存数据")
+        //   return
+        // }
 
         // 提交到服务器
         if (id) {
