@@ -17,7 +17,7 @@ export default async function chatChunkDeepseek(
     {
       id: "deepseek",
       name: "DeepSeek",
-      apiKey: "sk-2ef828934e1f422d8ae5c4f71770cef1",
+      apiKey: "",
       endpoint: "https://api.deepseek.com/chat/completions",
       isDefault: false,
     },
