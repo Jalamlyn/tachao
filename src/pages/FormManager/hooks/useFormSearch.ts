@@ -6,9 +6,17 @@ export const useFormSearch = (forms: MetadataDetail[]) => {
 
   const filteredForms = useCallback(
     () =>
-      forms.filter((form) =>
-        form.title.toLowerCase().includes(searchQuery.toLowerCase())
-      ),
+      forms.filter((form) => {
+        const searchLower = searchQuery.toLowerCase()
+        return (
+          // 搜索标题
+          form.title.toLowerCase().includes(searchLower) ||
+          // 搜索模板名称
+          form.template?.title?.toLowerCase().includes(searchLower) ||
+          // 搜索订单号
+          form.indexFields?.orderNumber?.toLowerCase().includes(searchLower)
+        )
+      }),
     [forms, searchQuery]
   )
 

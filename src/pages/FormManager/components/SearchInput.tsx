@@ -19,8 +19,9 @@ const SearchInput: React.FC<SearchInputProps> = ({ onSearch }) => {
     <Input
       value={value}
       onChange={handleChange}
-      placeholder="搜索单据..."
+      placeholder="搜索单据标题、模板名称或订单号..."
       startContent={<Icon icon="mdi:magnify" className="w-5 h-5 text-default-400" />}
+      description="支持搜索单据标题、模板名称和订单号"
       className="max-w-md"
     />
   )

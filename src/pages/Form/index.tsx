@@ -13,6 +13,7 @@ const Form: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [formConfig, setFormConfig] = useState<any>(null)
+  const [formData, setFormData] = useState<any>(null)  // 新增 formData state
   const [templateId, setTemplateId] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState("form")
 
@@ -22,43 +23,60 @@ const Form: React.FC = () => {
   useEffect(() => {
     const loadFormData = async () => {
       if (!formId) {
+        console.log("[Form] No formId provided")
         setError("表单ID不能为空")
         setIsLoading(false)
         return
       }
 
       try {
+        console.log("[Form] Start loading form data for formId:", formId)
         // 获取表单详情
         const formDetail = await getFormDetail(formId)
+        console.log("[Form] Form detail loaded:", formDetail)
+        
         if (!formDetail) {
+          console.log("[Form] Form detail not found")
           throw new Error("未找到表单数据")
         }
 
+        // 保存表单数据
+        setFormData(formDetail.data)
+
         // 获取模板ID
         const formTemplateId = formDetail.templateId
+        console.log("[Form] Template ID from form:", formTemplateId)
+        
         if (!formTemplateId) {
+          console.log("[Form] No template ID found in form detail")
           throw new Error("未找到模板ID")
         }
         setTemplateId(formTemplateId)
 
         // 获取模板配置
+        console.log("[Form] Loading template detail for templateId:", formTemplateId)
         const template = await getTemplateDetail(formTemplateId)
+        console.log("[Form] Template detail loaded:", template)
+        
         if (!template || !template.data.config) {
+          console.log("[Form] Template config not found")
           throw new Error("未找到模板配置")
         }
 
         // 设置表单配置
-        setFormConfig({
+        const newFormConfig = {
           ...template.data.config,
           formId,
           templateId: formTemplateId,
-          data: formDetail.data || {}, // 使用表单数据填充
-        })
+        }
+        console.log("[Form] Setting form config:", newFormConfig)
+        setFormConfig(newFormConfig)
       } catch (err) {
-        console.error("加载表单数据失败:", err)
+        console.error("[Form] Error loading form data:", err)
         setError(err instanceof Error ? err.message : "加载表单数据失败")
         message.error("加载表单数据失败")
       } finally {
+        console.log("[Form] Form loading completed")
         setIsLoading(false)
       }
     }
@@ -83,10 +101,10 @@ const Form: React.FC = () => {
     )
   }
 
-  if (!formConfig) {
+  if (!formConfig || !formData) {
     return (
       <div className='flex items-center justify-center min-h-screen text-gray-500'>
-        <p>未找到表单配置</p>
+        <p>未找到表单配置或数据</p>
       </div>
     )
   }
@@ -120,7 +138,12 @@ const Form: React.FC = () => {
             }
           >
             <div className='mt-4'>
-              <DynamicForm config={formConfig} id={formId} templateId={templateId} />
+              <DynamicForm 
+                config={formConfig} 
+                id={formId} 
+                templateId={templateId}
+                initialValues={formData}  // 直接传递 formData 作为初始值
+              />
             </div>
           </Tab>
           <Tab

@@ -30,6 +30,7 @@ const ProcessStep: React.FC<ProcessStepProps> = ({
   const stepData = form.watch(`${fieldName}.${step.key}`) || {}
   const isConfirmed = stepData.confirmed
   const isLoading = isConfirming
+  const isRequired = stepData.required
 
   return (
     <Card className={cn("border-l-4", isConfirmed ? "border-l-blue-500" : "border-l-gray-200")}>
@@ -47,6 +48,7 @@ const ProcessStep: React.FC<ProcessStepProps> = ({
             <div className='flex-1 min-w-0'>
               <h3 className={cn("text-lg font-semibold break-all", isConfirmed ? "text-blue-600" : "text-gray-900")}>
                 {step.title}
+                {isRequired && <span className="text-red-500 ml-1">*</span>}
               </h3>
               {step.description && (
                 <p className='text-gray-500 mt-1 text-sm leading-relaxed break-all'>{step.description}</p>
@@ -86,7 +88,6 @@ const ProcessStep: React.FC<ProcessStepProps> = ({
           )}
         </div>
 
-        {/* 步骤表单 */}
         {step.fields && (
           <ProcessStepForm
             step={step}
@@ -97,7 +98,6 @@ const ProcessStep: React.FC<ProcessStepProps> = ({
           />
         )}
 
-        {/* 确认信息 */}
         {isConfirmed && (
           <ProcessStepConfirmation confirmer={stepData.confirmer} confirmationDate={stepData.confirmationDate} />
         )}

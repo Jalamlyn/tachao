@@ -184,13 +184,6 @@ const AIFormEditor: React.FC = () => {
     }
   )
 
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault()
-      handleSendMessage()
-    }
-  }
-
   const pageActions = (
     <Button
       color='primary'
@@ -237,7 +230,6 @@ const AIFormEditor: React.FC = () => {
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
               placeholder='输入您的需求，例如 编辑 xxx 创建 xxx AI 会根据您的指令来创建和更改表单'
               className='flex-grow'
               classNames={{
@@ -276,16 +268,16 @@ const AIFormEditor: React.FC = () => {
           </div>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={70}>
-          <div className='max-h-[calc(100vh-200px)] overflow-auto'>
+        <ResizablePanel defaultSize={70} className='bg-slate-100 ml-2'>
+          <div className='h-[calc(100vh-200px)] overflow-auto'>
             <AnimatePresence mode='wait'>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                 {formState.formConfig ? (
                   <FormPreview config={formState.formConfig} />
                 ) : (
-                  <div className='text-center py-12 text-gray-500'>
+                  <div className='text-center py-12 text-gray-500 h-[calc(100vh-200px)] flex flex-col justify-center items-center'>
                     <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
-                    <p>请输入您的需求,AI将为您生成表单</p>
+                    <p>请输入您的需求,AI将为您开发表单</p>
                   </div>
                 )}
               </motion.div>

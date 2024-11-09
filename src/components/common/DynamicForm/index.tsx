@@ -12,50 +12,41 @@ import message from "@/components/Message"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import PrintableTemplate from "./components/PrintableTemplate"
 import { useReactToPrint } from "react-to-print"
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { cn } from "@/theme/cn"
 import { defaultFormConfig } from "./defaultConfig"
 import { merge } from "lodash"
 
-const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSubmit, onCancel, templateId }) => {
+const DynamicForm: React.FC<DynamicFormProps> = ({
+  config: userConfig,
+  id,
+  onSubmit,
+  onCancel,
+  templateId,
+  initialValues,
+  previewMode,
+}) => {
   // 合并默认配置和用户配置
   const config = merge({}, defaultFormConfig, userConfig)
 
   // 添加状态管理
   const [isLoading, setIsLoading] = useState(false)
-  const [initialValues, setInitialValues] = useState<any>(null)
   const { getDetail, create: createMetadata, update: updateMetadata } = useMetadata("form")
+  const { getDetail: getTemplateDetail } = useMetadata("template")
+  const [formValues, setFormValues] = useState<any>(null)
 
-  // 获取模板详情
-  const getTemplateDetail = useCallback(async (templateId: string) => {
-    try {
-      const { getDetail: getTemplateDetail } = useMetadata("template")
-      const template = await getTemplateDetail(templateId)
-      if (!template) {
-        throw new Error("Template not found")
-      }
-      return {
-        id: template.id,
-        title: template.title,
-        type: template.type || "custom",
-        data: template.data,
-      }
-    } catch (error) {
-      console.error("Failed to get template detail:", error)
-      message.error("获取模板详情失败")
-      return null
-    }
-  }, [])
-
-  // 加载表单数据
   useEffect(() => {
     const loadFormData = async () => {
+      if (initialValues) {
+        setFormValues(initialValues)
+        return
+      }
+
       if (id) {
         setIsLoading(true)
         try {
           const formData = await getDetail(id)
           if (formData) {
-            setInitialValues(formData.data)
+            setFormValues(formData.data)
           }
         } catch (error) {
           console.error("Failed to load form data:", error)
@@ -67,9 +58,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
     }
 
     loadFormData()
-  }, [id, getDetail])
+  }, [id, getDetail, initialValues])
 
-  const { form, handleSubmit, validateForm } = useDynamicForm(config, initialValues)
+  const { form, submitForm } = useDynamicForm(config, initialValues)
   const [isEditing, setIsEditing] = useState(false)
   const [validationErrors, setValidationErrors] = useState<{
     required?: string[]
@@ -78,6 +69,68 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
   }>({})
   const printRef = useRef<HTMLDivElement>(null)
   const printId = useRef<string>()
+
+  // 获取模板信息的函数
+  const getTemplateInfo = async (templateId: string | undefined) => {
+    if (!templateId) return null
+
+    try {
+      const template = await getTemplateDetail(templateId)
+      if (!template) return null
+
+      return {
+        id: template.id,
+        title: template.title,
+        type: template.type || "custom",
+      }
+    } catch (error) {
+      console.error("Failed to get template info:", error)
+      return null
+    }
+  }
+
+  // 准备表单数据的函数
+  const prepareFormData = (formValues: any, templateInfo: any) => {
+    const orderNumberFieldName = config.orderNumberConfig?.fieldName || "orderNumber"
+    const orderNumber = formValues[orderNumberFieldName]
+
+    return {
+      title: orderNumber || config.metadata.title,
+      status: "submitted",
+      data: formValues,
+      templateId: templateId,
+      template: templateInfo,
+      indexFields: {
+        templateId: templateId,
+        templateTitle: templateInfo?.title,
+        templateType: templateInfo?.type,
+        orderNumber: orderNumber,
+        createdAt: new Date().toISOString(),
+      },
+    }
+  }
+
+  // 处理验证错误的函数
+  const handleValidationErrors = (errors?: string[]) => {
+    if (!errors?.length) return
+
+    setValidationErrors({
+      required: errors.filter((err) => err.includes("不能为空")),
+      invalid: errors.filter((err) => err.includes("格式错误") || err.includes("不能早于")),
+      other: errors.filter((err) => !err.includes("不能为空") && !err.includes("格式错误")),
+    })
+
+    message.error(
+      <div className='space-y-2'>
+        {errors.map((error, index) => (
+          <div key={index} className='flex items-center gap-2'>
+            <Icon icon='mdi:alert-circle' className='w-4 h-4' />
+            <span>{error}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -125,76 +178,60 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
   const handleFormSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
+
       try {
-        await handleSubmit(async (values) => {
-          if (onSubmit) {
-            await onSubmit(values)
-            message.success("提交成功")
+        // 提交处理
+        const { success, validationResult, values, error } = await submitForm(form.getValues())
+
+        if (!success) {
+          if (validationResult) {
+            handleValidationErrors(validationResult.errors)
+          }
+          return
+        }
+
+        // 如果有外部提交处理函数
+        if (onSubmit) {
+          await onSubmit(validationResult!, values)
+          return
+        }
+
+        // 获取模板信息
+        const templateInfo = await getTemplateInfo(templateId)
+
+        // 准备表单数据
+        const formData = prepareFormData(values, templateInfo)
+
+        // 如果是预览模式,只显示校验成功消息,不执行实际提交
+        // if (previewMode) {
+        //   message.success("表单校验通过，预览模式下无法保存数据")
+        //   return
+        // }
+
+        // 提交到服务器
+        if (id) {
+          const result = await updateMetadata(id, formData)
+          if (result) {
+            message.success("更新成功")
             setIsEditing(false)
-            return
-          }
-
-          // 获取模板信息
-          let templateInfo = null
-          if (templateId) {
-            try {
-              const template = await getTemplateDetail(templateId)
-              if (template) {
-                templateInfo = {
-                  id: template.id,
-                  title: template.title,
-                  type: template.type,
-                }
-              }
-            } catch (error) {
-              console.error("Failed to get template info:", error)
-            }
-          }
-
-          const orderNumberFieldName = config.orderNumberConfig?.fieldName || "orderNumber"
-          const orderNumber = values[orderNumberFieldName]
-
-          const formData = {
-            title: orderNumber || config.metadata.title,
-            status: "submitted",
-            data: values,
-            templateId: templateId,
-            // 添加模板信息
-            template: templateInfo,
-            // 添加索引字段
-            indexFields: {
-              templateId: templateId,
-              templateTitle: templateInfo?.title,
-              templateType: templateInfo?.type,
-              orderNumber: orderNumber,
-              createdAt: new Date().toISOString(),
-            },
-          }
-
-          if (id) {
-            const result = await updateMetadata(id, formData)
-            if (result) {
-              message.success("更新成功")
-              setIsEditing(false)
-            } else {
-              throw new Error("更新失败")
-            }
           } else {
-            const result = await createMetadata(formData)
-            if (result) {
-              message.success("创建成功")
-              setIsEditing(false)
-            } else {
-              throw new Error("创建失败")
-            }
+            throw new Error("更新失败")
           }
-        })
+        } else {
+          const result = await createMetadata(formData)
+          if (result) {
+            message.success("创建成功")
+            setIsEditing(false)
+          } else {
+            throw new Error("创建失败")
+          }
+        }
       } catch (error) {
         console.error("Form submission error:", error)
         message.error("提交失败，请重试")
       }
     },
-    [config, handleSubmit, id, onSubmit, updateMetadata, createMetadata, templateId, getTemplateDetail]
+    [form, id, onSubmit, templateId, updateMetadata, createMetadata]
   )
 
   const { metadata, renderConfig } = config
@@ -203,68 +240,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
     prefix: config.orderNumberConfig?.prefix || "ORDER",
     fieldName: config.orderNumberConfig?.fieldName || "orderNumber",
     label: config.orderNumberConfig?.label || "订单编号",
-  }
-
-  const renderValidationErrors = () => {
-    if (!Object.keys(validationErrors).length) return null
-
-    return (
-      <div className='space-y-4 mb-6'>
-        {validationErrors.required && validationErrors.required.length > 0 && (
-          <Alert variant='destructive'>
-            <AlertTitle className='flex items-center gap-2'>
-              <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-              必填项未填写
-            </AlertTitle>
-            <AlertDescription>
-              <ul className='list-disc list-inside mt-2'>
-                {validationErrors.required.map((error, index) => (
-                  <li key={index} className='break-all'>
-                    {error}
-                  </li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {validationErrors.invalid && validationErrors.invalid.length > 0 && (
-          <Alert variant='destructive'>
-            <AlertTitle className='flex items-center gap-2'>
-              <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-              格式错误
-            </AlertTitle>
-            <AlertDescription>
-              <ul className='list-disc list-inside mt-2'>
-                {validationErrors.invalid.map((error, index) => (
-                  <li key={index} className='break-all'>
-                    {error}
-                  </li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {validationErrors.other && validationErrors.other.length > 0 && (
-          <Alert variant='destructive'>
-            <AlertTitle className='flex items-center gap-2'>
-              <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-              其他错误
-            </AlertTitle>
-            <AlertDescription>
-              <ul className='list-disc list-inside mt-2'>
-                {validationErrors.other.map((error, index) => (
-                  <li key={index} className='break-all'>
-                    {error}
-                  </li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        )}
-      </div>
-    )
   }
 
   if (isLoading) {
@@ -304,9 +279,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, id, onSub
             )}
           </div>
         </div>
-
-        {/* 验证错误信息展示 */}
-        {renderValidationErrors()}
 
         {/* 基本信息 */}
         <div

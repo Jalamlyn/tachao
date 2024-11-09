@@ -16,6 +16,96 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { motion } from "framer-motion"
+import { Button } from "@nextui-org/react"
+import { Icon } from "@iconify/react"
+import message from "@/components/Message"
+
+// 文件上传组件
+const FileUpload: React.FC<{
+  field: any
+  isEditable?: boolean
+  accept?: string
+  onUpload?: (file: File) => Promise<void>
+  placeholder?: string
+}> = ({ field, isEditable = true, accept, onUpload, placeholder = "选择文件" }) => {
+  const [uploading, setUploading] = React.useState(false)
+  const inputRef = React.useRef<HTMLInputElement>(null)
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (onUpload) {
+      setUploading(true)
+      try {
+        await onUpload(file)
+        field.onChange(file)
+        message.success("文件上传成功")
+      } catch (error) {
+        console.error("File upload error:", error)
+        message.error("文件上传失败")
+      } finally {
+        setUploading(false)
+      }
+    } else {
+      field.onChange(file)
+    }
+  }
+
+  const handleClear = () => {
+    field.onChange(null)
+    if (inputRef.current) {
+      inputRef.current.value = ""
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        onChange={handleFileChange}
+        disabled={!isEditable || uploading}
+        className="hidden"
+        id={field.name}
+      />
+      <Button
+        as="label"
+        htmlFor={field.name}
+        variant="bordered"
+        size="sm"
+        isDisabled={!isEditable || uploading}
+        isLoading={uploading}
+        startContent={!uploading && <Icon icon="mdi:upload" className="w-4 h-4" />}
+        className={cn(
+          "font-medium",
+          "hover:bg-blue-50 hover:text-blue-600",
+          "transition-colors duration-200"
+        )}
+      >
+        {placeholder}
+      </Button>
+      {field.value && (
+        <>
+          <span className="text-sm text-gray-500 truncate flex-1">
+            {field.value instanceof File ? field.value.name : field.value}
+          </span>
+          <Button
+            isIconOnly
+            variant="light"
+            size="sm"
+            color="danger"
+            onClick={handleClear}
+            isDisabled={!isEditable || uploading}
+          >
+            <Icon icon="mdi:close" className="w-4 h-4" />
+          </Button>
+        </>
+      )}
+    </div>
+  )
+}
 
 interface DynamicFormFieldsProps {
   fields: DynamicFormField[]
@@ -55,7 +145,6 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             form={form}
             isEditable={isEditable}
             disabled={field.disabled}
-            showWhen={field.showWhen}
             tooltip={field.tooltip}
           >
             {(formField) => <BasicInput type={field.type} field={formField} />}
@@ -82,7 +171,6 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             form={form}
             isEditable={isEditable}
             disabled={field.disabled}
-            showWhen={field.showWhen}
             tooltip={field.tooltip}
           >
             {(formField) => (
@@ -108,7 +196,6 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             form={form}
             isEditable={isEditable}
             disabled={field.disabled}
-            showWhen={field.showWhen}
             tooltip={field.tooltip}
           >
             {(formField) => (
@@ -136,7 +223,6 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             form={form}
             isEditable={isEditable}
             disabled={field.disabled}
-            showWhen={field.showWhen}
             tooltip={field.tooltip}
           >
             {(formField) => <DateInput field={formField} />}
@@ -151,7 +237,6 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             form={form}
             isEditable={isEditable}
             disabled={field.disabled}
-            showWhen={field.showWhen}
             tooltip={field.tooltip}
           >
             {(formField) => (
@@ -206,29 +291,15 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             form={form}
             isEditable={isEditable}
             disabled={field.disabled}
-            showWhen={field.showWhen}
             tooltip={field.tooltip}
           >
             {(formField) => (
-              <Input
-                type="file"
+              <FileUpload
+                field={formField}
+                isEditable={isEditable && !field.disabled}
                 accept={field.accept}
-                onChange={async (e) => {
-                  const file = e.target.files?.[0]
-                  if (file && field.onUpload) {
-                    await field.onUpload(file)
-                  }
-                  formField.onChange(e)
-                }}
-                disabled={!isEditable || field.disabled}
-                className={cn(
-                  "file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0",
-                  "file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700",
-                  "hover:file:bg-blue-100",
-                  "w-full",
-                  "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
-                  "transition-colors"
-                )}
+                onUpload={field.onUpload}
+                placeholder={field.placeholder}
               />
             )}
           </FormFieldWrapper>
@@ -242,11 +313,10 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             form={form}
             isEditable={isEditable}
             disabled={field.disabled}
-            showWhen={field.showWhen}
             tooltip={field.tooltip}
           >
             {(formField) =>
-              field.render({
+              field?.render({
                 field: formField,
                 form,
                 isEditable,

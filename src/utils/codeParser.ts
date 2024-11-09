@@ -57,7 +57,7 @@ const validateCustomComponents = (jsxCode: string): boolean => {
   // 简单的正则匹配检查是否使用了非允许的组件
   const componentPattern = /<([A-Z][a-zA-Z0-9]*)/g
   const matches = jsxCode.match(componentPattern) || []
-  
+
   for (const match of matches) {
     const componentName = match.slice(1) // 移除 < 符号
     if (!uiComponents[componentName]) {
@@ -65,7 +65,7 @@ const validateCustomComponents = (jsxCode: string): boolean => {
       return false
     }
   }
-  
+
   return true
 }
 
@@ -97,16 +97,9 @@ const parseConfigObject = (jsCode: string): any => {
     const objectCode = jsCode.replace(/export\s+default\s+/, "return ")
 
     // 创建一个新的 Function 来执行代码，传入 React 和 UI 组件
-    const createConfig = new Function(
-      "React",
-      ...Object.keys(uiComponents),
-      `${objectCode}`
-    )
+    const createConfig = new Function("React", ...Object.keys(uiComponents), `${objectCode}`)
 
-    return createConfig(
-      React,
-      ...Object.values(uiComponents)
-    )
+    return createConfig(React, ...Object.values(uiComponents))
   } catch (error) {
     console.error("Failed to parse config object:", error)
     throw new Error("Failed to parse config object")
@@ -127,15 +120,13 @@ export const parseFormEditOperations = async (
 
     // 首先编译 JSX
     const jsCode = await jsxToJs(code)
-
     // 创建一个新的 Function 来执行编辑操作
-    return new Function(
-      "config",
-      "set",
-      "React",
-      ...Object.keys(uiComponents),
-      `${jsCode}`
-    ) as (config: any, set: Function, React: any) => void
+    console.log(jsCode)
+    return new Function("config", "set", "React", ...Object.keys(uiComponents), `${jsCode}`) as (
+      config: any,
+      set: Function,
+      React: any
+    ) => void
   } catch (error) {
     console.error("Failed to parse edit operations:", error)
     message.error("编辑操作解析失败，请检查格式是否正确")

@@ -71,9 +71,3 @@
   margin: 0 auto;
   padding: 20px;
 }
-
-html,
-body {
-  max-height: 100vh;
-  overflow: hidden;
-}
