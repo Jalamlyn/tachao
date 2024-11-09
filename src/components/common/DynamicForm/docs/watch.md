@@ -42,11 +42,9 @@ watch: (form) => {
   const subscription = form.watch((value, { name }) => {
     if (name === 'template') {
       // 批量更新多个字段
-      form.batch(() => {
-        form.setValue('field1', value.field1);
-        form.setValue('field2', value.field2);
-        form.setValue('field3', value.field3);
-      });
+      form.setValue('field1', value.field1);
+      form.setValue('field2', value.field2);
+      form.setValue('field3', value.field3);
     }
   });
   
@@ -183,15 +181,6 @@ const createFieldWatch = (form: UseFormReturn<any>) => ({
   // 监听多个字段
   watchFields: (names: string[], callback: (values: any[]) => void) => {
     return form.watch(names, callback);
-  },
-
-  // 批量更新
-  batchUpdate: (updates: Array<{ field: string; value: any }>) => {
-    form.batch(() => {
-      updates.forEach(({ field, value }) => {
-        form.setValue(field, value);
-      });
-    });
   }
 });
 ```
