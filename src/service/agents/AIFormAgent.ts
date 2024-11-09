@@ -13,11 +13,19 @@ export type CommandResult = {
 
 export class AIFormAgent {
   private static instance: AIFormAgent
-  private _currentConfig: DynamicFormConfig | null = null
+  private _currentConfig: DynamicFormConfig | null = null // 保留兼容旧代码
+  private _rawConfig: string | null = null  // 新增: 存储原始配置字符串
   private _cachedImage: string | null = null
   private systemPrompt = `你是一个智能表单助手，负责帮助用户创建和检索表单。
 每次都生成一个完整的符合 DynamicFormConfig 类型的配置对象，不生成局部修改。
-检索表单时，你需要根据用户的描述在表单索引中查找匹配的表单。
+${
+  this._rawConfig
+    ? `当前表单配置:
+${this._rawConfig}
+
+请根据上述配置和用户的需求，生成一个新的完整配置。`
+    : ""
+}
 
 不要生成 订单编号 的配置，系统会自动生成。
 生成的表单必须包含2个部分
@@ -64,8 +72,16 @@ ${doc}
     return this._currentConfig
   }
 
+  public getRawConfig(): string | null {
+    return this._rawConfig
+  }
+
   private setCurrentConfig(config: DynamicFormConfig | null): void {
     this._currentConfig = config
+  }
+
+  private setRawConfig(rawConfig: string | null): void {
+    this._rawConfig = rawConfig
   }
 
   public cacheImage(imageData: string): void {
@@ -79,7 +95,8 @@ ${doc}
   public async processCommand(
     command: string,
     onChunk?: (chunk: string) => void,
-    config?: DynamicFormConfig
+    config?: DynamicFormConfig,
+    rawConfig?: string  // 新增参数
   ): Promise<CommandResult> {
     let generationProcess = ""
 
@@ -90,6 +107,10 @@ ${doc}
 
     if (config) {
       this.setCurrentConfig(config)
+    }
+    
+    if (rawConfig) {
+      this.setRawConfig(rawConfig)
     }
 
     const intent = await this.analyzeIntent(command)
@@ -106,6 +127,9 @@ ${doc}
       const createResult = await this.createForm(command, updateGenerationProcess)
       if (createResult) {
         this.setCurrentConfig(createResult.config)
+        if (createResult.rawConfig) {
+          this.setRawConfig(createResult.rawConfig)
+        }
       }
       return {
         type: "create",
@@ -182,6 +206,7 @@ ${doc}
     onChunk: (chunk: string) => void
   ): Promise<{
     config: DynamicFormConfig
+    rawConfig: string
     title: string
   } | null> {
     onChunk("🎨 正在设计表单结构...\n")
@@ -191,9 +216,9 @@ ${doc}
 ${description}
 
 ${
-  this._currentConfig
+  this._rawConfig
     ? `当前表单配置:
-${jsonStringify(this._currentConfig)}
+${this._rawConfig}
 
 请根据上述配置和用户的需求，生成一个新的完整配置。`
     : ""
@@ -236,6 +261,7 @@ export default {
       onChunk("✨ 表单生成完成！\n")
       return {
         config: config as DynamicFormConfig,
+        rawConfig: response,
         title: title as string,
       }
     } catch (error) {
