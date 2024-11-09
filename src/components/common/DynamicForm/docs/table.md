@@ -86,26 +86,23 @@ const config: DynamicFormConfig = {
       if (name.startsWith('tableData')) {
         const tableData = form.getValues('tableData') || [];
         
-        // 批量更新以提高性能
-        form.batch(() => {
-          // 计算每行小计
-          tableData.forEach((row, index) => {
-            const quantity = Number(row.quantity) || 0;
-            const price = Number(row.price) || 0;
-            const subtotal = quantity * price;
-            
-            // 更新行小计
-            form.setValue(`tableData.${index}.subtotal`, subtotal);
-          });
+        // 计算每行小计
+        tableData.forEach((row, index) => {
+          const quantity = Number(row.quantity) || 0;
+          const price = Number(row.price) || 0;
+          const subtotal = quantity * price;
           
-          // 计算总金额
-          const totalAmount = tableData.reduce((sum, row) => {
-            return sum + (Number(row.subtotal) || 0);
-          }, 0);
-          
-          // 更新总金额字段
-          form.setValue('totalAmount', totalAmount);
+          // 更新行小计
+          form.setValue(`tableData.${index}.subtotal`, subtotal);
         });
+        
+        // 计算总金额
+        const totalAmount = tableData.reduce((sum, row) => {
+          return sum + (Number(row.subtotal) || 0);
+        }, 0);
+        
+        // 更新总金额字段
+        form.setValue('totalAmount', totalAmount);
       }
     });
 
@@ -116,14 +113,19 @@ const config: DynamicFormConfig = {
 
 ### 性能优化建议
 
-1. **使用批量更新**
+1. **使用防抖**
 ```typescript
-form.batch(() => {
-  // 在这里进行多个 setValue 操作
-  updates.forEach(({ field, value }) => {
-    form.setValue(field, value);
-  });
+import { debounce } from 'lodash';
+
+const subscription = form.watch((value, { name }) => {
+  if (name.startsWith('tableData')) {
+    debouncedCalculate(form.getValues('tableData'));
+  }
 });
+
+const debouncedCalculate = debounce((tableData) => {
+  // 执行计算逻辑
+}, 300);
 ```
 
 2. **避免不必要的计算**
@@ -132,15 +134,6 @@ form.batch(() => {
 if (name.startsWith('tableData') && (name.includes('.quantity') || name.includes('.price'))) {
   // 执行计算逻辑
 }
-```
-
-3. **使用防抖**
-```typescript
-import { debounce } from 'lodash';
-
-const debouncedCalculate = debounce((tableData) => {
-  // 执行计算逻辑
-}, 300);
 ```
 
 ### 复杂计算示例
@@ -152,37 +145,35 @@ const config: DynamicFormConfig = {
       if (name.startsWith('tableData')) {
         const tableData = form.getValues('tableData') || [];
         
-        form.batch(() => {
-          // 1. 计算每行的小计
-          tableData.forEach((row, index) => {
-            const quantity = Number(row.quantity) || 0;
-            const price = Number(row.price) || 0;
-            const discount = Number(row.discount) || 0;
-            
-            // 计算折扣后金额
-            const subtotal = quantity * price * (1 - discount / 100);
-            form.setValue(`tableData.${index}.subtotal`, subtotal);
-          });
+        // 1. 计算每行的小计
+        tableData.forEach((row, index) => {
+          const quantity = Number(row.quantity) || 0;
+          const price = Number(row.price) || 0;
+          const discount = Number(row.discount) || 0;
           
-          // 2. 计算商品总数
-          const totalQuantity = tableData.reduce((sum, row) => {
-            return sum + (Number(row.quantity) || 0);
-          }, 0);
-          form.setValue('totalQuantity', totalQuantity);
-          
-          // 3. 计算总金额
-          const totalAmount = tableData.reduce((sum, row) => {
-            return sum + (Number(row.subtotal) || 0);
-          }, 0);
-          form.setValue('totalAmount', totalAmount);
-          
-          // 4. 计算税费
-          const tax = totalAmount * 0.1; // 假设税率为 10%
-          form.setValue('tax', tax);
-          
-          // 5. 计算最终金额
-          form.setValue('finalAmount', totalAmount + tax);
+          // 计算折扣后金额
+          const subtotal = quantity * price * (1 - discount / 100);
+          form.setValue(`tableData.${index}.subtotal`, subtotal);
         });
+        
+        // 2. 计算商品总数
+        const totalQuantity = tableData.reduce((sum, row) => {
+          return sum + (Number(row.quantity) || 0);
+        }, 0);
+        form.setValue('totalQuantity', totalQuantity);
+        
+        // 3. 计算总金额
+        const totalAmount = tableData.reduce((sum, row) => {
+          return sum + (Number(row.subtotal) || 0);
+        }, 0);
+        form.setValue('totalAmount', totalAmount);
+        
+        // 4. 计算税费
+        const tax = totalAmount * 0.1; // 假设税率为 10%
+        form.setValue('tax', tax);
+        
+        // 5. 计算最终金额
+        form.setValue('finalAmount', totalAmount + tax);
       }
     });
 
@@ -199,9 +190,9 @@ const config: DynamicFormConfig = {
    - 保持代码一致性
 
 2. **性能优化**
-   - 使用批量更新
+   - 使用防抖处理频繁计算
    - 避免不必要的计算
-   - 合理使用防抖
+   - 合理使用缓存
 
 3. **状态管理**
    - 计算结果存储在表单状态中
