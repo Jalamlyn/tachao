@@ -40,29 +40,6 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
   disabled,
   showWhen,
 }) => {
-  // 处理条件显示逻辑
-  const shouldShow = React.useMemo(() => {
-    if (!showWhen) return true
-
-    const dependentValue = form.watch(showWhen.field)
-    
-    switch (showWhen.operator) {
-      case "neq":
-        return dependentValue !== showWhen.value
-      case "gt":
-        return dependentValue > showWhen.value
-      case "lt":
-        return dependentValue < showWhen.value
-      case "contains":
-        return dependentValue?.includes?.(showWhen.value)
-      case "eq":
-      default:
-        return dependentValue === showWhen.value
-    }
-  }, [form, showWhen])
-
-  if (!shouldShow) return null
-
   return (
     <motion.div 
       variants={tooltipAnimation}

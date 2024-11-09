@@ -1,5 +1,7 @@
 import { DynamicFormConfig, FormField } from "../types"
 
+// 保留原有函数但标记为废弃
+/** @deprecated Use watch function instead */
 export const calculateDependentValues = (
   dependencies: DynamicFormConfig["dependencies"],
   changedFields: string[],
@@ -23,6 +25,7 @@ export const calculateDependentValues = (
   return updates
 }
 
+/** @deprecated Use watch function instead */
 export const validateField = (
   field: FormField,
   value: any,
@@ -45,6 +48,7 @@ export const validateField = (
   return undefined
 }
 
+/** @deprecated Use watch function instead */
 export const evaluateShowWhen = (showWhen: FormField["showWhen"], allValues: any): boolean => {
   if (!showWhen) return true
 
@@ -62,5 +66,34 @@ export const evaluateShowWhen = (showWhen: FormField["showWhen"], allValues: any
     case "eq":
     default:
       return dependentValue === showWhen.value
+  }
+}
+
+// 新增 watch 相关工具函数
+export const createWatchUtils = (form: any) => {
+  return {
+    // 监听字段变化
+    watchField: (fieldName: string, callback: (value: any) => void) => {
+      return form.watch(fieldName, callback)
+    },
+
+    // 监听多个字段
+    watchFields: (fieldNames: string[], callback: (values: any[]) => void) => {
+      return form.watch(fieldNames, callback)
+    },
+
+    // 批量更新
+    batchUpdate: (updates: Array<{ field: string; value: any }>) => {
+      form.batch(() => {
+        updates.forEach(({ field, value }) => {
+          form.setValue(field, value)
+        })
+      })
+    },
+
+    // 条件显示
+    setFieldVisibility: (fieldName: string, visible: boolean) => {
+      form.setValue(`${fieldName}.hidden`, !visible)
+    }
   }
 }

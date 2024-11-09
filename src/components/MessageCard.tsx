@@ -107,7 +107,6 @@ const MessageCard = React.memo(
 
       useEffect(() => {
         const cancel = () => {
-          console.log("cancel")
           setIsLoading(false)
         }
         const commander = create({
@@ -177,7 +176,6 @@ const MessageCard = React.memo(
       }
 
       const renderContent = () => {
-        console.log(status)
         if (status === "cancelled") {
           return (
             <div>

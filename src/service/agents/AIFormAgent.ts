@@ -67,17 +67,20 @@ export class AIFormAgent {
 创建表单时，你需要生成一个符合 DynamicFormConfig 类型的配置对象。
 检索表单时，你需要根据用户的描述在表单索引中查找匹配的表单。
 
-${doc}
 不要生成 订单编号 的配置，系统会自动生成。
 生成的表单必须包含2个部分
+
 - 基本信息
 - 流程信息
+
 明细信息部分根据表单的实际类型生成，是可选的
 生成默认的 calculate 计算逻辑，如果没有可计算的字段就默认返回 0
 生成明细信息如果涉及到计算的，要生成正确的行计算和合计计算逻辑
 生成必要的校验逻辑函数，用于保存的时候对表单数据进行校验
 只返回生成的代码，开头不要解释，结尾不要说明
 生成的代码中不允许使用 import 语句，不引入任何第三方依赖
+processStep 必须在 renderConfig 下
+除了计算字段所有字段 disable 都是 false
 
 注意：自定义组件只能使用 shadcn UI 组件库中的组件，包括：
 - Alert, AlertTitle, AlertDescription
@@ -88,6 +91,12 @@ ${doc}
 - Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 - Textarea
 - Calendar
+
+<doc>
+${doc}
+</doc>
+- 仔细阅读 doc 来编写配置，不能编写超出 doc 范围的代码
+- 阅读完 doc 和用户需求之后要进行思考和反思
 `
 
   private constructor() {}
@@ -293,7 +302,8 @@ ${description}
 2. 表单配置(config)：一个符合 DynamicFormConfig 类型的配置 js 对象
 
 请使用如下格式返回：
-\`\`\`
+"""
+\`\`\`mo
 <shata-ai-form>
 export default {
   title,
@@ -303,6 +313,7 @@ export default {
 }
 </shata-ai-form>
 \`\`\`
+"""
 `
 
     try {
@@ -351,7 +362,8 @@ ${jsonStringify(currentConfig)}
 ${editDescription}
 
 请生成使用 lodash 的 set 函数的修改代码,使用如下格式:
-\`\`\`
+"""
+\`\`\`mo
 <shata-ai-edit>
 // 使用 set(config, path, value) 进行精确修改
 set(config, 'formFields.basicInfo[0].label', '新的标签');
@@ -360,7 +372,7 @@ set(config, 'formFields.basicInfo[0].required', true);
 config.title = "新的标题";
 </shata-ai-edit>
 \`\`\`
-
+"""
 注意:
 1. 只生成需要修改的部分
 2. 使用精确的对象路径
@@ -401,7 +413,8 @@ config.title = "新的标题";
 ${jsonStringify(formsIndex)}
 
 请返回匹配的表单数组，格式如下：
-\`\`\`
+"""
+\`\`\`mo
 <shata-ai-result>
 export default getMatchedForms() {
   return [
@@ -410,6 +423,7 @@ export default getMatchedForms() {
 }
 </shata-ai-result>
 \`\`\`
+"""
 注意：
 1. 只返回与查询条件相关的表单
 2. 如果没有匹配的表单，返回空数组

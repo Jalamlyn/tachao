@@ -8,17 +8,29 @@ import { Icon } from "@iconify/react"
 
 interface DateInputProps {
   field: any
+  className?: string
+  placeholder?: string
 }
 
-const DateInput: React.FC<DateInputProps> = ({ field }) => (
+const DateInput: React.FC<DateInputProps> = ({ 
+  field,
+  className,
+  placeholder = "选择日期"
+}) => (
   <Popover>
     <PopoverTrigger asChild>
       <Button
         variant="bordered"
-        className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
+        className={cn(
+          "w-full pl-3 text-left font-normal", 
+          !field.value && "text-muted-foreground",
+          "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+          "transition-colors duration-200",
+          className
+        )}
         disabled={field.disabled}
       >
-        {field.value ? format(new Date(field.value), "PPP") : <span>选择日期</span>}
+        {field.value ? format(new Date(field.value), "PPP") : <span>{placeholder}</span>}
         <Icon icon="mdi:calendar" className="ml-auto h-4 w-4 opacity-50" />
       </Button>
     </PopoverTrigger>

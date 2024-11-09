@@ -137,6 +137,7 @@ export interface DynamicFormProps {
   onSubmit?: (validationResult: ValidationResult, values: any) => Promise<void>
   onCancel?: () => void
   templateId?: string
+  previewMode?: boolean // 新增 previewMode 属性
 }
 
 export interface WatchUtils {

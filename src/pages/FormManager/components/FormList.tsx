@@ -14,6 +14,7 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Chip,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -61,24 +62,98 @@ const FormList: React.FC<FormListProps> = ({ forms, onDelete }) => {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
+    return new Date(dateString).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'submitted':
+        return 'success'
+      case 'draft':
+        return 'warning'
+      case 'rejected':
+        return 'danger'
+      default:
+        return 'default'
+    }
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'submitted':
+        return '已提交'
+      case 'draft':
+        return '草稿'
+      case 'rejected':
+        return '已拒绝'
+      default:
+        return status
+    }
   }
 
   return (
     <>
-      <Table aria-label='单据列表'>
+      <Table aria-label='单据列表' className="min-w-full">
         <TableHeader>
           <TableColumn>标题</TableColumn>
+          <TableColumn>订单号</TableColumn>
+          <TableColumn>模板</TableColumn>
           <TableColumn>状态</TableColumn>
+          <TableColumn>创建时间</TableColumn>
           <TableColumn>更新时间</TableColumn>
           <TableColumn>操作</TableColumn>
         </TableHeader>
         <TableBody>
           {forms.map((form) => (
             <TableRow key={form.id}>
-              <TableCell>{form.title}</TableCell>
-              <TableCell>{form.status}</TableCell>
-              <TableCell>{formatDate(form.updatedAt)}</TableCell>
+              <TableCell>
+                <Tooltip content={`ID: ${form.id}`}>
+                  <span>{form.title}</span>
+                </Tooltip>
+              </TableCell>
+              <TableCell>{form.indexFields?.orderNumber}</TableCell>
+              <TableCell>
+                <Tooltip 
+                  content={`模板ID: ${form.template?.id}`}
+                  className="capitalize"
+                >
+                  <div className="flex items-center gap-2">
+                    <span>{form.template?.title}</span>
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      className="capitalize"
+                    >
+                      {form.template?.type}
+                    </Chip>
+                  </div>
+                </Tooltip>
+              </TableCell>
+              <TableCell>
+                <Chip
+                  color={getStatusColor(form.status)}
+                  variant="flat"
+                  className="capitalize"
+                >
+                  {getStatusText(form.status)}
+                </Chip>
+              </TableCell>
+              <TableCell>
+                <Tooltip content={form.indexFields?.createdAt}>
+                  <span>{formatDate(form.indexFields?.createdAt)}</span>
+                </Tooltip>
+              </TableCell>
+              <TableCell>
+                <Tooltip content={form.updatedAt}>
+                  <span>{formatDate(form.updatedAt)}</span>
+                </Tooltip>
+              </TableCell>
               <TableCell>
                 <div className='flex gap-2'>
                   <Tooltip content='查看'>

@@ -87,28 +87,6 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
               </tr>
             ))}
           </tbody>
-          {renderConfig.table.summary && (
-            <tfoot className='print:table-footer-group'>
-              <tr>
-                <td
-                  colSpan={renderConfig.table.columns.length}
-                  className='border border-gray-300 p-2 text-sm bg-gray-50'
-                >
-                  <div className='space-y-1'>
-                    {Object.entries(renderConfig.table.summary.fields).map(([key, { label, calculate }]) => {
-                      const value = calculate && calculate(data.tableData)
-                      return (
-                        <div key={key} className='flex justify-between'>
-                          <span className='font-medium text-gray-700'>{label}:</span>
-                          <span className='font-mono'>{typeof value === "number" ? value.toFixed(2) : value}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </td>
-              </tr>
-            </tfoot>
-          )}
         </table>
       </div>
     )
