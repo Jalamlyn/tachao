@@ -3,7 +3,7 @@ import { jsonParse, jsonStringify } from "@/utils"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
-import React from "react"
+import { markdown as doc } from "@/components/common/DynamicForm/doc.md"
 
 // 导入 shadcn UI 组件
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
@@ -272,10 +272,14 @@ ${doc}
     const prompt = `请根据以下描述生成一个完整的表单配置代码：
 ${description}
 
-${this._currentConfig ? `当前表单配置:
+${
+  this._currentConfig
+    ? `当前表单配置:
 ${jsonStringify(this._currentConfig)}
 
-请根据上述配置和用户的需求，生成一个新的完整配置。` : ''}
+请根据上述配置和用户的需求，生成一个新的完整配置。`
+    : ""
+}
 
 请生成包含两部分内容的 js 代码：
 1. 表单标题(title)：简要概括表单的主要内容

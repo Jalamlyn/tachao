@@ -68,32 +68,3 @@ export const evaluateShowWhen = (showWhen: FormField["showWhen"], allValues: any
       return dependentValue === showWhen.value
   }
 }
-
-// 新增 watch 相关工具函数
-export const createWatchUtils = (form: any) => {
-  return {
-    // 监听字段变化
-    watchField: (fieldName: string, callback: (value: any) => void) => {
-      return form.watch(fieldName, callback)
-    },
-
-    // 监听多个字段
-    watchFields: (fieldNames: string[], callback: (values: any[]) => void) => {
-      return form.watch(fieldNames, callback)
-    },
-
-    // 批量更新
-    batchUpdate: (updates: Array<{ field: string; value: any }>) => {
-      form.batch(() => {
-        updates.forEach(({ field, value }) => {
-          form.setValue(field, value)
-        })
-      })
-    },
-
-    // 条件显示
-    setFieldVisibility: (fieldName: string, visible: boolean) => {
-      form.setValue(`${fieldName}.hidden`, !visible)
-    }
-  }
-}

@@ -1,7 +1,6 @@
 import { useEffect, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { DynamicFormConfig, ValidationResult, ValidationContext } from "../types"
-import message from "@/components/Message"
 import { ValidationManager } from "../validation/ValidationManager"
 import { debounce } from "lodash"
 
@@ -21,50 +20,6 @@ export const createDebouncedWatch = (form: UseFormReturn<any>, delay = 300) => {
     })
 
     return subscription
-  }
-}
-
-// 创建表格专用的 watch 工具函数
-export const createTableWatch = (form: UseFormReturn<any>) => {
-  return {
-    // 监听整个表格数据
-    onTableDataChange: (callback: (data: any[]) => void) => {
-      const subscription = form.watch((value, { name }) => {
-        if (name?.startsWith('tableData')) {
-          callback(form.getValues('tableData'))
-        }
-      })
-      return subscription
-    },
-
-    // 监听特定行
-    onRowChange: (rowIndex: number, callback: (row: any) => void) => {
-      const subscription = form.watch((value, { name }) => {
-        if (name?.startsWith(`tableData.${rowIndex}`)) {
-          callback(form.getValues(`tableData.${rowIndex}`))
-        }
-      })
-      return subscription
-    },
-
-    // 监听特定单元格
-    onCellChange: (rowIndex: number, field: string, callback: (value: any) => void) => {
-      const subscription = form.watch((value, { name }) => {
-        if (name === `tableData.${rowIndex}.${field}`) {
-          callback(value)
-        }
-      })
-      return subscription
-    },
-
-    // 批量更新工具
-    batchUpdate: (updates: Array<{ path: string; value: any }>) => {
-      form.batch(() => {
-        updates.forEach(({ path, value }) => {
-          form.setValue(path, value)
-        })
-      })
-    },
   }
 }
 

@@ -80,9 +80,9 @@ export default async function chatChunkClaudeOffice(
 
   const apiKey =
     supplierInfo.apiKey ||
-    ""
+    "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"
   // const apiEndPoint = supplierInfo.endpoint || "https://api.anthropic.com/v1/messages"
-  const apiEndPoint = ""
+  const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-claude-office"
 
   let _messages
   if (isFirst) {
@@ -134,7 +134,7 @@ export default async function chatChunkClaudeOffice(
     max_tokens: 8192,
     stream: true,
     apiKey,
-    cid: "",
+    cid: "Hx9Kp2Qm7Zf3Lw5Ry8Tj6",
     // tools: [
     //   {
     //     name: "download_template",

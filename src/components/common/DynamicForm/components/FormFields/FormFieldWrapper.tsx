@@ -38,7 +38,6 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
   form,
   isEditable = true,
   disabled,
-  showWhen,
 }) => {
   return (
     <motion.div 
