@@ -1,11 +1,9 @@
 import chatChunkClaude from "../chat/chat-chunk-claude-office"
 import { jsonParse, jsonStringify } from "@/utils"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
-import { parseFormConfig, parseFormEditOperations } from "@/utils/codeParser"
+import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
-import { set, cloneDeep } from "lodash"
 import React from "react"
-import doc from "@/components/common/DynamicForm/docs"
 
 // 导入 shadcn UI 组件
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
@@ -43,7 +41,7 @@ interface FormIndex {
 }
 
 export type CommandResult = {
-  type: "create" | "edit" | "search"
+  type: "create" | "search"
   data: any
   generationProcess?: string
 }
@@ -64,7 +62,7 @@ export class AIFormAgent {
   private _currentConfig: DynamicFormConfig | null = null
   private _cachedImage: string | null = null
   private systemPrompt = `你是一个智能表单助手，负责帮助用户创建和检索表单。
-创建表单时，你需要生成一个符合 DynamicFormConfig 类型的配置对象。
+每次都生成一个完整的符合 DynamicFormConfig 类型的配置对象，不生成局部修改。
 检索表单时，你需要根据用户的描述在表单索引中查找匹配的表单。
 
 不要生成 订单编号 的配置，系统会自动生成。
@@ -171,7 +169,8 @@ ${doc}
 
     switch (intent) {
       case "create":
-        updateGenerationProcess("📝 开始创建表单...\n")
+      case "edit":
+        updateGenerationProcess("📝 开始生成表单...\n")
         const createResult = await this.createForm(command, updateGenerationProcess)
         if (createResult) {
           this.setCurrentConfig(createResult.config)
@@ -179,20 +178,6 @@ ${doc}
         return {
           type: "create",
           data: createResult,
-          generationProcess,
-        }
-      case "edit":
-        if (!this._currentConfig) {
-          throw new Error("没有可编辑的表单配置，请先创建或加载一个表单")
-        }
-        updateGenerationProcess("✏️ 开始编辑表单...\n")
-        const editResult = await this.editForm(this._currentConfig, command, updateGenerationProcess)
-        if (editResult) {
-          this.setCurrentConfig(editResult.config)
-        }
-        return {
-          type: "edit",
-          data: editResult,
           generationProcess,
         }
       case "search":
@@ -239,28 +224,23 @@ ${doc}
 请根据以下规则进行分析：
 1. 如果是创建/新建/生成表单的指令，返回 "create"
 2. 如果是搜索/查找/检索表单或资料的指令，返回 "search"
-3. 如果是编辑/修改/更新表单的指令，返回 "edit"
+3. 如果是编辑/修改/更新表单的指令，返回 "create"
 4. 如果不是表单相关的指令或指令不明确，返回 "unsupported"
 
-请只返回 "create"、"search"、"edit" 或 "unsupported"，不要返回其他内容。`
+请只返回 "create"、"search" 或 "unsupported"，不要返回其他内容。`
 
     try {
       const aiResponse = await this.processAIResponse(aiAnalysisPrompt, () => {})
       const cleanResponse = aiResponse.trim().toLowerCase()
 
-      if (
-        cleanResponse === "create" ||
-        cleanResponse === "search" ||
-        cleanResponse === "edit" ||
-        cleanResponse === "unsupported"
-      ) {
+      if (cleanResponse === "create" || cleanResponse === "search" || cleanResponse === "unsupported") {
         if (cleanResponse === "unsupported") {
-          message.warning("不支持的指令，请使用创建表单、检索表单或编辑表单相关的指令。")
+          message.warning("不支持的指令，请使用创建表单或检索表单相关的指令。")
         }
         return cleanResponse as "create" | "search" | "edit" | "unsupported"
       }
 
-      const createKeywords = /(创建|新建|生成|制作|添加|建立).*?(表单|单据|模板)/
+      const createKeywords = /(创建|新建|生成|制作|添加|建立|编辑|修改|更新|调整|改变).*?(表单|单据|模板)/
       if (createKeywords.test(input)) {
         return "create"
       }
@@ -270,12 +250,7 @@ ${doc}
         return "search"
       }
 
-      const editKeywords = /(编辑|修改|更新|调整|改变).*?(表单|单据|模板)/
-      if (editKeywords.test(input)) {
-        return "edit"
-      }
-
-      message.warning("不支持的指令，请使用创建表单、检索表单或编辑表单相关的指令。")
+      message.warning("不支持的指令，请使用创建表单或检索表单相关的指令。")
       return "unsupported"
     } catch (error) {
       console.error("Error analyzing intent:", error)
@@ -294,12 +269,17 @@ ${doc}
     onChunk("🎨 正在设计表单结构...\n")
     await new Promise((resolve) => setTimeout(resolve, 300))
 
-    const prompt = `请根据以下描述生成一个表单配置代码：
+    const prompt = `请根据以下描述生成一个完整的表单配置代码：
 ${description}
+
+${this._currentConfig ? `当前表单配置:
+${jsonStringify(this._currentConfig)}
+
+请根据上述配置和用户的需求，生成一个新的完整配置。` : ''}
 
 请生成包含两部分内容的 js 代码：
 1. 表单标题(title)：简要概括表单的主要内容
-2. 表单配置(config)：一个符合 DynamicFormConfig 类型的配置 js 对象
+2. 表单配置(config)：一个完整的符合 DynamicFormConfig 类型的配置 js 对象
 
 请使用如下格式返回：
 """
@@ -339,65 +319,6 @@ export default {
     } catch (error) {
       console.error("Error creating form:", error)
       throw new Error("创建表单失败：" + (error as Error).message)
-    }
-  }
-
-  private async editForm(
-    currentConfig: DynamicFormConfig,
-    editDescription: string,
-    onChunk: (chunk: string) => void
-  ): Promise<{
-    config: DynamicFormConfig
-    title?: string
-  } | null> {
-    onChunk("🔄 正在分析编辑需求...\n")
-    await new Promise((resolve) => setTimeout(resolve, 300))
-
-    const prompt = `请根据以下编辑描述,生成精确的表单配置修改代码:
-
-当前表单配置:
-${jsonStringify(currentConfig)}
-
-编辑需求:
-${editDescription}
-
-请生成使用 lodash 的 set 函数的修改代码,使用如下格式:
-"""
-\`\`\`mo
-<shata-ai-edit>
-// 使用 set(config, path, value) 进行精确修改
-set(config, 'formFields.basicInfo[0].label', '新的标签');
-set(config, 'formFields.basicInfo[0].required', true);
-// 如果需要修改标题
-config.title = "新的标题";
-</shata-ai-edit>
-\`\`\`
-"""
-注意:
-1. 只生成需要修改的部分
-2. 使用精确的对象路径
-3. 每个修改使用单独的 set 语句
-4. 确保路径正确且存在
-5. 自定义组件只能使用 shadcn UI 组件库中的组件，Button 只能使用 NextUI 的 Button
-`
-
-    try {
-      onChunk("🛠️ 正在应用修改...\n")
-      const response = await this.processAIResponse(prompt, onChunk)
-      const editOperation = await parseFormEditOperations(response)
-      const newConfig = cloneDeep(currentConfig)
-
-      // 传入 React 和 shadcn 组件
-      editOperation(newConfig, set, React, ...Object.values(uiComponents))
-
-      onChunk("✅ 表单修改完成！\n")
-      return {
-        config: newConfig,
-        title: newConfig.title,
-      }
-    } catch (error) {
-      console.error("Error editing form:", error)
-      throw new Error("编辑表单失败：" + (error as Error).message)
     }
   }
 
