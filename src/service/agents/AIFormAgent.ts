@@ -1,5 +1,4 @@
 import chatChunkClaude from "../chat/chat-chunk-claude-office"
-import { jsonParse, jsonStringify } from "@/utils"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
@@ -92,6 +91,16 @@ ${doc}
 
   public clearCachedImage(): void {
     this._cachedImage = null
+  }
+
+  public static async parseConfig(rawConfig: string) {
+    try {
+      const parsedConfig = await parseFormConfig(rawConfig)
+      return parsedConfig
+    } catch (error) {
+      console.error("Error parsing form config:", error)
+      throw new Error("Failed to parse form config")
+    }
   }
 
   public async processCommand(
