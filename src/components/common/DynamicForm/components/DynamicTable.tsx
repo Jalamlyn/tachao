@@ -235,6 +235,45 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     }
   }
 
+  // 计算合计行数据
+  const calculateSummary = () => {
+    if (!config.summary?.show) return null
+
+    const summaryData = config.columns.reduce((acc, column) => {
+      if (column.summary?.calculate) {
+        acc[column.key] = column.summary.calculate(tableData)
+      }
+      return acc
+    }, {} as Record<string, any>)
+
+    return summaryData
+  }
+
+  const summaryData = calculateSummary()
+
+  // 渲染合计行单元格
+  const renderSummaryCell = (column: TableConfig["columns"][0]) => {
+    if (column.key === config.columns[0].key) {
+      return <div className="font-medium">{config.summary?.label || "合计"}</div>
+    }
+
+    if (!summaryData || !column.summary?.calculate) {
+      return null
+    }
+
+    const value = summaryData[column.key]
+    
+    if (column.summary.render) {
+      return column.summary.render(value)
+    }
+
+    if (column.type === "number") {
+      return <div className="text-right font-mono">{value}</div>
+    }
+
+    return value
+  }
+
   return (
     <div>
       {config.toolbar}
@@ -272,6 +311,16 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                 )}
               </TableRow>
             ))}
+            {config.summary?.show && summaryData && (
+              <TableRow className={cn("bg-default-50", config.summary.className)} style={config.summary.style}>
+                {config.columns.map((column) => (
+                  <TableCell key={column.key}>
+                    {renderSummaryCell(column)}
+                  </TableCell>
+                ))}
+                {isEditable && <TableCell />}
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
@@ -300,6 +349,24 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             )}
           </motion.div>
         ))}
+        {config.summary?.show && summaryData && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={cn(
+              'bg-default-50 rounded-lg p-4 space-y-3',
+              config.summary.className
+            )}
+            style={config.summary.style}
+          >
+            {config.columns.map((column) => (
+              <div key={column.key} className='space-y-1'>
+                <div className='text-sm font-medium text-gray-500'>{column.title}</div>
+                <div>{renderSummaryCell(column)}</div>
+              </div>
+            ))}
+          </motion.div>
+        )}
       </div>
 
       {isEditable && (

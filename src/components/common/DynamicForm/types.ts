@@ -64,11 +64,23 @@ export interface TableColumn {
     selectionMode?: "single" | "multiple"
   }
   render?: (value: any, record: any, index: number) => ReactNode
+  summary?: {
+    calculate?: (records: any[]) => any
+    render?: (value: any) => ReactNode
+  }
+}
+
+export interface TableSummary {
+  show?: boolean
+  label?: string
+  className?: string
+  style?: React.CSSProperties
 }
 
 export interface TableConfig {
   columns: TableColumn[]
   toolbar?: ReactNode
+  summary?: TableSummary
 }
 
 export interface ProcessStep {
@@ -137,7 +149,7 @@ export interface DynamicFormProps {
   onSubmit?: (validationResult: ValidationResult, values: any) => Promise<void>
   onCancel?: () => void
   templateId?: string
-  previewMode?: boolean // 新增 previewMode 属性
+  previewMode?: boolean
 }
 
 export interface WatchUtils {
