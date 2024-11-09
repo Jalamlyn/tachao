@@ -2,6 +2,8 @@ import { useState, useCallback } from "react"
 import { setMetadata, getMetadata, queryMetadataHistory, deleteMetadata } from "@/service/apis/api"
 import { getCurrentAccountInfo } from "@/service/apis/user"
 import { jsonParse, jsonStringify } from "@/utils"
+import { functionToString, stringToFunction } from '@/utils/functionSerializer'
+import { logger } from '@/utils/logger'
 
 /**
  * 元数据索引接口
@@ -84,14 +86,20 @@ export function useMetadata<T = any>(type: string) {
    * 获取索引列表
    */
   const getIndexes = useCallback(async () => {
+    logger.debug('[useMetadata] Getting indexes', { type });
     try {
       const result = await getMetadata([`${type}_index`])
       if (result.data?.[0]?.value) {
-        return jsonParse(result.data[0].value) as MetadataIndex[]
+        const indexes = jsonParse(result.data[0].value) as MetadataIndex[];
+        logger.debug('[useMetadata] Indexes loaded successfully', { 
+          count: indexes.length 
+        });
+        return indexes;
       }
+      logger.debug('[useMetadata] No indexes found');
       return []
     } catch (error) {
-      console.error(`Error getting ${type} indexes:`, error)
+      logger.error(`[useMetadata] Error getting ${type} indexes`, error as Error);
       setError(`Failed to get ${type} indexes`)
       return []
     }
@@ -102,17 +110,23 @@ export function useMetadata<T = any>(type: string) {
    */
   const getDetail = useCallback(
     async (id: string) => {
+      logger.debug('[useMetadata] Getting detail', { type, id });
       try {
         const result = await getMetadata([`${id}`])
         if (result.data?.[0]?.value) {
+          const parsedData = jsonParse(result.data[0].value);
+          // 还原函数
+          const restoredData = stringToFunction(parsedData);
+          logger.debug('[useMetadata] Detail loaded and restored successfully', { id });
           return {
-            ...jsonParse(result.data[0].value),
+            ...restoredData,
             versionCode: result.data[0].versionCode,
           } as MetadataDetail<T>
         }
+        logger.debug('[useMetadata] No detail found', { id });
         return null
       } catch (error) {
-        console.error(`Error getting ${type} detail:`, error)
+        logger.error(`[useMetadata] Error getting ${type} detail`, error as Error, { id });
         setError(`Failed to get ${type} detail`)
         return null
       }
@@ -125,11 +139,13 @@ export function useMetadata<T = any>(type: string) {
    */
   const saveIndex = useCallback(
     async (indexes: MetadataIndex[]) => {
+      logger.debug('[useMetadata] Saving indexes', { type, count: indexes.length });
       try {
         await setMetadata(`${type}_index`, jsonStringify(indexes))
+        logger.debug('[useMetadata] Indexes saved successfully');
         return true
       } catch (error) {
-        console.error(`Error saving ${type} index:`, error)
+        logger.error(`[useMetadata] Error saving ${type} index`, error as Error);
         setError(`Failed to save ${type} index`)
         return false
       }
@@ -142,11 +158,15 @@ export function useMetadata<T = any>(type: string) {
    */
   const saveDetail = useCallback(
     async (detail: MetadataDetail<T>) => {
+      logger.debug('[useMetadata] Saving detail', { type, id: detail.id });
       try {
-        await setMetadata(`${detail.id}`, jsonStringify(detail))
+        // 转换函数为字符串
+        const serializedDetail = functionToString(detail);
+        await setMetadata(`${detail.id}`, jsonStringify(serializedDetail))
+        logger.debug('[useMetadata] Detail saved successfully', { id: detail.id });
         return true
       } catch (error) {
-        console.error(`Error saving ${type} detail:`, error)
+        logger.error(`[useMetadata] Error saving ${type} detail`, error as Error, { id: detail.id });
         setError(`Failed to save ${type} detail`)
         return false
       }
@@ -159,6 +179,7 @@ export function useMetadata<T = any>(type: string) {
    */
   const create = useCallback(
     async (data: Partial<MetadataDetail<T>>) => {
+      logger.debug('[useMetadata] Creating new item', { type });
       setLoading(true)
       setError(null)
       try {
@@ -179,9 +200,7 @@ export function useMetadata<T = any>(type: string) {
           modifiedBy: currentUser.name || currentUser.email || "Unknown",
           createdAt: now,
           updatedAt: now,
-          // 保存模板信息
           template: data.template,
-          // 保存索引字段
           indexFields: {
             ...(data.indexFields || {}),
             createdAt: now,
@@ -205,9 +224,7 @@ export function useMetadata<T = any>(type: string) {
           title: detail.title,
           status: detail.status,
           updatedAt: now,
-          // 在索引中保存模板信息
           template: detail.template,
-          // 在索引中保存索引字段
           indexFields: detail.indexFields,
         }
         indexes.push(newIndex)
@@ -215,9 +232,10 @@ export function useMetadata<T = any>(type: string) {
         if (!indexSaved) throw new Error("Failed to save index")
 
         setItems((prev) => [...prev, detail])
+        logger.debug('[useMetadata] Item created successfully', { id: normalizedId });
         return detail
       } catch (error) {
-        console.error(`Error creating ${type}:`, error)
+        logger.error(`[useMetadata] Error creating ${type}`, error as Error);
         setError(`Failed to create ${type}`)
         return null
       } finally {
@@ -232,6 +250,7 @@ export function useMetadata<T = any>(type: string) {
    */
   const update = useCallback(
     async (id: string, data: Partial<MetadataDetail<T>>) => {
+      logger.debug('[useMetadata] Updating item', { type, id });
       setLoading(true)
       setError(null)
       try {
@@ -247,9 +266,7 @@ export function useMetadata<T = any>(type: string) {
           ...data,
           updatedAt: now,
           modifiedBy: currentUser.name || currentUser.email || "Unknown",
-          // 更新模板信息
           template: data.template || currentDetail.template,
-          // 更新索引字段
           indexFields: {
             ...(currentDetail.indexFields || {}),
             ...(data.indexFields || {}),
@@ -274,9 +291,7 @@ export function useMetadata<T = any>(type: string) {
             title: updatedDetail.title,
             status: updatedDetail.status,
             updatedAt: now,
-            // 更新索引中的模板信息
             template: updatedDetail.template,
-            // 更新索引中的索引字段
             indexFields: updatedDetail.indexFields,
           }
           const indexSaved = await saveIndex(indexes)
@@ -284,9 +299,10 @@ export function useMetadata<T = any>(type: string) {
         }
 
         setItems((prev) => prev.map((item) => (item.id === id ? updatedDetail : item)))
+        logger.debug('[useMetadata] Item updated successfully', { id });
         return updatedDetail
       } catch (error) {
-        console.error(`Error updating ${type}:`, error)
+        logger.error(`[useMetadata] Error updating ${type}`, error as Error, { id });
         setError(`Failed to update ${type}`)
         return null
       } finally {
@@ -301,6 +317,7 @@ export function useMetadata<T = any>(type: string) {
    */
   const remove = useCallback(
     async (id: string) => {
+      logger.debug('[useMetadata] Removing item', { type, id });
       setLoading(true)
       setError(null)
       try {
@@ -313,9 +330,10 @@ export function useMetadata<T = any>(type: string) {
         await saveIndex(filteredIndexes)
 
         setItems((prev) => prev.filter((item) => item.id !== id))
+        logger.debug('[useMetadata] Item removed successfully', { id });
         return true
       } catch (error) {
-        console.error(`Error deleting ${type}:`, error)
+        logger.error(`[useMetadata] Error deleting ${type}`, error as Error, { id });
         setError(`Failed to delete ${type}`)
         return false
       } finally {
@@ -330,18 +348,24 @@ export function useMetadata<T = any>(type: string) {
    */
   const getHistory = useCallback(
     async (id: string) => {
+      logger.debug('[useMetadata] Getting history', { type, id });
       setLoading(true)
       setError(null)
       try {
         const history = await queryMetadataHistory({ names: [`${id}`] })
-        return history.data.map((item) => ({
+        const formattedHistory = history.data.map((item) => ({
           updatedAt: item.updatedAt,
           versionCode: item.versionCode,
           modifiedBy: jsonParse(item.value).modifiedBy || "Unknown",
           value: item.value,
-        }))
+        }));
+        logger.debug('[useMetadata] History loaded successfully', { 
+          id, 
+          count: formattedHistory.length 
+        });
+        return formattedHistory;
       } catch (error) {
-        console.error(`Error getting ${type} history:`, error)
+        logger.error(`[useMetadata] Error getting ${type} history`, error as Error, { id });
         setError(`Failed to get ${type} history`)
         return []
       } finally {
@@ -355,6 +379,7 @@ export function useMetadata<T = any>(type: string) {
    * 加载列表
    */
   const load = useCallback(async () => {
+    logger.debug('[useMetadata] Loading list', { type });
     setLoading(true)
     setError(null)
     try {
@@ -373,9 +398,12 @@ export function useMetadata<T = any>(type: string) {
         createdAt: index.indexFields?.createdAt || index.updatedAt,
       }))
       setItems(simpleDetails)
+      logger.debug('[useMetadata] List loaded successfully', { 
+        count: simpleDetails.length 
+      });
       return simpleDetails
     } catch (error) {
-      console.error(`Error loading ${type} list:`, error)
+      logger.error(`[useMetadata] Error loading ${type} list`, error as Error);
       setError(`Failed to load ${type} list`)
       return []
     } finally {
@@ -387,6 +415,7 @@ export function useMetadata<T = any>(type: string) {
    * 加载列表(包含详情)
    */
   const loadWithDetails = useCallback(async () => {
+    logger.debug('[useMetadata] Loading list with details', { type });
     setLoading(true)
     setError(null)
     try {
@@ -394,9 +423,12 @@ export function useMetadata<T = any>(type: string) {
       const details = await Promise.all(indexes.map((index) => getDetail(index.id)))
       const validDetails = details.filter((d): d is MetadataDetail<T> => d !== null)
       setItems(validDetails)
+      logger.debug('[useMetadata] List with details loaded successfully', { 
+        count: validDetails.length 
+      });
       return validDetails
     } catch (error) {
-      console.error(`Error loading ${type} list with details:`, error)
+      logger.error(`[useMetadata] Error loading ${type} list with details`, error as Error);
       setError(`Failed to load ${type} list with details`)
       return []
     } finally {
