@@ -5,56 +5,10 @@ import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
 import { markdown as doc } from "@/components/common/DynamicForm/doc.md"
 
-// 导入 shadcn UI 组件
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Calendar } from "@/components/ui/calendar"
-import { Button } from "@nextui-org/button"
-
-// shadcn UI 组件映射
-const uiComponents = {
-  Alert,
-  AlertTitle,
-  AlertDescription,
-  Button, //NextUI
-  Card,
-  Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-  Calendar,
-}
-
-interface FormIndex {
-  id: string
-  templateId: string
-  status: string
-  title: string
-}
-
 export type CommandResult = {
-  type: "create" | "search"
+  type: "create"
   data: any
   generationProcess?: string
-}
-
-// 添加格式化时间的辅助函数
-const formatTime = () => {
-  const now = new Date()
-  return now.toLocaleTimeString("zh-CN", {
-    hour12: false,
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  })
 }
 
 export class AIFormAgent {
@@ -129,27 +83,7 @@ ${doc}
   ): Promise<CommandResult> {
     let generationProcess = ""
 
-    // 记录用户输入和时间
-    const userInputTime = formatTime()
-    generationProcess += `[${userInputTime}] 👤 用户: ${command}\n\n`
-
     const updateGenerationProcess = (chunk: string) => {
-      // 如果是新的AI回复开始,添加时间戳
-      if (
-        chunk.startsWith("🤖") ||
-        chunk.startsWith("📝") ||
-        chunk.startsWith("✏️") ||
-        chunk.startsWith("🔍") ||
-        chunk.startsWith("⚡") ||
-        chunk.startsWith("✨") ||
-        chunk.startsWith("🎨") ||
-        chunk.startsWith("🛠️") ||
-        chunk.startsWith("✅") ||
-        chunk.startsWith("📋")
-      ) {
-        const timestamp = formatTime()
-        generationProcess += `[${timestamp}] `
-      }
       generationProcess += chunk
       onChunk?.(chunk)
     }
@@ -167,30 +101,20 @@ ${doc}
     updateGenerationProcess("🤖 AI助手正在分析您的需求...\n")
     await new Promise((resolve) => setTimeout(resolve, 500))
 
-    switch (intent) {
-      case "create":
-      case "edit":
-        updateGenerationProcess("📝 开始生成表单...\n")
-        const createResult = await this.createForm(command, updateGenerationProcess)
-        if (createResult) {
-          this.setCurrentConfig(createResult.config)
-        }
-        return {
-          type: "create",
-          data: createResult,
-          generationProcess,
-        }
-      case "search":
-        updateGenerationProcess("🔍 开始搜索表单...\n")
-        const searchResult = await this.searchForms(command, [], updateGenerationProcess)
-        return {
-          type: "search",
-          data: searchResult,
-          generationProcess,
-        }
-      default:
-        throw new Error("未知的指令类型")
+    if (intent === "create" || intent === "edit") {
+      updateGenerationProcess("📝 开始生成表单...\n")
+      const createResult = await this.createForm(command, updateGenerationProcess)
+      if (createResult) {
+        this.setCurrentConfig(createResult.config)
+      }
+      return {
+        type: "create",
+        data: createResult,
+        generationProcess,
+      }
     }
+
+    throw new Error("未知的指令类型")
   }
 
   private async processAIResponse(userInput: string, onChunk: (chunk: string) => void): Promise<string> {
@@ -217,27 +141,26 @@ ${doc}
     return response
   }
 
-  public async analyzeIntent(input: string): Promise<"create" | "search" | "edit" | "unsupported"> {
+  public async analyzeIntent(input: string): Promise<"create" | "edit" | "unsupported"> {
     const aiAnalysisPrompt = `请分析以下用户指令的意图，判断是否是合法的表单操作指令：
 "${input}"
 
 请根据以下规则进行分析：
 1. 如果是创建/新建/生成表单的指令，返回 "create"
-2. 如果是搜索/查找/检索表单或资料的指令，返回 "search"
-3. 如果是编辑/修改/更新表单的指令，返回 "create"
-4. 如果不是表单相关的指令或指令不明确，返回 "unsupported"
+2. 如果是编辑/修改/更新表单的指令，返回 "create"
+3. 如果不是表单相关的指令或指令不明确，返回 "unsupported"
 
-请只返回 "create"、"search" 或 "unsupported"，不要返回其他内容。`
+请只返回 "create" 或 "unsupported"，不要返回其他内容。`
 
     try {
       const aiResponse = await this.processAIResponse(aiAnalysisPrompt, () => {})
       const cleanResponse = aiResponse.trim().toLowerCase()
 
-      if (cleanResponse === "create" || cleanResponse === "search" || cleanResponse === "unsupported") {
+      if (cleanResponse === "create" || cleanResponse === "unsupported") {
         if (cleanResponse === "unsupported") {
-          message.warning("不支持的指令，请使用创建表单或检索表单相关的指令。")
+          message.warning("不支持的指令，请使用创建表单相关的指令。")
         }
-        return cleanResponse as "create" | "search" | "edit" | "unsupported"
+        return cleanResponse as "create" | "edit" | "unsupported"
       }
 
       const createKeywords = /(创建|新建|生成|制作|添加|建立|编辑|修改|更新|调整|改变).*?(表单|单据|模板)/
@@ -245,12 +168,7 @@ ${doc}
         return "create"
       }
 
-      const searchKeywords = /(搜索|查找|检索|查询|寻找|浏览).*?(表单|单据|资料|模板)/
-      if (searchKeywords.test(input)) {
-        return "search"
-      }
-
-      message.warning("不支持的指令，请使用创建表单或检索表单相关的指令。")
+      message.warning("不支持的指令，请使用创建表单相关的指令。")
       return "unsupported"
     } catch (error) {
       console.error("Error analyzing intent:", error)
@@ -323,52 +241,6 @@ export default {
     } catch (error) {
       console.error("Error creating form:", error)
       throw new Error("创建表单失败：" + (error as Error).message)
-    }
-  }
-
-  private async searchForms(
-    query: string,
-    formsIndex: FormIndex[],
-    onChunk: (chunk: string) => void
-  ): Promise<FormIndex[]> {
-    onChunk("🔍 正在搜索匹配的表单...\n")
-    await new Promise((resolve) => setTimeout(resolve, 300))
-
-    const prompt = `请根据用户的查询条件"${query}"，在以下表单索引中查找匹配的表单：
-${jsonStringify(formsIndex)}
-
-请返回匹配的表单数组，格式如下：
-"""
-\`\`\`mo
-<shata-ai-result>
-export default getMatchedForms() {
-  return [
-    // 匹配的表单索引数组
-  ]
-}
-</shata-ai-result>
-\`\`\`
-"""
-注意：
-1. 只返回与查询条件相关的表单
-2. 如果没有匹配的表单，返回空数组
-3. 返回的数组元素必须来自原始数据，不要修改或添加新字段`
-
-    try {
-      const response = await this.processAIResponse(prompt, onChunk)
-      const match = response.match(/<shata-ai-result>([\s\S]*?)<\/shata-ai-result>/)
-
-      onChunk("📋 搜索完成！\n")
-
-      if (!match) {
-        throw new Error("AI 响应格式错误")
-      }
-
-      const results = jsonParse(match[1])
-      return Array.isArray(results) ? results : []
-    } catch (error) {
-      console.error("Error searching forms:", error)
-      throw new Error("搜索表单失败：" + (error as Error).message)
     }
   }
 }
