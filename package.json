@@ -73,6 +73,7 @@
     "events": "^3.3.0",
     "exa-js": "^1.0.14",
     "fetch-event-stream": "^0.1.5",
+    "formulajs": "^1.0.8",
     "framer-motion": "~11.1.1",
     "gantt-task-react": "^0.3.9",
     "github-markdown-css": "^5.6.1",
