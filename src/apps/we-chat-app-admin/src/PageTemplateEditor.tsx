@@ -12,6 +12,8 @@ import {
 import { Icon } from "@iconify/react"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { PageRenderer, useComponents } from "@/components/common/DynamicPage"
+import { useTemplates } from "./hooks/useTemplates"
+import { usePageState } from "./hooks/usePageState"
 import message from "@/components/Message"
 
 const PageTemplateEditor: React.FC = () => {
@@ -19,9 +21,19 @@ const PageTemplateEditor: React.FC = () => {
   const { templateId } = useParams<{ templateId: string }>()
   const { updateBreadcrumbs } = useBreadcrumb()
   const { components } = useComponents()
-  const [selectedDevice, setSelectedDevice] = useState<string>("desktop")
-  const [pageConfig, setPageConfig] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const { 
+    handleTemplateChange, 
+    saveTemplate, 
+    isLoading: isTemplateLoading 
+  } = useTemplates()
+  const {
+    state: { pageConfig, selectedDevice, isLoading, error },
+    setPageConfig,
+    setSelectedDevice,
+    startLoading,
+    stopLoading,
+    setError
+  } = usePageState()
 
   useEffect(() => {
     updateBreadcrumbs([
@@ -41,42 +53,29 @@ const PageTemplateEditor: React.FC = () => {
   }, [templateId])
 
   const loadTemplate = async (id: string) => {
-    setIsLoading(true)
+    startLoading()
     try {
-      // TODO: 实现模板加载逻辑
-      const mockTemplate = {
-        metadata: {
-          title: "示例模板",
-          description: "这是一个示例模板"
-        },
-        layout: {
-          type: "grid",
-          grid: {
-            cols: { base: 1, md: 2 },
-            gap: 4
-          }
-        },
-        content: [
-          {
-            type: "Card",
-            props: {
-              className: "p-4",
-              children: "示例内容"
-            }
-          }
-        ]
+      const config = await handleTemplateChange(id)
+      if (config) {
+        setPageConfig(config)
+      } else {
+        setError("模板加载失败")
       }
-      setPageConfig(mockTemplate)
     } catch (error) {
-      message.error("加载模板失败")
+      setError("加载模板失败")
     } finally {
-      setIsLoading(false)
+      stopLoading()
     }
   }
 
   const handleSave = async () => {
+    if (!pageConfig) {
+      message.error("请先创建页面内容")
+      return
+    }
+
     try {
-      // TODO: 实现保存逻辑
+      await saveTemplate(pageConfig)
       message.success("保存成功")
       navigate("/we-chat-app/admin/pages")
     } catch (error) {
@@ -85,8 +84,15 @@ const PageTemplateEditor: React.FC = () => {
   }
 
   const handlePreview = () => {
+    if (!pageConfig) {
+      message.error("没有可预览的内容")
+      return
+    }
     // TODO: 实现预览逻辑
+    message.info("预览功能开发中")
   }
+
+  const isLoadingState = isLoading || isTemplateLoading
 
   return (
     <div className="flex h-[calc(100vh-100px)]">
@@ -95,7 +101,7 @@ const PageTemplateEditor: React.FC = () => {
         <div className="flex items-center gap-4">
           <Select
             label="预览设备"
-            defaultSelectedKeys={["desktop"]}
+            selectedKeys={[selectedDevice]}
             className="w-40"
             onChange={(e) => setSelectedDevice(e.target.value)}
           >
@@ -122,6 +128,7 @@ const PageTemplateEditor: React.FC = () => {
             variant="flat"
             startContent={<Icon icon="mdi:eye" className="w-4 h-4" />}
             onClick={handlePreview}
+            isDisabled={!pageConfig}
           >
             预览
           </Button>
@@ -129,6 +136,8 @@ const PageTemplateEditor: React.FC = () => {
             color="primary"
             startContent={<Icon icon="mdi:content-save" className="w-4 h-4" />}
             onClick={handleSave}
+            isDisabled={!pageConfig}
+            isLoading={isLoadingState}
           >
             保存模板
           </Button>
@@ -139,9 +148,14 @@ const PageTemplateEditor: React.FC = () => {
       <div className="flex-1 mt-16 p-6">
         <Card className="w-full h-full">
           <CardBody>
-            {isLoading ? (
+            {isLoadingState ? (
               <div className="flex items-center justify-center h-full">
                 <Icon icon="eos-icons:loading" className="w-8 h-8 animate-spin" />
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center h-full text-danger">
+                <Icon icon="mdi:alert-circle" className="w-16 h-16 mb-4" />
+                <p>{error}</p>
               </div>
             ) : pageConfig ? (
               <div className={`preview-${selectedDevice}`}>

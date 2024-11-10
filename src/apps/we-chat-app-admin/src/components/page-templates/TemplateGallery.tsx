@@ -13,9 +13,11 @@ import {
   Input,
   Chip,
   Tooltip,
+  Spinner,
 } from "@nextui-org/react"
 import { motion } from "framer-motion"
 import { Icon } from "@iconify/react"
+import { useTemplates } from "../../hooks/useTemplates"
 import message from "@/components/Message"
 
 interface Template {
@@ -36,30 +38,13 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
   onTemplateSelect, 
   className 
 }) => {
-  const [templates, setTemplates] = useState<Template[]>([])
+  const { templates, isLoading, loadTemplateIndexes } = useTemplates()
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure()
   const { isOpen: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure()
 
-  // TODO: 替换为实际的 API 调用
   useEffect(() => {
-    // 模拟数据
-    setTemplates([
-      {
-        id: "1",
-        title: "数据分析仪表盘",
-        description: "包含多个数据图表的仪表盘模板",
-        tags: ["图表", "数据分析"],
-        updatedAt: new Date().toISOString()
-      },
-      {
-        id: "2",
-        title: "客户管理页面",
-        description: "客户信息管理页面模板",
-        tags: ["表格", "表单"],
-        updatedAt: new Date().toISOString()
-      }
-    ])
+    loadTemplateIndexes()
   }, [])
 
   const handleDelete = async () => {
@@ -67,7 +52,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
     
     try {
       // TODO: 实现删除逻辑
-      setTemplates(prev => prev.filter(t => t.id !== selectedTemplate.id))
+      await loadTemplateIndexes() // 重新加载列表
       message.success("模板删除成功")
       onDeleteClose()
     } catch (error) {
@@ -79,12 +64,21 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
     if (!selectedTemplate) return
     
     try {
-      // TODO: 实现分享逻辑
+      const shareLink = `${window.location.origin}/template/${selectedTemplate.id}`
+      await navigator.clipboard.writeText(shareLink)
       message.success("分享链接已复制")
       onShareClose()
     } catch (error) {
       message.error("分享失败")
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Spinner label="加载中..." />
+      </div>
+    )
   }
 
   return (
@@ -131,7 +125,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
                     {template.description}
                   </p>
                   <div className="flex flex-wrap gap-1">
-                    {template.tags.map((tag) => (
+                    {template.tags?.map((tag) => (
                       <Chip key={tag} size="sm" variant="flat">
                         {tag}
                       </Chip>
@@ -198,7 +192,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({
           <ModalBody>
             <Input
               readOnly
-              value={`https://example.com/template/${selectedTemplate?.id}`}
+              value={`${window.location.origin}/template/${selectedTemplate?.id}`}
               endContent={
                 <Button size="sm" variant="light" onClick={handleShare}>
                   复制
