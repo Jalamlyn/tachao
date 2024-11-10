@@ -12,3 +12,8 @@ export * from './types/page'
 export { default as AIPageAgent } from './core/AIPageAgent'
 export { default as usePageGenerator } from './hooks/usePageGenerator'
 export * from './utils/parser'
+
+// 导出组件注册相关
+export { default as ComponentRegistry } from './core/ComponentRegistry'
+export { default as useComponents } from './hooks/useComponents'
+export * from './utils/componentLoader'
