@@ -24,6 +24,15 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
     isEditable,
   })
 
+  // 新增：监听表单变化并触发重新渲染
+  React.useEffect(() => {
+    const subscription = form.watch(() => {
+      // 强制组件重新渲染
+      form.trigger(fieldName)
+    })
+    return () => subscription.unsubscribe()
+  }, [form, fieldName])
+
   return (
     <div className='space-y-6'>
       {steps.map((step) => {
