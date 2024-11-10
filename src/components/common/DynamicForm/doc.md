@@ -248,13 +248,27 @@ interface FormRenderConfig {
 Watch 指令用于监听表单字段的变化。以下是一个使用单个 watch 的例子：
 
 ```typescript
-const subscription = watch((value, { name, type }) =>
-  console.log(value, name, type)
-)
-return () => subscription.unsubscribe()
+watch: (form) => {
+  const unsubscribe = form.watch((value, { name, type }) => {
+    if (name === 'startDate' || name === 'endDate') {
+      const start = form.getValues('startDate') ? new Date(form.getValues('startDate')) : null;
+      const end = form.getValues('endDate') ? new Date(form.getValues('endDate')) : null;
+
+      if (start && end) {
+        const days = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        form.setValue('leaveDays', days);
+        form.trigger('leaveDays'); // 强制触发表单更新
+      }
+    }
+  });
+
+  return () => unsubscribe();
+},
+
 ```
 
 在这个例子中：
+
 - `watch` 函数接受一个回调函数作为参数
 - 回调函数接收三个参数：`value`（字段的新值），`name`（字段名称），和 `type`（变化类型）
 - 回调函数中，我们简单地将这些值打印到控制台

@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 
-import TemplateGallery from "./components/TemplateGallery"
-import { useBreadcrumb } from "../../contexts/BreadcrumbContext"
+import TemplateGallery from "./FormTempManager.component.TemplateGallery"
+import { useBreadcrumb } from "../contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 
 const FormManager: React.FC = () => {

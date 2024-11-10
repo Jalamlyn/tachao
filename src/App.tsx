@@ -13,8 +13,8 @@ import { Toaster } from "./components/ui/toaster"
 import LandingPage from "./pages/LandingPage"
 import AIHomePage from "./pages/AIHomePage"
 import renderWeChatApp from "./apps/we-chat-app-admin/renderWeChatApp"
-import FormPreview from "./pages/FormTempManager/components/FormPreview"
-import Form from "./pages/Form"
+import FormPreview from "./pages/FormTempManager.component.FormPreview"
+import Form from "./pages/Form.index"
 
 function App() {
   const navigate = useNavigate()

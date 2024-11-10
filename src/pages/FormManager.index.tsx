@@ -2,11 +2,11 @@ import React, { useState, useCallback, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button, Modal, ModalHeader, ModalBody, ModalContent, ModalFooter } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import FormList from "./components/FormList"
-import SearchInput from "./components/SearchInput"
+import FormList from "./FormManager.component.list"
+import SearchInput from "./FormManager.component.SearchInput"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
-import { useBreadcrumb } from "../../contexts/BreadcrumbContext"
+import { useBreadcrumb } from "../contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
 
@@ -89,7 +89,7 @@ const FormManager: React.FC = () => {
       }
       try {
         const template = await getTemplateDetail(templateId)
-        if (template && template.data.config) {
+        if (template && template.data.rawConfig) {
           window.open(`/form-preview/${templateId}`, "_blank")
         } else {
           message.error("加载模板失败")

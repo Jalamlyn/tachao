@@ -3,11 +3,11 @@ import AdminPage from "./src/App"
 import ApplicationList from "./src/ApplicationList"
 import EnterpriseSettings from "./src/EnterpriseSettings"
 import AppDetail from "./src/AppDetail"
-import FormTempManager from "@/pages/FormTempManager"
-import FormManager from "@/pages/FormManager"
-import FormPreview from "@/pages/FormTempManager/components/FormPreview"
-import AIFormEditor from "@/pages/FormTempManager/AIFormEditor"
-import FormAnalysis from "@/pages/FormManager/components/FormAnalysis"
+import FormTempManager from "@/pages/FormTempManager.index"
+import FormManager from "@/pages/FormManager.index"
+import FormPreview from "@/pages/FormTempManager.component.FormPreview"
+import AIFormEditor from "@/pages/FormTempManager.page.AIFormEditor"
+import FormAnalysis from "@/pages/FormManager.component.FormAnalysis"
 
 export default function renderWeChatApp() {
   return (

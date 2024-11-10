@@ -16,12 +16,13 @@ import DynamicForm from "@/components/common/DynamicForm"
 import type { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import message from "@/components/Message"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import { parseFormConfig } from "@/utils/codeParser"
 
 interface FormPreviewProps {
   config: DynamicFormConfig | null
 }
 
-const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig }) => {
+const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMode = false }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,8 +45,9 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig }) => {
         setError(null)
         try {
           const result = await getDetail(templateId)
-          if (result && result.data.config) {
-            setLoadedConfig(result.data.config)
+          if (result && result.data.rawConfig) {
+            const { config } = await parseFormConfig(result.data.rawConfig)
+            setLoadedConfig(config)
           } else {
             setError("未找到表单配置")
           }
@@ -101,7 +103,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig }) => {
       {config ? (
         <>
           <div className='border rounded-lg p-6 mx-auto w-full max-w-[1200px] bg-white'>
-            <DynamicForm previewMode config={config} templateId={templateId} />
+            <DynamicForm previewMode={previewMode} config={config} templateId={templateId} />
           </div>
         </>
       ) : (

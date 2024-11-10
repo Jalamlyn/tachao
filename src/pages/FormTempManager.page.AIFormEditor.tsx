@@ -15,8 +15,8 @@ import {
   Chip,
 } from "@nextui-org/react"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
-import FormPreview from "./components/FormPreview"
-import { useFormState } from "./hooks/useFormState"
+import FormPreview from "./FormTempManager.component.FormPreview"
+import { useFormState } from "./FormTempManager.hook.useFormState"
 import AIFormAgent from "@/service/agents/AIFormAgent"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
@@ -176,7 +176,7 @@ const AIFormEditor: React.FC = () => {
           formState.formConfig
         )
 
-        if (result.type === "create" || result.type === "edit") {
+        if (result.type === "support") {
           if (result.data?.config) {
             setFormConfig(result.data.config)
             setRawConfig(result.data.rawConfig)
