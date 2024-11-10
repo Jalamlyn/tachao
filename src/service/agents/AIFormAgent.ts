@@ -139,7 +139,7 @@ ${doc}
       }
     }
     return {
-      type: "create",
+      type: "support",
       data: createResult,
       generationProcess,
     }
@@ -178,16 +178,16 @@ ${doc}
 "${input}"
 
 请根据以下规则进行分析：
-1. 如果是创建、编辑、修改、更新表单的指令，返回 "create"
+1. 如果是创建、编辑、修改、更新表单的指令，返回 "support"
 2. 如果不是表单相关的指令或指令不明确，返回 "unsupported"
 
-请只返回 "create" 或 "unsupported"，不要返回其他内容。`
+请只返回 "support" 或 "unsupported"，不要返回其他内容。`
 
     try {
       const aiResponse = await this.processAIResponse(aiAnalysisPrompt, () => {})
       const cleanResponse = aiResponse.trim().toLowerCase()
 
-      if (cleanResponse === "create" || cleanResponse === "unsupported") {
+      if (cleanResponse === "support" || cleanResponse === "unsupported") {
         if (cleanResponse === "unsupported") {
           message.warning("请使用表单创建或编辑相关的指令。")
         }
@@ -196,7 +196,7 @@ ${doc}
 
       const formKeywords = /(创建|新建|生成|制作|添加|建立|编辑|修改|更新|调整|改变).*?(表单|单据|模板)/
       if (formKeywords.test(input)) {
-        return "create"
+        return "support"
       }
 
       message.warning("请使用表单创建或编辑相关的指令。")
