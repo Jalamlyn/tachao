@@ -3,17 +3,19 @@ import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
 import { markdown as doc } from "@/components/common/DynamicForm/doc.md"
+import {
+  CommandResult,
+  AIFormAgentConfig,
+  CreateFormResult,
+  IntentAnalysisResult,
+  AIResponseHandler,
+  Message,
+  IAIFormAgent
+} from "./AIFormAgentTypes"
 
-export type CommandResult = {
-  type: "create"
-  data: any
-  generationProcess?: string
-}
-
-export class AIFormAgent {
+export class AIFormAgent implements IAIFormAgent {
   private static instance: AIFormAgent
-  private _currentConfig: DynamicFormConfig | null = null // 保留兼容旧代码
-  private _rawConfig: string | null = null // 新增: 存储原始配置字符串
+  private _rawConfig: string | null = null
   private _cachedImage: string | null = null
   private systemPrompt = `你是一个智能表单助手，负责帮助用户创建和检索表单。
 每次都生成一个完整的符合 DynamicFormConfig 类型的配置对象，不生成局部修改。
@@ -67,17 +69,9 @@ ${doc}
     return AIFormAgent.instance
   }
 
-  public getCurrentConfig(): DynamicFormConfig | null {
-    return this._currentConfig
-  }
-
   public getRawConfig(): string | null {
     console.log("[AIFormAgent] getRawConfig called, returning:", this._rawConfig?.substring(0, 100) + "...")
     return this._rawConfig
-  }
-
-  private setCurrentConfig(config: DynamicFormConfig | null): void {
-    this._currentConfig = config
   }
 
   private setRawConfig(rawConfig: string | null): void {
@@ -105,7 +99,7 @@ ${doc}
 
   public async processCommand(
     command: string,
-    onChunk?: (chunk: string) => void,
+    onChunk?: AIResponseHandler,
     config?: DynamicFormConfig,
     rawConfig?: string
   ): Promise<CommandResult> {
@@ -151,13 +145,13 @@ ${doc}
     }
   }
 
-  private async processAIResponse(userInput: string, onChunk: (chunk: string) => void): Promise<string> {
+  private async processAIResponse(userInput: string, onChunk: AIResponseHandler): Promise<string> {
     console.log(
       "[AIFormAgent] processAIResponse started with current rawConfig:",
       this._rawConfig?.substring(0, 100) + "..."
     )
     let response = ""
-    const messages = [
+    const messages: Message[] = [
       { role: "system", content: this.systemPrompt },
       { role: "user", content: userInput },
     ]
@@ -179,7 +173,7 @@ ${doc}
     return response
   }
 
-  public async analyzeIntent(input: string): Promise<"create" | "unsupported"> {
+  public async analyzeIntent(input: string): Promise<IntentAnalysisResult> {
     const aiAnalysisPrompt = `请分析以下用户指令，判断是否是表单创建或编辑相关的指令：
 "${input}"
 
@@ -197,7 +191,7 @@ ${doc}
         if (cleanResponse === "unsupported") {
           message.warning("请使用表单创建或编辑相关的指令。")
         }
-        return cleanResponse as "create" | "unsupported"
+        return cleanResponse as IntentAnalysisResult
       }
 
       const formKeywords = /(创建|新建|生成|制作|添加|建立|编辑|修改|更新|调整|改变).*?(表单|单据|模板)/
@@ -216,12 +210,8 @@ ${doc}
 
   private async createForm(
     description: string,
-    onChunk: (chunk: string) => void
-  ): Promise<{
-    config: DynamicFormConfig
-    rawConfig: string
-    title: string
-  } | null> {
+    onChunk: AIResponseHandler
+  ): Promise<CreateFormResult> {
     console.log("[AIFormAgent] createForm started with current rawConfig:", this._rawConfig?.substring(0, 100) + "...")
     onChunk("🎨 正在设计表单结构...\n")
     await new Promise((resolve) => setTimeout(resolve, 300))
@@ -284,6 +274,10 @@ export default {
       console.error("Error creating form:", error)
       throw new Error("创建表单失败：" + (error as Error).message)
     }
+  }
+
+  private setCurrentConfig(config: DynamicFormConfig): void {
+    // 实现设置当前配置的逻辑
   }
 }
 
