@@ -13,7 +13,7 @@ export type CommandResult = {
 export class AIFormAgent {
   private static instance: AIFormAgent
   private _currentConfig: DynamicFormConfig | null = null // 保留兼容旧代码
-  private _rawConfig: string | null = null  // 新增: 存储原始配置字符串
+  private _rawConfig: string | null = null // 新增: 存储原始配置字符串
   private _cachedImage: string | null = null
   private systemPrompt = `你是一个智能表单助手，负责帮助用户创建和检索表单。
 每次都生成一个完整的符合 DynamicFormConfig 类型的配置对象，不生成局部修改。
@@ -93,7 +93,7 @@ ${doc}
     this._cachedImage = null
   }
 
-  public static async parseConfig(rawConfig: string) {
+  public async parseConfig(rawConfig: string) {
     try {
       const parsedConfig = await parseFormConfig(rawConfig)
       return parsedConfig
@@ -107,7 +107,7 @@ ${doc}
     command: string,
     onChunk?: (chunk: string) => void,
     config?: DynamicFormConfig,
-    rawConfig?: string  // 新增参数
+    rawConfig?: string
   ): Promise<CommandResult> {
     console.log("[AIFormAgent] processCommand started with rawConfig:", rawConfig?.substring(0, 100) + "...")
     let generationProcess = ""
@@ -120,7 +120,7 @@ ${doc}
     if (config) {
       this.setCurrentConfig(config)
     }
-    
+
     if (rawConfig) {
       console.log("[AIFormAgent] Setting new rawConfig in processCommand")
       this.setRawConfig(rawConfig)
@@ -129,34 +129,33 @@ ${doc}
     const intent = await this.analyzeIntent(command)
 
     if (intent === "unsupported") {
-      throw new Error("不支持的指令，请使用'创建'、'检索'或'编辑'开头的指令，让我更好的理解您的意图。")
+      throw new Error("请使用表单创建或编辑相关的指令，让我更好地理解您的需求。")
     }
 
     updateGenerationProcess("🤖 AI助手正在分析您的需求...\n")
     await new Promise((resolve) => setTimeout(resolve, 500))
 
-    if (intent === "create" || intent === "edit") {
-      updateGenerationProcess("📝 开始生成表单...\n")
-      const createResult = await this.createForm(command, updateGenerationProcess)
-      if (createResult) {
-        this.setCurrentConfig(createResult.config)
-        if (createResult.rawConfig) {
-          console.log("[AIFormAgent] Setting new rawConfig from createResult")
-          this.setRawConfig(createResult.rawConfig)
-        }
-      }
-      return {
-        type: "create",
-        data: createResult,
-        generationProcess,
+    updateGenerationProcess("📝 开始生成表单...\n")
+    const createResult = await this.createForm(command, updateGenerationProcess)
+    if (createResult) {
+      this.setCurrentConfig(createResult.config)
+      if (createResult.rawConfig) {
+        console.log("[AIFormAgent] Setting new rawConfig from createResult")
+        this.setRawConfig(createResult.rawConfig)
       }
     }
-
-    throw new Error("未知的指令类型")
+    return {
+      type: "create",
+      data: createResult,
+      generationProcess,
+    }
   }
 
   private async processAIResponse(userInput: string, onChunk: (chunk: string) => void): Promise<string> {
-    console.log("[AIFormAgent] processAIResponse started with current rawConfig:", this._rawConfig?.substring(0, 100) + "...")
+    console.log(
+      "[AIFormAgent] processAIResponse started with current rawConfig:",
+      this._rawConfig?.substring(0, 100) + "..."
+    )
     let response = ""
     const messages = [
       { role: "system", content: this.systemPrompt },
@@ -180,14 +179,13 @@ ${doc}
     return response
   }
 
-  public async analyzeIntent(input: string): Promise<"create" | "edit" | "unsupported"> {
-    const aiAnalysisPrompt = `请分析以下用户指令的意图，判断是否是合法的表单操作指令：
+  public async analyzeIntent(input: string): Promise<"create" | "unsupported"> {
+    const aiAnalysisPrompt = `请分析以下用户指令，判断是否是表单创建或编辑相关的指令：
 "${input}"
 
 请根据以下规则进行分析：
-1. 如果是创建/新建/生成表单的指令，返回 "create"
-2. 如果是编辑/修改/更新表单的指令，返回 "create"
-3. 如果不是表单相关的指令或指令不明确，返回 "unsupported"
+1. 如果是创建、编辑、修改、更新表单的指令，返回 "create"
+2. 如果不是表单相关的指令或指令不明确，返回 "unsupported"
 
 请只返回 "create" 或 "unsupported"，不要返回其他内容。`
 
@@ -197,17 +195,17 @@ ${doc}
 
       if (cleanResponse === "create" || cleanResponse === "unsupported") {
         if (cleanResponse === "unsupported") {
-          message.warning("不支持的指令，请使用创建表单相关的指令。")
+          message.warning("请使用表单创建或编辑相关的指令。")
         }
-        return cleanResponse as "create" | "edit" | "unsupported"
+        return cleanResponse as "create" | "unsupported"
       }
 
-      const createKeywords = /(创建|新建|生成|制作|添加|建立|编辑|修改|更新|调整|改变).*?(表单|单据|模板)/
-      if (createKeywords.test(input)) {
+      const formKeywords = /(创建|新建|生成|制作|添加|建立|编辑|修改|更新|调整|改变).*?(表单|单据|模板)/
+      if (formKeywords.test(input)) {
         return "create"
       }
 
-      message.warning("不支持的指令，请使用创建表单相关的指令。")
+      message.warning("请使用表单创建或编辑相关的指令。")
       return "unsupported"
     } catch (error) {
       console.error("Error analyzing intent:", error)
