@@ -209,6 +209,11 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
                   "placeholder:text-gray-400"
                 )}
                 placeholder={field.placeholder}
+                onChange={(e) => {
+                  formField.onChange(e);
+                  // 触发表单更新
+                  form.trigger(field.name);
+                }}
               />
             )}
           </FormFieldWrapper>
@@ -225,7 +230,16 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             disabled={field.disabled}
             tooltip={field.tooltip}
           >
-            {(formField) => <DateInput field={formField} />}
+            {(formField) => (
+              <DateInput
+                field={formField}
+                onChange={(date) => {
+                  formField.onChange(date);
+                  // 触发表单更新
+                  form.trigger(field.name);
+                }}
+              />
+            )}
           </FormFieldWrapper>
         )
 
@@ -242,7 +256,11 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             {(formField) => (
               <Select
                 disabled={!isEditable || field.disabled}
-                onValueChange={formField.onChange}
+                onValueChange={(value) => {
+                  formField.onChange(value);
+                  // 触发表单更新
+                  form.trigger(field.name);
+                }}
                 value={formField.value || ""}
               >
                 <SelectTrigger className={cn(
