@@ -10,6 +10,7 @@ DynamicForm 是一个灵活的动态表单组件，支持以下功能：
 - 打印预览
 - 自定义验证
 - 动态联动
+- AI 生成的公式计算（新功能）
 
 ## 基础类型
 
@@ -199,6 +200,11 @@ interface TableColumn {
     calculate?: (records: any[]) => any
     render?: (value: any) => ReactNode
   }
+  calculate?: {
+    // 计算配置（新增）
+    formula: string // 计算公式
+    dependencies?: string[] // 依赖字段
+  }
 }
 ```
 
@@ -243,36 +249,38 @@ interface FormRenderConfig {
 }
 ```
 
-## Watch 指令
+## 新增：AI 生成的公式计算
 
-Watch 指令用于监听表单字段的变化。以下是一个使用单个 watch 的例子：
+DynamicForm 现在支持 AI 生成的公式计算功能。这个功能允许表格中的所有字段都支持计算。
+
+### 使用方法
+
+在 TableColumn 配置中，你可以添加 `calculate` 属性来定义计算逻辑：
 
 ```typescript
-watch: (form) => {
-  const unsubscribe = form.watch((value, { name, type }) => {
-    if (name === 'startDate' || name === 'endDate') {
-      const start = form.getValues('startDate') ? new Date(form.getValues('startDate')) : null;
-      const end = form.getValues('endDate') ? new Date(form.getValues('endDate')) : null;
-
-      if (start && end) {
-        const days = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-        form.setValue('leaveDays', days);
-        form.trigger('leaveDays'); // 强制触发表单更新
-      }
-    }
-  });
-
-  return () => unsubscribe();
-},
-
+{
+  key: "totalPrice",
+  title: "总价",
+  type: "number",
+  editable: false,
+  calculate: {
+    formula: "row.quantity * row.unitPrice * (1 - (row.discount || 0))",
+    dependencies: ["quantity", "unitPrice", "discount"]
+  }
+}
 ```
 
-在这个例子中：
+### 注意事项
 
-- `watch` 函数接受一个回调函数作为参数
-- 回调函数接收三个参数：`value`（字段的新值），`name`（字段名称），和 `type`（变化类型）
-- 回调函数中，我们简单地将这些值打印到控制台
-- `watch` 函数返回一个订阅对象，我们将其存储在 `subscription` 变量中
-- 最后，我们返回一个清理函数，该函数在组件卸载时调用 `subscription.unsubscribe()` 来取消订阅
+1. 公式中可以使用 `row` 对象访问当前行的所有字段值。
+2. 公式支持基本的数学运算和 Formula.js 提供的函数。
+3. 出于安全考虑，某些 JavaScript 函数（如 `eval`）在公式中是被禁止的。
+4. 计算是通过 FormulaService 进行的，它提供了安全的公式评估机制。
 
-注意：这种写法是必须的，它确保了在组件卸载时正确地清理了监听器，防止内存泄漏。
+### 性能优化
+
+为了提高性能，计算触发使用了防抖（debounce）机制。这意味着在快速输入时，计算不会立即执行，而是等待一小段时间后才进行，以减少不必要的计算。
+
+## 结论
+
+DynamicForm 组件提供了强大的动态表单创建能力，现在更支持 AI 生成的公式计算。这使得表单更加灵活和智能，能够满足各种复杂的业务需求。
