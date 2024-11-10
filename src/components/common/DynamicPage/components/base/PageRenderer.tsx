@@ -1,5 +1,5 @@
 import React, { useState, useCallback, createContext, useContext } from 'react'
-import type { PageConfig, PageContext, ContentConfig } from '../../types/page'
+import type { PageConfig, PageContext, ContentConfig, RenderContext } from '../../types/page'
 import { Layout } from '../layout/Layout'
 import { Page } from './Page'
 
@@ -24,12 +24,12 @@ const ContentRenderer: React.FC<{
   content: ContentConfig
   components: Record<string, React.ComponentType<any>>
 }> = ({ content, components }) => {
-  const { state } = useContext(pageContext)
+  const context = useContext(pageContext)
   
   // 检查条件渲染
   if (content.showWhen) {
     const { field, value, operator = 'eq' } = content.showWhen
-    const fieldValue = state[field]
+    const fieldValue = context.state[field]
     
     switch (operator) {
       case 'neq':
@@ -46,6 +46,26 @@ const ContentRenderer: React.FC<{
         break
       default:
         if (fieldValue !== value) return null
+    }
+  }
+
+  // 处理自定义渲染
+  if (content.render) {
+    const renderContext: RenderContext = {
+      state: context.state,
+      computed: context.computed,
+      setState: context.setState
+    }
+
+    if (React.isValidElement(content.render)) {
+      return content.render
+    }
+    
+    if (typeof content.render === 'function') {
+      return content.render({
+        ...renderContext,
+        ...content.renderProps
+      })
     }
   }
   

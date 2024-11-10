@@ -14,6 +14,15 @@ export interface PageMetadata {
 }
 
 /**
+ * 渲染上下文
+ */
+export interface RenderContext {
+  state: Record<string, any>
+  computed: Record<string, any>
+  setState: (key: string, value: any) => void
+}
+
+/**
  * 组件配置
  */
 export interface ComponentConfig {
@@ -23,6 +32,9 @@ export interface ComponentConfig {
   layout?: LayoutConfig
   className?: string
   style?: React.CSSProperties
+  // 添加自定义渲染支持
+  render?: React.ReactNode | ((context: RenderContext) => React.ReactNode)
+  renderProps?: Record<string, any>
   // 条件渲染
   showWhen?: {
     field: string
@@ -40,6 +52,9 @@ export type ContentConfig = ComponentConfig | {
   children: ContentConfig[]
   className?: string
   style?: React.CSSProperties
+  // 容器也支持自定义渲染
+  render?: React.ReactNode | ((context: RenderContext) => React.ReactNode)
+  renderProps?: Record<string, any>
 }
 
 /**
