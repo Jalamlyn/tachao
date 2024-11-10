@@ -133,7 +133,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                     <Calendar
                       mode='single'
                       selected={field.value ? new Date(field.value) : undefined}
-                      onSelect={(date) => field.onChange(date?.toISOString())}
+                      onSelect={(date) => {
+                        field.onChange(date?.toISOString())
+                        form.trigger(cellFieldName)
+                      }}
                       disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
                       initialFocus
                     />
@@ -170,7 +173,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
               <FormItem>
                 <Select
                   disabled={!isFieldEditable}
-                  onValueChange={field.onChange}
+                  onValueChange={(value) => {
+                    field.onChange(value)
+                    form.trigger(cellFieldName)
+                  }}
                   value={field.value}
                   defaultValue={field.value}
                 >
@@ -208,6 +214,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                     className='text-right font-mono'
                     onChange={(e) => {
                       field.onChange(e)
+                      form.trigger(cellFieldName)
                     }}
                   />
                 </FormControl>
