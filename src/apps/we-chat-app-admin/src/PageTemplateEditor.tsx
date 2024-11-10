@@ -1,15 +1,129 @@
-// ... 保留原有的导入 ...
-import { CodeEditor } from './components/page-templates/CodeEditor'
-import { configToCode, codeToConfig } from './utils/codeFormatter'
+import React, { useState, useEffect, useCallback } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import {
+  Button,
+  Card,
+  CardBody,
+  Select,
+  SelectItem,
+  Spacer,
+  useDisclosure,
+  ButtonGroup,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@nextui-org/react"
+import { Icon } from "@iconify/react"
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
+import { PageRenderer, useComponents } from "@/components/common/DynamicPage"
+import { useTemplates } from "./hooks/useTemplates"
+import { usePageState } from "./hooks/usePageState"
+import { AIEditor } from "./components/page-templates/AIEditor"
+import { CodeEditor } from "./components/page-templates/CodeEditor"
+import { configToCode, codeToConfig } from "./utils/codeFormatter"
+import message from "@/components/Message"
+
+type EditorMode = 'visual' | 'ai'
 
 const PageTemplateEditor: React.FC = () => {
-  // ... 保留原有的状态和函数 ...
-  
-  // 添加代码编辑器状态
+  const navigate = useNavigate()
+  const { templateId } = useParams<{ templateId: string }>()
+  const { updateBreadcrumbs } = useBreadcrumb()
+  const { components } = useComponents()
+  const { 
+    handleTemplateChange, 
+    saveTemplate, 
+    isLoading: isTemplateLoading 
+  } = useTemplates()
+  const {
+    state: { pageConfig, selectedDevice, isLoading, error },
+    setPageConfig,
+    setSelectedDevice,
+    startLoading,
+    stopLoading,
+    setError,
+    resetState
+  } = usePageState()
+
+  // 编辑器状态
+  const [editorMode, setEditorMode] = useState<EditorMode>('visual')
   const [showCodeEditor, setShowCodeEditor] = useState(false)
   const [codeValue, setCodeValue] = useState('')
 
-  // 处理代码编辑器打开
+  // 成功保存弹窗
+  const { 
+    isOpen: isSuccessModalOpen, 
+    onOpen: onSuccessModalOpen, 
+    onClose: onSuccessModalClose 
+  } = useDisclosure()
+
+  useEffect(() => {
+    updateBreadcrumbs([
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "页面模板管理", href: "/we-chat-app/admin/pages" },
+      {
+        label: templateId ? "编辑页面模板" : "创建页面模板",
+        href: templateId 
+          ? `/we-chat-app/admin/pages/edit/${templateId}`
+          : "/we-chat-app/admin/pages/create",
+      },
+    ])
+
+    if (templateId) {
+      loadTemplate(templateId)
+    }
+
+    return () => {
+      resetState()
+    }
+  }, [templateId])
+
+  const loadTemplate = async (id: string) => {
+    startLoading()
+    try {
+      const config = await handleTemplateChange(id)
+      if (config) {
+        setPageConfig(config)
+      } else {
+        setError("模板加载失败")
+      }
+    } catch (error) {
+      setError("加载模板失败")
+      navigate("/we-chat-app/admin/pages")
+    } finally {
+      stopLoading()
+    }
+  }
+
+  const handleSave = async () => {
+    if (!pageConfig) {
+      message.error("请先创建页面内容")
+      return
+    }
+
+    try {
+      await saveTemplate(pageConfig)
+      onSuccessModalOpen()
+    } catch (error) {
+      message.error("保存失败")
+    }
+  }
+
+  const handlePreview = () => {
+    if (!pageConfig) {
+      message.error("没有可预览的内容")
+      return
+    }
+    // TODO: 实现预览逻辑
+    message.info("预览功能开发中")
+  }
+
+  const handleConfigChange = useCallback((newConfig: any) => {
+    setPageConfig(newConfig)
+  }, [])
+
   const handleOpenCodeEditor = useCallback(() => {
     if (pageConfig) {
       try {
@@ -22,31 +136,99 @@ const PageTemplateEditor: React.FC = () => {
     }
   }, [pageConfig])
 
-  // 处理代码更新
   const handleCodeChange = useCallback((newCode: string) => {
     setCodeValue(newCode)
     try {
       const newConfig = codeToConfig(newCode)
       setPageConfig(newConfig)
     } catch (error) {
-      // 解析错误时不更新配置
       console.error('Error parsing code:', error)
     }
   }, [])
 
+  const handleCreateDocument = () => {
+    navigate("/we-chat-app/admin/documents/create")
+  }
+
+  const handleGoToTemplates = () => {
+    navigate("/we-chat-app/admin/pages")
+  }
+
+  const isLoadingState = isLoading || isTemplateLoading
+
   return (
     <div className="flex h-[calc(100vh-100px)]">
-      {/* ... 保留原有的工具栏 ... */}
-      
-      {/* 修改工具栏中的代码按钮 */}
-      <Button
-        variant="flat"
-        startContent={<Icon icon="mdi:code" className="w-4 h-4" />}
-        onClick={handleOpenCodeEditor}
-        isDisabled={!pageConfig}
-      >
-        查看代码
-      </Button>
+      {/* 工具栏 */}
+      <div className="w-full h-16 px-4 border-b fixed top-0 left-0 bg-white z-10 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          {/* 编辑模式切换 */}
+          <ButtonGroup>
+            <Button
+              variant={editorMode === 'visual' ? 'solid' : 'flat'}
+              onClick={() => setEditorMode('visual')}
+              startContent={<Icon icon="mdi:pencil" className="w-4 h-4" />}
+            >
+              可视化编辑
+            </Button>
+            <Button
+              variant={editorMode === 'ai' ? 'solid' : 'flat'}
+              onClick={() => setEditorMode('ai')}
+              startContent={<Icon icon="mdi:robot" className="w-4 h-4" />}
+            >
+              AI 助手
+            </Button>
+          </ButtonGroup>
+
+          {editorMode === 'visual' && (
+            <>
+              <Select
+                label="预览设备"
+                selectedKeys={[selectedDevice]}
+                className="w-40"
+                onChange={(e) => setSelectedDevice(e.target.value)}
+              >
+                <SelectItem key="desktop" startContent={<Icon icon="mdi:desktop" />}>
+                  桌面
+                </SelectItem>
+                <SelectItem key="tablet" startContent={<Icon icon="mdi:tablet" />}>
+                  平板
+                </SelectItem>
+                <SelectItem key="mobile" startContent={<Icon icon="mdi:mobile" />}>
+                  手机
+                </SelectItem>
+              </Select>
+              <Button
+                variant="flat"
+                startContent={<Icon icon="mdi:code" className="w-4 h-4" />}
+                onClick={handleOpenCodeEditor}
+                isDisabled={!pageConfig}
+              >
+                查看代码
+              </Button>
+            </>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            color="primary"
+            variant="flat"
+            startContent={<Icon icon="mdi:eye" className="w-4 h-4" />}
+            onClick={handlePreview}
+            isDisabled={!pageConfig}
+          >
+            预览
+          </Button>
+          <Button
+            color="primary"
+            startContent={<Icon icon="mdi:content-save" className="w-4 h-4" />}
+            onClick={handleSave}
+            isDisabled={!pageConfig}
+            isLoading={isLoadingState}
+          >
+            保存模板
+          </Button>
+        </div>
+      </div>
 
       {/* 内容区 */}
       <div className="flex-1 mt-16 p-6">
@@ -59,9 +241,103 @@ const PageTemplateEditor: React.FC = () => {
         ) : editorMode === 'ai' ? (
           <AIEditor onConfigChange={handleConfigChange} />
         ) : (
-          // ... 保留原有的可视化编辑器 ...
+          <Card className="w-full h-full">
+            <CardBody>
+              {isLoadingState ? (
+                <div className="flex items-center justify-center h-full">
+                  <Icon icon="eos-icons:loading" className="w-8 h-8 animate-spin" />
+                </div>
+              ) : error ? (
+                <div className="flex flex-col items-center justify-center h-full text-danger">
+                  <Icon icon="mdi:alert-circle" className="w-16 h-16 mb-4" />
+                  <p>{error}</p>
+                </div>
+              ) : pageConfig ? (
+                <div className={`preview-${selectedDevice}`}>
+                  <PageRenderer
+                    config={pageConfig}
+                    components={components}
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                  <Icon icon="solar:layout-left-bold" className="w-16 h-16 mb-4" />
+                  <p>开始创建您的页面模板</p>
+                  <Button
+                    className="mt-4"
+                    color="primary"
+                    variant="flat"
+                    startContent={<Icon icon="mdi:robot" />}
+                    onClick={() => setEditorMode('ai')}
+                  >
+                    使用 AI 助手
+                  </Button>
+                </div>
+              )}
+            </CardBody>
+          </Card>
         )}
       </div>
+
+      {/* 成功保存弹窗 */}
+      <Modal isOpen={isSuccessModalOpen} onClose={onSuccessModalClose} size="lg">
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2"
+            >
+              <Icon icon="mdi:check-circle" className="w-6 h-6 text-success" />
+              <span>模板{templateId ? "更新" : "保存"}成功</span>
+            </motion.div>
+          </ModalHeader>
+          <ModalBody>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              className="space-y-4"
+            >
+              <p className="text-gray-600">
+                恭喜！您的页面模板已经{templateId ? "更新" : "保存"}成功。现在您可以：
+              </p>
+              <div className="flex flex-col gap-2">
+                <div className="p-4 border rounded-lg bg-gray-50">
+                  <h3 className="font-medium mb-2">创建新单据</h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    使用这个模板立即创建一个新的单据，开始记录您的业务数据。
+                  </p>
+                  <Button
+                    color="primary"
+                    onClick={handleCreateDocument}
+                    startContent={<Icon icon="mdi:file-document-plus" className="w-4 h-4" />}
+                  >
+                    创建单据
+                  </Button>
+                </div>
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-medium mb-2">返回模板管理</h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    返回模板列表查看或管理您的所有页面模板。
+                  </p>
+                  <Button
+                    variant="bordered"
+                    onClick={handleGoToTemplates}
+                    startContent={<Icon icon="mdi:format-list-bulleted" className="w-4 h-4" />}
+                  >
+                    查看所有模板
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="light" onPress={onSuccessModalClose}>
+              关闭
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   )
 }
