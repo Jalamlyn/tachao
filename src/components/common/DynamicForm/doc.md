@@ -242,3 +242,23 @@ interface FormRenderConfig {
   processSteps?: ProcessStep[] // 流程步骤配置，用于渲染流程确认步骤
 }
 ```
+
+## Watch 指令
+
+Watch 指令用于监听表单字段的变化。以下是一个使用单个 watch 的例子：
+
+```typescript
+const subscription = watch((value, { name, type }) =>
+  console.log(value, name, type)
+)
+return () => subscription.unsubscribe()
+```
+
+在这个例子中：
+- `watch` 函数接受一个回调函数作为参数
+- 回调函数接收三个参数：`value`（字段的新值），`name`（字段名称），和 `type`（变化类型）
+- 回调函数中，我们简单地将这些值打印到控制台
+- `watch` 函数返回一个订阅对象，我们将其存储在 `subscription` 变量中
+- 最后，我们返回一个清理函数，该函数在组件卸载时调用 `subscription.unsubscribe()` 来取消订阅
+
+注意：这种写法是必须的，它确保了在组件卸载时正确地清理了监听器，防止内存泄漏。
