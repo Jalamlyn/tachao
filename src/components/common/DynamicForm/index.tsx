@@ -23,7 +23,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   onCancel,
   templateId,
   initialValues,
-  previewMode,
+  previewMode = false,
 }) => {
   // 合并默认配置和用户配置
   const config = merge({}, defaultFormConfig, userConfig)
@@ -69,6 +69,18 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   }>({})
   const printRef = useRef<HTMLDivElement>(null)
   const printId = useRef<string>()
+
+  // 新增：使用useEffect来设置watch函数
+  useEffect(() => {
+    if (config.watch) {
+      const unsubscribe = config.watch(form);
+      return () => {
+        if (typeof unsubscribe === 'function') {
+          unsubscribe();
+        }
+      };
+    }
+  }, [config.watch, form]);
 
   // 获取模板信息的函数
   const getTemplateInfo = async (templateId: string | undefined) => {
@@ -202,11 +214,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         // 准备表单数据
         const formData = prepareFormData(values, templateInfo)
 
-        // 如果是预览模式,只显示校验成功消息,不执行实际提交
-        // if (previewMode) {
-        //   message.success("表单校验通过，预览模式下无法保存数据")
-        //   return
-        // }
+        //如果是预览模式, 只显示校验成功消息, 不执行实际提交
+        if (previewMode) {
+          message.success("表单校验通过，预览模式下无法保存数据")
+          return
+        }
 
         // 提交到服务器
         if (id) {
