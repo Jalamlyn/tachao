@@ -7,13 +7,14 @@ import FormHistoryTable from "@/components/forms/FormHistoryTable"
 import message from "@/components/Message"
 import { motion } from "framer-motion"
 import { Icon } from "@iconify/react"
+import { parseFormConfig } from "@/utils/codeParser"
 
 const Form: React.FC = () => {
   const { formId } = useParams<{ formId: string }>()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [formConfig, setFormConfig] = useState<any>(null)
-  const [formData, setFormData] = useState<any>(null)  // 新增 formData state
+  const [formData, setFormData] = useState<any>(null) // 新增 formData state
   const [templateId, setTemplateId] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState("form")
 
@@ -34,7 +35,7 @@ const Form: React.FC = () => {
         // 获取表单详情
         const formDetail = await getFormDetail(formId)
         console.log("[Form] Form detail loaded:", formDetail)
-        
+
         if (!formDetail) {
           console.log("[Form] Form detail not found")
           throw new Error("未找到表单数据")
@@ -46,7 +47,7 @@ const Form: React.FC = () => {
         // 获取模板ID
         const formTemplateId = formDetail.templateId
         console.log("[Form] Template ID from form:", formTemplateId)
-        
+
         if (!formTemplateId) {
           console.log("[Form] No template ID found in form detail")
           throw new Error("未找到模板ID")
@@ -57,15 +58,15 @@ const Form: React.FC = () => {
         console.log("[Form] Loading template detail for templateId:", formTemplateId)
         const template = await getTemplateDetail(formTemplateId)
         console.log("[Form] Template detail loaded:", template)
-        
-        if (!template || !template.data.config) {
+        const { config } = await parseFormConfig(template.data.rawConfig)
+        if (!template || !config) {
           console.log("[Form] Template config not found")
           throw new Error("未找到模板配置")
         }
 
         // 设置表单配置
         const newFormConfig = {
-          ...template.data.config,
+          ...config,
           formId,
           templateId: formTemplateId,
         }
@@ -129,7 +130,7 @@ const Form: React.FC = () => {
           }}
         >
           <Tab
-            key="form"
+            key='form'
             title={
               <div className='flex items-center space-x-1 sm:space-x-2'>
                 <Icon icon='mdi:form-select' className='w-4 h-4 sm:w-5 sm:h-5' />
@@ -138,16 +139,16 @@ const Form: React.FC = () => {
             }
           >
             <div className='mt-4'>
-              <DynamicForm 
-                config={formConfig} 
-                id={formId} 
+              <DynamicForm
+                config={formConfig}
+                id={formId}
                 templateId={templateId}
-                initialValues={formData}  // 直接传递 formData 作为初始值
+                initialValues={formData} // 直接传递 formData 作为初始值
               />
             </div>
           </Tab>
           <Tab
-            key="history"
+            key='history'
             title={
               <div className='flex items-center space-x-1 sm:space-x-2'>
                 <Icon icon='mdi:history' className='w-4 h-4 sm:w-5 sm:h-5' />

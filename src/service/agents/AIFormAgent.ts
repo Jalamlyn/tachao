@@ -29,11 +29,10 @@ ${this._rawConfig}
 }
 
 不要生成 订单编号 的配置，系统会自动生成。
-不要在流程确认中生成确认按钮,系统会自动生成。
 生成的表单必须包含2个部分
 
 - 基本信息
-- 流程信息
+- 流程信息, 不生成确认按钮,系统会自动生成
 
 明细信息部分的表根根据表单的实际类型生成，是可选的
 生成默认的 calculate 计算逻辑，如果没有可计算的字段就默认返回 0
@@ -103,7 +102,7 @@ ${doc}
     onChunk?: AIResponseHandler,
     rawConfig?: string
   ): Promise<CommandResult> {
-    console.log("[AIFormAgent] processCommand started with rawConfig:", rawConfig?.substring(0, 100) + "...")
+    console.log("[AIFormAgent] processCommand started with rawConfig:", rawConfig)
     let generationProcess = ""
 
     const updateGenerationProcess = (chunk: string) => {
@@ -123,13 +122,13 @@ ${doc}
     }
 
     if (intent === "unclear") {
-      updateGenerationProcess("🤔 您的指令不太明确，我需要更多信息来帮助您。\n")
-      updateGenerationProcess("💡 请尝试使用以下格式的指令：\n")
-      updateGenerationProcess("- 创建一个[表单类型]表单，包含[字段1]、[字段2]等字段\n")
-      updateGenerationProcess("- 在现有表单中添加[新字段]字段\n")
-      updateGenerationProcess("- 修改[现有字段]的[属性]为[新值]\n")
-      updateGenerationProcess("- 删除表单中的[字段名]字段\n")
-      updateGenerationProcess("例如：'创建一个订单表单，包含客户名称、订单日期和商品列表字段'\n")
+      updateGenerationProcess("🤔 您的指令不太明确，我需要更多信息来帮助您。</br>")
+      updateGenerationProcess("💡 请尝试使用以下格式的指令：</br>")
+      updateGenerationProcess("- 创建一个[表单类型]表单，包含[字段1]、[字段2]等字段</br>")
+      updateGenerationProcess("- 在现有表单中添加[新字段]字段</br>")
+      updateGenerationProcess("- 修改[现有字段]的[属性]为[新值]</br>")
+      updateGenerationProcess("- 删除表单中的[字段名]字段</br>")
+      updateGenerationProcess("例如：'创建一个订单表单，包含客户名称、订单日期和商品列表字段'</br>")
       return {
         type: "unclear",
         data: null,
@@ -137,10 +136,10 @@ ${doc}
       }
     }
 
-    updateGenerationProcess("🤖 AI助手正在分析您的需求...\n")
+    updateGenerationProcess("🤖 AI助手正在分析您的需求...</br>")
     await new Promise((resolve) => setTimeout(resolve, 500))
 
-    updateGenerationProcess("📝 开始生成表单...\n")
+    updateGenerationProcess("📝 开始生成表单...</br>")
     const createResult = await this.createForm(command, updateGenerationProcess)
     if (createResult) {
       if (createResult.rawConfig) {
@@ -221,7 +220,7 @@ ${doc}
 
   private async createForm(description: string, onChunk: AIResponseHandler): Promise<CreateFormResult> {
     console.log("[AIFormAgent] createForm started with current rawConfig:", this._rawConfig?.substring(0, 100) + "...")
-    onChunk("🎨 正在设计表单结构...\n")
+    onChunk("🎨 正在设计表单结构...</br>")
     await new Promise((resolve) => setTimeout(resolve, 300))
 
     const prompt = `请根据以下描述生成一个完整的表单配置代码：
@@ -237,7 +236,7 @@ ${this._rawConfig}
 }
 
 请生成包含两部分内容的 js 代码：
-1. 表单标题(title)：简要概括表单的主要内容
+1. 表单标题(title)：表单的名称
 2. 表单配置(config)：一个完整的符合 DynamicFormConfig 类型的配置 js 对象
 
 请使用如下格式返回：
@@ -256,7 +255,7 @@ export default {
 `
 
     try {
-      onChunk("⚡ 正在生成表单配置...\n")
+      onChunk("⚡ 正在生成表单配置...</br>\n")
       const response = await this.processAIResponse(prompt, onChunk)
       console.log("[AIFormAgent] Received AI response, length:", response.length)
       const parsedConfig = await parseFormConfig(response)
@@ -271,7 +270,7 @@ export default {
         throw new Error("表单配置缺少必要的字段")
       }
 
-      onChunk("✨ 表单生成完成！\n")
+      onChunk("✨ 表单生成完成！</br>")
       console.log("[AIFormAgent] Form generation completed, returning new rawConfig")
       return {
         config: config as DynamicFormConfig,

@@ -272,9 +272,6 @@ const MessageCard = React.memo(
                       <Icon className='text-lg text-default-600' icon='gravity-ui:copy' />
                     )}
                   </Button>
-                  <Button isIconOnly radius='full' size='sm' variant='light' onPress={onDeleteMessage}>
-                    <Icon className='text-lg text-default-600' icon='mdi:delete' />
-                  </Button>
                 </div>
               )}
               {attempts > 1 && !hasFailed && !isLoading && (

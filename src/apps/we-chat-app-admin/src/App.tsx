@@ -160,7 +160,7 @@ export default function Component() {
         </SidebarDrawer>
 
         {/*  Content */}
-        <div className='w-full max-h-screen overflow-hidden md:max-w-[calc(100%-288px)] flex-1 p-4'>
+        <div className='w-full max-h-screen overflow-hidden md:max-w-[calc(100%-40px)] flex-1 p-4'>
           <GlobalBreadcrumb />
           <div className='content-container'>
             <Outlet />
