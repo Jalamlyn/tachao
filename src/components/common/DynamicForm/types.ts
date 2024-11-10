@@ -68,6 +68,10 @@ export interface TableColumn {
     calculate?: (records: any[]) => any
     render?: (value: any) => ReactNode
   }
+  calculate?: {
+    formula: string
+    dependencies?: string[]
+  }
 }
 
 export interface TableSummary {
@@ -157,4 +161,9 @@ export interface WatchUtils {
   watchFields: (fieldNames: string[], callback: (values: any[]) => void) => () => void
   batchUpdate: (updates: Array<{ field: string; value: any }>) => void
   setFieldVisibility: (fieldName: string, visible: boolean) => void
+}
+
+export interface CalculateConfig {
+  formula: string
+  dependencies?: string[]
 }
