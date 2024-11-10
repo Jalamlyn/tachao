@@ -126,6 +126,21 @@ ${doc}
       throw new Error("请使用表单创建或编辑相关的指令，让我更好地理解您的需求。")
     }
 
+    if (intent === "unclear") {
+      updateGenerationProcess("🤔 您的指令不太明确，我需要更多信息来帮助您。\n")
+      updateGenerationProcess("💡 请尝试使用以下格式的指令：\n")
+      updateGenerationProcess("- 创建一个[表单类型]表单，包含[字段1]、[字段2]等字段\n")
+      updateGenerationProcess("- 在现有表单中添加[新字段]字段\n")
+      updateGenerationProcess("- 修改[现有字段]的[属性]为[新值]\n")
+      updateGenerationProcess("- 删除表单中的[字段名]字段\n")
+      updateGenerationProcess("例如：'创建一个订单表单，包含客户名称、订单日期和商品列表字段'\n")
+      return {
+        type: "unclear",
+        data: null,
+        generationProcess,
+      }
+    }
+
     updateGenerationProcess("🤖 AI助手正在分析您的需求...\n")
     await new Promise((resolve) => setTimeout(resolve, 500))
 
@@ -178,16 +193,17 @@ ${doc}
 "${input}"
 
 请根据以下规则进行分析：
-1. 如果是创建、编辑、修改、更新表单的指令，返回 "support"
-2. 如果不是表单相关的指令或指令不明确，返回 "unsupported"
+1. 如果是明确的创建、编辑、修改、更新表单的指令，返回 "support"
+2. 如果不是表单相关的指令，返回 "unsupported"
+3. 如果是表单相关但指令不够明确或缺少关键信息，返回 "unclear"
 
-请只返回 "support" 或 "unsupported"，不要返回其他内容。`
+请只返回 "support"、"unsupported" 或 "unclear"，不要返回其他内容。`
 
     try {
       const aiResponse = await this.processAIResponse(aiAnalysisPrompt, () => {})
       const cleanResponse = aiResponse.trim().toLowerCase()
 
-      if (cleanResponse === "support" || cleanResponse === "unsupported") {
+      if (cleanResponse === "support" || cleanResponse === "unsupported" || cleanResponse === "unclear") {
         if (cleanResponse === "unsupported") {
           message.warning("请使用表单创建或编辑相关的指令。")
         }
@@ -199,8 +215,8 @@ ${doc}
         return "support"
       }
 
-      message.warning("请使用表单创建或编辑相关的指令。")
-      return "unsupported"
+      message.warning("请使用更明确的表单创建或编辑相关的指令。")
+      return "unclear"
     } catch (error) {
       console.error("Error analyzing intent:", error)
       message.error("分析用户意图失败：" + (error as Error).message)
