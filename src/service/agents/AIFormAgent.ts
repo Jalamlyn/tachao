@@ -1,16 +1,16 @@
-import chatChunkClaude from "../chat/chat-chunk-claude-office"
+// import chatChunkClaude from "../chat/chat-chunk-claude-office"
+import chatChunkGroq from "../chat/chat-chunk-groq"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
 import { markdown as doc } from "@/components/common/DynamicForm/doc.md"
 import {
   CommandResult,
-  AIFormAgentConfig,
   CreateFormResult,
   IntentAnalysisResult,
   AIResponseHandler,
   Message,
-  IAIFormAgent
+  IAIFormAgent,
 } from "./AIFormAgentTypes"
 
 export class AIFormAgent implements IAIFormAgent {
@@ -100,7 +100,6 @@ ${doc}
   public async processCommand(
     command: string,
     onChunk?: AIResponseHandler,
-    config?: DynamicFormConfig,
     rawConfig?: string
   ): Promise<CommandResult> {
     console.log("[AIFormAgent] processCommand started with rawConfig:", rawConfig?.substring(0, 100) + "...")
@@ -109,10 +108,6 @@ ${doc}
     const updateGenerationProcess = (chunk: string) => {
       generationProcess += chunk
       onChunk?.(chunk)
-    }
-
-    if (config) {
-      this.setCurrentConfig(config)
     }
 
     if (rawConfig) {
@@ -147,7 +142,6 @@ ${doc}
     updateGenerationProcess("📝 开始生成表单...\n")
     const createResult = await this.createForm(command, updateGenerationProcess)
     if (createResult) {
-      this.setCurrentConfig(createResult.config)
       if (createResult.rawConfig) {
         console.log("[AIFormAgent] Setting new rawConfig from createResult")
         this.setRawConfig(createResult.rawConfig)
@@ -175,7 +169,7 @@ ${doc}
       messages.push({ role: "user", content: `[Uploaded Image: ${this._cachedImage}]` })
     }
 
-    await chatChunkClaude(
+    await chatChunkGroq(
       messages,
       (chunk: string) => {
         response += chunk
@@ -224,10 +218,7 @@ ${doc}
     }
   }
 
-  private async createForm(
-    description: string,
-    onChunk: AIResponseHandler
-  ): Promise<CreateFormResult> {
+  private async createForm(description: string, onChunk: AIResponseHandler): Promise<CreateFormResult> {
     console.log("[AIFormAgent] createForm started with current rawConfig:", this._rawConfig?.substring(0, 100) + "...")
     onChunk("🎨 正在设计表单结构...\n")
     await new Promise((resolve) => setTimeout(resolve, 300))
@@ -290,10 +281,6 @@ export default {
       console.error("Error creating form:", error)
       throw new Error("创建表单失败：" + (error as Error).message)
     }
-  }
-
-  private setCurrentConfig(config: DynamicFormConfig): void {
-    // 实现设置当前配置的逻辑
   }
 }
 

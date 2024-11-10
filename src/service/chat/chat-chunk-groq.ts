@@ -25,16 +25,17 @@ export default async function chatChunkGroq(
     })
   }
 
-  const apiKey = localStorage.getItem("mobenai.api-key")
-  const apiEndPoint = `https://api.groq.com/openai/v1/chat/completions`
+  const apiKey = "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"
+  const apiEndPoint = `https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-groq`
 
   const payload = {
-    model: "llama-3.1-70b-versatile",
+    model: "llama-3.2-90b-text-preview",
     messages: _messages,
     temperature,
     max_tokens: 8000,
     top_p: 1,
     stream: true,
+    apiKey,
   }
 
   let controller = new AbortController()

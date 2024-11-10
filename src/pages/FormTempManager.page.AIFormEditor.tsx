@@ -173,7 +173,7 @@ const AIFormEditor: React.FC = () => {
             })
             appendGenerationProcess(chunk)
           },
-          formState.formConfig
+          formState.rawConfig
         )
 
         if (result.type === "support") {
