@@ -8,8 +8,7 @@ import FormManager from "@/pages/FormManager.index"
 import FormPreview from "@/pages/FormTempManager.component.FormPreview"
 import AIFormEditor from "@/pages/FormTempManager.page.AIFormEditor"
 import FormAnalysis from "@/pages/FormManager.component.FormAnalysis"
-import PageTemplateManager from "./src/PageTemplateManager"
-import PageTemplateEditor from "./src/PageTemplateEditor"
+import FinancialStatement from "@/pages/FinancialStatement"
 
 export default function renderWeChatApp() {
   return (
@@ -23,10 +22,6 @@ export default function renderWeChatApp() {
       <Route path='documents/create' element={<AIFormEditor />} />
       <Route path='documents/edit/:templateId' element={<AIFormEditor />} />
       <Route path='form-preview/:formId' element={<FormPreview />} />
-      {/* 添加页面模板路由 */}
-      <Route path='pages' element={<PageTemplateManager />} />
-      <Route path='pages/create' element={<PageTemplateEditor />} />
-      <Route path='pages/edit/:templateId' element={<PageTemplateEditor />} />
     </Route>
   )
 }

@@ -30,7 +30,7 @@ export default async function chatChunkClaudeHoray(
   isFirst = true,
   temperature = 0,
   overFlag = "YES",
-  baseModel = "hooray::claude-3-5-sonnet@20241022"
+  baseModel = "hooray::claude-3-5-sonnet-v2@20241022"
 ) {
   const [provider, model] = baseModel.split("::")
   console.log("chatChunkClaudeHoray", baseModel)
@@ -49,7 +49,7 @@ export default async function chatChunkClaudeHoray(
     throw new Error(`未找到服务商信息：${provider}`)
   }
 
-  const apiKey = supplierInfo.apiKey
+  const apiKey = "sk-ttybjxxgbpeaelqamcorbcfojczintmlwrifhwyfxlqbqenm"
   const apiEndPoint = supplierInfo.endpoint || "https://api.horay.ai/v1/messages"
 
   let _messages

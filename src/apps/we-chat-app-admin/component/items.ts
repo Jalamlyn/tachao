@@ -14,12 +14,6 @@ export const items: SidebarItem[] = [
     title: "单据管理",
   },
   {
-    key: "pages",
-    href: "/we-chat-app/admin/pages",
-    icon: "solar:layout-left-outline",
-    title: "页面模板管理",
-  },
-  {
     key: "settings",
     href: "/we-chat-app/admin/settings",
     icon: "solar:settings-outline",
