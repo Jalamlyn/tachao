@@ -22,6 +22,7 @@ import { useSearchParams } from "react-router-dom"
 import message from "@/components/Message"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import { format } from "date-fns"
+import ResourceDataTable from "@/components/common/data-table/ResourceDataTable"
 
 interface Resource {
   id: string
@@ -68,6 +69,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) =
   const [filterValue, setFilterValue] = useState("")
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null)
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure()
+  const { isOpen: isViewOpen, onOpen: onViewOpen, onClose: onViewClose } = useDisclosure()
 
   const { remove: deleteResource } = useMetadata<Resource>("resource")
 
@@ -79,6 +81,11 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) =
   const handleDelete = (resource: Resource) => {
     setSelectedResource(resource)
     onDeleteOpen()
+  }
+
+  const handleView = (resource: Resource) => {
+    setSelectedResource(resource)
+    onViewOpen()
   }
 
   const confirmDelete = async () => {
@@ -145,8 +152,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) =
                 size="sm"
                 variant="light"
                 className="text-default-600 hover:text-primary transition-colors"
-                as="a"
-                href={`/we-chat-app/admin/resources/${item.id}?appId=${appId}`}
+                onClick={() => handleView(item)}
               >
                 <Icon icon="mdi:eye" className="w-4 h-4" />
               </Button>
@@ -214,6 +220,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) =
         </TableBody>
       </Table>
 
+      {/* 删除确认对话框 */}
       <Modal isOpen={isDeleteOpen} onClose={onDeleteClose}>
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">确认删除</ModalHeader>
@@ -226,6 +233,36 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) =
             </Button>
             <Button color="danger" onPress={confirmDelete}>
               删除
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* 查看数据对话框 */}
+      <Modal 
+        isOpen={isViewOpen} 
+        onClose={onViewClose}
+        size="full"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Icon icon="mdi:file-excel" className="w-5 h-5 text-success" />
+              <span>{selectedResource?.title}</span>
+            </div>
+          </ModalHeader>
+          <ModalBody className="p-0">
+            {selectedResource && (
+              <ResourceDataTable
+                id={selectedResource.id}
+                appId={appId || ""}
+              />
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button color="default" variant="light" onPress={onViewClose}>
+              关闭
             </Button>
           </ModalFooter>
         </ModalContent>
