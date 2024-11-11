@@ -3,6 +3,7 @@ import { Button, useDisclosure } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import ResourceTable from "./components/ResourceTable"
 import UploadModal from "./components/UploadModal"
+import CreateResourceButton from "./components/CreateResourceButton"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import message from "@/components/Message"
@@ -96,24 +97,34 @@ const ResourceManagement: React.FC = () => {
   }
 
   const pageActions = (
-    <Button 
-      onClick={onOpenUpload} 
-      color="primary"
-      isDisabled={!appId || uploading}
-      className="bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300"
-    >
-      {uploading ? (
-        <>
-          <Icon icon="mdi:loading" className="w-4 h-4 mr-2 animate-spin" />
-          上传中...
-        </>
-      ) : (
-        <>
-          <Icon icon="mdi:upload" className="w-4 h-4 mr-2" />
-          上传资料
-        </>
-      )}
-    </Button>
+    <div className="flex gap-2">
+      <CreateResourceButton 
+        appId={appId} 
+        isDisabled={!appId || uploading}
+        onSuccess={() => {
+          message.success("资料创建成功")
+          loadResources()
+        }}
+      />
+      <Button 
+        onClick={onOpenUpload} 
+        color="primary"
+        isDisabled={!appId || uploading}
+        className="bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300"
+      >
+        {uploading ? (
+          <>
+            <Icon icon="mdi:loading" className="w-4 h-4 mr-2 animate-spin" />
+            上传中...
+          </>
+        ) : (
+          <>
+            <Icon icon="mdi:upload" className="w-4 h-4 mr-2" />
+            上传资料
+          </>
+        )}
+      </Button>
+    </div>
   )
 
   return (
