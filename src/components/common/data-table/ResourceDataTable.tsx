@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
-import { getMetadata, setMetadata } from "@/service/apis/api"
+import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import {
   ColumnFiltersState,
   SortingState,
@@ -26,7 +26,6 @@ import { RankingInfo, rankItem } from "@tanstack/match-sorter-utils"
 import { ResourceDataTableToolbar } from "./ResourceDataTableToolbar"
 import { ResourceDataTableBody } from "./ResourceDataTableBody"
 import { ResourceDataTablePagination } from "./ResourceDataTablePagination"
-import { useResourceMetadata } from "@/pages/resource-management/hooks/useResourceMetadata"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,17 +57,8 @@ const ResourceDataTable: React.FC = () => {
   const [searchParams] = useSearchParams()
   const appId = searchParams.get("appId")
 
-  // 使用 useResourceMetadata hook
-  const {
-    resources,
-    loading,
-    error: resourceError,
-    loadResources,
-    updateResource,
-    deleteResource,
-    getResourceDetail,
-  } = useResourceMetadata(appId)
-
+  // 使用 useMetadata hook
+  const { getDetail, update, remove } = useMetadata("resource")
   const [resource, setResource] = useState<any>(null)
   const [columns, setColumns] = useState<ColumnDef<any>[]>([])
   const [sorting, setSorting] = useState<SortingState>([])
@@ -81,47 +71,27 @@ const ResourceDataTable: React.FC = () => {
   const [globalFilter, setGlobalFilter] = useState("")
   const [showDeleteAlert, setShowDeleteAlert] = useState(false)
 
-  // 加载资源数据
-  useEffect(() => {
-    if (id && appId) {
-      const loadResourceData = async () => {
-        setIsLoading(true)
-        try {
-          const detail = await getResourceDetail(id)
-          if (detail) {
-            setResource(detail)
-          }
-        } catch (err) {
-          console.error("Error loading resource detail:", err)
-          message.error("加载资源详情失败")
-        } finally {
-          setIsLoading(false)
-        }
+  const fetchResources = useCallback(async () => {
+    if (!appId || !id) return
+    try {
+      const resourceDetail = await getDetail(id)
+      if (resourceDetail) {
+        setResource(resourceDetail)
       }
-      loadResourceData()
+    } catch (error) {
+      console.error("Error fetching resource data:", error)
+      message.error("获取资源数据失败")
     }
-  }, [id, appId, getResourceDetail])
+  }, [appId, id, getDetail])
 
-  // 处理保存
   const handleSave = async (formData: any) => {
     if (!resource || !appId) return
 
     setIsLoading(true)
     try {
-      const newData = [...resource.data]
-
-      if (editingRow) {
-        const index = newData.findIndex((item: any) => item === editingRow)
-        if (index !== -1) {
-          newData[index] = formData
-        }
-      } else {
-        newData.push(formData)
-      }
-
-      const updatedResource = await updateResource(resource.id, {
+      const updatedResource = await update(resource.id, {
         ...resource,
-        data: newData,
+        data: formData,
       })
 
       if (updatedResource) {
@@ -149,7 +119,7 @@ const ResourceDataTable: React.FC = () => {
     setIsLoading(true)
     try {
       const newData = resource.data.filter((item: any) => item !== row)
-      const updatedResource = await updateResource(resource.id, {
+      const updatedResource = await update(resource.id, {
         ...resource,
         data: newData,
       })
@@ -180,7 +150,7 @@ const ResourceDataTable: React.FC = () => {
       const selectedIds = selectedRows.map((row) => row.original)
       const newData = resource.data.filter((item: any) => !selectedIds.includes(item))
 
-      const updatedResource = await updateResource(resource.id, {
+      const updatedResource = await update(resource.id, {
         ...resource,
         data: newData,
       })
@@ -228,6 +198,12 @@ const ResourceDataTable: React.FC = () => {
       message.error("导出失败")
     }
   }
+
+  useEffect(() => {
+    if (id && appId) {
+      fetchResources()
+    }
+  }, [id, appId, fetchResources])
 
   useEffect(() => {
     if (resource?.data && resource.data.length > 0) {
@@ -278,7 +254,7 @@ const ResourceDataTable: React.FC = () => {
     enableRowSelection: true,
   })
 
-  if (loading || isLoading) {
+  if (!resource) {
     return (
       <div className='full-screen flex items-center justify-center h-screen'>
         <Spinner label='加载中...'></Spinner>
@@ -286,23 +262,12 @@ const ResourceDataTable: React.FC = () => {
     )
   }
 
-  if (!resource) {
-    return (
-      <div className='full-screen flex items-center justify-center h-screen'>
-        <div className='text-center text-gray-500'>
-          <p>未找到资源</p>
-          {resourceError && <p className='text-red-500 text-sm mt-2'>{resourceError}</p>}
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className='w-full p-6'>
       {/* 添加标题 */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">{resource.name}</h1>
-        <p className="text-sm text-gray-500 mt-1">数据管理</p>
+      <div className='mb-6'>
+        <h1 className='text-2xl font-bold text-gray-800'>{resource.name}</h1>
+        <p className='text-sm text-gray-500 mt-1'>数据管理</p>
       </div>
 
       <ResourceDataTableToolbar
