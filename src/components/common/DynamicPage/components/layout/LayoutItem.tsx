@@ -1,12 +1,16 @@
 import React from 'react'
 import { cn } from '@/lib/utils'
+import { motion } from 'framer-motion'
 import type { LayoutItemConfig } from '../../types/layout'
 import { createResponsiveClasses } from '../../utils/layout/classNames'
 
 interface LayoutItemProps {
   config: LayoutItemConfig
   className?: string
+  style?: React.CSSProperties
   children?: React.ReactNode
+  animate?: boolean
+  index?: number
 }
 
 /**
@@ -16,8 +20,12 @@ interface LayoutItemProps {
 export const LayoutItem: React.FC<LayoutItemProps> = ({
   config,
   className,
-  children
+  style,
+  children,
+  animate = true,
+  index = 0
 }) => {
+  // 生成布局项类名
   const generateItemClasses = () => {
     const classes: string[] = []
     
@@ -36,6 +44,10 @@ export const LayoutItem: React.FC<LayoutItemProps> = ({
     
     if (config.rowStart) {
       classes.push(...createResponsiveClasses('row-start', config.rowStart))
+    }
+    
+    if (config.area) {
+      classes.push(`grid-area-[${config.area}]`)
     }
     
     // Flex 相关类名
@@ -75,11 +87,51 @@ export const LayoutItem: React.FC<LayoutItemProps> = ({
     return classes.join(' ')
   }
   
-  return (
-    <div className={cn(generateItemClasses(), config.className, className)}>
+  // 动画配置
+  const variants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.3,
+        delay: index * 0.1
+      }
+    }
+  }
+  
+  // 包装内容
+  const content = (
+    <div
+      className={cn(
+        // 基础类名
+        'relative',
+        // 布局项类名
+        generateItemClasses(),
+        // 自定义类名
+        config.className,
+        className
+      )}
+      style={style}
+    >
       {children}
     </div>
   )
+  
+  // 如果启用动画,使用 motion.div 包装
+  if (animate) {
+    return (
+      <motion.div
+        variants={variants}
+        initial="hidden"
+        animate="visible"
+      >
+        {content}
+      </motion.div>
+    )
+  }
+  
+  return content
 }
 
 export default LayoutItem
