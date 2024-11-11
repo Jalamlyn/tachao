@@ -1,15 +1,46 @@
 import React, { useEffect, useState } from "react"
-import { Button } from "@nextui-org/react"
+import { Button, useDisclosure } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import ResourceTable from "./components/ResourceTable"
 import UploadModal from "./components/UploadModal"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import message from "@/components/Message"
+import { useResourceMetadata } from "./hooks/useResourceMetadata"
+import { useFileUpload } from "./hooks/useFileUpload"
+import { useSearchParams } from "react-router-dom"
 
 const ResourceManagement: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+  const [searchParams] = useSearchParams()
+  const appId = searchParams.get("appId")
+  const { isOpen: isUploadModalOpen, onOpen: onOpenUpload, onClose: onCloseUpload } = useDisclosure()
+  
+  // 使用 hooks
+  const {
+    createResource,
+    loadResources,
+    resources,
+    loading: resourceLoading,
+  } = useResourceMetadata(appId)
+
+  const {
+    handleUpload: uploadFile,
+    uploading,
+    progress,
+    error: uploadError,
+  } = useFileUpload({
+    onProgress: (progress) => {
+      console.log("Upload progress:", progress)
+    },
+    onSuccess: (data) => {
+      message.success("文件解析成功")
+      handleCreateResource(data)
+    },
+    onError: (error) => {
+      message.error(error.message || "文件上传失败")
+    },
+  })
 
   useEffect(() => {
     updateBreadcrumbs([
@@ -18,15 +49,46 @@ const ResourceManagement: React.FC = () => {
     ])
   }, [])
 
-  const handleCreateResource = () => {
-    setIsUploadModalOpen(true)
+  useEffect(() => {
+    if (appId) {
+      loadResources()
+    }
+  }, [appId, loadResources])
+
+  const handleCreateResource = async (data: any) => {
+    if (!appId) {
+      message.error("缺少应用ID")
+      return
+    }
+
+    try {
+      const resource = {
+        name: data.name || "新建资料",
+        type: "excel",
+        size: data.size || "0",
+        status: "active" as const,
+        description: `上传于 ${new Date().toLocaleString()}`,
+        data: data,
+      }
+
+      await createResource(resource)
+      message.success("资料创建成功")
+      onCloseUpload()
+      loadResources() // 重新加载资源列表
+    } catch (error) {
+      console.error("Error creating resource:", error)
+      message.error("创建资料失败")
+    }
   }
 
-  const handleUpload = async (data: any) => {
+  const handleUpload = async (file: File) => {
+    if (!appId) {
+      message.error("缺少应用ID")
+      return
+    }
+
     try {
-      // TODO: 实现实际的上传逻辑
-      console.log("Uploaded data:", data)
-      message.success("上传成功")
+      await uploadFile(file)
     } catch (error) {
       console.error("Upload error:", error)
       message.error("上传失败")
@@ -34,19 +96,41 @@ const ResourceManagement: React.FC = () => {
   }
 
   const pageActions = (
-    <Button onClick={handleCreateResource} color="primary">
-      <Icon icon="mdi:plus" className="w-4 h-4 mr-2" />
-      创建资料
+    <Button 
+      onClick={onOpenUpload} 
+      color="primary"
+      isDisabled={!appId || uploading}
+      className="bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300"
+    >
+      {uploading ? (
+        <>
+          <Icon icon="mdi:loading" className="w-4 h-4 mr-2 animate-spin" />
+          上传中...
+        </>
+      ) : (
+        <>
+          <Icon icon="mdi:upload" className="w-4 h-4 mr-2" />
+          上传资料
+        </>
+      )}
     </Button>
   )
 
   return (
-    <PageLayout title="资料管理" titleIcon="mdi:file-document" actions={pageActions}>
-      <ResourceTable />
+    <PageLayout 
+      title="资料管理" 
+      titleIcon="mdi:file-document" 
+      actions={pageActions}
+      loading={resourceLoading}
+    >
+      <ResourceTable resources={resources} onRefresh={loadResources} />
       <UploadModal
         isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
+        onClose={onCloseUpload}
         onUpload={handleUpload}
+        uploading={uploading}
+        progress={progress}
+        error={uploadError}
       />
     </PageLayout>
   )
