@@ -1,9 +1,10 @@
-// import chatChunkClaude from "../chat/chat-chunk-claude-office"
-import chatChunkGroq from "../chat/chat-chunk-groq"
+import chatChunkClaude from "../chat/chat-chunk-claude-office"
+// import chatChunkGroq from "../chat/chat-chunk-groq"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
 import { markdown as doc } from "@/components/common/DynamicForm/doc.md"
+import { markdown as formulaService } from "@/services/formulaService.md"
 import {
   CommandResult,
   CreateFormResult,
@@ -54,7 +55,10 @@ processStep 必须在 renderConfig 下
 - Calendar
 
 <doc>
+# 动态表单配置文档
 ${doc}
+# 动态表单计算公式文档
+${formulaService}
 </doc>
 - 仔细阅读 doc 来编写配置，不能编写超出 doc 范围的代码
 - 阅读完 doc 和用户需求之后要进行思考和反思
@@ -169,7 +173,7 @@ ${doc}
       messages.push({ role: "user", content: `[Uploaded Image: ${this._cachedImage}]` })
     }
 
-    await chatChunkGroq(
+    await chatChunkClaude(
       messages,
       (chunk: string) => {
         response += chunk
