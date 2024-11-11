@@ -20,6 +20,7 @@ import { parseFormConfig } from "@/utils/codeParser"
 
 interface FormPreviewProps {
   config: DynamicFormConfig | null
+  previewMode?: boolean
 }
 
 const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMode = false }) => {
@@ -98,7 +99,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className='flex flex-col items-center p-2'
+      className='flex flex-col items-center p-2 h-full overflow-y-auto'
     >
       {config ? (
         <>

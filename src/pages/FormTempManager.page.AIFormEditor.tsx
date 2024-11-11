@@ -210,89 +210,93 @@ const AIFormEditor: React.FC = () => {
       titleIcon='mdi:form-select'
       actions={pageActions}
     >
-      <ResizablePanelGroup direction='horizontal' className='h-[calc(100vh-200px)]'>
-        <ResizablePanel defaultSize={30}>
-          <ScrollShadow className='h-[calc(100vh-240px)]'>
-            <AnimatePresence>
-              {messages.map((message) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <MessageCard
-                    avatar={message.role === "assistant" ? mo2 : user}
-                    message={message.content}
-                    role={message.role}
-                    status='success'
-                    className='mb-4'
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </ScrollShadow>
-
-          <div className='flex items-end gap-2'>
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder='输入您的需求，例如 编辑 xxx 创建 xxx AI 会根据您的指令来创建和更改表单'
-              className='flex-grow'
-              classNames={{
-                input: "py-2 text-medium",
-                inputWrapper: "bg-default-100",
-              }}
-              minRows={1}
-              maxRows={4}
-              endContent={
-                <div className='flex items-center gap-2 pr-2'>
-                  <Tooltip content='发送指令' placement='top'>
-                    <Button
-                      isIconOnly
-                      className={!input || isLoading ? "" : "bg-primary"}
-                      color={!input || isLoading ? "default" : "primary"}
-                      isDisabled={!input || isLoading}
-                      radius='full'
-                      variant={!input || isLoading ? "flat" : "solid"}
-                      onClick={handleSendMessage}
-                      isLoading={isLoading}
+      <div className="h-[calc(100vh-200px)] overflow-hidden">
+        <ResizablePanelGroup direction='horizontal' className='h-full'>
+          <ResizablePanel defaultSize={30}>
+            <div className="h-full flex flex-col">
+              <ScrollShadow className='flex-1 overflow-y-auto'>
+                <AnimatePresence>
+                  {messages.map((message) => (
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3 }}
                     >
-                      {isLoading ? (
-                        <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
-                      ) : (
-                        <Icon
-                          className={!input ? "text-default-500" : "text-white"}
-                          icon='solar:arrow-up-linear'
-                          width={20}
-                        />
-                      )}
-                    </Button>
-                  </Tooltip>
-                </div>
-              }
-            />
-          </div>
-        </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={70} className='bg-slate-100 ml-2'>
-          <div className='h-[calc(100vh-200px)] overflow-auto'>
-            <AnimatePresence mode='wait'>
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                {formState.formConfig ? (
-                  <FormPreview previewMode config={formState.formConfig} />
-                ) : (
-                  <div className='text-center py-12 text-gray-500 h-[calc(100vh-200px)] flex flex-col justify-center items-center'>
-                    <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
-                    <p>请输入您的需求,AI将为您开发表单</p>
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </ResizablePanel>
-      </ResizablePanelGroup>
+                      <MessageCard
+                        avatar={message.role === "assistant" ? mo2 : user}
+                        message={message.content}
+                        role={message.role}
+                        status='success'
+                        className='mb-4'
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </ScrollShadow>
+
+              <div className='flex items-end gap-2 p-4 bg-white'>
+                <Textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder='输入您的需求，例如 编辑 xxx 创建 xxx AI 会根据您的指令来创建和更改表单'
+                  className='flex-grow'
+                  classNames={{
+                    input: "py-2 text-medium",
+                    inputWrapper: "bg-default-100",
+                  }}
+                  minRows={1}
+                  maxRows={4}
+                  endContent={
+                    <div className='flex items-center gap-2 pr-2'>
+                      <Tooltip content='发送指令' placement='top'>
+                        <Button
+                          isIconOnly
+                          className={!input || isLoading ? "" : "bg-primary"}
+                          color={!input || isLoading ? "default" : "primary"}
+                          isDisabled={!input || isLoading}
+                          radius='full'
+                          variant={!input || isLoading ? "flat" : "solid"}
+                          onClick={handleSendMessage}
+                          isLoading={isLoading}
+                        >
+                          {isLoading ? (
+                            <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
+                          ) : (
+                            <Icon
+                              className={!input ? "text-default-500" : "text-white"}
+                              icon='solar:arrow-up-linear'
+                              width={20}
+                            />
+                          )}
+                        </Button>
+                      </Tooltip>
+                    </div>
+                  }
+                />
+              </div>
+            </div>
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+          <ResizablePanel defaultSize={70} className='bg-slate-100'>
+            <div className='h-full overflow-auto'>
+              <AnimatePresence mode='wait'>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                  {formState.formConfig ? (
+                    <FormPreview previewMode config={formState.formConfig} />
+                  ) : (
+                    <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
+                      <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
+                      <p>请输入您的需求,AI将为您开发表单</p>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
 
       <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} size='lg' placement='center'>
         <ModalContent>
