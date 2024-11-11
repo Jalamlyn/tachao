@@ -1,46 +1,6 @@
 import React from 'react';
 import { Card, Table } from 'antd';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import styled from 'styled-components';
-
-const Container = styled.div`
-  padding: 20px;
-  background: #f0f2f5;
-`;
-
-const Header = styled.div`
-  background: #8a7dea;
-  color: white;
-  padding: 10px;
-  text-align: center;
-  font-size: 18px;
-  margin-bottom: 20px;
-`;
-
-const SummaryGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 20px;
-`;
-
-const SummaryCard = styled(Card)`
-  background: ${props => props.color || '#fff'};
-  color: ${props => props.textColor || '#000'};
-`;
-
-const StatisticsSection = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-bottom: 20px;
-`;
-
-const ChartContainer = styled.div`
-  background: white;
-  padding: 20px;
-  border-radius: 4px;
-`;
 
 const FinancialStatement: React.FC = () => {
   const summaryData = {
@@ -74,29 +34,31 @@ const FinancialStatement: React.FC = () => {
   ];
 
   return (
-    <Container>
-      <Header>收支明细流水账</Header>
+    <div className="p-5 bg-gray-100">
+      <div className="bg-purple-500 text-white p-3 text-center text-lg mb-5">
+        收支明细流水账
+      </div>
       
-      <SummaryGrid>
-        <SummaryCard color="#8a7dea" textColor="white">
-          <h3>期初金额</h3>
-          <p>¥{summaryData.initialBalance.toFixed(2)}</p>
-        </SummaryCard>
-        <SummaryCard color="#8a7dea" textColor="white">
-          <h3>总收入</h3>
-          <p>¥{summaryData.totalIncome.toFixed(2)}</p>
-        </SummaryCard>
-        <SummaryCard color="#8a7dea" textColor="white">
-          <h3>总支出</h3>
-          <p>¥{summaryData.totalExpense.toFixed(2)}</p>
-        </SummaryCard>
-        <SummaryCard color="#8a7dea" textColor="white">
-          <h3>总结余</h3>
-          <p>¥{summaryData.finalBalance.toFixed(2)}</p>
-        </SummaryCard>
-      </SummaryGrid>
+      <div className="grid grid-cols-4 gap-5 mb-5">
+        <Card className="bg-purple-500 text-white">
+          <h3 className="text-white">期初金额</h3>
+          <p className="text-white">¥{summaryData.initialBalance.toFixed(2)}</p>
+        </Card>
+        <Card className="bg-purple-500 text-white">
+          <h3 className="text-white">总收入</h3>
+          <p className="text-white">¥{summaryData.totalIncome.toFixed(2)}</p>
+        </Card>
+        <Card className="bg-purple-500 text-white">
+          <h3 className="text-white">总支出</h3>
+          <p className="text-white">¥{summaryData.totalExpense.toFixed(2)}</p>
+        </Card>
+        <Card className="bg-purple-500 text-white">
+          <h3 className="text-white">总结余</h3>
+          <p className="text-white">¥{summaryData.finalBalance.toFixed(2)}</p>
+        </Card>
+      </div>
 
-      <StatisticsSection>
+      <div className="grid grid-cols-2 gap-5 mb-5">
         <Card title="账户收支汇总表">
           <Table
             dataSource={accountData}
@@ -109,7 +71,7 @@ const FinancialStatement: React.FC = () => {
           />
         </Card>
         
-        <ChartContainer>
+        <div className="bg-white p-5 rounded-md">
           <BarChart width={500} height={300} data={accountData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
@@ -119,8 +81,8 @@ const FinancialStatement: React.FC = () => {
             <Bar dataKey="income" name="收入金额" fill="#8884d8" />
             <Bar dataKey="expense" name="支出金额" fill="#82ca9d" />
           </BarChart>
-        </ChartContainer>
-      </StatisticsSection>
+        </div>
+      </div>
 
       <Card title="收支明细">
         <Table
@@ -129,7 +91,7 @@ const FinancialStatement: React.FC = () => {
           pagination={{ pageSize: 10 }}
         />
       </Card>
-    </Container>
+    </div>
   );
 };
 
