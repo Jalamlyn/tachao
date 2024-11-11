@@ -1,22 +1,11 @@
-import React, { useCallback, useState, useEffect, useRef } from "react"
-import { Card, CardBody, ScrollShadow } from "@nextui-org/react"
+import React, { useState, useEffect, useRef } from "react"
+import { ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { AnimatePresence, motion } from "framer-motion"
 import { useNavigate, useParams } from "react-router-dom"
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  Textarea,
-  Tooltip,
-  Chip,
-} from "@nextui-org/react"
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Textarea, Tooltip } from "@nextui-org/react"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
-import FormPreview from "./FormTempManager.component.FormPreview"
-import { useFormState } from "./FormTempManager.hook.useFormState"
+import FormPreview from "./components/FormPreview"
+import { useFormState } from "./hooks/useFormState"
 import AIFormAgent from "@/service/agents/AIFormAgent"
 import { useMetadata } from "@/components/from-templates/hook/useMetadata"
 import message from "@/components/Message"
@@ -210,20 +199,14 @@ const AIFormEditor: React.FC = () => {
       titleIcon='mdi:form-select'
       actions={pageActions}
     >
-      <div className="h-[calc(100vh-200px)] overflow-hidden">
+      <div className='h-[calc(100vh-140px)] overflow-hidden'>
         <ResizablePanelGroup direction='horizontal' className='h-full'>
           <ResizablePanel defaultSize={30}>
-            <div className="h-full flex flex-col">
+            <div className='h-full flex flex-col'>
               <ScrollShadow className='flex-1 overflow-y-auto'>
-                <AnimatePresence>
+                <div className='space-y-4'>
                   {messages.map((message) => (
-                    <motion.div
-                      key={message.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
-                    >
+                    <div key={message.id}>
                       <MessageCard
                         avatar={message.role === "assistant" ? mo2 : user}
                         message={message.content}
@@ -231,9 +214,9 @@ const AIFormEditor: React.FC = () => {
                         status='success'
                         className='mb-4'
                       />
-                    </motion.div>
+                    </div>
                   ))}
-                </AnimatePresence>
+                </div>
               </ScrollShadow>
 
               <div className='flex items-end gap-2 p-4 bg-white'>
@@ -281,18 +264,16 @@ const AIFormEditor: React.FC = () => {
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={70} className='bg-slate-100'>
             <div className='h-full overflow-auto'>
-              <AnimatePresence mode='wait'>
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                  {formState.formConfig ? (
-                    <FormPreview previewMode config={formState.formConfig} />
-                  ) : (
-                    <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
-                      <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
-                      <p>请输入您的需求,AI将为您开发表单</p>
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
+              <div>
+                {formState.formConfig ? (
+                  <FormPreview previewMode config={formState.formConfig} />
+                ) : (
+                  <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
+                    <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
+                    <p>请输入您的需求,AI将为您开发表单</p>
+                  </div>
+                )}
+              </div>
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
@@ -301,17 +282,13 @@ const AIFormEditor: React.FC = () => {
       <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} size='lg' placement='center'>
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className='flex items-center gap-2'
-            >
+            <div className='flex items-center gap-2'>
               <Icon icon='mdi:check-circle' className='w-6 h-6 text-success' />
               <span>模板{isEditMode ? "更新" : "保存"}成功</span>
-            </motion.div>
+            </div>
           </ModalHeader>
           <ModalBody>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className='space-y-4'>
+            <div className='space-y-4'>
               <p className='text-gray-600'>恭喜！您的单据模板已经{isEditMode ? "更新" : "保存"}成功。现在您可以：</p>
               <div className='flex flex-col gap-2'>
                 <div className='p-4 border rounded-lg bg-gray-50'>
@@ -337,7 +314,7 @@ const AIFormEditor: React.FC = () => {
                   </Button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </ModalBody>
           <ModalFooter>
             <Button variant='light' onPress={() => setIsSuccessModalOpen(false)}>
