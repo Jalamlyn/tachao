@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Table,
   TableHeader,
@@ -21,6 +21,8 @@ import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
 import EditModal from "./EditModal"
 import message from "@/components/Message"
+import { useResourceMetadata } from "../hooks/useResourceMetadata"
+import { formatDate, formatFileSize } from "@/utils/format"
 
 interface Resource {
   id: string
@@ -30,39 +32,15 @@ interface Resource {
   updatedAt: string
   status: "active" | "processing" | "error"
   description?: string
+  data?: any[]
 }
 
-const mockData: Resource[] = [
-  {
-    id: "1",
-    name: "销售数据.xlsx",
-    type: "Excel",
-    size: "2.5MB",
-    updatedAt: "2024-01-20 10:30",
-    status: "active",
-    description: "2023年第四季度销售数据",
-  },
-  {
-    id: "2",
-    name: "客户信息.xlsx",
-    type: "Excel",
-    size: "1.8MB",
-    updatedAt: "2024-01-19 15:45",
-    status: "active",
-    description: "客户基础信息表",
-  },
-  {
-    id: "3",
-    name: "库存统计.xlsx",
-    type: "Excel",
-    size: "3.2MB",
-    updatedAt: "2024-01-18 09:20",
-    status: "processing",
-    description: "实时库存统计数据",
-  },
-]
+interface ResourceTableProps {
+  resources: Resource[]
+  onRefresh: () => void
+}
 
-const ResourceTable: React.FC = () => {
+const ResourceTable: React.FC<ResourceTableProps> = ({ resources = [], onRefresh }) => {
   const [filterValue, setFilterValue] = useState("")
   const [page, setPage] = useState(1)
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null)
@@ -70,7 +48,11 @@ const ResourceTable: React.FC = () => {
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure()
   const rowsPerPage = 10
 
-  const filteredItems = mockData.filter((item) => item.name.toLowerCase().includes(filterValue.toLowerCase()))
+  const { deleteResource, updateResource } = useResourceMetadata()
+
+  const filteredItems = resources.filter((item) =>
+    item.name.toLowerCase().includes(filterValue.toLowerCase())
+  )
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage)
   const items = filteredItems.slice((page - 1) * rowsPerPage, page * rowsPerPage)
@@ -86,12 +68,14 @@ const ResourceTable: React.FC = () => {
   }
 
   const confirmDelete = async () => {
+    if (!selectedResource) return
+
     try {
-      // TODO: 实现实际的删除逻辑
-      console.log("Deleting resource:", selectedResource)
+      await deleteResource(selectedResource.id)
       message.success("删除成功")
       onDeleteClose()
       setSelectedResource(null)
+      onRefresh()
     } catch (error) {
       console.error("Error deleting resource:", error)
       message.error("删除失败")
@@ -99,12 +83,13 @@ const ResourceTable: React.FC = () => {
   }
 
   const handleSave = async (updatedResource: Resource) => {
+    if (!selectedResource) return
+
     try {
-      // TODO: 实现实际的保存逻辑
-      console.log("Saving resource:", updatedResource)
+      await updateResource(selectedResource.id, updatedResource)
       message.success("保存成功")
       onEditClose()
-      // 这里应该更新列表数据
+      onRefresh()
     } catch (error) {
       console.error("Error saving resource:", error)
       message.error("保存失败")
@@ -156,6 +141,10 @@ const ResourceTable: React.FC = () => {
             {getStatusText(item.status)}
           </Chip>
         )
+      case "size":
+        return <span className='text-default-600 text-small'>{formatFileSize(item.data?.length || 0)}</span>
+      case "updatedAt":
+        return <span className='text-default-600 text-small'>{formatDate(item.updatedAt)}</span>
       case "actions":
         return (
           <div className='flex gap-2 items-center'>
@@ -165,6 +154,9 @@ const ResourceTable: React.FC = () => {
                 size='sm'
                 variant='light'
                 className='text-default-600 hover:text-primary transition-colors'
+                as="a"
+                href={`/we-chat-app/admin/resources/${item.id}?appId=${item.appId}`}
+                target="_blank"
               >
                 <Icon icon='mdi:eye' className='w-4 h-4' />
               </Button>
@@ -193,12 +185,8 @@ const ResourceTable: React.FC = () => {
             </Tooltip>
           </div>
         )
-      case "type":
-      case "size":
-      case "updatedAt":
-        return <span className='text-default-600 text-small'>{item[columnKey as keyof Resource]}</span>
       default:
-        return null
+        return <span className='text-default-600 text-small'>{item[columnKey as keyof Resource]}</span>
     }
   }
 
@@ -258,11 +246,8 @@ const ResourceTable: React.FC = () => {
           <TableColumn key='name' className='text-sm'>
             资料名称
           </TableColumn>
-          <TableColumn key='type' className='text-sm'>
-            类型
-          </TableColumn>
           <TableColumn key='size' className='text-sm'>
-            大小
+            数据量
           </TableColumn>
           <TableColumn key='updatedAt' className='text-sm'>
             更新时间
