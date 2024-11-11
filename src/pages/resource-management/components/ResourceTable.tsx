@@ -16,35 +16,77 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Spinner,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
 import EditModal from "./EditModal"
 import message from "@/components/Message"
-import { useResourceMetadata, Resource } from "../hooks/useResourceMetadata"
 import { useSearchParams } from "react-router-dom"
+import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+
+interface Resource {
+  id: string
+  name: string
+  data?: any[]
+  updatedAt?: string
+  status?: string
+  description?: string
+}
 
 interface ResourceTableProps {
   resources: Resource[]
   onRefresh: () => void
 }
 
-const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) => {
+const ResourceTable: React.FC<ResourceTableProps> = ({ resources: propResources, onRefresh }) => {
+  const [searchParams] = useSearchParams()
+  const appId = searchParams.get("appId")
   const [filterValue, setFilterValue] = useState("")
   const [page, setPage] = useState(1)
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null)
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure()
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure()
+  const [resources, setResources] = useState<Resource[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const { remove: deleteResource, update: updateResource, getDetail } = useMetadata<Resource>("resource")
+
+  useEffect(() => {
+    const loadResourceDetails = async () => {
+      setLoading(true)
+      try {
+        const detailedResources = await Promise.all(
+          propResources.map(async (resource) => {
+            const detail = await getDetail(resource.id)
+            return {
+              ...resource,
+              ...detail,
+              data: detail?.data || [],
+              status: detail?.status || "active",
+              updatedAt: detail?.updatedAt || new Date().toISOString(),
+            }
+          })
+        )
+        setResources(detailedResources)
+      } catch (error) {
+        console.error("Error loading resource details:", error)
+        message.error("加载资源详情失败")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (propResources.length > 0) {
+      loadResourceDetails()
+    } else {
+      setResources([])
+      setLoading(false)
+    }
+  }, [propResources, getDetail])
+
   const rowsPerPage = 10
-
-  const [searchParams] = useSearchParams()
-  const appId = searchParams.get("appId")
-  const { deleteResource, updateResource } = useResourceMetadata(appId)
-
-  const filteredItems = resources.filter((item) =>
-    item.name?.toLowerCase().includes(filterValue.toLowerCase())
-  )
-
+  const filteredItems = resources.filter((item) => item.name?.toLowerCase().includes(filterValue.toLowerCase()))
   const pages = Math.ceil(filteredItems.length / rowsPerPage)
   const items = filteredItems.slice((page - 1) * rowsPerPage, page * rowsPerPage)
 
@@ -88,7 +130,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) =
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string = "active") => {
     switch (status) {
       case "active":
         return "success"
@@ -101,7 +143,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) =
     }
   }
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: string = "active") => {
     switch (status) {
       case "active":
         return "已上传"
@@ -114,7 +156,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) =
     }
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string = new Date().toISOString()) => {
     return new Date(dateString).toLocaleString("zh-CN", {
       year: "numeric",
       month: "2-digit",
@@ -158,9 +200,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) =
         const dataSize = Array.isArray(item.data) ? JSON.stringify(item.data).length : 0
         return <span className='text-default-600 text-small'>{formatSize(dataSize)}</span>
       case "rowCount":
-        return (
-          <span className='text-default-600 text-small'>{Array.isArray(item.data) ? item.data.length : 0} 行</span>
-        )
+        return <span className='text-default-600 text-small'>{Array.isArray(item.data) ? item.data.length : 0} 行</span>
       case "actions":
         return (
           <div className='flex gap-2 items-center'>
@@ -170,7 +210,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) =
                 size='sm'
                 variant='light'
                 className='text-default-600 hover:text-primary transition-colors'
-                as="a"
+                as='a'
                 href={`/we-chat-app/admin/resources/${item.id}?appId=${appId}`}
               >
                 <Icon icon='mdi:eye' className='w-4 h-4' />
@@ -203,6 +243,14 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) =
       default:
         return null
     }
+  }
+
+  if (loading) {
+    return (
+      <div className='flex justify-center items-center h-64'>
+        <Spinner label='加载中...' />
+      </div>
+    )
   }
 
   return (
