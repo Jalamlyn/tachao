@@ -8,7 +8,6 @@ import FormManager from "@/pages/FormManager.index"
 import FormPreview from "@/pages/FormTempManager.component.FormPreview"
 import AIFormEditor from "@/pages/FormTempManager.page.AIFormEditor"
 import FormAnalysis from "@/pages/FormManager.component.FormAnalysis"
-import FinancialStatement from "@/pages/FinancialStatement"
 
 export default function renderWeChatApp() {
   return (
