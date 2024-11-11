@@ -1,35 +1,43 @@
 // ... 保留原有的导入 ...
-import { PreviewModal } from './components/page-templates/PreviewModal'
+import { ShareModal } from './components/page-templates/ShareModal'
 
 const PageTemplateEditor: React.FC = () => {
   // ... 保留原有的状态和函数 ...
 
-  // 添加预览模态框状态
+  // 添加分享模态框状态
   const { 
-    isOpen: isPreviewOpen, 
-    onOpen: onPreviewOpen, 
-    onClose: onPreviewClose 
+    isOpen: isShareOpen, 
+    onOpen: onShareOpen, 
+    onClose: onShareClose 
   } = useDisclosure()
 
-  const handlePreview = () => {
-    if (!pageConfig) {
-      message.error("没有可预览的内容")
-      return
-    }
-    onPreviewOpen()
-  }
+  // 添加分享按钮到工具栏
+  const toolbarButtons = (
+    <div className="flex gap-2">
+      <Button
+        color="primary"
+        variant="flat"
+        startContent={<Icon icon="mdi:share" className="w-4 h-4" />}
+        onClick={onShareOpen}
+        isDisabled={!pageConfig}
+      >
+        分享
+      </Button>
+      {/* ... 保留原有的按钮 ... */}
+    </div>
+  )
 
   return (
     <>
       {/* ... 保留原有的 JSX ... */}
 
-      {/* 添加预览模态框 */}
+      {/* 添加分享模态框 */}
       {pageConfig && (
-        <PreviewModal
-          isOpen={isPreviewOpen}
-          onClose={onPreviewClose}
-          config={pageConfig}
-          components={components}
+        <ShareModal
+          isOpen={isShareOpen}
+          onClose={onShareClose}
+          templateId={templateId || ""}
+          templateTitle={pageConfig.metadata?.title || "未命名模板"}
         />
       )}
     </>
