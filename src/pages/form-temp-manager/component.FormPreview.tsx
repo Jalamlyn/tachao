@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { Icon } from "@iconify/react"
 import {
   Button,
@@ -73,33 +72,9 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
     }
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut",
-      },
-    },
-    exit: {
-      opacity: 0,
-      y: -20,
-      transition: {
-        duration: 0.3,
-      },
-    },
-  }
-
   if (isLoading) {
     return (
-      <motion.div
-        className='flex flex-col items-center justify-center h-full'
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
+      <div className='flex flex-col items-center justify-center h-full'>
         <Spinner
           label='加载中...'
           classNames={{
@@ -107,92 +82,73 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
             label: "text-xl font-medium text-default-600 mt-4",
           }}
         />
-      </motion.div>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <motion.div
-        className='flex flex-col items-center justify-center h-full'
-        variants={containerVariants}
-        initial='hidden'
-        animate='visible'
-        exit='exit'
-      >
-        <div className='bg-danger-50 rounded-xl p-8 text-center'>
-          <Icon icon='mdi:alert-circle' className='w-16 h-16 text-danger mb-4' />
-          <p className='text-xl font-medium text-danger'>{error}</p>
-        </div>
-      </motion.div>
+      <div className='bg-danger-50 rounded-xl p-8 text-center'>
+        <Icon icon='mdi:alert-circle' className='w-16 h-16 text-danger mb-4' />
+        <p className='text-xl font-medium text-danger'>{error}</p>
+      </div>
     )
   }
 
   return (
-    <AnimatePresence mode='wait'>
-      <motion.div
-        variants={containerVariants}
-        initial='hidden'
-        animate='visible'
-        exit='exit'
-        className='relative h-full bg-background'
-      >
-        {config ? (
-          <div className='h-full overflow-auto'>
-            <div className='max-w-[1200px] mx-auto p-6 bg-white min-h-full'>
-              <DynamicForm previewMode={previewMode} config={config} templateId={templateId} />
-            </div>
+    <div className='relative h-full bg-background'>
+      {config ? (
+        <div className='h-full overflow-auto'>
+          <div className='max-w-[1200px] mx-auto p-6 bg-white min-h-full'>
+            <DynamicForm previewMode={previewMode} config={config} templateId={templateId} />
           </div>
-        ) : (
-          <motion.div
-            className='flex flex-col items-center justify-center h-full bg-default-50'
-            variants={containerVariants}
-          >
-            <Icon icon='mdi:form' className='w-20 h-20 text-default-400 mb-6' />
-            <p className='text-xl font-medium text-default-600 mb-2'>开始创建表单</p>
-            <p className='text-default-500'>请先生成或选择一个表单模板来预览</p>
-          </motion.div>
-        )}
+        </div>
+      ) : (
+        <div className='flex flex-col items-center justify-center h-full bg-default-50'>
+          <Icon icon='mdi:form' className='w-20 h-20 text-default-400 mb-6' />
+          <p className='text-xl font-medium text-default-600 mb-2'>开始创建表单</p>
+          <p className='text-default-500'>请先生成或选择一个表单模板来预览</p>
+        </div>
+      )}
 
-        <Modal
-          isOpen={isOpen}
-          onClose={onClose}
-          classNames={{
-            base: "max-w-md",
-            header: "border-b",
-            body: "py-6",
-            footer: "border-t",
-          }}
-        >
-          <ModalContent>
-            <ModalHeader className='flex flex-col gap-1'>分享表单</ModalHeader>
-            <ModalBody>
-              <div className='flex items-center gap-2 bg-default-50 p-3 rounded-lg'>
-                <input
-                  type='text'
-                  value={shareLink}
-                  readOnly
-                  className='flex-1 p-2 bg-transparent border-none focus:outline-none text-default-700'
-                />
-                <Button
-                  color='primary'
-                  variant='flat'
-                  onClick={handleCopyLink}
-                  startContent={<Icon icon='mdi:content-copy' className='w-4 h-4' />}
-                >
-                  复制
-                </Button>
-              </div>
-            </ModalBody>
-            <ModalFooter>
-              <Button color='danger' variant='light' onPress={onClose}>
-                关闭
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        classNames={{
+          base: "max-w-md",
+          header: "border-b",
+          body: "py-6",
+          footer: "border-t",
+        }}
+      >
+        <ModalContent>
+          <ModalHeader className='flex flex-col gap-1'>分享表单</ModalHeader>
+          <ModalBody>
+            <div className='flex items-center gap-2 bg-default-50 p-3 rounded-lg'>
+              <input
+                type='text'
+                value={shareLink}
+                readOnly
+                className='flex-1 p-2 bg-transparent border-none focus:outline-none text-default-700'
+              />
+              <Button
+                color='primary'
+                variant='flat'
+                onClick={handleCopyLink}
+                startContent={<Icon icon='mdi:content-copy' className='w-4 h-4' />}
+              >
+                复制
               </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-      </motion.div>
-    </AnimatePresence>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button color='danger' variant='light' onPress={onClose}>
+              关闭
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </div>
   )
 }
 
