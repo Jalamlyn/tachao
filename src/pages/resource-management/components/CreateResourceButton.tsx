@@ -12,8 +12,9 @@ import {
   RadioGroup,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { setMetadata, getMetadata } from "@/service/apis/api"
 import { readExcel } from "@/utils/ExcelReader"
+import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import message from "@/components/Message"
 
 interface CreateResourceButtonProps {
   appId: string | null
@@ -29,6 +30,9 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
   const [errorMessage, setErrorMessage] = useState("")
   const [headerType, setHeaderType] = useState<"single" | "multiple">("single")
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // 使用 useMetadata hook
+  const { create: createResource, getDetail: getResourceDetail } = useMetadata("resource")
 
   useEffect(() => {
     if (isOpen) {
@@ -55,23 +59,35 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
     setErrorMessage("")
 
     try {
-      const result = await getMetadata(["resources"], appId)
-      let resourceIndexes = []
-      if (result.data && result.data.length > 0 && result.data[0].value) {
-        resourceIndexes = JSON.parse(result.data[0].value)
-      }
-
-      const isNameExists = resourceIndexes.some((resource: any) => resource.name === resourceName)
-      if (isNameExists) {
+      // 检查资源名称是否已存在
+      const existingResource = await getResourceDetail(`resource_${resourceName}`)
+      if (existingResource) {
         setErrorMessage("资源名称已存在，请使用其他名称。")
         setUploading(false)
         return
       }
 
       const data = await readExcel(file, headerType === "multiple")
-      await uploadData(data)
-      await updateResourceIndex(resourceName)
-      onClose()
+      
+      // 使用 useMetadata hook 创建资源
+      const result = await createResource({
+        title: resourceName,
+        data: data,
+        status: "active",
+        indexFields: {
+          appId: appId,
+          type: "excel",
+          size: file.size,
+          fileName: file.name,
+        }
+      })
+
+      if (result) {
+        message.success("创建成功")
+        onClose()
+      } else {
+        throw new Error("创建失败")
+      }
     } catch (error) {
       console.error("Error uploading file:", error)
       setErrorMessage("上传文件时发生错误，请重试。")
@@ -80,30 +96,6 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
       setFile(null)
       setResourceName("")
       setPreviewData([])
-    }
-  }
-
-  const uploadData = async (data: any[]) => {
-    if (!appId) return
-    const resourceData = JSON.stringify(data)
-    await setMetadata(resourceName, resourceData, appId)
-  }
-
-  const updateResourceIndex = async (newResourceName: string) => {
-    if (!appId) return
-    try {
-      const result = await getMetadata(["resources"], appId)
-      let resourceIndexes = []
-      if (result.data && result.data.length > 0 && result.data[0].value) {
-        resourceIndexes = JSON.parse(result.data[0].value)
-      }
-      resourceIndexes.push({
-        id: Date.now().toString(),
-        name: newResourceName,
-      })
-      await setMetadata("resources", JSON.stringify(resourceIndexes), appId)
-    } catch (error) {
-      console.error("Error updating resource index:", error)
     }
   }
 
@@ -130,10 +122,8 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
   return (
     <>
       <Button
-        className='w-full sm:flex-1 min-w-0 sm:min-w-[200px] bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300'
         onClick={onOpen}
         color='primary'
-        size='sm'
         startContent={<Icon icon='mdi:upload' width='20' height='20' />}
         isDisabled={isDisabled}
       >
@@ -198,19 +188,10 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
             {errorMessage && <div className='mt-4 text-red-500'>{errorMessage}</div>}
           </ModalBody>
           <ModalFooter>
-            <Button
-              className='bg-gray-400 hover:bg-gray-500 text-white transition-colors'
-              variant='light'
-              onClick={onClose}
-            >
+            <Button variant='light' onClick={onClose}>
               取消
             </Button>
-            <Button
-              className='bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-indigo-500/50 transition-all duration-200'
-              onClick={handleUpload}
-              isLoading={uploading}
-              isDisabled={!file || !resourceName}
-            >
+            <Button onClick={handleUpload} isLoading={uploading} isDisabled={!file || !resourceName}>
               保存
             </Button>
           </ModalFooter>
