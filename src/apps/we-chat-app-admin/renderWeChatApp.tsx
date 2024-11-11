@@ -3,11 +3,12 @@ import AdminPage from "./src/App"
 import ApplicationList from "./src/ApplicationList"
 import EnterpriseSettings from "./src/EnterpriseSettings"
 import AppDetail from "./src/AppDetail"
-import FormTempManager from "@/pages/FormTempManager.index"
-import FormManager from "@/pages/FormManager.index"
-import FormPreview from "@/pages/FormTempManager.component.FormPreview"
-import AIFormEditor from "@/pages/FormTempManager.page.AIFormEditor"
-import FormAnalysis from "@/pages/FormManager.component.FormAnalysis"
+import FormTempManager from "@/pages/form-temp-manager"
+import FormManager from "@/pages/form-manager"
+import FormPreview from "@/pages/form-temp-manager/components/FormPreview"
+import AIFormEditor from "@/pages/form-temp-manager/AIFormEditor"
+import FormAnalysis from "@/pages/form-manager/component.FormAnalysis"
+import ResourceManagement from "@/pages/resource-management" // 添加导入
 
 export default function renderWeChatApp() {
   return (
@@ -21,6 +22,7 @@ export default function renderWeChatApp() {
       <Route path='documents/create' element={<AIFormEditor />} />
       <Route path='documents/edit/:templateId' element={<AIFormEditor />} />
       <Route path='form-preview/:formId' element={<FormPreview />} />
+      <Route path='resources' element={<ResourceManagement />} /> {/* 添加新路由 */}
     </Route>
   )
 }
