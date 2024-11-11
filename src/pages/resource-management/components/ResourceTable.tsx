@@ -21,26 +21,15 @@ import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
 import EditModal from "./EditModal"
 import message from "@/components/Message"
-import { useResourceMetadata } from "../hooks/useResourceMetadata"
-import { formatDate, formatFileSize } from "@/utils/format"
-
-interface Resource {
-  id: string
-  name: string
-  type: string
-  size: string
-  updatedAt: string
-  status: "active" | "processing" | "error"
-  description?: string
-  data?: any[]
-}
+import { useResourceMetadata, Resource } from "../hooks/useResourceMetadata"
+import { useSearchParams } from "react-router-dom"
 
 interface ResourceTableProps {
   resources: Resource[]
   onRefresh: () => void
 }
 
-const ResourceTable: React.FC<ResourceTableProps> = ({ resources = [], onRefresh }) => {
+const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) => {
   const [filterValue, setFilterValue] = useState("")
   const [page, setPage] = useState(1)
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null)
@@ -48,10 +37,12 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources = [], onRefresh
   const { isOpen: isEditOpen, onOpen: onEditOpen, onClose: onEditClose } = useDisclosure()
   const rowsPerPage = 10
 
-  const { deleteResource, updateResource } = useResourceMetadata()
+  const [searchParams] = useSearchParams()
+  const appId = searchParams.get("appId")
+  const { deleteResource, updateResource } = useResourceMetadata(appId)
 
   const filteredItems = resources.filter((item) =>
-    item.name.toLowerCase().includes(filterValue.toLowerCase())
+    item.name?.toLowerCase().includes(filterValue.toLowerCase())
   )
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage)
@@ -97,7 +88,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources = [], onRefresh
     }
   }
 
-  const getStatusColor = (status: Resource["status"]) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
         return "success"
@@ -110,7 +101,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources = [], onRefresh
     }
   }
 
-  const getStatusText = (status: Resource["status"]) => {
+  const getStatusText = (status: string) => {
     switch (status) {
       case "active":
         return "已上传"
@@ -120,6 +111,26 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources = [], onRefresh
         return "失败"
       default:
         return status
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  const formatSize = (size: number) => {
+    if (size < 1024) {
+      return size + " B"
+    } else if (size < 1024 * 1024) {
+      return (size / 1024).toFixed(2) + " KB"
+    } else {
+      return (size / (1024 * 1024)).toFixed(2) + " MB"
     }
   }
 
@@ -141,10 +152,15 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources = [], onRefresh
             {getStatusText(item.status)}
           </Chip>
         )
-      case "size":
-        return <span className='text-default-600 text-small'>{formatFileSize(item.data?.length || 0)}</span>
       case "updatedAt":
         return <span className='text-default-600 text-small'>{formatDate(item.updatedAt)}</span>
+      case "size":
+        const dataSize = Array.isArray(item.data) ? JSON.stringify(item.data).length : 0
+        return <span className='text-default-600 text-small'>{formatSize(dataSize)}</span>
+      case "rowCount":
+        return (
+          <span className='text-default-600 text-small'>{Array.isArray(item.data) ? item.data.length : 0} 行</span>
+        )
       case "actions":
         return (
           <div className='flex gap-2 items-center'>
@@ -155,8 +171,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources = [], onRefresh
                 variant='light'
                 className='text-default-600 hover:text-primary transition-colors'
                 as="a"
-                href={`/we-chat-app/admin/resources/${item.id}?appId=${item.appId}`}
-                target="_blank"
+                href={`/we-chat-app/admin/resources/${item.id}?appId=${appId}`}
               >
                 <Icon icon='mdi:eye' className='w-4 h-4' />
               </Button>
@@ -186,7 +201,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources = [], onRefresh
           </div>
         )
       default:
-        return <span className='text-default-600 text-small'>{item[columnKey as keyof Resource]}</span>
+        return null
     }
   }
 
@@ -246,8 +261,11 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources = [], onRefresh
           <TableColumn key='name' className='text-sm'>
             资料名称
           </TableColumn>
-          <TableColumn key='size' className='text-sm'>
+          <TableColumn key='rowCount' className='text-sm'>
             数据量
+          </TableColumn>
+          <TableColumn key='size' className='text-sm'>
+            大小
           </TableColumn>
           <TableColumn key='updatedAt' className='text-sm'>
             更新时间
