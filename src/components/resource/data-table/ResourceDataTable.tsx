@@ -26,6 +26,7 @@ import { RankingInfo, rankItem } from "@tanstack/match-sorter-utils"
 import { ResourceDataTableToolbar } from "./ResourceDataTableToolbar"
 import { ResourceDataTableBody } from "./ResourceDataTableBody"
 import { ResourceDataTablePagination } from "./ResourceDataTablePagination"
+import { useResourceMetadata } from "@/pages/resource-management/hooks/useResourceMetadata"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,6 +58,17 @@ const ResourceDataTable: React.FC = () => {
   const [searchParams] = useSearchParams()
   const appId = searchParams.get("appId")
 
+  // 使用 useResourceMetadata hook
+  const {
+    resources,
+    loading,
+    error: resourceError,
+    loadResources,
+    updateResource,
+    deleteResource,
+    getResourceDetail,
+  } = useResourceMetadata(appId)
+
   const [resource, setResource] = useState<any>(null)
   const [columns, setColumns] = useState<ColumnDef<any>[]>([])
   const [sorting, setSorting] = useState<SortingState>([])
@@ -69,29 +81,28 @@ const ResourceDataTable: React.FC = () => {
   const [globalFilter, setGlobalFilter] = useState("")
   const [showDeleteAlert, setShowDeleteAlert] = useState(false)
 
-  const fetchResources = useCallback(async () => {
-    if (!appId) return
-    try {
-      const response = await getMetadata(["resources"], appId)
-      if (response.data && response.data.length > 0 && response.data[0].value) {
-        const resourcesData = JSON.parse(response.data[0].value)
-        const currentResource = resourcesData.find((r: any) => r.id === id)
-        if (currentResource) {
-          const resourceDataResponse = await getMetadata([currentResource.name], appId)
-          if (resourceDataResponse.data && resourceDataResponse.data.length > 0 && resourceDataResponse.data[0].value) {
-            setResource({
-              ...currentResource,
-              data: JSON.parse(resourceDataResponse.data[0].value),
-            })
+  // 加载资源数据
+  useEffect(() => {
+    if (id && appId) {
+      const loadResourceData = async () => {
+        setIsLoading(true)
+        try {
+          const detail = await getResourceDetail(id)
+          if (detail) {
+            setResource(detail)
           }
+        } catch (err) {
+          console.error("Error loading resource detail:", err)
+          message.error("加载资源详情失败")
+        } finally {
+          setIsLoading(false)
         }
       }
-    } catch (error) {
-      console.error("Error fetching resource data:", error)
-      message.error("获取资源数据失败")
+      loadResourceData()
     }
-  }, [appId, id])
+  }, [id, appId, getResourceDetail])
 
+  // 处理保存
   const handleSave = async (formData: any) => {
     if (!resource || !appId) return
 
@@ -108,11 +119,17 @@ const ResourceDataTable: React.FC = () => {
         newData.push(formData)
       }
 
-      await setMetadata(resource.name, JSON.stringify(newData), appId)
-      setResource({ ...resource, data: newData })
-      message.success(editingRow ? "更新成功" : "添加成功")
-      setIsModalOpen(false)
-      setEditingRow(null)
+      const updatedResource = await updateResource(resource.id, {
+        ...resource,
+        data: newData,
+      })
+
+      if (updatedResource) {
+        setResource(updatedResource)
+        message.success(editingRow ? "更新成功" : "添加成功")
+        setIsModalOpen(false)
+        setEditingRow(null)
+      }
     } catch (error) {
       console.error("Error saving data:", error)
       message.error(editingRow ? "更新失败" : "添加失败")
@@ -132,9 +149,15 @@ const ResourceDataTable: React.FC = () => {
     setIsLoading(true)
     try {
       const newData = resource.data.filter((item: any) => item !== row)
-      await setMetadata(resource.name, JSON.stringify(newData), appId)
-      setResource({ ...resource, data: newData })
-      message.success("删除成功")
+      const updatedResource = await updateResource(resource.id, {
+        ...resource,
+        data: newData,
+      })
+
+      if (updatedResource) {
+        setResource(updatedResource)
+        message.success("删除成功")
+      }
     } catch (error) {
       console.error("Error deleting data:", error)
       message.error("删除失败")
@@ -157,10 +180,16 @@ const ResourceDataTable: React.FC = () => {
       const selectedIds = selectedRows.map((row) => row.original)
       const newData = resource.data.filter((item: any) => !selectedIds.includes(item))
 
-      await setMetadata(resource.name, JSON.stringify(newData), appId)
-      setResource({ ...resource, data: newData })
-      setRowSelection({})
-      message.success("批量删除成功")
+      const updatedResource = await updateResource(resource.id, {
+        ...resource,
+        data: newData,
+      })
+
+      if (updatedResource) {
+        setResource(updatedResource)
+        setRowSelection({})
+        message.success("批量删除成功")
+      }
     } catch (error) {
       console.error("Error batch deleting data:", error)
       message.error("批量删除失败")
@@ -199,12 +228,6 @@ const ResourceDataTable: React.FC = () => {
       message.error("导出失败")
     }
   }
-
-  useEffect(() => {
-    if (id && appId) {
-      fetchResources()
-    }
-  }, [id, appId, fetchResources])
 
   useEffect(() => {
     if (resource?.data && resource.data.length > 0) {
@@ -255,10 +278,21 @@ const ResourceDataTable: React.FC = () => {
     enableRowSelection: true,
   })
 
-  if (!resource) {
+  if (loading || isLoading) {
     return (
       <div className='full-screen flex items-center justify-center h-screen'>
         <Spinner label='加载中...'></Spinner>
+      </div>
+    )
+  }
+
+  if (!resource) {
+    return (
+      <div className='full-screen flex items-center justify-center h-screen'>
+        <div className='text-center text-gray-500'>
+          <p>未找到资源</p>
+          {resourceError && <p className='text-red-500 text-sm mt-2'>{resourceError}</p>}
+        </div>
       </div>
     )
   }
