@@ -1,5 +1,5 @@
-// import chatChunkClaude from "../chat/chat-chunk-claude-office"
-import chatChunkClaude from "../chat/chat-chunk-claude-horay"
+import chatChunkClaude from "../chat/chat-chunk-claude-office"
+// import chatChunkClaude from "../chat/chat-chunk-claude-horay"
 // import chatChunkGroq from "../chat/chat-chunk-groq"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
