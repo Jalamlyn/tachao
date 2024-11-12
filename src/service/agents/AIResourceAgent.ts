@@ -87,7 +87,7 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
         : `你需要返回如下结构:
 {
   type: 'analyze',
-  data: originalData,  // 原始数据
+  data: originalData,  // 保持原始数据不变
   analysis: {
     summary: {         // 统计摘要
       [key: string]: number | string
@@ -113,16 +113,23 @@ ${modeSpecificPrompt}
 2. 直接使用传入的 data 参数
 3. 直接返回处理结果对象
 4. 确保返回对象包含必要的 type 和 data 字段
+5. data 字段必须保持原始数据不变
+6. 统计结果放在 analysis 字段中
 
 返回格式示例:
 \`\`\`mo
 <shata-ai-resource>
 // 直接处理数据,使用传入的 data 参数
 const result = {
-  type: 'modify',  // 或 'analyze'
-  data: [...],     // 处理后的数据
+  type: 'analyze',
+  data: data,     // 保持原始数据不变
+  analysis: {     // 统计结果放在这里
+    summary: {...},
+    charts: [...],
+    insights: [...]
+  }
 };
-return result;     // 直接返回结果对象
+return result;
 </shata-ai-resource>
 \`\`\`
 - 开头和结尾都不要做解释和说明`
