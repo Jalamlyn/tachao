@@ -7,20 +7,54 @@ export type ResourceColumn = {
   accessorKey: string
 }
 
+interface ProcessCommandOptions {
+  data: any[]
+  command: string
+  onChunk?: (chunk: string) => void
+  mode?: string
+}
+
 export class AIResourceAgent {
   private static instance: AIResourceAgent
   private _columns: ResourceColumn[] = []
   private _data: any[] = []
-  private systemPrompt = `你是一个智能资料助手，负责帮助用户对资料进行操作和分析。
+
+  private constructor() {}
+
+  public static getInstance(): AIResourceAgent {
+    if (!AIResourceAgent.instance) {
+      AIResourceAgent.instance = new AIResourceAgent()
+    }
+    return AIResourceAgent.instance
+  }
+
+  // 保留原有方法以保证兼容性
+  public setColumns(columns: ResourceColumn[]): void {
+    console.log("[AIResourceAgent] Setting columns:", columns)
+    this._columns = columns
+  }
+
+  public setData(data: any[]): void {
+    console.log("[AIResourceAgent] Setting data, length:", data?.length)
+    this._data = data
+  }
+
+  private generateSystemPrompt(data: any[]): string {
+    const columns = Object.keys(data[0] || {}).map(key => ({
+      header: key,
+      accessorKey: key,
+    }))
+
+    return `你是一个智能资料助手，负责帮助用户对资料进行操作和分析。
 请仔细分析用户的需求，生成相应的代码。
 
 资料列定义:
-${JSON.stringify(this._columns, null, 2)}
+${JSON.stringify(columns, null, 2)}
 
 资料数据示例:
-${JSON.stringify(this._data.slice(0, 3), null, 2)}
+${JSON.stringify(data.slice(0, 3), null, 2)}
 
-数据总行数: ${this._data.length}
+数据总行数: ${data.length}
 
 你可以:
 1. 修改资料 - 通过 JavaScript 代码修改数据
@@ -44,24 +78,6 @@ return formulajs.SUM(data.map(row => row.amount));
 </shata-ai-resource>
 \`\`\`
 `
-
-  private constructor() {}
-
-  public static getInstance(): AIResourceAgent {
-    if (!AIResourceAgent.instance) {
-      AIResourceAgent.instance = new AIResourceAgent()
-    }
-    return AIResourceAgent.instance
-  }
-
-  public setColumns(columns: ResourceColumn[]): void {
-    console.log("[AIResourceAgent] Setting columns:", columns)
-    this._columns = columns
-  }
-
-  public setData(data: any[]): void {
-    console.log("[AIResourceAgent] Setting data, length:", data?.length)
-    this._data = data
   }
 
   private extractCode(content: string): string {
@@ -73,11 +89,11 @@ return formulajs.SUM(data.map(row => row.amount));
     return match[1].trim()
   }
 
-  private async executeCode(code: string): Promise<any> {
+  private async executeCode(code: string, data: any[]): Promise<any> {
     try {
       console.log("[AIResourceAgent] Executing code:", code)
       const executeFunction = new Function("data", "formulajs", code)
-      const result = executeFunction(this._data, formulaService)
+      const result = executeFunction(data, formulaService)
       console.log("[AIResourceAgent] Code execution result:", result)
       return result
     } catch (error) {
@@ -86,16 +102,19 @@ return formulajs.SUM(data.map(row => row.amount));
     }
   }
 
-  public async processCommand(
-    command: string,
-    onChunk?: (chunk: string) => void,
-    mode?: string
-  ): Promise<{ success: boolean; message: string }> {
-    console.log("[AIResourceAgent] Processing command:", command)
-    if (!this._columns.length) {
+  // 新的处理方法
+  public async processCommand({
+    data,
+    command,
+    onChunk,
+    mode
+  }: ProcessCommandOptions): Promise<{ success: boolean; message: string }> {
+    console.log("[AIResourceAgent] Processing command with data:", command)
+    
+    if (!data || !data.length) {
       return {
         success: false,
-        message: "请先设置资料列定义",
+        message: "请提供有效的数据",
       }
     }
 
@@ -107,8 +126,9 @@ return formulajs.SUM(data.map(row => row.amount));
     try {
       updateProgress("🤖 AI助手正在分析您的需求...")
 
+      const systemPrompt = this.generateSystemPrompt(data)
       const messages: Message[] = [
-        { role: "system", content: this.systemPrompt },
+        { role: "system", content: systemPrompt },
         { role: "user", content: command },
       ]
 
@@ -130,7 +150,7 @@ return formulajs.SUM(data.map(row => row.amount));
       console.log("[AIResourceAgent] Extracted code:", generatedCode)
 
       updateProgress("⚡ 正在执行代码...")
-      await this.executeCode(generatedCode)
+      await this.executeCode(generatedCode, data)
 
       return {
         success: true,
@@ -143,6 +163,20 @@ return formulajs.SUM(data.map(row => row.amount));
         message: "处理指令时发生错误：" + (error as Error).message,
       }
     }
+  }
+
+  // 保留原有方法以保证兼容性
+  public async processCommand(
+    command: string,
+    onChunk?: (chunk: string) => void,
+    mode?: string
+  ): Promise<{ success: boolean; message: string }> {
+    return this.processCommand({
+      data: this._data,
+      command,
+      onChunk,
+      mode
+    })
   }
 }
 
