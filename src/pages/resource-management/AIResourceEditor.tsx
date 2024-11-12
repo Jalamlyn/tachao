@@ -43,7 +43,10 @@ const AIResourceEditor: React.FC = () => {
                 accessorKey: key,
               }))
               setColumns(cols)
+              // 保留这行以保证兼容性
               AIResourceAgent.setColumns(cols)
+              // 保留这行以保证兼容性
+              AIResourceAgent.setData(resource.data)
             }
           } else {
             message.error("资料加载失败")
@@ -100,10 +103,11 @@ const AIResourceEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        // 调用 AIResourceAgent 处理用户输入，传入当前模式
-        const result = await AIResourceAgent.processCommand(
-          input,
-          (chunk: string) => {
+        // 使用新的 API 处理用户输入
+        const result = await AIResourceAgent.processCommand({
+          data: resourceData,
+          command: input,
+          onChunk: (chunk: string) => {
             setMessages((prev) => {
               const lastMessage = prev[prev.length - 1]
               if (lastMessage.role === "assistant") {
@@ -118,8 +122,8 @@ const AIResourceEditor: React.FC = () => {
               return prev
             })
           },
-          selectedMode // 传入当前模式
-        )
+          mode: selectedMode
+        })
 
         if (result.success) {
           setMessages((prev) => {
