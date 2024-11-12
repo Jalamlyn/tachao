@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from "react"
 import { Button } from "@nextui-org/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import SimpleDataTable from "../resource/simple-data-table/SimpleDataTable"
 import { getMetadata } from "@/service/apis/api"
 import { Icon } from "@iconify/react"
+import SimpleDataTable from "./simple-data-table/SimpleDataTable"
 
 interface ResourceSelectButtonProps {
   resourceName: string
