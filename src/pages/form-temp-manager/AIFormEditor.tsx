@@ -141,14 +141,6 @@ const AIFormEditor: React.FC = () => {
       setInput("")
 
       try {
-        const assistantMessage = {
-          role: "assistant",
-          content: "",
-          id: (Date.now() + 1).toString(),
-          timestamp: new Date().toLocaleTimeString(),
-        }
-        setMessages((prev) => [...prev, assistantMessage])
-
         const result = await AIFormAgent.processCommand(
           input,
           (chunk) => {
@@ -165,7 +157,16 @@ const AIFormEditor: React.FC = () => {
           formState.rawConfig
         )
 
+        // 只有在确认支持该指令后才添加assistant消息
         if (result.type === "support") {
+          const assistantMessage = {
+            role: "assistant",
+            content: "",
+            id: (Date.now() + 1).toString(),
+            timestamp: new Date().toLocaleTimeString(),
+          }
+          setMessages((prev) => [...prev, assistantMessage])
+
           if (result.data?.config) {
             setFormConfig(result.data.config)
             setRawConfig(result.data.rawConfig)
@@ -173,7 +174,7 @@ const AIFormEditor: React.FC = () => {
         }
       } catch (error) {
         console.error("Error in chat:", error)
-        message.error("生成过程中发生错误")
+        message.error((error as Error).message || "生成过程中发生错误")
       }
     },
     {
