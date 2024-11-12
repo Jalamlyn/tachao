@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect } from "react"
 import { ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Button, Textarea, Tabs, Tab } from "@nextui-org/react"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
@@ -13,6 +12,7 @@ import MessageCard from "@/components/MessageCard"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import AIResourceAgent from "@/service/agents/AIResourceAgent"
 import AnalysisResult from "./components/AnalysisResult"
+import AICommandInput from "@/components/AICommandInput"
 
 // 导入头像
 import mo2 from "/assets/mo-2.png"
@@ -107,10 +107,6 @@ const AIResourceEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        // 添加调试日志
-        console.log('Current mode:', selectedMode)
-        console.log('Current resource data:', resourceData)
-
         const result = await AIResourceAgent.processCommand({
           data: resourceData,
           command: input,
@@ -132,20 +128,10 @@ const AIResourceEditor: React.FC = () => {
           mode: selectedMode,
         })
 
-        // 添加调试日志
-        console.log('Process result:', result)
-
         if (result.success) {
-          if (selectedMode === 'modify' && result.data) {
-            // 添加调试日志
-            console.log('Updating resource data:', result.data)
-            
-            // 修改模式: 更新资源数据
-            setResourceData(result.data)
-            
-            // 添加调试日志
-            console.log('Resource data updated')
-            
+          if (selectedMode === "modify" && result.data) {
+            setResourceData([...result.data])
+
             setMessages((prev) => {
               const lastMessage = prev[prev.length - 1]
               if (lastMessage.role === "assistant") {
@@ -160,8 +146,7 @@ const AIResourceEditor: React.FC = () => {
               }
               return prev
             })
-          } else if (selectedMode === 'analyze' && result.analysis) {
-            // 分析模式: 使用 AnalysisResult 组件展示结果
+          } else if (selectedMode === "analyze" && result.analysis) {
             setMessages((prev) => {
               const lastMessage = prev[prev.length - 1]
               if (lastMessage.role === "assistant") {
@@ -225,76 +210,16 @@ const AIResourceEditor: React.FC = () => {
                 </div>
               </ScrollShadow>
 
-              <div className='flex flex-col gap-2 p-4 bg-white'>
-                <Tabs
-                  selectedKey={selectedMode}
-                  onSelectionChange={(key) => setSelectedMode(key as string)}
-                  size='sm'
-                  color='primary'
-                  variant='light'
-                  classNames={{
-                    tabList: "gap-4",
-                    cursor: "w-full",
-                    tab: "max-w-fit px-4",
-                  }}
-                >
-                  <Tab
-                    key='modify'
-                    title={
-                      <div className='flex items-center gap-2'>
-                        <Icon icon='mdi:pencil' />
-                        <span>资料修改</span>
-                      </div>
-                    }
-                  />
-                  <Tab
-                    key='analyze'
-                    title={
-                      <div className='flex items-center gap-2'>
-                        <Icon icon='mdi:chart-bar' />
-                        <span>资料分析</span>
-                      </div>
-                    }
-                  />
-                </Tabs>
-
-                <Textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder={getPlaceholder()}
-                  className='flex-grow'
-                  classNames={{
-                    input: "py-2 text-medium",
-                    inputWrapper: "bg-default-100",
-                  }}
-                  minRows={1}
-                  maxRows={4}
-                  endContent={
-                    <div className='flex items-center gap-2 pr-2'>
-                      <Button
-                        isIconOnly
-                        className={!input || isLoading ? "" : "bg-primary"}
-                        color={!input || isLoading ? "default" : "primary"}
-                        isDisabled={!input || isLoading}
-                        radius='full'
-                        variant={!input || isLoading ? "flat" : "solid"}
-                        onClick={handleSendMessage}
-                        isLoading={isLoading}
-                      >
-                        {isLoading ? (
-                          <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
-                        ) : (
-                          <Icon
-                            className={!input ? "text-default-500" : "text-white"}
-                            icon='solar:arrow-up-linear'
-                            width={20}
-                          />
-                        )}
-                      </Button>
-                    </div>
-                  }
-                />
-              </div>
+              <AICommandInput
+                input={input}
+                isLoading={isLoading}
+                selectedMode={selectedMode as "modify" | "analyze"}
+                onInputChange={setInput}
+                onSend={handleSendMessage}
+                onModeChange={setSelectedMode}
+                placeholder={getPlaceholder()}
+                showModeSwitch={true}
+              />
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
