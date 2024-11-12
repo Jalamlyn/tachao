@@ -12,20 +12,29 @@ import { useAsyncButton } from "@/hooks/useAsyncButton"
 import MessageCard from "@/components/MessageCard"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import AIResourceAgent from "@/service/agents/AIResourceAgent"
+import AnalysisResult from "./components/AnalysisResult"
 
 // 导入头像
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
+
+interface Message {
+  role: "user" | "assistant"
+  content: React.ReactNode
+  id: string
+  timestamp: string
+  status?: "success" | "error"
+}
 
 const AIResourceEditor: React.FC = () => {
   const navigate = useNavigate()
   const { resourceId } = useParams<{ resourceId: string }>()
   const { updateBreadcrumbs } = useBreadcrumb()
   const [input, setInput] = useState("")
-  const [messages, setMessages] = useState<any[]>([])
-  const [resourceData, setResourceData] = useState<any>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [resourceData, setResourceData] = useState<any[]>([])
   const [columns, setColumns] = useState<any[]>([])
-  const [selectedMode, setSelectedMode] = useState("modify") // 新增：模式选择状态
+  const [selectedMode, setSelectedMode] = useState("modify")
 
   const { getDetail: getResourceDetail } = useMetadata("resource")
 
@@ -65,7 +74,6 @@ const AIResourceEditor: React.FC = () => {
     ])
   }, [resourceId])
 
-  // 获取当前模式的 placeholder
   const getPlaceholder = () => {
     switch (selectedMode) {
       case "modify":
@@ -81,7 +89,7 @@ const AIResourceEditor: React.FC = () => {
     async () => {
       if (!input.trim()) return
 
-      const userMessage = {
+      const userMessage: Message = {
         role: "user",
         content: input,
         id: Date.now().toString(),
@@ -91,7 +99,7 @@ const AIResourceEditor: React.FC = () => {
       setInput("")
 
       try {
-        const assistantMessage = {
+        const assistantMessage: Message = {
           role: "assistant",
           content: "正在分析您的数据...",
           id: (Date.now() + 1).toString(),
@@ -99,7 +107,6 @@ const AIResourceEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        // 使用新的 API 处理用户输入
         const result = await AIResourceAgent.processCommand({
           data: resourceData,
           command: input,
@@ -122,24 +129,40 @@ const AIResourceEditor: React.FC = () => {
         })
 
         if (result.success) {
-          // 更新资源数据以触发重新渲染
-          if (result.data) {
+          if (selectedMode === 'modify' && result.data) {
+            // 修改模式: 更新资源数据
             setResourceData([...result.data])
+            setMessages((prev) => {
+              const lastMessage = prev[prev.length - 1]
+              if (lastMessage.role === "assistant") {
+                return [
+                  ...prev.slice(0, -1),
+                  {
+                    ...lastMessage,
+                    content: "✅ 数据已更新",
+                    status: "success",
+                  },
+                ]
+              }
+              return prev
+            })
+          } else if (selectedMode === 'analyze' && result.analysis) {
+            // 分析模式: 使用 AnalysisResult 组件展示结果
+            setMessages((prev) => {
+              const lastMessage = prev[prev.length - 1]
+              if (lastMessage.role === "assistant") {
+                return [
+                  ...prev.slice(0, -1),
+                  {
+                    ...lastMessage,
+                    content: <AnalysisResult analysis={result.analysis} />,
+                    status: "success",
+                  },
+                ]
+              }
+              return prev
+            })
           }
-          
-          setMessages((prev) => {
-            const lastMessage = prev[prev.length - 1]
-            if (lastMessage.role === "assistant") {
-              return [
-                ...prev.slice(0, -1),
-                {
-                  ...lastMessage,
-                  status: "success",
-                },
-              ]
-            }
-            return prev
-          })
         } else {
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]

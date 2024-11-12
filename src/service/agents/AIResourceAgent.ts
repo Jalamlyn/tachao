@@ -7,6 +7,36 @@ export type ResourceColumn = {
   accessorKey: string
 }
 
+// 新增类型定义
+interface ModifyResult {
+  type: 'modify';
+  data: any[];
+  changes: {
+    row: number;
+    field: string;
+    oldValue: any;
+    newValue: any;
+  }[];
+}
+
+interface AnalysisResult {
+  type: 'analyze';
+  data: any[];
+  analysis: {
+    summary: Record<string, number | string>;
+    charts?: {
+      type: string;
+      data: {
+        labels: string[];
+        values: number[];
+      };
+    }[];
+    insights: string[];
+  };
+}
+
+type ResourceOperationResult = ModifyResult | AnalysisResult;
+
 interface ProcessCommandOptions {
   data: any[]
   command: string
@@ -32,18 +62,49 @@ export class AIResourceAgent {
     this._data = data
   }
 
-  private generateSystemPrompt(data: any[]): string {
-    return `你是一个智能资料助手，负责帮助用户对资料进行操作和分析。
+  private generateSystemPrompt(data: any[], mode: string = 'modify'): string {
+    const basePrompt = `你是一个智能资料助手，负责帮助用户对资料进行操作和分析。
 请仔细分析用户的需求，生成相应的代码。
 
 资料数据示例:
 ${JSON.stringify(data.slice(0, 3), null, 2)}
 
-数据总行数: ${data.length}
+数据总行数: ${data.length}`
 
-你可以:
-1. 修改资料 - 通过 JavaScript 代码修改数据
-2. 分析计算 - 通过 formulajs 进行计算
+    const modeSpecificPrompt = mode === 'modify' 
+      ? `你需要返回如下结构:
+{
+  type: 'modify',
+  data: modifiedData,  // 修改后的数据
+  changes: [{          // 修改记录
+    row: number,       // 行号
+    field: string,     // 字段名
+    oldValue: any,     // 原值
+    newValue: any      // 新值
+  }]
+}`
+      : `你需要返回如下结构:
+{
+  type: 'analyze',
+  data: originalData,  // 原始数据
+  analysis: {
+    summary: {         // 统计摘要
+      [key: string]: number | string
+    },
+    charts?: [{        // 可选的图表数据
+      type: string,
+      data: {
+        labels: string[],
+        values: number[]
+      }
+    }],
+    insights: string[] // 数据洞察
+  }
+}`
+
+    return `${basePrompt}
+
+${modeSpecificPrompt}
 
 请使用 <shata-ai-resource> 标签包裹你生成的代码，直接返回可执行的 JavaScript 代码。
 返回个结构
@@ -52,8 +113,7 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 //生成的 javascript 代码
 </shata-ai-resource>
 \`\`\`
-- 开头和结尾都不要做解释和说明
-`
+- 开头和结尾都不要做解释和说明`
   }
 
   private async executeCode(code: string, data: any[]): Promise<any> {
@@ -73,8 +133,13 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
     data,
     command,
     onChunk,
-    mode,
-  }: ProcessCommandOptions): Promise<{ success: boolean; message: string; data?: any[] }> {
+    mode = 'modify',
+  }: ProcessCommandOptions): Promise<{ 
+    success: boolean; 
+    message: string; 
+    data?: any[];
+    analysis?: AnalysisResult['analysis'];
+  }> {
     console.log("[AIResourceAgent] Processing command with data:", command)
 
     if (!data || !data.length) {
@@ -92,7 +157,7 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
     try {
       updateProgress("🤖 AI助手正在分析您的需求...")
 
-      const systemPrompt = this.generateSystemPrompt(data)
+      const systemPrompt = this.generateSystemPrompt(data, mode)
       const messages: Message[] = [
         { role: "system", content: systemPrompt },
         { role: "user", content: command },
@@ -120,12 +185,13 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
       const generatedCode = match[1].trim()
 
       updateProgress("⚡ 正在执行代码...")
-      const modifiedData = await this.executeCode(generatedCode, data)
-
+      const result = await this.executeCode(generatedCode, data) as ResourceOperationResult
+      
       return {
         success: true,
-        message: "操作执行成功",
-        data: modifiedData, // 返回修改后的数据
+        message: mode === 'modify' ? "操作执行成功" : "分析完成",
+        data: result.data,
+        ...(result.type === 'analyze' ? { analysis: result.analysis } : {})
       }
     } catch (error) {
       console.error("[AIResourceAgent] Error processing command:", error)
