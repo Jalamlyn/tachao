@@ -41,15 +41,7 @@ const AIResourceEditor: React.FC = () => {
         try {
           const resource = await getResourceDetail(resourceId)
           if (resource && resource.data) {
-            setResourceData(resource.data)
-            if (Array.isArray(resource.data) && resource.data.length > 0) {
-              const firstRow = resource.data[0]
-              const cols = Object.keys(firstRow).map((key) => ({
-                header: key,
-                accessorKey: key,
-              }))
-              setColumns(cols)
-            }
+            updatedResourceData(resource)
           } else {
             message.error("资料加载失败")
             navigate("/we-chat-app/admin/resources")
@@ -121,35 +113,23 @@ const AIResourceEditor: React.FC = () => {
     },
   }
 
+  const updatedResourceData = useCallback((res) => {
+    setResourceData(res.data)
+    if (Array.isArray(res.data) && res.data.length > 0) {
+      const firstRow = res.data[0]
+      const cols = Object.keys(firstRow).map((key) => ({
+        header: key,
+        accessorKey: key,
+      }))
+      setColumns(cols)
+    }
+  }, [])
+
   // 处理命令结果
   const handleCommandResult = useCallback(
     (result) => {
       if (result.success) {
-        if (result.data) {
-          setResourceData(result.data)
-          if (Array.isArray(result.data) && result.data.length > 0) {
-            const firstRow = result.data[0]
-            const cols = Object.keys(firstRow).map((key) => ({
-              header: key,
-              accessorKey: key,
-            }))
-            setColumns(cols)
-          }
-          setMessages((prev) => {
-            const lastMessage = prev[prev.length - 1]
-            if (lastMessage.role === "assistant") {
-              return [
-                ...prev.slice(0, -1),
-                {
-                  ...lastMessage,
-                  content: "✅ 数据已更新",
-                  status: "success",
-                },
-              ]
-            }
-            return prev
-          })
-        } else if (result.analysis) {
+        if (result.analysis) {
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
             if (lastMessage.role === "assistant") {
@@ -158,6 +138,22 @@ const AIResourceEditor: React.FC = () => {
                 {
                   ...lastMessage,
                   content: <AnalysisResult analysis={result.analysis} />,
+                  status: "success",
+                },
+              ]
+            }
+            return prev
+          })
+        } else if (result.data) {
+          updatedResourceData(result)
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1]
+            if (lastMessage.role === "assistant") {
+              return [
+                ...prev.slice(0, -1),
+                {
+                  ...lastMessage,
+                  content: "✅ 数据已更新",
                   status: "success",
                 },
               ]
@@ -182,7 +178,7 @@ const AIResourceEditor: React.FC = () => {
         })
       }
     },
-    [setResourceData]
+    [updatedResourceData]
   )
 
   return (
