@@ -1,7 +1,7 @@
 import chatChunkClaude from "../chat/chat-chunk-claude-office"
 import { Message } from "./AIFormAgentTypes"
 import { formulaService } from "@/services/formulaService"
-import { parseResourceOperations } from "@/utils/codeParser"
+import { parseResourceOperations, parseAICode } from "@/utils/codeParser"
 
 export type ResourceColumn = {
   header: string
@@ -38,17 +38,31 @@ ${JSON.stringify(this._columns, null, 2)}
 1. 修改资料 - 通过 JavaScript 代码修改数据
 2. 分析计算 - 通过 formulajs 进行计算
 
-生成的操作代码格式:
+生成的操作代码格式必须是:
 <shata-ai-resource>
 export default {
-  // JavaScript 代码，用于修改数据或者分析计算"
+  operations: [{
+    type: "code",
+    code: "// JavaScript 代码"
+  }]
+}
+</shata-ai-resource>
+
+或者:
+<shata-ai-resource>
+export default {
+  operations: [{
+    type: "calculate",
+    formula: "// formulajs 计算公式"
+  }]
 }
 </shata-ai-resource>
 
 注意:
-- 只返回操作代码，不要返回其他内容
-- 计算时可以使用 formulajs 提供的所有函数
-- 修改数据时使用标准的 JavaScript 代码
+- 必须使用完整的模块导出格式
+- 必须包含在 shata-ai-resource 标签内
+- operations 必须是数组格式
+- 每个操作必须指定 type
 - 不要生成修改表结构的操作
 `
 
@@ -62,25 +76,31 @@ export default {
   }
 
   public setColumns(columns: ResourceColumn[]): void {
+    console.log("[AIResourceAgent] Setting columns:", columns)
     this._columns = columns
   }
 
   public setData(data: any[]): void {
+    console.log("[AIResourceAgent] Setting data, length:", data?.length)
     this._data = data
   }
 
   private async executeCode(code: string): Promise<any> {
     try {
+      console.log("[AIResourceAgent] Executing code:", code)
       // 创建一个新的函数来执行代码，传入数据作为参数
       const executeFunction = new Function("data", "formulajs", code)
-      return executeFunction(this._data, formulaService)
+      const result = executeFunction(this._data, formulaService)
+      console.log("[AIResourceAgent] Code execution result:", result)
+      return result
     } catch (error) {
-      console.error("Error executing code:", error)
+      console.error("[AIResourceAgent] Error executing code:", error)
       throw error
     }
   }
 
   private async analyzeIntent(input: string, mode?: string): Promise<ResourceIntent> {
+    console.log("[AIResourceAgent] Analyzing intent, input:", input, "mode:", mode)
     // 如果提供了模式，直接返回对应的意图
     if (mode === "modify") return "modify"
     if (mode === "analyze") return "analyze"
@@ -113,15 +133,17 @@ export default {
         0
       )
 
+      console.log("[AIResourceAgent] Intent analysis response:", response)
       const intent = response.trim().toLowerCase() as ResourceIntent
       return ["modify", "analyze", "unsupported", "unclear"].includes(intent) ? intent : "unclear"
     } catch (error) {
-      console.error("Error analyzing intent:", error)
+      console.error("[AIResourceAgent] Error analyzing intent:", error)
       return "unsupported"
     }
   }
 
   private async generateOperations(input: string, intent: ResourceIntent): Promise<ResourceOperation[]> {
+    console.log("[AIResourceAgent] Generating operations for intent:", intent)
     const intentSpecificPrompt =
       intent === "modify"
         ? "请生成修改资料的 JavaScript 代码。使用标准的 JavaScript 语法，返回 type: 'code' 的操作。"
@@ -146,12 +168,22 @@ export default {
       0
     )
 
+    console.log("[AIResourceAgent] AI response:", response)
+
     try {
-      const operations = await parseResourceOperations(response)
+      // 使用新的通用解析函数
+      const result = await parseAICode(response, "shata-ai-resource")
+      console.log("[AIResourceAgent] Parsed operations:", result)
+      
+      // 确保返回数组格式
+      const operations = result.operations || [result]
       return Array.isArray(operations) ? operations : [operations]
     } catch (error) {
-      console.error("Error parsing operations:", error)
-      return []
+      console.error("[AIResourceAgent] Error parsing operations:", error)
+      // 尝试使用旧的解析方式作为备选
+      console.log("[AIResourceAgent] Trying fallback parsing method")
+      const operations = await parseResourceOperations(response)
+      return Array.isArray(operations) ? operations : [operations]
     }
   }
 
@@ -160,6 +192,7 @@ export default {
     onChunk?: (chunk: string) => void,
     mode?: string
   ): Promise<ResourceAgentResult> {
+    console.log("[AIResourceAgent] Processing command:", command, "mode:", mode)
     if (!this._columns.length) {
       return {
         success: false,
@@ -168,12 +201,14 @@ export default {
     }
 
     const updateProgress = (message: string) => {
+      console.log("[AIResourceAgent] Progress:", message)
       onChunk?.(message + "</br>")
     }
 
     try {
       updateProgress("🤖 AI助手正在分析您的需求...")
       const intent = await this.analyzeIntent(command, mode)
+      console.log("[AIResourceAgent] Analyzed intent:", intent)
 
       if (intent === "unsupported") {
         return {
@@ -196,6 +231,7 @@ export default {
 
       updateProgress(`📝 开始${intent === "modify" ? "修改资料" : "分析计算"}...`)
       const operations = await this.generateOperations(command, intent)
+      console.log("[AIResourceAgent] Generated operations:", operations)
 
       if (!operations.length) {
         return {
@@ -206,10 +242,12 @@ export default {
 
       // 执行操作
       for (const operation of operations) {
+        console.log("[AIResourceAgent] Executing operation:", operation)
         if (operation.type === "code") {
           await this.executeCode(operation.code)
         } else if (operation.type === "calculate") {
           const result = formulaService.evaluateFormula(operation.formula, this._data)
+          console.log("[AIResourceAgent] Formula evaluation result:", result)
           if (result.error) {
             throw new Error(`计算错误: ${result.error}`)
           }
@@ -222,7 +260,7 @@ export default {
         operations,
       }
     } catch (error) {
-      console.error("Error processing command:", error)
+      console.error("[AIResourceAgent] Error processing command:", error)
       return {
         success: false,
         message: "处理指令时发生错误：" + (error as Error).message,
