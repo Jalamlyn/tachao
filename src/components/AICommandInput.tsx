@@ -1,29 +1,55 @@
-import React, { memo } from "react"
+import React, { memo, useState } from "react"
 import { Button, Textarea, Tabs, Tab } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 
 interface AICommandInputProps {
-  input: string
+  defaultValue?: string
   isLoading: boolean
   selectedMode?: "modify" | "analyze"
-  onInputChange: (value: string) => void
+  onInputSubmit: (value: string) => void
   onSend: () => void
   onModeChange?: (mode: "modify" | "analyze") => void
   placeholder?: string
   showModeSwitch?: boolean
+  // 保留 input 和 onInputChange 以保持向后兼容
+  input?: string
+  onInputChange?: (value: string) => void
 }
 
 const AICommandInput = memo(
   ({
-    input,
+    defaultValue = "",
     isLoading,
     selectedMode,
-    onInputChange,
+    onInputSubmit,
     onSend,
     onModeChange,
     placeholder,
     showModeSwitch = false,
+    // 向后兼容的属性
+    input: _input,
+    onInputChange: _onInputChange,
   }: AICommandInputProps) => {
+    // 内部状态管理
+    const [internalInput, setInternalInput] = useState(defaultValue)
+
+    // 处理输入变化
+    const handleInputChange = (value: string) => {
+      setInternalInput(value)
+      // 向后兼容：如果提供了 onInputChange，也调用它
+      _onInputChange?.(value)
+    }
+
+    // 处理发送
+    const handleSend = () => {
+      onInputSubmit(internalInput)
+      onSend()
+      setInternalInput("")
+    }
+
+    // 使用受控或非受控模式
+    const inputValue = _input !== undefined ? _input : internalInput
+
     return (
       <div className='flex flex-col gap-2 p-4 bg-white'>
         {showModeSwitch && onModeChange && (
@@ -61,8 +87,8 @@ const AICommandInput = memo(
         )}
 
         <Textarea
-          value={input}
-          onChange={(e) => onInputChange(e.target.value)}
+          value={inputValue}
+          onChange={(e) => handleInputChange(e.target.value)}
           placeholder={placeholder}
           className='flex-grow'
           classNames={{
@@ -75,19 +101,19 @@ const AICommandInput = memo(
             <div className='flex items-center gap-2 pr-2'>
               <Button
                 isIconOnly
-                className={!input || isLoading ? "" : "bg-primary"}
-                color={!input || isLoading ? "default" : "primary"}
-                isDisabled={!input || isLoading}
+                className={!inputValue || isLoading ? "" : "bg-primary"}
+                color={!inputValue || isLoading ? "default" : "primary"}
+                isDisabled={!inputValue || isLoading}
                 radius='full'
-                variant={!input || isLoading ? "flat" : "solid"}
-                onClick={onSend}
+                variant={!inputValue || isLoading ? "flat" : "solid"}
+                onClick={handleSend}
                 isLoading={isLoading}
               >
                 {isLoading ? (
                   <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
                 ) : (
                   <Icon
-                    className={!input ? "text-default-500" : "text-white"}
+                    className={!inputValue ? "text-default-500" : "text-white"}
                     icon='solar:arrow-up-linear'
                     width={20}
                   />
