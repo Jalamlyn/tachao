@@ -14,22 +14,25 @@ import {
   YAxis,
   Tooltip,
   Legend,
+  Pie,
+  PieChart,
+  Cell,
 } from "recharts"
 import { ChartConfig, ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
 
 interface AnalysisResultProps {
   analysis: {
-    summary: Record<string, number | string>;
+    summary: Record<string, number | string | Record<string, number>>;
     charts?: {
       type: string;
-      data: {
-        labels: string[];
-        values: number[];
-      };
+      title: string;
+      data: Array<{ name: string; value: number }>;
     }[];
     insights: string[];
   };
 }
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
 const chartConfig = {
   values: {
@@ -39,13 +42,83 @@ const chartConfig = {
 } satisfies ChartConfig
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
-  // 转换图表数据格式
-  const transformChartData = (chartData: { labels: string[]; values: number[] }) => {
-    return chartData.labels.map((label, index) => ({
-      name: label,
-      values: chartData.values[index],
-    }))
-  }
+  const renderChart = (chart: {
+    type: string;
+    title: string;
+    data: Array<{ name: string; value: number }>;
+  }) => {
+    switch (chart.type.toLowerCase()) {
+      case 'pie':
+        return (
+          <ChartContainer config={chartConfig} className="aspect-[16/9] w-full">
+            <PieChart>
+              <Pie
+                data={chart.data}
+                cx="50%"
+                cy="50%"
+                labelLine={true}
+                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {chart.data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={<ChartTooltipContent />} />
+              <Legend />
+            </PieChart>
+          </ChartContainer>
+        );
+      case 'bar':
+        return (
+          <ChartContainer config={chartConfig} className="aspect-[16/9] w-full">
+            <BarChart data={chart.data}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip content={<ChartTooltipContent />} />
+              <Legend />
+              <Bar
+                dataKey="value"
+                fill={`var(--color-values)`}
+                name="数值"
+              />
+            </BarChart>
+          </ChartContainer>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderSummaryItem = (key: string, value: number | string | Record<string, number>) => {
+    if (typeof value === 'object') {
+      return (
+        <div key={key} className="p-4 border rounded">
+          <p className="text-sm text-muted-foreground capitalize">{key}</p>
+          <div className="space-y-1">
+            {Object.entries(value).map(([subKey, subValue]) => (
+              <div key={subKey} className="flex justify-between">
+                <span className="text-sm">{subKey}</span>
+                <span className="text-sm font-medium">{subValue}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div key={key} className="p-4 border rounded">
+        <p className="text-sm text-muted-foreground capitalize">{key}</p>
+        <p className="text-2xl font-bold">
+          {typeof value === 'number' ? value.toLocaleString() : value}
+        </p>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -56,15 +129,8 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
           <CardDescription>数据分析的关键指标</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.entries(analysis.summary).map(([key, value]) => (
-              <div key={key} className="p-4 border rounded">
-                <p className="text-sm text-muted-foreground capitalize">{key}</p>
-                <p className="text-2xl font-bold">
-                  {typeof value === 'number' ? value.toLocaleString() : value}
-                </p>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(analysis.summary).map(([key, value]) => renderSummaryItem(key, value))}
           </div>
         </CardContent>
       </Card>
@@ -73,24 +139,11 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
       {analysis.charts?.map((chart, index) => (
         <Card key={index}>
           <CardHeader>
-            <CardTitle>数据可视化</CardTitle>
+            <CardTitle>{chart.title || '数据可视化'}</CardTitle>
             <CardDescription>图表分析</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className="aspect-[16/9] w-full">
-              <BarChart data={transformChartData(chart.data)}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip content={<ChartTooltipContent />} />
-                <Legend />
-                <Bar
-                  dataKey="values"
-                  fill={`var(--color-values)`}
-                  name="数值"
-                />
-              </BarChart>
-            </ChartContainer>
+            {renderChart(chart)}
           </CardContent>
         </Card>
       ))}
