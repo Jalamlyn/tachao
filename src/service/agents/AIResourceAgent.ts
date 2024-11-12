@@ -17,13 +17,18 @@ export class AIResourceAgent {
 资料列定义:
 ${JSON.stringify(this._columns, null, 2)}
 
+资料数据示例:
+${JSON.stringify(this._data.slice(0, 3), null, 2)}
+
+数据总行数: ${this._data.length}
+
 你可以:
 1. 修改资料 - 通过 JavaScript 代码修改数据
 2. 分析计算 - 通过 formulajs 进行计算
 
 请使用 <shata-ai-resource> 标签包裹你生成的代码，直接返回可执行的 JavaScript 代码。
-例如:
-
+按照下列结构返回:
+\`\`\`mo
 <shata-ai-resource>
 data.forEach(row => {
   if(row.amount > 1000) {
@@ -31,12 +36,13 @@ data.forEach(row => {
   }
 });
 </shata-ai-resource>
-
+\`\`\`
 或者:
-
+\`\`\`mo
 <shata-ai-resource>
 return formulajs.SUM(data.map(row => row.amount));
 </shata-ai-resource>
+\`\`\`
 `
 
   private constructor() {}
