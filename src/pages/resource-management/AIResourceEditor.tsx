@@ -211,14 +211,14 @@ const AIResourceEditor: React.FC = () => {
               </ScrollShadow>
 
               <AICommandInput
-                input={input}
                 isLoading={isLoading}
                 selectedMode={selectedMode as "modify" | "analyze"}
-                onInputChange={setInput}
                 onSend={handleSendMessage}
                 onModeChange={setSelectedMode}
                 placeholder={getPlaceholder()}
                 showModeSwitch={true}
+                defaultValue={input}
+                onInputSubmit={setInput}
               />
             </div>
           </ResizablePanel>
