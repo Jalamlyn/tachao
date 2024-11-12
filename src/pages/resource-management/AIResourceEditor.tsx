@@ -11,6 +11,7 @@ import PageLayout from "@/components/PageLayout"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
 import MessageCard from "@/components/MessageCard"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import AIResourceAgent from "@/service/agents/AIResourceAgent"
 
 // 导入头像
 import mo2 from "/assets/mo-2.png"
@@ -42,6 +43,8 @@ const AIResourceEditor: React.FC = () => {
                 accessorKey: key,
               }))
               setColumns(cols)
+              // 设置 AIResourceAgent 的列定义
+              AIResourceAgent.setColumns(cols)
             }
           } else {
             message.error("资料加载失败")
@@ -86,7 +89,55 @@ const AIResourceEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        // TODO: 这里添加与 AI 的交互逻辑
+        // 调用 AIResourceAgent 处理用户输入
+        const result = await AIResourceAgent.processCommand(input, (chunk: string) => {
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1]
+            if (lastMessage.role === "assistant") {
+              return [
+                ...prev.slice(0, -1),
+                {
+                  ...lastMessage,
+                  content: lastMessage.content + chunk,
+                },
+              ]
+            }
+            return prev
+          })
+        })
+
+        if (result.success) {
+          // 更新最后一条消息为成功状态
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1]
+            if (lastMessage.role === "assistant") {
+              return [
+                ...prev.slice(0, -1),
+                {
+                  ...lastMessage,
+                  status: "success",
+                },
+              ]
+            }
+            return prev
+          })
+        } else {
+          // 更新最后一条消息为错误状态
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1]
+            if (lastMessage.role === "assistant") {
+              return [
+                ...prev.slice(0, -1),
+                {
+                  ...lastMessage,
+                  content: result.message,
+                  status: "error",
+                },
+              ]
+            }
+            return prev
+          })
+        }
       } catch (error) {
         console.error("Error in chat:", error)
         message.error("分析过程中发生错误")
@@ -111,7 +162,7 @@ const AIResourceEditor: React.FC = () => {
                         avatar={message.role === "assistant" ? mo2 : user}
                         message={message.content}
                         role={message.role}
-                        status='success'
+                        status={message.status || "success"}
                         className='mb-4'
                       />
                     </div>
