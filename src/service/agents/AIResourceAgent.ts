@@ -21,18 +21,22 @@ ${JSON.stringify(this._columns, null, 2)}
 1. 修改资料 - 通过 JavaScript 代码修改数据
 2. 分析计算 - 通过 formulajs 进行计算
 
-请直接返回可执行的 JavaScript 代码，不要包含任何标签或额外的包装。
+请使用 <shata-ai-resource> 标签包裹你生成的代码，直接返回可执行的 JavaScript 代码。
 例如:
-// 修改数据的代码
+
+<shata-ai-resource>
 data.forEach(row => {
   if(row.amount > 1000) {
     row.type = 'VIP';
   }
 });
+</shata-ai-resource>
 
 或者:
-// 分析计算的代码
+
+<shata-ai-resource>
 return formulajs.SUM(data.map(row => row.amount));
+</shata-ai-resource>
 `
 
   private constructor() {}
@@ -52,6 +56,15 @@ return formulajs.SUM(data.map(row => row.amount));
   public setData(data: any[]): void {
     console.log("[AIResourceAgent] Setting data, length:", data?.length)
     this._data = data
+  }
+
+  private extractCode(content: string): string {
+    const regex = /<shata-ai-resource>([\s\S]*?)<\/shata-ai-resource>/
+    const match = content.match(regex)
+    if (!match) {
+      throw new Error("No valid code found in AI response")
+    }
+    return match[1].trim()
   }
 
   private async executeCode(code: string): Promise<any> {
@@ -93,18 +106,22 @@ return formulajs.SUM(data.map(row => row.amount));
         { role: "user", content: command },
       ]
 
-      let generatedCode = ""
+      let aiResponse = ""
       await chatChunkClaude(
         messages,
         (chunk: string) => {
-          generatedCode += chunk
+          aiResponse += chunk
+          onChunk?.(chunk)
         },
         () => {},
         true,
         0
       )
 
-      console.log("[AIResourceAgent] Generated code:", generatedCode)
+      console.log("[AIResourceAgent] AI response:", aiResponse)
+
+      const generatedCode = this.extractCode(aiResponse)
+      console.log("[AIResourceAgent] Extracted code:", generatedCode)
 
       updateProgress("⚡ 正在执行代码...")
       await this.executeCode(generatedCode)
