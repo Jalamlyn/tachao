@@ -75,7 +75,7 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
     command,
     onChunk,
     mode,
-  }: ProcessCommandOptions): Promise<{ success: boolean; message: string }> {
+  }: ProcessCommandOptions): Promise<{ success: boolean; message: string; data?: any[] }> {
     console.log("[AIResourceAgent] Processing command with data:", command)
 
     if (!data || !data.length) {
@@ -121,11 +121,12 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
       const generatedCode = match[1].trim()
 
       updateProgress("⚡ 正在执行代码...")
-      await this.executeCode(generatedCode, data)
+      const modifiedData = await this.executeCode(generatedCode, data)
 
       return {
         success: true,
         message: "操作执行成功",
+        data: modifiedData // 返回修改后的数据
       }
     } catch (error) {
       console.error("[AIResourceAgent] Error processing command:", error)
