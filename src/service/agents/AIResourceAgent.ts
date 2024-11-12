@@ -16,7 +16,6 @@ interface ProcessCommandOptions {
 
 export class AIResourceAgent {
   private static instance: AIResourceAgent
-  private _columns: ResourceColumn[] = []
   private _data: any[] = []
 
   private constructor() {}
@@ -26,12 +25,6 @@ export class AIResourceAgent {
       AIResourceAgent.instance = new AIResourceAgent()
     }
     return AIResourceAgent.instance
-  }
-
-  // 保留原有方法以保证兼容性
-  public setColumns(columns: ResourceColumn[]): void {
-    console.log("[AIResourceAgent] Setting columns:", columns)
-    this._columns = columns
   }
 
   public setData(data: any[]): void {
@@ -52,33 +45,7 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 1. 修改资料 - 通过 JavaScript 代码修改数据
 2. 分析计算 - 通过 formulajs 进行计算
 
-请使用 <shata-ai-resource> 标签包裹你生成的代码，直接返回可执行的 JavaScript 代码。
-按照下列结构返回:
-\`\`\`mo
-<shata-ai-resource>
-data.forEach(row => {
-  if(row.amount > 1000) {
-    row.type = 'VIP';
-  }
-});
-</shata-ai-resource>
-\`\`\`
-或者:
-\`\`\`mo
-<shata-ai-resource>
-return formulajs.SUM(data.map(row => row.amount));
-</shata-ai-resource>
-\`\`\`
-`
-  }
-
-  private extractCode(content: string): string {
-    const regex = /<shata-ai-resource>([\s\S]*?)<\/shata-ai-resource>/
-    const match = content.match(regex)
-    if (!match) {
-      throw new Error("No valid code found in AI response")
-    }
-    return match[1].trim()
+请使用 <shata-ai-resource> 标签包裹你生成的代码，直接返回可执行的 JavaScript 代码。`
   }
 
   private async executeCode(code: string, data: any[]): Promise<any> {
@@ -94,15 +61,14 @@ return formulajs.SUM(data.map(row => row.amount));
     }
   }
 
-  // 新的处理方法
   public async processCommand({
     data,
     command,
     onChunk,
-    mode
+    mode,
   }: ProcessCommandOptions): Promise<{ success: boolean; message: string }> {
     console.log("[AIResourceAgent] Processing command with data:", command)
-    
+
     if (!data || !data.length) {
       return {
         success: false,
@@ -138,8 +104,12 @@ return formulajs.SUM(data.map(row => row.amount));
 
       console.log("[AIResourceAgent] AI response:", aiResponse)
 
-      const generatedCode = this.extractCode(aiResponse)
-      console.log("[AIResourceAgent] Extracted code:", generatedCode)
+      const regex = /<shata-ai-resource>([\s\S]*?)<\/shata-ai-resource>/
+      const match = aiResponse.match(regex)
+      if (!match) {
+        throw new Error("No valid code found in AI response")
+      }
+      const generatedCode = match[1].trim()
 
       updateProgress("⚡ 正在执行代码...")
       await this.executeCode(generatedCode, data)
@@ -155,20 +125,6 @@ return formulajs.SUM(data.map(row => row.amount));
         message: "处理指令时发生错误：" + (error as Error).message,
       }
     }
-  }
-
-  // 保留原有方法以保证兼容性
-  public async processCommand(
-    command: string,
-    onChunk?: (chunk: string) => void,
-    mode?: string
-  ): Promise<{ success: boolean; message: string }> {
-    return this.processCommand({
-      data: this._data,
-      command,
-      onChunk,
-      mode
-    })
   }
 }
 
