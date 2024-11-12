@@ -121,7 +121,6 @@ ${modeSpecificPrompt}
 const result = {
   type: 'modify',  // 或 'analyze'
   data: [...],     // 处理后的数据
-  // 其他必要字段
 };
 return result;     // 直接返回结果对象
 </shata-ai-resource>
