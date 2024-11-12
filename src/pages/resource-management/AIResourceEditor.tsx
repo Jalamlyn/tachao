@@ -122,6 +122,11 @@ const AIResourceEditor: React.FC = () => {
         })
 
         if (result.success) {
+          // 更新资源数据以触发重新渲染
+          if (result.data) {
+            setResourceData([...result.data])
+          }
+          
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
             if (lastMessage.role === "assistant") {
