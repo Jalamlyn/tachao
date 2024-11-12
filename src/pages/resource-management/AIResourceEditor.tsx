@@ -10,7 +10,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
 import MessageCard from "@/components/MessageCard"
-import SimpleDataTable from "@/components/common/simple-data-table/SimpleDataTable"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 // 导入头像
 import mo2 from "/assets/mo-2.png"
@@ -99,7 +99,7 @@ const AIResourceEditor: React.FC = () => {
   )
 
   return (
-    <PageLayout title='AI 资料分析' titleIcon='mdi:robot' className="p-0">
+    <PageLayout title='AI 资料分析' titleIcon='hugeicons:ai-chat-02' className="p-0">
       <div className='h-[calc(100vh-140px)] overflow-hidden'>
         <ResizablePanelGroup direction='horizontal' className='h-full'>
           <ResizablePanel defaultSize={30}>
@@ -164,11 +164,28 @@ const AIResourceEditor: React.FC = () => {
           <ResizablePanel defaultSize={70} className='bg-slate-100'>
             <div className='h-full overflow-auto p-4'>
               {resourceData ? (
-                <SimpleDataTable
-                  data={resourceData}
-                  columns={columns}
-                  className="bg-white rounded-lg shadow"
-                />
+                <div className="bg-white rounded-lg shadow">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        {columns.map((column) => (
+                          <TableHead key={column.accessorKey}>{column.header}</TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {resourceData.map((row: any, rowIndex: number) => (
+                        <TableRow key={rowIndex}>
+                          {columns.map((column) => (
+                            <TableCell key={`${rowIndex}-${column.accessorKey}`}>
+                              {row[column.accessorKey]}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               ) : (
                 <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
                   <Icon icon='mdi:loading' className='w-12 h-12 mx-auto mb-4 animate-spin' />
