@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react"
+import { useEffect } from "react"
 import { Navigate, Route, Routes, useNavigate, useLocation } from "react-router-dom"
 import { NextUIProvider } from "@nextui-org/react"
 import { useTranslation } from "react-i18next"
