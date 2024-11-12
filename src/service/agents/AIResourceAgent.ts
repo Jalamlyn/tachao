@@ -41,16 +41,7 @@ ${JSON.stringify(this._columns, null, 2)}
 生成的操作代码格式:
 <shata-ai-resource>
 export default {
-  type: "code",
-  code: "// JavaScript 代码，用于修改数据"
-}
-</shata-ai-resource>
-
-或者:
-<shata-ai-resource>
-export default {
-  type: "calculate",
-  formula: "// formulajs 计算公式"
+  // JavaScript 代码，用于修改数据或者分析计算"
 }
 </shata-ai-resource>
 
