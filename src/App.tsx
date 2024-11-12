@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next"
 import { getCurrentLanguage } from "./i18n"
 import WeChatLoginPage from "./pages/WeChatLoginPage"
 import FormRenderer from "./components/forms/FormRenderer"
-import ResourceDataTable from "./components/resource/data-table/ResourceDataTable"
 import AnalysisPage from "./pages/AnalysisPage"
 import CreateReportPage from "./components/reports/CreateReportPage"
 import ReadReportRenderer from "./components/reports/ReadReportRenderer"
@@ -15,6 +14,7 @@ import AIHomePage from "./pages/AIHomePage"
 import renderWeChatApp from "./apps/we-chat-app-admin/renderWeChatApp"
 import FormPreview from "./pages/form-temp-manager/components/FormPreview"
 import Form from "./pages/form"
+import ResourceDataTable from "./components/common/data-table/ResourceDataTable"
 
 function App() {
   const navigate = useNavigate()
