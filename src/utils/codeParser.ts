@@ -1,6 +1,7 @@
 import { message } from "@/components/Message"
 import * as Babel from "@babel/standalone"
 import React from "react"
+import { aiLog } from "./AITraceLogger"
 
 // 导入 shadcn UI 组件
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
@@ -37,33 +38,31 @@ const uiComponents = {
  */
 export const parseAICode = async (content: string, tag: string): Promise<any> => {
   try {
-    console.log(`[parseAICode] Starting to parse ${tag}, content length:`, content?.length)
+    aiLog.log(`Starting to parse ${tag}`, { contentLength: content?.length });
     
     // 1. 提取标签内容
     const regex = new RegExp(`<${tag}>([\s\S]*?)<\/${tag}>`)
     const match = content.match(regex)
     if (!match) {
-      console.warn(`[parseAICode] No valid ${tag} found in content`)
-      console.log(`[parseAICode] Content preview:`, content?.substring(0, 200))
+      aiLog.log(`No valid ${tag} found in content`, { contentPreview: content?.substring(0, 200) });
       throw new Error(`No valid ${tag} found`)
     }
     
     const code = match[1].trim()
-    console.log(`[parseAICode] Extracted code from ${tag}:`, code)
+    aiLog.log(`Extracted code from ${tag}`, { code });
 
     // 2. 使用 babel 转换
     const jsCode = await jsxToJs(code)
-    console.log(`[parseAICode] Transformed code:`, jsCode)
+    aiLog.log(`Transformed code`, { jsCode });
 
     // 3. 解析配置对象
     const result = parseConfigObject(jsCode)
-    console.log(`[parseAICode] Parsed result:`, result)
+    aiLog.log(`Parsed result`, { result });
 
     return result
   } catch (error) {
-    console.error(`[parseAICode] Failed to parse ${tag}:`, error)
-    console.error(`[parseAICode] Original content:`, content)
-    throw error
+    aiLog.error(error as Error);
+    throw error;
   }
 }
 
@@ -89,11 +88,11 @@ const extractEditCode = (content: string): string | null => {
  * 从 shata-ai-resource 标签中提取资源操作代码
  */
 export const extractResourceCode = (content: string): string | null => {
-  console.log("[extractResourceCode] Starting to extract resource code")
+  aiLog.log("Starting to extract resource code");
   const regex = /<shata-ai-resource>([\s\S]*?)<\/shata-ai-resource>/
   const match = content.match(regex)
   const code = match ? match[1].trim() : null
-  console.log("[extractResourceCode] Extracted code:", code)
+  aiLog.log("Extracted resource code", { code });
   return code
 }
 
@@ -121,7 +120,7 @@ const validateCustomComponents = (jsxCode: string): boolean => {
  */
 const jsxToJs = async (jsxCode: string): Promise<string> => {
   try {
-    console.log("[jsxToJs] Starting JSX transformation")
+    aiLog.log("Starting JSX transformation");
     // 验证自定义组件
     if (!validateCustomComponents(jsxCode)) {
       throw new Error("自定义组件验证失败")
@@ -130,10 +129,10 @@ const jsxToJs = async (jsxCode: string): Promise<string> => {
     const result = Babel.transform(jsxCode, {
       presets: ["react"],
     }).code
-    console.log("[jsxToJs] Transformed code:", result)
+    aiLog.log("Transformed code", { result });
     return result
   } catch (error) {
-    console.error("Failed to transform JSX:", error)
+    aiLog.error(error as Error);
     throw new Error("Failed to transform JSX")
   }
 }
@@ -143,19 +142,19 @@ const jsxToJs = async (jsxCode: string): Promise<string> => {
  */
 const parseConfigObject = (jsCode: string): any => {
   try {
-    console.log("[parseConfigObject] Starting to parse config object")
+    aiLog.log("Starting to parse config object");
     // 移除 export default 并获取对象部分
     const objectCode = jsCode.replace(/export\s+default\s+/, "return ")
-    console.log("[parseConfigObject] Prepared code:", objectCode)
+    aiLog.log("Prepared code", { objectCode });
 
     // 创建一个新的 Function 来执行代码，传入 React 和 UI 组件
     const createConfig = new Function("React", ...Object.keys(uiComponents), `${objectCode}`)
     const result = createConfig(React, ...Object.values(uiComponents))
-    console.log("[parseConfigObject] Parsed result:", result)
+    aiLog.log("Parsed result", { result });
 
     return result
   } catch (error) {
-    console.error("Failed to parse config object:", error)
+    aiLog.error(error as Error);
     throw new Error("Failed to parse config object")
   }
 }
@@ -165,29 +164,28 @@ const parseConfigObject = (jsCode: string): any => {
  */
 export const parseResourceOperations = async (content: string): Promise<any> => {
   try {
-    console.log("[parseResourceOperations] Starting to parse resource operations")
-    console.log("[parseResourceOperations] Input content:", content)
+    aiLog.log("Starting to parse resource operations", { content });
 
     // 使用新的通用解析函数
     const result = await parseAICode(content, "shata-ai-resource")
-    console.log("[parseResourceOperations] Parsed result:", result)
+    aiLog.log("Parsed result", { result });
 
     // 如果解析失败，尝试使用旧的 JSON 解析作为备选方案
     if (!result) {
-      console.log("[parseResourceOperations] Falling back to JSON parse")
+      aiLog.log("Falling back to JSON parse");
       try {
         const jsonResult = JSON.parse(content)
-        console.log("[parseResourceOperations] JSON parse result:", jsonResult)
+        aiLog.log("JSON parse result", { jsonResult });
         return jsonResult
       } catch (jsonError) {
-        console.error("[parseResourceOperations] JSON parse failed:", jsonError)
+        aiLog.error(jsonError as Error);
         throw new Error("No valid resource operations found")
       }
     }
 
     return result.operations || result
   } catch (error) {
-    console.error("[parseResourceOperations] Failed to parse operations:", error)
+    aiLog.error(error as Error);
     message.error("资源操作解析失败，请检查格式是否正确")
     throw error
   }
@@ -208,14 +206,14 @@ export const parseFormEditOperations = async (
     // 首先编译 JSX
     const jsCode = await jsxToJs(code)
     // 创建一个新的 Function 来执行编辑操作
-    console.log(jsCode)
+    aiLog.log("Transformed edit operations", { jsCode });
     return new Function("config", "set", "React", ...Object.keys(uiComponents), `${jsCode}`) as (
       config: any,
       set: Function,
       React: any
     ) => void
   } catch (error) {
-    console.error("Failed to parse edit operations:", error)
+    aiLog.error(error as Error);
     message.error("编辑操作解析失败，请检查格式是否正确")
     throw error
   }
@@ -229,7 +227,7 @@ export const parseFormConfig = async (content: string): Promise<any> => {
     // 使用新的通用解析函数
     return await parseAICode(content, "shata-ai-form")
   } catch (error) {
-    console.error("Failed to parse form config:", error)
+    aiLog.error(error as Error);
     message.error("配置解析失败，请检查配置格式是否正确")
     throw error
   }
@@ -254,7 +252,7 @@ export const validateFormConfig = (config: any): boolean => {
 
     return true
   } catch (error) {
-    console.error("Config validation failed:", error)
+    aiLog.error(error as Error);
     return false
   }
 }
