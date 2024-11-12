@@ -52,7 +52,6 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 //生成的 javascript 代码
 </shata-ai-resource>
 \`\`\`
-
 - 开头和结尾都不要做解释和说明
 `
   }
@@ -126,7 +125,7 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
       return {
         success: true,
         message: "操作执行成功",
-        data: modifiedData // 返回修改后的数据
+        data: modifiedData, // 返回修改后的数据
       }
     } catch (error) {
       console.error("[AIResourceAgent] Error processing command:", error)
