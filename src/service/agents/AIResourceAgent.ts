@@ -9,33 +9,33 @@ export type ResourceColumn = {
 
 // 新增类型定义
 interface ModifyResult {
-  type: 'modify';
-  data: any[];
+  type: "modify"
+  data: any[]
   changes: {
-    row: number;
-    field: string;
-    oldValue: any;
-    newValue: any;
-  }[];
+    row: number
+    field: string
+    oldValue: any
+    newValue: any
+  }[]
 }
 
 interface AnalysisResult {
-  type: 'analyze';
-  data: any[];
+  type: "analyze"
+  data: any[]
   analysis: {
-    summary: Record<string, number | string>;
+    summary: Record<string, number | string>
     charts?: {
-      type: string;
+      type: string
       data: {
-        labels: string[];
-        values: number[];
-      };
-    }[];
-    insights: string[];
-  };
+        labels: string[]
+        values: number[]
+      }
+    }[]
+    insights: string[]
+  }
 }
 
-type ResourceOperationResult = ModifyResult | AnalysisResult;
+type ResourceOperationResult = ModifyResult | AnalysisResult
 
 interface ProcessCommandOptions {
   data: any[]
@@ -62,7 +62,7 @@ export class AIResourceAgent {
     this._data = data
   }
 
-  private generateSystemPrompt(data: any[], mode: string = 'modify'): string {
+  private generateSystemPrompt(data: any[], mode: string = "modify"): string {
     const basePrompt = `你是一个智能资料助手，负责帮助用户对资料进行操作和分析。
 请仔细分析用户的需求，生成相应的代码。
 
@@ -71,19 +71,20 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 
 数据总行数: ${data.length}`
 
-    const modeSpecificPrompt = mode === 'modify' 
-      ? `你需要返回如下结构:
+    const modeSpecificPrompt =
+      mode === "modify"
+        ? `你需要返回如下结构:
 {
   type: 'modify',
   data: modifiedData,  // 修改后的数据
-  changes: [{          // 修改记录
-    row: number,       // 行号
-    field: string,     // 字段名
-    oldValue: any,     // 原值
-    newValue: any      // 新值
+  changes?: [{         // 可选的修改记录
+    row: number,       // 修改的行号
+    field: string,     // 修改的字段
+    oldValue: any,     // 修改前的值
+    newValue: any      // 修改后的值
   }]
 }`
-      : `你需要返回如下结构:
+        : `你需要返回如下结构:
 {
   type: 'analyze',
   data: originalData,  // 原始数据
@@ -107,10 +108,22 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 ${modeSpecificPrompt}
 
 请使用 <shata-ai-resource> 标签包裹你生成的代码，直接返回可执行的 JavaScript 代码。
-返回个结构
+注意:
+1. 不要将代码包装在函数定义中
+2. 直接使用传入的 data 参数
+3. 直接返回处理结果对象
+4. 确保返回对象包含必要的 type 和 data 字段
+
+返回格式示例:
 \`\`\`mo
 <shata-ai-resource>
-//生成的 javascript 代码
+// 直接处理数据,使用传入的 data 参数
+const result = {
+  type: 'modify',  // 或 'analyze'
+  data: [...],     // 处理后的数据
+  // 其他必要字段
+};
+return result;     // 直接返回结果对象
 </shata-ai-resource>
 \`\`\`
 - 开头和结尾都不要做解释和说明`
@@ -119,7 +132,13 @@ ${modeSpecificPrompt}
   private async executeCode(code: string, data: any[]): Promise<any> {
     try {
       console.log("[AIResourceAgent] Executing code:", code)
-      const executeFunction = new Function("data", "formulajs", code)
+      // 构造一个自执行函数,传入 data 参数
+      const wrappedCode = `
+        return (function(data, formulajs) {
+          ${code}
+        })(data, formulajs);
+      `
+      const executeFunction = new Function("data", "formulajs", wrappedCode)
       const result = executeFunction(data, formulaService)
       console.log("[AIResourceAgent] Code execution result:", result)
       return result
@@ -129,16 +148,11 @@ ${modeSpecificPrompt}
     }
   }
 
-  public async processCommand({
-    data,
-    command,
-    onChunk,
-    mode = 'modify',
-  }: ProcessCommandOptions): Promise<{ 
-    success: boolean; 
-    message: string; 
-    data?: any[];
-    analysis?: AnalysisResult['analysis'];
+  public async processCommand({ data, command, onChunk, mode = "modify" }: ProcessCommandOptions): Promise<{
+    success: boolean
+    message: string
+    data?: any[]
+    analysis?: AnalysisResult["analysis"]
   }> {
     console.log("[AIResourceAgent] Processing command with data:", command)
 
@@ -185,13 +199,17 @@ ${modeSpecificPrompt}
       const generatedCode = match[1].trim()
 
       updateProgress("⚡ 正在执行代码...")
-      const result = await this.executeCode(generatedCode, data) as ResourceOperationResult
-      
+      const result = (await this.executeCode(generatedCode, data)) as ResourceOperationResult
+
+      if (!result || !result.type || !result.data) {
+        throw new Error("Invalid result format")
+      }
+
       return {
         success: true,
-        message: mode === 'modify' ? "操作执行成功" : "分析完成",
+        message: mode === "modify" ? "操作执行成功" : "分析完成",
         data: result.data,
-        ...(result.type === 'analyze' ? { analysis: result.analysis } : {})
+        ...(result.type === "analyze" ? { analysis: result.analysis } : {}),
       }
     } catch (error) {
       console.error("[AIResourceAgent] Error processing command:", error)
