@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react"
 import { ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Button, Textarea } from "@nextui-org/react"
+import { Button, Textarea, Tabs, Tab } from "@nextui-org/react"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
@@ -25,6 +25,7 @@ const AIResourceEditor: React.FC = () => {
   const [messages, setMessages] = useState<any[]>([])
   const [resourceData, setResourceData] = useState<any>(null)
   const [columns, setColumns] = useState<any[]>([])
+  const [selectedMode, setSelectedMode] = useState("modify") // 新增：模式选择状态
 
   const { getDetail: getResourceDetail } = useMetadata("resource")
 
@@ -35,7 +36,6 @@ const AIResourceEditor: React.FC = () => {
           const resource = await getResourceDetail(resourceId)
           if (resource && resource.data) {
             setResourceData(resource.data)
-            // 从数据中提取列定义
             if (Array.isArray(resource.data) && resource.data.length > 0) {
               const firstRow = resource.data[0]
               const cols = Object.keys(firstRow).map((key) => ({
@@ -43,7 +43,6 @@ const AIResourceEditor: React.FC = () => {
                 accessorKey: key,
               }))
               setColumns(cols)
-              // 设置 AIResourceAgent 的列定义
               AIResourceAgent.setColumns(cols)
             }
           } else {
@@ -67,6 +66,18 @@ const AIResourceEditor: React.FC = () => {
     ])
   }, [resourceId])
 
+  // 获取当前模式的 placeholder
+  const getPlaceholder = () => {
+    switch (selectedMode) {
+      case "modify":
+        return "请输入修改指令，例如：将第一行的姓名改为张三..."
+      case "analyze":
+        return "请输入分析需求，例如：统计所有销售金额的总和..."
+      default:
+        return "输入您的问题，AI 将帮您分析数据..."
+    }
+  }
+
   const { isLoading, handleClick: handleSendMessage } = useAsyncButton(
     async () => {
       if (!input.trim()) return
@@ -89,25 +100,28 @@ const AIResourceEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        // 调用 AIResourceAgent 处理用户输入
-        const result = await AIResourceAgent.processCommand(input, (chunk: string) => {
-          setMessages((prev) => {
-            const lastMessage = prev[prev.length - 1]
-            if (lastMessage.role === "assistant") {
-              return [
-                ...prev.slice(0, -1),
-                {
-                  ...lastMessage,
-                  content: lastMessage.content + chunk,
-                },
-              ]
-            }
-            return prev
-          })
-        })
+        // 调用 AIResourceAgent 处理用户输入，传入当前模式
+        const result = await AIResourceAgent.processCommand(
+          input,
+          (chunk: string) => {
+            setMessages((prev) => {
+              const lastMessage = prev[prev.length - 1]
+              if (lastMessage.role === "assistant") {
+                return [
+                  ...prev.slice(0, -1),
+                  {
+                    ...lastMessage,
+                    content: lastMessage.content + chunk,
+                  },
+                ]
+              }
+              return prev
+            })
+          },
+          selectedMode // 传入当前模式
+        )
 
         if (result.success) {
-          // 更新最后一条消息为成功状态
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
             if (lastMessage.role === "assistant") {
@@ -122,7 +136,6 @@ const AIResourceEditor: React.FC = () => {
             return prev
           })
         } else {
-          // 更新最后一条消息为错误状态
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
             if (lastMessage.role === "assistant") {
@@ -170,11 +183,43 @@ const AIResourceEditor: React.FC = () => {
                 </div>
               </ScrollShadow>
 
-              <div className='flex items-end gap-2 p-4 bg-white'>
+              <div className='flex flex-col gap-2 p-4 bg-white'>
+                <Tabs
+                  selectedKey={selectedMode}
+                  onSelectionChange={(key) => setSelectedMode(key as string)}
+                  size="sm"
+                  color="primary"
+                  variant="light"
+                  classNames={{
+                    tabList: "gap-4",
+                    cursor: "w-full",
+                    tab: "max-w-fit px-4",
+                  }}
+                >
+                  <Tab
+                    key="modify"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <Icon icon="mdi:pencil" />
+                        <span>资料修改</span>
+                      </div>
+                    }
+                  />
+                  <Tab
+                    key="analyze"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <Icon icon="mdi:chart-bar" />
+                        <span>资料分析</span>
+                      </div>
+                    }
+                  />
+                </Tabs>
+
                 <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder='输入您的问题，AI 将帮您分析数据...'
+                  placeholder={getPlaceholder()}
                   className='flex-grow'
                   classNames={{
                     input: "py-2 text-medium",
