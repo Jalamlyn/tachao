@@ -15,7 +15,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
-import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 
 interface Template {

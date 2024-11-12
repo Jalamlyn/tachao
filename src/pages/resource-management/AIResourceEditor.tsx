@@ -37,7 +37,7 @@ const AIResourceEditor: React.FC = () => {
             // 从数据中提取列定义
             if (Array.isArray(resource.data) && resource.data.length > 0) {
               const firstRow = resource.data[0]
-              const cols = Object.keys(firstRow).map(key => ({
+              const cols = Object.keys(firstRow).map((key) => ({
                 header: key,
                 accessorKey: key,
               }))
@@ -60,7 +60,7 @@ const AIResourceEditor: React.FC = () => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "资料管理", href: "/we-chat-app/admin/resources" },
-      { label: "AI 资料分析", href: `/we-chat-app/admin/resources/ai/${resourceId}` },
+      { label: "AI 资料助手", href: `/we-chat-app/admin/resources/ai/${resourceId}` },
     ])
   }, [resourceId])
 
@@ -87,7 +87,6 @@ const AIResourceEditor: React.FC = () => {
         setMessages((prev) => [...prev, assistantMessage])
 
         // TODO: 这里添加与 AI 的交互逻辑
-        
       } catch (error) {
         console.error("Error in chat:", error)
         message.error("分析过程中发生错误")
@@ -99,7 +98,7 @@ const AIResourceEditor: React.FC = () => {
   )
 
   return (
-    <PageLayout title='AI 资料分析' titleIcon='hugeicons:ai-chat-02' className="p-0">
+    <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
       <div className='h-[calc(100vh-140px)] overflow-hidden'>
         <ResizablePanelGroup direction='horizontal' className='h-full'>
           <ResizablePanel defaultSize={30}>
@@ -120,7 +119,7 @@ const AIResourceEditor: React.FC = () => {
                 </div>
               </ScrollShadow>
 
-              <div className='flex items-end gap-2 p-4 bg-white border-t'>
+              <div className='flex items-end gap-2 p-4 bg-white'>
                 <Textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -164,7 +163,7 @@ const AIResourceEditor: React.FC = () => {
           <ResizablePanel defaultSize={70} className='bg-slate-100'>
             <div className='h-full overflow-auto p-4'>
               {resourceData ? (
-                <div className="bg-white rounded-lg shadow">
+                <div className='bg-white rounded-lg shadow'>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -177,9 +176,7 @@ const AIResourceEditor: React.FC = () => {
                       {resourceData.map((row: any, rowIndex: number) => (
                         <TableRow key={rowIndex}>
                           {columns.map((column) => (
-                            <TableCell key={`${rowIndex}-${column.accessorKey}`}>
-                              {row[column.accessorKey]}
-                            </TableCell>
+                            <TableCell key={`${rowIndex}-${column.accessorKey}`}>{row[column.accessorKey]}</TableCell>
                           ))}
                         </TableRow>
                       ))}

@@ -2,8 +2,7 @@
 
 import * as React from "react"
 import { useState, useEffect, useCallback } from "react"
-import { useParams, useSearchParams } from "react-router-dom"
-import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import { useMetadata } from "@/hooks/useMetadata"
 import {
   ColumnFiltersState,
   SortingState,
@@ -52,11 +51,7 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   return itemRank.passed
 }
 
-const ResourceDataTable: React.FC = () => {
-  const { id } = useParams<{ id: string }>()
-  const [searchParams] = useSearchParams()
-  const appId = searchParams.get("appId")
-
+const ResourceDataTable: React.FC = ({ id, appId }) => {
   // 使用 useMetadata hook
   const { getDetail, update, remove } = useMetadata("resource")
   const [resource, setResource] = useState<any>(null)
@@ -203,7 +198,7 @@ const ResourceDataTable: React.FC = () => {
     if (id && appId) {
       fetchResources()
     }
-  }, [id, appId, fetchResources])
+  }, [])
 
   useEffect(() => {
     if (resource?.data && resource.data.length > 0) {

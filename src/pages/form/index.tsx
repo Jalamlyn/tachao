@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { Spinner, Tabs, Tab } from "@nextui-org/react"
-import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import { useMetadata } from "@/hooks/useMetadata"
 import DynamicForm from "@/components/common/DynamicForm"
 import FormHistoryTable from "@/components/forms/FormHistoryTable"
 import message from "@/components/Message"

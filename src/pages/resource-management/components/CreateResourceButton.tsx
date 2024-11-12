@@ -13,7 +13,7 @@ import {
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { readExcel } from "@/utils/ExcelReader"
-import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 
 interface CreateResourceButtonProps {

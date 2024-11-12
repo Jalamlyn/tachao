@@ -14,7 +14,7 @@ import { useParams } from "react-router-dom"
 import DynamicForm from "@/components/common/DynamicForm"
 import type { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import message from "@/components/Message"
-import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import { useMetadata } from "@/hooks/useMetadata"
 import { parseFormConfig } from "@/utils/codeParser"
 
 interface FormPreviewProps {

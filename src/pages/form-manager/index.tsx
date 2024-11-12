@@ -4,7 +4,7 @@ import { Button, Modal, ModalHeader, ModalBody, ModalContent, ModalFooter } from
 import { Icon } from "@iconify/react"
 import FormList from "./component.list"
 import SearchInput from "./component.SearchInput"
-import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 import { useBreadcrumb } from "../../contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"

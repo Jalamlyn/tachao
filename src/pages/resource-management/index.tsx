@@ -3,7 +3,7 @@ import ResourceTable from "./components/ResourceTable"
 import CreateResourceButton from "./components/CreateResourceButton"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
-import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 
 const ResourceManagement: React.FC = () => {
@@ -24,7 +24,7 @@ const ResourceManagement: React.FC = () => {
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "资料管理", href: "/we-chat-app/admin/resources" },
     ])
-  }, [updateBreadcrumbs])
+  }, [])
 
   // 加载资源数据
   useEffect(() => {
@@ -44,7 +44,6 @@ const ResourceManagement: React.FC = () => {
       <CreateResourceButton appId={appId} isDisabled={!appId} />
     </div>
   )
-  console.log(resources, "resources")
   return (
     <PageLayout title='资料管理' titleIcon='mdi:file-document' actions={pageActions} loading={resourceLoading}>
       <ResourceTable resources={resources} onRefresh={loadResources} />

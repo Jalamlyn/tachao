@@ -7,7 +7,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import FormPreview from "./components/FormPreview"
 import { useFormState } from "./hooks/useFormState"
 import AIFormAgent from "@/service/agents/AIFormAgent"
-import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
@@ -195,7 +195,7 @@ const AIFormEditor: React.FC = () => {
 
   return (
     <PageLayout
-      title={isEditMode ? "AI 更新单据模板" : "AI 保存单据模板"}
+      title="AI 智能单据助手"
       titleIcon='mdi:form-select'
       actions={pageActions}
     >

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react"
-import { useMetadata } from "@/components/from-templates/hook/useMetadata"
+import { useMetadata } from "@/hooks/useMetadata"
 import { PageConfig } from "@/components/common/DynamicPage"
 import message from "@/components/Message"
 import { getMetadata } from "@/service/apis/metadata"

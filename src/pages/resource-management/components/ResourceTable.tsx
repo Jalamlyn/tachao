@@ -153,7 +153,7 @@ const ResourceTable: React.FC<ResourceTableProps> = ({ resources, onRefresh }) =
                 className='text-default-600 hover:text-primary transition-colors'
                 onClick={() => handleAI(item)}
               >
-                <Icon icon='mdi:robot' className='w-4 h-4' />
+                <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
               </Button>
             </Tooltip>
             <Tooltip content='删除' color='danger'>

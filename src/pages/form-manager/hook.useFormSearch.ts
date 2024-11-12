@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react"
-import { MetadataDetail } from "@/components/from-templates/hook/useMetadata"
+import { MetadataDetail } from "@/hooks/useMetadata"
 
 export const useFormSearch = (forms: MetadataDetail[]) => {
   const [searchQuery, setSearchQuery] = useState("")

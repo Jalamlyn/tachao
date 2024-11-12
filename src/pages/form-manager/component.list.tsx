@@ -18,7 +18,7 @@ import {
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
-import { MetadataDetail, useMetadata } from "@/components/from-templates/hook/useMetadata"
+import { MetadataDetail, useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
 
