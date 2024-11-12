@@ -40,16 +40,8 @@ export class AIResourceAgent {
   }
 
   private generateSystemPrompt(data: any[]): string {
-    const columns = Object.keys(data[0] || {}).map(key => ({
-      header: key,
-      accessorKey: key,
-    }))
-
     return `你是一个智能资料助手，负责帮助用户对资料进行操作和分析。
 请仔细分析用户的需求，生成相应的代码。
-
-资料列定义:
-${JSON.stringify(columns, null, 2)}
 
 资料数据示例:
 ${JSON.stringify(data.slice(0, 3), null, 2)}
