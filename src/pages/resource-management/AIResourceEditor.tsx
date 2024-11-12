@@ -118,29 +118,54 @@ const AIResourceEditor: React.FC = () => {
         message.error("分析过程中发生错误")
         throw error
       }
-    }
+    },
   }
 
   // 处理命令结果
-  const handleCommandResult = useCallback((result) => {
-    if (result.success) {
-      if (result.data) {
-        setResourceData([...result.data])
-        setMessages((prev) => {
-          const lastMessage = prev[prev.length - 1]
-          if (lastMessage.role === "assistant") {
-            return [
-              ...prev.slice(0, -1),
-              {
-                ...lastMessage,
-                content: "✅ 数据已更新",
-                status: "success",
-              },
-            ]
+  const handleCommandResult = useCallback(
+    (result) => {
+      if (result.success) {
+        if (result.data) {
+          setResourceData(result.data)
+          if (Array.isArray(result.data) && result.data.length > 0) {
+            const firstRow = result.data[0]
+            const cols = Object.keys(firstRow).map((key) => ({
+              header: key,
+              accessorKey: key,
+            }))
+            setColumns(cols)
           }
-          return prev
-        })
-      } else if (result.analysis) {
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1]
+            if (lastMessage.role === "assistant") {
+              return [
+                ...prev.slice(0, -1),
+                {
+                  ...lastMessage,
+                  content: "✅ 数据已更新",
+                  status: "success",
+                },
+              ]
+            }
+            return prev
+          })
+        } else if (result.analysis) {
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1]
+            if (lastMessage.role === "assistant") {
+              return [
+                ...prev.slice(0, -1),
+                {
+                  ...lastMessage,
+                  content: <AnalysisResult analysis={result.analysis} />,
+                  status: "success",
+                },
+              ]
+            }
+            return prev
+          })
+        }
+      } else {
         setMessages((prev) => {
           const lastMessage = prev[prev.length - 1]
           if (lastMessage.role === "assistant") {
@@ -148,31 +173,17 @@ const AIResourceEditor: React.FC = () => {
               ...prev.slice(0, -1),
               {
                 ...lastMessage,
-                content: <AnalysisResult analysis={result.analysis} />,
-                status: "success",
+                content: result.message,
+                status: "error",
               },
             ]
           }
           return prev
         })
       }
-    } else {
-      setMessages((prev) => {
-        const lastMessage = prev[prev.length - 1]
-        if (lastMessage.role === "assistant") {
-          return [
-            ...prev.slice(0, -1),
-            {
-              ...lastMessage,
-              content: result.message,
-              status: "error",
-            },
-          ]
-        }
-        return prev
-      })
-    }
-  }, [setResourceData])
+    },
+    [setResourceData]
+  )
 
   return (
     <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
