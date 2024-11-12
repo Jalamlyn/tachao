@@ -138,7 +138,7 @@ const Form: React.FC = () => {
               </div>
             }
           >
-            <div className='mt-4'>
+            <div className='mt-4 h-[calc(100vh-140px)] overflow-auto'>
               <DynamicForm
                 config={formConfig}
                 id={formId}

@@ -141,6 +141,14 @@ const AIFormEditor: React.FC = () => {
       setInput("")
 
       try {
+        const assistantMessage = {
+          role: "assistant",
+          content: "",
+          id: (Date.now() + 1).toString(),
+          timestamp: new Date().toLocaleTimeString(),
+        }
+        setMessages((prev) => [...prev, assistantMessage])
+
         const result = await AIFormAgent.processCommand(
           input,
           (chunk) => {
@@ -157,16 +165,7 @@ const AIFormEditor: React.FC = () => {
           formState.rawConfig
         )
 
-        // 只有在确认支持该指令后才添加assistant消息
         if (result.type === "support") {
-          const assistantMessage = {
-            role: "assistant",
-            content: "",
-            id: (Date.now() + 1).toString(),
-            timestamp: new Date().toLocaleTimeString(),
-          }
-          setMessages((prev) => [...prev, assistantMessage])
-
           if (result.data?.config) {
             setFormConfig(result.data.config)
             setRawConfig(result.data.rawConfig)
@@ -174,7 +173,7 @@ const AIFormEditor: React.FC = () => {
         }
       } catch (error) {
         console.error("Error in chat:", error)
-        message.error((error as Error).message || "生成过程中发生错误")
+        message.error("生成过程中发生错误")
       }
     },
     {
@@ -195,11 +194,7 @@ const AIFormEditor: React.FC = () => {
   )
 
   return (
-    <PageLayout
-      title="AI 智能单据助手"
-      titleIcon='mdi:form-select'
-      actions={pageActions}
-    >
+    <PageLayout title='AI 智能单据助手' titleIcon='mdi:form-select' actions={pageActions}>
       <div className='h-[calc(100vh-140px)] overflow-hidden'>
         <ResizablePanelGroup direction='horizontal' className='h-full'>
           <ResizablePanel defaultSize={30}>

@@ -45,7 +45,16 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 1. 修改资料 - 通过 JavaScript 代码修改数据
 2. 分析计算 - 通过 formulajs 进行计算
 
-请使用 <shata-ai-resource> 标签包裹你生成的代码，直接返回可执行的 JavaScript 代码。`
+请使用 <shata-ai-resource> 标签包裹你生成的代码，直接返回可执行的 JavaScript 代码。
+返回个结构
+\`\`\`mo
+<shata-ai-resource>
+//生成的 javascript 代码
+</shata-ai-resource>
+\`\`\`
+
+- 开头和结尾都不要做解释和说明
+`
   }
 
   private async executeCode(code: string, data: any[]): Promise<any> {
