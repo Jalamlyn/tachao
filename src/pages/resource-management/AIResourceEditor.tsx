@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams } from "react-router-dom"
@@ -7,7 +7,6 @@ import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
-import { useAsyncButton } from "@/hooks/useAsyncButton"
 import MessageCard from "@/components/MessageCard"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import AIResourceAgent from "@/service/agents/AIResourceAgent"
@@ -30,11 +29,9 @@ const AIResourceEditor: React.FC = () => {
   const navigate = useNavigate()
   const { resourceId } = useParams<{ resourceId: string }>()
   const { updateBreadcrumbs } = useBreadcrumb()
-  const [input, setInput] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
   const [resourceData, setResourceData] = useState<any[]>([])
   const [columns, setColumns] = useState<any[]>([])
-  const [selectedMode, setSelectedMode] = useState("modify")
 
   const { getDetail: getResourceDetail } = useMetadata("resource")
 
@@ -74,31 +71,18 @@ const AIResourceEditor: React.FC = () => {
     ])
   }, [resourceId])
 
-  const getPlaceholder = () => {
-    switch (selectedMode) {
-      case "modify":
-        return "请输入修改指令，例如：将第一行的姓名改为张三..."
-      case "analyze":
-        return "请输入分析需求，例如：统计所有销售金额的总和..."
-      default:
-        return "输入您的问题，AI 将帮您分析数据..."
-    }
-  }
-
-  const { isLoading, handleClick: handleSendMessage } = useAsyncButton(
-    async () => {
-      if (!input.trim()) return
-
-      const userMessage: Message = {
-        role: "user",
-        content: input,
-        id: Date.now().toString(),
-        timestamp: new Date().toLocaleTimeString(),
-      }
-      setMessages((prev) => [...prev, userMessage])
-      setInput("")
-
+  // 构造 AI 代理对象
+  const resourceAgent = {
+    processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
       try {
+        const userMessage: Message = {
+          role: "user",
+          content: command,
+          id: Date.now().toString(),
+          timestamp: new Date().toLocaleTimeString(),
+        }
+        setMessages((prev) => [...prev, userMessage])
+
         const assistantMessage: Message = {
           role: "assistant",
           content: "正在分析您的数据...",
@@ -109,8 +93,9 @@ const AIResourceEditor: React.FC = () => {
 
         const result = await AIResourceAgent.processCommand({
           data: resourceData,
-          command: input,
+          command: command,
           onChunk: (chunk: string) => {
+            onChunk?.(chunk)
             setMessages((prev) => {
               const lastMessage = prev[prev.length - 1]
               if (lastMessage.role === "assistant") {
@@ -125,68 +110,69 @@ const AIResourceEditor: React.FC = () => {
               return prev
             })
           },
-          mode: selectedMode,
         })
 
-        if (result.success) {
-          if (selectedMode === "modify" && result.data) {
-            setResourceData([...result.data])
-
-            setMessages((prev) => {
-              const lastMessage = prev[prev.length - 1]
-              if (lastMessage.role === "assistant") {
-                return [
-                  ...prev.slice(0, -1),
-                  {
-                    ...lastMessage,
-                    content: "✅ 数据已更新",
-                    status: "success",
-                  },
-                ]
-              }
-              return prev
-            })
-          } else if (selectedMode === "analyze" && result.analysis) {
-            setMessages((prev) => {
-              const lastMessage = prev[prev.length - 1]
-              if (lastMessage.role === "assistant") {
-                return [
-                  ...prev.slice(0, -1),
-                  {
-                    ...lastMessage,
-                    content: <AnalysisResult analysis={result.analysis} />,
-                    status: "success",
-                  },
-                ]
-              }
-              return prev
-            })
-          }
-        } else {
-          setMessages((prev) => {
-            const lastMessage = prev[prev.length - 1]
-            if (lastMessage.role === "assistant") {
-              return [
-                ...prev.slice(0, -1),
-                {
-                  ...lastMessage,
-                  content: result.message,
-                  status: "error",
-                },
-              ]
-            }
-            return prev
-          })
-        }
+        return result
       } catch (error) {
         console.error("Error in chat:", error)
         message.error("分析过程中发生错误")
+        throw error
       }
-    },
-    {
-      errorMessage: "分析过程中发生错误",
     }
-  )
+  }
+
+  // 处理命令结果
+  const handleCommandResult = useCallback((result) => {
+    if (result.success) {
+      if (result.data) {
+        setResourceData([...result.data])
+        setMessages((prev) => {
+          const lastMessage = prev[prev.length - 1]
+          if (lastMessage.role === "assistant") {
+            return [
+              ...prev.slice(0, -1),
+              {
+                ...lastMessage,
+                content: "✅ 数据已更新",
+                status: "success",
+              },
+            ]
+          }
+          return prev
+        })
+      } else if (result.analysis) {
+        setMessages((prev) => {
+          const lastMessage = prev[prev.length - 1]
+          if (lastMessage.role === "assistant") {
+            return [
+              ...prev.slice(0, -1),
+              {
+                ...lastMessage,
+                content: <AnalysisResult analysis={result.analysis} />,
+                status: "success",
+              },
+            ]
+          }
+          return prev
+        })
+      }
+    } else {
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1]
+        if (lastMessage.role === "assistant") {
+          return [
+            ...prev.slice(0, -1),
+            {
+              ...lastMessage,
+              content: result.message,
+              status: "error",
+            },
+          ]
+        }
+        return prev
+      })
+    }
+  }, [setResourceData])
 
   return (
     <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
@@ -210,16 +196,7 @@ const AIResourceEditor: React.FC = () => {
                 </div>
               </ScrollShadow>
 
-              <AICommandInput
-                isLoading={isLoading}
-                selectedMode={selectedMode as "modify" | "analyze"}
-                onSend={handleSendMessage}
-                onModeChange={setSelectedMode}
-                placeholder={getPlaceholder()}
-                showModeSwitch={true}
-                defaultValue={input}
-                onInputSubmit={setInput}
-              />
+              <AICommandInput agent={resourceAgent} onResult={handleCommandResult} />
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
