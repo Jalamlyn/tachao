@@ -107,6 +107,10 @@ const AIResourceEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
+        // 添加调试日志
+        console.log('Current mode:', selectedMode)
+        console.log('Current resource data:', resourceData)
+
         const result = await AIResourceAgent.processCommand({
           data: resourceData,
           command: input,
@@ -128,10 +132,20 @@ const AIResourceEditor: React.FC = () => {
           mode: selectedMode,
         })
 
+        // 添加调试日志
+        console.log('Process result:', result)
+
         if (result.success) {
           if (selectedMode === 'modify' && result.data) {
+            // 添加调试日志
+            console.log('Updating resource data:', result.data)
+            
             // 修改模式: 更新资源数据
-            setResourceData([...result.data])
+            setResourceData(result.data)
+            
+            // 添加调试日志
+            console.log('Resource data updated')
+            
             setMessages((prev) => {
               const lastMessage = prev[prev.length - 1]
               if (lastMessage.role === "assistant") {
