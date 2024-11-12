@@ -2,7 +2,6 @@ import { useState, useCallback } from "react"
 import { setMetadata, getMetadata, queryMetadataHistory, deleteMetadata } from "@/service/apis/api"
 import { getCurrentAccountInfo } from "@/service/apis/user"
 import { jsonParse, jsonStringify } from "@/utils"
-import { functionToString, stringToFunction } from "@/utils/functionSerializer"
 import { logger } from "@/utils/logger"
 
 /**
@@ -115,11 +114,8 @@ export function useMetadata<T = any>(type: string) {
         const result = await getMetadata([`${id}`])
         if (result.data?.[0]?.value) {
           const parsedData = jsonParse(result.data[0].value)
-          // 还原函数
-          const restoredData = stringToFunction(parsedData)
-          logger.debug("[useMetadata] Detail loaded and restored successfully", { id })
           return {
-            ...restoredData,
+            ...parsedData,
             versionCode: result.data[0].versionCode,
           } as MetadataDetail<T>
         }
@@ -162,8 +158,7 @@ export function useMetadata<T = any>(type: string) {
       try {
         // 转换函数为字符串
         logger.debug("[useMetadata] Detail", { detail })
-        const serializedDetail = functionToString(detail)
-        await setMetadata(`${detail.id}`, jsonStringify(serializedDetail))
+        await setMetadata(`${detail.id}`, jsonStringify(detail))
         return true
       } catch (error) {
         logger.error(`[useMetadata] Error saving ${type} detail`, error as Error, { id: detail.id })

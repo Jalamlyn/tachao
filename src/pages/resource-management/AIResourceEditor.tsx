@@ -43,10 +43,6 @@ const AIResourceEditor: React.FC = () => {
                 accessorKey: key,
               }))
               setColumns(cols)
-              // 保留这行以保证兼容性
-              AIResourceAgent.setColumns(cols)
-              // 保留这行以保证兼容性
-              AIResourceAgent.setData(resource.data)
             }
           } else {
             message.error("资料加载失败")
@@ -122,7 +118,7 @@ const AIResourceEditor: React.FC = () => {
               return prev
             })
           },
-          mode: selectedMode
+          mode: selectedMode,
         })
 
         if (result.success) {
@@ -191,9 +187,9 @@ const AIResourceEditor: React.FC = () => {
                 <Tabs
                   selectedKey={selectedMode}
                   onSelectionChange={(key) => setSelectedMode(key as string)}
-                  size="sm"
-                  color="primary"
-                  variant="light"
+                  size='sm'
+                  color='primary'
+                  variant='light'
                   classNames={{
                     tabList: "gap-4",
                     cursor: "w-full",
@@ -201,19 +197,19 @@ const AIResourceEditor: React.FC = () => {
                   }}
                 >
                   <Tab
-                    key="modify"
+                    key='modify'
                     title={
-                      <div className="flex items-center gap-2">
-                        <Icon icon="mdi:pencil" />
+                      <div className='flex items-center gap-2'>
+                        <Icon icon='mdi:pencil' />
                         <span>资料修改</span>
                       </div>
                     }
                   />
                   <Tab
-                    key="analyze"
+                    key='analyze'
                     title={
-                      <div className="flex items-center gap-2">
-                        <Icon icon="mdi:chart-bar" />
+                      <div className='flex items-center gap-2'>
+                        <Icon icon='mdi:chart-bar' />
                         <span>资料分析</span>
                       </div>
                     }
