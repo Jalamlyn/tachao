@@ -51,6 +51,15 @@ const extractEditCode = (content: string): string | null => {
 }
 
 /**
+ * 从 shata-ai-resource 标签中提取资源操作代码
+ */
+export const extractResourceCode = (content: string): string | null => {
+  const regex = /<shata-ai-resource>([\s\S]*?)<\/shata-ai-resource>/
+  const match = content.match(regex)
+  return match ? match[1].trim() : null
+}
+
+/**
  * 验证自定义组件是否只使用了允许的 UI 组件
  */
 const validateCustomComponents = (jsxCode: string): boolean => {
@@ -103,6 +112,33 @@ const parseConfigObject = (jsCode: string): any => {
   } catch (error) {
     console.error("Failed to parse config object:", error)
     throw new Error("Failed to parse config object")
+  }
+}
+
+/**
+ * 解析资源操作代码
+ */
+export const parseResourceOperations = async (content: string): Promise<any> => {
+  try {
+    const code = extractResourceCode(content)
+    if (!code) {
+      // 尝试 JSON 解析作为备选方案
+      try {
+        return JSON.parse(content)
+      } catch {
+        throw new Error("No valid resource operations found")
+      }
+    }
+
+    // 首先编译 JSX
+    const jsCode = await jsxToJs(code)
+    // 创建一个新的 Function 来执行操作
+    const createOperations = new Function("React", ...Object.keys(uiComponents), `${jsCode}`)
+    return createOperations(React, ...Object.values(uiComponents))
+  } catch (error) {
+    console.error("Failed to parse resource operations:", error)
+    message.error("资源操作解析失败，请检查格式是否正确")
+    throw error
   }
 }
 
