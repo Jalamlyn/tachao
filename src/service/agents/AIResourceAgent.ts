@@ -84,8 +84,9 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 4. 确保返回对象包含必要的 type 和 data 字段
 5. data 字段必须保持原始数据不变
 6. 统计结果放在 analysis 字段中
+7. 统计摘要要用中文,不要出现英文标签
 
-返回格式示例:
+返回 markdown 格式示例,必须 \`\`\`mo 开头 \`\`\`结尾
 \`\`\`mo
 <shata-ai-resource>
 // 直接处理数据,使用传入的 data 参数
@@ -141,7 +142,7 @@ return result;
 
     const updateProgress = (message: string) => {
       console.log("[AIResourceAgent] Progress:", message)
-      onChunk?.(message + "</br>")
+      onChunk?.(message)
     }
 
     try {

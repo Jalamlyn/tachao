@@ -128,7 +128,7 @@ const AIResourceEditor: React.FC = () => {
         const code = extractShataAICode(accumulatedTextRef.current)
 
         if (code) {
-          console.log("[handleChunk] Setting code preview")
+          console.log("[handleChunk] Setting code preview", code)
           setPreviewContent(code)
           setProcessingStage("analyzing")
         }
