@@ -207,7 +207,7 @@ const AIResourceEditor: React.FC = () => {
 
               const messageWithCode = {
                 ...lastMessage,
-                content: <AnalysisResult analysis={result.analysis} />,
+                content: "✅ 分析完成",
                 status: "success",
                 code: {
                   preview: <AnalysisResult analysis={result.analysis} />,
@@ -368,41 +368,6 @@ const AIResourceEditor: React.FC = () => {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
-
-      <style jsx>{`
-        .code-typing-animation {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 12px;
-          background: rgba(0, 0, 0, 0.05);
-          border-radius: 6px;
-        }
-
-        .code-generating-animation {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 24px;
-          background: rgba(0, 0, 0, 0.02);
-          border-radius: 12px;
-        }
-
-        .animate-pulse {
-          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @keyframes pulse {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.5;
-          }
-        }
-      `}</style>
     </PageLayout>
   )
 }
