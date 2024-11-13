@@ -49,11 +49,11 @@ const AIResourceEditor: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [resourceData, setResourceData] = useState<any[]>([])
   const [columns, setColumns] = useState<any[]>([])
-  const [currentPreview, setCurrentPreview] = useState<Message["code"]>(null)
+  const [previewContent, setPreviewContent] = useState<string>("")
+  const [previewComponent, setPreviewComponent] = useState<React.ReactNode>(null)
   const [selectedTab, setSelectedTab] = useState("data")
   const [processingStage, setProcessingStage] = useState<ProcessingStage>("idle")
 
-  // 使用 ref 来累积 AI 输出
   const accumulatedTextRef = useRef("")
   const codeOutputRef = useRef("")
   const isGeneratingCodeRef = useRef(false)
@@ -87,76 +87,65 @@ const AIResourceEditor: React.FC = () => {
     ])
   }, [resourceId])
 
-  // 处理 AI 输出的 chunk
   const handleChunk = useCallback((chunk: string) => {
     console.log("[handleChunk] Processing chunk:", chunk.slice(0, 50) + "...")
-    
-    // 累积文本
+
     accumulatedTextRef.current += chunk
-    
-    // 检测是否开始生成代码
+
     if (accumulatedTextRef.current.includes("<shata-ai-resource>") && !isGeneratingCodeRef.current) {
       console.log("[handleChunk] Code generation started")
       isGeneratingCodeRef.current = true
-      
-      // 更新状态显示生成代码的提示
-      setMessages(prev => {
+
+      setMessages((prev) => {
         const lastMessage = prev[prev.length - 1]
-        return [...prev.slice(0, -1), {
-          ...lastMessage,
-          content: (
-            <div className='flex items-center gap-3 text-primary'>
-              <Icon icon='mdi:code-braces' className='animate-pulse w-5 h-5' />
-              <div className='flex flex-col'>
-                <span className='font-medium'>AI 正在生成分析代码</span>
-                <span className='text-xs text-default-500'>请稍候...</span>
+        return [
+          ...prev.slice(0, -1),
+          {
+            ...lastMessage,
+            content: (
+              <div className='flex items-center gap-3 text-primary'>
+                <Icon icon='mdi:code-braces' className='animate-pulse w-5 h-5' />
+                <div className='flex flex-col'>
+                  <span className='font-medium'>AI 正在生成分析代码</span>
+                  <span className='text-xs text-default-500'>请稍候...</span>
+                </div>
               </div>
-            </div>
-          )
-        }]
+            ),
+          },
+        ]
       })
-      
-      // 切换到代码视图
+
       setProcessingStage("generating")
       setSelectedTab("code")
     }
-    
-    // 如果正在生成代码,将代码内容累积到专门的 ref
+
     if (isGeneratingCodeRef.current) {
       codeOutputRef.current += chunk
-      
-      // 检查代码是否生成完成
+
       if (accumulatedTextRef.current.includes("</shata-ai-resource>")) {
         console.log("[handleChunk] Code generation completed")
         isGeneratingCodeRef.current = false
         const code = extractShataAICode(accumulatedTextRef.current)
-        
+
         if (code) {
           console.log("[handleChunk] Setting code preview")
-          // 更新代码预览
-          setCurrentPreview({
-            preview: null,
-            content: code
-          })
-          
-          // 切换到分析阶段
+          setPreviewContent(code)
           setProcessingStage("analyzing")
         }
       } else {
-        // 持续更新代码预览
-        setCurrentPreview(prev => ({
-          ...prev,
-          content: codeOutputRef.current
-        }))
+        console.log("[handleChunk] output code preview", codeOutputRef.current)
+        setPreviewContent(codeOutputRef.current)
       }
     } else {
-      // 非代码生成阶段,正常更新消息
-      setMessages(prev => {
+      setMessages((prev) => {
         const lastMessage = prev[prev.length - 1]
-        return [...prev.slice(0, -1), {
-          ...lastMessage,
-          content: lastMessage.content + chunk
-        }]
+        return [
+          ...prev.slice(0, -1),
+          {
+            ...lastMessage,
+            content: lastMessage.content + chunk,
+          },
+        ]
       })
     }
   }, [])
@@ -166,8 +155,7 @@ const AIResourceEditor: React.FC = () => {
       console.log("[processCommand] Starting command processing")
       try {
         setProcessingStage("idle")
-        
-        // 重置 ref 值
+
         accumulatedTextRef.current = ""
         codeOutputRef.current = ""
         isGeneratingCodeRef.current = false
@@ -191,7 +179,7 @@ const AIResourceEditor: React.FC = () => {
         const result = await AIResourceAgent.processCommand({
           data: resourceData,
           command: command,
-          onChunk: handleChunk
+          onChunk: handleChunk,
         })
 
         return result
@@ -241,7 +229,8 @@ const AIResourceEditor: React.FC = () => {
               }
 
               setSelectedTab("analysis")
-              setCurrentPreview(messageWithCode.code)
+              setPreviewComponent(<AnalysisResult analysis={result.analysis} />)
+              setPreviewContent(originalCode || "")
               setProcessingStage("complete")
               console.log("[handleCommandResult] Analysis completed, stage: complete")
 
@@ -316,9 +305,9 @@ const AIResourceEditor: React.FC = () => {
   )
 
   const renderAnalysisResult = () =>
-    currentPreview?.preview ? (
+    previewComponent ? (
       <div className='h-full flex flex-col'>
-        <div className='flex-1 bg-white rounded-lg'>{currentPreview.preview}</div>
+        <div className='flex-1 bg-white rounded-lg'>{previewComponent}</div>
       </div>
     ) : (
       <div className='flex items-center justify-center h-full text-gray-500'>
@@ -328,15 +317,15 @@ const AIResourceEditor: React.FC = () => {
 
   const renderCodeView = () => {
     console.log("[renderCodeView] Current stage:", processingStage)
-    
     if (processingStage === "generating") {
       return (
         <div className='flex items-center justify-center h-full'>
           <div className='flex flex-col items-center gap-3 text-primary'>
             <Icon icon='mdi:code-braces' className='w-8 h-8 animate-pulse' />
             <div className='flex flex-col items-center'>
-              <span className='font-medium'>AI 正在生成分析代码</span>
-              <span className='text-xs text-default-500'>请稍候...</span>
+              <pre>
+                <code>{previewContent}</code>
+              </pre>
             </div>
           </div>
         </div>
@@ -357,10 +346,10 @@ const AIResourceEditor: React.FC = () => {
       )
     }
 
-    if (currentPreview?.content) {
+    if (previewContent) {
       return (
         <pre className='text-sm overflow-auto bg-slate-800 text-white p-2 rounded-lg'>
-          <code>{currentPreview.content}</code>
+          <code>{previewContent}</code>
         </pre>
       )
     }
