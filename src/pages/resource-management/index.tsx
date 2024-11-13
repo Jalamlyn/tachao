@@ -70,10 +70,6 @@ const ResourceManagement: React.FC = () => {
     },
   ]
 
-  const handleAI = (record: Resource) => {
-    navigate(`/we-chat-app/admin/resources/ai/${record.id}`)
-  }
-
   const handleAnalyze = () => {
     navigate("/we-chat-app/admin/forms/analysis")
   }
