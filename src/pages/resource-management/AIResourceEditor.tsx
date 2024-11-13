@@ -22,6 +22,11 @@ interface Message {
   id: string
   timestamp: string
   status?: "success" | "error"
+  // 新增代码预览相关字段
+  code?: {
+    preview?: React.ReactNode  // 预览组件
+    content?: string          // 代码内容 
+  }
 }
 
 const AIResourceEditor: React.FC = () => {
@@ -136,6 +141,11 @@ const AIResourceEditor: React.FC = () => {
                   ...lastMessage,
                   content: <AnalysisResult analysis={result.analysis} />,
                   status: "success",
+                  // 添加代码预览信息
+                  code: {
+                    preview: <AnalysisResult analysis={result.analysis} />,
+                    content: JSON.stringify(result.analysis, null, 2)
+                  }
                 },
               ]
             }
@@ -181,8 +191,8 @@ const AIResourceEditor: React.FC = () => {
   return (
     <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
       <div className='h-[calc(100vh-140px)] overflow-hidden'>
-        <ResizablePanelGroup direction='horizontal' className='h-full'>
-          <ResizablePanel defaultSize={30} className="resizable-panel">
+        <ResizablePanelGroup direction='horizontal' className='h-full p-2'>
+          <ResizablePanel defaultSize={30} className='resizable-panel'>
             <div className='h-full flex flex-col'>
               <ScrollShadow className='flex-1 overflow-y-auto'>
                 <div className='space-y-4'>
@@ -204,7 +214,7 @@ const AIResourceEditor: React.FC = () => {
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={70} className="resizable-panel bg-slate-50">
+          <ResizablePanel defaultSize={70} className='resizable-panel bg-slate-50'>
             <div className='h-full overflow-auto'>
               {resourceData ? (
                 <div className='bg-white rounded-lg shadow'>
@@ -212,7 +222,9 @@ const AIResourceEditor: React.FC = () => {
                     <TableHeader>
                       <TableRow>
                         {columns.map((column) => (
-                          <TableHead key={column.accessorKey}>{column.header}</TableHead>
+                          <TableHead className='min-w-24 bg-slate-50' key={column.accessorKey}>
+                            {column.header}
+                          </TableHead>
                         ))}
                       </TableRow>
                     </TableHeader>
