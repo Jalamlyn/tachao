@@ -28,6 +28,9 @@ interface Message {
   }
 }
 
+// 添加处理阶段类型
+type ProcessingStage = 'idle' | 'generating' | 'analyzing' | 'complete';
+
 const PreviewButton: React.FC<{
   code?: Message["code"]
   onPreview?: (code: Message["code"]) => void
@@ -47,7 +50,7 @@ const PreviewButton: React.FC<{
   )
 }
 
-// 添加代码检测和提取函数
+// 优化代码检测和提取函数
 const extractShataAICode = (content: string) => {
   console.log("[extractShataAICode] Checking content for code")
   const regex = /<shata-ai-resource>([\s\S]*?)<\/shata-ai-resource>/
@@ -70,6 +73,10 @@ const AIResourceEditor: React.FC = () => {
   const [currentPreview, setCurrentPreview] = useState<Message["code"]>(null)
   const [selectedTab, setSelectedTab] = useState("data")
   const [isGeneratingCode, setIsGeneratingCode] = useState(false)
+  
+  // 添加新的状态
+  const [accumulatedContent, setAccumulatedContent] = useState("")
+  const [processingStage, setProcessingStage] = useState<ProcessingStage>('idle')
 
   const { getDetail: getResourceDetail } = useMetadata("resource")
 
@@ -105,6 +112,11 @@ const AIResourceEditor: React.FC = () => {
     processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
       console.log("[processCommand] Starting command processing")
       try {
+        // 重置状态
+        setAccumulatedContent("")
+        setProcessingStage('idle')
+        setIsGeneratingCode(false)
+
         const userMessage: Message = {
           role: "user",
           content: command,
@@ -121,9 +133,8 @@ const AIResourceEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        // 添加代码检测逻辑
-        let accumulatedCode = ""
         let codeDetected = false
+        let codeStartIndex = -1
 
         const result = await AIResourceAgent.processCommand({
           data: resourceData,
@@ -132,30 +143,38 @@ const AIResourceEditor: React.FC = () => {
             console.log("[onChunk] Received chunk:", chunk.slice(0, 50) + "...")
             onChunk?.(chunk)
 
-            // 检测是否包含代码块开始标记
-            if (chunk.includes("<shata-ai-resource>") && !codeDetected) {
-              console.log("[onChunk] Code block detected, switching to code tab")
-              codeDetected = true
-              setIsGeneratingCode(true)
-              setSelectedTab("code")
-            }
+            // 累积内容
+            setAccumulatedContent(prev => {
+              const newContent = prev + chunk
+              
+              // 检测代码块开始
+              if (chunk.includes("<shata-ai-resource>") && !codeDetected) {
+                console.log("[onChunk] Code block detected, switching to code tab")
+                codeDetected = true
+                setIsGeneratingCode(true)
+                setProcessingStage('generating')
+                setSelectedTab("code")
+                codeStartIndex = newContent.indexOf("<shata-ai-resource>")
+              }
 
-            // 检测是否包含代码块结束标记
-            if (chunk.includes("</shata-ai-resource>") && codeDetected) {
-              console.log("[onChunk] Code block completed")
-              setIsGeneratingCode(false)
-            }
+              // 检测代码块结束
+              if (chunk.includes("</shata-ai-resource>") && codeDetected) {
+                console.log("[onChunk] Code block completed")
+                setIsGeneratingCode(false)
+                setProcessingStage('analyzing')
+                
+                const code = extractShataAICode(newContent)
+                if (code) {
+                  console.log("[onChunk] Updating code preview")
+                  setCurrentPreview({
+                    preview: null,
+                    content: code,
+                  })
+                }
+              }
 
-            // 累积代码内容
-            accumulatedCode += chunk
-            const code = extractShataAICode(accumulatedCode)
-            if (code) {
-              console.log("[onChunk] Updating code preview")
-              setCurrentPreview({
-                preview: null,
-                content: code,
-              })
-            }
+              return newContent
+            })
 
             setMessages((prev) => {
               const lastMessage = prev[prev.length - 1]
@@ -226,7 +245,12 @@ const AIResourceEditor: React.FC = () => {
             }
             return prev
           })
-          setSelectedTab("analysis")
+          
+          // 延迟切换到分析视图
+          setTimeout(() => {
+            setProcessingStage('complete')
+            setSelectedTab("analysis")
+          }, 100)
         } else if (result.data) {
           console.log("[handleCommandResult] Data result received")
           updatedResourceData(result.data)
