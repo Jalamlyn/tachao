@@ -68,6 +68,23 @@ const ResourceManagement: React.FC = () => {
         </div>
       ),
     },
+    {
+      key: "actions",
+      title: "操作",
+      render: (record: Resource) => (
+        <div className='flex gap-2 items-center justify-end'>
+          <Button
+            isIconOnly
+            size='sm'
+            variant='light'
+            className='text-default-600 hover:text-primary transition-colors'
+            onClick={() => navigate(`/we-chat-app/admin/resources/ai/${record.id}`)}
+          >
+            <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
+          </Button>
+        </div>
+      ),
+    },
   ]
 
   const handleAnalyze = () => {
@@ -106,26 +123,9 @@ const ResourceManagement: React.FC = () => {
             fields: ["title", "indexFields.fileName"],
           },
         }}
-        actions={[
-          {
-            key: "ai",
-            label: "AI 分析",
-            icon: "hugeicons:ai-chat-02",
-            color: "primary",
-            onClick: (record) => {
-              navigate(`/we-chat-app/admin/resources/ai/${record.id}`)
-            },
-          },
-          {
-            key: "delete",
-            label: "删除",
-            icon: "mdi:delete",
-            color: "danger",
-            onClick: (record) => {
-              // 删除操作由 MetadataTable 内部处理
-            },
-          },
-        ]}
+        defaultActions={{
+          showDelete: true
+        }}
         onError={(error) => message.error(error.message)}
       />
     </PageLayout>
