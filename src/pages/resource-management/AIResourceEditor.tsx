@@ -109,8 +109,8 @@ const AIResourceEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
+        let accumulatedText = ""
         let codeDetected = false
-        let codeStartIndex = -1
 
         const result = await AIResourceAgent.processCommand({
           data: resourceData,
@@ -118,43 +118,21 @@ const AIResourceEditor: React.FC = () => {
           onChunk: (chunk: string) => {
             console.log("[onChunk] Received chunk:", chunk.slice(0, 50) + "...")
             onChunk?.(chunk)
-
-            setAccumulatedContent((prev) => {
-              const newContent = prev + chunk
-
-              if (chunk.includes("<shata-ai-resource>") && !codeDetected) {
-                console.log("[onChunk] Code block detected, switching to code tab")
-                codeDetected = true
-                setIsGeneratingCode(true)
-                setProcessingStage("generating")
-                setSelectedTab("code")
-                codeStartIndex = newContent.indexOf("<shata-ai-resource>")
-              }
-
-              if (chunk.includes("</shata-ai-resource>") && codeDetected) {
-                console.log("[onChunk] Code block completed")
-                setIsGeneratingCode(false)
-                setProcessingStage("analyzing")
-
-                const code = extractShataAICode(newContent)
-                if (code) {
-                  console.log("[onChunk] Updating code preview")
-                  setCurrentPreview({
-                    preview: null,
-                    content: code,
-                  })
-                }
-              }
-
-              return newContent
-            })
-
+            
+            // 累积文本以便完整匹配
+            accumulatedText += chunk
+            
             setMessages((prev) => {
               const lastMessage = prev[prev.length - 1]
-              if (lastMessage.role === "assistant") {
-                const updatedMessage = {
-                  ...lastMessage,
-                  content: codeDetected ? (
+              if (lastMessage.role !== "assistant") {
+                return prev
+              }
+
+              // 使用函数来处理消息内容,提高可读性
+              const getMessageContent = () => {
+                // 如果已经检测到代码生成开始
+                if (codeDetected) {
+                  return (
                     <div className='flex items-center gap-3 text-primary'>
                       <Icon icon='mdi:code-braces' className='animate-pulse w-5 h-5' />
                       <div className='flex flex-col'>
@@ -162,13 +140,53 @@ const AIResourceEditor: React.FC = () => {
                         <span className='text-xs text-default-500'>请稍候...</span>
                       </div>
                     </div>
-                  ) : (
-                    lastMessage.content + chunk
-                  ),
+                  )
                 }
-                return [...prev.slice(0, -1), updatedMessage]
+
+                // 检查累积的文本是否包含代码标记
+                if (accumulatedText.includes("<shata-ai-resource>")) {
+                  console.log("[onChunk] Code block detected, switching to code tab")
+                  codeDetected = true
+                  setIsGeneratingCode(true)
+                  setProcessingStage("generating")
+                  setSelectedTab("code")
+                  return (
+                    <div className='flex items-center gap-3 text-primary'>
+                      <Icon icon='mdi:code-braces' className='animate-pulse w-5 h-5' />
+                      <div className='flex flex-col'>
+                        <span className='font-medium'>AI 正在生成分析代码</span>
+                        <span className='text-xs text-default-500'>请稍候...</span>
+                      </div>
+                    </div>
+                  )
+                }
+
+                // 检查代码生成是否完成
+                if (accumulatedText.includes("</shata-ai-resource>") && codeDetected) {
+                  console.log("[onChunk] Code block completed")
+                  setIsGeneratingCode(false)
+                  setProcessingStage("analyzing")
+
+                  const code = extractShataAICode(accumulatedText)
+                  if (code) {
+                    console.log("[onChunk] Updating code preview")
+                    setCurrentPreview({
+                      preview: null,
+                      content: code,
+                    })
+                  }
+                }
+
+                // 普通文本追加
+                return lastMessage.content + chunk
               }
-              return prev
+
+              const updatedMessage = {
+                ...lastMessage,
+                content: getMessageContent()
+              }
+
+              return [...prev.slice(0, -1), updatedMessage]
             })
           },
         })
@@ -210,7 +228,7 @@ const AIResourceEditor: React.FC = () => {
 
               const messageWithCode = {
                 ...lastMessage,
-                content: "✅ 分析完成",
+                content: "✔️ 分析完成",
                 status: "success",
                 code: {
                   preview: <AnalysisResult analysis={result.analysis} />,
@@ -235,7 +253,7 @@ const AIResourceEditor: React.FC = () => {
                 ...prev.slice(0, -1),
                 {
                   ...lastMessage,
-                  content: "✅ 数据已更新",
+                  content: "✔️ 数据已更新",
                   status: "success",
                 },
               ]
