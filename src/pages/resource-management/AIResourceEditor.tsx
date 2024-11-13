@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import { ScrollShadow, Button, Tabs, Tab } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams } from "react-router-dom"
@@ -53,6 +53,9 @@ const AIResourceEditor: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState("data")
   const [processingStage, setProcessingStage] = useState<ProcessingStage>("idle")
 
+  // 使用 useRef 替换所有可能的闭包变量
+  const accumulatedTextRef = useRef("")
+  const codeDetectedRef = useRef(false)
   const { getDetail: getResourceDetail } = useMetadata("resource")
 
   useEffect(() => {
@@ -88,6 +91,10 @@ const AIResourceEditor: React.FC = () => {
       console.log("[processCommand] Starting command processing")
       try {
         setProcessingStage("idle")
+        
+        // 重置 ref 值
+        accumulatedTextRef.current = ""
+        codeDetectedRef.current = false
 
         const userMessage: Message = {
           role: "user",
@@ -105,9 +112,6 @@ const AIResourceEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        let accumulatedText = ""
-        let codeDetected = false
-
         const result = await AIResourceAgent.processCommand({
           data: resourceData,
           command: command,
@@ -115,7 +119,7 @@ const AIResourceEditor: React.FC = () => {
             console.log("[onChunk] Received chunk:", chunk.slice(0, 50) + "...")
             onChunk?.(chunk)
             
-            accumulatedText += chunk
+            accumulatedTextRef.current += chunk
             
             setMessages((prev) => {
               const lastMessage = prev[prev.length - 1]
@@ -124,9 +128,9 @@ const AIResourceEditor: React.FC = () => {
               }
 
               const getMessageContent = () => {
-                if (accumulatedText.includes("<shata-ai-resource>")) {
+                if (accumulatedTextRef.current.includes("<shata-ai-resource>")) {
                   console.log("[onChunk] Code generation started")
-                  codeDetected = true
+                  codeDetectedRef.current = true
                   setProcessingStage("generating")
                   setSelectedTab("code")
                   return (
@@ -139,12 +143,11 @@ const AIResourceEditor: React.FC = () => {
                     </div>
                   )
                 }
-
-                if (accumulatedText.includes("</shata-ai-resource>") && codeDetected) {
+                if (accumulatedTextRef.current.includes("</shata-ai-resource>") && codeDetectedRef.current) {
                   console.log("[onChunk] Code generation completed")
                   setProcessingStage("analyzing")
 
-                  const code = extractShataAICode(accumulatedText)
+                  const code = extractShataAICode(accumulatedTextRef.current)
                   if (code) {
                     console.log("[onChunk] Setting code preview")
                     setCurrentPreview({
