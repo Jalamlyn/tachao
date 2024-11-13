@@ -68,6 +68,11 @@ const ResourceManagement: React.FC = () => {
         </div>
       ),
     },
+    {
+      key: "actions",
+      title: "操作",
+      render: (record: Resource) => null, // 这里返回 null 因为操作列会由 MetadataTable 自动处理
+    },
   ]
 
   const handleAnalyze = () => {
@@ -117,9 +122,6 @@ const ResourceManagement: React.FC = () => {
             },
           }
         ]}
-        defaultActions={{
-          showDelete: true
-        }}
         onError={(error) => message.error(error.message)}
       />
     </PageLayout>
