@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import { ScrollShadow, Tabs, Tab } from "@nextui-org/react"
+import { Tabs, Tab } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
@@ -7,14 +7,12 @@ import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
-import MessageCard from "@/components/MessageCard"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import AIResourceAgent from "@/service/agents/AIResourceAgent"
-import AnalysisResult from "./components/AnalysisResult"
 import AICommandInput from "@/components/AICommandInput"
-
-import mo2 from "/assets/mo-2.png"
-import user from "/assets/user.png"
+import MessageList from "./components/MessageList"
+import DataTable from "./components/DataTable"
+import CodeView from "./components/CodeView"
+import AnalysisView from "./components/AnalysisView"
 
 interface Message {
   role: "user" | "assistant"
@@ -209,13 +207,13 @@ const AIResourceEditor: React.FC = () => {
                 ),
                 status: "success",
                 code: {
-                  preview: <AnalysisResult analysis={result.analysis} />,
+                  preview: <AnalysisView analysis={result.analysis} />,
                   content: originalCode,
                 },
               }
 
               setSelectedTab("analysis")
-              setPreviewComponent(<AnalysisResult analysis={result.analysis} />)
+              setPreviewComponent(<AnalysisView analysis={result.analysis} />)
               console.log("[handleCommandResult] Analysis completed")
 
               return [...prev.slice(0, -1), messageWithCode]
@@ -244,80 +242,13 @@ const AIResourceEditor: React.FC = () => {
     []
   )
 
-  const renderDataTable = () => (
-    <div className='bg-white rounded-lg shadow'>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map((column) => (
-              <TableHead className='min-w-24 bg-slate-50' key={column.accessorKey}>
-                {column.header}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {resourceData.map((row: any, rowIndex: number) => (
-            <TableRow key={rowIndex}>
-              {columns.map((column) => (
-                <TableCell key={`${rowIndex}-${column.accessorKey}`}>{row[column.accessorKey]}</TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  )
-
-  const renderAnalysisResult = () =>
-    previewComponent ? (
-      <div className='h-full flex flex-col'>
-        <div className='flex-1 bg-white rounded-lg'>{previewComponent}</div>
-      </div>
-    ) : (
-      <div className='flex items-center justify-center h-full text-gray-500'>
-        <p>请先生成分析报表</p>
-      </div>
-    )
-
-  const renderCodeView = () => {
-    if (previewContent) {
-      return (
-        <pre className='text-sm overflow-auto bg-slate-800 text-white p-2 rounded-lg'>
-          <code>{previewContent}</code>
-        </pre>
-      )
-    }
-
-    return (
-      <div className='flex items-center justify-center h-full text-gray-500'>
-        <p>请先生成分析报表</p>
-      </div>
-    )
-  }
-
   return (
     <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
       <div className='h-[calc(100vh-140px)] overflow-hidden'>
         <ResizablePanelGroup direction='horizontal' className='h-full p-2'>
           <ResizablePanel defaultSize={30} className='resizable-panel'>
             <div className='h-full flex flex-col'>
-              <ScrollShadow className='flex-1 overflow-y-auto'>
-                <div className='space-y-4'>
-                  {messages.map((message) => (
-                    <div key={message.id}>
-                      <MessageCard
-                        avatar={message.role === "assistant" ? mo2 : user}
-                        message={message.content}
-                        role={message.role}
-                        status={message.status || "success"}
-                        className='message-card'
-                      />
-                    </div>
-                  ))}
-                </div>
-              </ScrollShadow>
-
+              <MessageList messages={messages} />
               <AICommandInput agent={resourceAgent} onResult={handleCommandResult} />
             </div>
           </ResizablePanel>
@@ -328,7 +259,7 @@ const AIResourceEditor: React.FC = () => {
                 <Tab key='data' title='数据表格'>
                   <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
                     {resourceData ? (
-                      renderDataTable()
+                      <DataTable data={resourceData} columns={columns} />
                     ) : (
                       <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
                         <Icon icon='mdi:loading' className='w-12 h-12 mx-auto mb-4' />
@@ -338,10 +269,14 @@ const AIResourceEditor: React.FC = () => {
                   </div>
                 </Tab>
                 <Tab key='analysis' title='分析报表'>
-                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderAnalysisResult()}</div>
+                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
+                    <AnalysisView analysis={previewComponent} />
+                  </div>
                 </Tab>
                 <Tab key='code' title='代码视图'>
-                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderCodeView()}</div>
+                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
+                    <CodeView content={previewContent} />
+                  </div>
                 </Tab>
               </Tabs>
             </div>
