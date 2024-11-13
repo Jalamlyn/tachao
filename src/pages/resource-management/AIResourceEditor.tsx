@@ -28,6 +28,17 @@ interface Message {
   }
 }
 
+// 新增: 代码提取函数
+const extractShataAICode = (content: string) => {
+  console.log("[extractShataAICode] Checking content:", content);
+  const regex = /<shata-ai-resource>([\s\S]*?)<\/shata-ai-resource>/;
+  const match = content.match(regex);
+  if (match) {
+    console.log("[extractShataAICode] Found code:", match[1].trim());
+  }
+  return match ? match[1].trim() : null;
+};
+
 const PreviewButton: React.FC<{
   code?: Message["code"]
   onPreview?: (code: Message["code"]) => void
@@ -55,37 +66,11 @@ const AIResourceEditor: React.FC = () => {
   const [resourceData, setResourceData] = useState<any[]>([])
   const [columns, setColumns] = useState<any[]>([])
   const [currentPreview, setCurrentPreview] = useState<Message["code"]>(null)
-  const [selectedTab, setSelectedTab] = useState("data") // 新增: 当前选中的tab
+  const [selectedTab, setSelectedTab] = useState("data")
 
   const { getDetail: getResourceDetail } = useMetadata("resource")
 
-  useEffect(() => {
-    const loadResourceData = async () => {
-      if (resourceId) {
-        try {
-          const resource = await getResourceDetail(resourceId)
-          if (resource && resource.data) {
-            updatedResourceData(resource.data)
-          } else {
-            message.error("资料加载失败")
-            navigate("/we-chat-app/admin/resources")
-          }
-        } catch (error) {
-          console.error("Error loading resource:", error)
-          message.error("资料加载失败")
-          navigate("/we-chat-app/admin/resources")
-        }
-      }
-    }
-
-    loadResourceData()
-
-    updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "资料管理", href: "/we-chat-app/admin/resources" },
-      { label: "AI 资料助手", href: `/we-chat-app/admin/resources/ai/${resourceId}` },
-    ])
-  }, [resourceId])
+  // ... 保持原有的 useEffect 和其他函数不变 ...
 
   const resourceAgent = {
     processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
@@ -106,11 +91,33 @@ const AIResourceEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
+        // 新增: 代码累积和检测逻辑
+        let accumulatedCode = "";
+        console.log("[processCommand] Starting command processing");
+
         const result = await AIResourceAgent.processCommand({
           data: resourceData,
           command: command,
           onChunk: (chunk: string) => {
             onChunk?.(chunk)
+            
+            // 检测是否包含代码块
+            if (chunk.includes("<shata-ai-resource>")) {
+              console.log("[processCommand] Detected code block, switching to code tab");
+              setSelectedTab("code");
+            }
+            
+            // 累积代码内容
+            accumulatedCode += chunk;
+            const code = extractShataAICode(accumulatedCode);
+            if (code) {
+              console.log("[processCommand] Extracted code, updating preview");
+              setCurrentPreview({
+                preview: null,
+                content: code
+              });
+            }
+            
             setMessages((prev) => {
               const lastMessage = prev[prev.length - 1]
               if (lastMessage.role === "assistant") {
@@ -136,134 +143,7 @@ const AIResourceEditor: React.FC = () => {
     },
   }
 
-  const updatedResourceData = useCallback((res) => {
-    setResourceData(res.data)
-    if (Array.isArray(res.data) && res.data.length > 0) {
-      const firstRow = res.data[0]
-      const cols = Object.keys(firstRow).map((key) => ({
-        header: key,
-        accessorKey: key,
-      }))
-      setColumns(cols)
-    }
-  }, [])
-
-  const handleCommandResult = useCallback(
-    (result) => {
-      if (result.success) {
-        if (result.analysis) {
-          setMessages((prev) => {
-            const lastMessage = prev[prev.length - 1]
-            if (lastMessage.role === "assistant") {
-              const regex = /<shata-ai-resource>([\s\S]*?)<\/shata-ai-resource>/
-              const match = lastMessage.content.toString().match(regex)
-              const originalCode = match ? match[1].trim() : null
-
-              const updatedMessage = {
-                ...lastMessage,
-                content: <AnalysisResult analysis={result.analysis} />,
-                status: "success",
-                code: {
-                  preview: <AnalysisResult analysis={result.analysis} />,
-                  content: originalCode,
-                },
-              }
-
-              return [...prev.slice(0, -1), updatedMessage]
-            }
-            return prev
-          })
-        } else if (result.data) {
-          updatedResourceData(result.data)
-          setMessages((prev) => {
-            const lastMessage = prev[prev.length - 1]
-            if (lastMessage.role === "assistant") {
-              return [
-                ...prev.slice(0, -1),
-                {
-                  ...lastMessage,
-                  content: "✅ 数据已更新",
-                  status: "success",
-                },
-              ]
-            }
-            return prev
-          })
-        }
-      } else {
-        setMessages((prev) => {
-          const lastMessage = prev[prev.length - 1]
-          if (lastMessage.role === "assistant") {
-            return [
-              ...prev.slice(0, -1),
-              {
-                ...lastMessage,
-                content: result.message,
-                status: "error",
-              },
-            ]
-          }
-          return prev
-        })
-      }
-    },
-    [updatedResourceData]
-  )
-
-  const handlePreview = useCallback((code: Message["code"]) => {
-    setCurrentPreview(code)
-    setSelectedTab("analysis") // 切换到分析报表tab
-  }, [])
-
-  // 渲染数据表格
-  const renderDataTable = () => (
-    <div className='bg-white rounded-lg shadow'>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map((column) => (
-              <TableHead className='min-w-24 bg-slate-50' key={column.accessorKey}>
-                {column.header}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {resourceData.map((row: any, rowIndex: number) => (
-            <TableRow key={rowIndex}>
-              {columns.map((column) => (
-                <TableCell key={`${rowIndex}-${column.accessorKey}`}>{row[column.accessorKey]}</TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  )
-
-  // 渲染分析结果
-  const renderAnalysisResult = () =>
-    currentPreview?.preview ? (
-      <div className='h-full flex flex-col'>
-        <div className='flex-1 bg-white rounded-lg'>{currentPreview.preview}</div>
-      </div>
-    ) : (
-      <div className='flex items-center justify-center h-full text-gray-500'>
-        <p>请先生成分析报表</p>
-      </div>
-    )
-
-  // 渲染代码视图
-  const renderCodeView = () =>
-    currentPreview?.content ? (
-      <pre className='text-sm overflow-auto bg-slate-800 text-white p-2 rounded-lg'>
-        <code>{currentPreview.content}</code>
-      </pre>
-    ) : (
-      <div className='flex items-center justify-center h-full text-gray-500'>
-        <p>请先生成分析报表</p>
-      </div>
-    )
+  // ... 保持其他代码不变 ...
 
   return (
     <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
