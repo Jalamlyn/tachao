@@ -28,17 +28,6 @@ interface Message {
   }
 }
 
-// 新增: 代码提取函数
-const extractShataAICode = (content: string) => {
-  console.log("[extractShataAICode] Checking content:", content);
-  const regex = /<shata-ai-resource>([\s\S]*?)<\/shata-ai-resource>/;
-  const match = content.match(regex);
-  if (match) {
-    console.log("[extractShataAICode] Found code:", match[1].trim());
-  }
-  return match ? match[1].trim() : null;
-};
-
 const PreviewButton: React.FC<{
   code?: Message["code"]
   onPreview?: (code: Message["code"]) => void
@@ -58,6 +47,19 @@ const PreviewButton: React.FC<{
   )
 }
 
+// 添加代码检测和提取函数
+const extractShataAICode = (content: string) => {
+  console.log("[extractShataAICode] Checking content for code")
+  const regex = /<shata-ai-resource>([\s\S]*?)<\/shata-ai-resource>/
+  const match = content.match(regex)
+  if (match) {
+    console.log("[extractShataAICode] Code found")
+    return match[1].trim()
+  }
+  console.log("[extractShataAICode] No code found")
+  return null
+}
+
 const AIResourceEditor: React.FC = () => {
   const navigate = useNavigate()
   const { resourceId } = useParams<{ resourceId: string }>()
@@ -67,120 +69,41 @@ const AIResourceEditor: React.FC = () => {
   const [columns, setColumns] = useState<any[]>([])
   const [currentPreview, setCurrentPreview] = useState<Message["code"]>(null)
   const [selectedTab, setSelectedTab] = useState("data")
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false)
 
   const { getDetail: getResourceDetail } = useMetadata("resource")
 
   useEffect(() => {
+    const loadResourceData = async () => {
+      if (resourceId) {
+        try {
+          const resource = await getResourceDetail(resourceId)
+          if (resource && resource.data) {
+            updatedResourceData(resource.data)
+          } else {
+            message.error("资料加载失败")
+            navigate("/we-chat-app/admin/resources")
+          }
+        } catch (error) {
+          console.error("Error loading resource:", error)
+          message.error("资料加载失败")
+          navigate("/we-chat-app/admin/resources")
+        }
+      }
+    }
+
+    loadResourceData()
+
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "资料管理", href: "/we-chat-app/admin/resources" },
-      { label: "AI 分析", href: `/we-chat-app/admin/resources/ai/${resourceId}` },
+      { label: "AI 资料助手", href: `/we-chat-app/admin/resources/ai/${resourceId}` },
     ])
-  }, [resourceId, updateBreadcrumbs])
-
-  useEffect(() => {
-    const loadResource = async () => {
-      if (!resourceId) return
-      try {
-        const resource = await getResourceDetail(resourceId)
-        if (resource) {
-          setResourceData(resource.data)
-          // 从数据中提取列信息
-          if (resource.data && resource.data.length > 0) {
-            const firstRow = resource.data[0]
-            setColumns(
-              Object.keys(firstRow).map((key) => ({
-                key,
-                label: key,
-              }))
-            )
-          }
-        }
-      } catch (error) {
-        console.error("Error loading resource:", error)
-        message.error("加载资源失败")
-      }
-    }
-    loadResource()
-  }, [resourceId, getResourceDetail])
-
-  const handlePreview = useCallback((code: Message["code"]) => {
-    setCurrentPreview(code)
-  }, [])
-
-  const handleCommandResult = useCallback(
-    (result: any) => {
-      if (result.success) {
-        if (result.analysis) {
-          setSelectedTab("analysis")
-        }
-      }
-    },
-    []
-  )
-
-  const renderDataTable = useCallback(() => {
-    if (!resourceData || !columns) return null
-
-    return (
-      <div className='rounded-md border'>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column) => (
-                <TableHead key={column.key} className='font-medium'>
-                  {column.label}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {resourceData.map((row, rowIndex) => (
-              <TableRow key={rowIndex}>
-                {columns.map((column) => (
-                  <TableCell key={`${rowIndex}-${column.key}`}>{row[column.key]}</TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    )
-  }, [resourceData, columns])
-
-  const renderAnalysisResult = useCallback(() => {
-    if (!currentPreview?.content) return null
-    try {
-      const result = JSON.parse(currentPreview.content)
-      if (result.type === "analyze" && result.analysis) {
-        return <AnalysisResult analysis={result.analysis} />
-      }
-    } catch (error) {
-      console.error("Error parsing analysis result:", error)
-      return <div className='text-danger'>分析结果解析失败</div>
-    }
-    return null
-  }, [currentPreview])
-
-  const renderCodeView = useCallback(() => {
-    if (!currentPreview?.content) {
-      return (
-        <div className='text-center py-12 text-gray-500'>
-          <Icon icon='mdi:code-braces' className='w-12 h-12 mx-auto mb-4' />
-          <p>暂无代码</p>
-        </div>
-      )
-    }
-
-    return (
-      <pre className='p-4 bg-default-100 rounded-lg overflow-auto'>
-        <code>{currentPreview.content}</code>
-      </pre>
-    )
-  }, [currentPreview])
+  }, [resourceId])
 
   const resourceAgent = {
     processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
+      console.log("[processCommand] Starting command processing")
       try {
         const userMessage: Message = {
           role: "user",
@@ -198,43 +121,57 @@ const AIResourceEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        // 新增: 代码累积和检测逻辑
-        let accumulatedCode = "";
-        console.log("[processCommand] Starting command processing");
+        // 添加代码检测逻辑
+        let accumulatedCode = ""
+        let codeDetected = false
 
         const result = await AIResourceAgent.processCommand({
           data: resourceData,
           command: command,
           onChunk: (chunk: string) => {
+            console.log("[onChunk] Received chunk:", chunk.slice(0, 50) + "...")
             onChunk?.(chunk)
-            
-            // 检测是否包含代码块
-            if (chunk.includes("<shata-ai-resource>")) {
-              console.log("[processCommand] Detected code block, switching to code tab");
-              setSelectedTab("code");
+
+            // 检测是否包含代码块开始标记
+            if (chunk.includes("<shata-ai-resource>") && !codeDetected) {
+              console.log("[onChunk] Code block detected, switching to code tab")
+              codeDetected = true
+              setIsGeneratingCode(true)
+              setSelectedTab("code")
             }
-            
+
+            // 检测是否包含代码块结束标记
+            if (chunk.includes("</shata-ai-resource>") && codeDetected) {
+              console.log("[onChunk] Code block completed")
+              setIsGeneratingCode(false)
+            }
+
             // 累积代码内容
-            accumulatedCode += chunk;
-            const code = extractShataAICode(accumulatedCode);
+            accumulatedCode += chunk
+            const code = extractShataAICode(accumulatedCode)
             if (code) {
-              console.log("[processCommand] Extracted code, updating preview");
+              console.log("[onChunk] Updating code preview")
               setCurrentPreview({
                 preview: null,
-                content: code
-              });
+                content: code,
+              })
             }
-            
+
             setMessages((prev) => {
               const lastMessage = prev[prev.length - 1]
               if (lastMessage.role === "assistant") {
-                return [
-                  ...prev.slice(0, -1),
-                  {
-                    ...lastMessage,
-                    content: lastMessage.content + chunk,
-                  },
-                ]
+                const updatedMessage = {
+                  ...lastMessage,
+                  content: codeDetected ? (
+                    <div className="code-typing-animation">
+                      <Icon icon="mdi:code-braces" className="animate-pulse" />
+                      <span>AI正在生成分析代码...</span>
+                    </div>
+                  ) : (
+                    lastMessage.content + chunk
+                  ),
+                }
+                return [...prev.slice(0, -1), updatedMessage]
               }
               return prev
             })
@@ -249,6 +186,148 @@ const AIResourceEditor: React.FC = () => {
       }
     },
   }
+
+  const updatedResourceData = useCallback((res) => {
+    setResourceData(res.data)
+    if (Array.isArray(res.data) && res.data.length > 0) {
+      const firstRow = res.data[0]
+      const cols = Object.keys(firstRow).map((key) => ({
+        header: key,
+        accessorKey: key,
+      }))
+      setColumns(cols)
+    }
+  }, [])
+
+  const handleCommandResult = useCallback(
+    (result) => {
+      console.log("[handleCommandResult] Processing result:", result)
+      if (result.success) {
+        if (result.analysis) {
+          console.log("[handleCommandResult] Analysis result received, switching to analysis tab")
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1]
+            if (lastMessage.role === "assistant") {
+              const regex = /<shata-ai-resource>([\s\S]*?)<\/shata-ai-resource>/
+              const match = lastMessage.content.toString().match(regex)
+              const originalCode = match ? match[1].trim() : null
+
+              const updatedMessage = {
+                ...lastMessage,
+                content: <AnalysisResult analysis={result.analysis} />,
+                status: "success",
+                code: {
+                  preview: <AnalysisResult analysis={result.analysis} />,
+                  content: originalCode,
+                },
+              }
+
+              return [...prev.slice(0, -1), updatedMessage]
+            }
+            return prev
+          })
+          setSelectedTab("analysis")
+        } else if (result.data) {
+          console.log("[handleCommandResult] Data result received")
+          updatedResourceData(result.data)
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1]
+            if (lastMessage.role === "assistant") {
+              return [
+                ...prev.slice(0, -1),
+                {
+                  ...lastMessage,
+                  content: "✅ 数据已更新",
+                  status: "success",
+                },
+              ]
+            }
+            return prev
+          })
+        }
+      } else {
+        console.log("[handleCommandResult] Error result received")
+        setMessages((prev) => {
+          const lastMessage = prev[prev.length - 1]
+          if (lastMessage.role === "assistant") {
+            return [
+              ...prev.slice(0, -1),
+              {
+                ...lastMessage,
+                content: result.message,
+                status: "error",
+              },
+            ]
+          }
+          return prev
+        })
+      }
+    },
+    [updatedResourceData]
+  )
+
+  const handlePreview = useCallback((code: Message["code"]) => {
+    console.log("[handlePreview] Preview requested")
+    setCurrentPreview(code)
+    setSelectedTab("analysis")
+  }, [])
+
+  // 渲染数据表格
+  const renderDataTable = () => (
+    <div className='bg-white rounded-lg shadow'>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((column) => (
+              <TableHead className='min-w-24 bg-slate-50' key={column.accessorKey}>
+                {column.header}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {resourceData.map((row: any, rowIndex: number) => (
+            <TableRow key={rowIndex}>
+              {columns.map((column) => (
+                <TableCell key={`${rowIndex}-${column.accessorKey}`}>{row[column.accessorKey]}</TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+
+  // 渲染分析结果
+  const renderAnalysisResult = () =>
+    currentPreview?.preview ? (
+      <div className='h-full flex flex-col'>
+        <div className='flex-1 bg-white rounded-lg'>{currentPreview.preview}</div>
+      </div>
+    ) : (
+      <div className='flex items-center justify-center h-full text-gray-500'>
+        <p>请先生成分析报表</p>
+      </div>
+    )
+
+  // 渲染代码视图
+  const renderCodeView = () =>
+    isGeneratingCode ? (
+      <div className='flex items-center justify-center h-full'>
+        <div className='code-generating-animation'>
+          <Icon icon='mdi:code-braces' className='w-8 h-8 animate-pulse text-primary' />
+          <p className='mt-2 text-primary'>正在生成分析代码...</p>
+        </div>
+      </div>
+    ) : currentPreview?.content ? (
+      <pre className='text-sm overflow-auto bg-slate-800 text-white p-2 rounded-lg'>
+        <code>{currentPreview.content}</code>
+      </pre>
+    ) : (
+      <div className='flex items-center justify-center h-full text-gray-500'>
+        <p>请先生成分析报表</p>
+      </div>
+    )
 
   return (
     <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
@@ -311,6 +390,41 @@ const AIResourceEditor: React.FC = () => {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
+
+      <style jsx>{`
+        .code-typing-animation {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px;
+          background: rgba(0, 0, 0, 0.05);
+          border-radius: 6px;
+        }
+
+        .code-generating-animation {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          background: rgba(0, 0, 0, 0.02);
+          border-radius: 12px;
+        }
+
+        .animate-pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
+        }
+      `}</style>
     </PageLayout>
   )
 }
