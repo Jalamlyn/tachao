@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import { ScrollShadow, Button, Tabs, Tab } from "@nextui-org/react"
+import { ScrollShadow, Tabs, Tab } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
@@ -60,7 +60,15 @@ const AIResourceEditor: React.FC = () => {
         try {
           const resource = await getResourceDetail(resourceId)
           if (resource && resource.data) {
-            updatedResourceData(resource.data)
+            setResourceData(resource.data.data)
+            if (Array.isArray(resource.data.data) && resource.data.data.length > 0) {
+              const firstRow = resource.data.data[0]
+              const cols = Object.keys(firstRow).map((key) => ({
+                header: key,
+                accessorKey: key,
+              }))
+              setColumns(cols)
+            }
           } else {
             message.error("资料加载失败")
             navigate("/we-chat-app/admin/resources")
@@ -177,18 +185,6 @@ const AIResourceEditor: React.FC = () => {
     },
   }
 
-  const updatedResourceData = useCallback((res) => {
-    setResourceData(res.data)
-    if (Array.isArray(res.data) && res.data.length > 0) {
-      const firstRow = res.data[0]
-      const cols = Object.keys(firstRow).map((key) => ({
-        header: key,
-        accessorKey: key,
-      }))
-      setColumns(cols)
-    }
-  }, [])
-
   const handleCommandResult = useCallback(
     (result) => {
       console.log("[handleCommandResult] Processing result:", result)
@@ -221,23 +217,6 @@ const AIResourceEditor: React.FC = () => {
             }
             return prev
           })
-        } else if (result.data) {
-          console.log("[handleCommandResult] Data result received")
-          updatedResourceData(result.data)
-          setMessages((prev) => {
-            const lastMessage = prev[prev.length - 1]
-            if (lastMessage.role === "assistant") {
-              return [
-                ...prev.slice(0, -1),
-                {
-                  ...lastMessage,
-                  content: "✔️ 数据已更新",
-                  status: "success",
-                },
-              ]
-            }
-            return prev
-          })
         }
       } else {
         console.log("[handleCommandResult] Error result received")
@@ -257,7 +236,7 @@ const AIResourceEditor: React.FC = () => {
         })
       }
     },
-    [updatedResourceData]
+    []
   )
 
   const renderDataTable = () => (
