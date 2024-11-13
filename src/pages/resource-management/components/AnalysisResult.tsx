@@ -2,6 +2,7 @@ import React from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { motion } from "framer-motion"
 import ChartRenderer from "./ChartRenderer"
+import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table"
 
 interface AnalysisResultProps {
   analysis: {
@@ -10,6 +11,14 @@ interface AnalysisResultProps {
       type: string
       title: string
       data: any
+    }[]
+    tables?: {
+      title: string
+      columns: {
+        key: string
+        title: string
+      }[]
+      data: any[]
     }[]
     insights: string[]
   }
@@ -97,11 +106,52 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         </motion.div>
       ))}
 
+      {/* 明细表格 */}
+      {analysis.tables?.map((table, index) => (
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: (analysis.charts?.length || 0) * 0.1 + index * 0.1 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>{table.title || "数据明细"}</CardTitle>
+              <CardDescription>详细数据记录</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='rounded-md border'>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {table.columns.map((column) => (
+                        <TableCell key={column.key} className='font-medium'>
+                          {column.title}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {table.data.map((row, rowIndex) => (
+                      <TableRow key={rowIndex}>
+                        {table.columns.map((column) => (
+                          <TableCell key={`${rowIndex}-${column.key}`}>{row[column.key]}</TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      ))}
+
       {/* 数据洞察 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: (analysis.charts?.length || 0) * 0.1 }}
+        transition={{ duration: 0.5, delay: (analysis.charts?.length || 0) * 0.1 + (analysis.tables?.length || 0) * 0.1 }}
       >
         <Card>
           <CardHeader>
