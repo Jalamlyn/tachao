@@ -110,10 +110,26 @@ const ResourceManagement: React.FC = () => {
             fields: ["title", "indexFields.fileName"],
           },
         }}
-        defaultActions={{
-          showAIEdit: true,
-          showDelete: true,
-        }}
+        actions={[
+          {
+            key: "ai",
+            label: "AI 分析",
+            icon: "hugeicons:ai-chat-02",
+            color: "primary",
+            onClick: (record) => {
+              navigate(`/we-chat-app/admin/resources/ai/${record.id}`)
+            },
+          },
+          {
+            key: "delete",
+            label: "删除",
+            icon: "mdi:delete",
+            color: "danger",
+            onClick: (record) => {
+              // 删除操作由 MetadataTable 内部处理
+            },
+          },
+        ]}
         onError={(error) => message.error(error.message)}
       />
     </PageLayout>
