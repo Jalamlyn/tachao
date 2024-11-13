@@ -28,7 +28,7 @@ interface Message {
   }
 }
 
-type ProcessingStage = "idle" | "generating" | "analyzing" | "complete"
+type ProcessingStage = "idle" | "generating" | "analyzing" | "complete" | "error"
 
 const extractShataAICode = (content: string) => {
   console.log("[extractShataAICode] Checking content for code")
@@ -51,8 +51,6 @@ const AIResourceEditor: React.FC = () => {
   const [columns, setColumns] = useState<any[]>([])
   const [currentPreview, setCurrentPreview] = useState<Message["code"]>(null)
   const [selectedTab, setSelectedTab] = useState("data")
-  const [isGeneratingCode, setIsGeneratingCode] = useState(false)
-  const [accumulatedContent, setAccumulatedContent] = useState("")
   const [processingStage, setProcessingStage] = useState<ProcessingStage>("idle")
 
   const { getDetail: getResourceDetail } = useMetadata("resource")
@@ -89,9 +87,7 @@ const AIResourceEditor: React.FC = () => {
     processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
       console.log("[processCommand] Starting command processing")
       try {
-        setAccumulatedContent("")
         setProcessingStage("idle")
-        setIsGeneratingCode(false)
 
         const userMessage: Message = {
           role: "user",
@@ -119,7 +115,6 @@ const AIResourceEditor: React.FC = () => {
             console.log("[onChunk] Received chunk:", chunk.slice(0, 50) + "...")
             onChunk?.(chunk)
             
-            // 累积文本以便完整匹配
             accumulatedText += chunk
             
             setMessages((prev) => {
@@ -128,26 +123,10 @@ const AIResourceEditor: React.FC = () => {
                 return prev
               }
 
-              // 使用函数来处理消息内容,提高可读性
               const getMessageContent = () => {
-                // 如果已经检测到代码生成开始
-                if (codeDetected) {
-                  return (
-                    <div className='flex items-center gap-3 text-primary'>
-                      <Icon icon='mdi:code-braces' className='animate-pulse w-5 h-5' />
-                      <div className='flex flex-col'>
-                        <span className='font-medium'>AI 正在生成分析代码</span>
-                        <span className='text-xs text-default-500'>请稍候...</span>
-                      </div>
-                    </div>
-                  )
-                }
-
-                // 检查累积的文本是否包含代码标记
                 if (accumulatedText.includes("<shata-ai-resource>")) {
-                  console.log("[onChunk] Code block detected, switching to code tab")
+                  console.log("[onChunk] Code generation started")
                   codeDetected = true
-                  setIsGeneratingCode(true)
                   setProcessingStage("generating")
                   setSelectedTab("code")
                   return (
@@ -161,15 +140,13 @@ const AIResourceEditor: React.FC = () => {
                   )
                 }
 
-                // 检查代码生成是否完成
                 if (accumulatedText.includes("</shata-ai-resource>") && codeDetected) {
-                  console.log("[onChunk] Code block completed")
-                  setIsGeneratingCode(false)
+                  console.log("[onChunk] Code generation completed")
                   setProcessingStage("analyzing")
 
                   const code = extractShataAICode(accumulatedText)
                   if (code) {
-                    console.log("[onChunk] Updating code preview")
+                    console.log("[onChunk] Setting code preview")
                     setCurrentPreview({
                       preview: null,
                       content: code,
@@ -177,16 +154,10 @@ const AIResourceEditor: React.FC = () => {
                   }
                 }
 
-                // 普通文本追加
                 return lastMessage.content + chunk
               }
 
-              const updatedMessage = {
-                ...lastMessage,
-                content: getMessageContent()
-              }
-
-              return [...prev.slice(0, -1), updatedMessage]
+              return [...prev.slice(0, -1), { ...lastMessage, content: getMessageContent() }]
             })
           },
         })
@@ -194,6 +165,7 @@ const AIResourceEditor: React.FC = () => {
         return result
       } catch (error) {
         console.error("Error in chat:", error)
+        setProcessingStage("error")
         message.error("分析过程中发生错误")
         throw error
       }
@@ -238,6 +210,8 @@ const AIResourceEditor: React.FC = () => {
 
               setSelectedTab("analysis")
               setCurrentPreview(messageWithCode.code)
+              setProcessingStage("complete")
+              console.log("[handleCommandResult] Analysis completed, stage: complete")
 
               return [...prev.slice(0, -1), messageWithCode]
             }
@@ -249,6 +223,7 @@ const AIResourceEditor: React.FC = () => {
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
             if (lastMessage.role === "assistant") {
+              setProcessingStage("complete")
               return [
                 ...prev.slice(0, -1),
                 {
@@ -263,6 +238,7 @@ const AIResourceEditor: React.FC = () => {
         }
       } else {
         console.log("[handleCommandResult] Error result received")
+        setProcessingStage("error")
         setMessages((prev) => {
           const lastMessage = prev[prev.length - 1]
           if (lastMessage.role === "assistant") {
@@ -318,26 +294,51 @@ const AIResourceEditor: React.FC = () => {
       </div>
     )
 
-  const renderCodeView = () =>
-    isGeneratingCode ? (
-      <div className='flex items-center justify-center h-full'>
-        <div className='flex flex-col items-center gap-3 text-primary'>
-          <Icon icon='mdi:code-braces' className='w-8 h-8 animate-pulse' />
-          <div className='flex flex-col items-center'>
-            <span className='font-medium'>AI 正在生成分析代码</span>
-            <span className='text-xs text-default-500'>请稍候...</span>
+  const renderCodeView = () => {
+    console.log("[renderCodeView] Current stage:", processingStage)
+    
+    if (processingStage === "generating") {
+      return (
+        <div className='flex items-center justify-center h-full'>
+          <div className='flex flex-col items-center gap-3 text-primary'>
+            <Icon icon='mdi:code-braces' className='w-8 h-8 animate-pulse' />
+            <div className='flex flex-col items-center'>
+              <span className='font-medium'>AI 正在生成分析代码</span>
+              <span className='text-xs text-default-500'>请稍候...</span>
+            </div>
           </div>
         </div>
-      </div>
-    ) : currentPreview?.content ? (
-      <pre className='text-sm overflow-auto bg-slate-800 text-white p-2 rounded-lg'>
-        <code>{currentPreview.content}</code>
-      </pre>
-    ) : (
+      )
+    }
+
+    if (processingStage === "analyzing") {
+      return (
+        <div className='flex items-center justify-center h-full'>
+          <div className='flex flex-col items-center gap-3 text-primary'>
+            <Icon icon='mdi:chart-box' className='w-8 h-8 animate-pulse' />
+            <div className='flex flex-col items-center'>
+              <span className='font-medium'>正在分析数据</span>
+              <span className='text-xs text-default-500'>请稍候...</span>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    if (currentPreview?.content) {
+      return (
+        <pre className='text-sm overflow-auto bg-slate-800 text-white p-2 rounded-lg'>
+          <code>{currentPreview.content}</code>
+        </pre>
+      )
+    }
+
+    return (
       <div className='flex items-center justify-center h-full text-gray-500'>
         <p>请先生成分析报表</p>
       </div>
     )
+  }
 
   return (
     <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
