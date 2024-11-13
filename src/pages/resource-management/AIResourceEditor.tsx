@@ -201,7 +201,12 @@ const AIResourceEditor: React.FC = () => {
 
               const messageWithCode = {
                 ...lastMessage,
-                content: "✔️ 分析完成",
+                content: (
+                  <div className="flex items-center gap-2 text-success">
+                    <Icon icon="line-md:check-all" className="w-5 h-5" />
+                    <span>分析完成</span>
+                  </div>
+                ),
                 status: "success",
                 code: {
                   preview: <AnalysisResult analysis={result.analysis} />,
