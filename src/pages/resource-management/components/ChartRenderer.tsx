@@ -32,8 +32,14 @@ import {
 } from "recharts"
 import { ChartConfig, ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
 
-// 图表配色方案
-const CHART_COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d", "#ffc658"]
+// 更新图表配色方案，使用 CSS 变量
+const CHART_COLORS = [
+  "hsl(var(--chart-1))", // 173 58% 39%
+  "hsl(var(--chart-2))", // 12 76% 61%
+  "hsl(var(--chart-3))", // 197 37% 24%
+  "hsl(var(--chart-4))", // 43 74% 66%
+  "hsl(var(--chart-5))", // 27 87% 67%
+]
 
 interface ChartData {
   type: string
@@ -245,11 +251,11 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = ({ chart }) => {
           <Sankey
             data={chart.data}
             node={{
-              fill: "#8884d8",
+              fill: CHART_COLORS[0],
               stroke: "#fff",
             }}
             link={{
-              stroke: "#77c878",
+              stroke: CHART_COLORS[1],
             }}
             nodePadding={50}
           >
