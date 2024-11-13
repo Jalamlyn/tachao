@@ -155,9 +155,12 @@ const AIResourceEditor: React.FC = () => {
                 const updatedMessage = {
                   ...lastMessage,
                   content: codeDetected ? (
-                    <div className='code-typing-animation'>
-                      <Icon icon='mdi:code-braces' className='animate-pulse' />
-                      <span>AI正在生成分析代码...</span>
+                    <div className='flex items-center gap-3 text-primary'>
+                      <Icon icon='mdi:code-braces' className='animate-pulse w-5 h-5' />
+                      <div className='flex flex-col'>
+                        <span className='font-medium'>AI 正在生成分析代码</span>
+                        <span className='text-xs text-default-500'>请稍候...</span>
+                      </div>
                     </div>
                   ) : (
                     lastMessage.content + chunk
@@ -215,7 +218,6 @@ const AIResourceEditor: React.FC = () => {
                 },
               }
 
-              // 自动切换到分析报表标签页
               setSelectedTab("analysis")
               setCurrentPreview(messageWithCode.code)
 
@@ -301,9 +303,12 @@ const AIResourceEditor: React.FC = () => {
   const renderCodeView = () =>
     isGeneratingCode ? (
       <div className='flex items-center justify-center h-full'>
-        <div className='code-generating-animation'>
-          <Icon icon='mdi:code-braces' className='w-8 h-8 animate-pulse text-primary' />
-          <p className='mt-2 text-primary'>正在生成分析代码...</p>
+        <div className='flex flex-col items-center gap-3 text-primary'>
+          <Icon icon='mdi:code-braces' className='w-8 h-8 animate-pulse' />
+          <div className='flex flex-col items-center'>
+            <span className='font-medium'>AI 正在生成分析代码</span>
+            <span className='text-xs text-default-500'>请稍候...</span>
+          </div>
         </div>
       </div>
     ) : currentPreview?.content ? (
