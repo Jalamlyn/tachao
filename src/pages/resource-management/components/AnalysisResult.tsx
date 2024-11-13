@@ -39,6 +39,47 @@ const chartConfig = {
 } satisfies ChartConfig
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
+  // 添加 renderSummaryItem 函数实现
+  const renderSummaryItem = (key: string, value: number | string | Record<string, number> | Array<{ name: string; count: number }>) => {
+    if (typeof value === 'number' || typeof value === 'string') {
+      return (
+        <div key={key} className="p-4 bg-muted rounded-lg">
+          <div className="text-sm text-muted-foreground">{key}</div>
+          <div className="text-2xl font-semibold mt-1">{value}</div>
+        </div>
+      )
+    } else if (Array.isArray(value)) {
+      return (
+        <div key={key} className="p-4 bg-muted rounded-lg">
+          <div className="text-sm text-muted-foreground mb-2">{key}</div>
+          <div className="space-y-1">
+            {value.map((item, index) => (
+              <div key={index} className="flex justify-between text-sm">
+                <span>{item.name}</span>
+                <span className="font-medium">{item.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    } else if (typeof value === 'object') {
+      return (
+        <div key={key} className="p-4 bg-muted rounded-lg">
+          <div className="text-sm text-muted-foreground mb-2">{key}</div>
+          <div className="space-y-1">
+            {Object.entries(value).map(([subKey, subValue]) => (
+              <div key={subKey} className="flex justify-between text-sm">
+                <span>{subKey}</span>
+                <span className="font-medium">{subValue}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
+    return null
+  }
+
   const renderChart = (chart: { type: string; title: string; data: Array<any> }) => {
     // 通用的图表容器样式
     const containerStyle = 'aspect-[16/9] w-full'
