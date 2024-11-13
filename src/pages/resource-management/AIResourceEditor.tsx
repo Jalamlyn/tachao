@@ -13,7 +13,6 @@ import AIResourceAgent from "@/service/agents/AIResourceAgent"
 import AnalysisResult from "./components/AnalysisResult"
 import AICommandInput from "@/components/AICommandInput"
 
-// 导入头像
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
 
@@ -63,7 +62,6 @@ const AIResourceEditor: React.FC = () => {
     ])
   }, [resourceId])
 
-  // 构造 AI 代理对象
   const resourceAgent = {
     processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
       try {
@@ -125,7 +123,6 @@ const AIResourceEditor: React.FC = () => {
     }
   }, [])
 
-  // 处理命令结果
   const handleCommandResult = useCallback(
     (result) => {
       if (result.success) {
@@ -185,10 +182,10 @@ const AIResourceEditor: React.FC = () => {
     <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
       <div className='h-[calc(100vh-140px)] overflow-hidden'>
         <ResizablePanelGroup direction='horizontal' className='h-full'>
-          <ResizablePanel defaultSize={30}>
+          <ResizablePanel defaultSize={30} className="resizable-panel">
             <div className='h-full flex flex-col'>
               <ScrollShadow className='flex-1 overflow-y-auto'>
-                <div className='space-y-4 p-4'>
+                <div className='space-y-4'>
                   {messages.map((message) => (
                     <div key={message.id}>
                       <MessageCard
@@ -196,7 +193,7 @@ const AIResourceEditor: React.FC = () => {
                         message={message.content}
                         role={message.role}
                         status={message.status || "success"}
-                        className='mb-4'
+                        className='message-card'
                       />
                     </div>
                   ))}
@@ -207,8 +204,8 @@ const AIResourceEditor: React.FC = () => {
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={70} className='bg-slate-100'>
-            <div className='h-full overflow-auto p-4'>
+          <ResizablePanel defaultSize={70} className="resizable-panel bg-slate-50">
+            <div className='h-full overflow-auto'>
               {resourceData ? (
                 <div className='bg-white rounded-lg shadow'>
                   <Table>
@@ -232,7 +229,7 @@ const AIResourceEditor: React.FC = () => {
                 </div>
               ) : (
                 <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
-                  <Icon icon='mdi:loading' className='w-12 h-12 mx-auto mb-4 animate-spin' />
+                  <Icon icon='mdi:loading' className='w-12 h-12 mx-auto mb-4' />
                   <p>正在加载数据...</p>
                 </div>
               )}
