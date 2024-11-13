@@ -40,12 +40,47 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
     }
   }, [isOpen])
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const selectedFile = event.target.files[0]
       setFile(selectedFile)
       const fileName = selectedFile.name.split(".").slice(0, -1).join(".")
       setResourceName(fileName)
+
+      // 添加测试代码
+      try {
+        console.log("开始测试文件转换...")
+        console.log("原始文件大小:", (selectedFile.size / 1024 / 1024).toFixed(2), "MB")
+
+        const result = await readExcel(selectedFile, headerType === "multiple")
+
+        // 确保 result 和 result.data 存在
+        if (result && result.data) {
+          // 输出 JSON 格式大小
+          const jsonSize = new Blob([JSON.stringify(result.data)]).size
+          console.log("JSON 格式大小:", (jsonSize / 1024 / 1024).toFixed(2), "MB")
+
+          // 将数据转换为 CSV 格式
+          const csvData = result.data.map((row: any) => Object.values(row).join(",")).join("\n")
+          const csvSize = new Blob([csvData]).size
+          console.log("CSV 格式大小:", (csvSize / 1024 / 1024).toFixed(2), "MB")
+
+          // 输出压缩比
+          const compressionRatio = (((jsonSize - csvSize) / jsonSize) * 100).toFixed(2)
+          console.log("CSV 相比 JSON 节省了:", compressionRatio, "%")
+
+          // 输出一些数据统计
+          console.log("数据行数:", result.data.length)
+          console.log("数据列数:", Object.keys(result.data[0] || {}).length)
+
+          message.success(`文件解析成功！CSV格式节省了${compressionRatio}%的空间`)
+        } else {
+          throw new Error("文件解析结果无效")
+        }
+      } catch (error) {
+        console.error("测试文件转换失败:", error)
+        message.error("文件解析失败")
+      }
     }
   }
 
@@ -68,7 +103,7 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
       }
 
       const data = await readExcel(file, headerType === "multiple")
-      
+
       // 使用 useMetadata hook 创建资源
       const result = await createResource({
         title: resourceName,
@@ -79,7 +114,7 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
           type: "excel",
           size: file.size,
           fileName: file.name,
-        }
+        },
       })
 
       if (result) {
