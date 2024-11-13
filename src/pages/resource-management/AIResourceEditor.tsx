@@ -28,8 +28,6 @@ interface Message {
   }
 }
 
-type ProcessingStage = "idle" | "generating" | "analyzing" | "complete" | "error"
-
 const extractShataAICode = (content: string) => {
   console.log("[extractShataAICode] Checking content for code")
   const regex = /<shata-ai-resource>([\s\S]*?)<\/shata-ai-resource>/
@@ -52,11 +50,8 @@ const AIResourceEditor: React.FC = () => {
   const [previewContent, setPreviewContent] = useState<string>("")
   const [previewComponent, setPreviewComponent] = useState<React.ReactNode>(null)
   const [selectedTab, setSelectedTab] = useState("data")
-  const [processingStage, setProcessingStage] = useState<ProcessingStage>("idle")
 
   const accumulatedTextRef = useRef("")
-  const codeOutputRef = useRef("")
-  const isGeneratingCodeRef = useRef(false)
   const { getDetail: getResourceDetail } = useMetadata("resource")
 
   useEffect(() => {
@@ -92,9 +87,8 @@ const AIResourceEditor: React.FC = () => {
 
     accumulatedTextRef.current += chunk
 
-    if (accumulatedTextRef.current.includes("<shata-ai-resource>") && !isGeneratingCodeRef.current) {
+    if (accumulatedTextRef.current.includes("<shata-ai-resource>") && !previewContent) {
       console.log("[handleChunk] Code generation started")
-      isGeneratingCodeRef.current = true
 
       setMessages((prev) => {
         const lastMessage = prev[prev.length - 1]
@@ -115,26 +109,21 @@ const AIResourceEditor: React.FC = () => {
         ]
       })
 
-      setProcessingStage("generating")
       setSelectedTab("code")
     }
 
-    if (isGeneratingCodeRef.current) {
-      codeOutputRef.current += chunk
+    if (previewContent || accumulatedTextRef.current.includes("<shata-ai-resource>")) {
+      const newContent = accumulatedTextRef.current
+      console.log("[handleChunk] Updating preview content")
+      setPreviewContent(newContent)
 
       if (accumulatedTextRef.current.includes("</shata-ai-resource>")) {
         console.log("[handleChunk] Code generation completed")
-        isGeneratingCodeRef.current = false
         const code = extractShataAICode(accumulatedTextRef.current)
-
         if (code) {
           console.log("[handleChunk] Setting code preview", code)
           setPreviewContent(code)
-          setProcessingStage("analyzing")
         }
-      } else {
-        console.log("[handleChunk] output code preview", codeOutputRef.current)
-        setPreviewContent(codeOutputRef.current)
       }
     } else {
       setMessages((prev) => {
@@ -154,11 +143,8 @@ const AIResourceEditor: React.FC = () => {
     processCommand: async (command: string) => {
       console.log("[processCommand] Starting command processing")
       try {
-        setProcessingStage("idle")
-
         accumulatedTextRef.current = ""
-        codeOutputRef.current = ""
-        isGeneratingCodeRef.current = false
+        setPreviewContent("")
 
         const userMessage: Message = {
           role: "user",
@@ -185,7 +171,6 @@ const AIResourceEditor: React.FC = () => {
         return result
       } catch (error) {
         console.error("Error in chat:", error)
-        setProcessingStage("error")
         message.error("分析过程中发生错误")
         throw error
       }
@@ -230,9 +215,7 @@ const AIResourceEditor: React.FC = () => {
 
               setSelectedTab("analysis")
               setPreviewComponent(<AnalysisResult analysis={result.analysis} />)
-              setPreviewContent(originalCode || "")
-              setProcessingStage("complete")
-              console.log("[handleCommandResult] Analysis completed, stage: complete")
+              console.log("[handleCommandResult] Analysis completed")
 
               return [...prev.slice(0, -1), messageWithCode]
             }
@@ -244,7 +227,6 @@ const AIResourceEditor: React.FC = () => {
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
             if (lastMessage.role === "assistant") {
-              setProcessingStage("complete")
               return [
                 ...prev.slice(0, -1),
                 {
@@ -259,7 +241,6 @@ const AIResourceEditor: React.FC = () => {
         }
       } else {
         console.log("[handleCommandResult] Error result received")
-        setProcessingStage("error")
         setMessages((prev) => {
           const lastMessage = prev[prev.length - 1]
           if (lastMessage.role === "assistant") {
@@ -316,36 +297,6 @@ const AIResourceEditor: React.FC = () => {
     )
 
   const renderCodeView = () => {
-    console.log("[renderCodeView] Current stage:", processingStage)
-    if (processingStage === "generating") {
-      return (
-        <div className='flex items-center justify-center h-full'>
-          <div className='flex flex-col items-center gap-3 text-primary'>
-            <Icon icon='mdi:code-braces' className='w-8 h-8 animate-pulse' />
-            <div className='flex flex-col items-center'>
-              <pre>
-                <code>{previewContent}</code>
-              </pre>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    if (processingStage === "analyzing") {
-      return (
-        <div className='flex items-center justify-center h-full'>
-          <div className='flex flex-col items-center gap-3 text-primary'>
-            <Icon icon='mdi:chart-box' className='w-8 h-8 animate-pulse' />
-            <div className='flex flex-col items-center'>
-              <span className='font-medium'>正在分析数据</span>
-              <span className='text-xs text-default-500'>请稍候...</span>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
     if (previewContent) {
       return (
         <pre className='text-sm overflow-auto bg-slate-800 text-white p-2 rounded-lg'>
