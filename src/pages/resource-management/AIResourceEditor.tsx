@@ -70,7 +70,114 @@ const AIResourceEditor: React.FC = () => {
 
   const { getDetail: getResourceDetail } = useMetadata("resource")
 
-  // ... 保持原有的 useEffect 和其他函数不变 ...
+  useEffect(() => {
+    updateBreadcrumbs([
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "资料管理", href: "/we-chat-app/admin/resources" },
+      { label: "AI 分析", href: `/we-chat-app/admin/resources/ai/${resourceId}` },
+    ])
+  }, [resourceId, updateBreadcrumbs])
+
+  useEffect(() => {
+    const loadResource = async () => {
+      if (!resourceId) return
+      try {
+        const resource = await getResourceDetail(resourceId)
+        if (resource) {
+          setResourceData(resource.data)
+          // 从数据中提取列信息
+          if (resource.data && resource.data.length > 0) {
+            const firstRow = resource.data[0]
+            setColumns(
+              Object.keys(firstRow).map((key) => ({
+                key,
+                label: key,
+              }))
+            )
+          }
+        }
+      } catch (error) {
+        console.error("Error loading resource:", error)
+        message.error("加载资源失败")
+      }
+    }
+    loadResource()
+  }, [resourceId, getResourceDetail])
+
+  const handlePreview = useCallback((code: Message["code"]) => {
+    setCurrentPreview(code)
+  }, [])
+
+  const handleCommandResult = useCallback(
+    (result: any) => {
+      if (result.success) {
+        if (result.analysis) {
+          setSelectedTab("analysis")
+        }
+      }
+    },
+    []
+  )
+
+  const renderDataTable = useCallback(() => {
+    if (!resourceData || !columns) return null
+
+    return (
+      <div className='rounded-md border'>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columns.map((column) => (
+                <TableHead key={column.key} className='font-medium'>
+                  {column.label}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {resourceData.map((row, rowIndex) => (
+              <TableRow key={rowIndex}>
+                {columns.map((column) => (
+                  <TableCell key={`${rowIndex}-${column.key}`}>{row[column.key]}</TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  }, [resourceData, columns])
+
+  const renderAnalysisResult = useCallback(() => {
+    if (!currentPreview?.content) return null
+    try {
+      const result = JSON.parse(currentPreview.content)
+      if (result.type === "analyze" && result.analysis) {
+        return <AnalysisResult analysis={result.analysis} />
+      }
+    } catch (error) {
+      console.error("Error parsing analysis result:", error)
+      return <div className='text-danger'>分析结果解析失败</div>
+    }
+    return null
+  }, [currentPreview])
+
+  const renderCodeView = useCallback(() => {
+    if (!currentPreview?.content) {
+      return (
+        <div className='text-center py-12 text-gray-500'>
+          <Icon icon='mdi:code-braces' className='w-12 h-12 mx-auto mb-4' />
+          <p>暂无代码</p>
+        </div>
+      )
+    }
+
+    return (
+      <pre className='p-4 bg-default-100 rounded-lg overflow-auto'>
+        <code>{currentPreview.content}</code>
+      </pre>
+    )
+  }, [currentPreview])
 
   const resourceAgent = {
     processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
@@ -142,8 +249,6 @@ const AIResourceEditor: React.FC = () => {
       }
     },
   }
-
-  // ... 保持其他代码不变 ...
 
   return (
     <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
