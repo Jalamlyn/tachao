@@ -53,9 +53,10 @@ const AIResourceEditor: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState("data")
   const [processingStage, setProcessingStage] = useState<ProcessingStage>("idle")
 
-  // 使用 useRef 替换所有可能的闭包变量
+  // 使用 ref 来累积 AI 输出
   const accumulatedTextRef = useRef("")
-  const codeDetectedRef = useRef(false)
+  const codeOutputRef = useRef("")
+  const isGeneratingCodeRef = useRef(false)
   const { getDetail: getResourceDetail } = useMetadata("resource")
 
   useEffect(() => {
@@ -86,15 +87,90 @@ const AIResourceEditor: React.FC = () => {
     ])
   }, [resourceId])
 
+  // 处理 AI 输出的 chunk
+  const handleChunk = useCallback((chunk: string) => {
+    console.log("[handleChunk] Processing chunk:", chunk.slice(0, 50) + "...")
+    
+    // 累积文本
+    accumulatedTextRef.current += chunk
+    
+    // 检测是否开始生成代码
+    if (accumulatedTextRef.current.includes("<shata-ai-resource>") && !isGeneratingCodeRef.current) {
+      console.log("[handleChunk] Code generation started")
+      isGeneratingCodeRef.current = true
+      
+      // 更新状态显示生成代码的提示
+      setMessages(prev => {
+        const lastMessage = prev[prev.length - 1]
+        return [...prev.slice(0, -1), {
+          ...lastMessage,
+          content: (
+            <div className='flex items-center gap-3 text-primary'>
+              <Icon icon='mdi:code-braces' className='animate-pulse w-5 h-5' />
+              <div className='flex flex-col'>
+                <span className='font-medium'>AI 正在生成分析代码</span>
+                <span className='text-xs text-default-500'>请稍候...</span>
+              </div>
+            </div>
+          )
+        }]
+      })
+      
+      // 切换到代码视图
+      setProcessingStage("generating")
+      setSelectedTab("code")
+    }
+    
+    // 如果正在生成代码,将代码内容累积到专门的 ref
+    if (isGeneratingCodeRef.current) {
+      codeOutputRef.current += chunk
+      
+      // 检查代码是否生成完成
+      if (accumulatedTextRef.current.includes("</shata-ai-resource>")) {
+        console.log("[handleChunk] Code generation completed")
+        isGeneratingCodeRef.current = false
+        const code = extractShataAICode(accumulatedTextRef.current)
+        
+        if (code) {
+          console.log("[handleChunk] Setting code preview")
+          // 更新代码预览
+          setCurrentPreview({
+            preview: null,
+            content: code
+          })
+          
+          // 切换到分析阶段
+          setProcessingStage("analyzing")
+        }
+      } else {
+        // 持续更新代码预览
+        setCurrentPreview(prev => ({
+          ...prev,
+          content: codeOutputRef.current
+        }))
+      }
+    } else {
+      // 非代码生成阶段,正常更新消息
+      setMessages(prev => {
+        const lastMessage = prev[prev.length - 1]
+        return [...prev.slice(0, -1), {
+          ...lastMessage,
+          content: lastMessage.content + chunk
+        }]
+      })
+    }
+  }, [])
+
   const resourceAgent = {
-    processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
+    processCommand: async (command: string) => {
       console.log("[processCommand] Starting command processing")
       try {
         setProcessingStage("idle")
         
         // 重置 ref 值
         accumulatedTextRef.current = ""
-        codeDetectedRef.current = false
+        codeOutputRef.current = ""
+        isGeneratingCodeRef.current = false
 
         const userMessage: Message = {
           role: "user",
@@ -115,54 +191,7 @@ const AIResourceEditor: React.FC = () => {
         const result = await AIResourceAgent.processCommand({
           data: resourceData,
           command: command,
-          onChunk: (chunk: string) => {
-            console.log("[onChunk] Received chunk:", chunk.slice(0, 50) + "...")
-            onChunk?.(chunk)
-            
-            accumulatedTextRef.current += chunk
-            
-            setMessages((prev) => {
-              const lastMessage = prev[prev.length - 1]
-              if (lastMessage.role !== "assistant") {
-                return prev
-              }
-
-              const getMessageContent = () => {
-                if (accumulatedTextRef.current.includes("<shata-ai-resource>")) {
-                  console.log("[onChunk] Code generation started")
-                  codeDetectedRef.current = true
-                  setProcessingStage("generating")
-                  setSelectedTab("code")
-                  return (
-                    <div className='flex items-center gap-3 text-primary'>
-                      <Icon icon='mdi:code-braces' className='animate-pulse w-5 h-5' />
-                      <div className='flex flex-col'>
-                        <span className='font-medium'>AI 正在生成分析代码</span>
-                        <span className='text-xs text-default-500'>请稍候...</span>
-                      </div>
-                    </div>
-                  )
-                }
-                if (accumulatedTextRef.current.includes("</shata-ai-resource>") && codeDetectedRef.current) {
-                  console.log("[onChunk] Code generation completed")
-                  setProcessingStage("analyzing")
-
-                  const code = extractShataAICode(accumulatedTextRef.current)
-                  if (code) {
-                    console.log("[onChunk] Setting code preview")
-                    setCurrentPreview({
-                      preview: null,
-                      content: code,
-                    })
-                  }
-                }
-
-                return lastMessage.content + chunk
-              }
-
-              return [...prev.slice(0, -1), { ...lastMessage, content: getMessageContent() }]
-            })
-          },
+          onChunk: handleChunk
         })
 
         return result
