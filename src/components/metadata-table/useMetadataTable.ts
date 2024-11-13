@@ -47,6 +47,11 @@ export function useMetadataTable<T extends MetadataDetail>({
     })
   }, [data, searchValue, searchFields])
 
+  // 判断是否是搜索导致的空结果
+  const isEmptySearchResult = useMemo(() => {
+    return searchValue && data.length > 0 && filteredData.length === 0
+  }, [searchValue, data.length, filteredData.length])
+
   // 刷新数据
   const handleRefresh = useCallback(async () => {
     try {
@@ -80,6 +85,7 @@ export function useMetadataTable<T extends MetadataDetail>({
     loading,
     error,
     searchValue,
+    isEmptySearchResult,
     handleSearch,
     handleRefresh,
     handleDelete,

@@ -37,7 +37,15 @@ export function MetadataTable<T extends MetadataDetail>({
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [recordToDelete, setRecordToDelete] = React.useState<T | null>(null)
 
-  const { data, loading, searchValue, handleSearch, handleRefresh, handleDelete } = useMetadataTable<T>({
+  const { 
+    data, 
+    loading, 
+    searchValue, 
+    isEmptySearchResult,
+    handleSearch, 
+    handleRefresh, 
+    handleDelete 
+  } = useMetadataTable<T>({
     type,
     searchFields: toolbar?.searchProps?.fields,
     onDataChange,
@@ -73,7 +81,7 @@ export function MetadataTable<T extends MetadataDetail>({
     if (!toolbar) return null
 
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -103,12 +111,12 @@ export function MetadataTable<T extends MetadataDetail>({
           {toolbar.extra}
           {toolbar.showRefresh && (
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button 
-                isIconOnly 
-                variant='light' 
-                onClick={handleRefresh} 
+              <Button
+                isIconOnly
+                variant='light'
+                onClick={handleRefresh}
                 isLoading={loading}
-                className="bg-default-100 shadow-sm hover:shadow transition-shadow duration-200"
+                className='bg-default-100 shadow-sm hover:shadow transition-shadow duration-200'
               >
                 <Icon icon='mdi:refresh' className='w-5 h-5' />
               </Button>
@@ -124,12 +132,12 @@ export function MetadataTable<T extends MetadataDetail>({
     const allActions: Action<T>[] = [
       ...actions,
       {
-        key: 'delete',
-        label: '删除',
-        icon: 'mdi:delete',
-        color: 'danger',
-        onClick: () => handleDeleteClick(record)
-      }
+        key: "delete",
+        label: "删除",
+        icon: "mdi:delete",
+        color: "danger",
+        onClick: () => handleDeleteClick(record),
+      },
     ]
 
     return (
@@ -137,10 +145,10 @@ export function MetadataTable<T extends MetadataDetail>({
         {allActions.map((action) => (
           <Tooltip key={action.key} content={action.label}>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button 
-                isIconOnly 
-                size='sm' 
-                variant='light' 
+              <Button
+                isIconOnly
+                size='sm'
+                variant='light'
                 color={action.color}
                 className='shadow-sm hover:shadow transition-shadow duration-200'
                 onClick={() => action.onClick(record)}
@@ -154,15 +162,52 @@ export function MetadataTable<T extends MetadataDetail>({
     )
   }
 
+  const renderEmptyContent = () => {
+    if (emptyContent) return emptyContent
+
+    if (isEmptySearchResult) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className='text-center text-default-400 py-8'
+        >
+          <Icon icon='mdi:file-search' className='w-12 h-12 mx-auto mb-4 opacity-50' />
+          <p className='text-lg font-medium mb-2'>未找到匹配结果</p>
+          <p className='text-sm text-default-400'>
+            没有找到与 "{searchValue}" 相关的内容
+          </p>
+          <Button 
+            variant="light" 
+            size="sm"
+            className="mt-4"
+            onClick={() => handleSearch("")}
+          >
+            <Icon icon="mdi:refresh" className="mr-2" />
+            重置搜索
+          </Button>
+        </motion.div>
+      )
+    }
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className='text-center text-default-400 py-8'
+      >
+        <Icon icon='mdi:file-search' className='w-12 h-12 mx-auto mb-4 opacity-50' />
+        <p className='text-lg font-medium mb-2'>暂无数据</p>
+        <p className='text-sm text-default-400'>试试添加一些数据吧</p>
+      </motion.div>
+    )
+  }
+
   return (
     <div className='metadata-table space-y-4'>
       {renderToolbar()}
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.1 }}>
         <Table
           aria-label={`${type} table`}
           classNames={{
@@ -171,13 +216,13 @@ export function MetadataTable<T extends MetadataDetail>({
             td: "text-sm",
           }}
           loadingContent={
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className='flex flex-col justify-center items-center h-32 space-y-4'
             >
               <Icon icon='mdi:loading' className='w-8 h-8 animate-spin text-primary' />
-              <p className="text-default-500">加载中...</p>
+              <p className='text-default-500'>加载中...</p>
             </motion.div>
           }
           loadingState={loading ? "loading" : "idle"}
@@ -188,29 +233,13 @@ export function MetadataTable<T extends MetadataDetail>({
                 {column.title}
               </TableColumn>
             ))}
-            {actions && <TableColumn className='text-sm text-center'>操作</TableColumn>}
           </TableHeader>
           <TableBody
             items={data}
-            emptyContent={
-              emptyContent || (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className='text-center text-default-400 py-8'
-                >
-                  <Icon icon='mdi:file-search' className='w-12 h-12 mx-auto mb-4 opacity-50' />
-                  <p className="text-lg font-medium mb-2">暂无数据</p>
-                  <p className="text-sm text-default-400">试试添加一些数据吧</p>
-                </motion.div>
-              )
-            }
+            emptyContent={renderEmptyContent()}
           >
             {(item) => (
-              <TableRow 
-                key={item.id} 
-                className='hover:bg-default-50 transition-colors duration-150 cursor-pointer'
-              >
+              <TableRow key={item.id} className='hover:bg-default-50 transition-colors duration-150 cursor-pointer'>
                 {(columnKey) => (
                   <TableCell>
                     {columnKey === "actions"
@@ -224,8 +253,8 @@ export function MetadataTable<T extends MetadataDetail>({
         </Table>
       </motion.div>
 
-      <Modal 
-        isOpen={isOpen} 
+      <Modal
+        isOpen={isOpen}
         onClose={onClose}
         classNames={{
           base: "bg-default-50 dark:bg-default-100",
@@ -251,7 +280,7 @@ export function MetadataTable<T extends MetadataDetail>({
                 ease: "easeIn",
               },
             },
-          }
+          },
         }}
       >
         <ModalContent>
@@ -263,11 +292,7 @@ export function MetadataTable<T extends MetadataDetail>({
             <Button color='default' variant='light' onPress={onClose}>
               取消
             </Button>
-            <Button 
-              color='danger' 
-              onPress={confirmDelete}
-              className="shadow-lg shadow-danger-500/20"
-            >
+            <Button color='danger' onPress={confirmDelete} className='shadow-lg shadow-danger-500/20'>
               删除
             </Button>
           </ModalFooter>
