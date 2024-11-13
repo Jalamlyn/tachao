@@ -1,24 +1,28 @@
 import React, { useEffect } from "react"
-import ResourceTable from "./components/ResourceTable"
+import { useNavigate } from "react-router-dom"
+import { Button } from "@nextui-org/react"
+import { Icon } from "@iconify/react"
+import { MetadataTable } from "@/components/metadata-table"
 import CreateResourceButton from "./components/CreateResourceButton"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
-import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
+import type { MetadataDetail } from "@/hooks/useMetadata"
+
+interface Resource extends MetadataDetail {
+  indexFields: {
+    appId: string
+    type: string
+    size: number
+    fileName: string
+  }
+}
 
 const ResourceManagement: React.FC = () => {
+  const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
   const appId = import.meta.env.VITE_SHATA_AI_APP_ID
 
-  // 使用 useMetadata hook 获取资源数据
-  const {
-    items: resources,
-    loading: resourceLoading,
-    error: resourceError,
-    load: loadResources,
-  } = useMetadata("resource")
-
-  // 初始化面包屑
   useEffect(() => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
@@ -26,27 +30,92 @@ const ResourceManagement: React.FC = () => {
     ])
   }, [])
 
-  // 加载资源数据
-  useEffect(() => {
-    loadResources().catch((error) => {
-      console.error("Error loading resources:", error)
-      message.error("加载资源列表失败")
-    })
-  }, [])
+  // 格式化文件大小
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return "0 B"
+    const k = 1024
+    const sizes = ["B", "KB", "MB", "GB"]
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+  }
 
-  // 如果出现错误，显示错误信息
-  if (resourceError) {
-    message.error(resourceError)
+  const columns = [
+    {
+      key: "title",
+      title: "资料名称",
+      render: (record: Resource) => (
+        <div className='flex items-center gap-2'>
+          <Icon icon='mdi:file-excel' className='w-5 h-5 text-success' style={{ opacity: 0.8 }} />
+          <div className='flex flex-col'>
+            <span className='font-medium text-small'>{record.title}</span>
+            <span className='text-tiny text-default-400'>{record.indexFields.fileName}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "size",
+      title: "大小",
+      render: (record: Resource) => formatFileSize(record.indexFields.size),
+    },
+    {
+      key: "date",
+      title: "时间",
+      render: (record: Resource) => (
+        <div className='flex flex-col'>
+          <span className='text-tiny text-default-500'>创建: {new Date(record.createdAt).toLocaleString()}</span>
+          <span className='text-tiny text-default-400'>更新: {new Date(record.updatedAt).toLocaleString()}</span>
+        </div>
+      ),
+    },
+  ]
+
+  const handleAI = (record: Resource) => {
+    navigate(`/we-chat-app/admin/resources/ai/${record.id}`)
+  }
+
+  const handleAnalyze = () => {
+    navigate("/we-chat-app/admin/forms/analysis")
   }
 
   const pageActions = (
-    <div className='flex gap-2'>
-      <CreateResourceButton appId={appId} isDisabled={!appId} />
-    </div>
+    <>
+      <Button isIconOnly variant='light' onClick={handleAnalyze}>
+        <Icon icon='mdi:refresh' className='w-5 h-5' />
+      </Button>
+      <Button
+        onClick={handleAnalyze}
+        color='secondary'
+        startContent={<Icon icon='solar:chart-2-bold' className='w-4 h-4' />}
+      >
+        AI 数据分析
+      </Button>
+      <Button onClick={handleAnalyze} color='primary'>
+        <Icon icon='mdi:file-document-plus' className='w-4 h-4 mr-2' />
+        创建单据
+      </Button>
+    </>
   )
+
   return (
-    <PageLayout title='资料管理' titleIcon='mdi:file-document' actions={pageActions} loading={resourceLoading}>
-      <ResourceTable resources={resources} onRefresh={loadResources} />
+    <PageLayout title='资料管理' titleIcon='mdi:file-document' actions={pageActions}>
+      <MetadataTable
+        type='resource'
+        columns={columns}
+        toolbar={{
+          showSearch: true,
+          showRefresh: true,
+          searchProps: {
+            placeholder: "搜索资料名称或文件名...",
+            fields: ["title", "indexFields.fileName"],
+          },
+        }}
+        defaultActions={{
+          showAIEdit: true,
+          showDelete: true,
+        }}
+        onError={(error) => message.error(error.message)}
+      />
     </PageLayout>
   )
 }
