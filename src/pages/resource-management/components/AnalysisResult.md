@@ -21,71 +21,131 @@ const analysis = {
 };
 
 <AnalysisResult analysis={analysis} />
-```
-
-## Props
-
-### analysis
-
+Props
+analysis
 主要的数据分析结果对象，包含以下属性：
 
-```typescript
 {
   // 统计摘要，可以包含多种类型的数据
   summary: Record<string, number | string | Record<string, number> | Array<{ name: string; count: number }>>;
-  
+
   // 可选的图表数据数组
   charts?: Array<{
-    // 图表类型，支持 'pie' | 'bar'
+    // 图表类型，支持多种图表类型
     type: string;
     // 图表标题
     title: string;
     // 图表数据
-    data: Array<{ name: string; value: number }>;
+    data: Array<any>;
   }>;
-  
+
   // 数据洞察数组，包含分析发现和建议
   insights: string[];
 }
+支持的图表类型
+1. 基础图表
+饼图 (pie)
+
+用途：展示占比数据
+适用场景：部分与整体的关系展示
+数据格式：[{ name: string, value: number }]
+柱状图 (bar)
+
+用途：比较数据大小
+适用场景：分类数据的对比
+数据格式：[{ name: string, value: number }]
+折线图 (line)
+
+用途：展示数据趋势
+适用场景：连续数据的变化
+数据格式：[{ name: string, value: number }]
+面积图 (area)
+
+用途：展示数据累计趋势
+适用场景：数据的累积效应
+数据格式：[{ name: string, value: number }]
+2. 高级图表
+散点图 (scatter)
+
+用途：展示数据分布
+适用场景：两个变量之间的关系
+数据格式：[{ name: string, value: number }]
+雷达图 (radar)
+
+用途：多维度数据对比
+适用场景：多个维度的数据对比
+数据格式：[{ name: string, value: number }]
+仪表盘 (radialBar)
+
+用途：展示进度或达成率
+适用场景：目标完成情况
+数据格式：[{ name: string, value: number }]
+树形图 (treemap)
+
+用途：展示层级数据
+适用场景：层级结构数据
+数据格式：[{ name: string, value: number }]
+漏斗图 (funnel)
+
+用途：展示转化率
+适用场景：流程转化数据
+数据格式：[{ name: string, value: number }]
+3. 特殊图表
+复合图表 (composed)
+
+用途：组合多种图表类型
+适用场景：多维度数据分析
+数据格式：
+[{
+  name: string,
+  value: number,       // 主要指标
+  secondaryValue: number, // 次要指标
+  thirdValue: number     // 第三指标
+}]
+桑基图 (sankey)
+
+用途：展示流向关系
+适用场景：数据流转过程
+数据格式：
+{
+  nodes: [{ name: string }],
+  links: [{
+    source: number,
+    target: number,
+    value: number
+  }]
+}
+图表选择建议
+数据对比场景
+
+类别间数值对比：使用柱状图
+部分占整体比例：使用饼图
+多维度指标对比：使用雷达图
+趋势分析场景
+
+连续数据变化：使用折线图
+累计数据变化：使用面积图
+多指标趋势：使用复合图表
+分布分析场景
+
+数据分布关系：使用散点图
+层级数据分布：使用树形图
+流程数据分布：使用漏斗图
+流向分析场景
+
+数据流转过程：使用桑基图
+目标达成情况：使用仪表盘
+组件功能
+统计摘要展示
+
+以卡片形式展示各类统计指标
+支持多种数据类型的展示
+带有动画效果的数据呈现
+图表可视化
+
+支持多种图表类型
+自动适应数据进行渲染
+包含图例和数据提示
+响应式布局
+数据洞察展示
 ```
-
-## 组件功能
-
-1. **统计摘要展示**
-   - 以卡片形式展示各类统计指标
-   - 支持多种数据类型的展示（数字、文本、对象、数组）
-   - 带有动画效果的数据呈现
-
-2. **图表可视化**
-   - 支持饼图（pie）和柱状图（bar）两种图表类型
-   - 自动适应数据进行渲染
-   - 包含图例和数据提示
-   - 响应式布局
-
-3. **数据洞察展示**
-   - 清晰展示分析发现和建议
-   - 带有图标和动画效果
-   - 良好的视觉层次
-
-## 样式特点
-
-- 使用 NextUI 的 Card 组件作为容器
-- 响应式网格布局
-- 动画过渡效果
-- 统一的设计风格
-- 良好的空间层次
-
-## 注意事项
-
-1. 确保传入的 `analysis` 对象包含必要的 `summary` 和 `insights` 属性
-2. 图表数据需要符合指定的数据结构
-3. 组件会自动处理空值和异常情况
-4. 动画效果使用 framer-motion 实现，确保安装相关依赖
-
-## 依赖
-
-- @nextui-org/react
-- recharts
-- framer-motion
-- @/components/ui/card
-- @/components/ui/chart

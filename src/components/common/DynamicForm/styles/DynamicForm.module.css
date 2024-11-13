@@ -1,42 +1,43 @@
 /* DynamicForm 专用样式 */
 .dynamic-form {
   /* 主题色系 - 采用蓝色主题 */
-  --df-primary-50: #EBF5FF;
-  --df-primary-100: #E1EFFE;
-  --df-primary-200: #C3DDFD;
-  --df-primary-300: #A4CAFE;
-  --df-primary-400: #76A9FA;
-  --df-primary-500: #3F83F8;
-  --df-primary-600: #1C64F2;
-  --df-primary-700: #1A56DB;
-  
+  --df-primary-50: #ebf5ff;
+  --df-primary-100: #e1effe;
+  --df-primary-200: #c3ddfd;
+  --df-primary-300: #a4cafe;
+  --df-primary-400: #76a9fa;
+  --df-primary-500: #3f83f8;
+  --df-primary-600: #1c64f2;
+  --df-primary-700: #1a56db;
+
   /* 功能色系 */
-  --df-success-50: #F0FDF4;
-  --df-success-500: #22C55E;
-  --df-success-700: #15803D;
-  
-  --df-warning-50: #FEFCE8;
-  --df-warning-500: #EAB308;
-  --df-warning-700: #A16207;
-  
-  --df-error-50: #FEF2F2;
-  --df-error-500: #EF4444;
-  --df-error-700: #B91C1C;
-  
+  --df-success-50: #f0fdf4;
+  --df-success-500: #22c55e;
+  --df-success-700: #15803d;
+
+  --df-warning-50: #fefce8;
+  --df-warning-500: #eab308;
+  --df-warning-700: #a16207;
+
+  --df-error-50: #fef2f2;
+  --df-error-500: #ef4444;
+  --df-error-700: #b91c1c;
+
   /* 中性色系 - 更柔和的灰度 */
-  --df-gray-50: #F9FAFB;
-  --df-gray-100: #F3F4F6;
-  --df-gray-200: #E5E7EB;
-  --df-gray-300: #D1D5DB;
-  --df-gray-400: #9CA3AF;
-  --df-gray-500: #6B7280;
-  --df-gray-600: #4B5563;
+  --df-gray-50: #f9fafb;
+  --df-gray-100: #f3f4f6;
+  --df-gray-200: #e5e7eb;
+  --df-gray-300: #d1d5db;
+  --df-gray-400: #9ca3af;
+  --df-gray-500: #6b7280;
+  --df-gray-600: #4b5563;
   --df-gray-700: #374151;
   --df-gray-900: #111827;
 
   /* 应用基础样式 */
   background-color: var(--df-gray-50);
   color: var(--df-gray-900);
+  padding: 8px;
 }
 
 /* 表单卡片样式 */
@@ -109,11 +110,6 @@
   background-color: var(--df-primary-600);
   color: white;
   border: none;
-}
-
-.button-primary:hover {
-  background-color: var(--df-primary-700);
-  transform: translateY(-1px);
 }
 
 /* 状态样式 */
@@ -242,7 +238,7 @@
   .dynamic-form {
     background-color: white;
   }
-  
+
   .form-card {
     box-shadow: none;
     border: 1px solid var(--df-gray-300);

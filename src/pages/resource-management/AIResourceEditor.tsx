@@ -41,7 +41,7 @@ const AIResourceEditor: React.FC = () => {
         try {
           const resource = await getResourceDetail(resourceId)
           if (resource && resource.data) {
-            updatedResourceData(resource)
+            updatedResourceData(resource.data)
           } else {
             message.error("资料加载失败")
             navigate("/we-chat-app/admin/resources")
@@ -145,7 +145,7 @@ const AIResourceEditor: React.FC = () => {
             return prev
           })
         } else if (result.data) {
-          updatedResourceData(result)
+          updatedResourceData(result.data)
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
             if (lastMessage.role === "assistant") {
