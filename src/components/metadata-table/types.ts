@@ -42,10 +42,4 @@ export interface MetadataTableProps<T extends MetadataDetail = MetadataDetail> {
   // 事件回调
   onDataChange?: (data: T[]) => void
   onError?: (error: Error) => void
-  // 默认操作
-  defaultActions?: {
-    showDelete?: boolean
-    showAIEdit?: boolean
-    onAIEdit?: (record: T) => void
-  }
 }

@@ -28,11 +28,10 @@ export function MetadataTable<T extends MetadataDetail>({
   type,
   columns,
   toolbar,
-  actions,
+  actions = [],
   emptyContent,
   onDataChange,
   onError,
-  defaultActions,
 }: MetadataTableProps<T>) {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -65,13 +64,9 @@ export function MetadataTable<T extends MetadataDetail>({
 
   const handleAIEdit = useCallback(
     (record: T) => {
-      if (defaultActions?.onAIEdit) {
-        defaultActions.onAIEdit(record)
-      } else {
-        navigate(`/we-chat-app/admin/${type}/ai/${record.id}`)
-      }
+      navigate(`/we-chat-app/admin/${type}/ai/${record.id}`)
     },
-    [defaultActions, navigate]
+    [navigate, type]
   )
 
   const renderToolbar = () => {
@@ -125,65 +120,36 @@ export function MetadataTable<T extends MetadataDetail>({
   }
 
   const renderActions = (record: T) => {
-    const defaultActionButtons = []
-
-    if (defaultActions?.showAIEdit) {
-      defaultActionButtons.push(
-        <Tooltip key='ai-edit' content='AI 分析'>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              isIconOnly
-              size='sm'
-              variant='light'
-              className='text-default-600 hover:text-primary transition-colors bg-default-100 shadow-sm hover:shadow'
-              onClick={() => handleAIEdit(record)}
-            >
-              <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
-            </Button>
-          </motion.div>
-        </Tooltip>
-      )
-    }
-
-    if (defaultActions?.showDelete) {
-      defaultActionButtons.push(
-        <Tooltip key='delete' content='删除' color='danger'>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              isIconOnly
-              size='sm'
-              variant='light'
-              className='text-danger-500 hover:text-danger-600 transition-colors bg-danger-50 shadow-sm hover:shadow'
-              onClick={() => handleDeleteClick(record)}
-            >
-              <Icon icon='mdi:delete' className='w-4 h-4' />
-            </Button>
-          </motion.div>
-        </Tooltip>
-      )
-    }
-
-    const customActionButtons = actions?.map((action) => (
-      <Tooltip key={action.key} content={action.label}>
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <Button 
-            isIconOnly 
-            size='sm' 
-            variant='light' 
-            color={action.color}
-            className='shadow-sm hover:shadow transition-shadow duration-200'
-            onClick={() => action.onClick(record)}
-          >
-            <Icon icon={action.icon} className='w-4 h-4' />
-          </Button>
-        </motion.div>
-      </Tooltip>
-    ))
+    // 合并默认删除操作和自定义操作
+    const allActions: Action<T>[] = [
+      ...actions,
+      {
+        key: 'delete',
+        label: '删除',
+        icon: 'mdi:delete',
+        color: 'danger',
+        onClick: () => handleDeleteClick(record)
+      }
+    ]
 
     return (
       <div className='flex gap-2 items-center justify-end'>
-        {defaultActionButtons}
-        {customActionButtons}
+        {allActions.map((action) => (
+          <Tooltip key={action.key} content={action.label}>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button 
+                isIconOnly 
+                size='sm' 
+                variant='light' 
+                color={action.color}
+                className='shadow-sm hover:shadow transition-shadow duration-200'
+                onClick={() => action.onClick(record)}
+              >
+                <Icon icon={action.icon} className='w-4 h-4' />
+              </Button>
+            </motion.div>
+          </Tooltip>
+        ))}
       </div>
     )
   }
@@ -222,9 +188,7 @@ export function MetadataTable<T extends MetadataDetail>({
                 {column.title}
               </TableColumn>
             ))}
-            {(actions?.length || defaultActions?.showDelete || defaultActions?.showAIEdit) && (
-              <TableColumn className='text-sm text-center'>操作</TableColumn>
-            )}
+            {actions && <TableColumn className='text-sm text-center'>操作</TableColumn>}
           </TableHeader>
           <TableBody
             items={data}
