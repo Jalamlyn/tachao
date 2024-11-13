@@ -8,18 +8,6 @@ export type ResourceColumn = {
   accessorKey: string
 }
 
-// 新增类型定义
-interface ModifyResult {
-  type: "modify"
-  data: any[]
-  changes: {
-    row: number
-    field: string
-    oldValue: any
-    newValue: any
-  }[]
-}
-
 interface AnalysisResult {
   type: "analyze"
   data: any[]
@@ -36,24 +24,26 @@ interface AnalysisResult {
   }
 }
 
-type ResourceOperationResult = ModifyResult | AnalysisResult
+type ResourceOperationResult = AnalysisResult
 
 interface ProcessCommandOptions {
   data: any[]
   command: string
   onChunk?: (chunk: string) => void
-  mode?: string
 }
 
 export class AIResourceAgent {
   private static instance: AIResourceAgent
   private _data: any[] = []
 
-  private constructor() {}
+  private constructor() {
+    console.log("[AIResourceAgent] Instance created")
+  }
 
   public static getInstance(): AIResourceAgent {
     if (!AIResourceAgent.instance) {
       AIResourceAgent.instance = new AIResourceAgent()
+      console.log("[AIResourceAgent] New instance created")
     }
     return AIResourceAgent.instance
   }
@@ -63,9 +53,10 @@ export class AIResourceAgent {
     this._data = data
   }
 
-  private generateSystemPrompt(data: any[], mode: string = "modify"): string {
-    const basePrompt = `你是一个智能资料助手，负责帮助用户对资料进行操作和分析。
-请仔细分析用户的需求，生成相应的代码。
+  private generateSystemPrompt(data: any[]): string {
+    console.log("[AIResourceAgent] Generating system prompt")
+    const basePrompt = `你是一个智能资料分析助手，负责帮助用户对资料进行分析。
+请仔细分析用户的需求，生成相应的分析代码。
 
 资料数据示例:
 ${JSON.stringify(data.slice(0, 3), null, 2)}
@@ -74,13 +65,12 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 
     return `${basePrompt}
 
-
 <doc>${doc}</doc>
 请使用 <shata-ai-resource> 标签包裹你生成的代码，直接返回可执行的 JavaScript 代码。
 注意:
 1. 不要将代码包装在函数定义中
 2. 直接使用传入的 data 参数
-3. 直接返回处理结果对象
+3. 直接返回分析结果对象
 4. 确保返回对象包含必要的 type 和 data 字段
 5. data 字段必须保持原始数据不变
 6. 统计结果放在 analysis 字段中
@@ -96,7 +86,6 @@ const result = {
   analysis: {     // 统计结果放在这里
     summary: {...},
     charts: [...],
-    tables:[...],
     insights: [...]
   }
 };
@@ -108,8 +97,7 @@ return result;
 
   private async executeCode(code: string, data: any[]): Promise<any> {
     try {
-      console.log("[AIResourceAgent] Executing code:", code)
-      // 构造一个自执行函数,传入 data 参数
+      console.log("[AIResourceAgent] Executing analysis code")
       const wrappedCode = `
         return (function(data, formulajs) {
           ${code}
@@ -117,23 +105,23 @@ return result;
       `
       const executeFunction = new Function("data", "formulajs", wrappedCode)
       const result = executeFunction(data, formulaService)
-      console.log("[AIResourceAgent] Code execution result:", result)
+      console.log("[AIResourceAgent] Analysis completed successfully")
       return result
     } catch (error) {
-      console.error("[AIResourceAgent] Error executing code:", error)
+      console.error("[AIResourceAgent] Error executing analysis code:", error)
       throw error
     }
   }
 
-  public async processCommand({ data, command, onChunk, mode = "modify" }: ProcessCommandOptions): Promise<{
+  public async processCommand({ data, command, onChunk }: ProcessCommandOptions): Promise<{
     success: boolean
     message: string
-    data?: any[]
     analysis?: AnalysisResult["analysis"]
   }> {
-    console.log("[AIResourceAgent] Processing command with data:", command)
+    console.log("[AIResourceAgent] Processing analysis command:", command)
 
     if (!data || !data.length) {
+      console.log("[AIResourceAgent] Invalid data provided")
       return {
         success: false,
         message: "请提供有效的数据",
@@ -146,9 +134,9 @@ return result;
     }
 
     try {
-      updateProgress("🤖 AI助手正在分析您的需求...")
+      updateProgress("🤖 AI助手正在分析您的数据...")
 
-      const systemPrompt = this.generateSystemPrompt(data, mode)
+      const systemPrompt = this.generateSystemPrompt(data)
       const messages: Message[] = [
         { role: "system", content: systemPrompt },
         { role: "user", content: command },
@@ -166,33 +154,35 @@ return result;
         0
       )
 
-      console.log("[AIResourceAgent] AI response:", aiResponse)
+      console.log("[AIResourceAgent] AI response received")
 
       const regex = /<shata-ai-resource>([\s\S]*?)<\/shata-ai-resource>/
       const match = aiResponse.match(regex)
       if (!match) {
-        throw new Error("No valid code found in AI response")
+        console.error("[AIResourceAgent] No valid analysis code found in AI response")
+        throw new Error("No valid analysis code found in AI response")
       }
       const generatedCode = match[1].trim()
 
-      updateProgress("⚡ 正在执行代码...")
+      updateProgress("⚡ 正在执行分析...")
       const result = (await this.executeCode(generatedCode, data)) as ResourceOperationResult
 
       if (!result || !result.type || !result.data) {
-        throw new Error("Invalid result format")
+        console.error("[AIResourceAgent] Invalid analysis result format")
+        throw new Error("Invalid analysis result format")
       }
 
+      console.log("[AIResourceAgent] Analysis completed successfully")
       return {
         success: true,
-        message: mode === "modify" ? "操作执行成功" : "分析完成",
-        data: result.data,
-        ...(result.type === "analyze" ? { analysis: result.analysis } : {}),
+        message: "分析完成",
+        analysis: result.analysis,
       }
     } catch (error) {
-      console.error("[AIResourceAgent] Error processing command:", error)
+      console.error("[AIResourceAgent] Error processing analysis command:", error)
       return {
         success: false,
-        message: "处理指令时发生错误：" + (error as Error).message,
+        message: "分析过程中发生错误：" + (error as Error).message,
       }
     }
   }
