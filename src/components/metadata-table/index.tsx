@@ -22,6 +22,7 @@ import type { MetadataTableProps, Column, Action } from "./types"
 import { MetadataDetail } from "@/hooks/useMetadata"
 import { useNavigate } from "react-router-dom"
 import message from "@/components/Message"
+import { motion, AnimatePresence } from "framer-motion"
 
 export function MetadataTable<T extends MetadataDetail>({
   type,
@@ -37,7 +38,6 @@ export function MetadataTable<T extends MetadataDetail>({
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [recordToDelete, setRecordToDelete] = React.useState<T | null>(null)
 
-  // 使用 hook 管理状态
   const { data, loading, searchValue, handleSearch, handleRefresh, handleDelete } = useMetadataTable<T>({
     type,
     searchFields: toolbar?.searchProps?.fields,
@@ -45,13 +45,11 @@ export function MetadataTable<T extends MetadataDetail>({
     onError,
   })
 
-  // 处理删除确认
   const handleDeleteClick = useCallback((record: T) => {
     setRecordToDelete(record)
     onOpen()
   }, [])
 
-  // 确认删除
   const confirmDelete = useCallback(async () => {
     if (recordToDelete) {
       try {
@@ -65,100 +63,120 @@ export function MetadataTable<T extends MetadataDetail>({
     }
   }, [recordToDelete, handleDelete])
 
-  // 处理 AI 编辑
   const handleAIEdit = useCallback(
     (record: T) => {
       if (defaultActions?.onAIEdit) {
         defaultActions.onAIEdit(record)
       } else {
-        navigate(`/we-chat-app/admin/resources/ai/${record.id}`)
+        navigate(`/we-chat-app/admin/${type}/ai/${record.id}`)
       }
     },
     [defaultActions, navigate]
   )
 
-  // 渲染工具栏
   const renderToolbar = () => {
     if (!toolbar) return null
 
     return (
-      <div className='flex justify-between items-center mb-4'>
-        <div className='flex items-center gap-2'>
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className='flex justify-between items-center mb-6 bg-default-50 p-4 rounded-lg shadow-sm'
+      >
+        <div className='flex items-center gap-3'>
           {toolbar.showSearch && (
             <Input
               isClearable
               className='w-full max-w-xs'
               placeholder={toolbar.searchProps?.placeholder || "搜索..."}
-              startContent={<Icon icon='mdi:search' className='text-default-400 pointer-events-none flex-shrink-0' />}
+              startContent={
+                <Icon icon='mingcute:search-ai-line' className='text-default-400 pointer-events-none flex-shrink-0' />
+              }
               value={searchValue}
               onClear={() => handleSearch("")}
               onValueChange={handleSearch}
               variant='bordered'
+              classNames={{
+                input: "text-small",
+                inputWrapper: "h-10 shadow-sm hover:shadow transition-shadow duration-200",
+              }}
             />
           )}
         </div>
         <div className='flex items-center gap-2'>
           {toolbar.extra}
           {toolbar.showRefresh && (
-            <Button isIconOnly variant='light' onClick={handleRefresh} isLoading={loading}>
-              <Icon icon='mdi:refresh' className='w-5 h-5' />
-            </Button>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button 
+                isIconOnly 
+                variant='light' 
+                onClick={handleRefresh} 
+                isLoading={loading}
+                className="bg-default-100 shadow-sm hover:shadow transition-shadow duration-200"
+              >
+                <Icon icon='mdi:refresh' className='w-5 h-5' />
+              </Button>
+            </motion.div>
           )}
         </div>
-      </div>
+      </motion.div>
     )
   }
 
-  // 渲染操作按钮
   const renderActions = (record: T) => {
     const defaultActionButtons = []
 
-    // AI 编辑按钮
     if (defaultActions?.showAIEdit) {
       defaultActionButtons.push(
         <Tooltip key='ai-edit' content='AI 分析'>
-          <Button
-            isIconOnly
-            size='sm'
-            variant='light'
-            className='text-default-600 hover:text-primary transition-colors'
-            onClick={() => handleAIEdit(record)}
-          >
-            <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
-          </Button>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-600 hover:text-primary transition-colors bg-default-100 shadow-sm hover:shadow'
+              onClick={() => handleAIEdit(record)}
+            >
+              <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
+            </Button>
+          </motion.div>
         </Tooltip>
       )
     }
 
-    // 删除按钮
     if (defaultActions?.showDelete) {
       defaultActionButtons.push(
         <Tooltip key='delete' content='删除' color='danger'>
-          <Button
-            isIconOnly
-            size='sm'
-            variant='light'
-            className='text-danger-500 hover:text-danger-600 transition-colors'
-            onClick={() => handleDeleteClick(record)}
-          >
-            <Icon icon='mdi:delete' className='w-4 h-4' />
-          </Button>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-danger-500 hover:text-danger-600 transition-colors bg-danger-50 shadow-sm hover:shadow'
+              onClick={() => handleDeleteClick(record)}
+            >
+              <Icon icon='mdi:delete' className='w-4 h-4' />
+            </Button>
+          </motion.div>
         </Tooltip>
       )
     }
 
-    // 自定义操作按钮
     const customActionButtons = actions?.map((action) => (
       <Tooltip key={action.key} content={action.label}>
-        <Button
-          isIconOnly
-          size='sm'
-          variant='light'
-          color={action.color}
-          onClick={() => action.onClick(record)}
-        >
-          <Icon icon={action.icon} className='w-4 h-4' />
-        </Button>
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button 
+            isIconOnly 
+            size='sm' 
+            variant='light' 
+            color={action.color}
+            className='shadow-sm hover:shadow transition-shadow duration-200'
+            onClick={() => action.onClick(record)}
+          >
+            <Icon icon={action.icon} className='w-4 h-4' />
+          </Button>
+        </motion.div>
       </Tooltip>
     ))
 
@@ -172,59 +190,106 @@ export function MetadataTable<T extends MetadataDetail>({
 
   return (
     <div className='metadata-table space-y-4'>
-      {/* 工具栏 */}
       {renderToolbar()}
 
-      {/* 表格 */}
-      <Table
-        aria-label={`${type} table`}
-        classNames={{
-          wrapper: "min-h-[222px]",
-        }}
-        loadingContent={
-          <div className='flex justify-center items-center h-32'>
-            <Icon icon='mdi:loading' className='w-8 h-8 animate-spin' />
-          </div>
-        }
-        loadingState={loading ? "loading" : "idle"}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
       >
-        <TableHeader>
-          {columns.map((column) => (
-            <TableColumn key={column.key} className='text-sm'>
-              {column.title}
-            </TableColumn>
-          ))}
-          {(actions?.length || defaultActions?.showDelete || defaultActions?.showAIEdit) && (
-            <TableColumn className='text-sm text-center'>操作</TableColumn>
-          )}
-        </TableHeader>
-        <TableBody
-          items={data}
-          emptyContent={
-            emptyContent || (
-              <div className='text-center text-default-400 py-6'>
-                <Icon icon='mdi:file-search' className='w-8 h-8 mx-auto mb-2' />
-                <p>暂无数据</p>
-              </div>
-            )
+        <Table
+          aria-label={`${type} table`}
+          classNames={{
+            wrapper: "min-h-[222px] shadow-sm rounded-lg overflow-hidden",
+            th: "bg-default-100 text-default-800 text-xs uppercase tracking-wider",
+            td: "text-sm",
+          }}
+          loadingContent={
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className='flex flex-col justify-center items-center h-32 space-y-4'
+            >
+              <Icon icon='mdi:loading' className='w-8 h-8 animate-spin text-primary' />
+              <p className="text-default-500">加载中...</p>
+            </motion.div>
           }
+          loadingState={loading ? "loading" : "idle"}
         >
-          {(item) => (
-            <TableRow key={item.id} className='hover:bg-default-100 transition-colors'>
-              {(columnKey) => (
-                <TableCell>
-                  {columnKey === "actions"
-                    ? renderActions(item)
-                    : (columns.find((col) => col.key === columnKey)?.render?.(item) ?? item[columnKey as keyof T])}
-                </TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          <TableHeader>
+            {columns.map((column) => (
+              <TableColumn key={column.key} className='text-sm'>
+                {column.title}
+              </TableColumn>
+            ))}
+            {(actions?.length || defaultActions?.showDelete || defaultActions?.showAIEdit) && (
+              <TableColumn className='text-sm text-center'>操作</TableColumn>
+            )}
+          </TableHeader>
+          <TableBody
+            items={data}
+            emptyContent={
+              emptyContent || (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className='text-center text-default-400 py-8'
+                >
+                  <Icon icon='mdi:file-search' className='w-12 h-12 mx-auto mb-4 opacity-50' />
+                  <p className="text-lg font-medium mb-2">暂无数据</p>
+                  <p className="text-sm text-default-400">试试添加一些数据吧</p>
+                </motion.div>
+              )
+            }
+          >
+            {(item) => (
+              <TableRow 
+                key={item.id} 
+                className='hover:bg-default-50 transition-colors duration-150 cursor-pointer'
+              >
+                {(columnKey) => (
+                  <TableCell>
+                    {columnKey === "actions"
+                      ? renderActions(item)
+                      : (columns.find((col) => col.key === columnKey)?.render?.(item) ?? item[columnKey as keyof T])}
+                  </TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </motion.div>
 
-      {/* 删除确认对话框 */}
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal 
+        isOpen={isOpen} 
+        onClose={onClose}
+        classNames={{
+          base: "bg-default-50 dark:bg-default-100",
+          header: "border-b border-default-200",
+          body: "py-6",
+          footer: "border-t border-default-200",
+        }}
+        motionProps={{
+          variants: {
+            enter: {
+              y: 0,
+              opacity: 1,
+              transition: {
+                duration: 0.3,
+                ease: "easeOut",
+              },
+            },
+            exit: {
+              y: -20,
+              opacity: 0,
+              transition: {
+                duration: 0.2,
+                ease: "easeIn",
+              },
+            },
+          }
+        }}
+      >
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>确认删除</ModalHeader>
           <ModalBody>
@@ -234,7 +299,11 @@ export function MetadataTable<T extends MetadataDetail>({
             <Button color='default' variant='light' onPress={onClose}>
               取消
             </Button>
-            <Button color='danger' onPress={confirmDelete}>
+            <Button 
+              color='danger' 
+              onPress={confirmDelete}
+              className="shadow-lg shadow-danger-500/20"
+            >
               删除
             </Button>
           </ModalFooter>
