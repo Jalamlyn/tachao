@@ -70,7 +70,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
   }
 
   return (
-    <div className='space-y-6 p-6'>
+    <div className='space-y-6'>
       {/* 统计摘要卡片 */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <Card>
@@ -151,7 +151,10 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: (analysis.charts?.length || 0) * 0.1 + (analysis.tables?.length || 0) * 0.1 }}
+        transition={{
+          duration: 0.5,
+          delay: (analysis.charts?.length || 0) * 0.1 + (analysis.tables?.length || 0) * 0.1,
+        }}
       >
         <Card>
           <CardHeader>

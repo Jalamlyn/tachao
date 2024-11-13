@@ -68,33 +68,11 @@ const ResourceManagement: React.FC = () => {
         </div>
       ),
     },
-    {
-      key: "actions",
-      title: "操作",
-      render: (record: Resource) => null, // 这里返回 null 因为操作列会由 MetadataTable 自动处理
-    },
   ]
-
-  const handleAnalyze = () => {
-    navigate("/we-chat-app/admin/forms/analysis")
-  }
 
   const pageActions = (
     <>
-      <Button isIconOnly variant='light' onClick={handleAnalyze}>
-        <Icon icon='mdi:refresh' className='w-5 h-5' />
-      </Button>
-      <Button
-        onClick={handleAnalyze}
-        color='secondary'
-        startContent={<Icon icon='solar:chart-2-bold' className='w-4 h-4' />}
-      >
-        AI 数据分析
-      </Button>
-      <Button onClick={handleAnalyze} color='primary'>
-        <Icon icon='mdi:file-document-plus' className='w-4 h-4 mr-2' />
-        创建单据
-      </Button>
+      <CreateResourceButton appId={appId} isDisabled={false} />
     </>
   )
 
@@ -116,11 +94,11 @@ const ResourceManagement: React.FC = () => {
             key: "ai",
             label: "AI 分析",
             icon: "hugeicons:ai-chat-02",
-            color: "primary", 
+            color: "primary",
             onClick: (record) => {
               navigate(`/we-chat-app/admin/resources/ai/${record.id}`)
             },
-          }
+          },
         ]}
         onError={(error) => message.error(error.message)}
       />

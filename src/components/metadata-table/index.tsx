@@ -37,20 +37,13 @@ export function MetadataTable<T extends MetadataDetail>({
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [recordToDelete, setRecordToDelete] = React.useState<T | null>(null)
 
-  const { 
-    data, 
-    loading, 
-    searchValue, 
-    isEmptySearchResult,
-    handleSearch, 
-    handleRefresh, 
-    handleDelete 
-  } = useMetadataTable<T>({
-    type,
-    searchFields: toolbar?.searchProps?.fields,
-    onDataChange,
-    onError,
-  })
+  const { data, loading, searchValue, isEmptySearchResult, handleSearch, handleRefresh, handleDelete } =
+    useMetadataTable<T>({
+      type,
+      searchFields: toolbar?.searchProps?.fields,
+      onDataChange,
+      onError,
+    })
 
   const handleDeleteClick = useCallback((record: T) => {
     setRecordToDelete(record)
@@ -70,13 +63,6 @@ export function MetadataTable<T extends MetadataDetail>({
     }
   }, [recordToDelete, handleDelete])
 
-  const handleAIEdit = useCallback(
-    (record: T) => {
-      navigate(`/we-chat-app/admin/${type}/ai/${record.id}`)
-    },
-    [navigate, type]
-  )
-
   const renderToolbar = () => {
     if (!toolbar) return null
 
@@ -85,7 +71,7 @@ export function MetadataTable<T extends MetadataDetail>({
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className='flex justify-between items-center mb-6 bg-default-50 p-4 rounded-lg shadow-sm'
+        className='flex justify-between items-center mb-6 p-4 rounded-lg shadow-sm'
       >
         <div className='flex items-center gap-3'>
           {toolbar.showSearch && (
@@ -174,16 +160,9 @@ export function MetadataTable<T extends MetadataDetail>({
         >
           <Icon icon='mdi:file-search' className='w-12 h-12 mx-auto mb-4 opacity-50' />
           <p className='text-lg font-medium mb-2'>未找到匹配结果</p>
-          <p className='text-sm text-default-400'>
-            没有找到与 "{searchValue}" 相关的内容
-          </p>
-          <Button 
-            variant="light" 
-            size="sm"
-            className="mt-4"
-            onClick={() => handleSearch("")}
-          >
-            <Icon icon="mdi:refresh" className="mr-2" />
+          <p className='text-sm text-default-400'>没有找到与 "{searchValue}" 相关的内容</p>
+          <Button variant='light' size='sm' className='mt-4' onClick={() => handleSearch("")}>
+            <Icon icon='mdi:refresh' className='mr-2' />
             重置搜索
           </Button>
         </motion.div>
@@ -233,11 +212,11 @@ export function MetadataTable<T extends MetadataDetail>({
                 {column.title}
               </TableColumn>
             ))}
+            <TableColumn key='actions' className='text-sm'>
+              操作
+            </TableColumn>
           </TableHeader>
-          <TableBody
-            items={data}
-            emptyContent={renderEmptyContent()}
-          >
+          <TableBody items={data} emptyContent={renderEmptyContent()}>
             {(item) => (
               <TableRow key={item.id} className='hover:bg-default-50 transition-colors duration-150 cursor-pointer'>
                 {(columnKey) => (

@@ -72,38 +72,10 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 
 数据总行数: ${data.length}`
 
-    const modeSpecificPrompt =
-      mode === "modify"
-        ? `你需要返回如下结构:
-{
-  type: 'modify',
-  data: modifiedData,  // 修改后的数据
-}`
-        : `你需要返回如下结构:
-{
-  type: 'analyze',
-  data: originalData,  // 保持原始数据不变
-  analysis: {
-    summary: {         // 统计摘要
-      [key: string]: number | string
-    },
-    charts?: [{        // 可选的图表数据
-      type: string,
-      data: {
-        labels: string[],
-        values: number[]
-      }
-    }],
-    insights: string[] // 数据洞察
-  }
-}
-<doc>${doc}</doc>
-`
-
     return `${basePrompt}
 
-${modeSpecificPrompt}
 
+<doc>${doc}</doc>
 请使用 <shata-ai-resource> 标签包裹你生成的代码，直接返回可执行的 JavaScript 代码。
 注意:
 1. 不要将代码包装在函数定义中
@@ -123,6 +95,7 @@ const result = {
   analysis: {     // 统计结果放在这里
     summary: {...},
     charts: [...],
+    tables:[...],
     insights: [...]
   }
 };
