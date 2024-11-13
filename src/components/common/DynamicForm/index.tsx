@@ -15,6 +15,7 @@ import { useReactToPrint } from "react-to-print"
 import { cn } from "@/theme/cn"
 import { defaultFormConfig } from "./defaultConfig"
 import { merge } from "lodash"
+import styles from "./styles/DynamicForm.module.css"
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
   config: userConfig,
@@ -74,7 +75,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     if (config.watch) {
       const unsubscribe = config.watch(form)
       return () => {
-        if (typeof unsubscribe === 'function') {
+        if (typeof unsubscribe === "function") {
           unsubscribe()
         }
       }
@@ -253,55 +254,43 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={handleFormSubmit} className="max-w-[1200px] mx-auto space-y-6">
-        {/* 表单标题区域 */}
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900">{metadata.title}</h1>
-              {metadata.description && (
-                <p className="mt-1 text-sm text-gray-500">{metadata.description}</p>
-              )}
-            </div>
-            <div className="flex gap-3">
-              {metadata.permissions?.print && (
-                <Button 
-                  variant="flat"
-                  className="bg-white border border-gray-200 hover:bg-gray-50"
-                  onClick={handlePrint}
-                >
-                  <Icon icon="mdi:printer" className="w-4 h-4" />
-                  <span className="ml-2">打印</span>
-                </Button>
-              )}
-              {metadata.permissions?.edit && (
-                <Button
-                  variant="flat" 
-                  className={cn(
-                    "bg-white border",
-                    isEditing 
-                      ? "border-orange-200 text-orange-600 hover:bg-orange-50"
-                      : "border-blue-200 text-blue-600 hover:bg-blue-50"
-                  )}
-                  onClick={() => setIsEditing(!isEditing)}
-                >
-                  <Icon 
-                    icon={isEditing ? "mdi:pencil-off" : "mdi:pencil"} 
-                    className="w-4 h-4" 
-                  />
-                  <span className="ml-2">
-                    {isEditing ? "取消编辑" : "编辑"}
-                  </span>
-                </Button>
-              )}
-            </div>
+      <form onSubmit={handleFormSubmit} className={cn(styles['dynamic-form'], 'space-y-6 md:space-y-8')}>
+        {/* 表单标题 */}
+        <div className={cn(styles['form-card'], 'flex flex-col md:flex-row md:justify-between md:items-center pb-4 gap-4')}>
+          <div>
+            <h1 className={cn(styles['form-title'])}>{metadata.title}</h1>
+            {metadata.description && <p className={cn(styles['form-description'], 'text-gray-500 mt-1 text-sm break-all')}>{metadata.description}</p>}
+          </div>
+          <div className='flex gap-2 flex-wrap'>
+            {metadata.permissions?.print && (
+              <Button
+                variant='flat'
+                color='primary'
+                onClick={handlePrint}
+                className={cn(styles['button'], styles['button-primary'], 'w-full md:w-auto')}
+              >
+                <Icon icon='mdi:printer' className='w-4 h-4' />
+                <span className='hidden md:inline ml-1'>打印</span>
+              </Button>
+            )}
+            {metadata.permissions?.edit && (
+              <Button
+                variant='flat'
+                color={isEditing ? "warning" : "primary"}
+                className={cn(styles['button'], 'w-full md:w-auto')}
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                <Icon icon={isEditing ? "mdi:pencil-off" : "mdi:pencil"} className='w-4 h-4' />
+                <span className='hidden md:inline ml-1'>{isEditing ? "取消编辑" : "编辑"}</span>
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* 基本信息区域 */}
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900 mb-6">基本信息</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* 基本信息 */}
+        <div className={cn(styles['form-card'])}>
+          <h2 className={cn(styles['form-title'])}>基本信息</h2>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-2'>
             <OrderNumberField
               form={form}
               prefix={orderNumberConfig.prefix}
@@ -310,59 +299,46 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               disabled={!isEditing}
             />
           </div>
-          <DynamicFormFields 
-            fields={renderConfig.basicFields} 
-            form={form} 
-            isEditable={isEditing} 
-          />
+          <DynamicFormFields fields={renderConfig.basicFields} form={form} isEditable={isEditing} />
         </div>
 
-        {/* 表格区域 */}
+        {/* 表格 */}
         {renderConfig.table && (
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 mb-6">明细信息</h2>
-            <DynamicTable 
-              config={renderConfig.table} 
-              form={form} 
-              isEditable={isEditing} 
-              fieldName='tableData' 
-            />
+          <div className={cn(styles['form-card'])}>
+            <h2 className={cn(styles['form-title'])}>明细信息</h2>
+            <DynamicTable config={renderConfig.table} form={form} isEditable={isEditing} fieldName='tableData' />
           </div>
         )}
 
-        {/* 流程确认区域 */}
+        {/* 流程确认 */}
         {renderConfig.processSteps && (
-          <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 mb-6">流程确认</h2>
-            <DynamicProcessConfirm 
-              steps={renderConfig.processSteps} 
-              form={form} 
-              isEditable={isEditing} 
-            />
+          <div className={cn(styles['form-card'])}>
+            <h2 className={cn(styles['form-title'])}>流程确认</h2>
+            <DynamicProcessConfirm steps={renderConfig.processSteps} form={form} isEditable={isEditing} />
           </div>
         )}
 
         {/* 操作按钮 */}
         {isEditing && (
-          <div className="flex flex-col md:flex-row justify-end gap-4 pt-4">
+          <div className={cn(styles['form-card'], 'flex flex-col md:flex-row md:justify-end gap-4 pt-4 border-t')}>
             {onCancel && (
-              <Button 
-                variant="flat" 
-                color="default" 
+              <Button
+                variant='flat'
+                color='default'
                 onClick={onCancel}
-                className="w-full md:w-auto order-2 md:order-1"
+                className={cn(styles['button'], 'w-full md:w-auto order-2 md:order-1')}
               >
-                <Icon icon="mdi:close" className="w-4 h-4" />
-                <span className="ml-2">取消</span>
+                <Icon icon='mdi:close' className='w-4 h-4' />
+                <span className='hidden md:inline ml-1'>取消</span>
               </Button>
             )}
-            <Button 
-              type="submit" 
-              color="primary"
-              className="w-full md:w-auto order-1 md:order-2"
+            <Button
+              type='submit'
+              color='primary'
+              className={cn(styles['button'], styles['button-primary'], 'w-full md:w-auto order-1 md:order-2')}
             >
-              <Icon icon="mdi:content-save" className="w-4 h-4" />
-              <span className="ml-2">保存</span>
+              <Icon icon='mdi:content-save' className='w-4 h-4' />
+              <span className='hidden md:inline ml-1'>保存</span>
             </Button>
           </div>
         )}

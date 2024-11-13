@@ -1,0 +1,222 @@
+/* DynamicForm 专用样式 */
+.dynamic-form {
+  /* 主题色系 */
+  --df-primary-50: #EFF6FF;
+  --df-primary-100: #DBEAFE;
+  --df-primary-200: #BFDBFE;
+  --df-primary-300: #93C5FD;
+  --df-primary-400: #60A5FA;
+  --df-primary-500: #3B82F6;
+  --df-primary-600: #2563EB;
+  --df-primary-700: #1D4ED8;
+  
+  /* 功能色系 */
+  --df-success-50: #F0FDF4;
+  --df-success-500: #22C55E;
+  --df-success-700: #15803D;
+  
+  --df-warning-50: #FEFCE8;
+  --df-warning-500: #EAB308;
+  --df-warning-700: #A16207;
+  
+  --df-error-50: #FEF2F2;
+  --df-error-500: #EF4444;
+  --df-error-700: #B91C1C;
+  
+  /* 中性色系 */
+  --df-gray-50: #F9FAFB;
+  --df-gray-100: #F3F4F6;
+  --df-gray-200: #E5E7EB;
+  --df-gray-300: #D1D5DB;
+  --df-gray-400: #9CA3AF;
+  --df-gray-500: #6B7280;
+  --df-gray-600: #4B5563;
+  --df-gray-700: #374151;
+  --df-gray-900: #111827;
+
+  /* 应用基础样式 */
+  background-color: var(--df-gray-50);
+  color: var(--df-gray-900);
+}
+
+/* 表单卡片样式 */
+.form-card {
+  background-color: white;
+  border: 1px solid var(--df-gray-200);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.form-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: var(--df-gray-300);
+}
+
+/* 表单标题样式 */
+.form-title {
+  color: var(--df-gray-900);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--df-primary-100);
+}
+
+/* 表单字段样式 */
+.form-field {
+  margin-bottom: 1rem;
+}
+
+.field-label {
+  color: var(--df-gray-700);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.field-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--df-gray-200);
+  border-radius: 0.375rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.field-input:focus {
+  border-color: var(--df-primary-500);
+  box-shadow: 0 0 0 2px var(--df-primary-100);
+  outline: none;
+}
+
+/* 按钮样式 */
+.button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.button-primary {
+  background-color: var(--df-primary-500);
+  color: white;
+  border: none;
+}
+
+.button-primary:hover {
+  background-color: var(--df-primary-600);
+}
+
+/* 状态样式 */
+.status-success {
+  background-color: var(--df-success-50);
+  border: 1px solid var(--df-success-500);
+  color: var(--df-success-700);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+}
+
+.status-warning {
+  background-color: var(--df-warning-50);
+  border: 1px solid var(--df-warning-500);
+  color: var(--df-warning-700);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+}
+
+.status-error {
+  background-color: var(--df-error-50);
+  border: 1px solid var(--df-error-500);
+  color: var(--df-error-700);
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+}
+
+/* 表格样式 */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1rem 0;
+}
+
+.table th {
+  background-color: var(--df-gray-50);
+  color: var(--df-gray-700);
+  font-weight: 500;
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 2px solid var(--df-gray-200);
+}
+
+.table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--df-gray-200);
+}
+
+.table tr:hover {
+  background-color: var(--df-gray-50);
+}
+
+/* 流程步骤样式 */
+.process-step {
+  border-left: 4px solid var(--df-gray-200);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.process-step.active {
+  border-left-color: var(--df-primary-500);
+  background-color: var(--df-primary-50);
+}
+
+.step-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--df-gray-100);
+  color: var(--df-gray-400);
+}
+
+.step-icon.completed {
+  background-color: var(--df-primary-50);
+  color: var(--df-primary-500);
+}
+
+/* 工具提示样式 */
+.tooltip {
+  background-color: var(--df-gray-900);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+/* 打印样式 */
+@media print {
+  .dynamic-form {
+    background-color: white;
+  }
+  
+  .form-card {
+    box-shadow: none;
+    border: 1px solid var(--df-gray-300);
+  }
+
+  .process-step {
+    break-inside: avoid;
+  }
+
+  .table {
+    break-inside: auto;
+  }
+
+  .table tr {
+    break-inside: avoid;
+  }
+}
