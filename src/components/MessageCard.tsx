@@ -13,7 +13,7 @@ import rehypeRaw from "rehype-raw"
 type MessageCardProps = React.HTMLAttributes<HTMLDivElement> & {
   avatar?: string
   showFeedback?: boolean
-  message?: string
+  message?: React.ReactNode | string // 修改这里，允许 ReactNode 类型
   currentAttempt?: number
   status?: "success" | "failed" | "streaming" | "loading" | "cancelled"
   attempts?: number
@@ -31,7 +31,7 @@ type MessageCardProps = React.HTMLAttributes<HTMLDivElement> & {
   onDeleteGuidanceMessage?: () => void
 }
 
-// 新增的 Mermaid 组件
+// Mermaid 组件保持不变
 const Mermaid = ({ chart }) => {
   const [svg, setSvg] = useState("")
   const mermaidRef = useRef()
@@ -90,7 +90,7 @@ const MessageCard = React.memo(
 
       useEffect(() => {
         setDisplayedMessage(message)
-      }, [message?.length])
+      }, [message])
 
       const failedMessageClassName =
         status === "failed" ? "bg-danger-100/50 border border-danger-100 text-foreground" : ""
@@ -134,7 +134,9 @@ const MessageCard = React.memo(
 
       const handleCopy = useCallback(() => {
         startTransition(() => {
-          const valueToCopy = displayedMessage || messageRef.current?.textContent || ""
+          const valueToCopy = typeof displayedMessage === 'string' 
+            ? displayedMessage 
+            : messageRef.current?.textContent || ""
           copy(valueToCopy)
           onMessageCopy?.(valueToCopy)
         })
@@ -148,41 +150,9 @@ const MessageCard = React.memo(
         [onAttemptFeedback]
       )
 
-      const renderUsageInfo = (usage) => {
-        if (!usage) return null
-        return (
-          <div className='mt-2 flex flex-wrap gap-2'>
-            <Chip size='sm' variant='flat' color='primary'>
-              Prompt Tokens: {usage.prompt_tokens}
-            </Chip>
-            <Chip size='sm' variant='flat' color='secondary'>
-              Completion Tokens: {usage.completion_tokens}
-            </Chip>
-            <Chip size='sm' variant='flat' color='success'>
-              Total Tokens: {usage.total_tokens}
-            </Chip>
-            {usage.prompt_cache_hit_tokens !== undefined && (
-              <Chip size='sm' variant='flat' color='warning'>
-                Cache Hit Tokens: {usage.prompt_cache_hit_tokens}
-              </Chip>
-            )}
-            {usage.prompt_cache_miss_tokens !== undefined && (
-              <Chip size='sm' variant='flat' color='danger'>
-                Cache Miss Tokens: {usage.prompt_cache_miss_tokens}
-              </Chip>
-            )}
-          </div>
-        )
-      }
-
       const renderContent = () => {
         if (status === "cancelled") {
-          return (
-            <div>
-              {/* <p>{t("message_cancelled")}</p> */}
-              <p>......</p>
-            </div>
-          )
+          return <div><p>......</p></div>
         }
         if (hasFailed) {
           return failedMessage
@@ -201,25 +171,18 @@ const MessageCard = React.memo(
           contentClassName += " text-black p-0 rounded-lg"
         }
 
-        let usage = null
-        try {
-          if (displayedMessage?.includes("usage")) {
-            usage = messageObj.usage
-          }
-        } catch (error) {
-          // 如果解析失败，说明消息不是JSON格式，继续使用原始消息
+        // 检查 displayedMessage 的类型
+        if (React.isValidElement(displayedMessage)) {
+          // 如果是 React 元素，直接返回
+          return displayedMessage
         }
 
-        const markdownContent = (
-          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-            {usage ? JSON.stringify(usage) : displayedMessage || ""}
-          </ReactMarkdown>
-        )
-
+        // 如果是字符串，使用 ReactMarkdown 渲染
         return (
           <div className={contentClassName}>
-            {markdownContent}
-            {usage && renderUsageInfo(usage)}
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+              {displayedMessage as string || ""}
+            </ReactMarkdown>
           </div>
         )
       }

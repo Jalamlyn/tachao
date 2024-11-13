@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Textarea, Tooltip } from "@nextui-org/react"
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import FormPreview from "./components/FormPreview"
 import { useFormState } from "./hooks/useFormState"
@@ -13,6 +13,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
 import MessageCard from "@/components/MessageCard"
+import AICommandInput from "@/components/AICommandInput"
 
 // 导入头像
 import mo2 from "/assets/mo-2.png"
@@ -23,7 +24,6 @@ const AIFormEditor: React.FC = () => {
   const { templateId } = useParams<{ templateId: string }>()
   const isEditMode = Boolean(templateId)
   const { updateBreadcrumbs } = useBreadcrumb()
-  const [input, setInput] = useState("")
   const [messages, setMessages] = useState<any[]>([])
 
   const { state: formState, setFormConfig, setRawConfig, handleError, appendGenerationProcess } = useFormState()
@@ -127,23 +127,30 @@ const AIFormEditor: React.FC = () => {
     navigate("/we-chat-app/admin/documents")
   }
 
-  const { isLoading, handleClick: handleSendMessage } = useAsyncButton(
-    async () => {
-      if (!input.trim()) return
-
+  // 构造 AI 代理对象
+  const formAgent = {
+    processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
       const userMessage = {
         role: "user",
-        content: input,
+        content: command,
         id: Date.now().toString(),
         timestamp: new Date().toLocaleTimeString(),
       }
       setMessages((prev) => [...prev, userMessage])
-      setInput("")
+
+      const assistantMessage = {
+        role: "assistant",
+        content: "",
+        id: (Date.now() + 1).toString(),
+        timestamp: new Date().toLocaleTimeString(),
+      }
+      setMessages((prev) => [...prev, assistantMessage])
 
       try {
         const result = await AIFormAgent.processCommand(
-          input,
+          command,
           (chunk) => {
+            onChunk?.(chunk)
             setMessages((prev) => {
               const newMessages = [...prev]
               const lastMessage = newMessages[newMessages.length - 1]
@@ -157,29 +164,26 @@ const AIFormEditor: React.FC = () => {
           formState.rawConfig
         )
 
-        // 只有在确认支持该指令后才添加assistant消息
-        if (result.type === "support") {
-          const assistantMessage = {
-            role: "assistant",
-            content: "",
-            id: (Date.now() + 1).toString(),
-            timestamp: new Date().toLocaleTimeString(),
-          }
-          setMessages((prev) => [...prev, assistantMessage])
-
-          if (result.data?.config) {
-            setFormConfig(result.data.config)
-            setRawConfig(result.data.rawConfig)
-          }
-        }
+        return result
       } catch (error) {
         console.error("Error in chat:", error)
-        message.error((error as Error).message || "生成过程中发生错误")
+        message.error("生成过程中发生错误")
+        throw error
+      }
+    }
+  }
+
+  // 处理命令结果
+  const handleCommandResult = useCallback(
+    (result) => {
+      if (result?.type === "support") {
+        if (result.data?.config) {
+          setFormConfig(result.data.config)
+          setRawConfig(result.data.rawConfig)
+        }
       }
     },
-    {
-      errorMessage: "生成过程中发生错误",
-    }
+    [setFormConfig, setRawConfig]
   )
 
   const pageActions = (
@@ -195,11 +199,7 @@ const AIFormEditor: React.FC = () => {
   )
 
   return (
-    <PageLayout
-      title="AI 智能单据助手"
-      titleIcon='mdi:form-select'
-      actions={pageActions}
-    >
+    <PageLayout title='AI 智能单据助手' titleIcon='mdi:form-select' actions={pageActions}>
       <div className='h-[calc(100vh-140px)] overflow-hidden'>
         <ResizablePanelGroup direction='horizontal' className='h-full'>
           <ResizablePanel defaultSize={30}>
@@ -220,56 +220,17 @@ const AIFormEditor: React.FC = () => {
                 </div>
               </ScrollShadow>
 
-              <div className='flex items-end gap-2 p-4 bg-white'>
-                <Textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder='输入您的需求，例如 编辑 xxx 创建 xxx AI 会根据您的指令来创建和更改表单'
-                  className='flex-grow'
-                  classNames={{
-                    input: "py-2 text-medium",
-                    inputWrapper: "bg-default-100",
-                  }}
-                  minRows={1}
-                  maxRows={4}
-                  endContent={
-                    <div className='flex items-center gap-2 pr-2'>
-                      <Tooltip content='发送指令' placement='top'>
-                        <Button
-                          isIconOnly
-                          className={!input || isLoading ? "" : "bg-primary"}
-                          color={!input || isLoading ? "default" : "primary"}
-                          isDisabled={!input || isLoading}
-                          radius='full'
-                          variant={!input || isLoading ? "flat" : "solid"}
-                          onClick={handleSendMessage}
-                          isLoading={isLoading}
-                        >
-                          {isLoading ? (
-                            <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
-                          ) : (
-                            <Icon
-                              className={!input ? "text-default-500" : "text-white"}
-                              icon='solar:arrow-up-linear'
-                              width={20}
-                            />
-                          )}
-                        </Button>
-                      </Tooltip>
-                    </div>
-                  }
-                />
-              </div>
+              <AICommandInput agent={formAgent} onResult={handleCommandResult} />
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={70} className='bg-slate-100'>
-            <div className='h-full overflow-auto'>
+          <ResizablePanel defaultSize={70} className='p-2'>
+            <div className='h-full overflow-auto bg-slate-100'>
               <div>
                 {formState.formConfig ? (
                   <FormPreview previewMode config={formState.formConfig} />
                 ) : (
-                  <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
+                  <div className='text-center pt-[30%] text-gray-500 h-full flex flex-col justify-center items-center'>
                     <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
                     <p>请输入您的需求,AI将为您开发表单</p>
                   </div>

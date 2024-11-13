@@ -1,31 +1,37 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams } from "react-router-dom"
-import { Button, Textarea, Tabs, Tab } from "@nextui-org/react"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
-import { useAsyncButton } from "@/hooks/useAsyncButton"
 import MessageCard from "@/components/MessageCard"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import AIResourceAgent from "@/service/agents/AIResourceAgent"
+import AnalysisResult from "./components/AnalysisResult"
+import AICommandInput from "@/components/AICommandInput"
 
 // 导入头像
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
 
+interface Message {
+  role: "user" | "assistant"
+  content: React.ReactNode
+  id: string
+  timestamp: string
+  status?: "success" | "error"
+}
+
 const AIResourceEditor: React.FC = () => {
   const navigate = useNavigate()
   const { resourceId } = useParams<{ resourceId: string }>()
   const { updateBreadcrumbs } = useBreadcrumb()
-  const [input, setInput] = useState("")
-  const [messages, setMessages] = useState<any[]>([])
-  const [resourceData, setResourceData] = useState<any>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [resourceData, setResourceData] = useState<any[]>([])
   const [columns, setColumns] = useState<any[]>([])
-  const [selectedMode, setSelectedMode] = useState("modify") // 新增：模式选择状态
 
   const { getDetail: getResourceDetail } = useMetadata("resource")
 
@@ -35,15 +41,7 @@ const AIResourceEditor: React.FC = () => {
         try {
           const resource = await getResourceDetail(resourceId)
           if (resource && resource.data) {
-            setResourceData(resource.data)
-            if (Array.isArray(resource.data) && resource.data.length > 0) {
-              const firstRow = resource.data[0]
-              const cols = Object.keys(firstRow).map((key) => ({
-                header: key,
-                accessorKey: key,
-              }))
-              setColumns(cols)
-            }
+            updatedResourceData(resource.data)
           } else {
             message.error("资料加载失败")
             navigate("/we-chat-app/admin/resources")
@@ -65,33 +63,19 @@ const AIResourceEditor: React.FC = () => {
     ])
   }, [resourceId])
 
-  // 获取当前模式的 placeholder
-  const getPlaceholder = () => {
-    switch (selectedMode) {
-      case "modify":
-        return "请输入修改指令，例如：将第一行的姓名改为张三..."
-      case "analyze":
-        return "请输入分析需求，例如：统计所有销售金额的总和..."
-      default:
-        return "输入您的问题，AI 将帮您分析数据..."
-    }
-  }
-
-  const { isLoading, handleClick: handleSendMessage } = useAsyncButton(
-    async () => {
-      if (!input.trim()) return
-
-      const userMessage = {
-        role: "user",
-        content: input,
-        id: Date.now().toString(),
-        timestamp: new Date().toLocaleTimeString(),
-      }
-      setMessages((prev) => [...prev, userMessage])
-      setInput("")
-
+  // 构造 AI 代理对象
+  const resourceAgent = {
+    processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
       try {
-        const assistantMessage = {
+        const userMessage: Message = {
+          role: "user",
+          content: command,
+          id: Date.now().toString(),
+          timestamp: new Date().toLocaleTimeString(),
+        }
+        setMessages((prev) => [...prev, userMessage])
+
+        const assistantMessage: Message = {
           role: "assistant",
           content: "正在分析您的数据...",
           id: (Date.now() + 1).toString(),
@@ -99,11 +83,11 @@ const AIResourceEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        // 使用新的 API 处理用户输入
         const result = await AIResourceAgent.processCommand({
           data: resourceData,
-          command: input,
+          command: command,
           onChunk: (chunk: string) => {
+            onChunk?.(chunk)
             setMessages((prev) => {
               const lastMessage = prev[prev.length - 1]
               if (lastMessage.role === "assistant") {
@@ -118,10 +102,34 @@ const AIResourceEditor: React.FC = () => {
               return prev
             })
           },
-          mode: selectedMode,
         })
 
-        if (result.success) {
+        return result
+      } catch (error) {
+        console.error("Error in chat:", error)
+        message.error("分析过程中发生错误")
+        throw error
+      }
+    },
+  }
+
+  const updatedResourceData = useCallback((res) => {
+    setResourceData(res.data)
+    if (Array.isArray(res.data) && res.data.length > 0) {
+      const firstRow = res.data[0]
+      const cols = Object.keys(firstRow).map((key) => ({
+        header: key,
+        accessorKey: key,
+      }))
+      setColumns(cols)
+    }
+  }, [])
+
+  // 处理命令结果
+  const handleCommandResult = useCallback(
+    (result) => {
+      if (result.success) {
+        if (result.analysis) {
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
             if (lastMessage.role === "assistant") {
@@ -129,13 +137,15 @@ const AIResourceEditor: React.FC = () => {
                 ...prev.slice(0, -1),
                 {
                   ...lastMessage,
+                  content: <AnalysisResult analysis={result.analysis} />,
                   status: "success",
                 },
               ]
             }
             return prev
           })
-        } else {
+        } else if (result.data) {
+          updatedResourceData(result.data)
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
             if (lastMessage.role === "assistant") {
@@ -143,22 +153,32 @@ const AIResourceEditor: React.FC = () => {
                 ...prev.slice(0, -1),
                 {
                   ...lastMessage,
-                  content: result.message,
-                  status: "error",
+                  content: "✅ 数据已更新",
+                  status: "success",
                 },
               ]
             }
             return prev
           })
         }
-      } catch (error) {
-        console.error("Error in chat:", error)
-        message.error("分析过程中发生错误")
+      } else {
+        setMessages((prev) => {
+          const lastMessage = prev[prev.length - 1]
+          if (lastMessage.role === "assistant") {
+            return [
+              ...prev.slice(0, -1),
+              {
+                ...lastMessage,
+                content: result.message,
+                status: "error",
+              },
+            ]
+          }
+          return prev
+        })
       }
     },
-    {
-      errorMessage: "分析过程中发生错误",
-    }
+    [updatedResourceData]
   )
 
   return (
@@ -183,76 +203,7 @@ const AIResourceEditor: React.FC = () => {
                 </div>
               </ScrollShadow>
 
-              <div className='flex flex-col gap-2 p-4 bg-white'>
-                <Tabs
-                  selectedKey={selectedMode}
-                  onSelectionChange={(key) => setSelectedMode(key as string)}
-                  size='sm'
-                  color='primary'
-                  variant='light'
-                  classNames={{
-                    tabList: "gap-4",
-                    cursor: "w-full",
-                    tab: "max-w-fit px-4",
-                  }}
-                >
-                  <Tab
-                    key='modify'
-                    title={
-                      <div className='flex items-center gap-2'>
-                        <Icon icon='mdi:pencil' />
-                        <span>资料修改</span>
-                      </div>
-                    }
-                  />
-                  <Tab
-                    key='analyze'
-                    title={
-                      <div className='flex items-center gap-2'>
-                        <Icon icon='mdi:chart-bar' />
-                        <span>资料分析</span>
-                      </div>
-                    }
-                  />
-                </Tabs>
-
-                <Textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder={getPlaceholder()}
-                  className='flex-grow'
-                  classNames={{
-                    input: "py-2 text-medium",
-                    inputWrapper: "bg-default-100",
-                  }}
-                  minRows={1}
-                  maxRows={4}
-                  endContent={
-                    <div className='flex items-center gap-2 pr-2'>
-                      <Button
-                        isIconOnly
-                        className={!input || isLoading ? "" : "bg-primary"}
-                        color={!input || isLoading ? "default" : "primary"}
-                        isDisabled={!input || isLoading}
-                        radius='full'
-                        variant={!input || isLoading ? "flat" : "solid"}
-                        onClick={handleSendMessage}
-                        isLoading={isLoading}
-                      >
-                        {isLoading ? (
-                          <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
-                        ) : (
-                          <Icon
-                            className={!input ? "text-default-500" : "text-white"}
-                            icon='solar:arrow-up-linear'
-                            width={20}
-                          />
-                        )}
-                      </Button>
-                    </div>
-                  }
-                />
-              </div>
+              <AICommandInput agent={resourceAgent} onResult={handleCommandResult} />
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />

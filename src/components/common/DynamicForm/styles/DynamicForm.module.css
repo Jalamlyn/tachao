@@ -1,0 +1,259 @@
+/* DynamicForm 专用样式 */
+.dynamic-form {
+  /* 主题色系 - 采用蓝色主题 */
+  --df-primary-50: #ebf5ff;
+  --df-primary-100: #e1effe;
+  --df-primary-200: #c3ddfd;
+  --df-primary-300: #a4cafe;
+  --df-primary-400: #76a9fa;
+  --df-primary-500: #3f83f8;
+  --df-primary-600: #1c64f2;
+  --df-primary-700: #1a56db;
+
+  /* 功能色系 */
+  --df-success-50: #f0fdf4;
+  --df-success-500: #22c55e;
+  --df-success-700: #15803d;
+
+  --df-warning-50: #fefce8;
+  --df-warning-500: #eab308;
+  --df-warning-700: #a16207;
+
+  --df-error-50: #fef2f2;
+  --df-error-500: #ef4444;
+  --df-error-700: #b91c1c;
+
+  /* 中性色系 - 更柔和的灰度 */
+  --df-gray-50: #f9fafb;
+  --df-gray-100: #f3f4f6;
+  --df-gray-200: #e5e7eb;
+  --df-gray-300: #d1d5db;
+  --df-gray-400: #9ca3af;
+  --df-gray-500: #6b7280;
+  --df-gray-600: #4b5563;
+  --df-gray-700: #374151;
+  --df-gray-900: #111827;
+
+  /* 应用基础样式 */
+  background-color: var(--df-gray-50);
+  color: var(--df-gray-900);
+  padding: 8px;
+}
+
+/* 表单卡片样式 */
+.form-card {
+  background-color: white;
+  border: 1px solid var(--df-gray-200);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.form-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* 表单标题样式 */
+.form-title {
+  color: var(--df-gray-900);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--df-primary-100);
+}
+
+/* 表单字段样式 */
+.form-field {
+  margin-bottom: 1.5rem;
+}
+
+.field-label {
+  color: var(--df-gray-700);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.field-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--df-gray-200);
+  border-radius: 0.75rem;
+  transition: all 0.2s ease-in-out;
+  font-size: 0.875rem;
+  background-color: white;
+}
+
+.field-input:focus {
+  border-color: var(--df-primary-400);
+  box-shadow: 0 0 0 3px var(--df-primary-100);
+  outline: none;
+}
+
+/* 按钮样式 */
+.button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.button-primary {
+  background-color: var(--df-primary-600);
+  color: white;
+  border: none;
+}
+
+/* 状态样式 */
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  gap: 0.25rem;
+}
+
+.status-success {
+  background-color: var(--df-success-50);
+  color: var(--df-success-700);
+}
+
+.status-warning {
+  background-color: var(--df-warning-50);
+  color: var(--df-warning-700);
+}
+
+.status-error {
+  background-color: var(--df-error-50);
+  color: var(--df-error-700);
+}
+
+/* 表格样式 */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1rem 0;
+}
+
+.table th {
+  background-color: var(--df-gray-50);
+  color: var(--df-gray-600);
+  font-weight: 500;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--df-gray-200);
+}
+
+.table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--df-gray-100);
+  font-size: 0.875rem;
+}
+
+.table tr:hover {
+  background-color: var(--df-gray-50);
+}
+
+/* 流程步骤样式 */
+.process-step {
+  border: 1px solid var(--df-gray-200);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease-in-out;
+  background-color: white;
+}
+
+.process-step.active {
+  border-color: var(--df-primary-400);
+  background-color: var(--df-primary-50);
+}
+
+.step-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--df-gray-100);
+  color: var(--df-gray-400);
+}
+
+.step-icon.completed {
+  background-color: var(--df-primary-50);
+  color: var(--df-primary-600);
+}
+
+/* 信息提示样式 */
+.info-box {
+  background-color: var(--df-primary-50);
+  border: 1px solid var(--df-primary-200);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--df-primary-700);
+}
+
+/* 输入框组样式 */
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.input-group .field-input {
+  flex: 1;
+}
+
+/* 选择器样式 */
+.select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+}
+
+/* 打印样式 */
+@media print {
+  .dynamic-form {
+    background-color: white;
+  }
+
+  .form-card {
+    box-shadow: none;
+    border: 1px solid var(--df-gray-300);
+    break-inside: avoid;
+  }
+
+  .process-step {
+    break-inside: avoid;
+  }
+
+  .table {
+    break-inside: auto;
+  }
+
+  .table tr {
+    break-inside: avoid;
+  }
+}

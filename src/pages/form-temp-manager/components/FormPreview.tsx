@@ -74,7 +74,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
 
   if (isLoading) {
     return (
-      <div className='flex flex-col items-center justify-center h-full'>
+      <div className='flex flex-col items-center justify-center h-screen'>
         <Spinner
           label='加载中...'
           classNames={{
@@ -98,8 +98,8 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
   return (
     <div className='relative h-full bg-background'>
       {config ? (
-        <div className='h-full overflow-auto'>
-          <div className='max-w-[1200px] mx-auto p-6 bg-white min-h-full'>
+        <div className='h-full'>
+          <div className='max-w-[1200px] mx-auto p-6 bg-white h-screen overflow-auto'>
             <DynamicForm previewMode={previewMode} config={config} templateId={templateId} />
           </div>
         </div>
