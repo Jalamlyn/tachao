@@ -37,14 +37,16 @@
         background: var(--card-background);
         border-radius: var(--border-radius);
         padding: 32px;
-        width: 90%;
-        max-width: 420px;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         position: relative;
         overflow: hidden;
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
         transition: var(--transition);
       }
 
@@ -359,7 +361,7 @@
       }
 
       function copyEmail() {
-        const email = "jalam@muselink.cc"
+        const email = "info@mobenai.com.cn"
         navigator.clipboard
           .writeText(email)
           .then(() => {
@@ -371,7 +373,7 @@
       }
 
       function callPhone() {
-        window.location.href = "tel:13800138000"
+        window.location.href = "tel:18888720903"
       }
 
       function shareCard() {
