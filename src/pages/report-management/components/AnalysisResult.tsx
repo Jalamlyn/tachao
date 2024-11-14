@@ -105,6 +105,26 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
     return null
   }
 
+  // 渲染表格单元格内容
+  const renderTableCell = (key: string, value: any) => {
+    // 如果是 orderNumber 列,渲染为链接
+    if (key === 'orderNumber') {
+      const formId = `form_${value}`
+      return (
+        <a 
+          href={`/form-preview/${formId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:text-primary/80 hover:underline transition-colors duration-200"
+        >
+          {value}
+        </a>
+      )
+    }
+    // 其他列正常渲染
+    return value
+  }
+
   return (
     <motion.div 
       variants={containerVariants}
@@ -184,7 +204,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
                         >
                           {table.columns.map((column) => (
                             <TableCell key={`${rowIndex}-${column.key}`}>
-                              {row[column.key]}
+                              {renderTableCell(column.key, row[column.key])}
                             </TableCell>
                           ))}
                         </TableRow>
