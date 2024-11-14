@@ -12,13 +12,12 @@
       }
 
       :root {
-        --primary-color: #1a1a1a;
-        --primary-light: #2a2a2a;
+        --primary-color: #000000;
         --text-primary: #ffffff;
         --text-secondary: #a0a0a0;
-        --background: #121212;
-        --card-background: rgba(30, 30, 30, 0.7);
-        --hover-color: rgba(40, 40, 40, 0.8);
+        --background: #000000;
+        --card-background: rgba(20, 20, 20, 0.7);
+        --hover-color: rgba(30, 30, 30, 0.8);
         --border-radius: 16px;
         --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
@@ -32,7 +31,6 @@
         background: var(--background);
         color: var(--text-primary);
         line-height: 1.5;
-        background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
       }
 
       .card {
@@ -50,21 +48,26 @@
         transition: var(--transition);
       }
 
-      .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      .share-button {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-primary);
+        transition: var(--transition);
       }
 
-      .card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 120px;
-        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-        border-radius: var(--border-radius) var(--border-radius) 0 0;
-        opacity: 0.8;
+      .share-button:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1);
       }
 
       .profile-section {
@@ -99,18 +102,11 @@
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       }
 
-      .title {
-        color: var(--text-secondary);
-        font-size: 16px;
-        margin-bottom: 24px;
-        opacity: 0.8;
-      }
-
       .contact-section {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 12px;
-        margin-bottom: 16px;
+        margin-bottom: 32px;
       }
 
       .contact-item {
@@ -139,13 +135,6 @@
         transition: var(--transition);
       }
 
-      .contact-item span {
-        font-size: 13px;
-        color: var(--text-secondary);
-        line-height: 1.4;
-        word-break: break-all;
-      }
-
       .contact-item:hover {
         transform: translateY(-2px);
         background: var(--hover-color);
@@ -156,53 +145,19 @@
         transform: scale(1.1);
       }
 
-      .website-link {
-        display: flex;
-        align-items: center;
-        padding: 16px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        cursor: pointer;
-        transition: var(--transition);
-        text-decoration: none;
-        color: inherit;
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+      .logo {
+        text-align: center;
+        margin-top: 20px;
       }
 
-      .website-link i {
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 12px;
-        color: var(--text-primary);
-        font-size: 18px;
+      .logo img {
+        height: 30px;
+        opacity: 0.8;
         transition: var(--transition);
       }
 
-      .website-link span {
-        flex: 1;
-        font-size: 15px;
-        color: var(--text-primary);
-      }
-
-      .website-arrow {
-        color: var(--text-secondary);
-        font-size: 14px;
-        transition: transform 0.3s ease;
-      }
-
-      .website-link:hover {
-        transform: translateY(-2px);
-        background: var(--hover-color);
-        border-color: rgba(255, 255, 255, 0.2);
-      }
-
-      .website-link:hover .website-arrow {
-        transform: translateX(4px);
+      .logo img:hover {
+        opacity: 1;
       }
 
       .modal {
@@ -310,11 +265,6 @@
 
         .contact-item i {
           font-size: 20px;
-          margin-bottom: 6px;
-        }
-
-        .contact-item span {
-          font-size: 12px;
         }
       }
 
@@ -329,8 +279,7 @@
         }
       }
 
-      .contact-item,
-      .website-link {
+      .contact-item {
         animation: fadeIn 0.5s ease backwards;
       }
 
@@ -343,46 +292,41 @@
       .contact-item:nth-child(3) {
         animation-delay: 0.3s;
       }
-      .website-link {
-        animation-delay: 0.4s;
-      }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
   </head>
   <body>
     <div class="card">
+      <button class="share-button" onclick="shareCard()">
+        <i class="fas fa-share-alt"></i>
+      </button>
+      
       <div class="profile-section">
         <img
           src="https://images.unsplash.com/photo-1588345921523-c2dcdb7f1dcd?w=800&dpr=2&q=80"
           alt="头像"
           class="avatar"
         />
-        <h1 class="name">张三</h1>
-        <p class="title">UI/UX Designer</p>
+        <h1 class="name">Jalam吕越男</h1>
       </div>
 
       <div class="contact-section">
         <div class="contact-item" onclick="showWechat()">
           <i class="fab fa-weixin"></i>
-          <span>微信</span>
         </div>
 
         <div class="contact-item" onclick="copyEmail()">
           <i class="far fa-envelope"></i>
-          <span>邮箱</span>
         </div>
 
         <div class="contact-item" onclick="callPhone()">
           <i class="fas fa-phone"></i>
-          <span>电话</span>
         </div>
       </div>
 
-      <a href="http://www.mobenai.com.cn" target="_blank" class="website-link">
-        <i class="fas fa-globe"></i>
-        <span>访问官网</span>
-        <i class="fas fa-arrow-right website-arrow"></i>
-      </a>
+      <div class="logo">
+        <img src="https://muselink.cc/logo.png" alt="MUSE LINK" />
+      </div>
     </div>
 
     <div id="wechatModal" class="modal">
@@ -413,7 +357,7 @@
       }
 
       function copyEmail() {
-        const email = "zhangsan@example.com"
+        const email = "jalam@muselink.cc"
         navigator.clipboard
           .writeText(email)
           .then(() => {
@@ -428,21 +372,34 @@
         window.location.href = "tel:13800138000"
       }
 
+      function shareCard() {
+        if (navigator.share) {
+          navigator.share({
+            title: 'Jalam的数字名片',
+            text: '这是我的数字名片,让我们保持联系!',
+            url: window.location.href
+          })
+          .catch((error) => console.log('分享失败', error));
+        } else {
+          showToast("您的浏览器不支持分享功能")
+        }
+      }
+
       function showToast(message) {
         const toast = document.createElement("div")
         toast.style.cssText = `
-                position: fixed;
-                bottom: 32px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(0, 0, 0, 0.8);
-                color: white;
-                padding: 12px 24px;
-                border-radius: 8px;
-                font-size: 14px;
-                z-index: 1000;
-                animation: fadeInOut 2s ease forwards;
-            `
+          position: fixed;
+          bottom: 32px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(0, 0, 0, 0.8);
+          color: white;
+          padding: 12px 24px;
+          border-radius: 8px;
+          font-size: 14px;
+          z-index: 1000;
+          animation: fadeInOut 2s ease forwards;
+        `
         toast.textContent = message
         document.body.appendChild(toast)
 
