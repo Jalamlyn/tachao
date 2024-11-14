@@ -18,7 +18,6 @@ const ReportManagement: React.FC = () => {
 
   // 使用 useMetadata 获取模板列表
   const { load: loadTemplates } = useMetadata("template")
-  const { load: loadForms } = useMetadata("form")
 
   useEffect(() => {
     updateBreadcrumbs([
@@ -71,30 +70,14 @@ const ReportManagement: React.FC = () => {
 
     setLoading(true)
     try {
-      // 根据模板ID加载相关的表单数据
-      const forms = await loadForms()
-      if (!forms) {
-        throw new Error("加载表单数据失败")
-      }
-
-      // 过滤出选中模板相关的表单
-      const templateForms = forms.filter(form => 
-        form.indexFields?.templateId === selectedTemplate
-      )
-
-      // 跳转到报表编辑页面，传递数据源信息
-      navigate(`/we-chat-app/admin/reports/ai/create`, {
-        state: {
-          templateId: selectedTemplate,
-          forms: templateForms
-        }
-      })
+      // 直接通过路由参数传递模板ID
+      navigate(`/we-chat-app/admin/reports/ai/create/${selectedTemplate}`)
+      handleCreateModalClose()
     } catch (error) {
       console.error("Error creating report:", error)
       message.error("创建报表失败")
     } finally {
       setLoading(false)
-      handleCreateModalClose()
     }
   }
 

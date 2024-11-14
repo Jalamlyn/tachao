@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import { ScrollShadow, Tabs, Tab, Code } from "@nextui-org/react"
+import { ScrollShadow, Tabs, Tab, Code, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
@@ -43,7 +43,7 @@ const extractShataAICode = (content: string) => {
 const AIReportEditor: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { resourceId } = useParams<{ resourceId: string }>()
+  const { resourceId, templateId } = useParams<{ resourceId: string; templateId: string }>()
   const { updateBreadcrumbs } = useBreadcrumb()
   const [messages, setMessages] = useState<Message[]>([])
   const [resourceData, setResourceData] = useState<any[]>([])
@@ -51,10 +51,13 @@ const AIReportEditor: React.FC = () => {
   const [previewContent, setPreviewContent] = useState<string>("")
   const [previewComponent, setPreviewComponent] = useState<React.ReactNode>(null)
   const [selectedTab, setSelectedTab] = useState("data")
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadingText, setLoadingText] = useState("正在初始化...")
 
   const accumulatedTextRef = useRef("")
   const { getDetail: getResourceDetail } = useMetadata("resource")
-  const { getDetail: getFormDetail } = useMetadata("form")
+  const { load: loadForms, getDetail: getFormDetail } = useMetadata("form")
+  const { getDetail: getTemplateDetail } = useMetadata("template")
 
   useEffect(() => {
     const loadResourceData = async () => {
@@ -63,42 +66,68 @@ const AIReportEditor: React.FC = () => {
         
         if (resourceId) {
           // 如果有 resourceId，从资源加载数据
+          setLoadingText("正在加载资源数据...")
           const resource = await getResourceDetail(resourceId)
           if (resource && resource.data) {
             data = resource.data.data
           } else {
-            message.error("资料加载失败")
-            navigate("/we-chat-app/admin/resources")
-            return
+            throw new Error("资料加载失败")
           }
-        } else if (location.state?.forms) {
-          // 如果是创建模式，从表单数据加载
-          const forms = location.state.forms
-          // 合并所有表单数据
-          data = await Promise.all(forms.map(async (form: any) => {
-            const formDetail = await getFormDetail(form.id)
-            return formDetail ? formDetail.data : null
-          }))
-          data = data.filter(Boolean).flat()
+        } else if (templateId) {
+          // 如果有 templateId，从表单数据加载
+          setLoadingText("正在加载模板信息...")
+          const template = await getTemplateDetail(templateId)
+          if (!template) {
+            throw new Error("模板不存在")
+          }
+
+          setLoadingText("正在加载表单数据...")
+          const forms = await loadForms()
+          if (!forms) {
+            throw new Error("加载表单数据失败")
+          }
+
+          // 过滤出选中模板相关的表单
+          const templateForms = forms.filter(form => 
+            form.indexFields?.templateId === templateId
+          )
+
+          if (templateForms.length === 0) {
+            throw new Error("未找到相关表单数据")
+          }
+
+          setLoadingText("正在处理数据...")
+          // 获取所有表单详情并合并数据
+          const formDataPromises = templateForms.map(form => getFormDetail(form.id))
+          const formDetails = await Promise.all(formDataPromises)
+          data = formDetails
+            .filter(Boolean)
+            .map(detail => detail.data)
+            .filter(Boolean)
+            .flat()
+
         } else {
-          message.error("未找到数据源")
-          navigate("/we-chat-app/admin/resources")
-          return
+          throw new Error("未找到数据源")
+        }
+
+        if (!data || data.length === 0) {
+          throw new Error("没有可用的数据")
         }
 
         setResourceData(data)
-        if (Array.isArray(data) && data.length > 0) {
-          const firstRow = data[0]
-          const cols = Object.keys(firstRow).map((key) => ({
-            header: key,
-            accessorKey: key,
-          }))
-          setColumns(cols)
-        }
+        const firstRow = data[0]
+        const cols = Object.keys(firstRow).map((key) => ({
+          header: key,
+          accessorKey: key,
+        }))
+        setColumns(cols)
+
       } catch (error) {
         console.error("Error loading data:", error)
-        message.error("数据加载失败")
+        message.error(error instanceof Error ? error.message : "数据加载失败")
         navigate("/we-chat-app/admin/resources")
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -117,10 +146,213 @@ const AIReportEditor: React.FC = () => {
     }
     
     updateBreadcrumbs(breadcrumbs)
-  }, [resourceId, location.state, navigate, getResourceDetail, getFormDetail, updateBreadcrumbs])
+  }, [resourceId, templateId, navigate, getResourceDetail, getFormDetail, loadForms, getTemplateDetail, updateBreadcrumbs])
 
   // 保持其他代码不变...
-  // 这里是原有的其他方法和JSX，保持不变
+  const handleChunk = useCallback((chunk: string) => {
+    console.log("[handleChunk] Processing chunk:", chunk.slice(0, 50) + "...")
+
+    accumulatedTextRef.current += chunk
+
+    if (accumulatedTextRef.current.includes("<shata-ai-code>") && !previewContent) {
+      console.log("[handleChunk] Code generation started")
+
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1]
+        return [
+          ...prev.slice(0, -1),
+          {
+            ...lastMessage,
+            content: (
+              <div className='flex items-center gap-3 text-primary'>
+                <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10' />
+                <div className='flex flex-col'>
+                  <span className='font-medium text-sm'>AI 正在生成分析代码</span>
+                </div>
+              </div>
+            ),
+          },
+        ]
+      })
+
+      setSelectedTab("code")
+    }
+
+    if (previewContent || accumulatedTextRef.current.includes("<shata-ai-code>")) {
+      const newContent = accumulatedTextRef.current
+      console.log("[handleChunk] Updating preview content")
+      setPreviewContent(newContent)
+
+      if (accumulatedTextRef.current.includes("</shata-ai-code>")) {
+        console.log("[handleChunk] Code generation completed")
+        const code = extractShataAICode(accumulatedTextRef.current)
+        if (code) {
+          console.log("[handleChunk] Setting code preview", code)
+          setPreviewContent(code)
+        }
+      }
+    } else {
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1]
+        return [
+          ...prev.slice(0, -1),
+          {
+            ...lastMessage,
+            content: lastMessage.content + chunk,
+          },
+        ]
+      })
+    }
+  }, [])
+
+  const resourceAgent = {
+    processCommand: async (command: string) => {
+      console.log("[processCommand] Starting command processing")
+      try {
+        accumulatedTextRef.current = ""
+        setPreviewContent("")
+
+        const userMessage: Message = {
+          role: "user",
+          content: command,
+          id: Date.now().toString(),
+          timestamp: new Date().toLocaleTimeString(),
+        }
+        setMessages((prev) => [...prev, userMessage])
+
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: "正在分析您的数据...",
+          id: (Date.now() + 1).toString(),
+          timestamp: new Date().toLocaleTimeString(),
+        }
+        setMessages((prev) => [...prev, assistantMessage])
+
+        const result = await AIResourceAgent.processCommand({
+          data: resourceData,
+          command: command,
+          onChunk: handleChunk,
+        })
+
+        return result
+      } catch (error) {
+        console.error("Error in chat:", error)
+        message.error("分析过程中发生错误")
+        throw error
+      }
+    },
+  }
+
+  const handleCommandResult = useCallback((result) => {
+    console.log("[handleCommandResult] Processing result:", result)
+    if (result.success) {
+      if (result.analysis) {
+        console.log("[handleCommandResult] Analysis result received")
+
+        setMessages((prev) => {
+          const lastMessage = prev[prev.length - 1]
+          if (lastMessage.role === "assistant") {
+            const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
+            const match = lastMessage.content.toString().match(regex)
+            const originalCode = match ? match[1].trim() : null
+
+            const messageWithCode = {
+              ...lastMessage,
+              content: (
+                <div className='flex items-center gap-2 text-success'>
+                  <Icon icon='line-md:check-all' className='w-5 h-5' />
+                  <span>分析完成</span>
+                </div>
+              ),
+              status: "success",
+              code: {
+                preview: <AnalysisResult analysis={result.analysis} />,
+                content: originalCode,
+              },
+            }
+
+            setSelectedTab("analysis")
+            setPreviewComponent(<AnalysisResult analysis={result.analysis} />)
+            console.log("[handleCommandResult] Analysis completed")
+
+            return [...prev.slice(0, -1), messageWithCode]
+          }
+          return prev
+        })
+      }
+    } else {
+      console.log("[handleCommandResult] Error result received")
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1]
+        if (lastMessage.role === "assistant") {
+          return [
+            ...prev.slice(0, -1),
+            {
+              ...lastMessage,
+              content: result.message,
+              status: "error",
+            },
+          ]
+        }
+        return prev
+      })
+    }
+  }, [])
+
+  const renderDataTable = () => (
+    <div className='bg-white rounded-lg shadow'>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((column) => (
+              <TableHead className='min-w-24 bg-slate-50' key={column.accessorKey}>
+                {column.header}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {resourceData.map((row: any, rowIndex: number) => (
+            <TableRow key={rowIndex}>
+              {columns.map((column) => (
+                <TableCell key={`${rowIndex}-${column.accessorKey}`}>{row[column.accessorKey]}</TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+
+  const renderAnalysisResult = () =>
+    previewComponent ? (
+      <div className='h-full flex flex-col'>
+        <div className='flex-1 bg-white rounded-lg'>{previewComponent}</div>
+      </div>
+    ) : (
+      <div className='flex items-center justify-center h-full text-gray-500'>
+        <p>请先生成分析报表</p>
+      </div>
+    )
+
+  const renderCodeView = () => {
+    if (previewContent) {
+      return <Code size='sm'>{previewContent}</Code>
+    }
+
+    return (
+      <div className='flex items-center justify-center h-full text-gray-500'>
+        <p>请先生成分析报表</p>
+      </div>
+    )
+  }
+
+  const renderLoadingState = () => (
+    <div className='flex flex-col items-center justify-center h-full space-y-4'>
+      <Spinner size="lg" color="primary" />
+      <div className='text-primary font-medium'>{loadingText}</div>
+    </div>
+  )
 
   return (
     <PageLayout title={resourceId ? 'AI 资料助手' : '创建报表'} titleIcon='hugeicons:ai-chat-02' className='p-0'>
@@ -150,26 +382,30 @@ const AIReportEditor: React.FC = () => {
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={70} className='resizable-panel bg-slate-50'>
             <div className='h-full flex flex-col'>
-              <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key.toString())}>
-                <Tab key='data' title='数据表格'>
-                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
-                    {resourceData ? (
-                      renderDataTable()
-                    ) : (
-                      <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
-                        <Icon icon='mdi:loading' className='w-12 h-12 mx-auto mb-4' />
-                        <p>正在加载数据...</p>
-                      </div>
-                    )}
-                  </div>
-                </Tab>
-                <Tab key='analysis' title='分析报表'>
-                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderAnalysisResult()}</div>
-                </Tab>
-                <Tab key='code' title='代码视图'>
-                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderCodeView()}</div>
-                </Tab>
-              </Tabs>
+              {isLoading ? (
+                renderLoadingState()
+              ) : (
+                <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key.toString())}>
+                  <Tab key='data' title='数据表格'>
+                    <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
+                      {resourceData.length > 0 ? (
+                        renderDataTable()
+                      ) : (
+                        <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
+                          <Icon icon='mdi:database-off' className='w-12 h-12 mx-auto mb-4' />
+                          <p>暂无数据</p>
+                        </div>
+                      )}
+                    </div>
+                  </Tab>
+                  <Tab key='analysis' title='分析报表'>
+                    <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderAnalysisResult()}</div>
+                  </Tab>
+                  <Tab key='code' title='代码视图'>
+                    <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderCodeView()}</div>
+                  </Tab>
+                </Tabs>
+              )}
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
