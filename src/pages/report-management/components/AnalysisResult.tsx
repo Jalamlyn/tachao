@@ -22,6 +22,22 @@ interface AnalysisResultProps {
       data: any[]
     }[]
     insights: string[]
+    // 新增: 流程分析数据
+    processAnalysis?: {
+      summary?: {
+        totalProcessNodes: number
+        completedNodes: number
+        completionRate: string
+        averageProcessTime: string
+      }
+      nodeStatus?: Record<string, string>
+      processDuration?: {
+        total: string
+        nodesDuration: Record<string, string>
+      }
+      approvers?: Record<string, number>
+      processStatus?: Record<string, number>
+    }
   }
 }
 
@@ -125,6 +141,118 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
     return value
   }
 
+  // 新增: 渲染流程分析卡片
+  const renderProcessAnalysis = () => {
+    if (!analysis.processAnalysis) return null
+
+    const { summary, nodeStatus, processDuration, approvers, processStatus } = analysis.processAnalysis
+
+    // 生成流程节点状态的图表数据
+    const nodeStatusChartData = nodeStatus
+      ? {
+          type: "pie",
+          title: "流程节点状态分布",
+          data: Object.entries(nodeStatus).map(([name, status]) => ({
+            name,
+            value: status === "已完成" ? 1 : 0,
+          })),
+        }
+      : null
+
+    // 生成审批人工作量的图表数据
+    const approversChartData = approvers
+      ? {
+          type: "bar",
+          title: "审批人工作量统计",
+          data: Object.entries(approvers).map(([name, count]) => ({
+            name,
+            value: count,
+          })),
+        }
+      : null
+
+    return (
+      <motion.div variants={itemVariants}>
+        <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
+          <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
+            <CardTitle className='text-xl font-bold'>流程分析</CardTitle>
+            <CardDescription>流程执行情况统计</CardDescription>
+          </CardHeader>
+          <CardContent className='p-6'>
+            <div className='space-y-6'>
+              {/* 流程概览 */}
+              {summary && (
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+                  <motion.div
+                    variants={itemVariants}
+                    className='rounded-xl bg-gradient-to-br from-background to-muted p-4 shadow'
+                  >
+                    <div className='text-sm text-muted-foreground'>总节点数</div>
+                    <div className='text-2xl font-bold text-primary'>{summary.totalProcessNodes}</div>
+                  </motion.div>
+                  <motion.div
+                    variants={itemVariants}
+                    className='rounded-xl bg-gradient-to-br from-background to-muted p-4 shadow'
+                  >
+                    <div className='text-sm text-muted-foreground'>已完成节点</div>
+                    <div className='text-2xl font-bold text-primary'>{summary.completedNodes}</div>
+                  </motion.div>
+                  <motion.div
+                    variants={itemVariants}
+                    className='rounded-xl bg-gradient-to-br from-background to-muted p-4 shadow'
+                  >
+                    <div className='text-sm text-muted-foreground'>完成率</div>
+                    <div className='text-2xl font-bold text-primary'>{summary.completionRate}</div>
+                  </motion.div>
+                  <motion.div
+                    variants={itemVariants}
+                    className='rounded-xl bg-gradient-to-br from-background to-muted p-4 shadow'
+                  >
+                    <div className='text-sm text-muted-foreground'>平均处理时长</div>
+                    <div className='text-2xl font-bold text-primary'>{summary.averageProcessTime}</div>
+                  </motion.div>
+                </div>
+              )}
+
+              {/* 流程节点状态图表 */}
+              {nodeStatusChartData && (
+                <div className='mt-6'>
+                  <ChartRenderer chart={nodeStatusChartData} />
+                </div>
+              )}
+
+              {/* 审批人工作量图表 */}
+              {approversChartData && (
+                <div className='mt-6'>
+                  <ChartRenderer chart={approversChartData} />
+                </div>
+              )}
+
+              {/* 流程耗时详情 */}
+              {processDuration && (
+                <div className='mt-6'>
+                  <h3 className='text-lg font-semibold mb-3'>流程耗时分析</h3>
+                  <div className='space-y-2'>
+                    <div className='flex justify-between items-center p-2 rounded-lg bg-background/50'>
+                      <span className='font-medium'>总耗时</span>
+                      <span className='text-primary font-semibold'>{processDuration.total}</span>
+                    </div>
+                    {Object.entries(processDuration.nodesDuration).map(([node, duration]) => (
+                      <div key={node} className='flex justify-between items-center p-2 rounded-lg bg-background/50'>
+                        <span className='font-medium'>{node}</span>
+                        <span className='text-primary font-semibold'>{duration}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    )
+  }
+
   return (
     <motion.div variants={containerVariants} initial='hidden' animate='show' className='space-y-6 p-4'>
       {/* 统计摘要卡片 */}
@@ -141,6 +269,9 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* 流程分析卡片 */}
+      {renderProcessAnalysis()}
 
       {/* 图表展示 */}
       <AnimatePresence>
