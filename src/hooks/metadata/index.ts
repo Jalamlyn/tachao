@@ -249,12 +249,54 @@ export function useMetadata<T = any>(type: string) {
     }
   }, [type, getIndexes, getDetail])
 
+  /**
+   * 根据索引字段筛选并加载详情
+   * @param filter 筛选函数,用于过滤索引
+   */
+  const loadFilteredDetails = useCallback(
+    async (filter: (index: MetadataIndex) => boolean) => {
+      logger.debug("[useMetadata] Loading filtered details", { type })
+      setLoading(true)
+      setError(null)
+      try {
+        // 1. 获取并筛选索引
+        const indexes = await getIndexes()
+        const filteredIndexes = indexes.filter(filter)
+        logger.debug("[useMetadata] Filtered indexes", { 
+          totalCount: indexes.length,
+          filteredCount: filteredIndexes.length 
+        })
+
+        // 2. 一次性获取所有匹配的详情
+        const ids = filteredIndexes.map(index => index.id)
+        const details = await getDetail(ids)
+        const validDetails = Array.isArray(details) ? details : []
+        
+        // 3. 更新状态
+        setItems(validDetails)
+        logger.debug("[useMetadata] Filtered details loaded successfully", {
+          count: validDetails.length,
+        })
+        
+        return validDetails
+      } catch (error) {
+        logger.error(`[useMetadata] Error loading filtered ${type} details`, error as Error)
+        setError(`Failed to load filtered ${type} details`)
+        return []
+      } finally {
+        setLoading(false)
+      }
+    },
+    [type, getIndexes, getDetail]
+  )
+
   return {
     items,
     loading,
     error,
     load,
     loadWithDetails,
+    loadFilteredDetails,
     create,
     update,
     remove,
