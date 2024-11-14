@@ -28,6 +28,68 @@ interface Message {
   }
 }
 
+// 生成列配置
+const generateColumns = (data: any[]) => {
+  if (!data || data.length === 0) return []
+  
+  const firstItem = data[0]
+  const columns: any[] = []
+  
+  const processObject = (obj: any, prefix = '') => {
+    Object.entries(obj).forEach(([key, value]) => {
+      // 跳过空值和数组
+      if (value === null || value === undefined || Array.isArray(value)) return
+      
+      // 处理嵌套对象
+      if (typeof value === 'object') {
+        processObject(value, prefix ? `${prefix}.${key}` : key)
+        return
+      }
+      
+      const accessorKey = prefix ? `${prefix}.${key}` : key
+      
+      columns.push({
+        header: accessorKey, // 直接使用key
+        accessorKey,
+        cell: (value: any) => {
+          if (value === null || value === undefined) return '-'
+          if (typeof value === 'boolean') return value ? 'true' : 'false'
+          if (typeof value === 'number') return value.toString()
+          return value
+        }
+      })
+    })
+  }
+  
+  processObject(firstItem)
+  console.log("[generateColumns] Generated columns:", columns)
+  return columns
+}
+
+// 扁平化数据
+const flattenData = (data: any[]) => {
+  return data.map(item => {
+    const flatItem: any = {}
+    
+    const flatten = (obj: any, prefix = '') => {
+      Object.entries(obj).forEach(([key, value]) => {
+        if (value === null || value === undefined || Array.isArray(value)) return
+        
+        if (typeof value === 'object') {
+          flatten(value, prefix ? `${prefix}.${key}` : key)
+          return
+        }
+        
+        const accessorKey = prefix ? `${prefix}.${key}` : key
+        flatItem[accessorKey] = value
+      })
+    }
+    
+    flatten(item)
+    return flatItem
+  })
+}
+
 const extractShataAICode = (content: string) => {
   console.log("[extractShataAICode] Checking content for code")
   const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
@@ -50,6 +112,7 @@ const AIReportEditor: React.FC = () => {
   const [previewContent, setPreviewContent] = useState<string>("")
   const [previewComponent, setPreviewComponent] = useState<React.ReactNode>(null)
   const [selectedTab, setSelectedTab] = useState("data")
+  const [flattenedData, setFlattenedData] = useState<any[]>([])
 
   const accumulatedTextRef = useRef("")
   const { getDetail: getResourceDetail } = useMetadata("resource")
@@ -89,14 +152,16 @@ const AIReportEditor: React.FC = () => {
           console.log("[loadData] Loaded form details:", formData.length)
           setResourceData(formData)
 
-          // 5. 设置列
+          // 5. 生成列和扁平化数据
           if (formData.length > 0) {
-            const firstRow = formData[0]
-            const cols = Object.keys(firstRow).map((key) => ({
-              header: key,
-              accessorKey: key,
-            }))
+            const cols = generateColumns(formData)
+            const flattened = flattenData(formData)
             setColumns(cols)
+            setFlattenedData(flattened)
+            console.log("[loadData] Data processed:", {
+              columnsCount: cols.length,
+              rowsCount: flattened.length
+            })
           }
         } else if (resourceId) {
           console.log("[loadData] Loading resource:", resourceId)
@@ -104,12 +169,14 @@ const AIReportEditor: React.FC = () => {
           if (resource && resource.data) {
             setResourceData(resource.data.data)
             if (Array.isArray(resource.data.data) && resource.data.data.length > 0) {
-              const firstRow = resource.data.data[0]
-              const cols = Object.keys(firstRow).map((key) => ({
-                header: key,
-                accessorKey: key,
-              }))
+              const cols = generateColumns(resource.data.data)
+              const flattened = flattenData(resource.data.data)
               setColumns(cols)
+              setFlattenedData(flattened)
+              console.log("[loadData] Resource data processed:", {
+                columnsCount: cols.length,
+                rowsCount: flattened.length
+              })
             }
           } else {
             message.error("资料加载失败")
@@ -282,30 +349,46 @@ const AIReportEditor: React.FC = () => {
     }
   }, [])
 
-  const renderDataTable = () => (
-    <div className='bg-white rounded-lg shadow'>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map((column) => (
-              <TableHead className='min-w-24 bg-slate-50' key={column.accessorKey}>
-                {column.header}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {resourceData.map((row: any, rowIndex: number) => (
-            <TableRow key={rowIndex}>
+  const renderDataTable = () => {
+    if (!columns.length || !flattenedData.length) {
+      return (
+        <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
+          <Icon icon='mdi:loading' className='w-12 h-12 mx-auto mb-4' />
+          <p>正在加载数据...</p>
+        </div>
+      )
+    }
+
+    return (
+      <div className='bg-white rounded-lg shadow'>
+        <Table>
+          <TableHeader>
+            <TableRow>
               {columns.map((column) => (
-                <TableCell key={`${rowIndex}-${column.accessorKey}`}>{row[column.accessorKey]}</TableCell>
+                <TableHead 
+                  className='min-w-24 bg-slate-50' 
+                  key={column.accessorKey}
+                >
+                  {column.header}
+                </TableHead>
               ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  )
+          </TableHeader>
+          <TableBody>
+            {flattenedData.map((row: any, rowIndex: number) => (
+              <TableRow key={rowIndex}>
+                {columns.map((column) => (
+                  <TableCell key={`${rowIndex}-${column.accessorKey}`}>
+                    {column.cell(row[column.accessorKey])}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  }
 
   const renderAnalysisResult = () =>
     previewComponent ? (
@@ -361,14 +444,7 @@ const AIReportEditor: React.FC = () => {
               <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key.toString())}>
                 <Tab key='data' title='数据表格'>
                   <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
-                    {resourceData ? (
-                      renderDataTable()
-                    ) : (
-                      <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
-                        <Icon icon='mdi:loading' className='w-12 h-12 mx-auto mb-4' />
-                        <p>正在加载数据...</p>
-                      </div>
-                    )}
+                    {renderDataTable()}
                   </div>
                 </Tab>
                 <Tab key='analysis' title='分析报表'>
