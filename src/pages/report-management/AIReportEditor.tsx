@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import { ScrollShadow, Tabs, Tab, Code } from "@nextui-org/react"
+import { ScrollShadow, Tabs, Tab } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
@@ -115,8 +115,8 @@ const AIReportEditor: React.FC = () => {
   const [flattenedData, setFlattenedData] = useState<any[]>([])
 
   const accumulatedTextRef = useRef("")
-  const { getDetail: getResourceDetail } = useMetadata("resource")
-  const { getDetail: getFormDetail, load: loadFormIndexes } = useMetadata("form")
+  const { getDetail: getResourceDetail, loadFilteredDetails } = useMetadata("resource")
+  const { loadFilteredDetails: loadFormFilteredDetails } = useMetadata("form")
 
   useEffect(() => {
     const loadData = async () => {
@@ -125,38 +125,21 @@ const AIReportEditor: React.FC = () => {
 
         if (templateId) {
           console.log("[loadData] Loading forms for template:", templateId)
-          // 1. 获取form索引
-          const formIndexes = await loadFormIndexes()
-          if (!formIndexes) {
-            throw new Error("Failed to load form indexes")
-          }
-
-          // 2. 筛选出匹配templateId的表单
-          const matchingForms = formIndexes.filter((form) => form.indexFields?.templateId === templateId)
-          console.log("[loadData] Found matching forms:", matchingForms.length)
-
-          // 3. 获取所有匹配表单的详情
-          const formIds = matchingForms.map((form) => form.id)
-          console.log("[loadData] Getting details for forms:", formIds)
-
-          const formDetails = await Promise.all(formIds.map((id) => getFormDetail(id)))
-
-          // 4. 过滤掉null结果并提取数据
-          const validFormDetails = formDetails.filter((detail): detail is NonNullable<typeof detail> => detail !== null)
-          const formData = validFormDetails.map((detail) => {
-            return {
+          // 使用新的 loadFilteredDetails 方法加载数据
+          const formDetails = await loadFormFilteredDetails(
+            (index) => index.indexFields?.templateId === templateId
+          )
+          
+          if (formDetails.length > 0) {
+            const formData = formDetails.map((detail) => ({
               id: detail.id,
               ...detail.data,
-            }
-          })
+            }))
 
-          console.log("[loadData] Loaded form details:", formData.length)
-          setResourceData(formData)
+            console.log("[loadData] Loaded form details:", formData.length)
+            setResourceData(formData)
 
-          // 5. 生成列和扁平化数据
-          if (formData.length > 0) {
             const cols = generateColumns(formData)
-            console.log(formData)
             const flattened = flattenData(formData)
             setColumns(cols)
             setFlattenedData(flattened)
