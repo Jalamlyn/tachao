@@ -106,25 +106,44 @@ export function useMetadata<T = any>(type: string) {
 
   /**
    * 获取详情数据
+   * @param ids 元数据ID或ID数组
+   * @returns 单个ID时返回单个详情对象或null,ID数组时返回详情对象数组
    */
   const getDetail = useCallback(
-    async (id: string) => {
-      logger.debug("[useMetadata] Getting detail", { type, id })
+    async (ids: string | string[]) => {
+      const idArray = Array.isArray(ids) ? ids : [ids]
+      logger.debug("[useMetadata] Getting details", { type, ids: idArray })
+
       try {
-        const result = await getMetadata([`${id}`])
-        if (result.data?.[0]?.value) {
-          const parsedData = jsonParse(result.data[0].value)
-          return {
-            ...parsedData,
-            versionCode: result.data[0].versionCode,
-          } as MetadataDetail<T>
+        const result = await getMetadata(idArray)
+        
+        // 处理返回结果
+        const details = result.data
+          .filter(item => item?.value) // 过滤掉无效数据
+          .map(item => {
+            const parsedData = jsonParse(item.value)
+            return {
+              ...parsedData,
+              versionCode: item.versionCode,
+            } as MetadataDetail<T>
+          })
+
+        logger.debug("[useMetadata] Details loaded successfully", {
+          requestedCount: idArray.length,
+          loadedCount: details.length,
+        })
+
+        // 如果是单个ID请求,返回单个对象或null
+        if (!Array.isArray(ids)) {
+          return details[0] || null
         }
-        logger.debug("[useMetadata] No detail found", { id })
-        return null
+
+        // 如果是数组请求,返回详情数组
+        return details
       } catch (error) {
-        logger.error(`[useMetadata] Error getting ${type} detail`, error as Error, { id })
-        setError(`Failed to get ${type} detail`)
-        return null
+        logger.error(`[useMetadata] Error getting ${type} details`, error as Error, { ids: idArray })
+        setError(`Failed to get ${type} details`)
+        return Array.isArray(ids) ? [] : null
       }
     },
     [type]
