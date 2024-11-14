@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>数字名片</title>
+    <title>MOBENAI | Jalam吕越男</title>
     <style>
       * {
         margin: 0;
@@ -166,7 +166,7 @@
         top: 0;
         left: 0;
         width: 100%;
-        height: 100%;
+        height: 80vh;
         background: rgba(0, 0, 0, 0.8);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
@@ -209,7 +209,6 @@
 
       .qr-code {
         width: 240px;
-        height: 240px;
         margin: 0 auto 24px;
         border-radius: 12px;
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
@@ -300,13 +299,9 @@
       <button class="share-button" onclick="shareCard()">
         <i class="fas fa-share-alt"></i>
       </button>
-      
+
       <div class="profile-section">
-        <img
-          src="https://images.unsplash.com/photo-1588345921523-c2dcdb7f1dcd?w=800&dpr=2&q=80"
-          alt="头像"
-          class="avatar"
-        />
+        <img src="https://picsum.photos/300" alt="头像" class="avatar" />
         <h1 class="name">Jalam吕越男</h1>
       </div>
 
@@ -325,7 +320,9 @@
       </div>
 
       <div class="logo">
-        <img src="https://muselink.cc/logo.png" alt="MUSE LINK" />
+        <div class="contact-item">
+          <a style="color: white" href="https://www.mobenai.com.cn"><i class="fas fa-web"></i></a>
+        </div>
       </div>
     </div>
 
@@ -335,7 +332,7 @@
           <i class="fas fa-times"></i>
         </div>
         <h2 class="modal-title">扫码添加微信好友</h2>
-        <img src="/api/placeholder/240/240" alt="微信二维码" class="qr-code" />
+        <img src="./jalam.png" alt="微信二维码" class="qr-code" />
         <p class="modal-subtitle">请使用微信扫描二维码</p>
       </div>
     </div>
@@ -374,12 +371,13 @@
 
       function shareCard() {
         if (navigator.share) {
-          navigator.share({
-            title: 'Jalam的数字名片',
-            text: '这是我的数字名片,让我们保持联系!',
-            url: window.location.href
-          })
-          .catch((error) => console.log('分享失败', error));
+          navigator
+            .share({
+              title: "Jalam的数字名片",
+              text: "这是我的数字名片,让我们保持联系!",
+              url: window.location.href,
+            })
+            .catch((error) => console.log("分享失败", error))
         } else {
           showToast("您的浏览器不支持分享功能")
         }
