@@ -91,7 +91,9 @@ const result = {
 return result;
 </shata-ai-code>
 \`\`\`
-- 开头和结尾都不要做解释和说明`
+- 开头和结尾都不要做解释和说明
+- 如果数据的列中有 id 字段, 那么明细表格中必须包含该字段
+`
   }
 
   private async executeCode(code: string, data: any[]): Promise<any> {

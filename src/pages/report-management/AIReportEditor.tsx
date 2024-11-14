@@ -9,7 +9,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import MessageCard from "@/components/MessageCard"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import AIResourceAgent from "@/service/agents/AIResourceAgent"
+import AIReportAgent from "@/service/agents/AIReportAgent"
 import AnalysisResult from "./components/AnalysisResult"
 import AICommandInput from "@/components/AICommandInput"
 
@@ -31,36 +31,36 @@ interface Message {
 // 生成列配置
 const generateColumns = (data: any[]) => {
   if (!data || data.length === 0) return []
-  
+
   const firstItem = data[0]
   const columns: any[] = []
-  
-  const processObject = (obj: any, prefix = '') => {
+
+  const processObject = (obj: any, prefix = "") => {
     Object.entries(obj).forEach(([key, value]) => {
       // 跳过空值和数组
       if (value === null || value === undefined || Array.isArray(value)) return
-      
+
       // 处理嵌套对象
-      if (typeof value === 'object') {
+      if (typeof value === "object") {
         processObject(value, prefix ? `${prefix}.${key}` : key)
         return
       }
-      
+
       const accessorKey = prefix ? `${prefix}.${key}` : key
-      
+
       columns.push({
         header: accessorKey, // 直接使用key
         accessorKey,
         cell: (value: any) => {
-          if (value === null || value === undefined) return '-'
-          if (typeof value === 'boolean') return value ? 'true' : 'false'
-          if (typeof value === 'number') return value.toString()
+          if (value === null || value === undefined) return "-"
+          if (typeof value === "boolean") return value ? "true" : "false"
+          if (typeof value === "number") return value.toString()
           return value
-        }
+        },
       })
     })
   }
-  
+
   processObject(firstItem)
   console.log("[generateColumns] Generated columns:", columns)
   return columns
@@ -68,23 +68,23 @@ const generateColumns = (data: any[]) => {
 
 // 扁平化数据
 const flattenData = (data: any[]) => {
-  return data.map(item => {
+  return data.map((item) => {
     const flatItem: any = {}
-    
-    const flatten = (obj: any, prefix = '') => {
+
+    const flatten = (obj: any, prefix = "") => {
       Object.entries(obj).forEach(([key, value]) => {
         if (value === null || value === undefined || Array.isArray(value)) return
-        
-        if (typeof value === 'object') {
+
+        if (typeof value === "object") {
           flatten(value, prefix ? `${prefix}.${key}` : key)
           return
         }
-        
+
         const accessorKey = prefix ? `${prefix}.${key}` : key
         flatItem[accessorKey] = value
       })
     }
-    
+
     flatten(item)
     return flatItem
   })
@@ -122,7 +122,7 @@ const AIReportEditor: React.FC = () => {
     const loadData = async () => {
       try {
         console.log("[loadData] Starting data load")
-        
+
         if (templateId) {
           console.log("[loadData] Loading forms for template:", templateId)
           // 1. 获取form索引
@@ -132,35 +132,37 @@ const AIReportEditor: React.FC = () => {
           }
 
           // 2. 筛选出匹配templateId的表单
-          const matchingForms = formIndexes.filter(
-            (form) => form.indexFields?.templateId === templateId
-          )
+          const matchingForms = formIndexes.filter((form) => form.indexFields?.templateId === templateId)
           console.log("[loadData] Found matching forms:", matchingForms.length)
 
           // 3. 获取所有匹配表单的详情
           const formIds = matchingForms.map((form) => form.id)
           console.log("[loadData] Getting details for forms:", formIds)
-          
-          const formDetails = await Promise.all(
-            formIds.map((id) => getFormDetail(id))
-          )
-          
+
+          const formDetails = await Promise.all(formIds.map((id) => getFormDetail(id)))
+
           // 4. 过滤掉null结果并提取数据
           const validFormDetails = formDetails.filter((detail): detail is NonNullable<typeof detail> => detail !== null)
-          const formData = validFormDetails.map((detail) => detail.data)
-          
+          const formData = validFormDetails.map((detail) => {
+            return {
+              id: detail.id,
+              ...detail.data,
+            }
+          })
+
           console.log("[loadData] Loaded form details:", formData.length)
           setResourceData(formData)
 
           // 5. 生成列和扁平化数据
           if (formData.length > 0) {
             const cols = generateColumns(formData)
+            console.log(formData)
             const flattened = flattenData(formData)
             setColumns(cols)
             setFlattenedData(flattened)
             console.log("[loadData] Data processed:", {
               columnsCount: cols.length,
-              rowsCount: flattened.length
+              rowsCount: flattened.length,
             })
           }
         } else if (resourceId) {
@@ -175,7 +177,7 @@ const AIReportEditor: React.FC = () => {
               setFlattenedData(flattened)
               console.log("[loadData] Resource data processed:", {
                 columnsCount: cols.length,
-                rowsCount: flattened.length
+                rowsCount: flattened.length,
               })
             }
           } else {
@@ -255,7 +257,7 @@ const AIReportEditor: React.FC = () => {
     }
   }, [])
 
-  const resourceAgent = {
+  const reportAgent = {
     processCommand: async (command: string) => {
       console.log("[processCommand] Starting command processing")
       try {
@@ -278,7 +280,7 @@ const AIReportEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        const result = await AIResourceAgent.processCommand({
+        const result = await AIReportAgent.processCommand({
           data: resourceData,
           command: command,
           onChunk: handleChunk,
@@ -365,10 +367,7 @@ const AIReportEditor: React.FC = () => {
           <TableHeader>
             <TableRow>
               {columns.map((column) => (
-                <TableHead 
-                  className='min-w-24 bg-slate-50' 
-                  key={column.accessorKey}
-                >
+                <TableHead className='min-w-24 bg-slate-50' key={column.accessorKey}>
                   {column.header}
                 </TableHead>
               ))}
@@ -403,7 +402,11 @@ const AIReportEditor: React.FC = () => {
 
   const renderCodeView = () => {
     if (previewContent) {
-      return <Code size='sm'>{previewContent}</Code>
+      return (
+        <pre>
+          <code>{previewContent}</code>
+        </pre>
+      )
     }
 
     return (
@@ -435,7 +438,7 @@ const AIReportEditor: React.FC = () => {
                 </div>
               </ScrollShadow>
 
-              <AICommandInput agent={resourceAgent} onResult={handleCommandResult} />
+              <AICommandInput agent={reportAgent} onResult={handleCommandResult} />
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
@@ -443,9 +446,7 @@ const AIReportEditor: React.FC = () => {
             <div className='h-full flex flex-col'>
               <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key.toString())}>
                 <Tab key='data' title='数据表格'>
-                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
-                    {renderDataTable()}
-                  </div>
+                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderDataTable()}</div>
                 </Tab>
                 <Tab key='analysis' title='分析报表'>
                   <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderAnalysisResult()}</div>
