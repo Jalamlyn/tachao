@@ -42,7 +42,7 @@ const extractShataAICode = (content: string) => {
 
 const AIReportEditor: React.FC = () => {
   const navigate = useNavigate()
-  const { resourceId } = useParams<{ resourceId: string }>()
+  const { resourceId, templateId } = useParams<{ resourceId: string; templateId: string }>()
   const { updateBreadcrumbs } = useBreadcrumb()
   const [messages, setMessages] = useState<Message[]>([])
   const [resourceData, setResourceData] = useState<any[]>([])
@@ -53,11 +53,53 @@ const AIReportEditor: React.FC = () => {
 
   const accumulatedTextRef = useRef("")
   const { getDetail: getResourceDetail } = useMetadata("resource")
+  const { getDetail: getFormDetail, load: loadFormIndexes } = useMetadata("form")
 
   useEffect(() => {
-    const loadResourceData = async () => {
-      if (resourceId) {
-        try {
+    const loadData = async () => {
+      try {
+        console.log("[loadData] Starting data load")
+        
+        if (templateId) {
+          console.log("[loadData] Loading forms for template:", templateId)
+          // 1. 获取form索引
+          const formIndexes = await loadFormIndexes()
+          if (!formIndexes) {
+            throw new Error("Failed to load form indexes")
+          }
+
+          // 2. 筛选出匹配templateId的表单
+          const matchingForms = formIndexes.filter(
+            (form) => form.indexFields?.templateId === templateId
+          )
+          console.log("[loadData] Found matching forms:", matchingForms.length)
+
+          // 3. 获取所有匹配表单的详情
+          const formIds = matchingForms.map((form) => form.id)
+          console.log("[loadData] Getting details for forms:", formIds)
+          
+          const formDetails = await Promise.all(
+            formIds.map((id) => getFormDetail(id))
+          )
+          
+          // 4. 过滤掉null结果并提取数据
+          const validFormDetails = formDetails.filter((detail): detail is NonNullable<typeof detail> => detail !== null)
+          const formData = validFormDetails.map((detail) => detail.data)
+          
+          console.log("[loadData] Loaded form details:", formData.length)
+          setResourceData(formData)
+
+          // 5. 设置列
+          if (formData.length > 0) {
+            const firstRow = formData[0]
+            const cols = Object.keys(firstRow).map((key) => ({
+              header: key,
+              accessorKey: key,
+            }))
+            setColumns(cols)
+          }
+        } else if (resourceId) {
+          console.log("[loadData] Loading resource:", resourceId)
           const resource = await getResourceDetail(resourceId)
           if (resource && resource.data) {
             setResourceData(resource.data.data)
@@ -73,22 +115,22 @@ const AIReportEditor: React.FC = () => {
             message.error("资料加载失败")
             navigate("/we-chat-app/admin/resources")
           }
-        } catch (error) {
-          console.error("Error loading resource:", error)
-          message.error("资料加载失败")
-          navigate("/we-chat-app/admin/resources")
         }
+      } catch (error) {
+        console.error("[loadData] Error loading data:", error)
+        message.error("数据加载失败")
+        navigate("/we-chat-app/admin/resources")
       }
     }
 
-    loadResourceData()
+    loadData()
 
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "资料管理", href: "/we-chat-app/admin/resources" },
-      { label: "AI 资料助手", href: `/we-chat-app/admin/resources/ai/${resourceId}` },
+      { label: "AI 资料助手", href: `/we-chat-app/admin/resources/ai/${resourceId || templateId}` },
     ])
-  }, [resourceId])
+  }, [resourceId, templateId])
 
   const handleChunk = useCallback((chunk: string) => {
     console.log("[handleChunk] Processing chunk:", chunk.slice(0, 50) + "...")
