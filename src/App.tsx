@@ -44,7 +44,14 @@ function App() {
             <Route index element={<Navigate to='management' replace />} />
           </Route>
           <Route path='/we-chat-login' element={<WeChatLoginPage />} />
-          <Route path='/form-preview/:templateId' element={<FormPreview />} />
+          <Route
+            path='/form-preview/:templateId'
+            element={
+              <div className='h-screen overflow-auto'>
+                <FormPreview />
+              </div>
+            }
+          />
           <Route path='/form/:formId' element={<Form />} />
           <Route
             path='/forms/:id'

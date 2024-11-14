@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import { ScrollShadow, Tabs, Tab, Code, Spinner } from "@nextui-org/react"
+import { ScrollShadow, Tabs, Tab, Code } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { useNavigate, useParams, useLocation } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
@@ -42,8 +42,7 @@ const extractShataAICode = (content: string) => {
 
 const AIReportEditor: React.FC = () => {
   const navigate = useNavigate()
-  const location = useLocation()
-  const { resourceId, templateId } = useParams<{ resourceId: string; templateId: string }>()
+  const { resourceId } = useParams<{ resourceId: string }>()
   const { updateBreadcrumbs } = useBreadcrumb()
   const [messages, setMessages] = useState<Message[]>([])
   const [resourceData, setResourceData] = useState<any[]>([])
@@ -51,104 +50,46 @@ const AIReportEditor: React.FC = () => {
   const [previewContent, setPreviewContent] = useState<string>("")
   const [previewComponent, setPreviewComponent] = useState<React.ReactNode>(null)
   const [selectedTab, setSelectedTab] = useState("data")
-  const [isLoading, setIsLoading] = useState(true)
-  const [loadingText, setLoadingText] = useState("正在初始化...")
 
   const accumulatedTextRef = useRef("")
   const { getDetail: getResourceDetail } = useMetadata("resource")
-  const { load: loadForms, getDetail: getFormDetail } = useMetadata("form")
-  const { getDetail: getTemplateDetail } = useMetadata("template")
 
   useEffect(() => {
     const loadResourceData = async () => {
-      try {
-        let data: any[] = []
-        
-        if (resourceId) {
-          // 如果有 resourceId，从资源加载数据
-          setLoadingText("正在加载资源数据...")
+      if (resourceId) {
+        try {
           const resource = await getResourceDetail(resourceId)
           if (resource && resource.data) {
-            data = resource.data.data
+            setResourceData(resource.data.data)
+            if (Array.isArray(resource.data.data) && resource.data.data.length > 0) {
+              const firstRow = resource.data.data[0]
+              const cols = Object.keys(firstRow).map((key) => ({
+                header: key,
+                accessorKey: key,
+              }))
+              setColumns(cols)
+            }
           } else {
-            throw new Error("资料加载失败")
+            message.error("资料加载失败")
+            navigate("/we-chat-app/admin/resources")
           }
-        } else if (templateId) {
-          // 如果有 templateId，从表单数据加载
-          setLoadingText("正在加载模板信息...")
-          const template = await getTemplateDetail(templateId)
-          if (!template) {
-            throw new Error("模板不存在")
-          }
-
-          setLoadingText("正在加载表单数据...")
-          const forms = await loadForms()
-          if (!forms) {
-            throw new Error("加载表单数据失败")
-          }
-
-          // 过滤出选中模板相关的表单
-          const templateForms = forms.filter(form => 
-            form.indexFields?.templateId === templateId
-          )
-
-          if (templateForms.length === 0) {
-            throw new Error("未找到相关表单数据")
-          }
-
-          setLoadingText("正在处理数据...")
-          // 获取所有表单详情并合并数据
-          const formDataPromises = templateForms.map(form => getFormDetail(form.id))
-          const formDetails = await Promise.all(formDataPromises)
-          data = formDetails
-            .filter(Boolean)
-            .map(detail => detail.data)
-            .filter(Boolean)
-            .flat()
-
-        } else {
-          throw new Error("未找到数据源")
+        } catch (error) {
+          console.error("Error loading resource:", error)
+          message.error("资料加载失败")
+          navigate("/we-chat-app/admin/resources")
         }
-
-        if (!data || data.length === 0) {
-          throw new Error("没有可用的数据")
-        }
-
-        setResourceData(data)
-        const firstRow = data[0]
-        const cols = Object.keys(firstRow).map((key) => ({
-          header: key,
-          accessorKey: key,
-        }))
-        setColumns(cols)
-
-      } catch (error) {
-        console.error("Error loading data:", error)
-        message.error(error instanceof Error ? error.message : "数据加载失败")
-        navigate("/we-chat-app/admin/resources")
-      } finally {
-        setIsLoading(false)
       }
     }
 
     loadResourceData()
 
-    // 更新面包屑
-    const breadcrumbs = [
+    updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "资料管理", href: "/we-chat-app/admin/resources" },
-    ]
-    
-    if (resourceId) {
-      breadcrumbs.push({ label: "AI 资料助手", href: `/we-chat-app/admin/resources/ai/${resourceId}` })
-    } else {
-      breadcrumbs.push({ label: "创建报表", href: `/we-chat-app/admin/reports/ai/create` })
-    }
-    
-    updateBreadcrumbs(breadcrumbs)
-  }, [resourceId, templateId, navigate, getResourceDetail, getFormDetail, loadForms, getTemplateDetail, updateBreadcrumbs])
+      { label: "AI 资料助手", href: `/we-chat-app/admin/resources/ai/${resourceId}` },
+    ])
+  }, [resourceId])
 
-  // 保持其他代码不变...
   const handleChunk = useCallback((chunk: string) => {
     console.log("[handleChunk] Processing chunk:", chunk.slice(0, 50) + "...")
 
@@ -347,15 +288,8 @@ const AIReportEditor: React.FC = () => {
     )
   }
 
-  const renderLoadingState = () => (
-    <div className='flex flex-col items-center justify-center h-full space-y-4'>
-      <Spinner size="lg" color="primary" />
-      <div className='text-primary font-medium'>{loadingText}</div>
-    </div>
-  )
-
   return (
-    <PageLayout title={resourceId ? 'AI 资料助手' : '创建报表'} titleIcon='hugeicons:ai-chat-02' className='p-0'>
+    <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
       <div className='h-[calc(100vh-140px)] overflow-hidden'>
         <ResizablePanelGroup direction='horizontal' className='h-full p-2'>
           <ResizablePanel defaultSize={30} className='resizable-panel'>
@@ -382,30 +316,26 @@ const AIReportEditor: React.FC = () => {
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={70} className='resizable-panel bg-slate-50'>
             <div className='h-full flex flex-col'>
-              {isLoading ? (
-                renderLoadingState()
-              ) : (
-                <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key.toString())}>
-                  <Tab key='data' title='数据表格'>
-                    <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
-                      {resourceData.length > 0 ? (
-                        renderDataTable()
-                      ) : (
-                        <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
-                          <Icon icon='mdi:database-off' className='w-12 h-12 mx-auto mb-4' />
-                          <p>暂无数据</p>
-                        </div>
-                      )}
-                    </div>
-                  </Tab>
-                  <Tab key='analysis' title='分析报表'>
-                    <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderAnalysisResult()}</div>
-                  </Tab>
-                  <Tab key='code' title='代码视图'>
-                    <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderCodeView()}</div>
-                  </Tab>
-                </Tabs>
-              )}
+              <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key.toString())}>
+                <Tab key='data' title='数据表格'>
+                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
+                    {resourceData ? (
+                      renderDataTable()
+                    ) : (
+                      <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
+                        <Icon icon='mdi:loading' className='w-12 h-12 mx-auto mb-4' />
+                        <p>正在加载数据...</p>
+                      </div>
+                    )}
+                  </div>
+                </Tab>
+                <Tab key='analysis' title='分析报表'>
+                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderAnalysisResult()}</div>
+                </Tab>
+                <Tab key='code' title='代码视图'>
+                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderCodeView()}</div>
+                </Tab>
+              </Tabs>
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>

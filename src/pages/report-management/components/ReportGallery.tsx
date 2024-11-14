@@ -132,7 +132,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
 
   const handleAIAnalysisClick = async (report: Report, e: React.MouseEvent) => {
     e.stopPropagation()
-    navigate(`/we-chat-app/admin/resources/ai/${report.id}`)
+    navigate(`/we-chat-app/admin/reports/ai/${report.id}`)
   }
 
   // 格式化文件大小
@@ -162,23 +162,24 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
                 onPress={() => onReportSelect(report.id)}
               >
                 <CardBody className='p-0 relative overflow-hidden'>
-                  <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-50 group-hover:scale-105 transition-transform duration-300'>
-                    <Icon icon='mdi:file-chart' className='w-16 h-16 text-blue-400 group-hover:scale-110 transition-transform duration-300' />
+                  <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-green-100 to-green-50 group-hover:scale-105 transition-transform duration-300'>
+                    <Icon
+                      icon='mdi:file-chart'
+                      className='w-16 h-16 text-green-400 group-hover:scale-110 transition-transform duration-300'
+                    />
                   </div>
                 </CardBody>
                 <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
                   <div className='flex justify-between items-center w-full'>
                     <h4
-                      className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-blue-500 transition-colors duration-300'
+                      className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-green-500 transition-colors duration-300'
                       title={report.title}
                     >
                       {report.title}
                     </h4>
                   </div>
                   <div className='flex justify-between items-center w-full'>
-                    <span className='text-sm text-default-400'>
-                      {formatFileSize(report.indexFields?.size)}
-                    </span>
+                    <span className='text-sm text-default-400'>{formatFileSize(report.indexFields?.size)}</span>
                     <div className='flex gap-2'>
                       <Button
                         isIconOnly
@@ -193,7 +194,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
                         isIconOnly
                         size='sm'
                         variant='light'
-                        className='text-default-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-300'
+                        className='text-default-400 hover:text-green-500 hover:bg-green-50 transition-colors duration-300'
                         onClick={(e) => handleAIAnalysisClick(report, e)}
                       >
                         <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
@@ -240,7 +241,11 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
             <Button color='default' variant='light' onPress={onClose}>
               取消
             </Button>
-            <Button color='danger' onPress={handleDeleteConfirm} startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}>
+            <Button
+              color='danger'
+              onPress={handleDeleteConfirm}
+              startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
+            >
               删除
             </Button>
           </ModalFooter>

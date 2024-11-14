@@ -135,35 +135,35 @@ const FormManager: React.FC = () => {
     setIsCreateModalOpen(false)
     selectedTemplateIdRef.current = ""
     // 清除所有选中状态
-    const templates = document.querySelectorAll('.template-item');
-    templates.forEach(template => {
-      template.classList.remove('border-primary', 'bg-primary/10');
-    });
+    const templates = document.querySelectorAll(".template-item")
+    templates.forEach((template) => {
+      template.classList.remove("border-primary", "bg-primary/10")
+    })
   }
 
   const handleTemplateClick = (templateId: string) => {
-    selectedTemplateIdRef.current = templateId;
-    
+    selectedTemplateIdRef.current = templateId
+
     // 使用 DOM 操作来更新视觉效果
-    const templates = document.querySelectorAll('.template-item');
-    templates.forEach(template => {
-      template.classList.remove('border-primary', 'bg-primary/10');
-    });
-    
-    const selectedTemplate = document.querySelector(`[data-template-id="${templateId}"]`);
-    selectedTemplate?.classList.add('border-primary', 'bg-primary/10');
+    const templates = document.querySelectorAll(".template-item")
+    templates.forEach((template) => {
+      template.classList.remove("border-primary", "bg-primary/10")
+    })
+
+    const selectedTemplate = document.querySelector(`[data-template-id="${templateId}"]`)
+    selectedTemplate?.classList.add("border-primary", "bg-primary/10")
   }
 
   const { isLoading: isTemplateLoading, handleClick: handleTemplateSelect } = useAsyncButton(
     async () => {
-      const templateId = selectedTemplateIdRef.current;
+      const templateId = selectedTemplateIdRef.current
       if (!templateId) {
-        message.error("请先选择模板");
-        return;
+        message.error("请先选择模板")
+        return
       }
       try {
         const template = await getTemplateDetail(templateId)
-        if (template && template.data.config) {
+        if (template && template.data.rawConfig) {
           window.open(`/form-preview/${templateId}`, "_blank")
         } else {
           message.error("加载模板失败")
@@ -174,19 +174,12 @@ const FormManager: React.FC = () => {
       }
     },
     {
-      errorMessage: "加载模板失败"
+      errorMessage: "加载模板失败",
     }
   )
 
   const pageActions = (
     <>
-      <Button
-        onClick={handleAnalyze}
-        color='secondary'
-        startContent={<Icon icon='solar:chart-2-bold' className='w-4 h-4' />}
-      >
-        AI 数据分析
-      </Button>
       <Button onClick={handleCreateDocument} color='primary'>
         <Icon icon='mdi:file-document-plus' className='w-4 h-4 mr-2' />
         创建单据
@@ -235,12 +228,7 @@ const FormManager: React.FC = () => {
             <Button color='danger' variant='light' onClick={handleModalClose}>
               取消
             </Button>
-            <Button
-              color='primary'
-              onClick={handleTemplateSelect}
-              isDisabled={!selectedTemplateIdRef.current}
-              isLoading={isTemplateLoading}
-            >
+            <Button color='primary' onClick={handleTemplateSelect} isLoading={isTemplateLoading}>
               确认
             </Button>
           </ModalFooter>
