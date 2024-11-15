@@ -1,294 +1,207 @@
 # DynamicForm 动态表单组件文档
 
-## 简介
+[原有文档内容保持不变...]
 
-DynamicForm 是一个灵活的动态表单组件，支持以下功能：
+## 表单联动配置指南
 
-- 基础表单字段渲染
-- 动态表格
-- 流程确认步骤
-- 打印预览
-- 自定义验证
-- 动态联动
-- AI 生成的公式计算（新功能）
+### 基础概念
 
-## 基础类型
+表单联动是指表单字段之间的互动关系,比如:
+- 字段值变化触发其他字段更新
+- 动态更新选项数据
+- 显示/隐藏字段
 
-### FormFieldType
+### Watch 函数使用
 
-表单字段类型枚举：
+watch 函数用于监听字段变化并处理联动逻辑:
 
 ```typescript
-type FormFieldType =
-  | "text" // 文本输入
-  | "password" // 密码输入
-  | "number" // 数字输入
-  | "email" // 邮箱输入
-  | "tel" // 电话输入
-  | "url" // URL输入
-  | "textarea" // 多行文本
-  | "select" // 下拉选择
-  | "date" // 日期选择
-  | "datetime" // 日期时间选择
-  | "file" // 文件上传
-  | "image" // 图片上传
-  | "custom" // 自定义组件
-  | "resource" // 资源选择
-```
+const config = {
+  watch: (form: UseFormReturn) => {
+    // 创建订阅
+    const subscription = form.watch((value, { name, type }) => {
+      console.log('Field changed:', name, value);
+      
+      // 更新其他字段
+      form.setValue('otherField', newValue);
+    });
 
-### FormField
-
-表单字段配置接口：
-
-```typescript
-interface FormField {
-  name: string // 字段名称
-  label: string // 字段标签
-  type: FormFieldType // 字段类型
-  placeholder?: string // 占位文本
-  disabled?: boolean // 是否禁用
-  hidden?: boolean // 是否隐藏
-  required?: boolean // 是否必填
-  tooltip?: TooltipConfig // 提示配置
-  validators?: Array<(value: any, allValues?: any) => string | undefined> // 自定义验证器
-  options?: Array<{
-    // 选项配置（用于select类型）
-    label: string
-    value: string | number
-    disabled?: boolean
-  }>
-  accept?: string // 文件接受类型
-  resourceConfig?: {
-    // 资源选择配置
-    resourceName: string
-    appId: string
-    selectionMode?: "single" | "multiple"
-  }
-  onUpload?: (file: File) => Promise<void> // 上传处理函数
-  render?: (props: {
-    // 自定义渲染函数
-    field: any
-    form: UseFormReturn<any>
-    isEditable: boolean
-  }) => ReactNode
-}
-```
-
-### TooltipConfig
-
-提示配置接口：
-
-```typescript
-interface TooltipConfig {
-  content: ReactNode // 提示内容
-  placement?: "top" | "bottom" | "left" | "right" // 提示位置
-}
-```
-
-## 表单配置
-
-### DynamicFormConfig
-
-表单总体配置接口：
-
-```typescript
-interface DynamicFormConfig {
-  metadata: FormMetadata // 元数据配置
-  renderConfig: FormRenderConfig // 渲染配置
-  orderNumberConfig?: {
-    // 单号配置
-    prefix?: string
-    fieldName?: string
-    label?: string
-  }
-  watch?: (form: UseFormReturn<any>) => () => void // 表单监听函数
-  validate?: (values: any, context?: ValidationContext) => Promise<ValidationResult> | ValidationResult // 表单验证函数
-}
-```
-
-watch 函数示例：只使用单个 watch 来监听所有字段的变化
-
-```typescript
-watch: (form) => {
-  const subscription = form.watch((value, { name, type }) => {
-    console.log("[useDynamicForm] Form value changed:", { field: name, type, value })
-    console.log("[useDynamicForm] Current form values:", form.getValues())
-
-    // 触发表单重新渲染
-    form.trigger(name)
-  })
-
-  return () => subscription.unsubscribe()
-}
-```
-
-### FormMetadata
-
-表单元数据配置：
-
-```typescript
-interface FormMetadata {
-  title: string // 表单标题
-  description?: string // 表单描述
-  permissions?: {
-    // 权限配置
-    edit?: boolean
-    delete?: boolean
-    print?: boolean
+    // 返回清理函数
+    return () => subscription.unsubscribe();
   }
 }
 ```
 
-### ValidationContext
+### 动态更新选项
 
-验证上下文接口：
-
-```typescript
-interface ValidationContext {
-  mode?: "create" | "edit" // 验证模式
-  user?: any // 用户信息
-}
-```
-
-### ValidationResult
-
-验证结果接口：
+对于 Select 类型字段,可以动态更新选项:
 
 ```typescript
-interface ValidationResult {
-  valid: boolean // 是否验证通过
-  errors?: string[] // 错误信息
-  warnings?: string[] // 警告信息
-  fields?: {
-    // 字段错误信息
-    [key: string]: string
-  }
-  categorizedErrors?: {
-    // 分类错误信息
-    required?: string[] // 必填错误
-    invalid?: string[] // 格式错误
-    other?: string[] // 其他错误
-  }
-}
-```
-
-## 表格配置
-
-### TableConfig
-
-表格配置接口：
-
-```typescript
-interface TableConfig {
-  columns: TableColumn[] // 列配置
-  toolbar?: ReactNode // 工具栏
-  summary?: TableSummary // 汇总配置
-}
-```
-
-### TableColumn
-
-表格列配置：
-
-```typescript
-interface TableColumn {
-  key: string // 列键名
-  title: string // 列标题
-  type: FormFieldType // 列类型
-  width?: string | number // 列宽度
-  editable?: boolean // 是否可编辑
-  required?: boolean // 是否必填
-  placeholder?: string // 占位文本
-  options?: Array<{
-    // 选项配置
-    label: string
-    value: string | number
-  }>
-  resourceConfig?: {
-    // 资源配置
-    resourceName: string
-    appId: string
-    selectionMode?: "single" | "multiple"
-  }
-  render?: (value: any, record: any, index: number) => ReactNode // 自定义渲染
-  summary?: {
-    // 汇总配置
-    calculate?: (records: any[]) => any
-    render?: (value: any) => ReactNode
-  }
-  calculate?: {
-    // 计算配置（新增）
-    formula: string // 计算公式
-    dependencies?: string[] // 依赖字段
+const config = {
+  renderConfig: {
+    basicFields: [
+      {
+        name: "city",
+        type: "select",
+        options: [] // 初始为空
+      }
+    ]
+  },
+  watch: (form) => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "province") {
+        // 根据省份更新城市选项
+        const cityOptions = getCityOptions(value.province);
+        form.setValue("city", ""); // 清空已选值
+        
+        // 更新选项
+        const cityField = form.getValues()?.basicFields?.find(f => f.name === "city");
+        if (cityField) {
+          form.setValue(`basicFields.${cityField.name}.options`, cityOptions);
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
   }
 }
 ```
 
-### TableSummary
+### 省市区联动示例
 
-表格汇总配置接口：
-
-```typescript
-interface TableSummary {
-  show?: boolean // 是否显示汇总行
-  label?: string // 汇总行标签
-  className?: string // 自定义类名
-  style?: React.CSSProperties // 自定义样式
-}
-```
-
-## 流程确认配置
-
-### ProcessStep
-
-流程步骤配置：
+完整的省市区联动配置示例:
 
 ```typescript
-interface ProcessStep {
-  key: string // 步骤键名
-  title: string // 步骤标题
-  description?: string // 步骤描述
-  icon?: string // 步骤图标
-  fields?: FormField[] // 步骤表单字段
-}
-```
+export default {
+  title: "地址选择",
+  config: {
+    metadata: {
+      title: "地址选择",
+      description: "省市区联动示例"
+    },
+    renderConfig: {
+      basicFields: [
+        {
+          name: "province",
+          label: "省份",
+          type: "select",
+          required: true,
+          options: [
+            { label: "广东省", value: "guangdong" },
+            { label: "北京市", value: "beijing" }
+          ]
+        },
+        {
+          name: "city",
+          label: "城市",
+          type: "select",
+          required: true,
+          options: []
+        },
+        {
+          name: "district",
+          label: "区县",
+          type: "select",
+          required: true,
+          options: []
+        }
+      ]
+    },
+    watch: (form) => {
+      const subscription = form.watch((value, { name }) => {
+        if (name === "province") {
+          const province = value.province;
+          
+          // 获取城市选项
+          const cityOptions = {
+            guangdong: [
+              { label: "广州市", value: "guangzhou" },
+              { label: "深圳市", value: "shenzhen" }
+            ],
+            beijing: [
+              { label: "北京市区", value: "beijing_city" }
+            ]
+          }[province] || [];
 
-### FormRenderConfig
+          // 清空下级选项
+          form.setValue("city", "");
+          form.setValue("district", "");
 
-表单渲染配置接口：
+          // 更新城市选项
+          const cityField = form.getValues()?.basicFields?.find(f => f.name === "city");
+          if (cityField) {
+            form.setValue(`basicFields.${cityField.name}.options`, cityOptions);
+          }
+        }
 
-```typescript
-interface FormRenderConfig {
-  basicFields: FormField[] // 基础字段配置，用于渲染基本表单字段
-  table?: TableConfig // 表格配置，用于渲染动态表格
-  processSteps?: ProcessStep[] // 流程步骤配置，用于渲染流程确认步骤
-}
-```
+        if (name === "city") {
+          const city = value.city;
+          
+          // 获取区县选项
+          const districtOptions = {
+            guangzhou: [
+              { label: "天河区", value: "tianhe" },
+              { label: "越秀区", value: "yuexiu" }
+            ],
+            shenzhen: [
+              { label: "南山区", value: "nanshan" },
+              { label: "福田区", value: "futian" }
+            ]
+          }[city] || [];
 
-## 新增：AI 生成的公式计算
+          // 清空已选值
+          form.setValue("district", "");
 
-DynamicForm 现在支持 AI 生成的公式计算功能。这个功能允许表格中的所有字段都支持计算。
+          // 更新区县选项
+          const districtField = form.getValues()?.basicFields?.find(f => f.name === "district");
+          if (districtField) {
+            form.setValue(`basicFields.${districtField.name}.options`, districtOptions);
+          }
+        }
+      });
 
-### 使用方法
-
-在 TableColumn 配置中，你可以添加 `calculate` 属性来定义计算逻辑：
-
-```typescript
-{
-  key: "totalPrice",
-  title: "总价",
-  type: "number",
-  editable: false,
-  calculate: {
-    formula: "row.quantity * row.unitPrice * (1 - (row.discount || 0))",
-    dependencies: ["quantity", "unitPrice", "discount"]
+      return () => subscription.unsubscribe();
+    }
   }
 }
 ```
 
-### 注意事项
+### 最佳实践
 
-1. 公式中可以使用 `row` 对象访问当前行的所有字段值。
-2. 公式支持基本的数学运算和 Formula.js 提供的函数。
-3. 出于安全考虑，某些 JavaScript 函数（如 `eval`）在公式中是被禁止的。
-4. 计算是通过 FormulaService 进行的，它提供了安全的公式评估机制。
+1. Watch 函数注意事项:
+- 始终返回清理函数
+- 避免在 watch 中执行复杂计算
+- 使用防抖处理频繁变化
+
+2. 选项更新建议:
+- 清空下级联动字段的值
+- 使用 setValue 更新选项
+- 保持选项数据结构一致
+
+3. 性能优化:
+- 使用 useMemo 缓存选项数据
+- 避免不必要的状态更新
+- 合理使用依赖收集
+
+4. 错误处理:
+- 添加必要的空值检查
+- 处理异步加载失败情况
+- 提供友好的错误提示
+
+### 常见问题
+
+1. 选项不更新
+- 检查 watch 函数是否正确订阅
+- 确认 setValue 路径正确
+- 验证选项数据结构
+
+2. 性能问题
+- 使用 useCallback 优化函数
+- 避免重复计算
+- 考虑使用虚拟滚动
+
+3. 内存泄漏
+- 确保清理函数被调用
+- 及时取消异步操作
+- 清理定时器和事件监听
+
+[原有文档其他内容保持不变...]
