@@ -20,91 +20,18 @@ import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
 
-// 文件上传组件
-const FileUpload: React.FC<{
-  field: any
-  isEditable?: boolean
-  accept?: string
-  onUpload?: (file: File) => Promise<void>
-  placeholder?: string
-}> = ({ field, isEditable = true, accept, onUpload, placeholder = "选择文件" }) => {
-  const [uploading, setUploading] = React.useState(false)
-  const inputRef = React.useRef<HTMLInputElement>(null)
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (onUpload) {
-      setUploading(true)
-      try {
-        await onUpload(file)
-        field.onChange(file)
-        message.success("文件上传成功")
-      } catch (error) {
-        console.error("File upload error:", error)
-        message.error("文件上传失败")
-      } finally {
-        setUploading(false)
-      }
-    } else {
-      field.onChange(file)
-    }
+// 新增: 获取选项的工具函数
+const getOptions = (field: DynamicFormField, form: UseFormReturn<any>) => {
+  console.log("[DynamicForm] Getting options for field:", field.name)
+  
+  if (typeof field.options === "function") {
+    const options = field.options(form)
+    console.log("[DynamicForm] Dynamic options:", options)
+    return Array.isArray(options) ? options : []
   }
-
-  const handleClear = () => {
-    field.onChange(null)
-    if (inputRef.current) {
-      inputRef.current.value = ""
-    }
-  }
-
-  return (
-    <div className="flex items-center gap-2">
-      <Input
-        ref={inputRef}
-        type="file"
-        accept={accept}
-        onChange={handleFileChange}
-        disabled={!isEditable || uploading}
-        className="hidden"
-        id={field.name}
-      />
-      <Button
-        as="label"
-        htmlFor={field.name}
-        variant="bordered"
-        size="sm"
-        isDisabled={!isEditable || uploading}
-        isLoading={uploading}
-        startContent={!uploading && <Icon icon="mdi:upload" className="w-4 h-4" />}
-        className={cn(
-          "font-medium",
-          "hover:bg-blue-50 hover:text-blue-600",
-          "transition-colors duration-200"
-        )}
-      >
-        {placeholder}
-      </Button>
-      {field.value && (
-        <>
-          <span className="text-sm text-gray-500 truncate flex-1">
-            {field.value instanceof File ? field.value.name : field.value}
-          </span>
-          <Button
-            isIconOnly
-            variant="light"
-            size="sm"
-            color="danger"
-            onClick={handleClear}
-            isDisabled={!isEditable || uploading}
-          >
-            <Icon icon="mdi:close" className="w-4 h-4" />
-          </Button>
-        </>
-      )}
-    </div>
-  )
+  
+  console.log("[DynamicForm] Static options:", field.options)
+  return field.options || []
 }
 
 interface DynamicFormFieldsProps {
@@ -278,7 +205,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
                     exit={{ opacity: 0, y: 10 }}
                     transition={{ duration: 0.2 }}
                   >
-                    {field.options?.map((option) => (
+                    {getOptions(field, form).map((option) => (
                       <SelectItem
                         key={option.value}
                         value={option.value}
@@ -312,13 +239,64 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             tooltip={field.tooltip}
           >
             {(formField) => (
-              <FileUpload
-                field={formField}
-                isEditable={isEditable && !field.disabled}
-                accept={field.accept}
-                onUpload={field.onUpload}
-                placeholder={field.placeholder}
-              />
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept={field.accept}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+
+                    if (field.onUpload) {
+                      try {
+                        await field.onUpload(file)
+                        formField.onChange(file)
+                        message.success("文件上传成功")
+                      } catch (error) {
+                        console.error("File upload error:", error)
+                        message.error("文件上传失败")
+                      }
+                    } else {
+                      formField.onChange(file)
+                    }
+                  }}
+                  disabled={!isEditable || field.disabled}
+                  className="hidden"
+                  id={field.name}
+                />
+                <Button
+                  as="label"
+                  htmlFor={field.name}
+                  variant="bordered"
+                  size="sm"
+                  isDisabled={!isEditable || field.disabled}
+                  startContent={<Icon icon="mdi:upload" className="w-4 h-4" />}
+                  className={cn(
+                    "font-medium",
+                    "hover:bg-blue-50 hover:text-blue-600",
+                    "transition-colors duration-200"
+                  )}
+                >
+                  {field.placeholder || "选择文件"}
+                </Button>
+                {formField.value && (
+                  <>
+                    <span className="text-sm text-gray-500 truncate flex-1">
+                      {formField.value instanceof File ? formField.value.name : formField.value}
+                    </span>
+                    <Button
+                      isIconOnly
+                      variant="light"
+                      size="sm"
+                      color="danger"
+                      onClick={() => formField.onChange(null)}
+                      isDisabled={!isEditable || field.disabled}
+                    >
+                      <Icon icon="mdi:close" className="w-4 h-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
             )}
           </FormFieldWrapper>
         )
