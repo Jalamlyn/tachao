@@ -77,7 +77,7 @@ export function MetadataTable<T extends MetadataDetail>({
           {toolbar.showSearch && (
             <Input
               isClearable
-              className='w-full max-w-xs'
+              className='w-[300px]'
               placeholder={toolbar.searchProps?.placeholder || "搜索..."}
               startContent={
                 <Icon icon='mingcute:search-ai-line' className='text-default-400 pointer-events-none flex-shrink-0' />
@@ -186,7 +186,12 @@ export function MetadataTable<T extends MetadataDetail>({
     <div className='metadata-table space-y-4'>
       {renderToolbar()}
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.1 }}>
+      <motion.div
+        className='h-[calc(100vh-280px)] overflow-auto'
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
         <Table
           aria-label={`${type} table`}
           classNames={{

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import { ScrollShadow, Tabs, Tab } from "@nextui-org/react"
+import { ScrollShadow, Tabs, Tab, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
@@ -104,7 +104,7 @@ const extractShataAICode = (content: string) => {
 
 const AIReportEditor: React.FC = () => {
   const navigate = useNavigate()
-  const { resourceId, templateId } = useParams<{ resourceId: string; templateId: string }>()
+  const { reportId, templateId } = useParams<{ reportId: string; templateId: string }>()
   const { updateBreadcrumbs } = useBreadcrumb()
   const [messages, setMessages] = useState<Message[]>([])
   const [resourceData, setResourceData] = useState<any[]>([])
@@ -126,10 +126,8 @@ const AIReportEditor: React.FC = () => {
         if (templateId) {
           console.log("[loadData] Loading forms for template:", templateId)
           // 使用新的 loadFilteredDetails 方法加载数据
-          const formDetails = await loadFormFilteredDetails(
-            (index) => index.indexFields?.templateId === templateId
-          )
-          
+          const formDetails = await loadFormFilteredDetails((index) => index.indexFields?.templateId === templateId)
+
           if (formDetails.length > 0) {
             const formData = formDetails.map((detail) => ({
               id: detail.id,
@@ -148,9 +146,9 @@ const AIReportEditor: React.FC = () => {
               rowsCount: flattened.length,
             })
           }
-        } else if (resourceId) {
-          console.log("[loadData] Loading resource:", resourceId)
-          const resource = await getResourceDetail(resourceId)
+        } else if (reportId) {
+          console.log("[loadData] Loading resource:", reportId)
+          const resource = await getResourceDetail(reportId)
           if (resource && resource.data) {
             setResourceData(resource.data.data)
             if (Array.isArray(resource.data.data) && resource.data.data.length > 0) {
@@ -179,10 +177,10 @@ const AIReportEditor: React.FC = () => {
 
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
-      { label: "资料管理", href: "/we-chat-app/admin/resources" },
-      { label: "AI 资料助手", href: `/we-chat-app/admin/resources/ai/${resourceId || templateId}` },
+      { label: "报表管理", href: "/we-chat-app/admin/reports" },
+      { label: "AI 报表助手", href: `/we-chat-app/admin/reports/ai/${reportId || templateId}` },
     ])
-  }, [resourceId, templateId])
+  }, [reportId, templateId])
 
   const handleChunk = useCallback((chunk: string) => {
     console.log("[handleChunk] Processing chunk:", chunk.slice(0, 50) + "...")
@@ -338,8 +336,7 @@ const AIReportEditor: React.FC = () => {
     if (!columns.length || !flattenedData.length) {
       return (
         <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
-          <Icon icon='mdi:loading' className='w-12 h-12 mx-auto mb-4' />
-          <p>正在加载数据...</p>
+          <Spinner label='加载中...' />
         </div>
       )
     }
@@ -400,7 +397,7 @@ const AIReportEditor: React.FC = () => {
   }
 
   return (
-    <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
+    <PageLayout title='AI 报表助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
       <div className='h-[calc(100vh-140px)] overflow-hidden'>
         <ResizablePanelGroup direction='horizontal' className='h-full p-2'>
           <ResizablePanel defaultSize={30} className='resizable-panel'>

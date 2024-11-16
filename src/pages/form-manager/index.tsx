@@ -119,7 +119,9 @@ const FormManager: React.FC = () => {
       label: "查看",
       icon: "mdi:eye",
       color: "primary",
-      onClick: (record) => navigate(`/form/${record.id}`),
+      onClick: (record) => {
+        window.open(`/form/${record.id}`, "_blank")
+      },
     },
   ]
 
@@ -180,6 +182,10 @@ const FormManager: React.FC = () => {
 
   const pageActions = (
     <>
+      <Button onClick={handleAnalyze}>
+        <Icon icon='mingcute:search-ai-line' className='w-4 h-4 mr-2' />
+        AI 智能助手
+      </Button>
       <Button onClick={handleCreateDocument} color='primary'>
         <Icon icon='mdi:file-document-plus' className='w-4 h-4 mr-2' />
         创建单据
