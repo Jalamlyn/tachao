@@ -74,6 +74,34 @@ interface FormField {
 }
 ```
 
+### 自定渲染示例：
+
+```jsx
+...
+{
+  name: "mapLocation",
+  label: "地图选择",
+  type: "custom",
+  render: ({ field, isEditable }) => {
+    return(
+      <div>
+        <Button
+          variant="outline"
+          disabled={!isEditable}
+          onClick={() => {
+            // 打开地图选择弹窗逻辑
+            console.log('打开地图选择')
+          }}
+        >
+          选择地址
+        </Button>
+      </div>
+    )
+  }
+}
+...
+```
+
 ### TooltipConfig
 
 提示配置接口：

@@ -170,7 +170,7 @@ const AIFormEditor: React.FC = () => {
         message.error("生成过程中发生错误")
         throw error
       }
-    }
+    },
   }
 
   // 处理命令结果
@@ -225,7 +225,7 @@ const AIFormEditor: React.FC = () => {
           </ResizablePanel>
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={70} className='p-2'>
-            <div className='h-full overflow-auto bg-slate-100'>
+            <div className='h-full overflow-auto'>
               <div>
                 {formState.formConfig ? (
                   <FormPreview previewMode config={formState.formConfig} />

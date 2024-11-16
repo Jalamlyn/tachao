@@ -1,9 +1,9 @@
 import chatChunkClaude from "../chat/chat-chunk-claude-office"
 import { Message } from "./AIFormAgentTypes"
 import { formulaService } from "@/services/formulaService"
-import { markdown as doc } from "@/pages/resource-management/components/AnalysisResult.md"
+import { markdown as doc } from "@/pages/report-management/components/AnalysisResult.md"
 
-export type ResourceColumn = {
+export type ReportColumn = {
   header: string
   accessorKey: string
 }
@@ -24,7 +24,7 @@ interface AnalysisResult {
   }
 }
 
-type ResourceOperationResult = AnalysisResult
+type ReportOperationResult = AnalysisResult
 
 interface ProcessCommandOptions {
   data: any[]
@@ -32,29 +32,29 @@ interface ProcessCommandOptions {
   onChunk?: (chunk: string) => void
 }
 
-export class AIResourceAgent {
-  private static instance: AIResourceAgent
+export class AIReportAgent {
+  private static instance: AIReportAgent
   private _data: any[] = []
 
   private constructor() {
-    console.log("[AIResourceAgent] Instance created")
+    console.log("[AIReportAgent] Instance created")
   }
 
-  public static getInstance(): AIResourceAgent {
-    if (!AIResourceAgent.instance) {
-      AIResourceAgent.instance = new AIResourceAgent()
-      console.log("[AIResourceAgent] New instance created")
+  public static getInstance(): AIReportAgent {
+    if (!AIReportAgent.instance) {
+      AIReportAgent.instance = new AIReportAgent()
+      console.log("[AIReportAgent] New instance created")
     }
-    return AIResourceAgent.instance
+    return AIReportAgent.instance
   }
 
   public setData(data: any[]): void {
-    console.log("[AIResourceAgent] Setting data, length:", data?.length)
+    console.log("[AIReportAgent] Setting data, length:", data?.length)
     this._data = data
   }
 
   private generateSystemPrompt(data: any[]): string {
-    console.log("[AIResourceAgent] Generating system prompt")
+    console.log("[AIReportAgent] Generating system prompt")
     const basePrompt = `你是一个智能资料分析助手，负责帮助用户对资料进行分析。
 请仔细分析用户的需求，生成相应的分析代码。
 
@@ -91,12 +91,14 @@ const result = {
 return result;
 </shata-ai-code>
 \`\`\`
-- 开头和结尾都不要做解释和说明`
+- 开头和结尾都不要做解释和说明
+- 如果数据的列中有 id 字段, 那么明细表格中必须包含该字段
+`
   }
 
   private async executeCode(code: string, data: any[]): Promise<any> {
     try {
-      console.log("[AIResourceAgent] Executing analysis code")
+      console.log("[AIReportAgent] Executing analysis code")
       const wrappedCode = `
         return (function(data, formulajs) {
           ${code}
@@ -104,10 +106,10 @@ return result;
       `
       const executeFunction = new Function("data", "formulajs", wrappedCode)
       const result = executeFunction(data, formulaService)
-      console.log("[AIResourceAgent] Analysis completed successfully")
+      console.log("[AIReportAgent] Analysis completed successfully")
       return result
     } catch (error) {
-      console.error("[AIResourceAgent] Error executing analysis code:", error)
+      console.error("[AIReportAgent] Error executing analysis code:", error)
       throw error
     }
   }
@@ -117,10 +119,10 @@ return result;
     message: string
     analysis?: AnalysisResult["analysis"]
   }> {
-    console.log("[AIResourceAgent] Processing analysis command:", command)
+    console.log("[AIReportAgent] Processing analysis command:", command)
 
     if (!data || !data.length) {
-      console.log("[AIResourceAgent] Invalid data provided")
+      console.log("[AIReportAgent] Invalid data provided")
       return {
         success: false,
         message: "请提供有效的数据",
@@ -146,31 +148,31 @@ return result;
         0
       )
 
-      console.log("[AIResourceAgent] AI response received")
+      console.log("[AIReportAgent] AI response received")
 
       const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
       const match = aiResponse.match(regex)
       if (!match) {
-        console.error("[AIResourceAgent] No valid analysis code found in AI response")
+        console.error("[AIReportAgent] No valid analysis code found in AI response")
         throw new Error("No valid analysis code found in AI response")
       }
       const generatedCode = match[1].trim()
 
-      const result = (await this.executeCode(generatedCode, data)) as ResourceOperationResult
+      const result = (await this.executeCode(generatedCode, data)) as ReportOperationResult
 
       if (!result || !result.type || !result.data) {
-        console.error("[AIResourceAgent] Invalid analysis result format")
+        console.error("[AIReportAgent] Invalid analysis result format")
         throw new Error("Invalid analysis result format")
       }
 
-      console.log("[AIResourceAgent] Analysis completed successfully")
+      console.log("[AIReportAgent] Analysis completed successfully")
       return {
         success: true,
         message: "分析完成",
         analysis: result.analysis,
       }
     } catch (error) {
-      console.error("[AIResourceAgent] Error processing analysis command:", error)
+      console.error("[AIReportAgent] Error processing analysis command:", error)
       return {
         success: false,
         message: "分析过程中发生错误：" + (error as Error).message,
@@ -179,4 +181,4 @@ return result;
   }
 }
 
-export default AIResourceAgent.getInstance()
+export default AIReportAgent.getInstance()

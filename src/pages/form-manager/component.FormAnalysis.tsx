@@ -159,7 +159,7 @@ const FormAnalysis: React.FC = () => {
 
   return (
     <PageLayout
-      title="AI 智能数据分析"
+      title="AI 智能助手"
       titleIcon="solar:chart-2-bold"
       actions={pageActions}
     >

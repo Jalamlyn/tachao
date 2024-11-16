@@ -3,7 +3,7 @@ import { ReactNode } from "react"
 
 export type FormFieldType =
   | "text"
-  | "password"
+  | "password" 
   | "number"
   | "email"
   | "tel"
@@ -31,7 +31,11 @@ export interface FormField {
     label: string
     value: string | number
     disabled?: boolean
-  }>
+  }> | ((form: UseFormReturn<any>) => Array<{
+    label: string
+    value: string | number
+    disabled?: boolean
+  }>)
   accept?: string
   resourceConfig?: {
     resourceName: string

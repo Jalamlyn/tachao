@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import { ScrollShadow, Tabs, Tab } from "@nextui-org/react"
+import { ScrollShadow, Tabs, Tab, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
@@ -9,7 +9,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import MessageCard from "@/components/MessageCard"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import AIResourceAgent from "@/service/agents/AIResourceAgent"
+import AIReportAgent from "@/service/agents/AIReportAgent"
 import AnalysisResult from "./components/AnalysisResult"
 import AICommandInput from "@/components/AICommandInput"
 
@@ -28,6 +28,68 @@ interface Message {
   }
 }
 
+// 生成列配置
+const generateColumns = (data: any[]) => {
+  if (!data || data.length === 0) return []
+
+  const firstItem = data[0]
+  const columns: any[] = []
+
+  const processObject = (obj: any, prefix = "") => {
+    Object.entries(obj).forEach(([key, value]) => {
+      // 跳过空值和数组
+      if (value === null || value === undefined || Array.isArray(value)) return
+
+      // 处理嵌套对象
+      if (typeof value === "object") {
+        processObject(value, prefix ? `${prefix}.${key}` : key)
+        return
+      }
+
+      const accessorKey = prefix ? `${prefix}.${key}` : key
+
+      columns.push({
+        header: accessorKey, // 直接使用key
+        accessorKey,
+        cell: (value: any) => {
+          if (value === null || value === undefined) return "-"
+          if (typeof value === "boolean") return value ? "true" : "false"
+          if (typeof value === "number") return value.toString()
+          return value
+        },
+      })
+    })
+  }
+
+  processObject(firstItem)
+  console.log("[generateColumns] Generated columns:", columns)
+  return columns
+}
+
+// 扁平化数据
+const flattenData = (data: any[]) => {
+  return data.map((item) => {
+    const flatItem: any = {}
+
+    const flatten = (obj: any, prefix = "") => {
+      Object.entries(obj).forEach(([key, value]) => {
+        if (value === null || value === undefined || Array.isArray(value)) return
+
+        if (typeof value === "object") {
+          flatten(value, prefix ? `${prefix}.${key}` : key)
+          return
+        }
+
+        const accessorKey = prefix ? `${prefix}.${key}` : key
+        flatItem[accessorKey] = value
+      })
+    }
+
+    flatten(item)
+    return flatItem
+  })
+}
+
 const extractShataAICode = (content: string) => {
   console.log("[extractShataAICode] Checking content for code")
   const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
@@ -40,9 +102,9 @@ const extractShataAICode = (content: string) => {
   return null
 }
 
-const AIResourceEditor: React.FC = () => {
+const AIReportEditor: React.FC = () => {
   const navigate = useNavigate()
-  const { resourceId } = useParams<{ resourceId: string }>()
+  const { reportId, templateId } = useParams<{ reportId: string; templateId: string }>()
   const { updateBreadcrumbs } = useBreadcrumb()
   const [messages, setMessages] = useState<Message[]>([])
   const [resourceData, setResourceData] = useState<any[]>([])
@@ -50,45 +112,75 @@ const AIResourceEditor: React.FC = () => {
   const [previewContent, setPreviewContent] = useState<string>("")
   const [previewComponent, setPreviewComponent] = useState<React.ReactNode>(null)
   const [selectedTab, setSelectedTab] = useState("data")
+  const [flattenedData, setFlattenedData] = useState<any[]>([])
 
   const accumulatedTextRef = useRef("")
-  const { getDetail: getResourceDetail } = useMetadata("resource")
+  const { getDetail: getResourceDetail, loadFilteredDetails } = useMetadata("resource")
+  const { loadFilteredDetails: loadFormFilteredDetails } = useMetadata("form")
 
   useEffect(() => {
-    const loadResourceData = async () => {
-      if (resourceId) {
-        try {
-          const resource = await getResourceDetail(resourceId)
+    const loadData = async () => {
+      try {
+        console.log("[loadData] Starting data load")
+
+        if (templateId) {
+          console.log("[loadData] Loading forms for template:", templateId)
+          // 使用新的 loadFilteredDetails 方法加载数据
+          const formDetails = await loadFormFilteredDetails((index) => index.indexFields?.templateId === templateId)
+
+          if (formDetails.length > 0) {
+            const formData = formDetails.map((detail) => ({
+              id: detail.id,
+              ...detail.data,
+            }))
+
+            console.log("[loadData] Loaded form details:", formData.length)
+            setResourceData(formData)
+
+            const cols = generateColumns(formData)
+            const flattened = flattenData(formData)
+            setColumns(cols)
+            setFlattenedData(flattened)
+            console.log("[loadData] Data processed:", {
+              columnsCount: cols.length,
+              rowsCount: flattened.length,
+            })
+          }
+        } else if (reportId) {
+          console.log("[loadData] Loading resource:", reportId)
+          const resource = await getResourceDetail(reportId)
           if (resource && resource.data) {
             setResourceData(resource.data.data)
             if (Array.isArray(resource.data.data) && resource.data.data.length > 0) {
-              const firstRow = resource.data.data[0]
-              const cols = Object.keys(firstRow).map((key) => ({
-                header: key,
-                accessorKey: key,
-              }))
+              const cols = generateColumns(resource.data.data)
+              const flattened = flattenData(resource.data.data)
               setColumns(cols)
+              setFlattenedData(flattened)
+              console.log("[loadData] Resource data processed:", {
+                columnsCount: cols.length,
+                rowsCount: flattened.length,
+              })
             }
           } else {
             message.error("资料加载失败")
             navigate("/we-chat-app/admin/resources")
           }
-        } catch (error) {
-          console.error("Error loading resource:", error)
-          message.error("资料加载失败")
-          navigate("/we-chat-app/admin/resources")
         }
+      } catch (error) {
+        console.error("[loadData] Error loading data:", error)
+        message.error("数据加载失败")
+        navigate("/we-chat-app/admin/resources")
       }
     }
 
-    loadResourceData()
+    loadData()
 
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
-      { label: "资料管理", href: "/we-chat-app/admin/resources" },
-      { label: "AI 资料助手", href: `/we-chat-app/admin/resources/ai/${resourceId}` },
+      { label: "报表管理", href: "/we-chat-app/admin/reports" },
+      { label: "AI 报表助手", href: `/we-chat-app/admin/reports/ai/${reportId || templateId}` },
     ])
-  }, [resourceId])
+  }, [reportId, templateId])
 
   const handleChunk = useCallback((chunk: string) => {
     console.log("[handleChunk] Processing chunk:", chunk.slice(0, 50) + "...")
@@ -146,7 +238,7 @@ const AIResourceEditor: React.FC = () => {
     }
   }, [])
 
-  const resourceAgent = {
+  const reportAgent = {
     processCommand: async (command: string) => {
       console.log("[processCommand] Starting command processing")
       try {
@@ -169,7 +261,7 @@ const AIResourceEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        const result = await AIResourceAgent.processCommand({
+        const result = await AIReportAgent.processCommand({
           data: resourceData,
           command: command,
           onChunk: handleChunk,
@@ -240,30 +332,42 @@ const AIResourceEditor: React.FC = () => {
     }
   }, [])
 
-  const renderDataTable = () => (
-    <div className='bg-white rounded-lg shadow'>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map((column) => (
-              <TableHead className='min-w-24 bg-slate-50' key={column.accessorKey}>
-                {column.header}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {resourceData.map((row: any, rowIndex: number) => (
-            <TableRow key={rowIndex}>
+  const renderDataTable = () => {
+    if (!columns.length || !flattenedData.length) {
+      return (
+        <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
+          <Spinner label='加载中...' />
+        </div>
+      )
+    }
+
+    return (
+      <div className='bg-white rounded-lg shadow'>
+        <Table>
+          <TableHeader>
+            <TableRow>
               {columns.map((column) => (
-                <TableCell key={`${rowIndex}-${column.accessorKey}`}>{row[column.accessorKey]}</TableCell>
+                <TableHead className='min-w-24 bg-slate-50' key={column.accessorKey}>
+                  {column.header}
+                </TableHead>
               ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  )
+          </TableHeader>
+          <TableBody>
+            {flattenedData.map((row: any, rowIndex: number) => (
+              <TableRow key={rowIndex}>
+                {columns.map((column) => (
+                  <TableCell key={`${rowIndex}-${column.accessorKey}`}>
+                    {column.cell(row[column.accessorKey])}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  }
 
   const renderAnalysisResult = () =>
     previewComponent ? (
@@ -279,7 +383,7 @@ const AIResourceEditor: React.FC = () => {
   const renderCodeView = () => {
     if (previewContent) {
       return (
-        <pre className='text-sm overflow-auto bg-slate-800 text-white p-2 rounded-lg'>
+        <pre>
           <code>{previewContent}</code>
         </pre>
       )
@@ -293,7 +397,7 @@ const AIResourceEditor: React.FC = () => {
   }
 
   return (
-    <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
+    <PageLayout title='AI 报表助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
       <div className='h-[calc(100vh-140px)] overflow-hidden'>
         <ResizablePanelGroup direction='horizontal' className='h-full p-2'>
           <ResizablePanel defaultSize={30} className='resizable-panel'>
@@ -314,7 +418,7 @@ const AIResourceEditor: React.FC = () => {
                 </div>
               </ScrollShadow>
 
-              <AICommandInput agent={resourceAgent} onResult={handleCommandResult} />
+              <AICommandInput agent={reportAgent} onResult={handleCommandResult} />
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
@@ -322,16 +426,7 @@ const AIResourceEditor: React.FC = () => {
             <div className='h-full flex flex-col'>
               <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key.toString())}>
                 <Tab key='data' title='数据表格'>
-                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
-                    {resourceData ? (
-                      renderDataTable()
-                    ) : (
-                      <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
-                        <Icon icon='mdi:loading' className='w-12 h-12 mx-auto mb-4' />
-                        <p>正在加载数据...</p>
-                      </div>
-                    )}
-                  </div>
+                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderDataTable()}</div>
                 </Tab>
                 <Tab key='analysis' title='分析报表'>
                   <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderAnalysisResult()}</div>
@@ -348,4 +443,4 @@ const AIResourceEditor: React.FC = () => {
   )
 }
 
-export default AIResourceEditor
+export default AIReportEditor

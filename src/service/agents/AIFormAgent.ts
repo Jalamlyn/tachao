@@ -5,7 +5,9 @@ import chatChunkQwen from "../chat/chat-siliconflow"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
-import { markdown as doc } from "@/components/common/DynamicForm/doc.md"
+import { markdown as dynamicFormAdvanced } from "@/components/common/DynamicForm/dynamic-form-advanced.md"
+import { markdown as dynamicForm } from "@/components/common/DynamicForm/dynamic-form.md"
+
 import { markdown as formulaService } from "@/services/formulaService.md"
 import {
   CommandResult,
@@ -45,6 +47,7 @@ ${this._rawConfig}
 生成的代码中不允许使用 import 语句，不引入任何第三方依赖
 processStep 必须在 renderConfig 下
 除了计算字段所有字段 disable 都是 false
+自定义渲染 render 返回的是 jsx 代码,不是字符串
 
 注意：自定义组件只能使用 shadcn UI 组件库中的组件，包括：
 - Alert, AlertTitle, AlertDescription
@@ -58,7 +61,8 @@ processStep 必须在 renderConfig 下
 
 <doc>
 # 动态表单配置文档
-${doc}
+${dynamicForm}
+${dynamicFormAdvanced}
 # 动态表单计算公式文档
 ${formulaService}
 </doc>
@@ -128,13 +132,13 @@ ${formulaService}
     }
 
     if (intent === "unclear") {
-      updateGenerationProcess("🤔 您的指令不太明确，我需要更多信息来帮助您。</br>")
-      updateGenerationProcess("💡 请尝试使用以下格式的指令：</br>")
-      updateGenerationProcess("- 创建一个[表单类型]表单，包含[字段1]、[字段2]等字段</br>")
-      updateGenerationProcess("- 在现有表单中添加[新字段]字段</br>")
-      updateGenerationProcess("- 修改[现有字段]的[属性]为[新值]</br>")
-      updateGenerationProcess("- 删除表单中的[字段名]字段</br>")
-      updateGenerationProcess("例如：'创建一个订单表单，包含客户名称、订单日期和商品列表字段'</br>")
+      updateGenerationProcess("🤔 您的指令不太明确，我需要更多信息来帮助您。")
+      updateGenerationProcess("💡 请尝试使用以下格式的指令：")
+      updateGenerationProcess("- 创建一个[表单类型]表单，包含[字段1]、[字段2]等字段")
+      updateGenerationProcess("- 在现有表单中添加[新字段]字段")
+      updateGenerationProcess("- 修改[现有字段]的[属性]为[新值]")
+      updateGenerationProcess("- 删除表单中的[字段名]字段")
+      updateGenerationProcess("例如：'创建一个订单表单，包含客户名称、订单日期和商品列表字段'")
       return {
         type: "unclear",
         data: null,
@@ -142,10 +146,10 @@ ${formulaService}
       }
     }
 
-    updateGenerationProcess("🤖 AI助手正在分析您的需求...</br>")
+    updateGenerationProcess("🤖 AI助手正在分析您的需求...")
     await new Promise((resolve) => setTimeout(resolve, 500))
 
-    updateGenerationProcess("📝 开始生成表单...</br>")
+    updateGenerationProcess("📝 开始生成表单...")
     const createResult = await this.createForm(command, updateGenerationProcess)
     if (createResult) {
       if (createResult.rawConfig) {
@@ -226,7 +230,7 @@ ${formulaService}
 
   private async createForm(description: string, onChunk: AIResponseHandler): Promise<CreateFormResult> {
     console.log("[AIFormAgent] createForm started with current rawConfig:", this._rawConfig?.substring(0, 100) + "...")
-    onChunk("🎨 正在设计表单结构...</br>")
+    onChunk("🎨 正在设计表单结构...")
     await new Promise((resolve) => setTimeout(resolve, 300))
 
     const prompt = `请根据以下描述生成一个完整的表单配置代码：
@@ -261,7 +265,7 @@ export default {
 `
 
     try {
-      onChunk("⚡ 正在生成表单配置...</br>\n")
+      onChunk("⚡ 正在生成表单配置...\n")
       const response = await this.processAIResponse(prompt, onChunk)
       console.log("[AIFormAgent] Received AI response, length:", response.length)
       const parsedConfig = await parseFormConfig(response)
@@ -276,7 +280,7 @@ export default {
         throw new Error("表单配置缺少必要的字段")
       }
 
-      onChunk("✨ 表单生成完成！</br>")
+      onChunk("✨ 表单生成完成！")
       console.log("[AIFormAgent] Form generation completed, returning new rawConfig")
       return {
         config: config as DynamicFormConfig,

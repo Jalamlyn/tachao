@@ -61,31 +61,6 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
     loadTemplates()
   }, [])
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      },
-    },
-  }
-
-  const item = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    show: { 
-      opacity: 1, 
-      y: 0, 
-      scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 20
-      }
-    },
-  }
-
   const handleDeleteConfirm = async () => {
     if (selectedTemplate) {
       try {
@@ -133,106 +108,97 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
 
   return (
     <>
-      <motion.div
-        variants={container}
-        initial='hidden'
-        animate='show'
-        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${className}`}
-      >
-        <AnimatePresence>
-          {templates.map((template) => (
-            <motion.div 
-              key={template.id} 
-              variants={item}
-              layout
-              className='h-full'
+      <motion.div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${className}`}>
+        {templates.map((template) => (
+          <motion.div key={template.id} layout className='h-full'>
+            <Card
+              isPressable
+              isHoverable
+              className='w-full h-[240px] group'
+              onPress={() => onTemplateSelect(template.id)}
             >
-              <Card 
-                isPressable 
-                isHoverable 
-                className='w-full h-[240px] group'
-                onPress={() => onTemplateSelect(template.id)}
-              >
-                <CardBody className='p-0 relative overflow-hidden'>
-                  <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 group-hover:scale-105 transition-transform duration-300'>
-                    <Icon icon='fluent:form-28-filled' className='w-16 h-16 text-primary-400 group-hover:scale-110 transition-transform duration-300' />
-                  </div>
-                </CardBody>
-                <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
-                  <div className='flex justify-between items-center w-full'>
-                    <h4 
-                      className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors duration-300' 
-                      title={template.title}
+              <CardBody className='p-0 relative overflow-hidden'>
+                <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 group-hover:scale-105 transition-transform duration-300'>
+                  <Icon
+                    icon='fluent:form-28-filled'
+                    className='w-16 h-16 text-primary-400 group-hover:scale-110 transition-transform duration-300'
+                  />
+                </div>
+              </CardBody>
+              <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
+                <div className='flex justify-between items-center w-full'>
+                  <h4
+                    className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors duration-300'
+                    title={template.title}
+                  >
+                    {template.title}
+                  </h4>
+                </div>
+                <div className='flex justify-between items-center w-full'>
+                  <div className='flex gap-2'>
+                    <Button
+                      isIconOnly
+                      size='sm'
+                      variant='light'
+                      className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+                      onClick={(e) => handleShareClick(template, e)}
                     >
-                      {template.title}
-                    </h4>
+                      <Icon icon='mdi:share' className='w-4 h-4' />
+                    </Button>
+                    <Button
+                      isIconOnly
+                      size='sm'
+                      variant='light'
+                      className='text-default-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-300'
+                      onClick={(e) => handleAIEditClick(template, e)}
+                    >
+                      <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
+                    </Button>
+                    <Button
+                      isIconOnly
+                      size='sm'
+                      variant='light'
+                      className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
+                      onClick={(e) => handleDeleteClick(template, e)}
+                    >
+                      <Icon icon='mdi:delete' className='w-4 h-4' />
+                    </Button>
                   </div>
-                  <div className='flex justify-between items-center w-full'>
-                    <div className='flex gap-2'>
-                      <Button
-                        isIconOnly
-                        size='sm'
-                        variant='light'
-                        className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
-                        onClick={(e) => handleShareClick(template, e)}
-                      >
-                        <Icon icon='mdi:share' className='w-4 h-4' />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        size='sm'
-                        variant='light'
-                        className='text-default-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-300'
-                        onClick={(e) => handleAIEditClick(template, e)}
-                      >
-                        <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        size='sm'
-                        variant='light'
-                        className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
-                        onClick={(e) => handleDeleteClick(template, e)}
-                      >
-                        <Icon icon='mdi:delete' className='w-4 h-4' />
-                      </Button>
-                    </div>
-                  </div>
-                </CardFooter>
-              </Card>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+                </div>
+              </CardFooter>
+            </Card>
+          </motion.div>
+        ))}
       </motion.div>
 
-      <Modal 
-        isOpen={isOpen} 
+      <Modal
+        isOpen={isOpen}
         onClose={onClose}
         classNames={{
           base: "max-w-md",
           header: "border-b",
           body: "py-6",
-          footer: "border-t"
+          footer: "border-t",
         }}
       >
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>
-            <div className="flex items-center gap-2 text-danger">
-              <Icon icon="mdi:alert-circle" className="w-6 h-6" />
+            <div className='flex items-center gap-2 text-danger'>
+              <Icon icon='mdi:alert-circle' className='w-6 h-6' />
               <span>确认删除</span>
             </div>
           </ModalHeader>
           <ModalBody>
-            <p className="text-default-600">确定要删除模板 "{selectedTemplate?.title}" 吗？此操作不可撤销。</p>
+            <p className='text-default-600'>确定要删除模板 "{selectedTemplate?.title}" 吗？此操作不可撤销。</p>
           </ModalBody>
           <ModalFooter>
             <Button color='default' variant='light' onPress={onClose}>
               取消
             </Button>
-            <Button 
-              color='danger' 
+            <Button
+              color='danger'
               onPress={handleDeleteConfirm}
-              startContent={<Icon icon="mdi:delete" className="w-4 h-4" />}
+              startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
             >
               删除
             </Button>
@@ -240,35 +206,30 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
         </ModalContent>
       </Modal>
 
-      <Modal 
-        isOpen={isShareOpen} 
+      <Modal
+        isOpen={isShareOpen}
         onClose={onShareClose}
         classNames={{
           base: "max-w-md",
           header: "border-b",
           body: "py-6",
-          footer: "border-t"
+          footer: "border-t",
         }}
       >
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>分享模板</ModalHeader>
           <ModalBody>
             <div className='flex flex-col gap-4'>
-              <p className="text-default-600">复制以下链接分享模板：</p>
+              <p className='text-default-600'>复制以下链接分享模板：</p>
               <Input
                 readOnly
                 value={`${window.location.origin}/form-preview/${selectedTemplate?.id || ""}`}
                 classNames={{
                   input: "bg-default-50",
-                  inputWrapper: "bg-default-50 hover:bg-default-100"
+                  inputWrapper: "bg-default-50 hover:bg-default-100",
                 }}
                 endContent={
-                  <Button 
-                    size='sm' 
-                    variant='light'
-                    className="min-w-unit-16 h-unit-8"
-                    onClick={handleCopyShareLink}
-                  >
+                  <Button size='sm' variant='light' className='min-w-unit-16 h-unit-8' onClick={handleCopyShareLink}>
                     <Icon icon='mdi:content-copy' className='w-4 h-4' />
                   </Button>
                 }
@@ -276,11 +237,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button 
-              color='primary' 
-              onPress={onShareClose}
-              startContent={<Icon icon="mdi:check" className="w-4 h-4" />}
-            >
+            <Button color='primary' onPress={onShareClose} startContent={<Icon icon='mdi:check' className='w-4 h-4' />}>
               完成
             </Button>
           </ModalFooter>

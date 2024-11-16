@@ -162,11 +162,11 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
         startContent={<Icon icon='mdi:upload' width='20' height='20' />}
         isDisabled={isDisabled}
       >
-        创建资料
+        上传资料
       </Button>
       <Modal placement='top-center' isOpen={isOpen} onClose={onClose} size='2xl'>
         <ModalContent>
-          <ModalHeader>创建资料</ModalHeader>
+          <ModalHeader>上传资料</ModalHeader>
           <ModalBody>
             <Input
               label='资料名称'

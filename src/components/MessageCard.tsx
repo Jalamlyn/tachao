@@ -134,9 +134,8 @@ const MessageCard = React.memo(
 
       const handleCopy = useCallback(() => {
         startTransition(() => {
-          const valueToCopy = typeof displayedMessage === 'string' 
-            ? displayedMessage 
-            : messageRef.current?.textContent || ""
+          const valueToCopy =
+            typeof displayedMessage === "string" ? displayedMessage : messageRef.current?.textContent || ""
           copy(valueToCopy)
           onMessageCopy?.(valueToCopy)
         })
@@ -152,7 +151,11 @@ const MessageCard = React.memo(
 
       const renderContent = () => {
         if (status === "cancelled") {
-          return <div><p>......</p></div>
+          return (
+            <div>
+              <p>......</p>
+            </div>
+          )
         }
         if (hasFailed) {
           return failedMessage
@@ -180,8 +183,30 @@ const MessageCard = React.memo(
         // 如果是字符串，使用 ReactMarkdown 渲染
         return (
           <div className={contentClassName}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-              {displayedMessage as string || ""}
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
+              components={{
+                code({ node, className, children, ...props }) {
+                  const match = /language-(\w+)/.exec(className || "")
+                  if (match && match[1] == "mo") {
+                    if (children && children.startsWith("<shata-ai-resource>")) {
+                      if (children.includes("</shata-ai-resource>")) {
+                        return <div color='success'>工作流程创建完成 ✔️</div>
+                      } else {
+                        return <div>正在创建工作流程，请稍后...</div>
+                      }
+                    }
+                    return (
+                      <code {...props} className={className}>
+                        {children}
+                      </code>
+                    )
+                  }
+                },
+              }}
+            >
+              {(displayedMessage as string) || ""}
             </ReactMarkdown>
           </div>
         )
