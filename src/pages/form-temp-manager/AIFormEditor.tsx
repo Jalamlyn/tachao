@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react"
-import { ScrollShadow } from "@nextui-org/react"
+import { ScrollShadow, Tabs, Tab } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react"
@@ -25,6 +25,7 @@ const AIFormEditor: React.FC = () => {
   const isEditMode = Boolean(templateId)
   const { updateBreadcrumbs } = useBreadcrumb()
   const [messages, setMessages] = useState<any[]>([])
+  const [selectedTab, setSelectedTab] = useState("preview")
 
   const { state: formState, setFormConfig, setRawConfig, handleError, appendGenerationProcess } = useFormState()
 
@@ -127,7 +128,6 @@ const AIFormEditor: React.FC = () => {
     navigate("/we-chat-app/admin/documents")
   }
 
-  // 构造 AI 代理对象
   const formAgent = {
     processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
       const userMessage = {
@@ -173,7 +173,6 @@ const AIFormEditor: React.FC = () => {
     },
   }
 
-  // 处理命令结果
   const handleCommandResult = useCallback(
     (result) => {
       if (result?.type === "support") {
@@ -224,18 +223,40 @@ const AIFormEditor: React.FC = () => {
             </div>
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={70} className='p-2'>
-            <div className='h-full overflow-auto'>
-              <div>
-                {formState.formConfig ? (
-                  <FormPreview previewMode config={formState.formConfig} />
-                ) : (
-                  <div className='text-center pt-[30%] text-gray-500 h-full flex flex-col justify-center items-center'>
-                    <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
-                    <p>请输入您的需求,AI将为您开发表单</p>
+          <ResizablePanel defaultSize={70} className='resizable-panel'>
+            <div className='h-full flex flex-col'>
+              <Tabs 
+                size='sm' 
+                selectedKey={selectedTab} 
+                onSelectionChange={(key) => setSelectedTab(key.toString())}
+              >
+                <Tab key='preview' title='表单预览'>
+                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
+                    {formState.formConfig ? (
+                      <FormPreview previewMode config={formState.formConfig} />
+                    ) : (
+                      <div className='text-center pt-[30%] text-gray-500'>
+                        <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
+                        <p>请输入您的需求,AI将为您开发表单</p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </Tab>
+                <Tab key='code' title='代码视图'>
+                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
+                    {formState.rawConfig ? (
+                      <pre className='bg-gray-50 p-4 rounded-lg'>
+                        <code>{formState.rawConfig}</code>
+                      </pre>
+                    ) : (
+                      <div className='text-center pt-[30%] text-gray-500'>
+                        <Icon icon='mdi:code-braces' className='w-12 h-12 mx-auto mb-4' />
+                        <p>等待生成代码...</p>
+                      </div>
+                    )}
+                  </div>
+                </Tab>
+              </Tabs>
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
