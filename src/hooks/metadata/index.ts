@@ -7,16 +7,20 @@ import { useMetadataIndex } from "./useMetadataIndex"
 import { useMetadataDetail } from "./useMetadataDetail"
 import { useMetadataHistory } from "./useMetadataHistory"
 
+interface UseMetadataOptions {
+  public?: boolean
+}
+
 /**
  * 元数据管理 Hook
  */
-export function useMetadata<T = any>(type: string) {
+export function useMetadata<T = any>(type: string, options: UseMetadataOptions = {}) {
   const [items, setItems] = useState<MetadataDetail<T>[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const { getIndexes, saveIndex } = useMetadataIndex(type)
-  const { getDetail, saveDetail } = useMetadataDetail<T>(type)
+  const { getDetail, saveDetail } = useMetadataDetail<T>(type, { public: options.public })
   const { getHistory } = useMetadataHistory(type)
 
   /**

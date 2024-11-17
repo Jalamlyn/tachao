@@ -1,12 +1,16 @@
 import { useCallback } from "react"
-import { getMetadata, setMetadata } from "@/service/apis/api"
+import { getMetadata, setMetadata, getPublicMetaData } from "@/service/apis/api"
 import { MetadataDetail } from "./types"
 import { jsonParse, jsonStringify, logger } from "./utils"
+
+interface UseMetadataDetailOptions {
+  public?: boolean
+}
 
 /**
  * 元数据详情管理 Hook
  */
-export function useMetadataDetail<T = any>(type: string) {
+export function useMetadataDetail<T = any>(type: string, options: UseMetadataDetailOptions = {}) {
   /**
    * 获取详情数据
    * @param ids 元数据ID或ID数组
@@ -15,10 +19,17 @@ export function useMetadataDetail<T = any>(type: string) {
   const getDetail = useCallback(
     async (ids: string | string[]) => {
       const idArray = Array.isArray(ids) ? ids : [ids]
-      logger.debug("[useMetadataDetail] Getting details", { type, ids: idArray })
+      logger.debug("[useMetadataDetail] Getting details", { 
+        type, 
+        ids: idArray,
+        isPublic: options.public 
+      })
 
       try {
-        const result = await getMetadata(idArray)
+        // 根据options.public选择使用哪个接口
+        const result = options.public 
+          ? await getPublicMetaData(idArray)
+          : await getMetadata(idArray)
         
         // 处理返回结果
         const details = result.data
@@ -34,6 +45,7 @@ export function useMetadataDetail<T = any>(type: string) {
         logger.debug("[useMetadataDetail] Details loaded successfully", {
           requestedCount: idArray.length,
           loadedCount: details.length,
+          isPublic: options.public
         })
 
         // 如果是单个ID请求,返回单个对象或null
@@ -44,11 +56,14 @@ export function useMetadataDetail<T = any>(type: string) {
         // 如果是数组请求,返回详情数组
         return details
       } catch (error) {
-        logger.error(`[useMetadataDetail] Error getting ${type} details`, error as Error, { ids: idArray })
+        logger.error(`[useMetadataDetail] Error getting ${type} details`, error as Error, { 
+          ids: idArray,
+          isPublic: options.public 
+        })
         return Array.isArray(ids) ? [] : null
       }
     },
-    [type]
+    [type, options.public]
   )
 
   /**

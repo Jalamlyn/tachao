@@ -12,7 +12,7 @@ import { generateWxAuthUrl, getWxUserInfo, checkWxAuth, saveWxUserInfo } from "@
 import { aiLog } from "@/utils/AITraceLogger"
 
 // 配置微信appId
-const WX_APP_ID = process.env.REACT_APP_WX_APP_ID || 'your_app_id'
+const WX_APP_ID = process.env.VITE_WX_APP_ID
 
 const Form: React.FC = () => {
   const { formId } = useParams<{ formId: string }>()
@@ -23,51 +23,52 @@ const Form: React.FC = () => {
   const [templateId, setTemplateId] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState("form")
 
-  const { getDetail: getFormDetail } = useMetadata("form")
-  const { getDetail: getTemplateDetail } = useMetadata("template")
+  // 使用public模式获取表单和模板数据
+  const { getDetail: getFormDetail } = useMetadata("form", { public: true })
+  const { getDetail: getTemplateDetail } = useMetadata("template", { public: true })
 
   // 处理微信授权
   const handleWxAuth = async () => {
     const traceId = aiLog.start()
-    aiLog.log('开始处理微信授权', { formId })
+    aiLog.log("开始处理微信授权", { formId })
 
     try {
-      const code = new URLSearchParams(window.location.search).get('code')
-      
+      const code = new URLSearchParams(window.location.search).get("code")
+
       // 检查是否已经授权
       const existingAuth = checkWxAuth()
       if (existingAuth) {
-        aiLog.log('已有微信授权信息', { userInfo: existingAuth })
+        aiLog.log("已有微信授权信息", { userInfo: existingAuth })
         return true
       }
 
       // 如果有code，获取用户信息
       if (code) {
-        aiLog.log('检测到授权code，开始获取用户信息', { code })
+        aiLog.log("检测到授权code，开始获取用户信息", { code })
         try {
           const userInfo = await getWxUserInfo(WX_APP_ID, code)
           saveWxUserInfo(userInfo)
           // 清除URL中的code参数
-          const cleanUrl = window.location.href.split('?')[0]
+          const cleanUrl = window.location.href.split("?")[0]
           window.history.replaceState({}, document.title, cleanUrl)
-          aiLog.log('微信授权成功', { userInfo })
+          aiLog.log("微信授权成功", { userInfo })
           return true
         } catch (error) {
-          aiLog.log('获取微信用户信息失败', { error })
-          message.error('微信授权失败，请重试')
+          aiLog.log("获取微信用户信息失败", { error })
+          message.error("微信授权失败，请重试")
           return false
         }
       }
 
       // 需要进行授权
-      aiLog.log('需要进行微信授权')
+      aiLog.log("需要进行微信授权")
       const currentUrl = `${window.location.origin}/form/${formId}`
-      const authUrl = generateWxAuthUrl(WX_APP_ID, currentUrl, 'snsapi_userinfo', formId)
+      const authUrl = generateWxAuthUrl(WX_APP_ID, currentUrl, "snsapi_userinfo", formId)
       window.location.href = authUrl
       return false
     } catch (error) {
-      aiLog.log('微信授权处理失败', { error })
-      message.error('微信授权处理失败')
+      aiLog.log("微信授权处理失败", { error })
+      message.error("微信授权处理失败")
       return false
     }
   }
@@ -86,7 +87,7 @@ const Form: React.FC = () => {
         // 首先进行微信授权
         const isAuthorized = await handleWxAuth()
         if (!isAuthorized) {
-          aiLog.log('等待微信授权，暂停加载表单')
+          aiLog.log("等待微信授权，暂停加载表单")
           return
         }
 
