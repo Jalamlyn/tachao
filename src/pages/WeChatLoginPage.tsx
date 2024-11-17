@@ -122,7 +122,7 @@ export default function WeChatLoginPage() {
           transition={{ duration: 0.6 }}
           className='w-full max-w-md'
         >
-          <Card className='bg-white/20 border border-white/30 shadow-2xl'>
+          <Card className='bg-white/20 border bg-white border-white/30 shadow-2xl'>
             <CardBody className='gap-4 p-8'>
               <motion.div
                 initial={{ opacity: 0 }}
@@ -130,12 +130,12 @@ export default function WeChatLoginPage() {
                 transition={{ delay: 0.2 }}
                 className='text-center'
               >
-                <h2 className='text-2xl font-bold text-white mb-2 drop-shadow-lg'>欢迎登录</h2>
+                <h2 className='text-2xl font-bold mb-2 drop-shadow-lg'>欢迎登录</h2>
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: sloganVisible ? 1 : 0 }}
                   transition={{ duration: 1 }}
-                  className='text-white/90 text-lg mb-6 drop-shadow'
+                  className='text-lg mb-6 drop-shadow'
                 >
                   沙塔 AI，智能统计单据
                 </motion.p>
@@ -157,8 +157,7 @@ export default function WeChatLoginPage() {
                     onChange={handleInputChange}
                     value={account}
                     classNames={{
-                      input: "text-white",
-                      label: "text-white font-medium",
+                      label: "font-medium",
                     }}
                   />
                 </motion.div>
@@ -169,15 +168,9 @@ export default function WeChatLoginPage() {
                     endContent={
                       <button type='button' onClick={toggleVisibility} className='focus:outline-none'>
                         {isVisible ? (
-                          <Icon
-                            className='text-white/90 hover:text-white text-xl transition-colors'
-                            icon='solar:eye-closed-linear'
-                          />
+                          <Icon className='text-xl transition-colors' icon='solar:eye-closed-linear' />
                         ) : (
-                          <Icon
-                            className='text-white/90 hover:text-white text-xl transition-colors'
-                            icon='solar:eye-bold'
-                          />
+                          <Icon className='text-xl transition-colors' icon='solar:eye-bold' />
                         )}
                       </button>
                     }
@@ -189,8 +182,7 @@ export default function WeChatLoginPage() {
                     onChange={handleInputChange}
                     value={password}
                     classNames={{
-                      input: "text-white",
-                      label: "text-white font-medium",
+                      label: "font-medium",
                     }}
                   />
                 </motion.div>
@@ -207,7 +199,7 @@ export default function WeChatLoginPage() {
                     isSelected={rememberMe}
                     onValueChange={handleRememberMeChange}
                     classNames={{
-                      label: "text-white/90 hover:text-white transition-colors",
+                      label: "  transition-colors",
                     }}
                   >
                     {t("remember_me")}
@@ -220,7 +212,7 @@ export default function WeChatLoginPage() {
                     type='submit'
                     onClick={handleLogin}
                     isLoading={loginLoading}
-                    className='w-full bg-white text-primary-dark hover:bg-white/90 transition-all duration-300 font-medium shadow-lg hover:shadow-xl'
+                    className='w-full transition-all duration-300 font-medium shadow-lg hover:shadow-xl'
                   >
                     {t("login")}
                   </Button>
