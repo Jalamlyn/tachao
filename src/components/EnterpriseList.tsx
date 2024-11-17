@@ -61,7 +61,7 @@ export default ({ loginData }) => {
     <div>
       <Autocomplete
         variant='bordered'
-        className='w-full text-white'
+        className='w-full'
         value={value}
         onSelectionChange={onSelectionChange}
         onInputChange={onInputChange}

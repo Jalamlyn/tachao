@@ -44,16 +44,15 @@
         s.parentNode.insertBefore(hm, s)
       })()
     </script>
-    <!-- <script async src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script> -->
+    <script async src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
     <script>
-      // 只在域名是 localhost 的时候开启 vconsole
-      // var isDev = window.location.hostname === "localhost"
-      // if (isDev) {
-      //   var vConsole = new window.VConsole()
-      // }
-      // setTimeout(function () {
-      //   var vConsole = new window.VConsole()
-      // }, 5000)
+      setTimeout(function () {
+        // var isDev = window.location.hostname === "localhost"
+        // if (isDev) {
+        //   var vConsole = new window.VConsole()
+        // }
+        var vConsole = new window.VConsole()
+      }, 5000)
     </script>
   </body>
 </html>
