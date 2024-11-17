@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import { Spinner, Tabs, Tab } from "@nextui-org/react"
+import { Spinner, Tabs, Tab, Button } from "@nextui-org/react"
 import { useMetadata } from "@/hooks/useMetadata"
 import DynamicForm from "@/components/common/DynamicForm"
 import FormHistoryTable from "@/components/forms/FormHistoryTable"
@@ -22,6 +22,7 @@ const Form: React.FC = () => {
   const [formData, setFormData] = useState<any>(null)
   const [templateId, setTemplateId] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState("form")
+  const [authRetrying, setAuthRetrying] = useState(false)
 
   // 使用public模式获取表单和模板数据
   const { getDetail: getFormDetail } = useMetadata("form", { public: true })
@@ -31,6 +32,7 @@ const Form: React.FC = () => {
   const handleWxAuth = async () => {
     const traceId = aiLog.start()
     aiLog.log("开始处理微信授权", { formId })
+    setAuthRetrying(false)
 
     try {
       const code = new URLSearchParams(window.location.search).get("code")
@@ -55,7 +57,8 @@ const Form: React.FC = () => {
           return true
         } catch (error) {
           aiLog.log("获取微信用户信息失败", { error })
-          message.error("微信授权失败，请重试")
+          setError("微信授权失败，请点击重试按钮重新授权")
+          setIsLoading(false)
           return false
         }
       }
@@ -68,9 +71,18 @@ const Form: React.FC = () => {
       return false
     } catch (error) {
       aiLog.log("微信授权处理失败", { error })
-      message.error("微信授权处理失败")
+      setError("微信授权处理失败，请点击重试按钮重新授权")
+      setIsLoading(false)
       return false
     }
+  }
+
+  // 重试授权
+  const retryAuth = async () => {
+    setAuthRetrying(true)
+    setError(null)
+    setIsLoading(true)
+    await handleWxAuth()
   }
 
   useEffect(() => {
@@ -158,6 +170,15 @@ const Form: React.FC = () => {
       <div className='flex flex-col items-center justify-center min-h-screen text-danger'>
         <p className='text-xl font-bold mb-2'>错误</p>
         <p>{error}</p>
+        {error.includes("授权") && !authRetrying && (
+          <Button
+            color="primary"
+            className="mt-4"
+            onClick={retryAuth}
+          >
+            重新授权
+          </Button>
+        )}
       </div>
     )
   }
