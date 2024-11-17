@@ -29,6 +29,7 @@ export default function renderWeChatApp() {
       <Route path='resources/ai/:resourceId' element={<AIResourceEditor />} />
       <Route path='reports' element={<ReportManagement />} />
       <Route path='reports/ai/create/:templateId' element={<AIReportEditor />} />
+      <Route path='analyse' element={<FormAnalysis />} />
     </Route>
   )
 }
