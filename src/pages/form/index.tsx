@@ -9,6 +9,7 @@ import { motion } from "framer-motion"
 import { Icon } from "@iconify/react"
 import { parseFormConfig } from "@/utils/codeParser"
 import { generateWxAuthUrl, getWxUserInfo, checkWxAuth, saveWxUserInfo } from "@/service/apis/wx"
+import { generateWecomAuthUrl, wecomLogin, checkWecomAuth, saveWecomUserInfo } from "@/service/apis/wecom"
 import { aiLog } from "@/utils/AITraceLogger"
 import { useLoginInfo } from "@/hooks/useLoginInfo"
 import { checkEnvironment, getEnvironmentName } from "@/utils/environment"
@@ -30,6 +31,69 @@ const Form: React.FC = () => {
   // 使用public模式获取表单和模板数据
   const { getDetail: getFormDetail } = useMetadata("form", { public: true })
   const { getDetail: getTemplateDetail } = useMetadata("template", { public: true })
+
+  // 处理企业微信授权
+  const handleWecomAuth = async () => {
+    const traceId = aiLog.start()
+    aiLog.log("开始处理企业微信授权", { formId })
+    setAuthRetrying(false)
+
+    try {
+      const code = new URLSearchParams(window.location.search).get("code")
+
+      // 检查是否已经授权
+      const existingAuth = checkWecomAuth()
+      if (existingAuth) {
+        aiLog.log("已有企业微信授权信息", { userInfo: existingAuth })
+        setLoginInfo({
+          type: 'wecom',
+          userInfo: existingAuth
+        })
+        return true
+      }
+
+      // 如果有code，进行登录
+      if (code) {
+        aiLog.log("检测到授权code，开始企业微信登录", { code })
+        try {
+          const loginResult = await wecomLogin(code)
+          const userInfo = {
+            name: loginResult.name || '企业微信用户',
+            id: loginResult.userId,
+            token: loginResult.tokenValue
+          }
+          saveWecomUserInfo(userInfo)
+          setLoginInfo({
+            type: 'wecom',
+            userInfo,
+            token: loginResult.tokenValue
+          })
+          // 清除URL中的code参数
+          const cleanUrl = window.location.href.split("?")[0]
+          window.history.replaceState({}, document.title, cleanUrl)
+          aiLog.log("企业微信登录成功", { userInfo })
+          return true
+        } catch (error) {
+          aiLog.log("企业微信登录失败", { error })
+          setError("企业微信登录失败，请点击重试按钮重新登录")
+          setIsLoading(false)
+          return false
+        }
+      }
+
+      // 需要进行授权
+      aiLog.log("需要进行企业微信授权")
+      const currentUrl = `${window.location.origin}/form/${formId}`
+      const authUrl = generateWecomAuthUrl(currentUrl, formId)
+      window.location.href = authUrl
+      return false
+    } catch (error) {
+      aiLog.log("企业微信授权处理失败", { error })
+      setError("企业微信授权处理失败，请点击重试按钮重新授权")
+      setIsLoading(false)
+      return false
+    }
+  }
 
   // 处理微信授权
   const handleWxAuth = async () => {
@@ -101,7 +165,12 @@ const Form: React.FC = () => {
     setAuthRetrying(true)
     setError(null)
     setIsLoading(true)
-    await handleWxAuth()
+    const env = checkEnvironment()
+    if (env === 'wechat') {
+      await handleWxAuth()
+    } else if (env === 'wecom') {
+      await handleWecomAuth()
+    }
   }
 
   useEffect(() => {
@@ -125,10 +194,11 @@ const Form: React.FC = () => {
               return
             }
           } else if (env === 'wecom') {
-            // TODO: 处理企业微信登录
-            setError("企业微信登录功能开发中")
-            setIsLoading(false)
-            return
+            const isAuthorized = await handleWecomAuth()
+            if (!isAuthorized) {
+              aiLog.log("等待企业微信授权，暂停加载表单")
+              return
+            }
           }
         }
 
