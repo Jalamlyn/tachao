@@ -7,11 +7,6 @@ interface DynamicFormFieldsProps {
   fields: DynamicFormField[]
   form: UseFormReturn<any>
   isEditable?: boolean
-  orderNumberFieldConfig?: {
-    prefix?: string
-    fieldName: string
-    label?: string
-  }
 }
 
 const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = (props) => {
@@ -19,3 +14,4 @@ const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = (props) => {
 }
 
 export default DynamicFormFieldsWrapper
+</FileContent>
