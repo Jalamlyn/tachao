@@ -12,7 +12,7 @@ import { generateWxAuthUrl, getWxUserInfo, checkWxAuth, saveWxUserInfo } from "@
 import { aiLog } from "@/utils/AITraceLogger"
 
 // 配置微信appId
-const WX_APP_ID = process.env.VITE_WX_APP_ID
+const WX_APP_ID = import.meta.env.VITE_WX_APP_ID || "wxd792f04d6c8ca1be"
 
 const Form: React.FC = () => {
   const { formId } = useParams<{ formId: string }>()
@@ -199,12 +199,7 @@ const Form: React.FC = () => {
             }
           >
             <div className='mt-4 h-[calc(100vh-140px)] overflow-auto'>
-              <DynamicForm
-                config={formConfig}
-                id={formId}
-                templateId={templateId}
-                initialValues={formData}
-              />
+              <DynamicForm config={formConfig} id={formId} templateId={templateId} initialValues={formData} />
             </div>
           </Tab>
           <Tab
