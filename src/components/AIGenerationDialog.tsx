@@ -15,7 +15,7 @@ const AIGenerationDialog: React.FC<AIGenerationDialogProps> = ({
   isOpen,
   onClose,
   generationContent,
-  title = "沙塔 AI",
+  title = "沙塔智能",
   ResultComponent,
   resultProps = {},
 }) => {

@@ -90,7 +90,7 @@ const defaultFormData: FormData = {
       ],
     },
     invoiceDetails: {
-      title: "模本科技",
+      title: "沙塔智能",
       taxNumber: "30929999",
       taxType: "增值税",
       vatRate: "12",

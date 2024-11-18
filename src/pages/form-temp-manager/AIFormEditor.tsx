@@ -46,6 +46,7 @@ const AIFormEditor: React.FC = () => {
             if (parsedConfig) {
               setFormConfig(parsedConfig.config)
               setRawConfig(template.data.rawConfig)
+              setPreviewContent(template.data.rawConfig) // 添加这行
             } else {
               message.error("模板解析失败")
               navigate("/we-chat-app/admin/documents")
@@ -301,7 +302,7 @@ const AIFormEditor: React.FC = () => {
                 <Tab key='code' title='代码预览'>
                   <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
                     {previewContent ? (
-                      <pre className='bg-gray-50 p-4 rounded-lg'>
+                      <pre className='p-4 rounded-lg bg-slate-900 text-white text-wrap'>
                         <code>{previewContent}</code>
                       </pre>
                     ) : (

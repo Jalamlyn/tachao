@@ -59,16 +59,16 @@ const Footer: React.FC = () => {
           <div>
             <h3 className='text-white font-bold mb-4'>联系方式</h3>
             <ul className='space-y-2'>
-              <li className='text-white/70'>邮箱：contact@shata-ai.com</li>
-              <li className='text-white/70'>电话：400-XXX-XXXX</li>
-              <li className='text-white/70'>地址：深圳市南山区科技园</li>
+              <li className='text-white/70'>邮箱：shihong@mobenai.com.cn</li>
+              <li className='text-white/70'>电话：15384078477</li>
+              <li className='text-white/70'>地址：杭州市临平区</li>
             </ul>
           </div>
         </div>
 
         <div className='mt-12 pt-8 border-t border-white/10'>
           <div className='flex flex-col md:flex-row justify-between items-center'>
-            <p className='text-white/70 text-sm'>© {currentYear} 沙塔科技. 保留所有权利.</p>
+            <p className='text-white/70 text-sm'>© {currentYear} 沙塔智能. 保留所有权利.</p>
             <div className='flex space-x-4 mt-4 md:mt-0'>
               <Link href='#' className='text-white/70 hover:text-white text-sm'>
                 隐私政策

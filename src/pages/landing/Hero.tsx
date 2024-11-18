@@ -149,7 +149,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         {/* 标题区域 */}
         <motion.div variants={itemVariants} className="space-y-4">
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-            沙塔 AI - 智慧企业服务专家
+            沙塔智能 - 智慧企业服务专家
           </h1>
           <p className="text-lg md:text-2xl text-white/80">
             让 AI 为企业赋能，提升效率，降低成本

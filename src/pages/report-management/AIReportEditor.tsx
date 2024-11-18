@@ -432,7 +432,9 @@ const AIReportEditor: React.FC = () => {
                   <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderAnalysisResult()}</div>
                 </Tab>
                 <Tab key='code' title='代码视图'>
-                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderCodeView()}</div>
+                  <div className='h-[calc(100vh-260px)] rounded-lg overflow-auto p-2 bg-slate-900 text-white text-wrap'>
+                    {renderCodeView()}
+                  </div>
                 </Tab>
               </Tabs>
             </div>
