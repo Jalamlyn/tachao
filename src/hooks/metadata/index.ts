@@ -22,6 +22,9 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
   const { getIndexes, saveIndex } = useMetadataIndex(type)
   const { getDetail, saveDetail } = useMetadataDetail<T>(type, { public: options.public })
   const { getHistory } = useMetadataHistory(type)
+  
+  // ✅ 在顶层调用 Hook 获取 form 索引
+  const { getIndexes: getFormIndexes } = useMetadataIndex('form')
 
   /**
    * 创建新项目
@@ -169,8 +172,8 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
   const checkTemplateUsage = useCallback(async (templateId: string) => {
     logger.debug("[useMetadata] Checking template usage", { templateId })
     try {
-      // 获取所有表单索引
-      const formIndexes = await getIndexes()
+      // ✅ 使用顶层声明的 getFormIndexes
+      const formIndexes = await getFormIndexes()
       
       // 筛选使用该模板的表单
       const formsUsingTemplate = formIndexes.filter(
@@ -198,7 +201,7 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
       logger.error("[useMetadata] Error checking template usage", error as Error)
       throw new Error("检查模板使用情况时发生错误")
     }
-  }, [getIndexes])
+  }, [getFormIndexes]) // ✅ 添加 getFormIndexes 到依赖数组
 
   /**
    * 删除项目
@@ -319,22 +322,22 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
         // 1. 获取并筛选索引
         const indexes = await getIndexes()
         const filteredIndexes = indexes.filter(filter)
-        logger.debug("[useMetadata] Filtered indexes", { 
+        logger.debug("[useMetadata] Filtered indexes", {
           totalCount: indexes.length,
-          filteredCount: filteredIndexes.length 
+          filteredCount: filteredIndexes.length,
         })
 
         // 2. 一次性获取所有匹配的详情
-        const ids = filteredIndexes.map(index => index.id)
+        const ids = filteredIndexes.map((index) => index.id)
         const details = await getDetail(ids)
         const validDetails = Array.isArray(details) ? details : []
-        
+
         // 3. 更新状态
         setItems(validDetails)
         logger.debug("[useMetadata] Filtered details loaded successfully", {
           count: validDetails.length,
         })
-        
+
         return validDetails
       } catch (error) {
         logger.error(`[useMetadata] Error loading filtered ${type} details`, error as Error)
@@ -359,7 +362,7 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
     remove,
     getDetail,
     getHistory,
-    checkTemplateUsage, // 导出新增的方法
+    checkTemplateUsage,
   }
 }
 
