@@ -229,7 +229,7 @@ const MessageCard = React.memo(
           <div className='flex w-full flex-col gap-4'>
             <div
               className={cn(
-                "relative rounded-medium bg-content2 px-4 py-3 pr-20 text-default-600",
+                "relative rounded-medium bg-content2 px-4 py-3 pr-3 text-default-600",
                 failedMessageClassName,
                 messageClassName,
                 "sm:max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl",

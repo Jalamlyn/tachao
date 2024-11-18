@@ -6,7 +6,6 @@ import { FormField as DynamicFormField } from "../../types"
 import FormFieldWrapper from "./FormFieldWrapper"
 import BasicInput from "./BasicInput"
 import DateInput from "./DateInput"
-import OrderNumberField from "@/components/common/OrderNumberField"
 import { cn } from "@/theme/cn"
 import {
   Select,
@@ -38,32 +37,21 @@ interface DynamicFormFieldsProps {
   fields: DynamicFormField[]
   form: UseFormReturn<any>
   isEditable?: boolean
-  orderNumberFieldConfig?: {
-    prefix?: string
-    fieldName: string
-    label?: string
-  }
 }
 
 const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
   fields,
   form,
   isEditable = true,
-  orderNumberFieldConfig,
 }) => {
   const renderField = (field: DynamicFormField) => {
     if (field.hidden) return null
-
-    // 如果是第一个字段且存在 orderNumberFieldConfig，则在其旁边渲染 OrderNumberField
-    const isFirstField = fields.indexOf(field) === 0
-    const shouldRenderOrderNumber = isFirstField && orderNumberFieldConfig
 
     // 基础输入类型映射
     const basicInputTypes = ["text", "password", "email", "tel", "url"]
     if (basicInputTypes.includes(field.type)) {
       return (
         <div className={cn(
-          shouldRenderOrderNumber ? "grid grid-cols-1 md:grid-cols-2 gap-4" : undefined,
           "form-field-container"
         )}>
           <FormFieldWrapper
@@ -76,15 +64,6 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
           >
             {(formField) => <BasicInput type={field.type} field={formField} />}
           </FormFieldWrapper>
-          {shouldRenderOrderNumber && (
-            <OrderNumberField
-              form={form}
-              prefix={orderNumberFieldConfig.prefix}
-              fieldName={orderNumberFieldConfig.fieldName}
-              label={orderNumberFieldConfig.label}
-              disabled={!isEditable}
-            />
-          )}
         </div>
       )
     }

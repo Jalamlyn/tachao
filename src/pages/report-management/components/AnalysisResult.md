@@ -25,7 +25,35 @@ const analysis = {
     ],
     data: [{ name: 'A', value: 30 }]
   }],
-  insights: ['数据呈现上升趋势']
+  insights: ['数据呈现上升趋势'],
+  // 流程分析示例
+  processAnalysis: {
+    summary: {
+      totalProcessNodes: 5,
+      completedNodes: 3,
+      completionRate: '60%',
+      averageProcessTime: '2.5天'
+    },
+    nodeStatus: {
+      '节点1': '已完成',    // 必须是状态描述字符串，不能是数字
+      '节点2': '进行中'     // 必须是状态描述字符串，不能是数字
+    },
+    processDuration: {
+      total: '5天',         // 必须是时间描述字符串，不能是数字
+      nodesDuration: {
+        '节点1': '2天',     // 必须是时间描述字符串，不能是数字
+        '节点2': '3天'      // 必须是时间描述字符串，不能是数字
+      }
+    },
+    approvers: {
+      '审批人A': 10,
+      '审批人B': 5
+    },
+    processStatus: {
+      '已完成': 3,
+      '进行中': 2
+    }
+  }
 };
 
 <AnalysisResult analysis={analysis} />
@@ -66,6 +94,34 @@ const analysis = {
 
   // 数据洞察数组，包含分析发现和建议
   insights: string[];
+
+  // 流程分析数据（可选）
+  processAnalysis?: {
+    // 流程概要信息
+    summary?: {
+      totalProcessNodes: number;    // 总节点数
+      completedNodes: number;       // 已完成节点数
+      completionRate: string;       // 完成率（百分比）
+      averageProcessTime: string;   // 平均处理时长（必须是时间描述，如：'2.5天'）
+    };
+    
+    // 节点状态信息，记录每个节点的当前状态
+    // ⚠️ 重要：值必须是状态描述字符串，如 '已完成'、'进行中'，不能是数字
+    nodeStatus?: Record<string, string>;
+    
+    // 流程耗时信息
+    // ⚠️ 重要：所有时间值必须是描述字符串，如 '5天'、'2小时'，不能是数字
+    processDuration?: {
+      total: string;                // 总耗时
+      nodesDuration: Record<string, string>;  // 各节点耗时
+    };
+    
+    // 审批人工作量统计
+    approvers?: Record<string, number>;
+    
+    // 流程状态统计
+    processStatus?: Record<string, number>;
+  };
 }
 ```
 
@@ -129,7 +185,50 @@ tables: [{
 }]
 ```
 
-### 4. 完整配置示例
+### 4. 流程分析配置
+
+生成流程分析示例：
+```javascript
+// 基础流程分析
+processAnalysis: {
+  summary: {
+    totalProcessNodes: data.length,
+    completedNodes: data.filter(item => item.status === 'completed').length,
+    completionRate: `${(completedCount / totalCount * 100).toFixed(1)}%`,
+    averageProcessTime: `${averageTime}天`  // 必须是时间描述字符串
+  },
+  // ⚠️ 重要：nodeStatus 必须使用状态描述字符串
+  nodeStatus: data.reduce((acc, curr) => {
+    acc[curr.nodeName] = curr.status === 'completed' ? '已完成' : '进行中';  // ✅ 正确：使用状态描述
+    // ❌ 错误：acc[curr.nodeName] = completedCount;  // 不要使用数字
+    return acc;
+  }, {}),
+  // ⚠️ 重要：processDuration 必须使用时间描述字符串
+  processDuration: {
+    total: `${totalDuration}天`,  // ✅ 正确：使用时间描述
+    nodesDuration: data.reduce((acc, curr) => {
+      acc[curr.nodeName] = `${curr.duration}天`;  // ✅ 正确：使用时间描述
+      // ❌ 错误：acc[curr.nodeName] = duration;  // 不要使用数字
+      return acc;
+    }, {})
+  }
+}
+
+// 带审批人统计的流程分析
+processAnalysis: {
+  ...baseProcessAnalysis,
+  approvers: data.reduce((acc, curr) => {
+    acc[curr.approver] = (acc[curr.approver] || 0) + 1;
+    return acc;
+  }, {}),
+  processStatus: data.reduce((acc, curr) => {
+    acc[curr.status] = (acc[curr.status] || 0) + 1;
+    return acc;
+  }, {})
+}
+```
+
+### 5. 完整配置示例
 
 ```javascript
 <shata-ai-resource>
@@ -162,10 +261,43 @@ const result = {
       ],
       data: data.slice(0, 10)
     }],
+    // 流程分析
+    processAnalysis: {
+      summary: {
+        totalProcessNodes: 5,
+        completedNodes: 3,
+        completionRate: '60%',
+        averageProcessTime: '2.5天'  // ✅ 使用时间描述字符串
+      },
+      nodeStatus: {
+        '提交申请': '已完成',  // ✅ 使用状态描述字符串
+        '部门审批': '进行中',  // ✅ 使用状态描述字符串
+        '财务审核': '待处理'   // ✅ 使用状态描述字符串
+      },
+      processDuration: {
+        total: '5天',          // ✅ 使用时间描述字符串
+        nodesDuration: {
+          '提交申请': '1天',   // ✅ 使用时间描述字符串
+          '部门审批': '2天',   // ✅ 使用时间描述字符串
+          '财务审核': '2天'    // ✅ 使用时间描述字符串
+        }
+      },
+      approvers: {
+        '张经理': 8,
+        '李财务': 5
+      },
+      processStatus: {
+        '已完成': 3,
+        '进行中': 1,
+        '待处理': 1
+      }
+    },
     // 数据洞察
     insights: [
       '总销售额达到3000元',
-      '产品B销售占比较高'
+      '产品B销售占比较高',
+      '流程完成率达到60%',
+      '平均处理时长为2.5天'
     ]
   }
 };
@@ -186,3 +318,10 @@ return result;
 3. 展示优化
 - 表格标题应清晰说明数据含义和筛选条件
 - 合理使用排序和筛选，提高数据可读性
+
+4. 流程分析
+- nodeStatus 必须使用状态描述字符串（如：'已完成'、'进行中'），不能使用数字
+- processDuration 必须使用时间描述字符串（如：'5天'、'2小时'），不能使用数字
+- 确保流程节点状态准确反映当前情况
+- 时间统计要考虑工作日和节假日
+- 审批人工作量统计要考虑有效性

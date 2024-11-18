@@ -13,7 +13,8 @@ import LandingPage from "./pages/LandingPage"
 import AIHomePage from "./pages/AIHomePage"
 import renderWeChatApp from "./apps/we-chat-app-admin/renderWeChatApp"
 import FormPreview from "./pages/form-temp-manager/components/FormPreview"
-import Form from "./pages/form"
+// import Form from "./pages/form"
+import Form from "@/features/form"
 import ResourceDataTable from "./components/common/data-table/ResourceDataTable"
 
 function App() {

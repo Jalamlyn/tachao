@@ -8,7 +8,7 @@ import { message } from "@/components/Message"
 import { useTranslation } from "react-i18next"
 import { jsonParse, jsonStringify } from "@/utils"
 import { motion } from "framer-motion"
-import AnimatedBackground from "@/components/landing/AnimatedBackground"
+import AnimatedBackground from "@/pages/landing/AnimatedBackground"
 
 export default function WeChatLoginPage() {
   const { t } = useTranslation()
@@ -137,7 +137,7 @@ export default function WeChatLoginPage() {
                   transition={{ duration: 1 }}
                   className='text-lg mb-6 drop-shadow'
                 >
-                  沙塔 AI，智能统计单据
+                  模本科技，智能统计单据
                 </motion.p>
               </motion.div>
 

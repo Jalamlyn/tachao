@@ -16,7 +16,7 @@ const Contact: React.FC = () => {
         >
           <Card className='bg-white/10 backdrop-blur-lg border border-white/20'>
             <CardBody className='text-center p-8'>
-              <h2 className='text-3xl md:text-4xl font-bold text-white mb-4'>开始使用 沙塔 AI</h2>
+              <h2 className='text-3xl md:text-4xl font-bold text-white mb-4'>开始使用 沙塔智能</h2>
               <p className='text-white/80 text-lg mb-8 max-w-2xl mx-auto'>立即体验智能化企业管理，提升效率，降低成本</p>
               <div className='flex flex-col sm:flex-row gap-4 justify-center'>
                 <Button

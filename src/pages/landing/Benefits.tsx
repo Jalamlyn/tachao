@@ -66,7 +66,7 @@ const Benefits: React.FC = () => {
 
       <div className='container mx-auto px-4 relative z-10'>
         <ScrollAnimation className='text-center mb-16'>
-          <h2 className='text-3xl md:text-4xl font-bold text-white mb-4'>为什么选择沙塔 AI</h2>
+          <h2 className='text-3xl md:text-4xl font-bold text-white mb-4'>为什么选择沙塔智能</h2>
           <p className='text-white/80 text-lg max-w-2xl mx-auto'>智能化解决方案，让企业管理更简单</p>
         </ScrollAnimation>
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import { Spinner, Tabs, Tab } from "@nextui-org/react"
+import { Spinner, Tabs, Tab, Button, Avatar } from "@nextui-org/react"
 import { useMetadata } from "@/hooks/useMetadata"
 import DynamicForm from "@/components/common/DynamicForm"
 import FormHistoryTable from "@/components/forms/FormHistoryTable"
@@ -9,7 +9,10 @@ import { motion } from "framer-motion"
 import { Icon } from "@iconify/react"
 import { parseFormConfig } from "@/utils/codeParser"
 import { generateWxAuthUrl, getWxUserInfo, checkWxAuth, saveWxUserInfo } from "@/service/apis/wx"
+import { generateWecomAuthUrl, wecomLogin, checkWecomAuth, saveWecomUserInfo } from "@/service/apis/wecom"
 import { aiLog } from "@/utils/AITraceLogger"
+import { useLoginInfo } from "@/hooks/useLoginInfo"
+import { checkEnvironment, getEnvironmentName } from "@/utils/environment"
 
 // 配置微信appId
 const WX_APP_ID = import.meta.env.VITE_WX_APP_ID || "wxd792f04d6c8ca1be"
@@ -22,15 +25,81 @@ const Form: React.FC = () => {
   const [formData, setFormData] = useState<any>(null)
   const [templateId, setTemplateId] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState("form")
+  const [authRetrying, setAuthRetrying] = useState(false)
+  const { loginInfo, setLoginInfo } = useLoginInfo()
 
   // 使用public模式获取表单和模板数据
   const { getDetail: getFormDetail } = useMetadata("form", { public: true })
   const { getDetail: getTemplateDetail } = useMetadata("template", { public: true })
 
+  // 处理企业微信授权
+  const handleWecomAuth = async () => {
+    const traceId = aiLog.start()
+    aiLog.log("开始处理企业微信授权", { formId })
+    setAuthRetrying(false)
+
+    try {
+      const code = new URLSearchParams(window.location.search).get("code")
+
+      // 检查是否已经授权
+      const existingAuth = checkWecomAuth()
+      if (existingAuth) {
+        aiLog.log("已有企业微信授权信息", { userInfo: existingAuth })
+        setLoginInfo({
+          type: "wecom",
+          userInfo: existingAuth,
+        })
+        return true
+      }
+
+      // 如果有code，进行登录
+      if (code) {
+        aiLog.log("检测到授权code，开始企业微信登录", { code })
+        try {
+          const loginResult = await wecomLogin(code)
+          const userInfo = {
+            name: loginResult.name || "企业微信用户",
+            id: loginResult.userId,
+            token: loginResult.tokenValue,
+          }
+          saveWecomUserInfo(userInfo)
+          setLoginInfo({
+            type: "wecom",
+            userInfo,
+            token: loginResult.tokenValue,
+          })
+          // 清除URL中的code参数
+          const cleanUrl = window.location.href.split("?")[0]
+          window.history.replaceState({}, document.title, cleanUrl)
+          aiLog.log("企业微信登录成功", { userInfo })
+          return true
+        } catch (error) {
+          aiLog.log("企业微信登录失败", { error })
+          setError("企业微信登录失败，请点击重试按钮重新登录")
+          setIsLoading(false)
+          return false
+        }
+      }
+
+      // 需要进行授权
+      aiLog.log("需要进行企业微信授权")
+      const currentUrl = `${window.location.origin}/form/${formId}`
+      const authUrl = generateWecomAuthUrl(currentUrl, formId)
+      window.location.href = authUrl
+      return false
+    } catch (error) {
+      aiLog.log("企业微信授权处理失败", { error })
+      setError("企业微信授权处理失败，请点击重试按钮重新授权")
+      setIsLoading(false)
+      return false
+    }
+  }
+
   // 处理微信授权
   const handleWxAuth = async () => {
     const traceId = aiLog.start()
     aiLog.log("开始处理微信授权", { formId })
+    setAuthRetrying(false)
 
     try {
       const code = new URLSearchParams(window.location.search).get("code")
@@ -39,6 +108,14 @@ const Form: React.FC = () => {
       const existingAuth = checkWxAuth()
       if (existingAuth) {
         aiLog.log("已有微信授权信息", { userInfo: existingAuth })
+        setLoginInfo({
+          type: "wechat",
+          userInfo: {
+            name: existingAuth.nickname,
+            avatar: existingAuth.headimgurl,
+            ...existingAuth,
+          },
+        })
         return true
       }
 
@@ -48,6 +125,14 @@ const Form: React.FC = () => {
         try {
           const userInfo = await getWxUserInfo(WX_APP_ID, code)
           saveWxUserInfo(userInfo)
+          setLoginInfo({
+            type: "wechat",
+            userInfo: {
+              name: userInfo.nickname,
+              avatar: userInfo.headimgurl,
+              ...userInfo,
+            },
+          })
           // 清除URL中的code参数
           const cleanUrl = window.location.href.split("?")[0]
           window.history.replaceState({}, document.title, cleanUrl)
@@ -55,7 +140,8 @@ const Form: React.FC = () => {
           return true
         } catch (error) {
           aiLog.log("获取微信用户信息失败", { error })
-          message.error("微信授权失败，请重试")
+          setError("微信授权失败，请点击重试按钮重新授权")
+          setIsLoading(false)
           return false
         }
       }
@@ -68,8 +154,22 @@ const Form: React.FC = () => {
       return false
     } catch (error) {
       aiLog.log("微信授权处理失败", { error })
-      message.error("微信授权处理失败")
+      setError("微信授权处理失败，请点击重试按钮重新授权")
+      setIsLoading(false)
       return false
+    }
+  }
+
+  // 重试授权
+  const retryAuth = async () => {
+    setAuthRetrying(true)
+    setError(null)
+    setIsLoading(true)
+    const env = checkEnvironment()
+    if (env === "wechat") {
+      await handleWxAuth()
+    } else if (env === "wecom") {
+      await handleWecomAuth()
     }
   }
 
@@ -84,11 +184,22 @@ const Form: React.FC = () => {
       }
 
       try {
-        // 首先进行微信授权
-        const isAuthorized = await handleWxAuth()
-        if (!isAuthorized) {
-          aiLog.log("等待微信授权，暂停加载表单")
-          return
+        // 检查登录状态
+        if (loginInfo.type === "none") {
+          const env = checkEnvironment()
+          if (env === "wechat") {
+            const isAuthorized = await handleWxAuth()
+            if (!isAuthorized) {
+              aiLog.log("等待微信授权，暂停加载表单")
+              return
+            }
+          } else if (env === "wecom") {
+            const isAuthorized = await handleWecomAuth()
+            if (!isAuthorized) {
+              aiLog.log("等待企业微信授权，暂停加载表单")
+              return
+            }
+          }
         }
 
         aiLog.log("[Form] Start loading form data for formId:", formId)
@@ -143,7 +254,7 @@ const Form: React.FC = () => {
     }
 
     loadFormData()
-  }, [formId, getFormDetail, getTemplateDetail])
+  }, [formId, getFormDetail, getTemplateDetail, loginInfo.type])
 
   if (isLoading) {
     return (
@@ -158,13 +269,40 @@ const Form: React.FC = () => {
       <div className='flex flex-col items-center justify-center min-h-screen text-danger'>
         <p className='text-xl font-bold mb-2'>错误</p>
         <p>{error}</p>
+        {error.includes("授权") && !authRetrying && (
+          <Button color='primary' className='mt-4' onClick={retryAuth}>
+            重新授权
+          </Button>
+        )}
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <Spinner label='加载中...' />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className='flex flex-col items-center justify-center min-h-screen text-danger'>
+        <p className='text-xl font-bold mb-2'>错误</p>
+        <p>{error}</p>
+        {error.includes("授权") && !authRetrying && (
+          <Button color='primary' className='mt-4' onClick={retryAuth}>
+            重新授权
+          </Button>
+        )}
       </div>
     )
   }
 
   if (!formConfig || !formData) {
     return (
-      <div className='flex items-center justify-center min-h-screen text-gray-500'>
+      <div className='flex items-center justify-center min-h-screen text-danger'>
         <p>未找到表单配置或数据</p>
       </div>
     )
@@ -178,6 +316,21 @@ const Form: React.FC = () => {
       className='container mx-auto py-8 px-4'
     >
       <div className='max-w-[1200px] mx-auto'>
+        {/* 用户信息显示 */}
+        {loginInfo.type !== "none" && (
+          <div className='mb-4 p-4 bg-white rounded-lg shadow-sm flex items-center gap-4'>
+            <Avatar src={loginInfo.userInfo?.avatar} name={loginInfo.userInfo?.name?.[0]} size='sm' />
+            <div>
+              <div className='font-medium'>{loginInfo.userInfo?.name || "未知用户"}</div>
+              <div className='text-sm text-gray-500'>
+                {loginInfo.type === "platform" && "平台账号"}
+                {loginInfo.type === "wechat" && "微信账号"}
+                {loginInfo.type === "wecom" && "企业微信账号"}
+              </div>
+            </div>
+          </div>
+        )}
+
         <Tabs
           selectedKey={selectedTab}
           onSelectionChange={(key) => setSelectedTab(key.toString())}

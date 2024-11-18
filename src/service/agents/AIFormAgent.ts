@@ -1,13 +1,10 @@
 import chatChunkClaude from "../chat/chat-chunk-claude-office"
-// import chatChunkClaude from "../chat/chat-chunk-claude-horay"
-// import chatChunkGroq from "../chat/chat-chunk-groq"
 import chatChunkQwen from "../chat/chat-siliconflow"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
 import { markdown as dynamicFormAdvanced } from "@/components/common/DynamicForm/dynamic-form-advanced.md"
 import { markdown as dynamicForm } from "@/components/common/DynamicForm/dynamic-form.md"
-
 import { markdown as formulaService } from "@/services/formulaService.md"
 import {
   CommandResult,
@@ -132,13 +129,13 @@ ${formulaService}
     }
 
     if (intent === "unclear") {
-      updateGenerationProcess("🤔 您的指令不太明确，我需要更多信息来帮助您。")
-      updateGenerationProcess("💡 请尝试使用以下格式的指令：")
-      updateGenerationProcess("- 创建一个[表单类型]表单，包含[字段1]、[字段2]等字段")
-      updateGenerationProcess("- 在现有表单中添加[新字段]字段")
-      updateGenerationProcess("- 修改[现有字段]的[属性]为[新值]")
-      updateGenerationProcess("- 删除表单中的[字段名]字段")
-      updateGenerationProcess("例如：'创建一个订单表单，包含客户名称、订单日期和商品列表字段'")
+      updateGenerationProcess(`🤔 您的指令不太明确，我需要更多信息来帮助您。
+        💡 请尝试使用以下格式的指令：
+        - 创建一个 **[表单类型]** 表单，包含 **[字段1]**、**[字段2]** 等字段。
+        - 在 **[表单名称]** 中添加 **[字段名]** 字段。
+        - 修改 **[表单名称]** 中 **[字段名]** 的 **[属性]** 为 **[新值]**。
+        - 删除 **[表单名称]** 中的 **[字段名]** 字段。
+        例如：创建一个订单表单，包含客户名称、订单日期和商品列表字段`)
       return {
         type: "unclear",
         data: null,
@@ -193,13 +190,13 @@ ${formulaService}
   }
 
   public async analyzeIntent(input: string): Promise<IntentAnalysisResult> {
-    const aiAnalysisPrompt = `请分析以下用户指令，判断是否是表单创建或编辑相关的指令：
+    const aiAnalysisPrompt = `请分析以下用户指令，判断是否是表单/流程创建或编辑相关的指令：
 "${input}"
 
 请根据以下规则进行分析：
-1. 如果是明确的创建、编辑、修改、更新表单的指令，返回 "support"
-2. 如果不是表单相关的指令，返回 "unsupported"
-3. 如果是表单相关但指令不够明确或缺少关键信息，返回 "unclear"
+1. 如果是明确的创建、编辑、修改、更新表单/流程的指令，返回 "support"
+2. 如果不是表单/流程相关的指令，返回 "unsupported"
+3. 如果是表单/流程相关但指令不够明确或缺少关键信息，返回 "unclear"
 
 请只返回 "support"、"unsupported" 或 "unclear"，不要返回其他内容。`
 
@@ -209,7 +206,7 @@ ${formulaService}
 
       if (cleanResponse === "support" || cleanResponse === "unsupported" || cleanResponse === "unclear") {
         if (cleanResponse === "unsupported") {
-          message.warning("请使用表单创建或编辑相关的指令。")
+          message.warning("请使用表单/流程创建或编辑相关的指令。")
         }
         return cleanResponse as IntentAnalysisResult
       }

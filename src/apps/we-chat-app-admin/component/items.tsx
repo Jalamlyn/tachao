@@ -26,6 +26,12 @@ export const items: SidebarItem[] = [
     title: "资料管理",
   },
   {
+    key: "ai-assistant",
+    href: "/we-chat-app/admin/ai-assistant",
+    icon: "hugeicons:ai-chat-02",
+    title: "AI 智能助手",
+  },
+  {
     key: "settings",
     href: "/we-chat-app/admin/settings",
     icon: "solar:settings-outline",

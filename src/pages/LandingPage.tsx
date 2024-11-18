@@ -3,17 +3,17 @@ import { motion, useAnimation } from "framer-motion"
 import { Button } from "@nextui-org/react"
 import { useNavigate } from "react-router-dom"
 import { Helmet } from "react-helmet"
-import Hero from "@/components/landing/Hero"
-import Stats from "@/components/landing/Stats"
-import Contact from "@/components/landing/Contact"
-import Footer from "@/components/landing/Footer"
-import AnimatedBackground from "@/components/landing/AnimatedBackground"
-import ScrollProgress from "@/components/landing/ScrollProgress"
-import ScrollNav from "@/components/landing/ScrollNav"
+import Hero from "@/pages/landing/Hero"
+import Stats from "@/pages/landing/Stats"
+import Contact from "@/pages/landing/Contact"
+import Footer from "@/pages/landing/Footer"
+import AnimatedBackground from "@/pages/landing/AnimatedBackground"
+import ScrollProgress from "@/pages/landing/ScrollProgress"
+import ScrollNav from "@/pages/landing/ScrollNav"
 
 // 懒加载组件
-const Features = React.lazy(() => import("@/components/landing/Features"))
-const Benefits = React.lazy(() => import("@/components/landing/Benefits"))
+const Features = React.lazy(() => import("@/pages/landing/Features"))
+const Benefits = React.lazy(() => import("@/pages/landing/Benefits"))
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate()
@@ -34,10 +34,10 @@ const LandingPage: React.FC = () => {
   return (
     <div className='min-h-screen bg-gradient-to-b from-primary-dark to-primary-light relative'>
       <Helmet>
-        <title>沙塔 AI - 智慧企业服务专家</title>
+        <title>沙塔智能 - 智慧企业服务专家</title>
         <meta name='description' content='让 AI 为企业赋能，提升效率，降低成本' />
         <meta name='keywords' content='AI,企业服务,效率提升,智能化,沙塔' />
-        <meta property='og:title' content='沙塔 AI - 智慧企业服务专家' />
+        <meta property='og:title' content='沙塔智能 - 智慧企业服务专家' />
         <meta property='og:description' content='让 AI 为企业赋能，提升效率，降低成本' />
         <meta property='og:type' content='website' />
         <meta name='viewport' content='width=device-width, initial-scale=1.0' />

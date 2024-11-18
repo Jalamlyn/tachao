@@ -99,7 +99,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
     <div className='relative h-full bg-background'>
       {config ? (
         <div className='h-full'>
-          <div className='max-w-[1200px] mx-auto p-6 bg-white h-screen'>
+          <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
             <DynamicForm previewMode={previewMode} config={config} templateId={templateId} />
           </div>
         </div>

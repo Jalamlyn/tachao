@@ -1,21 +1,12 @@
 import React, { useState, useEffect, useRef } from "react"
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  ScrollShadow,
-  Tooltip,
-  Chip,
-  Button,
-  Textarea,
-} from "@nextui-org/react"
+import { Card, CardHeader, CardBody, ScrollShadow, Tooltip, Chip, Button, Textarea } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadata"
 import message from "@/components/Message"
 import MessageCard from "@/components/MessageCard"
 import chatChunkClaude from "@/service/chat/chat-chunk-claude-office"
-import { useBreadcrumb } from '@/contexts/BreadcrumbContext'
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
 
@@ -37,11 +28,10 @@ const FormAnalysis: React.FC = () => {
       formsRef.current = await fetchForms()
     }
     fetchData()
-    
+
     updateBreadcrumbs([
-      { label: '首页', href: '/we-chat-app/admin' },
-      { label: '单据管理', href: '/we-chat-app/admin/forms' },
-      { label: '数据分析', href: '/we-chat-app/admin/forms/analysis' }
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "AI 智能助手", href: "/we-chat-app/admin/ai-assistant" },
     ])
   }, [])
 
@@ -53,33 +43,34 @@ const FormAnalysis: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  const { isLoading, handleClick: handleSendMessage } = useAsyncButton(async () => {
-    if (formsRef.current?.length === 0) return message.error("数据为空，请先创建单据，不然 AI 无法为您工作")
-    if (!input.trim()) return
+  const { isLoading, handleClick: handleSendMessage } = useAsyncButton(
+    async () => {
+      if (formsRef.current?.length === 0) return message.error("数据为空，请先创建单据，不然 AI 无法为您工作")
+      if (!input.trim()) return
 
-    const userMessage = {
-      role: "user",
-      content: input,
-      id: Date.now().toString(),
-      timestamp: new Date().toLocaleTimeString(),
-    }
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
-
-    try {
-      const assistantMessage = {
-        role: "assistant",
-        content: "",
-        id: (Date.now() + 1).toString(),
+      const userMessage = {
+        role: "user",
+        content: input,
+        id: Date.now().toString(),
         timestamp: new Date().toLocaleTimeString(),
       }
-      setMessages((prev) => [...prev, assistantMessage])
+      setMessages((prev) => [...prev, userMessage])
+      setInput("")
 
-      await chatChunkClaude(
-        [
-          {
-            role: "system",
-            content: `你是沙塔 AI 的智能数据分析助手，负责帮助用户分析和查询表单数据。
+      try {
+        const assistantMessage = {
+          role: "assistant",
+          content: "",
+          id: (Date.now() + 1).toString(),
+          timestamp: new Date().toLocaleTimeString(),
+        }
+        setMessages((prev) => [...prev, assistantMessage])
+
+        await chatChunkClaude(
+          [
+            {
+              role: "system",
+              content: `你是沙塔 AI 的智能数据分析助手，负责帮助用户分析和查询表单数据。
 你需要理解用户的查询意图，从提供的数据中找出相关信息并给出准确的回答。
 你只能回答与提供的数据相关的问题，对于超出数据范围的问题，你需要礼貌地拒绝回答。
 
@@ -101,33 +92,35 @@ const FormAnalysis: React.FC = () => {
 当前的时间是: ${new Date().toLocaleTimeString()}\n
 
 这是你要分析的数据:\n${JSON.stringify(formsRef.current)}\n\n`,
+            },
+            ...messages,
+            userMessage,
+          ],
+          (chunk) => {
+            setMessages((prev) => {
+              const newMessages = [...prev]
+              const lastMessage = newMessages[newMessages.length - 1]
+              if (lastMessage.role === "assistant") {
+                lastMessage.content += chunk
+              }
+              return [...newMessages]
+            })
           },
-          ...messages,
-          userMessage,
-        ],
-        (chunk) => {
-          setMessages((prev) => {
-            const newMessages = [...prev]
-            const lastMessage = newMessages[newMessages.length - 1]
-            if (lastMessage.role === "assistant") {
-              lastMessage.content += chunk
-            }
-            return [...newMessages]
-          })
-        },
-        () => {},
-        true,
-        0.7
-      )
+          () => {},
+          true,
+          0.3
+        )
 
-      setChatCount((prev) => prev + 1)
-    } catch (error) {
-      console.error("Error in chat:", error)
-      message.error("分析过程中发生错误")
+        setChatCount((prev) => prev + 1)
+      } catch (error) {
+        console.error("Error in chat:", error)
+        message.error("分析过程中发生错误")
+      }
+    },
+    {
+      errorMessage: "分析过程中发生错误",
     }
-  }, {
-    errorMessage: "分析过程中发生错误"
-  })
+  )
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -145,6 +138,7 @@ const FormAnalysis: React.FC = () => {
       <Tooltip content='对话次数' placement='left'>
         <Chip
           variant='shadow'
+          size='lg'
           classNames={{
             base: "bg-gradient-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30",
             content: "drop-shadow shadow-black text-white",
@@ -158,33 +152,21 @@ const FormAnalysis: React.FC = () => {
   )
 
   return (
-    <PageLayout
-      title="AI 智能助手"
-      titleIcon="solar:chart-2-bold"
-      actions={pageActions}
-    >
+    <PageLayout title='AI 智能助手' titleIcon='hugeicons:ai-chat-02' actions={pageActions}>
       <Card className='w-full shadow-lg'>
         <CardBody className='p-4 flex flex-col gap-4'>
-          <ScrollShadow className='flex-grow h-[calc(100vh-400px)] mb-4'>
-            <AnimatePresence>
-              {messages.map((message) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <MessageCard
-                    avatar={message.role === "assistant" ? mo2 : user}
-                    message={message.content}
-                    role={message.role}
-                    status='success'
-                    className='mb-4'
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
+          <ScrollShadow className='flex-grow h-[calc(100vh-300px)] mb-4'>
+            {messages.map((message) => (
+              <div key={message.id}>
+                <MessageCard
+                  avatar={message.role === "assistant" ? mo2 : user}
+                  message={message.content}
+                  role={message.role}
+                  status='success'
+                  className='mb-4'
+                />
+              </div>
+            ))}
             <div ref={messagesEndRef} />
           </ScrollShadow>
 

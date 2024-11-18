@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react'
+import React, { useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
+import { Chip } from "@nextui-org/react"
 
 interface OrderNumberFieldProps {
   form: UseFormReturn<any>
@@ -13,10 +14,10 @@ interface OrderNumberFieldProps {
 
 const OrderNumberField: React.FC<OrderNumberFieldProps> = ({
   form,
-  prefix = 'ORDER',
+  prefix = "ORDER",
   fieldName,
   label = "订单编号",
-  disabled = true
+  disabled = true,
 }) => {
   const generateOrderNumber = () => {
     return `${prefix}${Date.now()}`
@@ -28,10 +29,10 @@ const OrderNumberField: React.FC<OrderNumberFieldProps> = ({
     if (!currentValue) {
       const orderNumber = generateOrderNumber()
       form.setValue(fieldName, orderNumber)
-      
+
       // 如果存在 title 字段，也设置 title
-      if (form.getValues('title') === undefined || form.getValues('title') === '') {
-        form.setValue('title', orderNumber)
+      if (form.getValues("title") === undefined || form.getValues("title") === "") {
+        form.setValue("title", orderNumber)
       }
     }
   }, [form, fieldName, prefix])
@@ -42,7 +43,9 @@ const OrderNumberField: React.FC<OrderNumberFieldProps> = ({
       name={fieldName}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <FormLabel>
+            <Chip color='secondary'>{label}</Chip>
+          </FormLabel>
           <FormControl>
             <Input {...field} disabled />
           </FormControl>

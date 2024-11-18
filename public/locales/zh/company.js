@@ -1,5 +1,5 @@
 export default {
-  company_name: "模本科技",
+  company_name: "沙塔智能",
   beta_notice: "Mo 正在内测欢迎👏垂询",
   resources: "资源",
   cooperation: "合作",

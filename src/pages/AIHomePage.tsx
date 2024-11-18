@@ -2,7 +2,7 @@ import React from "react"
 import { motion } from "framer-motion"
 import { Card, CardHeader } from "@nextui-org/react"
 import { Outlet } from "react-router-dom"
-import AnimatedBackground from "@/components/landing/AnimatedBackground"
+import AnimatedBackground from "@/pages/landing/AnimatedBackground"
 
 const AIHomePage: React.FC = () => {
   const containerVariants = {
