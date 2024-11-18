@@ -162,6 +162,45 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
   )
 
   /**
+   * 检查模板使用情况
+   * @param templateId 模板ID
+   * @returns 返回使用该模板的表单信息
+   */
+  const checkTemplateUsage = useCallback(async (templateId: string) => {
+    logger.debug("[useMetadata] Checking template usage", { templateId })
+    try {
+      // 获取所有表单索引
+      const formIndexes = await getIndexes()
+      
+      // 筛选使用该模板的表单
+      const formsUsingTemplate = formIndexes.filter(
+        (index) => index.indexFields?.templateId === templateId
+      )
+
+      if (formsUsingTemplate.length > 0) {
+        return {
+          inUse: true,
+          count: formsUsingTemplate.length,
+          forms: formsUsingTemplate.map(form => ({
+            id: form.id,
+            title: form.title,
+            status: form.status
+          }))
+        }
+      }
+
+      return {
+        inUse: false,
+        count: 0,
+        forms: []
+      }
+    } catch (error) {
+      logger.error("[useMetadata] Error checking template usage", error as Error)
+      throw new Error("检查模板使用情况时发生错误")
+    }
+  }, [getIndexes])
+
+  /**
    * 删除项目
    */
   const remove = useCallback(
@@ -170,6 +209,20 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
       setLoading(true)
       setError(null)
       try {
+        // 如果是模板类型，先检查是否有表单在使用
+        if (type === 'template') {
+          const usage = await checkTemplateUsage(id)
+          if (usage.inUse) {
+            const formList = usage.forms
+              .map((form, index) => `${index + 1}. ${form.title}（${form.status}）`)
+              .join('\n')
+            
+            throw new Error(
+              `无法删除此模板，因为还有 ${usage.count} 个单据正在使用它：\n${formList}\n\n请先删除这些单据后再尝试删除模板。`
+            )
+          }
+        }
+
         // 删除详情
         await deleteMetadata({ name: `${id}` })
 
@@ -183,13 +236,13 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
         return true
       } catch (error) {
         logger.error(`[useMetadata] Error deleting ${type}`, error as Error, { id })
-        setError(`Failed to delete ${type}`)
+        setError((error as Error).message || `Failed to delete ${type}`)
         return false
       } finally {
         setLoading(false)
       }
     },
-    [type, getIndexes, saveIndex]
+    [type, getIndexes, saveIndex, checkTemplateUsage]
   )
 
   /**
@@ -306,6 +359,7 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
     remove,
     getDetail,
     getHistory,
+    checkTemplateUsage, // 导出新增的方法
   }
 }
 
