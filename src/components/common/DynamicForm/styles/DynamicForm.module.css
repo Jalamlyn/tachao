@@ -33,11 +33,7 @@
   --df-gray-600: #4b5563;
   --df-gray-700: #374151;
   --df-gray-900: #111827;
-
-  /* 应用基础样式 */
-  background-color: var(--df-gray-50);
   color: var(--df-gray-900);
-  padding: 8px;
 }
 
 /* 表单卡片样式 */

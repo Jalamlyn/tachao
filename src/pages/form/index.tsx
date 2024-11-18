@@ -46,8 +46,8 @@ const Form: React.FC = () => {
       if (existingAuth) {
         aiLog.log("已有企业微信授权信息", { userInfo: existingAuth })
         setLoginInfo({
-          type: 'wecom',
-          userInfo: existingAuth
+          type: "wecom",
+          userInfo: existingAuth,
         })
         return true
       }
@@ -58,15 +58,15 @@ const Form: React.FC = () => {
         try {
           const loginResult = await wecomLogin(code)
           const userInfo = {
-            name: loginResult.name || '企业微信用户',
+            name: loginResult.name || "企业微信用户",
             id: loginResult.userId,
-            token: loginResult.tokenValue
+            token: loginResult.tokenValue,
           }
           saveWecomUserInfo(userInfo)
           setLoginInfo({
-            type: 'wecom',
+            type: "wecom",
             userInfo,
-            token: loginResult.tokenValue
+            token: loginResult.tokenValue,
           })
           // 清除URL中的code参数
           const cleanUrl = window.location.href.split("?")[0]
@@ -109,12 +109,12 @@ const Form: React.FC = () => {
       if (existingAuth) {
         aiLog.log("已有微信授权信息", { userInfo: existingAuth })
         setLoginInfo({
-          type: 'wechat',
+          type: "wechat",
           userInfo: {
             name: existingAuth.nickname,
             avatar: existingAuth.headimgurl,
-            ...existingAuth
-          }
+            ...existingAuth,
+          },
         })
         return true
       }
@@ -126,12 +126,12 @@ const Form: React.FC = () => {
           const userInfo = await getWxUserInfo(WX_APP_ID, code)
           saveWxUserInfo(userInfo)
           setLoginInfo({
-            type: 'wechat',
+            type: "wechat",
             userInfo: {
               name: userInfo.nickname,
               avatar: userInfo.headimgurl,
-              ...userInfo
-            }
+              ...userInfo,
+            },
           })
           // 清除URL中的code参数
           const cleanUrl = window.location.href.split("?")[0]
@@ -166,9 +166,9 @@ const Form: React.FC = () => {
     setError(null)
     setIsLoading(true)
     const env = checkEnvironment()
-    if (env === 'wechat') {
+    if (env === "wechat") {
       await handleWxAuth()
-    } else if (env === 'wecom') {
+    } else if (env === "wecom") {
       await handleWecomAuth()
     }
   }
@@ -185,15 +185,15 @@ const Form: React.FC = () => {
 
       try {
         // 检查登录状态
-        if (loginInfo.type === 'none') {
+        if (loginInfo.type === "none") {
           const env = checkEnvironment()
-          if (env === 'wechat') {
+          if (env === "wechat") {
             const isAuthorized = await handleWxAuth()
             if (!isAuthorized) {
               aiLog.log("等待微信授权，暂停加载表单")
               return
             }
-          } else if (env === 'wecom') {
+          } else if (env === "wecom") {
             const isAuthorized = await handleWecomAuth()
             if (!isAuthorized) {
               aiLog.log("等待企业微信授权，暂停加载表单")
@@ -270,11 +270,29 @@ const Form: React.FC = () => {
         <p className='text-xl font-bold mb-2'>错误</p>
         <p>{error}</p>
         {error.includes("授权") && !authRetrying && (
-          <Button
-            color="primary"
-            className="mt-4"
-            onClick={retryAuth}
-          >
+          <Button color='primary' className='mt-4' onClick={retryAuth}>
+            重新授权
+          </Button>
+        )}
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <Spinner label='加载中...' />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className='flex flex-col items-center justify-center min-h-screen text-danger'>
+        <p className='text-xl font-bold mb-2'>错误</p>
+        <p>{error}</p>
+        {error.includes("授权") && !authRetrying && (
+          <Button color='primary' className='mt-4' onClick={retryAuth}>
             重新授权
           </Button>
         )}
@@ -284,7 +302,7 @@ const Form: React.FC = () => {
 
   if (!formConfig || !formData) {
     return (
-      <div className='flex items-center justify-center min-h-screen text-gray-500'>
+      <div className='flex items-center justify-center min-h-screen text-danger'>
         <p>未找到表单配置或数据</p>
       </div>
     )
@@ -299,19 +317,15 @@ const Form: React.FC = () => {
     >
       <div className='max-w-[1200px] mx-auto'>
         {/* 用户信息显示 */}
-        {loginInfo.type !== 'none' && (
-          <div className="mb-4 p-4 bg-white rounded-lg shadow-sm flex items-center gap-4">
-            <Avatar
-              src={loginInfo.userInfo?.avatar}
-              name={loginInfo.userInfo?.name?.[0]}
-              size="sm"
-            />
+        {loginInfo.type !== "none" && (
+          <div className='mb-4 p-4 bg-white rounded-lg shadow-sm flex items-center gap-4'>
+            <Avatar src={loginInfo.userInfo?.avatar} name={loginInfo.userInfo?.name?.[0]} size='sm' />
             <div>
-              <div className="font-medium">{loginInfo.userInfo?.name || '未知用户'}</div>
-              <div className="text-sm text-gray-500">
-                {loginInfo.type === 'platform' && '平台账号'}
-                {loginInfo.type === 'wechat' && '微信账号'}
-                {loginInfo.type === 'wecom' && '企业微信账号'}
+              <div className='font-medium'>{loginInfo.userInfo?.name || "未知用户"}</div>
+              <div className='text-sm text-gray-500'>
+                {loginInfo.type === "platform" && "平台账号"}
+                {loginInfo.type === "wechat" && "微信账号"}
+                {loginInfo.type === "wecom" && "企业微信账号"}
               </div>
             </div>
           </div>

@@ -204,7 +204,7 @@ const AIFormEditor: React.FC = () => {
           <ResizablePanel defaultSize={30}>
             <div className='h-full flex flex-col'>
               <ScrollShadow className='flex-1 overflow-y-auto'>
-                <div className='space-y-4'>
+                <div className='space-y-4 pr-3'>
                   {messages.map((message) => (
                     <div key={message.id}>
                       <MessageCard

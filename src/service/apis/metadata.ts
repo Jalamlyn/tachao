@@ -21,7 +21,7 @@ export const queryMetadataHistory = async (
     tags?: string[]
     title?: string
   },
-  appId = null
+  appId = import.meta.env.VITE_SHATA_AI_APP_ID
 ) => {
   let config = {
     headers: {},
@@ -36,7 +36,7 @@ export const queryMetadataHistory = async (
 export const getPublicMetaData = async (names) => {
   let config = {
     headers: {
-      appId: appId,
+      appId: import.meta.env.VITE_SHATA_AI_APP_ID,
     },
   }
   const res = await apiService.post(

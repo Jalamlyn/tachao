@@ -12,7 +12,7 @@ const tooltipAnimation = {
   initial: { opacity: 0, scale: 0.95, y: -4 },
   animate: { opacity: 1, scale: 1, y: 0 },
   exit: { opacity: 0, scale: 0.95, y: -4 },
-  transition: { duration: 0.15, ease: "easeOut" }
+  transition: { duration: 0.15, ease: "easeOut" },
 }
 
 interface FormFieldWrapperProps {
@@ -40,23 +40,19 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
   disabled,
 }) => {
   return (
-    <motion.div 
-      variants={tooltipAnimation}
-      initial="hidden"
-      animate="visible"
-    >
+    <motion.div variants={tooltipAnimation} initial='hidden' animate='visible'>
       <FormField
         control={form.control}
         name={name}
         render={({ field }) => (
-          <FormItem className="w-full">
-            <div className="flex items-center gap-1">
-              <FormLabel className="text-sm font-medium">{label}</FormLabel>
+          <FormItem className='w-full'>
+            <div className='flex items-center gap-1'>
+              <FormLabel className='text-sm font-medium text-primary-500'>{label}</FormLabel>
               {tooltip && (
                 <Popover>
                   <PopoverTrigger asChild>
                     <button
-                      type="button"
+                      type='button'
                       className={cn(
                         "inline-flex items-center justify-center rounded-full",
                         "w-4 h-4 text-gray-400 hover:text-gray-500",
@@ -64,7 +60,7 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
                         "transition-colors duration-200"
                       )}
                     >
-                      <Icon icon="mdi:help-circle-outline" className="w-4 h-4" />
+                      <Icon icon='mdi:help-circle-outline' className='w-4 h-4' />
                     </button>
                   </PopoverTrigger>
                   <AnimatePresence>
@@ -78,11 +74,9 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
                       )}
                       asChild
                     >
-                      <motion.div
-                        {...tooltipAnimation}
-                      >
-                        {typeof tooltip.content === 'string' ? (
-                          <div className="whitespace-pre-wrap">{tooltip.content}</div>
+                      <motion.div {...tooltipAnimation}>
+                        {typeof tooltip.content === "string" ? (
+                          <div className='whitespace-pre-wrap'>{tooltip.content}</div>
                         ) : (
                           tooltip.content
                         )}
@@ -92,10 +86,8 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
                 </Popover>
               )}
             </div>
-            <FormControl>
-              {children({ ...field, disabled: !isEditable || disabled })}
-            </FormControl>
-            <FormMessage className="text-xs" />
+            <FormControl>{children({ ...field, disabled: !isEditable || disabled })}</FormControl>
+            <FormMessage className='text-xs' />
           </FormItem>
         )}
       />
