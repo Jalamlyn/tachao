@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import { ScrollShadow, Tabs, Tab } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useParams } from "react-router-dom"
@@ -27,8 +27,9 @@ const AIFormEditor: React.FC = () => {
   const [messages, setMessages] = useState<any[]>([])
   const [selectedTab, setSelectedTab] = useState("preview")
   const [previewContent, setPreviewContent] = useState<string>("")
+  const accumulatedTextRef = useRef("")
 
-  const { state: formState, setFormConfig, setRawConfig, handleError, appendGenerationProcess } = useFormState()
+  const { state: formState, setFormConfig, setRawConfig, handleError } = useFormState()
 
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
   const [savedTemplateId, setSavedTemplateId] = useState<string | null>(null)
@@ -129,43 +130,49 @@ const AIFormEditor: React.FC = () => {
     navigate("/we-chat-app/admin/documents")
   }
 
-  const handleChunk = useCallback((chunk: string) => {
-    if (chunk.includes("<shata-ai-form>")) {
-      setSelectedTab("code")
-      setMessages((prev) => {
-        const lastMessage = prev[prev.length - 1]
-        return [
-          ...prev.slice(0, -1),
-          {
-            ...lastMessage,
-            content: (
-              <div className='flex items-center gap-3 text-primary'>
-                <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10' />
-                <div className='flex flex-col'>
-                  <span className='font-medium text-sm'>AI 正在生成表单配置</span>
-                </div>
-              </div>
-            ),
-          },
-        ]
-      })
-    }
+  const handleChunk = useCallback(
+    (chunk: string) => {
+      accumulatedTextRef.current += chunk
 
-    if (previewContent || chunk.includes("<shata-ai-form>")) {
-      setPreviewContent((prev) => prev + chunk)
-    } else {
-      setMessages((prev) => {
-        const lastMessage = prev[prev.length - 1]
-        return [
-          ...prev.slice(0, -1),
-          {
-            ...lastMessage,
-            content: lastMessage.content + chunk,
-          },
-        ]
-      })
-    }
-  }, [previewContent])
+      if (accumulatedTextRef.current.includes("<shata-ai-form>") && !previewContent) {
+        setMessages((prev) => {
+          const lastMessage = prev[prev.length - 1]
+          return [
+            ...prev.slice(0, -1),
+            {
+              ...lastMessage,
+              content: (
+                <div className='flex items-center gap-3 text-primary'>
+                  <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10' />
+                  <div className='flex flex-col'>
+                    <span className='font-medium text-sm'>AI 正在生成表单配置</span>
+                  </div>
+                </div>
+              ),
+            },
+          ]
+        })
+        setSelectedTab("code")
+      }
+
+      if (previewContent || accumulatedTextRef.current.includes("<shata-ai-form>")) {
+        const newContent = accumulatedTextRef.current
+        setPreviewContent(newContent)
+      } else {
+        setMessages((prev) => {
+          const lastMessage = prev[prev.length - 1]
+          return [
+            ...prev.slice(0, -1),
+            {
+              ...lastMessage,
+              content: lastMessage.content + chunk,
+            },
+          ]
+        })
+      }
+    },
+    [previewContent]
+  )
 
   const formAgent = {
     processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
@@ -193,7 +200,6 @@ const AIFormEditor: React.FC = () => {
           (chunk) => {
             onChunk?.(chunk)
             handleChunk(chunk)
-            appendGenerationProcess(chunk)
           },
           formState.rawConfig
         )
@@ -209,11 +215,12 @@ const AIFormEditor: React.FC = () => {
 
   const handleCommandResult = useCallback(
     (result) => {
+      accumulatedTextRef.current = "" // 清理累积文本
       if (result?.type === "support") {
         if (result.data?.config) {
           setFormConfig(result.data.config)
           setRawConfig(result.data.rawConfig)
-          
+
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
             return [
@@ -230,7 +237,7 @@ const AIFormEditor: React.FC = () => {
               },
             ]
           })
-          
+
           setSelectedTab("preview")
         }
       }
@@ -278,11 +285,7 @@ const AIFormEditor: React.FC = () => {
           <ResizableHandle withHandle />
           <ResizablePanel defaultSize={70} className='resizable-panel'>
             <div className='h-full flex flex-col'>
-              <Tabs 
-                size='sm' 
-                selectedKey={selectedTab} 
-                onSelectionChange={(key) => setSelectedTab(key.toString())}
-              >
+              <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key.toString())}>
                 <Tab key='preview' title='表单预览'>
                   <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
                     {formState.formConfig ? (
