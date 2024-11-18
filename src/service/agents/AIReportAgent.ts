@@ -78,6 +78,23 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 
 数据总行数: ${data.length}
 
+严格要求：
+1. 所有数值必须通过数据计算得出，禁止硬编码任何数字
+2. 每个统计结果都必须有对应的数据计算代码
+3. 必须对数据进行验证和空值检查
+4. 禁止在代码中直接写入具体的数值
+5. 所有百分比、平均值、统计数据都必须通过实际数据计算
+
+数据计算示例:
+// ✅ 正确：通过数据计算得出结果
+const totalCount = data.length;
+const completedCount = data.filter(item => item?.status === 'completed').length;
+const completionRate = \`\${((completedCount / totalCount) * 100).toFixed(2)}%\`;
+
+// ❌ 错误：硬编码数字
+const totalNodes = 5;  // 错误：不应该直接写入数字
+const rate = '60%';    // 错误：不应该直接写入百分比
+
 特别注意：
 1. 流程分析(processAnalysis)的数据格式要求：
    - nodeStatus 必须使用状态描述字符串，如 '已完成'、'进行中'，不能使用数字
@@ -86,50 +103,67 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
    - processStatus 需要包含状态统计
 
 2. 流程分析示例：
-processAnalysis: {
+// ✅ 正确：通过数据计算
+const processAnalysis = {
   summary: {
-    totalProcessNodes: 5,
-    completedNodes: 3,
-    completionRate: '60%',
-    averageProcessTime: '2.5天'  // 必须是时间描述字符串
+    totalProcessNodes: data.reduce((acc, item) => acc + (item?.nodes?.length || 0), 0),
+    completedNodes: data.filter(item => item?.status === 'completed').length,
+    completionRate: \`\${((completedCount / totalCount) * 100).toFixed(2)}%\`,
+    averageProcessTime: \`\${calculateAverageTime(data)}天\`
   },
-  nodeStatus: {
-    '节点1': '已完成',    // ✅ 正确：使用状态描述字符串
-    '节点2': '进行中'     // ✅ 正确：使用状态描述字符串
-    // ❌ 错误：'节点3': 5  // 不要使用数字
-  },
-  processDuration: {
-    total: '5天',         // ✅ 正确：使用时间描述字符串
-    nodesDuration: {
-      '节点1': '2天',     // ✅ 正确：使用时间描述字符串
-      '节点2': '3天'      // ✅ 正确：使用时间描述字符串
-      // ❌ 错误：'节点3': 3  // 不要使用数字
+  nodeStatus: data.reduce((acc, item) => {
+    if (item?.nodeName) {
+      acc[item.nodeName] = item.confirmed ? '已完成' : '进行中';
     }
-  },
-  approvers: {
-    '审批人A': 10,
-    '审批人B': 5
-  },
-  processStatus: {
-    '已完成': 3,
-    '进行中': 2
-  }
-}
-
-3. 数据转换示例：
-// 转换节点状态
-const nodeStatus = data.reduce((acc, item) => {
-  acc[item.nodeName] = item.confirmed ? '已完成' : '进行中';  // ✅ 转换为状态描述
-  return acc;
-}, {});
-
-// 转换处理时长
-const processDuration = {
-  total: \`\${totalDays}天\`,  // ✅ 转换为时间描述
-  nodesDuration: data.reduce((acc, item) => {
-    acc[item.nodeName] = \`\${item.duration}天\`;  // ✅ 转换为时间描述
     return acc;
-  }, {})
+  }, {}),
+  processDuration: {
+    total: \`\${calculateTotalDuration(data)}天\`,
+    nodesDuration: calculateNodesDuration(data)
+  }
+};
+
+// ❌ 错误：硬编码结果
+const wrongAnalysis = {
+  summary: {
+    totalProcessNodes: 5,           // 错误：直接写入数字
+    completedNodes: 3,              // 错误：直接写入数字
+    completionRate: '60%',          // 错误：直接写入百分比
+    averageProcessTime: '2.5天'     // 错误：直接写入时间
+  }
+};
+
+3. 数据转换和计算辅助函数示例：
+// 计算平均处理时间
+const calculateAverageTime = (data) => {
+  const times = data
+    .filter(item => item?.duration)
+    .map(item => item.duration);
+  return times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : 0;
+};
+
+// 计算节点状态
+const calculateNodeStatus = (data) => {
+  return data.reduce((acc, item) => {
+    if (item?.nodeName) {
+      acc[item.nodeName] = item.confirmed ? '已完成' : '进行中';
+    }
+    return acc;
+  }, {});
+};
+
+// 计算处理时长
+const calculateProcessDuration = (data) => {
+  const totalDays = data.reduce((acc, item) => acc + (item?.duration || 0), 0);
+  return {
+    total: \`\${totalDays}天\`,
+    nodesDuration: data.reduce((acc, item) => {
+      if (item?.nodeName && item?.duration) {
+        acc[item.nodeName] = \`\${item.duration}天\`;
+      }
+      return acc;
+    }, {})
+  };
 };
 
 重要提示：
@@ -138,26 +172,27 @@ const processDuration = {
 3. 对于需要深层访问的对象属性，先进行存在性检查
 4. 提供默认值处理异常情况
 
-代码示例：
-// 辅助函数：安全访问嵌套属性
-const getNestedValue = (obj, path, defaultValue = null) => {
+数据验证示例：
+// 数据有效性检查
+const isValidData = (data) => {
+  return Array.isArray(data) && data.length > 0;
+};
+
+// 安全的数据访问
+const safeGetValue = (obj, path, defaultValue = null) => {
   return path.split('.').reduce((curr, key) => 
     (curr && curr[key] !== undefined) ? curr[key] : defaultValue, 
     obj
   );
 };
 
-// 数据验证示例
-const validData = data.filter(item => item && typeof item === 'object');
-
-// 安全的属性访问示例
-const completedNodes = data.filter(item => 
-  item?.processConfirmations?.basicInfo?.confirmed === true
-).length;
-
-// 使用默认值
-const totalCount = data?.length || 0;
-const status = item?.status || 'unknown';`
+// 数据过滤和验证
+const validRecords = data.filter(item => 
+  item && 
+  typeof item === 'object' && 
+  item?.id &&
+  item?.status
+);`
 
     return `${basePrompt}
 
@@ -170,18 +205,25 @@ const status = item?.status || 'unknown';`
 4. 确保返回对象包含必要的 type 和 data 字段
 5. data 字段必须保持原始数据不变
 6. 统计结果放在 analysis 字段中
+7. 所有数值必须通过数据计算得出，禁止硬编码
 
 返回 markdown 格式示例,必须 \`\`\`mo 开头 \`\`\`结尾
 \`\`\`mo
 <shata-ai-code>
-// 直接处理数据,使用传入的 data 参数
+// 数据验证
+const validData = data.filter(item => item && typeof item === 'object');
+const totalCount = validData.length;
+
+// 计算统计结果
 const result = {
   type: 'analyze',
   data: data,     // 保持原始数据不变
-  analysis: {     // 统计结果放在这里, 不要出现英文标签
-    summary: {...},
-    charts: [...],
-    insights: [...]
+  analysis: {     // 统计结果必须通过计算得出
+    summary: {
+      totalRecords: totalCount,
+      validRecords: validData.length,
+      completionRate: \`\${((validData.filter(item => item.completed).length / totalCount) * 100).toFixed(2)}%\`
+    }
   }
 };
 return result;
