@@ -1,13 +1,10 @@
 import chatChunkClaude from "../chat/chat-chunk-claude-office"
-// import chatChunkClaude from "../chat/chat-chunk-claude-horay"
-// import chatChunkGroq from "../chat/chat-chunk-groq"
 import chatChunkQwen from "../chat/chat-siliconflow"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
 import { markdown as dynamicFormAdvanced } from "@/components/common/DynamicForm/dynamic-form-advanced.md"
 import { markdown as dynamicForm } from "@/components/common/DynamicForm/dynamic-form.md"
-
 import { markdown as formulaService } from "@/services/formulaService.md"
 import {
   CommandResult,

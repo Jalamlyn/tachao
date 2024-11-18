@@ -26,6 +26,7 @@ const AIFormEditor: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()
   const [messages, setMessages] = useState<any[]>([])
   const [selectedTab, setSelectedTab] = useState("preview")
+  const [previewContent, setPreviewContent] = useState<string>("")
 
   const { state: formState, setFormConfig, setRawConfig, handleError, appendGenerationProcess } = useFormState()
 
@@ -128,6 +129,44 @@ const AIFormEditor: React.FC = () => {
     navigate("/we-chat-app/admin/documents")
   }
 
+  const handleChunk = useCallback((chunk: string) => {
+    if (chunk.includes("<shata-ai-form>")) {
+      setSelectedTab("code")
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1]
+        return [
+          ...prev.slice(0, -1),
+          {
+            ...lastMessage,
+            content: (
+              <div className='flex items-center gap-3 text-primary'>
+                <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10' />
+                <div className='flex flex-col'>
+                  <span className='font-medium text-sm'>AI 正在生成表单配置</span>
+                </div>
+              </div>
+            ),
+          },
+        ]
+      })
+    }
+
+    if (previewContent || chunk.includes("<shata-ai-form>")) {
+      setPreviewContent((prev) => prev + chunk)
+    } else {
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1]
+        return [
+          ...prev.slice(0, -1),
+          {
+            ...lastMessage,
+            content: lastMessage.content + chunk,
+          },
+        ]
+      })
+    }
+  }, [previewContent])
+
   const formAgent = {
     processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
       const userMessage = {
@@ -146,19 +185,14 @@ const AIFormEditor: React.FC = () => {
       }
       setMessages((prev) => [...prev, assistantMessage])
 
+      setPreviewContent("")
+
       try {
         const result = await AIFormAgent.processCommand(
           command,
           (chunk) => {
             onChunk?.(chunk)
-            setMessages((prev) => {
-              const newMessages = [...prev]
-              const lastMessage = newMessages[newMessages.length - 1]
-              if (lastMessage.role === "assistant") {
-                lastMessage.content += chunk
-              }
-              return [...newMessages]
-            })
+            handleChunk(chunk)
             appendGenerationProcess(chunk)
           },
           formState.rawConfig
@@ -179,6 +213,25 @@ const AIFormEditor: React.FC = () => {
         if (result.data?.config) {
           setFormConfig(result.data.config)
           setRawConfig(result.data.rawConfig)
+          
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1]
+            return [
+              ...prev.slice(0, -1),
+              {
+                ...lastMessage,
+                content: (
+                  <div className='flex items-center gap-2 text-success'>
+                    <Icon icon='line-md:check-all' className='w-5 h-5' />
+                    <span>表单生成完成</span>
+                  </div>
+                ),
+                status: "success",
+              },
+            ]
+          })
+          
+          setSelectedTab("preview")
         }
       }
     },
@@ -211,7 +264,7 @@ const AIFormEditor: React.FC = () => {
                         avatar={message.role === "assistant" ? mo2 : user}
                         message={message.content}
                         role={message.role}
-                        status='success'
+                        status={message.status || "success"}
                         className='mb-4'
                       />
                     </div>
@@ -242,11 +295,11 @@ const AIFormEditor: React.FC = () => {
                     )}
                   </div>
                 </Tab>
-                <Tab key='code' title='代码视图'>
+                <Tab key='code' title='代码预览'>
                   <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
-                    {formState.rawConfig ? (
+                    {previewContent ? (
                       <pre className='bg-gray-50 p-4 rounded-lg'>
-                        <code>{formState.rawConfig}</code>
+                        <code>{previewContent}</code>
                       </pre>
                     ) : (
                       <div className='text-center pt-[30%] text-gray-500'>
