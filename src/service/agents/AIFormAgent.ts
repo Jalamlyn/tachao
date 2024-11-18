@@ -20,6 +20,23 @@ export class AIFormAgent implements IAIFormAgent {
   private _rawConfig: string | null = null
   private _cachedImage: string | null = null
   private systemPrompt = `你是一个智能表单助手，负责帮助用户创建和检索表单。
+
+如果用户的输入不是表单相关的指令，直接返回：
+"""
+<error>请使用表单创建或编辑相关的指令</error>
+"""
+
+如果用户的指令不够明确，直接返回：
+"""
+<unclear>
+您的指令不太明确，我需要更多信息。请尝试：
+- 创建一个[表单类型]表单，包含[字段1]、[字段2]等字段
+- 在[表单名称]中添加[字段名]字段
+- 修改[表单名称]中[字段名]的[属性]
+- 删除[表单名称]中的[字段名]字段
+</unclear>
+"""
+
 每次都生成一个完整的符合 DynamicFormConfig 类型的配置对象，不生成局部修改。
 ${
   this._rawConfig
@@ -122,42 +139,32 @@ ${formulaService}
       this.setRawConfig(rawConfig)
     }
 
-    const intent = await this.analyzeIntent(command)
+    try {
+      updateGenerationProcess("🤖 AI助手正在分析您的需求...")
+      await new Promise((resolve) => setTimeout(resolve, 500))
 
-    if (intent === "unsupported") {
-      throw new Error("请使用表单创建或编辑相关的指令，让我更好地理解您的需求。")
-    }
+      updateGenerationProcess("📝 开始生成表单...")
+      const createResult = await this.createForm(command, updateGenerationProcess)
+      
+      if (createResult) {
+        if (createResult.rawConfig) {
+          console.log("[AIFormAgent] Setting new rawConfig from createResult")
+          this.setRawConfig(createResult.rawConfig)
+        }
+      }
 
-    if (intent === "unclear") {
-      updateGenerationProcess(`🤔 您的指令不太明确，我需要更多信息来帮助您。
-        💡 请尝试使用以下格式的指令：
-        - 创建一个 **[表单类型]** 表单，包含 **[字段1]**、**[字段2]** 等字段。
-        - 在 **[表单名称]** 中添加 **[字段名]** 字段。
-        - 修改 **[表单名称]** 中 **[字段名]** 的 **[属性]** 为 **[新值]**。
-        - 删除 **[表单名称]** 中的 **[字段名]** 字段。
-        例如：创建一个订单表单，包含客户名称、订单日期和商品列表字段`)
       return {
-        type: "unclear",
-        data: null,
+        type: "support",
+        data: createResult,
         generationProcess,
       }
-    }
-
-    updateGenerationProcess("🤖 AI助手正在分析您的需求...")
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
-    updateGenerationProcess("📝 开始生成表单...")
-    const createResult = await this.createForm(command, updateGenerationProcess)
-    if (createResult) {
-      if (createResult.rawConfig) {
-        console.log("[AIFormAgent] Setting new rawConfig from createResult")
-        this.setRawConfig(createResult.rawConfig)
+    } catch (error) {
+      console.error("Error in processCommand:", error)
+      return {
+        type: "error",
+        data: null,
+        generationProcess: error.message,
       }
-    }
-    return {
-      type: "support",
-      data: createResult,
-      generationProcess,
     }
   }
 
@@ -187,42 +194,6 @@ ${formulaService}
       0
     )
     return response
-  }
-
-  public async analyzeIntent(input: string): Promise<IntentAnalysisResult> {
-    const aiAnalysisPrompt = `请分析以下用户指令，判断是否是表单/流程创建或编辑相关的指令：
-"${input}"
-
-请根据以下规则进行分析：
-1. 如果是明确的创建、编辑、修改、更新表单/流程的指令，返回 "support"
-2. 如果不是表单/流程相关的指令，返回 "unsupported"
-3. 如果是表单/流程相关但指令不够明确或缺少关键信息，返回 "unclear"
-
-请只返回 "support"、"unsupported" 或 "unclear"，不要返回其他内容。`
-
-    try {
-      const aiResponse = await this.processAIResponse(aiAnalysisPrompt, () => {})
-      const cleanResponse = aiResponse.trim().toLowerCase()
-
-      if (cleanResponse === "support" || cleanResponse === "unsupported" || cleanResponse === "unclear") {
-        if (cleanResponse === "unsupported") {
-          message.warning("请使用表单/流程创建或编辑相关的指令。")
-        }
-        return cleanResponse as IntentAnalysisResult
-      }
-
-      const formKeywords = /(创建|新建|生成|制作|添加|建立|编辑|修改|更新|调整|改变).*?(表单|单据|模板)/
-      if (formKeywords.test(input)) {
-        return "support"
-      }
-
-      message.warning("请使用更明确的表单创建或编辑相关的指令。")
-      return "unclear"
-    } catch (error) {
-      console.error("Error analyzing intent:", error)
-      message.error("分析用户意图失败：" + (error as Error).message)
-      return "unsupported"
-    }
   }
 
   private async createForm(description: string, onChunk: AIResponseHandler): Promise<CreateFormResult> {
@@ -265,6 +236,18 @@ export default {
       onChunk("⚡ 正在生成表单配置...\n")
       const response = await this.processAIResponse(prompt, onChunk)
       console.log("[AIFormAgent] Received AI response, length:", response.length)
+
+      // 检查是否包含错误或不明确提示
+      if (response.includes("<error>")) {
+        const errorMatch = response.match(/<error>(.*?)<\/error>/s)
+        throw new Error(errorMatch ? errorMatch[1].trim() : "无效的表单指令")
+      }
+
+      if (response.includes("<unclear>")) {
+        const unclearMatch = response.match(/<unclear>(.*?)<\/unclear>/s)
+        throw new Error(unclearMatch ? unclearMatch[1].trim() : "指令不明确")
+      }
+
       const parsedConfig = await parseFormConfig(response)
 
       if (!parsedConfig) {
