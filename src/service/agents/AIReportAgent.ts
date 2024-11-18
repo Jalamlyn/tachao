@@ -2,7 +2,6 @@ import chatChunkClaude from "../chat/chat-chunk-claude-office"
 import { Message } from "./AIFormAgentTypes"
 import { formulaService } from "@/services/formulaService"
 import { markdown as doc } from "@/pages/report-management/components/AnalysisResult.md"
-import message from "@/components/Message"
 
 export type ReportColumn = {
   header: string
@@ -40,10 +39,7 @@ interface AnalysisResult {
   }
 }
 
-type ReportOperationResult = AnalysisResult
-
-// 新增：意图分析结果类型
-type IntentAnalysisResult = "support" | "unsupported" | "unclear"
+type ResourceOperationResult = AnalysisResult
 
 interface ProcessCommandOptions {
   data: any[]
@@ -54,7 +50,6 @@ interface ProcessCommandOptions {
 export class AIReportAgent {
   private static instance: AIReportAgent
   private _data: any[] = []
-  private _currentReport: AnalysisResult | null = null
 
   private constructor() {
     console.log("[AIReportAgent] Instance created")
@@ -73,107 +68,48 @@ export class AIReportAgent {
     this._data = data
   }
 
-  public getCurrentReport(): AnalysisResult | null {
-    return this._currentReport
-  }
-
-  private setCurrentReport(report: AnalysisResult | null): void {
-    this._currentReport = report
-  }
-
-  private async analyzeIntent(input: string): Promise<IntentAnalysisResult> {
-    const aiAnalysisPrompt = `请分析以下用户指令，判断是否是报表创建或编辑相关的指令：
-"${input}"
-
-请根据以下规则进行分析：
-1. 如果是明确的创建、编辑、修改、更新报表的指令，返回 "support"
-2. 如果不是报表相关的指令，返回 "unsupported"
-3. 如果是报表相关但指令不够明确或缺少关键信息，返回 "unclear"
-
-请只返回 "support"、"unsupported" 或 "unclear"，不要返回其他内容。`
-
-    try {
-      let response = ""
-      await chatChunkClaude(
-        [
-          { role: "system", content: "你是一个专业的报表分析助手，负责判断用户指令的意图。" },
-          { role: "user", content: aiAnalysisPrompt },
-        ],
-        (chunk: string) => {
-          response += chunk
-        },
-        () => {},
-        true,
-        0
-      )
-
-      const cleanResponse = response.trim().toLowerCase()
-
-      if (cleanResponse === "support" || cleanResponse === "unsupported" || cleanResponse === "unclear") {
-        return cleanResponse as IntentAnalysisResult
-      }
-
-      const reportKeywords = /(创建|新建|生成|制作|添加|建立|编辑|修改|更新|调整|改变).*?(报表|图表|分析|统计)/
-      if (reportKeywords.test(input)) {
-        return "support"
-      }
-
-      return "unclear"
-    } catch (error) {
-      console.error("Error analyzing intent:", error)
-      return "unsupported"
-    }
-  }
-
   private generateSystemPrompt(data: any[]): string {
     console.log("[AIReportAgent] Generating system prompt")
-    const basePrompt = `你是一个智能报表分析助手，负责帮助用户对数据进行分析和生成报表。
+    const basePrompt = `你是一个智能报表分析助手，负责帮助用户对数据进行分析。
 请仔细分析用户的需求，生成相应的分析代码。
-
-${this._currentReport ? "当前已有报表分析结果，请基于现有结果进行修改或补充。" : "请创建新的报表分析。"}
 
 数据示例:
 ${JSON.stringify(data.slice(0, 3), null, 2)}
 
 数据总行数: ${data.length}
 
-如果数据中包含流程相关字段（如 status、approver、duration 等），请生成流程分析结果，包括：
-1. 流程概要信息（节点数、完成率等）
-2. 节点状态分布
-3. 流程耗时分析
-4. 审批人工作量统计
-5. 流程状态统计
+重要提示：
+1. 生成的代码必须包含数据验证和空值检查
+2. 使用可选链操作符（?.）访问可能不存在的属性
+3. 对于需要深层访问的对象属性，先进行存在性检查
+4. 提供默认值处理异常情况
 
-流程分析示例：
-{
-  processAnalysis: {
-    summary: {
-      totalProcessNodes: 5,
-      completedNodes: 3,
-      completionRate: '60%',
-      averageProcessTime: '2.5天'
-    },
-    nodeStatus: {
-      '提交申请': '已完成',
-      '部门审批': '进行中'
-    },
-    processDuration: {
-      total: '5天',
-      nodesDuration: {
-        '提交申请': '1天',
-        '部门审批': '2天'
-      }
-    },
-    approvers: {
-      '张经理': 8,
-      '李财务': 5
-    },
-    processStatus: {
-      '已完成': 3,
-      '进行中': 1
-    }
-  }
-}`
+代码示例：
+// 辅助函数：安全访问嵌套属性
+const getNestedValue = (obj, path, defaultValue = null) => {
+  return path.split('.').reduce((curr, key) => 
+    (curr && curr[key] !== undefined) ? curr[key] : defaultValue, 
+    obj
+  );
+};
+
+// 数据验证示例
+const validData = data.filter(item => item && typeof item === 'object');
+
+// 安全的属性访问示例
+const completedNodes = data.filter(item => 
+  item?.processConfirmations?.basicInfo?.confirmed === true
+).length;
+
+// 使用默认值
+const totalCount = data?.length || 0;
+const status = item?.status || 'unknown';
+
+请确保生成的代码：
+1. 对所有对象属性访问使用可选链（?.）
+2. 为计算结果提供默认值
+3. 在进行数据处理前先验证数据有效性
+4. 处理所有可能的异常情况`
 
     return `${basePrompt}
 
@@ -186,7 +122,6 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 4. 确保返回对象包含必要的 type 和 data 字段
 5. data 字段必须保持原始数据不变
 6. 统计结果放在 analysis 字段中
-7. 如果数据包含流程信息，必须生成 processAnalysis 分析结果
 
 返回 markdown 格式示例,必须 \`\`\`mo 开头 \`\`\`结尾
 \`\`\`mo
@@ -198,21 +133,13 @@ const result = {
   analysis: {     // 统计结果放在这里, 不要出现英文标签
     summary: {...},
     charts: [...],
-    insights: [...],
-    processAnalysis: {  // 如果有流程数据，生成流程分析
-      summary: {...},
-      nodeStatus: {...},
-      processDuration: {...},
-      approvers: {...},
-      processStatus: {...}
-    }
+    insights: [...]
   }
 };
 return result;
 </shata-ai-code>
 \`\`\`
-- 开头和结尾都不要做解释和说明
-- 如果数据的列中有 id 字段, 那么明细表格中必须包含该字段`
+- 开头和结尾都不要做解释和说明`
   }
 
   private async executeCode(code: string, data: any[]): Promise<any> {
@@ -249,32 +176,6 @@ return result;
     }
 
     try {
-      const intent = await this.analyzeIntent(command)
-
-      if (intent === "unsupported") {
-        message.warning("请使用报表创建或编辑相关的指令。")
-        return {
-          success: false,
-          message: "请使用报表创建或编辑相关的指令",
-        }
-      }
-
-      if (intent === "unclear") {
-        const suggestionMessage = `🤔 您的指令不太明确，我需要更多信息来帮助您。
-        💡 请尝试使用以下格式的指令：
-        - 创建一个展示 **[数据类型]** 的报表，包含 **[分析维度]** 分析
-        - 在报表中添加 **[图表类型]** 来展示 **[数据维度]**
-        - 分析 **[数据字段]** 的分布情况
-        - 统计 **[数据字段]** 的趋势变化
-        例如：创建一个销售数据分析报表，包含销售额统计和产品分布分析`
-
-        onChunk?.(suggestionMessage)
-        return {
-          success: false,
-          message: "指令不明确，请提供更具体的分析需求",
-        }
-      }
-
       const systemPrompt = this.generateSystemPrompt(data)
       const messages: Message[] = [
         { role: "system", content: systemPrompt },
@@ -303,14 +204,12 @@ return result;
       }
       const generatedCode = match[1].trim()
 
-      const result = (await this.executeCode(generatedCode, data)) as ReportOperationResult
+      const result = (await this.executeCode(generatedCode, data)) as ResourceOperationResult
 
       if (!result || !result.type || !result.data) {
         console.error("[AIReportAgent] Invalid analysis result format")
         throw new Error("Invalid analysis result format")
       }
-
-      this.setCurrentReport(result)
 
       console.log("[AIReportAgent] Analysis completed successfully")
       return {
