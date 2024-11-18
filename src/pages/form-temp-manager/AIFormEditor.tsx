@@ -134,8 +134,7 @@ const AIFormEditor: React.FC = () => {
   const handleChunk = useCallback(
     (chunk: string) => {
       accumulatedTextRef.current += chunk
-
-      if (accumulatedTextRef.current.includes("<shata-ai-form>") && !previewContent) {
+      if (accumulatedTextRef.current.includes("<shata-ai-form>")) {
         setMessages((prev) => {
           const lastMessage = prev[prev.length - 1]
           return [
@@ -159,17 +158,6 @@ const AIFormEditor: React.FC = () => {
       if (previewContent || accumulatedTextRef.current.includes("<shata-ai-form>")) {
         const newContent = accumulatedTextRef.current
         setPreviewContent(newContent)
-      } else {
-        setMessages((prev) => {
-          const lastMessage = prev[prev.length - 1]
-          return [
-            ...prev.slice(0, -1),
-            {
-              ...lastMessage,
-              content: lastMessage.content + chunk,
-            },
-          ]
-        })
       }
     },
     [previewContent]

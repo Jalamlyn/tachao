@@ -58,7 +58,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       }
     }
 
-    loadFormData()
+    // loadFormData()
   }, [id, getDetail, initialValues])
 
   const { form, submitForm } = useDynamicForm(config, initialValues)
@@ -254,12 +254,18 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={handleFormSubmit} className={cn(styles['dynamic-form'], 'space-y-6 md:space-y-8')}>
+      <form onSubmit={handleFormSubmit} className={cn(styles["dynamic-form"], "space-y-6 md:space-y-8")}>
         {/* 表单标题 */}
-        <div className={cn(styles['form-card'], 'flex flex-col md:flex-row md:justify-between md:items-center pb-4 gap-4')}>
+        <div
+          className={cn(styles["form-card"], "flex flex-col md:flex-row md:justify-between md:items-center pb-4 gap-4")}
+        >
           <div>
-            <h1 className={cn(styles['form-title'])}>{metadata.title}</h1>
-            {metadata.description && <p className={cn(styles['form-description'], 'text-gray-500 mt-1 text-sm break-all')}>{metadata.description}</p>}
+            <h1 className={cn(styles["form-title"])}>{metadata.title}</h1>
+            {metadata.description && (
+              <p className={cn(styles["form-description"], "text-gray-500 mt-1 text-sm break-all")}>
+                {metadata.description}
+              </p>
+            )}
           </div>
           <div className='flex gap-2 flex-wrap'>
             {metadata.permissions?.print && (
@@ -267,7 +273,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                 variant='flat'
                 color='primary'
                 onClick={handlePrint}
-                className={cn(styles['button'], styles['button-primary'], 'w-full md:w-auto')}
+                className={cn(styles["button"], styles["button-primary"], "w-full md:w-auto")}
               >
                 <Icon icon='mdi:printer' className='w-4 h-4' />
                 <span className='hidden md:inline ml-1'>打印</span>
@@ -277,7 +283,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               <Button
                 variant='flat'
                 color={isEditing ? "warning" : "primary"}
-                className={cn(styles['button'], 'w-full md:w-auto')}
+                className={cn(styles["button"], "w-full md:w-auto")}
                 onClick={() => setIsEditing(!isEditing)}
               >
                 <Icon icon={isEditing ? "mdi:pencil-off" : "mdi:pencil"} className='w-4 h-4' />
@@ -288,8 +294,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         </div>
 
         {/* 基本信息 */}
-        <div className={cn(styles['form-card'])}>
-          <h2 className={cn(styles['form-title'])}>基本信息</h2>
+        <div className={cn(styles["form-card"])}>
+          <h2 className={cn(styles["form-title"])}>基本信息</h2>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-2'>
             <OrderNumberField
               form={form}
@@ -304,29 +310,29 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
         {/* 表格 */}
         {renderConfig.table && (
-          <div className={cn(styles['form-card'])}>
-            <h2 className={cn(styles['form-title'])}>明细信息</h2>
+          <div className={cn(styles["form-card"])}>
+            <h2 className={cn(styles["form-title"])}>明细信息</h2>
             <DynamicTable config={renderConfig.table} form={form} isEditable={isEditing} fieldName='tableData' />
           </div>
         )}
 
         {/* 流程确认 */}
         {renderConfig.processSteps && (
-          <div className={cn(styles['form-card'])}>
-            <h2 className={cn(styles['form-title'])}>流程确认</h2>
+          <div className={cn(styles["form-card"])}>
+            <h2 className={cn(styles["form-title"])}>流程确认</h2>
             <DynamicProcessConfirm steps={renderConfig.processSteps} form={form} isEditable={isEditing} />
           </div>
         )}
 
         {/* 操作按钮 */}
         {isEditing && (
-          <div className={cn(styles['form-card'], 'flex flex-col md:flex-row md:justify-end gap-4 pt-4 border-t')}>
+          <div className={cn(styles["form-card"], "flex flex-col md:flex-row md:justify-end gap-4 pt-4 border-t")}>
             {onCancel && (
               <Button
                 variant='flat'
                 color='default'
                 onClick={onCancel}
-                className={cn(styles['button'], 'w-full md:w-auto order-2 md:order-1')}
+                className={cn(styles["button"], "w-full md:w-auto order-2 md:order-1")}
               >
                 <Icon icon='mdi:close' className='w-4 h-4' />
                 <span className='hidden md:inline ml-1'>取消</span>
@@ -335,7 +341,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             <Button
               type='submit'
               color='primary'
-              className={cn(styles['button'], styles['button-primary'], 'w-full md:w-auto order-1 md:order-2')}
+              className={cn(styles["button"], styles["button-primary"], "w-full md:w-auto order-1 md:order-2")}
             >
               <Icon icon='mdi:content-save' className='w-4 h-4' />
               <span className='hidden md:inline ml-1'>保存</span>

@@ -6,9 +6,51 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components
 import { cn } from "@/theme/cn"
 import { Tabs, Tab } from "@nextui-org/react"
 
+// 添加安全的对象序列化函数
+const safeStringify = (value: any, depth: number = 0): string => {
+  if (depth > 10) return "[Object]" // 防止过深递归
+
+  try {
+    if (value === null) return "null"
+    if (value === undefined) return "undefined"
+    if (typeof value === "function") return "[Function]"
+    if (typeof value !== "object") return String(value)
+
+    if (Array.isArray(value)) {
+      return `[${value.map((v) => safeStringify(v, depth + 1)).join(", ")}]`
+    }
+
+    const pairs = Object.entries(value).map(([k, v]) => `${k}: ${safeStringify(v, depth + 1)}`)
+    return `{${pairs.join(", ")}}`
+  } catch (error) {
+    return "[Error]"
+  }
+}
+
+// 添加错误边界组件
+class SummaryErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  state = { hasError: false }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className='p-4 text-danger'>
+          <p>数据渲染出错</p>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
 interface AnalysisResultProps {
   analysis: {
-    summary: Record<string, number | string | Record<string, number> | Array<{ name: string; count: number }>>
+    summary: Record<string, number | string | Record<string, any> | Array<{ name: string; count: number }>>
     charts?: {
       type: string
       title: string
@@ -67,11 +109,9 @@ const itemVariants = {
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
   // 渲染摘要项
-  const renderSummaryItem = (
-    key: string,
-    value: number | string | Record<string, number> | Array<{ name: string; count: number }>
-  ) => {
-    if (typeof value === "number" || typeof value === "string") {
+  const renderSummaryItem = (key: string, value: any) => {
+    // 基础类型直接渲染
+    if (typeof value !== "object" || value === null) {
       return (
         <motion.div
           variants={itemVariants}
@@ -79,11 +119,14 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         >
           <div className='text-sm text-muted-foreground font-medium mb-2'>{key}</div>
           <div className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70'>
-            {value}
+            {String(value)}
           </div>
         </motion.div>
       )
-    } else if (Array.isArray(value)) {
+    }
+
+    // 数组类型渲染
+    if (Array.isArray(value)) {
       return (
         <motion.div
           variants={itemVariants}
@@ -92,60 +135,40 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
           <div className='text-sm text-muted-foreground font-medium mb-3'>{key}</div>
           <div className='space-y-2'>
             {value.map((item, index) => (
-              <div key={index} className='flex justify-between items-center p-2 rounded-lg bg-background/50'>
-                <span className='font-medium'>{item.name}</span>
-                <span className='text-primary font-semibold'>{item.count}</span>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )
-    } else if (typeof value === "object") {
-      return (
-        <motion.div
-          variants={itemVariants}
-          className='rounded-xl bg-gradient-to-br from-background to-muted p-6 shadow-lg hover:shadow-xl transition-shadow duration-300'
-        >
-          <div className='text-sm text-muted-foreground font-medium mb-3'>{key}</div>
-          <div className='space-y-2'>
-            {Object.entries(value).map(([subKey, subValue]) => (
-              <div key={subKey} className='flex justify-between items-center p-2 rounded-lg bg-background/50'>
-                <span className='font-medium'>{subKey}</span>
-                <span className='text-primary font-semibold'>{subValue}</span>
+              <div key={index} className='p-2 rounded-lg bg-background/50'>
+                {typeof item === "object" ? safeStringify(item) : String(item)}
               </div>
             ))}
           </div>
         </motion.div>
       )
     }
-    return null
+
+    // 对象类型渲染
+    return (
+      <motion.div
+        variants={itemVariants}
+        className='rounded-xl bg-gradient-to-br from-background to-muted p-6 shadow-lg hover:shadow-xl transition-shadow duration-300'
+      >
+        <div className='text-sm text-muted-foreground font-medium mb-3'>{key}</div>
+        <div className='space-y-2'>
+          {Object.entries(value).map(([subKey, subValue]) => (
+            <div key={subKey} className='flex justify-between items-center p-2 rounded-lg bg-background/50'>
+              <span className='font-medium'>{subKey}</span>
+              <span className='text-primary font-semibold'>
+                {typeof subValue === "object" ? safeStringify(subValue) : String(subValue)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    )
   }
 
-  // 渲染表格单元格内容
-  const renderTableCell = (key: string, value: any) => {
-    // 如果是 orderNumber 列,渲染为链接
-    if (key === "id") {
-      const formId = `${value}`
-      return (
-        <a
-          href={`/form/${formId}`}
-          target='_blank'
-          rel='noopener noreferrer'
-          className='text-primary hover:text-primary/80 hover:underline transition-colors duration-200'
-        >
-          {value}
-        </a>
-      )
-    }
-    // 其他列正常渲染
-    return value
-  }
-
-  // 渲染图表区域
+  // 其他渲染函数保持不变...
   const renderCharts = () => {
     if (!analysis.charts?.length) return null
 
-    // 如果只有一个图表，使用原来的渲染方式
     if (analysis.charts.length === 1) {
       return (
         <motion.div variants={itemVariants} layout>
@@ -162,7 +185,6 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
       )
     }
 
-    // 多个图表使用 Tabs 展示
     return (
       <motion.div variants={itemVariants} layout>
         <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
@@ -172,14 +194,14 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
           </CardHeader>
           <CardContent className='p-6'>
             <Tabs
-              aria-label="图表分析"
-              className="w-full"
-              variant="underlined"
+              aria-label='图表分析'
+              className='w-full'
+              variant='underlined'
               classNames={{
                 tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
                 cursor: "w-full bg-primary",
                 tab: "max-w-fit px-0 h-12",
-                tabContent: "group-data-[selected=true]:text-primary"
+                tabContent: "group-data-[selected=true]:text-primary",
               }}
             >
               {analysis.charts.map((chart, index) => (
@@ -196,13 +218,11 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
     )
   }
 
-  // 新增: 渲染流程分析卡片
   const renderProcessAnalysis = () => {
     if (!analysis.processAnalysis) return null
 
     const { summary, nodeStatus, processDuration, approvers, processStatus } = analysis.processAnalysis
 
-    // 生成流程节点状态的图表数据
     const nodeStatusChartData = nodeStatus
       ? {
           type: "pie",
@@ -214,7 +234,6 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         }
       : null
 
-    // 生成审批人工作量的图表数据
     const approversChartData = approvers
       ? {
           type: "bar",
@@ -235,7 +254,6 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
           </CardHeader>
           <CardContent className='p-6'>
             <div className='space-y-6'>
-              {/* 流程概览 */}
               {summary && (
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
                   <motion.div
@@ -269,21 +287,18 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
                 </div>
               )}
 
-              {/* 流程节点状态图表 */}
               {nodeStatusChartData && (
                 <div className='mt-6'>
                   <ChartRenderer chart={nodeStatusChartData} />
                 </div>
               )}
 
-              {/* 审批人工作量图表 */}
               {approversChartData && (
                 <div className='mt-6'>
                   <ChartRenderer chart={approversChartData} />
                 </div>
               )}
 
-              {/* 流程耗时详情 */}
               {processDuration && (
                 <div className='mt-6'>
                   <h3 className='text-lg font-semibold mb-3'>流程耗时分析</h3>
@@ -319,7 +334,9 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
           </CardHeader>
           <CardContent className='p-6'>
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {Object.entries(analysis.summary).map(([key, value]) => renderSummaryItem(key, value))}
+              {Object.entries(analysis.summary).map(([key, value]) => (
+                <SummaryErrorBoundary key={key}>{renderSummaryItem(key, value)}</SummaryErrorBoundary>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -329,9 +346,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
       {renderProcessAnalysis()}
 
       {/* 图表展示 */}
-      <AnimatePresence>
-        {renderCharts()}
-      </AnimatePresence>
+      <AnimatePresence>{renderCharts()}</AnimatePresence>
 
       {/* 明细表格 */}
       <AnimatePresence>
@@ -360,12 +375,14 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
                           key={rowIndex}
                           className={cn(
                             "transition-colors hover:bg-muted/30",
-                            rowIndex % 2 === 0 ? "bg-background" : "bg-muted/10"
+                            rowIndex % 2 === 0 ? "bg-background" : "bg-muted/50"
                           )}
                         >
                           {table.columns.map((column) => (
                             <TableCell key={`${rowIndex}-${column.key}`}>
-                              {renderTableCell(column.key, row[column.key])}
+                              {typeof row[column.key] === "object"
+                                ? safeStringify(row[column.key])
+                                : String(row[column.key])}
                             </TableCell>
                           ))}
                         </TableRow>
