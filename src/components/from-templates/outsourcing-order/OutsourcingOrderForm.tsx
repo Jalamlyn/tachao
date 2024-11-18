@@ -55,7 +55,6 @@ const OutsourcingOrderForm: React.FC<OutsourcingOrderFormProps> = ({
     },
     onAfterPrint: () => {
       message.closeLoading(printId.current)
-      message.success("打印完成")
       setShowPrintPreview(false)
     },
     onPrintError: (error) => {

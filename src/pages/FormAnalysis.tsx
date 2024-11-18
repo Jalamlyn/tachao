@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"
 import { Card, CardHeader, CardBody, ScrollShadow, Tooltip, Chip, Button, Textarea } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { motion, AnimatePresence } from "framer-motion"
 import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadata"
 import message from "@/components/Message"
 import MessageCard from "@/components/MessageCard"
@@ -130,11 +129,7 @@ const FormAnalysis: React.FC = () => {
   }
 
   const pageActions = (
-    <motion.div
-      initial={{ scale: 0 }}
-      animate={{ scale: 1 }}
-      transition={{ type: "spring", stiffness: 260, damping: 20 }}
-    >
+    <div>
       <Tooltip content='对话次数' placement='left'>
         <Chip
           variant='shadow'
@@ -148,14 +143,14 @@ const FormAnalysis: React.FC = () => {
           {chatCount}
         </Chip>
       </Tooltip>
-    </motion.div>
+    </div>
   )
 
   return (
     <PageLayout title='AI 智能助手' titleIcon='hugeicons:ai-chat-02' actions={pageActions}>
       <Card className='w-full shadow-lg'>
         <CardBody className='p-4 flex flex-col gap-4'>
-          <ScrollShadow className='flex-grow h-[calc(100vh-300px)] mb-4'>
+          <ScrollShadow className='flex-grow h-[calc(100vh-320px)] mb-4'>
             {messages.map((message) => (
               <div key={message.id}>
                 <MessageCard
@@ -181,7 +176,7 @@ const FormAnalysis: React.FC = () => {
                 input: "py-2 text-medium",
                 inputWrapper: "bg-default-100",
               }}
-              minRows={1}
+              minRows={2}
               maxRows={4}
               endContent={
                 <div className='flex items-center gap-2 pr-2'>

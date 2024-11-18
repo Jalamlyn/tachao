@@ -45,15 +45,10 @@ const ErrorMessageList: React.FC<{ messages: string[] }> = ({ messages }) => {
 const MessageWithCopy: React.FC<MessageWithCopyProps> = ({ content, type }) => {
   const copyToClipboard = useCallback(() => {
     if (typeof content === "string") {
-      navigator.clipboard
-        .writeText(content)
-        .then(() => {
-          message.success("Copied to clipboard")
-        })
-        .catch((err) => {
-          console.error("Failed to copy: ", err)
-          message.error("Failed to copy")
-        })
+      navigator.clipboard.writeText(content).catch((err) => {
+        console.error("Failed to copy: ", err)
+        message.error("Failed to copy")
+      })
     }
   }, [content])
 

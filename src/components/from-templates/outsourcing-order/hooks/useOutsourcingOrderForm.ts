@@ -44,10 +44,8 @@ export const useOutsourcingOrderForm = (formId: string, onFormSaved?: () => void
       setIsSaving(true)
       if (formId && formId !== "create") {
         await updateForm(values)
-        message.success("表单更新成功")
       } else {
         await addForm(values)
-        message.success("表单创建成功")
       }
       if (onFormSaved) {
         onFormSaved()

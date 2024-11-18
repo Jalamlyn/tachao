@@ -69,7 +69,6 @@ export function useMetadataTable<T extends MetadataDetail>({
     async (id: string) => {
       try {
         await removeItem(id)
-        message.success("删除成功")
         handleRefresh()
       } catch (error) {
         console.error(`Error deleting ${type}:`, error)

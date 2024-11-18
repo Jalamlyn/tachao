@@ -37,10 +37,8 @@ export const useProcessingOrderSubmit = ({
 
         if (formId && formId !== "create") {
           await updateForm(values as ProcessingOrder)
-          message.success("表单更新成功")
         } else {
           await addForm(values as ProcessingOrder)
-          message.success("表单创建成功")
         }
 
         if (onFormSaved) {

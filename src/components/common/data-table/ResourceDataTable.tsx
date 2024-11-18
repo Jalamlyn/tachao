@@ -91,7 +91,6 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
 
       if (updatedResource) {
         setResource(updatedResource)
-        message.success(editingRow ? "更新成功" : "添加成功")
         setIsModalOpen(false)
         setEditingRow(null)
       }
@@ -121,7 +120,6 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
 
       if (updatedResource) {
         setResource(updatedResource)
-        message.success("删除成功")
       }
     } catch (error) {
       console.error("Error deleting data:", error)
@@ -153,7 +151,6 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
       if (updatedResource) {
         setResource(updatedResource)
         setRowSelection({})
-        message.success("批量删除成功")
       }
     } catch (error) {
       console.error("Error batch deleting data:", error)
@@ -187,7 +184,6 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
       const ws = XLSX.utils.json_to_sheet(exportData)
       XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
       XLSX.writeFile(wb, `${resource.name || "export"}.xlsx`)
-      message.success("导出成功")
     } catch (error) {
       console.error("Error exporting data:", error)
       message.error("导出失败")

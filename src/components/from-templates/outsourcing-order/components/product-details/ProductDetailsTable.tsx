@@ -31,14 +31,18 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
 }) => {
   const productDetails = form.watch("data.productDetails")
 
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>, index: number, type: "inbound" | "outbound") => {
+  const handleQuantityChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number,
+    type: "inbound" | "outbound"
+  ) => {
     const value = e.target.value
     form.setValue(`data.productDetails.${index}.${type}Quantity`, value)
-    
+
     if (type === "outbound") {
       form.setValue(`data.productDetails.${index}.quantity`, value) // 保持兼容性
     }
-    
+
     const numericValue = Number(value) || 0
     onQuantityChange(index, numericValue, type)
   }
@@ -51,7 +55,7 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
   }
 
   const handleSelectServices = (selectedServices: any[], index: number) => {
-    const serviceItems = selectedServices.map(service => service.服务项目 || "")
+    const serviceItems = selectedServices.map((service) => service.服务项目 || "")
     form.setValue(`data.productDetails.${index}.serviceItems`, serviceItems)
   }
 
@@ -59,8 +63,8 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
     const file = event.target.files?.[0]
     if (!file) return
 
-    if (!file.name.toLowerCase().endsWith('.dwg')) {
-      message.error('请上传CAD图纸(.dwg)文件')
+    if (!file.name.toLowerCase().endsWith(".dwg")) {
+      message.error("请上传CAD图纸(.dwg)文件")
       return
     }
 
@@ -68,22 +72,20 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
       // TODO: 实现文件上传逻辑
       const fileId = `file_${Date.now()}`
       const fileUrl = URL.createObjectURL(file)
-      
+
       form.setValue(`data.productDetails.${index}.cadAttachment`, {
         fileId,
         fileName: file.name,
-        fileUrl
+        fileUrl,
       })
-      
-      message.success('CAD图纸上传成功')
     } catch (error) {
-      console.error('Upload error:', error)
-      message.error('上传失败，请重试')
+      console.error("Upload error:", error)
+      message.error("上传失败，请重试")
     }
   }
 
   const handleDownloadFile = (fileUrl: string, fileName: string) => {
-    const link = document.createElement('a')
+    const link = document.createElement("a")
     link.href = fileUrl
     link.download = fileName
     document.body.appendChild(link)
@@ -115,7 +117,7 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Input {...field} disabled={!isEditable} className="min-w-[180px]" />
+                        <Input {...field} disabled={!isEditable} className='min-w-[180px]' />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -129,7 +131,7 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Input {...field} disabled={!isEditable} className="min-w-[150px]" />
+                        <Input {...field} disabled={!isEditable} className='min-w-[150px]' />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -137,25 +139,20 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                 />
               </TableCell>
               <TableCell>
-                <div className="flex items-center gap-2">
-                  <div className="flex flex-wrap gap-1">
+                <div className='flex items-center gap-2'>
+                  <div className='flex flex-wrap gap-1'>
                     {product.serviceItems?.map((service: string, sIndex: number) => (
-                      <Chip
-                        key={sIndex}
-                        size="sm"
-                        variant="flat"
-                        color="primary"
-                      >
+                      <Chip key={sIndex} size='sm' variant='flat' color='primary'>
                         {service}
                       </Chip>
                     ))}
                   </div>
                   {isEditable && (
                     <ResourceSelectButton
-                      resourceName="银隆服务项目资料表"
-                      appId=""
+                      resourceName='银隆服务项目资料表'
+                      appId=''
                       onSelect={(services) => handleSelectServices(services, index)}
-                      buttonText="选择"
+                      buttonText='选择'
                       buttonProps={{
                         size: "sm",
                         variant: "light",
@@ -163,7 +160,7 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                         className: "w-8 h-8",
                       }}
                     >
-                      <Icon icon="mdi:plus" className="w-4 h-4" />
+                      <Icon icon='mdi:plus' className='w-4 h-4' />
                     </ResourceSelectButton>
                   )}
                 </div>
@@ -175,7 +172,7 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Input {...field} disabled={!isEditable} className="min-w-[60px]" />
+                        <Input {...field} disabled={!isEditable} className='min-w-[60px]' />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -191,9 +188,9 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                       <FormControl>
                         <Input
                           {...field}
-                          type="number"
-                          min="0"
-                          step="1"
+                          type='number'
+                          min='0'
+                          step='1'
                           onChange={(e) => handleQuantityChange(e, index, "outbound")}
                           disabled={!isEditable}
                           className='text-right font-mono min-w-[80px]'
@@ -213,9 +210,9 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                       <FormControl>
                         <Input
                           {...field}
-                          type="number"
-                          min="0"
-                          step="1"
+                          type='number'
+                          min='0'
+                          step='1'
                           onChange={(e) => handleQuantityChange(e, index, "inbound")}
                           disabled={!isEditable}
                           className='text-right font-mono min-w-[80px]'
@@ -235,9 +232,9 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                       <FormControl>
                         <Input
                           {...field}
-                          type="number"
-                          min="0"
-                          step="1"
+                          type='number'
+                          min='0'
+                          step='1'
                           disabled={!isEditable}
                           className='text-right font-mono min-w-[80px]'
                         />
@@ -256,9 +253,9 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                       <FormControl>
                         <Input
                           {...field}
-                          type="number"
-                          min="0"
-                          step="0.01"
+                          type='number'
+                          min='0'
+                          step='0.01'
                           disabled={!isEditable}
                           className='text-right font-mono min-w-[80px]'
                         />
@@ -277,9 +274,9 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                       <FormControl>
                         <Input
                           {...field}
-                          type="number"
-                          min="0"
-                          step="0.0001"
+                          type='number'
+                          min='0'
+                          step='0.0001'
                           onChange={(e) => handleUnitPriceChange(e, index)}
                           disabled={!isEditable}
                           className='text-right font-mono min-w-[100px]'
@@ -298,7 +295,7 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Input {...field} disabled={!isEditable} className="min-w-[120px]" />
+                        <Input {...field} disabled={!isEditable} className='min-w-[120px]' />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -323,18 +320,16 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                               disabled={!isEditable}
                             >
                               {field.value ? format(new Date(field.value), "yyyy-MM-dd") : <span>选择日期</span>}
-                              <Icon icon="mdi:calendar" className="ml-auto h-4 w-4 opacity-50" />
+                              <Icon icon='mdi:calendar' className='ml-auto h-4 w-4 opacity-50' />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                        <PopoverContent className='w-auto p-0' align='start'>
                           <Calendar
-                            mode="single"
+                            mode='single'
                             selected={field.value ? new Date(field.value) : undefined}
                             onSelect={(date) => field.onChange(date?.toISOString())}
-                            disabled={(date) =>
-                              date > new Date() || date < new Date("2000-01-01")
-                            }
+                            disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
                             initialFocus
                           />
                         </PopoverContent>
@@ -345,7 +340,7 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                 />
               </TableCell>
               <TableCell>
-                <div className="flex items-center gap-2">
+                <div className='flex items-center gap-2'>
                   {isEditable ? (
                     <FormField
                       control={form.control}
@@ -353,19 +348,19 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <div className="flex items-center gap-2">
+                            <div className='flex items-center gap-2'>
                               <Input
-                                type="file"
-                                accept=".dwg"
+                                type='file'
+                                accept='.dwg'
                                 onChange={(e) => handleFileUpload(e, index)}
-                                className="hidden"
+                                className='hidden'
                                 id={`cad-upload-${index}`}
                               />
                               <label
                                 htmlFor={`cad-upload-${index}`}
-                                className="cursor-pointer flex items-center gap-1 text-blue-600 hover:text-blue-700"
+                                className='cursor-pointer flex items-center gap-1 text-blue-600 hover:text-blue-700'
                               >
-                                <Icon icon="mdi:upload" className="w-4 h-4" />
+                                <Icon icon='mdi:upload' className='w-4 h-4' />
                                 {field.value?.fileName || "上传CAD"}
                               </label>
                             </div>
@@ -377,12 +372,14 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                   ) : (
                     product.cadAttachment?.fileName && (
                       <Button
-                        size="sm"
-                        variant="light"
-                        onClick={() => handleDownloadFile(product.cadAttachment.fileUrl, product.cadAttachment.fileName)}
-                        className="gap-1"
+                        size='sm'
+                        variant='light'
+                        onClick={() =>
+                          handleDownloadFile(product.cadAttachment.fileUrl, product.cadAttachment.fileName)
+                        }
+                        className='gap-1'
                       >
-                        <Icon icon="mdi:download" className="w-4 h-4" />
+                        <Icon icon='mdi:download' className='w-4 h-4' />
                         {product.cadAttachment.fileName}
                       </Button>
                     )
@@ -396,7 +393,7 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Input {...field} disabled={!isEditable} className="min-w-[120px]" />
+                        <Input {...field} disabled={!isEditable} className='min-w-[120px]' />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

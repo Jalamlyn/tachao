@@ -56,7 +56,6 @@ export function MetadataTable<T extends MetadataDetail>({
         await handleDelete(recordToDelete.id)
         onClose()
         setRecordToDelete(null)
-        message.success("删除成功")
       } catch (error) {
         message.error("删除失败")
       }

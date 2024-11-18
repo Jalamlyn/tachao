@@ -79,7 +79,6 @@ const ResourceCardList: React.FC<ResourceCardListProps> = ({
       await deleteMetadata({ name: `${resourceType}_${itemToDelete}` })
       const updatedItems = items.filter((item) => item.id !== itemToDelete)
       await setMetadata(resourceType, JSON.stringify(updatedItems), appId)
-      message.success("删除成功")
       await fetchItems()
     } catch (error) {
       console.error("Error deleting resource:", error)
@@ -170,29 +169,29 @@ const ResourceCardList: React.FC<ResourceCardListProps> = ({
           >
             {items.map((item) => (
               <motion.div key={item.id} variants={itemVariants} layout>
-                <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 hover:shadow-sm transition-shadow">
-                  <div className="text-sm font-medium text-gray-700 truncate flex-1">
+                <div className='flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 hover:shadow-sm transition-shadow'>
+                  <div className='text-sm font-medium text-gray-700 truncate flex-1'>
                     {item.title || item.name || item.id}
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className='flex items-center gap-1'>
                     <Button
-                      size="sm"
+                      size='sm'
                       isIconOnly
-                      variant="light"
-                      className="min-w-0 w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-600"
+                      variant='light'
+                      className='min-w-0 w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-600'
                       onClick={() => onView(item.id)}
                     >
-                      <Icon icon="mdi:eye" className="w-3.5 h-3.5" />
+                      <Icon icon='mdi:eye' className='w-3.5 h-3.5' />
                     </Button>
                     <Button
-                      size="sm"
+                      size='sm'
                       isIconOnly
-                      variant="light"
-                      className="min-w-0 w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600"
+                      variant='light'
+                      className='min-w-0 w-8 h-8 bg-red-50 hover:bg-red-100 text-red-600'
                       onClick={() => handleDelete(item.id)}
                       isLoading={internalDeletingId === item.id || externalDeletingId === item.id}
                     >
-                      <Icon icon="mdi:delete" className="w-3.5 h-3.5" />
+                      <Icon icon='mdi:delete' className='w-3.5 h-3.5' />
                     </Button>
                   </div>
                 </div>

@@ -94,7 +94,7 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
       })
 
       form.trigger(`${fieldName}.${step.key}`)
-      message.success("确认成功")
+
     } catch (error) {
       console.error("Error confirming step:", error)
       message.error("确认失败")
@@ -116,7 +116,6 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
       })
 
       form.trigger(`${fieldName}.${step.key}`)
-      message.success("已取消确认")
     } catch (error) {
       console.error("Error canceling confirmation:", error)
       message.error("取消确认失败")

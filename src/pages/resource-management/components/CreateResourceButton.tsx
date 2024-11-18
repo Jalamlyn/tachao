@@ -118,7 +118,6 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
       })
 
       if (result) {
-        message.success("创建成功")
         onClose()
       } else {
         throw new Error("创建失败")

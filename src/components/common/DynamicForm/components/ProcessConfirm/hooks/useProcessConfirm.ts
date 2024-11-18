@@ -85,7 +85,6 @@ export const useProcessConfirm = ({
       form.setValue(`${fieldName}.${step.key}.confirmationDate`, new Date().toISOString())
 
       form.trigger(`${fieldName}.${step.key}`)
-      message.success("确认成功")
     } catch (error) {
       console.error("Error confirming step:", error)
       message.error("确认失败")
@@ -102,7 +101,6 @@ export const useProcessConfirm = ({
       form.setValue(`${fieldName}.${step.key}.confirmationDate`, "")
 
       form.trigger(`${fieldName}.${step.key}`)
-      message.success("已取消确认")
     } catch (error) {
       console.error("Error canceling confirmation:", error)
       message.error("取消确认失败")

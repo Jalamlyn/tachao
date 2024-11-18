@@ -66,7 +66,6 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareLink)
-      message.success("链接已复制到剪贴板")
     } catch (err) {
       message.error("复制失败，请手动复制")
     }

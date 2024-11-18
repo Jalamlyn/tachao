@@ -158,7 +158,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     },
     onAfterPrint: () => {
       message.closeLoading(printId.current)
-      message.success("打印完成")
     },
     onPrintError: (error) => {
       message.closeLoading(printId.current)
@@ -214,7 +213,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         if (id) {
           const result = await updateMetadata(id, formData)
           if (result) {
-            message.success("更新成功")
             setIsEditing(false)
           } else {
             throw new Error("更新失败")
@@ -222,7 +220,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         } else {
           const result = await createMetadata(formData)
           if (result) {
-            message.success("创建成功")
             setIsEditing(false)
           } else {
             throw new Error("创建失败")

@@ -134,6 +134,36 @@ const AIFormEditor: React.FC = () => {
   const handleChunk = useCallback(
     (chunk: string) => {
       accumulatedTextRef.current += chunk
+
+      // 检查是否包含错误信息
+      if (accumulatedTextRef.current.includes("<shata-ai-error>")) {
+        const errorMatch = accumulatedTextRef.current.match(/<shata-ai-error>([\s\S]*?)<\/shata-ai-error>/)
+        if (errorMatch) {
+          const errorMessage = errorMatch[1].trim()
+          // 更新最后一条消息为错误信息
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1]
+            return [
+              ...prev.slice(0, -1),
+              {
+                ...lastMessage,
+                content: (
+                  <div className='flex items-center gap-2 text-danger'>
+                    <Icon icon='mdi:alert-circle' className='w-5 h-5' />
+                    <span>{errorMessage}</span>
+                  </div>
+                ),
+                status: "error",
+              },
+            ]
+          })
+          // 清空累积的文本
+          accumulatedTextRef.current = ""
+          return // 不更新预览内容
+        }
+      }
+
+      // 原有的表单生成逻辑
       if (accumulatedTextRef.current.includes("<shata-ai-form>")) {
         setMessages((prev) => {
           const lastMessage = prev[prev.length - 1]
@@ -155,7 +185,7 @@ const AIFormEditor: React.FC = () => {
         setSelectedTab("code")
       }
 
-      if (previewContent || accumulatedTextRef.current.includes("<shata-ai-form>")) {
+      if (previewContent && accumulatedTextRef.current.includes("<shata-ai-form>")) {
         const newContent = accumulatedTextRef.current
         setPreviewContent(newContent)
       }

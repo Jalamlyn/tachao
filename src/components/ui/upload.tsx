@@ -39,7 +39,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({ value, onChange }) => {
           if (e.target && typeof e.target.result === "string") {
             onChange(e.target.result);
             localDB.setItem("avatarUrl", e.target.result); // 存储到 localDB
-            message.success("图片上传成功");
           }
         };
         reader.onprogress = (e) => {

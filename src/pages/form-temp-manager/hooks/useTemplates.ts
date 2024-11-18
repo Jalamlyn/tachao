@@ -74,7 +74,6 @@ export const useTemplates = () => {
 
         const template = await getTemplateDetail(templateId)
         if (template && template.data.config) {
-          message.success("模板加载成功")
           return template.data.config
         }
         return null
@@ -105,7 +104,6 @@ export const useTemplates = () => {
         }
 
         await createTemplate(templateData)
-        message.success("模板保存成功")
         await loadTemplateIndexes() // 保存后刷新索引列表
       } catch (error) {
         console.error("保存模板失败:", error)

@@ -230,7 +230,6 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
                       try {
                         await field.onUpload(file)
                         formField.onChange(file)
-                        message.success("文件上传成功")
                       } catch (error) {
                         console.error("File upload error:", error)
                         message.error("文件上传失败")

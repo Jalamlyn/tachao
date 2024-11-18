@@ -65,12 +65,10 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
     if (selectedTemplate) {
       try {
         await remove(selectedTemplate.id)
-        message.success("模板删除成功")
         onClose()
         await loadTemplates()
       } catch (error) {
         console.error("删除模板失败:", error)
-        message.error("删除模板失败")
       }
     }
   }
@@ -92,7 +90,6 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
       const shareLink = `${window.location.origin}/form-preview/${selectedTemplate.id}`
       try {
         await navigator.clipboard.writeText(shareLink)
-        message.success("链接已复制到剪贴板")
         onShareClose()
       } catch (error) {
         console.error("复制链接失败:", error)

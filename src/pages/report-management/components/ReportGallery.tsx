@@ -12,7 +12,6 @@ import {
   ModalFooter,
   Input,
 } from "@nextui-org/react"
-import { motion, AnimatePresence } from "framer-motion"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
@@ -65,36 +64,10 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
     loadReports()
   }, [])
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  }
-
-  const item = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    show: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 20,
-      },
-    },
-  }
-
   const handleDeleteConfirm = async () => {
     if (selectedReport) {
       try {
         await remove(selectedReport.id)
-        message.success("报表删除成功")
         onClose()
         await loadReports()
       } catch (error) {
@@ -121,7 +94,6 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
       const shareLink = `${window.location.origin}/report-preview/${selectedReport.id}`
       try {
         await navigator.clipboard.writeText(shareLink)
-        message.success("链接已复制到剪贴板")
         onShareClose()
       } catch (error) {
         console.error("复制链接失败:", error)
@@ -146,76 +118,64 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
 
   return (
     <>
-      <motion.div
-        variants={container}
-        initial='hidden'
-        animate='show'
-        className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${className}`}
-      >
-        <AnimatePresence>
-          {reports.map((report) => (
-            <motion.div key={report.id} variants={item} layout className='h-full'>
-              <Card
-                isPressable
-                isHoverable
-                className='w-full h-[240px] group'
-                onPress={() => onReportSelect(report.id)}
-              >
-                <CardBody className='p-0 relative overflow-hidden'>
-                  <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-green-100 to-green-50 group-hover:scale-105 transition-transform duration-300'>
-                    <Icon
-                      icon='mdi:file-chart'
-                      className='w-16 h-16 text-green-400 group-hover:scale-110 transition-transform duration-300'
-                    />
-                  </div>
-                </CardBody>
-                <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
-                  <div className='flex justify-between items-center w-full'>
-                    <h4
-                      className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-green-500 transition-colors duration-300'
-                      title={report.title}
+      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${className}`}>
+        {reports.map((report) => (
+          <div key={report.id} className='h-full'>
+            <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onReportSelect(report.id)}>
+              <CardBody className='p-0 relative overflow-hidden'>
+                <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-green-100 to-green-50 group-hover:scale-105 transition-transform duration-300'>
+                  <Icon
+                    icon='mdi:file-chart'
+                    className='w-16 h-16 text-green-400 group-hover:scale-110 transition-transform duration-300'
+                  />
+                </div>
+              </CardBody>
+              <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
+                <div className='flex justify-between items-center w-full'>
+                  <h4
+                    className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-green-500 transition-colors duration-300'
+                    title={report.title}
+                  >
+                    {report.title}
+                  </h4>
+                </div>
+                <div className='flex justify-between items-center w-full'>
+                  <span className='text-sm text-default-400'>{formatFileSize(report.indexFields?.size)}</span>
+                  <div className='flex gap-2'>
+                    <Button
+                      isIconOnly
+                      size='sm'
+                      variant='light'
+                      className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+                      onClick={(e) => handleShareClick(report, e)}
                     >
-                      {report.title}
-                    </h4>
+                      <Icon icon='mdi:share' className='w-4 h-4' />
+                    </Button>
+                    <Button
+                      isIconOnly
+                      size='sm'
+                      variant='light'
+                      className='text-default-400 hover:text-green-500 hover:bg-green-50 transition-colors duration-300'
+                      onClick={(e) => handleAIAnalysisClick(report, e)}
+                    >
+                      <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
+                    </Button>
+                    <Button
+                      isIconOnly
+                      size='sm'
+                      variant='light'
+                      className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
+                      onClick={(e) => handleDeleteClick(report, e)}
+                    >
+                      <Icon icon='mdi:delete' className='w-4 h-4' />
+                    </Button>
                   </div>
-                  <div className='flex justify-between items-center w-full'>
-                    <span className='text-sm text-default-400'>{formatFileSize(report.indexFields?.size)}</span>
-                    <div className='flex gap-2'>
-                      <Button
-                        isIconOnly
-                        size='sm'
-                        variant='light'
-                        className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
-                        onClick={(e) => handleShareClick(report, e)}
-                      >
-                        <Icon icon='mdi:share' className='w-4 h-4' />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        size='sm'
-                        variant='light'
-                        className='text-default-400 hover:text-green-500 hover:bg-green-50 transition-colors duration-300'
-                        onClick={(e) => handleAIAnalysisClick(report, e)}
-                      >
-                        <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        size='sm'
-                        variant='light'
-                        className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
-                        onClick={(e) => handleDeleteClick(report, e)}
-                      >
-                        <Icon icon='mdi:delete' className='w-4 h-4' />
-                      </Button>
-                    </div>
-                  </div>
-                </CardFooter>
-              </Card>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </motion.div>
+                </div>
+              </CardFooter>
+            </Card>
+          </div>
+        ))}
+      </div>
 
       <Modal
         isOpen={isOpen}

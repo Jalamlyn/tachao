@@ -21,22 +21,6 @@ export class AIFormAgent implements IAIFormAgent {
   private _cachedImage: string | null = null
   private systemPrompt = `你是一个智能表单助手，负责帮助用户创建和检索表单。
 
-如果用户的输入不是表单相关的指令，直接返回：
-"""
-<error>请使用表单创建或编辑相关的指令</error>
-"""
-
-如果用户的指令不够明确，直接返回：
-"""
-<unclear>
-您的指令不太明确，我需要更多信息。请尝试：
-- 创建一个[表单类型]表单，包含[字段1]、[字段2]等字段
-- 在[表单名称]中添加[字段名]字段
-- 修改[表单名称]中[字段名]的[属性]
-- 删除[表单名称]中的[字段名]字段
-</unclear>
-"""
-
 每次都生成一个完整的符合 DynamicFormConfig 类型的配置对象，不生成局部修改。
 ${
   this._rawConfig
@@ -145,7 +129,7 @@ ${formulaService}
 
       updateGenerationProcess("📝 开始生成表单...")
       const createResult = await this.createForm(command, updateGenerationProcess)
-      
+
       if (createResult) {
         if (createResult.rawConfig) {
           console.log("[AIFormAgent] Setting new rawConfig from createResult")
@@ -202,7 +186,24 @@ ${formulaService}
     await new Promise((resolve) => setTimeout(resolve, 300))
 
     const prompt = `请根据以下描述生成一个完整的表单配置代码：
+    <description>
 ${description}
+</description>
+如果<description>和表单无关，直接返回：
+"""
+<shata-ai-error>请使用表单创建或编辑相关的指令</shata-ai-error>
+"""
+
+如果<description>不够明确，直接返回：
+"""
+<shata-ai-error>
+您的指令不太明确，我需要更多信息。请尝试：
+- 创建一个[表单类型]表单，包含[字段1]、[字段2]等字段
+- 在[表单名称]中添加[字段名]字段
+- 修改[表单名称]中[字段名]的[属性]
+- 删除[表单名称]中的[字段名]字段
+</shata-ai-error>
+"""
 
 ${
   this._rawConfig

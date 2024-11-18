@@ -85,7 +85,7 @@ const AIResourceEditor: React.FC = () => {
 
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
-      { label: "资料管理", href: "/we-chat-app/admin/resources" },
+      { label: "表格管理", href: "/we-chat-app/admin/resources" },
       { label: "AI 资料助手", href: `/we-chat-app/admin/resources/ai/${resourceId}` },
     ])
   }, [resourceId])
