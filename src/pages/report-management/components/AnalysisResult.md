@@ -35,14 +35,14 @@ const analysis = {
       averageProcessTime: '2.5天'
     },
     nodeStatus: {
-      '节点1': '已完成',
-      '节点2': '进行中'
+      '节点1': '已完成',    // 必须是状态描述字符串，不能是数字
+      '节点2': '进行中'     // 必须是状态描述字符串，不能是数字
     },
     processDuration: {
-      total: '5天',
+      total: '5天',         // 必须是时间描述字符串，不能是数字
       nodesDuration: {
-        '节点1': '2天',
-        '节点2': '3天'
+        '节点1': '2天',     // 必须是时间描述字符串，不能是数字
+        '节点2': '3天'      // 必须是时间描述字符串，不能是数字
       }
     },
     approvers: {
@@ -102,13 +102,15 @@ const analysis = {
       totalProcessNodes: number;    // 总节点数
       completedNodes: number;       // 已完成节点数
       completionRate: string;       // 完成率（百分比）
-      averageProcessTime: string;   // 平均处理时长
+      averageProcessTime: string;   // 平均处理时长（必须是时间描述，如：'2.5天'）
     };
     
     // 节点状态信息，记录每个节点的当前状态
+    // ⚠️ 重要：值必须是状态描述字符串，如 '已完成'、'进行中'，不能是数字
     nodeStatus?: Record<string, string>;
     
     // 流程耗时信息
+    // ⚠️ 重要：所有时间值必须是描述字符串，如 '5天'、'2小时'，不能是数字
     processDuration?: {
       total: string;                // 总耗时
       nodesDuration: Record<string, string>;  // 各节点耗时
@@ -193,16 +195,20 @@ processAnalysis: {
     totalProcessNodes: data.length,
     completedNodes: data.filter(item => item.status === 'completed').length,
     completionRate: `${(completedCount / totalCount * 100).toFixed(1)}%`,
-    averageProcessTime: `${averageTime}天`
+    averageProcessTime: `${averageTime}天`  // 必须是时间描述字符串
   },
+  // ⚠️ 重要：nodeStatus 必须使用状态描述字符串
   nodeStatus: data.reduce((acc, curr) => {
-    acc[curr.nodeName] = curr.status;
+    acc[curr.nodeName] = curr.status === 'completed' ? '已完成' : '进行中';  // ✅ 正确：使用状态描述
+    // ❌ 错误：acc[curr.nodeName] = completedCount;  // 不要使用数字
     return acc;
   }, {}),
+  // ⚠️ 重要：processDuration 必须使用时间描述字符串
   processDuration: {
-    total: `${totalDuration}天`,
+    total: `${totalDuration}天`,  // ✅ 正确：使用时间描述
     nodesDuration: data.reduce((acc, curr) => {
-      acc[curr.nodeName] = `${curr.duration}天`;
+      acc[curr.nodeName] = `${curr.duration}天`;  // ✅ 正确：使用时间描述
+      // ❌ 错误：acc[curr.nodeName] = duration;  // 不要使用数字
       return acc;
     }, {})
   }
@@ -261,19 +267,19 @@ const result = {
         totalProcessNodes: 5,
         completedNodes: 3,
         completionRate: '60%',
-        averageProcessTime: '2.5天'
+        averageProcessTime: '2.5天'  // ✅ 使用时间描述字符串
       },
       nodeStatus: {
-        '提交申请': '已完成',
-        '部门审批': '进行中',
-        '财务审核': '待处理'
+        '提交申请': '已完成',  // ✅ 使用状态描述字符串
+        '部门审批': '进行中',  // ✅ 使用状态描述字符串
+        '财务审核': '待处理'   // ✅ 使用状态描述字符串
       },
       processDuration: {
-        total: '5天',
+        total: '5天',          // ✅ 使用时间描述字符串
         nodesDuration: {
-          '提交申请': '1天',
-          '部门审批': '2天',
-          '财务审核': '2天'
+          '提交申请': '1天',   // ✅ 使用时间描述字符串
+          '部门审批': '2天',   // ✅ 使用时间描述字符串
+          '财务审核': '2天'    // ✅ 使用时间描述字符串
         }
       },
       approvers: {
@@ -314,6 +320,8 @@ return result;
 - 合理使用排序和筛选，提高数据可读性
 
 4. 流程分析
+- nodeStatus 必须使用状态描述字符串（如：'已完成'、'进行中'），不能使用数字
+- processDuration 必须使用时间描述字符串（如：'5天'、'2小时'），不能使用数字
 - 确保流程节点状态准确反映当前情况
 - 时间统计要考虑工作日和节假日
 - 审批人工作量统计要考虑有效性

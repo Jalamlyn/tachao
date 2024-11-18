@@ -78,6 +78,60 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 
 数据总行数: ${data.length}
 
+特别注意：
+1. 流程分析(processAnalysis)的数据格式要求：
+   - nodeStatus 必须使用状态描述字符串，如 '已完成'、'进行中'，不能使用数字
+   - processDuration 需要包含时间描述字符串，如 '5天'、'2小时'，不能使用数字
+   - approvers 需要包含审批人统计
+   - processStatus 需要包含状态统计
+
+2. 流程分析示例：
+processAnalysis: {
+  summary: {
+    totalProcessNodes: 5,
+    completedNodes: 3,
+    completionRate: '60%',
+    averageProcessTime: '2.5天'  // 必须是时间描述字符串
+  },
+  nodeStatus: {
+    '节点1': '已完成',    // ✅ 正确：使用状态描述字符串
+    '节点2': '进行中'     // ✅ 正确：使用状态描述字符串
+    // ❌ 错误：'节点3': 5  // 不要使用数字
+  },
+  processDuration: {
+    total: '5天',         // ✅ 正确：使用时间描述字符串
+    nodesDuration: {
+      '节点1': '2天',     // ✅ 正确：使用时间描述字符串
+      '节点2': '3天'      // ✅ 正确：使用时间描述字符串
+      // ❌ 错误：'节点3': 3  // 不要使用数字
+    }
+  },
+  approvers: {
+    '审批人A': 10,
+    '审批人B': 5
+  },
+  processStatus: {
+    '已完成': 3,
+    '进行中': 2
+  }
+}
+
+3. 数据转换示例：
+// 转换节点状态
+const nodeStatus = data.reduce((acc, item) => {
+  acc[item.nodeName] = item.confirmed ? '已完成' : '进行中';  // ✅ 转换为状态描述
+  return acc;
+}, {});
+
+// 转换处理时长
+const processDuration = {
+  total: \`\${totalDays}天\`,  // ✅ 转换为时间描述
+  nodesDuration: data.reduce((acc, item) => {
+    acc[item.nodeName] = \`\${item.duration}天\`;  // ✅ 转换为时间描述
+    return acc;
+  }, {})
+};
+
 重要提示：
 1. 生成的代码必须包含数据验证和空值检查
 2. 使用可选链操作符（?.）访问可能不存在的属性
@@ -103,13 +157,7 @@ const completedNodes = data.filter(item =>
 
 // 使用默认值
 const totalCount = data?.length || 0;
-const status = item?.status || 'unknown';
-
-请确保生成的代码：
-1. 对所有对象属性访问使用可选链（?.）
-2. 为计算结果提供默认值
-3. 在进行数据处理前先验证数据有效性
-4. 处理所有可能的异常情况`
+const status = item?.status || 'unknown';`
 
     return `${basePrompt}
 
