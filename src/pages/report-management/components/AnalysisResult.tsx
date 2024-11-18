@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import ChartRenderer from "./ChartRenderer"
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table"
 import { cn } from "@/theme/cn"
+import { Tabs, Tab } from "@nextui-org/react"
 
 interface AnalysisResultProps {
   analysis: {
@@ -22,7 +23,6 @@ interface AnalysisResultProps {
       data: any[]
     }[]
     insights: string[]
-    // 新增: 流程分析数据
     processAnalysis?: {
       summary?: {
         totalProcessNodes: number
@@ -139,6 +139,61 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
     }
     // 其他列正常渲染
     return value
+  }
+
+  // 渲染图表区域
+  const renderCharts = () => {
+    if (!analysis.charts?.length) return null
+
+    // 如果只有一个图表，使用原来的渲染方式
+    if (analysis.charts.length === 1) {
+      return (
+        <motion.div variants={itemVariants} layout>
+          <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
+            <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
+              <CardTitle className='text-xl font-bold'>{analysis.charts[0].title || "数据可视化"}</CardTitle>
+              <CardDescription>图表分析与趋势</CardDescription>
+            </CardHeader>
+            <CardContent className='min-h-[400px] p-6'>
+              <ChartRenderer chart={analysis.charts[0]} />
+            </CardContent>
+          </Card>
+        </motion.div>
+      )
+    }
+
+    // 多个图表使用 Tabs 展示
+    return (
+      <motion.div variants={itemVariants} layout>
+        <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
+          <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
+            <CardTitle className='text-xl font-bold'>数据可视化</CardTitle>
+            <CardDescription>图表分析与趋势</CardDescription>
+          </CardHeader>
+          <CardContent className='p-6'>
+            <Tabs
+              aria-label="图表分析"
+              className="w-full"
+              variant="underlined"
+              classNames={{
+                tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+                cursor: "w-full bg-primary",
+                tab: "max-w-fit px-0 h-12",
+                tabContent: "group-data-[selected=true]:text-primary"
+              }}
+            >
+              {analysis.charts.map((chart, index) => (
+                <Tab key={index} title={chart.title || `图表 ${index + 1}`}>
+                  <div className='min-h-[400px] pt-4'>
+                    <ChartRenderer chart={chart} />
+                  </div>
+                </Tab>
+              ))}
+            </Tabs>
+          </CardContent>
+        </Card>
+      </motion.div>
+    )
   }
 
   // 新增: 渲染流程分析卡片
@@ -275,19 +330,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
 
       {/* 图表展示 */}
       <AnimatePresence>
-        {analysis.charts?.map((chart, index) => (
-          <motion.div key={index} variants={itemVariants} layout>
-            <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
-              <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
-                <CardTitle className='text-xl font-bold'>{chart.title || "数据可视化"}</CardTitle>
-                <CardDescription>图表分析与趋势</CardDescription>
-              </CardHeader>
-              <CardContent className='min-h-[400px] p-6'>
-                <ChartRenderer chart={chart} />
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
+        {renderCharts()}
       </AnimatePresence>
 
       {/* 明细表格 */}
