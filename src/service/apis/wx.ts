@@ -1,4 +1,4 @@
-import { apiService } from "./api"
+import { apiService, wxAPIService } from "./api"
 import { aiLog } from "@/utils/AITraceLogger"
 
 // 微信用户信息接口
@@ -46,7 +46,7 @@ export const getWxUserInfo = async (appId: string, code: string): Promise<WxUser
   aiLog.log("开始获取微信用户信息", { appId, code })
 
   try {
-    const res = await apiService.get("/external/wx/mp/web/user-infos", {
+    const res = await wxAPIService.get("/wx/mp/web/user-infos", {
       params: {
         appid: appId,
         code: code,

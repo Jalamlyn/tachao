@@ -12,6 +12,14 @@ export const apiService = axios.create({
   },
 })
 
+export const wxAPIService = axios.create({
+  // @ts-ignore
+  baseURL: "/external/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
+})
+
 apiService.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem(modelBaseUserToken)
