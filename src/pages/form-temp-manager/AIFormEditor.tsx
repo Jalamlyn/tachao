@@ -14,8 +14,9 @@ import PageLayout from "@/components/PageLayout"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
 import MessageCard from "@/components/MessageCard"
 import AICommandInput from "@/components/AICommandInput"
+import ErrorBoundary from "@/components/ErrorBoundary"
+import { useVersionControl } from "@/hooks/useVersionControl"
 
-// 导入头像
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
 
@@ -36,6 +37,12 @@ const AIFormEditor: React.FC = () => {
 
   const { create: createTemplate, getDetail: getTemplateDetail, update: updateTemplate } = useMetadata("template")
 
+  // 添加版本控制
+  const versionControl = useVersionControl<{
+    formConfig: any
+    rawConfig: string
+  }>()
+
   useEffect(() => {
     const loadTemplateData = async () => {
       if (isEditMode && templateId) {
@@ -46,7 +53,13 @@ const AIFormEditor: React.FC = () => {
             if (parsedConfig) {
               setFormConfig(parsedConfig.config)
               setRawConfig(template.data.rawConfig)
-              setPreviewContent(template.data.rawConfig) // 添加这行
+              setPreviewContent(template.data.rawConfig)
+
+              // 初始化版本控制
+              versionControl.addVersion({
+                formConfig: parsedConfig.config,
+                rawConfig: template.data.rawConfig,
+              })
             } else {
               message.error("模板解析失败")
               navigate("/we-chat-app/admin/documents")
@@ -234,9 +247,15 @@ const AIFormEditor: React.FC = () => {
 
   const handleCommandResult = useCallback(
     (result) => {
-      accumulatedTextRef.current = "" // 清理累积文本
+      accumulatedTextRef.current = ""
       if (result?.type === "support") {
         if (result.data?.config) {
+          // 保存新版本
+          versionControl.addVersion({
+            formConfig: result.data.config,
+            rawConfig: result.data.rawConfig,
+          })
+
           setFormConfig(result.data.config)
           setRawConfig(result.data.rawConfig)
 
@@ -261,8 +280,33 @@ const AIFormEditor: React.FC = () => {
         }
       }
     },
-    [setFormConfig, setRawConfig]
+    [setFormConfig, setRawConfig, versionControl]
   )
+
+  const renderPreview = () => {
+    if (!formState.formConfig) {
+      return (
+        <div className='text-center pt-[30%] text-gray-500'>
+          <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
+          <p>请输入您的需求,AI将为您开发表单</p>
+        </div>
+      )
+    }
+
+    return (
+      <ErrorBoundary
+        onReset={() => {
+          const prevVersion = versionControl.rollback()
+          if (prevVersion) {
+            setFormConfig(prevVersion.formConfig)
+            setRawConfig(prevVersion.rawConfig)
+          }
+        }}
+      >
+        <FormPreview previewMode config={formState.formConfig} />
+      </ErrorBoundary>
+    )
+  }
 
   const pageActions = (
     <Button
@@ -306,16 +350,7 @@ const AIFormEditor: React.FC = () => {
             <div className='h-full flex flex-col'>
               <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key.toString())}>
                 <Tab key='preview' title='表单预览'>
-                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
-                    {formState.formConfig ? (
-                      <FormPreview previewMode config={formState.formConfig} />
-                    ) : (
-                      <div className='text-center pt-[30%] text-gray-500'>
-                        <Icon icon='mdi:form' className='w-12 h-12 mx-auto mb-4' />
-                        <p>请输入您的需求,AI将为您开发表单</p>
-                      </div>
-                    )}
-                  </div>
+                  <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderPreview()}</div>
                 </Tab>
                 <Tab key='code' title='代码预览'>
                   <div className='h-[calc(100vh-260px)] overflow-auto p-2'>

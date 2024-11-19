@@ -12,6 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import AIReportAgent from "@/service/agents/AIReportAgent"
 import AnalysisResult from "./components/AnalysisResult"
 import AICommandInput from "@/components/AICommandInput"
+import ErrorBoundary from "@/components/ErrorBoundary"
+import { useVersionControl } from "@/hooks/useVersionControl"
 
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
@@ -117,6 +119,12 @@ const AIReportEditor: React.FC = () => {
   const accumulatedTextRef = useRef("")
   const { getDetail: getResourceDetail, loadFilteredDetails } = useMetadata("resource")
   const { loadFilteredDetails: loadFormFilteredDetails } = useMetadata("form")
+
+  // 添加版本控制
+  const versionControl = useVersionControl<{
+    analysis: any
+    code: string | null
+  }>()
 
   useEffect(() => {
     const loadData = async () => {
@@ -276,61 +284,94 @@ const AIReportEditor: React.FC = () => {
     },
   }
 
-  const handleCommandResult = useCallback((result) => {
-    console.log("[handleCommandResult] Processing result:", result)
-    if (result.success) {
-      if (result.analysis) {
-        console.log("[handleCommandResult] Analysis result received")
+  const handleCommandResult = useCallback(
+    (result) => {
+      console.log("[handleCommandResult] Processing result:", result)
+      if (result.success) {
+        if (result.analysis) {
+          console.log("[handleCommandResult] Analysis result received")
 
+          // 保存新版本
+          versionControl.addVersion({
+            analysis: result.analysis,
+            code: previewContent,
+          })
+
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1]
+            if (lastMessage.role === "assistant") {
+              const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
+              const match = lastMessage.content.toString().match(regex)
+              const originalCode = match ? match[1].trim() : null
+
+              const messageWithCode = {
+                ...lastMessage,
+                content: (
+                  <div className='flex items-center gap-2 text-success'>
+                    <Icon icon='line-md:check-all' className='w-5 h-5' />
+                    <span>分析完成</span>
+                  </div>
+                ),
+                status: "success",
+                code: {
+                  preview: (
+                    <ErrorBoundary
+                      onReset={() => {
+                        const prevVersion = versionControl.rollback()
+                        if (prevVersion) {
+                          setPreviewContent(prevVersion.code || "")
+                          setPreviewComponent(<AnalysisResult analysis={prevVersion.analysis} />)
+                        }
+                      }}
+                    >
+                      <AnalysisResult analysis={result.analysis} />
+                    </ErrorBoundary>
+                  ),
+                  content: originalCode,
+                },
+              }
+
+              setSelectedTab("analysis")
+              setPreviewComponent(
+                <ErrorBoundary
+                  onReset={() => {
+                    const prevVersion = versionControl.rollback()
+                    if (prevVersion) {
+                      setPreviewContent(prevVersion.code || "")
+                      setPreviewComponent(<AnalysisResult analysis={prevVersion.analysis} />)
+                    }
+                  }}
+                >
+                  <AnalysisResult analysis={result.analysis} />
+                </ErrorBoundary>
+              )
+              console.log("[handleCommandResult] Analysis completed")
+
+              return [...prev.slice(0, -1), messageWithCode]
+            }
+            return prev
+          })
+        }
+      } else {
+        console.log("[handleCommandResult] Error result received")
         setMessages((prev) => {
           const lastMessage = prev[prev.length - 1]
           if (lastMessage.role === "assistant") {
-            const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
-            const match = lastMessage.content.toString().match(regex)
-            const originalCode = match ? match[1].trim() : null
-
-            const messageWithCode = {
-              ...lastMessage,
-              content: (
-                <div className='flex items-center gap-2 text-success'>
-                  <Icon icon='line-md:check-all' className='w-5 h-5' />
-                  <span>分析完成</span>
-                </div>
-              ),
-              status: "success",
-              code: {
-                preview: <AnalysisResult analysis={result.analysis} />,
-                content: originalCode,
+            return [
+              ...prev.slice(0, -1),
+              {
+                ...lastMessage,
+                content: result.message,
+                status: "error",
               },
-            }
-
-            setSelectedTab("analysis")
-            setPreviewComponent(<AnalysisResult analysis={result.analysis} />)
-            console.log("[handleCommandResult] Analysis completed")
-
-            return [...prev.slice(0, -1), messageWithCode]
+            ]
           }
           return prev
         })
       }
-    } else {
-      console.log("[handleCommandResult] Error result received")
-      setMessages((prev) => {
-        const lastMessage = prev[prev.length - 1]
-        if (lastMessage.role === "assistant") {
-          return [
-            ...prev.slice(0, -1),
-            {
-              ...lastMessage,
-              content: result.message,
-              status: "error",
-            },
-          ]
-        }
-        return prev
-      })
-    }
-  }, [])
+    },
+    [previewContent, versionControl]
+  )
 
   const renderDataTable = () => {
     if (!columns.length || !flattenedData.length) {
