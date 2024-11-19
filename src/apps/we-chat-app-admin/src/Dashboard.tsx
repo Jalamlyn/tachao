@@ -1,23 +1,35 @@
-import React, { useEffect } from "react"
-import { Card, CardBody, CardHeader, Button, Chip, Divider } from "@nextui-org/react"
+import React, { useEffect, useState } from "react"
+import { Card, CardBody, CardHeader, Button, Chip, Divider, Input, useDisclosure } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { motion, AnimatePresence } from "framer-motion"
+import { useMetadata } from "@/hooks/metadata"
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
+  const [aiInput, setAiInput] = useState("")
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const { items: forms } = useMetadata("form")
 
   useEffect(() => {
     updateBreadcrumbs([{ label: "首页", href: "/we-chat-app/admin" }])
   }, [])
 
   const stats = [
-    { label: "总表单数", value: "128", icon: "solar:document-text-linear", color: "primary" },
-    { label: "待处理", value: "8", icon: "solar:clock-circle-linear", color: "warning" },
-    { label: "本月新增", value: "32", icon: "solar:chart-2-linear", color: "success" },
-    { label: "已归档", value: "64", icon: "solar:archive-linear", color: "default" },
+    {
+      label: "总表单数",
+      value: forms.length.toString(),
+      icon: "solar:document-text-linear",
+      color: "primary",
+    },
+    {
+      label: "已归档",
+      value: "开发中",
+      icon: "solar:archive-linear",
+      color: "default",
+    },
   ]
 
   const quickActions = [
@@ -33,23 +45,9 @@ const Dashboard: React.FC = () => {
 
   const recentActivities = [
     {
-      title: "销售订单表单已更新",
-      time: "10分钟前",
-      type: "update",
-      user: "张三",
-      avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-    },
-    {
-      title: "新建采购申请表单",
-      time: "30分钟前",
-      type: "create",
-      user: "李四",
-      avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-    },
-    {
-      title: "月度报表已生成",
-      time: "2小时前",
-      type: "report",
+      title: "功能开发中",
+      time: "敬请期待",
+      type: "development",
       user: "系统",
       avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024e",
     },
@@ -57,6 +55,8 @@ const Dashboard: React.FC = () => {
 
   const getActivityIcon = (type: string) => {
     switch (type) {
+      case "development":
+        return "solar:code-square-linear"
       case "update":
         return "solar:pen-new-square-linear"
       case "create":
@@ -68,32 +68,50 @@ const Dashboard: React.FC = () => {
     }
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
+  const handleAIAssistantSubmit = () => {
+    if (aiInput.trim()) {
+      navigate("/we-chat-app/admin/ai-assistant", {
+        state: { initialQuestion: aiInput },
+      })
+    }
   }
 
-  const itemVariants = {
-    hidden: {
-      opacity: 0,
-      y: 20,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 12,
-      },
-    },
-  }
+  const AIAssistantDialog = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 50 }}
+      className='fixed bottom-8 right-8 z-50'
+    >
+      <Card className='w-96 shadow-lg'>
+        <CardHeader className='flex justify-between items-center'>
+          <div className='flex items-center gap-2'>
+            <Icon icon='solar:robot-linear' className='text-2xl text-primary' />
+            <span className='font-semibold'>AI 智能助手</span>
+          </div>
+          <Button isIconOnly size='sm' variant='light' onPress={onClose}>
+            <Icon icon='solar:close-circle-linear' />
+          </Button>
+        </CardHeader>
+        <CardBody>
+          <div className='flex flex-col gap-4'>
+            <p className='text-sm text-default-600'>有什么我可以帮您的吗？</p>
+            <div className='flex gap-2'>
+              <Input
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                placeholder='输入您的问题...'
+                onKeyPress={(e) => e.key === "Enter" && handleAIAssistantSubmit()}
+              />
+              <Button color='primary' onPress={handleAIAssistantSubmit}>
+                <Icon icon='solar:arrow-right-linear' />
+              </Button>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
+    </motion.div>
+  )
 
   return (
     <div className='p-4 space-y-6'>
@@ -118,13 +136,36 @@ const Dashboard: React.FC = () => {
       </Card>
 
       <motion.div
-        variants={containerVariants}
+        variants={{
+          hidden: { opacity: 0 },
+          visible: {
+            opacity: 1,
+            transition: {
+              staggerChildren: 0.1,
+              delayChildren: 0.2,
+            },
+          },
+        }}
         initial='hidden'
         animate='visible'
-        className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'
+        className='grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4'
       >
         {stats.map((stat, index) => (
-          <motion.div key={index} variants={itemVariants}>
+          <motion.div
+            key={index}
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                transition: {
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 12,
+                },
+              },
+            }}
+          >
             <Card className='hover:shadow-lg transition-all duration-300'>
               <CardBody className='flex flex-row items-center gap-4 p-6'>
                 <div className={`p-3 rounded-lg bg-${stat.color}/10`}>
@@ -207,11 +248,11 @@ const Dashboard: React.FC = () => {
                     <div className='relative'>
                       <img src={activity.avatar} alt={activity.user} className='w-10 h-10 rounded-full' />
                       <div
-                        className={`absolute -bottom-1 -right-1 p-1 rounded-full bg-${activity.type === "update" ? "primary" : activity.type === "create" ? "success" : "warning"}/10`}
+                        className={`absolute -bottom-1 -right-1 p-1 rounded-full bg-${activity.type === "development" ? "warning" : activity.type === "update" ? "primary" : activity.type === "create" ? "success" : "warning"}/10`}
                       >
                         <Icon
                           icon={getActivityIcon(activity.type)}
-                          className={`w-4 h-4 text-${activity.type === "update" ? "primary" : activity.type === "create" ? "success" : "warning"}`}
+                          className={`w-4 h-4 text-${activity.type === "development" ? "warning" : activity.type === "update" ? "primary" : activity.type === "create" ? "success" : "warning"}`}
                         />
                       </div>
                     </div>
@@ -222,7 +263,13 @@ const Dashboard: React.FC = () => {
                           size='sm'
                           variant='flat'
                           color={
-                            activity.type === "update" ? "primary" : activity.type === "create" ? "success" : "warning"
+                            activity.type === "development"
+                              ? "warning"
+                              : activity.type === "update"
+                                ? "primary"
+                                : activity.type === "create"
+                                  ? "success"
+                                  : "warning"
                           }
                         >
                           {activity.type}
@@ -241,6 +288,28 @@ const Dashboard: React.FC = () => {
           </Card>
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className='fixed bottom-8 right-8 z-50'
+          >
+            <Button
+              size='lg'
+              color='primary'
+              className='shadow-lg'
+              startContent={<Icon icon='solar:robot-linear' className='text-xl' />}
+              onPress={onOpen}
+            >
+              AI 智能助手
+            </Button>
+          </motion.div>
+        )}
+        {isOpen && <AIAssistantDialog />}
+      </AnimatePresence>
     </div>
   )
 }
