@@ -251,7 +251,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={handleFormSubmit} className={cn(styles["dynamic-form"], "space-y-6 md:space-y-8")}>
+      <form onSubmit={handleFormSubmit} className={cn(styles["dynamic-form"], "space-y-6 md:space-y-8 pb-2")}>
         {/* 表单标题 */}
         <div
           className={cn(styles["form-card"], "flex flex-col md:flex-row md:justify-between md:items-center pb-4 gap-4")}

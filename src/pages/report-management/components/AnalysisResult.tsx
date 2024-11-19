@@ -405,7 +405,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
           </CardHeader>
           <CardContent className='p-6'>
             <div className='space-y-3'>
-              {analysis.insights.map((insight, index) => (
+              {analysis?.insights?.map((insight, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -20 }}

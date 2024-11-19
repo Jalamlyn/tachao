@@ -44,7 +44,6 @@ ${this._rawConfig}
 只返回生成的代码，开头不要解释，结尾不要说明
 生成的代码中不允许使用 import 语句，不引入任何第三方依赖
 processStep 必须在 renderConfig 下
-除了计算字段所有字段 disable 都是 false
 自定义渲染 render 返回的是 jsx 代码,不是字符串
 
 注意：自定义组件只能使用 shadcn UI 组件库中的组件，包括：

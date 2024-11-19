@@ -185,7 +185,7 @@ const AIFormEditor: React.FC = () => {
         setSelectedTab("code")
       }
 
-      if (previewContent && accumulatedTextRef.current.includes("<shata-ai-form>")) {
+      if (previewContent || accumulatedTextRef.current.includes("<shata-ai-form>")) {
         const newContent = accumulatedTextRef.current
         setPreviewContent(newContent)
       }
