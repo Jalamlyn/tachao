@@ -9,10 +9,7 @@ import { useMetadata } from "@/hooks/metadata"
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
-  const [aiInput, setAiInput] = useState("")
-  const { isOpen, onOpen, onClose } = useDisclosure()
   const { items: forms } = useMetadata("form")
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     updateBreadcrumbs([{ label: "首页", href: "/we-chat-app/admin" }])
@@ -69,56 +66,9 @@ const Dashboard: React.FC = () => {
     }
   }
 
-  const handleAIAssistantSubmit = useCallback(() => {
-    if (!aiInput.trim() || isSubmitting) return
-    
-    setIsSubmitting(true)
-    // 使用 navigate 跳转并传递状态
-    navigate("/we-chat-app/admin/ai-assistant", {
-      state: { initialQuestion: aiInput }
-    })
-  }, [aiInput, navigate, isSubmitting])
-
-  const AIAssistantDialog = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 50 }}
-      className='fixed bottom-8 right-8 z-50'
-    >
-      <Card className='w-96 shadow-lg'>
-        <CardHeader className='flex justify-between items-center'>
-          <div className='flex items-center gap-2'>
-            <Icon icon='solar:robot-linear' className='text-2xl text-primary' />
-            <span className='font-semibold'>AI 智能助手</span>
-          </div>
-          <Button isIconOnly size='sm' variant='light' onPress={onClose}>
-            <Icon icon='solar:close-circle-linear' />
-          </Button>
-        </CardHeader>
-        <CardBody>
-          <div className='flex flex-col gap-4'>
-            <p className='text-sm text-default-600'>有什么我可以帮您的吗？</p>
-            <div className='flex gap-2'>
-              <Input
-                value={aiInput}
-                onChange={(e) => setAiInput(e.target.value)}
-                placeholder='输入您的问题...'
-                onKeyPress={(e) => e.key === "Enter" && handleAIAssistantSubmit()}
-              />
-              <Button 
-                color='primary' 
-                onPress={handleAIAssistantSubmit}
-                isDisabled={!aiInput.trim() || isSubmitting}
-              >
-                <Icon icon='solar:arrow-right-linear' />
-              </Button>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
-    </motion.div>
-  )
+  const handleAIAssistantClick = () => {
+    navigate("/we-chat-app/admin/ai-assistant")
+  }
 
   return (
     <div className='p-4 space-y-6'>
@@ -296,27 +246,16 @@ const Dashboard: React.FC = () => {
         </motion.div>
       </div>
 
-      <AnimatePresence>
-        {!isOpen && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className='fixed bottom-8 right-8 z-50'
-          >
-            <Button
-              size='lg'
-              color='primary'
-              className='shadow-lg'
-              startContent={<Icon icon='solar:robot-linear' className='text-xl' />}
-              onPress={onOpen}
-            >
-              AI 智能助手
-            </Button>
-          </motion.div>
-        )}
-        {isOpen && <AIAssistantDialog />}
-      </AnimatePresence>
+      {/* AI Assistant Floating Button */}
+      <Button
+        isIconOnly
+        color="primary"
+        size="lg"
+        className="fixed bottom-8 right-8 shadow-lg z-50 rounded-full w-14 h-14"
+        onPress={handleAIAssistantClick}
+      >
+        <Icon icon="hugeicons:ai-chat-02" className="w-6 h-6" />
+      </Button>
     </div>
   )
 }
