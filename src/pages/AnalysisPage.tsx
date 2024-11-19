@@ -12,14 +12,15 @@ import {
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useLocation } from "react-router-dom"
 import chatMoV2 from "@/service/chat/chat-deepseek"
 import MessageCard from "@/components/MessageCard"
 import mo2 from "../../public/assets/mo-2.png"
 import user from "../../public/assets/user.png"
-import { getMetadata, queryMetadataHistory } from "@/service/apis/api"
 import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadata"
 
 const AnalysisPage: React.FC = () => {
+  const location = useLocation()
   const [context, setContext] = useState("")
   const [messages, setMessages] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -32,6 +33,16 @@ const AnalysisPage: React.FC = () => {
 
   useEffect(() => {
     fetchFormsData()
+    // 如果有初始问题，自动发送
+    const initialQuestion = location.state?.initialQuestion
+    if (initialQuestion) {
+      setInput(initialQuestion)
+      // 等待数据加载完成后自动发送
+      const timer = setTimeout(() => {
+        handleSendMessage(initialQuestion)
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
   }, [])
 
   useEffect(() => {
@@ -41,11 +52,9 @@ const AnalysisPage: React.FC = () => {
   const fetchFormsData = useCallback(async () => {
     setIsInitialLoading(true)
     try {
-      // 使用 fetchForms 获取完整的表单数据
       const forms = await fetchForms()
       setProcessedData(forms)
 
-      // 创建上下文数据
       const contextData = forms.map((form) => JSON.stringify(form)).join("\n")
       setContext(contextData)
 
@@ -66,10 +75,11 @@ const AnalysisPage: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  const handleSendMessage = async () => {
-    if (!input.trim() || isLoading || error) return
+  const handleSendMessage = async (questionText?: string) => {
+    const messageText = questionText || input
+    if (!messageText.trim() || isLoading || error) return
 
-    const userMessage = { role: "user", content: input, id: Date.now().toString() }
+    const userMessage = { role: "user", content: messageText, id: Date.now().toString() }
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsLoading(true)
@@ -82,7 +92,7 @@ const AnalysisPage: React.FC = () => {
         [
           {
             role: "system",
-            content: `你是一个智能查询助手，这是你要查询的表单数据:\n${context}，对于用户的查询，你要言简意赅的回复，尽量直接回复用户结果，不要过多的解释，用户没有要求列出详细数据，就一句话给出直接结果，你只负责帮助用户查询表单数据，其他指令和需求你都一律不接受，礼貌的拒绝用户，如果返回结果包含订单编号，那么就用一个 a 标签包裹，链接地址是“/forms/订单编号” 点击新开一个窗口`,
+            content: `你是一个智能查询助手，这是你要查询的表单数据:\n${context}，对于用户的查询，你要言简意赅的回复，尽量直接回复用户结果，不要过多的解释，用户没有要求列出详细数据，就一句话给出直接结果，你只负责帮助用户查询表单数据，其他指令和需求你都一律不接受，礼貌的拒绝用户，如果返回结果包含订单编号，那么就用一个 a 标签包裹，链接地址是"/forms/订单编号" 点击新开一个窗口`,
           },
           ...messages,
           userMessage,
@@ -185,7 +195,7 @@ const AnalysisPage: React.FC = () => {
             <Button
               color='primary'
               isLoading={isLoading}
-              onClick={handleSendMessage}
+              onClick={() => handleSendMessage()}
               isDisabled={isLoading || isInitialLoading || error !== null}
               className='px-8 h-14'
             >

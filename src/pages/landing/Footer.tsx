@@ -59,7 +59,7 @@ const Footer: React.FC = () => {
           <div>
             <h3 className='text-white font-bold mb-4'>联系方式</h3>
             <ul className='space-y-2'>
-              <li className='text-white/70'>邮箱：shihong@mobenai.com.cn</li>
+              <li className='text-white/70'>邮箱：lxy@shata.vip</li>
               <li className='text-white/70'>电话：13861608848</li>
               <li className='text-white/70'>地址：杭州市临平区</li>
             </ul>

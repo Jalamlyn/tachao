@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useCallback } from "react"
 import { Card, CardBody, CardHeader, Button, Chip, Divider, Input, useDisclosure } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -12,6 +12,7 @@ const Dashboard: React.FC = () => {
   const [aiInput, setAiInput] = useState("")
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { items: forms } = useMetadata("form")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     updateBreadcrumbs([{ label: "首页", href: "/we-chat-app/admin" }])
@@ -68,13 +69,15 @@ const Dashboard: React.FC = () => {
     }
   }
 
-  const handleAIAssistantSubmit = () => {
-    if (aiInput.trim()) {
-      navigate("/we-chat-app/admin/ai-assistant", {
-        state: { initialQuestion: aiInput },
-      })
-    }
-  }
+  const handleAIAssistantSubmit = useCallback(() => {
+    if (!aiInput.trim() || isSubmitting) return
+    
+    setIsSubmitting(true)
+    // 使用 navigate 跳转并传递状态
+    navigate("/we-chat-app/admin/ai-assistant", {
+      state: { initialQuestion: aiInput }
+    })
+  }, [aiInput, navigate, isSubmitting])
 
   const AIAssistantDialog = () => (
     <motion.div
@@ -103,7 +106,11 @@ const Dashboard: React.FC = () => {
                 placeholder='输入您的问题...'
                 onKeyPress={(e) => e.key === "Enter" && handleAIAssistantSubmit()}
               />
-              <Button color='primary' onPress={handleAIAssistantSubmit}>
+              <Button 
+                color='primary' 
+                onPress={handleAIAssistantSubmit}
+                isDisabled={!aiInput.trim() || isSubmitting}
+              >
                 <Icon icon='solar:arrow-right-linear' />
               </Button>
             </div>
