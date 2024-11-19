@@ -6,6 +6,8 @@ import { generateMetadataId, logger } from "./utils"
 import { useMetadataIndex } from "./useMetadataIndex"
 import { useMetadataDetail } from "./useMetadataDetail"
 import { useMetadataHistory } from "./useMetadataHistory"
+import message from "@/components/Message"
+import { Button } from "@nextui-org/react"
 
 interface UseMetadataOptions {
   public?: boolean
@@ -22,9 +24,9 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
   const { getIndexes, saveIndex } = useMetadataIndex(type)
   const { getDetail, saveDetail } = useMetadataDetail<T>(type, { public: options.public })
   const { getHistory } = useMetadataHistory(type)
-  
+
   // ✅ 在顶层调用 Hook 获取 form 索引
-  const { getIndexes: getFormIndexes } = useMetadataIndex('form')
+  const { getIndexes: getFormIndexes } = useMetadataIndex("form")
 
   /**
    * 创建新项目
@@ -169,39 +171,40 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
    * @param templateId 模板ID
    * @returns 返回使用该模板的表单信息
    */
-  const checkTemplateUsage = useCallback(async (templateId: string) => {
-    logger.debug("[useMetadata] Checking template usage", { templateId })
-    try {
-      // ✅ 使用顶层声明的 getFormIndexes
-      const formIndexes = await getFormIndexes()
-      
-      // 筛选使用该模板的表单
-      const formsUsingTemplate = formIndexes.filter(
-        (index) => index.indexFields?.templateId === templateId
-      )
+  const checkTemplateUsage = useCallback(
+    async (templateId: string) => {
+      logger.debug("[useMetadata] Checking template usage", { templateId })
+      try {
+        // ✅ 使用顶层声明的 getFormIndexes
+        const formIndexes = await getFormIndexes()
 
-      if (formsUsingTemplate.length > 0) {
-        return {
-          inUse: true,
-          count: formsUsingTemplate.length,
-          forms: formsUsingTemplate.map(form => ({
-            id: form.id,
-            title: form.title,
-            status: form.status
-          }))
+        // 筛选使用该模板的表单
+        const formsUsingTemplate = formIndexes.filter((index) => index.indexFields?.templateId === templateId)
+
+        if (formsUsingTemplate.length > 0) {
+          return {
+            inUse: true,
+            count: formsUsingTemplate.length,
+            forms: formsUsingTemplate.map((form) => ({
+              id: form.id,
+              title: form.title,
+              status: form.status,
+            })),
+          }
         }
-      }
 
-      return {
-        inUse: false,
-        count: 0,
-        forms: []
+        return {
+          inUse: false,
+          count: 0,
+          forms: [],
+        }
+      } catch (error) {
+        logger.error("[useMetadata] Error checking template usage", error as Error)
+        throw new Error("检查模板使用情况时发生错误")
       }
-    } catch (error) {
-      logger.error("[useMetadata] Error checking template usage", error as Error)
-      throw new Error("检查模板使用情况时发生错误")
-    }
-  }, [getFormIndexes]) // ✅ 添加 getFormIndexes 到依赖数组
+    },
+    [getFormIndexes]
+  )
 
   /**
    * 删除项目
@@ -213,16 +216,25 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
       setError(null)
       try {
         // 如果是模板类型，先检查是否有表单在使用
-        if (type === 'template') {
+        if (type === "template") {
           const usage = await checkTemplateUsage(id)
           if (usage.inUse) {
-            const formList = usage.forms
-              .map((form, index) => `${index + 1}. ${form.title}（${form.status}）`)
-              .join('\n')
-            
-            throw new Error(
-              `无法删除此模板，因为还有 ${usage.count} 个单据正在使用它：\n${formList}\n\n请先删除这些单据后再尝试删除模板。`
+            message.error(
+              <div className='flex flex-col gap-2'>
+                <p>无法删除此模板，因为还有 {usage.count} 个单据正在使用它。</p>
+                <p>请先删除这些单据后再尝试删除模板。</p>
+                <Button
+                  color='primary'
+                  size='sm'
+                  as='a'
+                  href='/we-chat-app/admin/forms?templateId=${id}'
+                  target='_blank'
+                >
+                  <span>查看使用此模板的单据</span>
+                </Button>
+              </div>
             )
+            throw new Error(`无法删除此模板`)
           }
         }
 
