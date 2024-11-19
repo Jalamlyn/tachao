@@ -12,10 +12,12 @@ import ResourceManagement from "@/pages/resource-management"
 import ReportManagement from "@/pages/report-management"
 import AIResourceEditor from "@/pages/resource-management/AIResourceEditor"
 import AIReportEditor from "@/pages/report-management/AIReportEditor"
+import Dashboard from "./src/Dashboard"
 
 export default function renderWeChatApp() {
   return (
     <Route path='/we-chat-app/admin' element={<AdminPage />}>
+      <Route index element={<Dashboard />} />
       <Route path='applications' element={<ApplicationList />} />
       <Route path='applications/:appId' element={<AppDetail />} />
       <Route path='settings' element={<EnterpriseSettings />} />
