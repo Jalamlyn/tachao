@@ -249,12 +249,12 @@ const Dashboard: React.FC = () => {
       {/* AI Assistant Floating Button */}
       <Button
         isIconOnly
-        color="primary"
-        size="lg"
-        className="fixed bottom-8 right-8 shadow-lg z-50 rounded-full w-14 h-14"
+        color='primary'
+        size='lg'
+        className='fixed bottom-8 right-8 shadow-lg z-50 rounded-full w-14 h-14'
         onPress={handleAIAssistantClick}
       >
-        <Icon icon="hugeicons:ai-chat-02" className="w-6 h-6" />
+        <Icon icon='hugeicons:ai-chat-02' className='w-10 h-10' />
       </Button>
     </div>
   )
