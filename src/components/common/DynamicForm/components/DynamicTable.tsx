@@ -16,6 +16,7 @@ import { motion } from "framer-motion"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { formulaService } from "@/services/formulaService"
 import { debounce } from "lodash"
+import styles from "../styles/DynamicForm.module.css"
 
 interface DynamicTableProps {
   config: TableConfig
@@ -83,7 +84,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
   const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
     const cellFieldName = `${fieldName}.${rowIndex}.${column.key}`
-    const isFieldEditable = isEditable && column.editable !== false
+    const isCalculatedField = column.calculate !== undefined
+    const isFieldEditable = isEditable && column.editable !== false && !isCalculatedField
 
     if (column.render) {
       return column.render(form.getValues(cellFieldName), tableData[rowIndex], rowIndex)
@@ -148,7 +150,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                     <FormControl>
                       <Button
                         variant={"outline"}
-                        className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground",
+                          isCalculatedField && styles["calculated-field"]
+                        )}
                         disabled={!isFieldEditable}
                       >
                         {field.value ? format(new Date(field.value), "PPP") : <span>选择日期</span>}
@@ -184,7 +190,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Textarea {...field} disabled={!isFieldEditable} className='min-h-[100px] md:min-h-[60px]' 
+                  <Textarea 
+                    {...field} 
+                    disabled={!isFieldEditable} 
+                    className={cn(
+                      'min-h-[100px] md:min-h-[60px]',
+                      isCalculatedField && styles["calculated-field"]
+                    )}
                     onChange={(e) => {
                       field.onChange(e)
                       debouncedTriggerRowCalculations(rowIndex)
@@ -215,7 +227,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className={cn(isCalculatedField && styles["calculated-field"])}>
                       <SelectValue placeholder={column.placeholder || "请选择"} />
                     </SelectTrigger>
                   </FormControl>
@@ -239,13 +251,18 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             control={form.control}
             name={cellFieldName}
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="relative group">
                 <FormControl>
                   <Input
                     {...field}
                     type='number'
                     disabled={!isFieldEditable}
-                    className='text-right font-mono'
+                    className={cn(
+                      "text-right font-mono",
+                      isCalculatedField && styles["calculated-field"],
+                      "group-hover:bg-blue-100/50"
+                    )}
+                    title={isCalculatedField ? "此字段为计算字段，值由公式自动计算" : undefined}
                     onChange={(e) => {
                       field.onChange(e)
                       form.trigger(cellFieldName)
@@ -253,6 +270,14 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                     }}
                   />
                 </FormControl>
+                {isCalculatedField && (
+                  <div className={cn(
+                    "absolute right-2 top-2",
+                    styles["calculated-field-icon"]
+                  )}>
+                    <Icon icon="mdi:calculator" className="w-4 h-4" />
+                  </div>
+                )}
                 <FormMessage />
               </FormItem>
             )}
@@ -267,7 +292,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input {...field} disabled={!isFieldEditable} 
+                  <Input 
+                    {...field} 
+                    disabled={!isFieldEditable}
+                    className={cn(isCalculatedField && styles["calculated-field"])}
                     onChange={(e) => {
                       field.onChange(e)
                       debouncedTriggerRowCalculations(rowIndex)
@@ -321,6 +349,18 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
   return (
     <div>
+      {/* 新增: 表格图例 */}
+      <div className={styles["table-legend"]}>
+        <div className={styles["legend-item"]}>
+          <div className={cn(styles["legend-color"], styles["legend-color-calculated"])} />
+          <span>计算字段</span>
+        </div>
+        <div className={styles["legend-item"]}>
+          <div className={cn(styles["legend-color"], styles["legend-color-disabled"])} />
+          <span>禁用字段</span>
+        </div>
+      </div>
+
       {config.toolbar}
 
       <div className='hidden md:block overflow-x-auto'>
@@ -329,7 +369,16 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             <TableRow>
               {config.columns.map((column) => (
                 <TableHead key={column.key} style={{ width: column.width }}>
-                  {column.title}
+                  <div className="flex items-center gap-1">
+                    {column.title}
+                    {column.calculate && (
+                      <Icon 
+                        icon="mdi:calculator" 
+                        className={styles["calculated-field-icon"]}
+                        title="计算字段 - 由公式自动计算"
+                      />
+                    )}
+                  </div>
                 </TableHead>
               ))}
               {isEditable && <TableHead>操作</TableHead>}
@@ -381,7 +430,16 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
           >
             {config.columns.map((column) => (
               <div key={column.key} className='space-y-1'>
-                <div className='text-sm font-medium text-gray-500'>{column.title}</div>
+                <div className="flex items-center gap-1 text-sm font-medium text-gray-500">
+                  {column.title}
+                  {column.calculate && (
+                    <Icon 
+                      icon="mdi:calculator" 
+                      className={styles["calculated-field-icon"]}
+                      title="计算字段 - 由公式自动计算"
+                    />
+                  )}
+                </div>
                 <div>{renderCell(column, rowIndex)}</div>
               </div>
             ))}
