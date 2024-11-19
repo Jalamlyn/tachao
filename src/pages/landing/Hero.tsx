@@ -161,7 +161,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           variants={itemVariants}
           className="text-base md:text-xl text-white/70 max-w-2xl mx-auto"
         >
-          自动生成单据和报表，智能分析企业经营数据，
+          自动生成表单和报表，智能分析企业经营数据，
           <br className="hidden md:block" />
           为中小企业提供智能化解决方案
         </motion.p>

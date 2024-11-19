@@ -22,7 +22,7 @@ const FormManager: React.FC = () => {
     loadTemplates()
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
-      { label: "单据管理", href: "/we-chat-app/admin/forms" },
+      { label: "表单管理", href: "/we-chat-app/admin/forms" },
     ])
   }, [])
 
@@ -184,13 +184,13 @@ const FormManager: React.FC = () => {
     <>
       <Button onClick={handleCreateDocument} color='primary'>
         <Icon icon='mdi:file-document-plus' className='w-4 h-4 mr-2' />
-        创建单据
+        创建表单
       </Button>
     </>
   )
 
   return (
-    <PageLayout title='单据管理' titleIcon='mdi:file-document' actions={pageActions}>
+    <PageLayout title='表单管理' titleIcon='mdi:file-document' actions={pageActions}>
       <MetadataTable
         type='form'
         columns={columns}
@@ -199,7 +199,7 @@ const FormManager: React.FC = () => {
           showSearch: true,
           showRefresh: true,
           searchProps: {
-            placeholder: "搜索单据标题、模板名称或订单号...",
+            placeholder: "搜索表单标题、模板名称或订单号...",
             fields: ["title", "template.title", "indexFields.orderNumber"],
           },
         }}
@@ -208,7 +208,7 @@ const FormManager: React.FC = () => {
 
       <Modal isOpen={isCreateModalOpen} onClose={handleModalClose} size='2xl'>
         <ModalContent>
-          <ModalHeader>选择单据模板</ModalHeader>
+          <ModalHeader>选择表单模板</ModalHeader>
           <ModalBody>
             <div className='grid grid-cols-3 gap-4'>
               {templates?.map((template) => (

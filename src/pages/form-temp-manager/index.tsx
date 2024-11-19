@@ -14,7 +14,7 @@ const FormManager: React.FC = () => {
   useEffect(() => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
-      { label: "单据模板管理", href: "/we-chat-app/admin/documents" },
+      { label: "表单模板管理", href: "/we-chat-app/admin/documents" },
     ])
   }, [])
 
@@ -29,12 +29,12 @@ const FormManager: React.FC = () => {
   const pageActions = (
     <Button onClick={handleCreateTemplate} color='primary'>
       <Icon icon='mdi:plus' className='w-4 h-4 mr-2' />
-      生成单据模板
+      生成表单模板
     </Button>
   )
 
   return (
-    <PageLayout title='单据模板管理' titleIcon='mdi:form-select' actions={pageActions}>
+    <PageLayout title='表单模板管理' titleIcon='mdi:form-select' actions={pageActions}>
       <TemplateGallery onTemplateSelect={handleTemplateSelect} className='transition-all duration-300' />
     </PageLayout>
   )

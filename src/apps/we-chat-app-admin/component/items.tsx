@@ -5,13 +5,13 @@ export const items: SidebarItem[] = [
     key: "documents",
     href: "/we-chat-app/admin/documents",
     icon: "solar:document-outline",
-    title: "单据模板管理",
+    title: "表单模板管理",
   },
   {
     key: "forms",
     href: "/we-chat-app/admin/forms",
     icon: "solar:document-text-line-duotone",
-    title: "单据管理",
+    title: "表单管理",
   },
   {
     key: "reports",

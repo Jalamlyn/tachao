@@ -9,7 +9,7 @@ const features = [
   {
     icon: "hugeicons:ai-chat-02",
     title: "AI 智能生成",
-    description: "自动生成标准化单据和报表，减少人工错误",
+    description: "自动生成标准化表单和报表，减少人工错误",
     details: ["智能识别数据", "自动填充字段", "格式标准化", "实时校验"],
     color: "from-cyan-500/90 to-blue-600/90",
     shadowColor: "shadow-blue-500/20",

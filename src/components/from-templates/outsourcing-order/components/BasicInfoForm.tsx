@@ -156,7 +156,7 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({ form, isEditable }) => {
 
               {isEditable && (
                 <ResourceSelectButton
-                  resourceName='银隆加工单位资料表'
+                  resourceName='银隆加工单位表格表'
                   appId=''
                   selectionMode='single'
                   onSelect={handleSelectManufacturer}

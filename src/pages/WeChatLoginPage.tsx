@@ -137,7 +137,7 @@ export default function WeChatLoginPage() {
                   transition={{ duration: 1 }}
                   className='text-lg mb-6 drop-shadow'
                 >
-                  模本科技，智能统计单据
+                  模本科技，智能统计表单
                 </motion.p>
               </motion.div>
 

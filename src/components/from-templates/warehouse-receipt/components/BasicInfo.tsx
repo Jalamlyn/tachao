@@ -156,7 +156,7 @@ const BasicInfo: React.FC<BasicInfoProps> = ({ form, isEditable }) => {
             name="data.basicInfo.sourceDocument"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>来源单据</FormLabel>
+                <FormLabel>来源表单</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -164,7 +164,7 @@ const BasicInfo: React.FC<BasicInfoProps> = ({ form, isEditable }) => {
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="选择来源单据" />
+                      <SelectValue placeholder="选择来源表单" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -183,7 +183,7 @@ const BasicInfo: React.FC<BasicInfoProps> = ({ form, isEditable }) => {
             name="data.basicInfo.sourceDocumentNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>来源单据号</FormLabel>
+                <FormLabel>来源表单号</FormLabel>
                 <FormControl>
                   <Input {...field} disabled={!isEditable} />
                 </FormControl>

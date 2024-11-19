@@ -47,7 +47,7 @@ export const getWxUserInfo = async (appId: string, code: string): Promise<WxUser
   aiLog.log('开始获取微信用户信息', { appId, code })
   
   try {
-    const res = await apiService.get('/wx/mp/web/user-infos', {
+    const res = await apiService.get('/external/wx/mp/web/user-infos', {
       params: {
         appid: appId,
         code: code

@@ -44,7 +44,7 @@ const FormAnalysis: React.FC = () => {
 
   const { isLoading, handleClick: handleSendMessage } = useAsyncButton(
     async () => {
-      if (formsRef.current?.length === 0) return message.error("数据为空，请先创建单据，不然 AI 无法为您工作")
+      if (formsRef.current?.length === 0) return message.error("数据为空，请先创建表单，不然 AI 无法为您工作")
       if (!input.trim()) return
 
       const userMessage = {
@@ -81,10 +81,10 @@ const FormAnalysis: React.FC = () => {
 5. 严格限制：只能回答数据集内的问题，拒绝回答超出范围的问题
 
 注意事项：
-- 所有单据都是系统自动生成的编号，不需要考虑编号的合理性
+- 所有表单都是系统自动生成的编号，不需要考虑编号的合理性
 - 如果涉及金额，保留两位小数
 - 如果涉及日期，使用标准格式
-- 输出单据编号，订单号的时候，使用 <a target="_blank" href="/form/这里是单据编号">单据编号</a> 格式
+- 输出表单编号，订单号的时候，使用 <a target="_blank" href="/form/这里是表单编号">表单编号</a> 格式
 - 如果数据不存在或查询条件不明确，要明确告知用户
 - 如果用户询问的内容超出数据范围，要礼貌拒绝并说明原因
 
@@ -170,7 +170,7 @@ const FormAnalysis: React.FC = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder='输入分析指令，例如: "统计所有单据的状态分布"'
+              placeholder='输入分析指令，例如: "统计所有表单的状态分布"'
               className='flex-grow'
               classNames={{
                 input: "py-2 text-medium",

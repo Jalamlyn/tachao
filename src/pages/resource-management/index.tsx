@@ -42,7 +42,7 @@ const ResourceManagement: React.FC = () => {
   const columns = [
     {
       key: "title",
-      title: "资料名称",
+      title: "表格名称",
       render: (record: Resource) => (
         <div className='flex items-center gap-2'>
           <Icon icon='mdi:file-excel' className='w-5 h-5 text-success' style={{ opacity: 0.8 }} />
@@ -85,7 +85,7 @@ const ResourceManagement: React.FC = () => {
           showSearch: true,
           showRefresh: true,
           searchProps: {
-            placeholder: "搜索资料名称或文件名...",
+            placeholder: "搜索表格名称或文件名...",
             fields: ["title", "indexFields.fileName"],
           },
         }}

@@ -99,11 +99,11 @@ const ResourceCardList: React.FC<ResourceCardListProps> = ({
   const getResourceTypeLabel = () => {
     switch (resourceType) {
       case "forms":
-        return "单据"
+        return "表单"
       case "reports":
         return "报表"
       case "resources":
-        return "资料"
+        return "表格"
       default:
         return "资源"
     }

@@ -15,7 +15,7 @@ const benefits = [
   {
     icon: "mdi:clock-fast",
     title: "效率提升",
-    description: "自动生成单据和报表，节省 75% 工作时间",
+    description: "自动生成表单和报表，节省 75% 工作时间",
     color: "from-green-500/90 to-green-600/90",
     shadowColor: "shadow-green-500/20",
   },

@@ -84,7 +84,7 @@ const OrderStatus: React.FC<OrderStatusProps> = ({ form, isEditable }) => {
     <Card>
       <CardContent>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">单据状态</h3>
+          <h3 className="text-lg font-semibold">表单状态</h3>
           <Badge variant={statusInfo.color} className="gap-1">
             <Icon icon={statusInfo.icon} className="w-4 h-4" />
             {statusInfo.label}

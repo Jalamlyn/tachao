@@ -13,7 +13,7 @@ const OrderStatusComponent: React.FC<OrderStatusComponentProps> = ({ form, isEdi
   return (
     <Card>
       <CardContent>
-        <h3 className='text-lg font-semibold mb-4'>单据状态</h3>
+        <h3 className='text-lg font-semibold mb-4'>表单状态</h3>
         <FormField
           control={form.control}
           name='status'
@@ -22,7 +22,7 @@ const OrderStatusComponent: React.FC<OrderStatusComponentProps> = ({ form, isEdi
               <FormControl>
                 <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!isEditable}>
                   <SelectTrigger>
-                    <SelectValue placeholder='选择单据状态' />
+                    <SelectValue placeholder='选择表单状态' />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value='pending_approval'>待审批</SelectItem>

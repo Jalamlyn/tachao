@@ -26,7 +26,7 @@ const TabsContainer: React.FC<TabsContainerProps> = ({ activeTab, onTabChange, c
         title={
           <div className='flex items-center space-x-1 sm:space-x-2'>
             <Icon icon='mdi:form-select' className='w-4 h-4 sm:w-5 sm:h-5' />
-            <span>单据</span>
+            <span>表单</span>
           </div>
         }
       >
@@ -48,7 +48,7 @@ const TabsContainer: React.FC<TabsContainerProps> = ({ activeTab, onTabChange, c
         title={
           <div className='flex items-center space-x-1 sm:space-x-2'>
             <Icon icon='mdi:database' className='w-4 h-4 sm:w-5 sm:h-5' />
-            <span>资料</span>
+            <span>表格</span>
           </div>
         }
       >

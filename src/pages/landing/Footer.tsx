@@ -19,7 +19,7 @@ const Footer: React.FC = () => {
             <ul className='space-y-2'>
               <li>
                 <Link href='#' className='text-white/70 hover:text-white'>
-                  智能单据
+                  智能表单
                 </Link>
               </li>
               <li>

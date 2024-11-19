@@ -1,5 +1,5 @@
 import React, { useEffect } from "react"
-import { Breadcrumbs, BreadcrumbItem, Tabs, Tab } from "@nextui-org/react"
+import { Tabs, Tab } from "@nextui-org/react"
 import DocumentContent from "./DocumentContent"
 import TableContent from "./TableContent"
 import ReportContent from "./ReportContent"
@@ -27,7 +27,7 @@ const AppDetail: React.FC = () => {
           title={
             <div className='flex items-center space-x-2'>
               <Icon icon='mdi:file-document-outline' width='20' height='20' />
-              <span>单据</span>
+              <span>表单</span>
             </div>
           }
         >

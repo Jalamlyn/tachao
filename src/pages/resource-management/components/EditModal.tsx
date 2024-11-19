@@ -62,13 +62,13 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, resource, onSave
     <Modal isOpen={isOpen} onClose={onClose} size="2xl">
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
-          编辑资料
+          编辑表格
         </ModalHeader>
         <ModalBody>
           <div className="space-y-4">
             <Input
-              label="资料名称"
-              placeholder="请输入资料名称"
+              label="表格名称"
+              placeholder="请输入表格名称"
               value={name}
               onChange={(e) => setName(e.target.value)}
               variant="bordered"
@@ -77,8 +77,8 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, resource, onSave
               }
             />
             <Textarea
-              label="资料描述"
-              placeholder="请输入资料描述"
+              label="表格描述"
+              placeholder="请输入表格描述"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               variant="bordered"

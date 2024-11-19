@@ -4,7 +4,7 @@ import { Card } from "@nextui-org/react"
 
 const stats = [
   { number: "1000+", label: "企业客户" },
-  { number: "100万+", label: "生成单据" },
+  { number: "100万+", label: "生成表单" },
   { number: "98%", label: "准确率" },
   { number: "75%", label: "效率提升" },
 ]

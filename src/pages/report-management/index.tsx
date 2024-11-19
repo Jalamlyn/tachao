@@ -107,8 +107,8 @@ const ReportManagement: React.FC = () => {
           <ModalHeader className="flex flex-col gap-1">选择数据源</ModalHeader>
           <ModalBody>
             <Select
-              label="选择单据类型"
-              placeholder="请选择单据类型"
+              label="选择表单类型"
+              placeholder="请选择表单类型"
               selectedKeys={selectedTemplate ? [selectedTemplate] : []}
               onChange={(e) => handleTemplateSelect(e.target.value)}
             >

@@ -55,10 +55,10 @@ export class AIResourceAgent {
 
   private generateSystemPrompt(data: any[]): string {
     console.log("[AIResourceAgent] Generating system prompt")
-    const basePrompt = `你是一个智能资料分析助手，负责帮助用户对资料进行分析。
+    const basePrompt = `你是一个智能表格分析助手，负责帮助用户对表格进行分析。
 请仔细分析用户的需求，生成相应的分析代码。
 
-资料数据示例:
+表格数据示例:
 ${JSON.stringify(data.slice(0, 3), null, 2)}
 
 数据总行数: ${data.length}`

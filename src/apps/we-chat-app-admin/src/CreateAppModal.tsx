@@ -66,7 +66,7 @@ const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose, onCrea
           </motion.div>
           <h3 className="text-lg font-semibold mb-2">还没有可用的模板</h3>
           <p className="text-sm text-default-500 mb-6">
-            创建您的第一个单据模板，开始使用强大的单据管理功能
+            创建您的第一个表单模板，开始使用强大的表单管理功能
           </p>
           <Button
             color="primary"
@@ -74,7 +74,7 @@ const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose, onCrea
             onClick={handleCreateTemplate}
             size="lg"
           >
-            创建单据模板
+            创建表单模板
           </Button>
         </div>
       </Card>

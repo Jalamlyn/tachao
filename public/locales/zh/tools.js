@@ -1,6 +1,6 @@
 export default {
   customize_project_style: "自定义项目风格",
-  profile_and_actions: "个人资料和操作",
+  profile_and_actions: "个人表格和操作",
   edit_profile: "修改个人信息",
   help_and_feedback: "帮助和反馈",
   save_chat_history: "保存聊天记录",

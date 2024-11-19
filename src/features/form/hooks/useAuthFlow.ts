@@ -143,3 +143,6 @@ export const useAuthFlow = () => {
     handleWecomAuth,
   };
 };
+
+
+https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxd792f04d6c8ca1be&redirect_uri=https://www.mobenai.com.cn/&response_type=code&scope=snsapi_base&state=STATE#wechat_redirect

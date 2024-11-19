@@ -9,10 +9,10 @@ const DocumentContent: React.FC = () => {
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">单据内容</h2>
-        <Button color="primary" onClick={handleCreateDocument}>创建单据</Button>
+        <h2 className="text-xl font-semibold">表单内容</h2>
+        <Button color="primary" onClick={handleCreateDocument}>创建表单</Button>
       </div>
-      <p>这里是单据内容的列表或详细信息。</p>
+      <p>这里是表单内容的列表或详细信息。</p>
     </div>
   );
 };

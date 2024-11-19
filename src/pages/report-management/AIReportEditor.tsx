@@ -162,7 +162,7 @@ const AIReportEditor: React.FC = () => {
               })
             }
           } else {
-            message.error("资料加载失败")
+            message.error("表格加载失败")
             navigate("/we-chat-app/admin/resources")
           }
         }

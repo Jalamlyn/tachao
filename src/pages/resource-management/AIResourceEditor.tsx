@@ -70,12 +70,12 @@ const AIResourceEditor: React.FC = () => {
               setColumns(cols)
             }
           } else {
-            message.error("资料加载失败")
+            message.error("表格加载失败")
             navigate("/we-chat-app/admin/resources")
           }
         } catch (error) {
           console.error("Error loading resource:", error)
-          message.error("资料加载失败")
+          message.error("表格加载失败")
           navigate("/we-chat-app/admin/resources")
         }
       }
@@ -86,7 +86,7 @@ const AIResourceEditor: React.FC = () => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "表格管理", href: "/we-chat-app/admin/resources" },
-      { label: "AI 资料助手", href: `/we-chat-app/admin/resources/ai/${resourceId}` },
+      { label: "AI 表格助手", href: `/we-chat-app/admin/resources/ai/${resourceId}` },
     ])
   }, [resourceId])
 
@@ -293,7 +293,7 @@ const AIResourceEditor: React.FC = () => {
   }
 
   return (
-    <PageLayout title='AI 资料助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
+    <PageLayout title='AI 表格助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
       <div className='h-[calc(100vh-140px)] overflow-hidden'>
         <ResizablePanelGroup direction='horizontal' className='h-full p-2'>
           <ResizablePanel defaultSize={30} className='resizable-panel'>

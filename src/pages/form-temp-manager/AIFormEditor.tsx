@@ -67,9 +67,9 @@ const AIFormEditor: React.FC = () => {
 
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
-      { label: "单据模板管理", href: "/we-chat-app/admin/documents" },
+      { label: "表单模板管理", href: "/we-chat-app/admin/documents" },
       {
-        label: isEditMode ? "编辑单据模板" : "创建单据模板",
+        label: isEditMode ? "编辑表单模板" : "创建表单模板",
         href: isEditMode ? `/we-chat-app/admin/documents/edit/${templateId}` : "/we-chat-app/admin/documents/create",
       },
     ])
@@ -272,12 +272,12 @@ const AIFormEditor: React.FC = () => {
       isLoading={isSaving}
       startContent={<Icon icon='mdi:content-save' className='w-4 h-4 mr-2' />}
     >
-      {isEditMode ? "更新单据模板" : "保存单据模板"}
+      {isEditMode ? "更新表单模板" : "保存表单模板"}
     </Button>
   )
 
   return (
-    <PageLayout title='AI 智能单据助手' titleIcon='mdi:form-select' actions={pageActions}>
+    <PageLayout title='AI 智能表单助手' titleIcon='mdi:form-select' actions={pageActions}>
       <div className='h-[calc(100vh-140px)] overflow-hidden'>
         <ResizablePanelGroup direction='horizontal' className='h-full'>
           <ResizablePanel defaultSize={30}>
@@ -347,22 +347,22 @@ const AIFormEditor: React.FC = () => {
           </ModalHeader>
           <ModalBody>
             <div className='space-y-4'>
-              <p className='text-gray-600'>恭喜！您的单据模板已经{isEditMode ? "更新" : "保存"}成功。现在您可以：</p>
+              <p className='text-gray-600'>恭喜！您的表单模板已经{isEditMode ? "更新" : "保存"}成功。现在您可以：</p>
               <div className='flex flex-col gap-2'>
                 <div className='p-4 border rounded-lg bg-gray-50'>
-                  <h3 className='font-medium mb-2'>创建新单据</h3>
-                  <p className='text-sm text-gray-500 mb-4'>使用这个模板立即创建一个新的单据，开始记录您的业务数据。</p>
+                  <h3 className='font-medium mb-2'>创建新表单</h3>
+                  <p className='text-sm text-gray-500 mb-4'>使用这个模板立即创建一个新的表单，开始记录您的业务数据。</p>
                   <Button
                     color='primary'
                     onClick={handleCreateDocument}
                     startContent={<Icon icon='mdi:file-document-plus' className='w-4 h-4' />}
                   >
-                    创建单据
+                    创建表单
                   </Button>
                 </div>
                 <div className='p-4 border rounded-lg'>
                   <h3 className='font-medium mb-2'>返回模板管理</h3>
-                  <p className='text-sm text-gray-500 mb-4'>返回模板列表查看或管理您的所有单据模板。</p>
+                  <p className='text-sm text-gray-500 mb-4'>返回模板列表查看或管理您的所有表单模板。</p>
                   <Button
                     variant='bordered'
                     onClick={handleGoToTemplates}

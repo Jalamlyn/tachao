@@ -149,7 +149,7 @@ const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
                   </div>
                   {isEditable && (
                     <ResourceSelectButton
-                      resourceName='银隆服务项目资料表'
+                      resourceName='银隆服务项目表格表'
                       appId=''
                       onSelect={(services) => handleSelectServices(services, index)}
                       buttonText='选择'

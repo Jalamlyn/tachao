@@ -71,8 +71,8 @@ const CreateFormRenderer: React.FC = () => {
     >
       <div className="flex justify-between items-center mb-4">
         <Select
-          label="选择单据模板"
-          placeholder="请选择单据模板"
+          label="选择表单模板"
+          placeholder="请选择表单模板"
           className="flex-1 mr-4"
           onChange={(e) => handleTemplateChange(e.target.value)}
           selectedKeys={selectedTemplateId ? [selectedTemplateId] : []}
