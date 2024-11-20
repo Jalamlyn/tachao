@@ -79,13 +79,8 @@ const EmptyState = ({ onCreateTemplate }: { onCreateTemplate: () => void }) => (
     <p className='text-default-500 mb-8 text-center max-w-md'>
       创建你的第一个表单模板，AI 助手会帮助你快速生成专业的表单
     </p>
-    <Button
-      color='primary'
-      size='lg'
-      onClick={onCreateTemplate}
-      startContent={<Icon icon='mdi:plus' className='w-5 h-5' />}
-    >
-      生成表单模板
+    <Button color='secondary' size='lg' onClick={onCreateTemplate}>
+      去创建
     </Button>
   </motion.div>
 )
@@ -129,7 +124,7 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
       }
       return []
     },
-    suspense: true,
+    suspense: false,
   })
 
   // 使用 React Query 的 mutation 来删除模板

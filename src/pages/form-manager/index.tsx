@@ -1,6 +1,16 @@
 import React, { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Chip, Tooltip, Spinner } from "@nextui-org/react"
+import {
+  Button,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Chip,
+  Tooltip,
+  Spinner,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { MetadataTable } from "@/components/metadata-table"
 import { Column, Action } from "@/components/metadata-table/types"
@@ -13,25 +23,25 @@ import { ErrorBoundary } from "react-error-boundary"
 
 // 错误回退组件
 const ErrorFallback = ({ error, resetErrorBoundary }) => (
-  <div className="flex flex-col items-center justify-center p-4">
-    <p className="text-danger mb-4">加载失败: {error.message}</p>
-    <Button color="primary" onClick={resetErrorBoundary}>
+  <div className='flex flex-col items-center justify-center p-4'>
+    <p className='text-danger mb-4'>加载失败: {error.message}</p>
+    <Button color='primary' onClick={resetErrorBoundary}>
       重试
     </Button>
   </div>
 )
 
 // 模板选择模态框组件
-const TemplateSelectModal = ({ 
-  isOpen, 
-  onClose, 
-  templates = [], 
-  onSelect 
-}: { 
+const TemplateSelectModal = ({
+  isOpen,
+  onClose,
+  templates = [],
+  onSelect,
+}: {
   isOpen: boolean
   onClose: () => void
   templates: MetadataDetail[]
-  onSelect: (templateId: string) => void 
+  onSelect: (templateId: string) => void
 }) => {
   const [selectedId, setSelectedId] = React.useState("")
 
@@ -48,11 +58,11 @@ const TemplateSelectModal = ({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+    <Modal isOpen={isOpen} onClose={onClose} size='2xl'>
       <ModalContent>
         <ModalHeader>选择表单模板</ModalHeader>
         <ModalBody>
-          <div className="grid grid-cols-3 gap-4">
+          <div className='grid grid-cols-3 gap-4'>
             {templates?.map((template) => (
               <div
                 key={template.id}
@@ -62,19 +72,19 @@ const TemplateSelectModal = ({
                 }`}
                 onClick={() => handleTemplateClick(template.id)}
               >
-                <div className="flex items-center gap-2">
-                  <Icon icon="mdi:file-document-outline" className="w-5 h-5" />
-                  <span className="font-medium truncate">{template.title}</span>
+                <div className='flex items-center gap-2'>
+                  <Icon icon='mdi:file-document-outline' className='w-5 h-5' />
+                  <span className='font-medium truncate'>{template.title}</span>
                 </div>
               </div>
             ))}
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button color="danger" variant="light" onClick={onClose}>
+          <Button color='danger' variant='light' onClick={onClose}>
             取消
           </Button>
-          <Button color="primary" onClick={handleConfirm}>
+          <Button color='primary' onClick={handleConfirm}>
             确认
           </Button>
         </ModalFooter>
@@ -90,9 +100,8 @@ const FormManager: React.FC = () => {
 
   // 使用 React Query hooks
   const { items: templates } = useQueryMetadata("template", {
-    suspense: true,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 30 * 60 * 1000,
+    staleTime: 5 * 1000,
+    cacheTime: 30 * 1000,
   })
 
   useEffect(() => {
@@ -159,9 +168,9 @@ const FormManager: React.FC = () => {
       title: "模板",
       render: (record) => (
         <Tooltip content={`模板ID: ${record.template?.id}`}>
-          <div className="flex items-center gap-2">
+          <div className='flex items-center gap-2'>
             <span>{record.template?.title}</span>
-            <Chip size="sm" variant="flat" className="capitalize">
+            <Chip size='sm' variant='flat' className='capitalize'>
               {record.template?.type}
             </Chip>
           </div>
@@ -172,7 +181,7 @@ const FormManager: React.FC = () => {
       key: "status",
       title: "状态",
       render: (record) => (
-        <Chip color={getStatusColor(record.status)} variant="flat" className="capitalize">
+        <Chip color={getStatusColor(record.status)} variant='flat' className='capitalize'>
           {getStatusText(record.status)}
         </Chip>
       ),
@@ -181,9 +190,9 @@ const FormManager: React.FC = () => {
       key: "date",
       title: "时间",
       render: (record) => (
-        <div className="flex flex-col">
-          <span className="text-tiny text-default-500">创建: {formatDate(record.indexFields?.createdAt)}</span>
-          <span className="text-tiny text-default-400">更新: {formatDate(record.updatedAt)}</span>
+        <div className='flex flex-col'>
+          <span className='text-tiny text-default-500'>创建: {formatDate(record.indexFields?.createdAt)}</span>
+          <span className='text-tiny text-default-400'>更新: {formatDate(record.updatedAt)}</span>
         </div>
       ),
     },
@@ -217,53 +226,52 @@ const FormManager: React.FC = () => {
 
   const pageActions = (
     <>
-      <Button onClick={handleCreateDocument} color="primary">
-        <Icon icon="mdi:file-document-plus" className="w-4 h-4 mr-2" />
+      <Button onClick={handleCreateDocument} color='primary'>
+        <Icon icon='mdi:file-document-plus' className='w-4 h-4 mr-2' />
         创建表单
       </Button>
     </>
   )
 
   return (
-    <ErrorBoundary
-      FallbackComponent={ErrorFallback}
-      onReset={() => {
-        // 重置错误状态
-        window.location.reload()
-      }}
-    >
-      <React.Suspense
-        fallback={
-          <div className="flex items-center justify-center h-screen">
-            <Spinner size="lg" />
-          </div>
-        }
+    <PageLayout title='表单管理' titleIcon='mdi:file-document' actions={pageActions}>
+      <MetadataTable
+        type='form'
+        columns={columns}
+        actions={actions}
+        toolbar={{
+          showSearch: true,
+          showRefresh: true,
+          searchProps: {
+            placeholder: "搜索表单标题、模板名称或订单号...",
+            fields: ["title", "template.title", "indexFields.orderNumber"],
+          },
+        }}
+        onError={(error) => message.error(error.message)}
+      />
+      <ErrorBoundary
+        FallbackComponent={ErrorFallback}
+        onReset={() => {
+          // 重置错误状态
+          window.location.reload()
+        }}
       >
-        <PageLayout title="表单管理" titleIcon="mdi:file-document" actions={pageActions}>
-          <MetadataTable
-            type="form"
-            columns={columns}
-            actions={actions}
-            toolbar={{
-              showSearch: true,
-              showRefresh: true,
-              searchProps: {
-                placeholder: "搜索表单标题、模板名称或订单号...",
-                fields: ["title", "template.title", "indexFields.orderNumber"],
-              },
-            }}
-            onError={(error) => message.error(error.message)}
-          />
-
+        <React.Suspense
+          fallback={
+            <div className='flex items-center justify-center h-screen'>
+              <Spinner size='lg' />
+            </div>
+          }
+        >
           <TemplateSelectModal
             isOpen={isCreateModalOpen}
             onClose={() => setIsCreateModalOpen(false)}
             templates={templates}
             onSelect={handleTemplateSelect}
           />
-        </PageLayout>
-      </React.Suspense>
-    </ErrorBoundary>
+        </React.Suspense>
+      </ErrorBoundary>
+    </PageLayout>
   )
 }
 

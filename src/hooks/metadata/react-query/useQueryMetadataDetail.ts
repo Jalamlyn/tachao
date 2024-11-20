@@ -60,7 +60,7 @@ export function useQueryMetadataDetail<T = any>(
     },
     staleTime: options.staleTime ?? 5 * 1000,
     cacheTime: options.cacheTime ?? 30 * 1000,
-    suspense: options.suspense ?? true,
+    suspense: options.suspense ?? false,
   })
 
   // 修改 Hook

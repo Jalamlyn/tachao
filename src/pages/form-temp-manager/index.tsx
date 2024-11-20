@@ -28,7 +28,7 @@ const FormManager: React.FC = () => {
 
   const pageActions = (
     <Button onClick={handleCreateTemplate} color='primary'>
-      <Icon icon='mdi:plus' className='w-4 h-4 mr-2' />
+      <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4 mr-2' />
       生成表单模板
     </Button>
   )

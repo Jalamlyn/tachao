@@ -119,7 +119,7 @@ export function useQueryMetadataDetail<T = any>(
 
       return Array.isArray(id) ? details : details[0] || null
     },
-    suspense: true, // 启用 Suspense 模式
+    suspense: false, // 启用 Suspense 模式
   })
 
   // 修改 hook

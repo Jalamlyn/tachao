@@ -35,9 +35,9 @@ export function useQueryMetadataHistory(
         throw error
       }
     },
-    staleTime: options.staleTime ?? 5 * 60 * 1000, // 默认5分钟
-    cacheTime: options.cacheTime ?? 30 * 60 * 1000, // 默认30分钟
-    suspense: options.suspense,
+    staleTime: options.staleTime ?? 5 * 1000,
+    cacheTime: options.cacheTime ?? 30 * 1000,
+    suspense: options.suspense ?? false,
   })
 
   return {
