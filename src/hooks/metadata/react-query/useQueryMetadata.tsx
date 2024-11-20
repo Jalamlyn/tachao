@@ -3,12 +3,12 @@ import { useTransition } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { deleteMetadata } from "@/service/apis/api"
 import { getCurrentAccountInfo } from "@/service/apis/user"
-import { MetadataDetail, MetadataIndex } from "../types"
-import { generateMetadataId, logger } from "../utils"
-import { useQueryMetadataIndex } from "./useQueryMetadataIndex"
-import { useQueryMetadataDetail } from "./useQueryMetadataDetail"
-import { useQueryMetadataHistory } from "./useQueryMetadataHistory"
-import { QueryMetadataOptions } from "./types"
+import { MetadataDetail, MetadataIndex } from "@/hooks/metadata/types"
+import { generateMetadataId, logger } from "@/hooks/metadata/utils"
+import { useQueryMetadataIndex } from "@/hooks/metadata/react-query/useQueryMetadataIndex"
+import { useQueryMetadataDetail } from "@/hooks/metadata/react-query/useQueryMetadataDetail"
+import { useQueryMetadataHistory } from "@/hooks/metadata/react-query/useQueryMetadataHistory"
+import { QueryMetadataOptions } from "@/hooks/metadata/react-query/types"
 import message from "@/components/Message"
 import { Button } from "@nextui-org/react"
 
@@ -21,11 +21,75 @@ export function useQueryMetadata<T = any>(type: string, options: QueryMetadataOp
   const queryClient = useQueryClient()
 
   const { data: indexes = [], saveIndex } = useQueryMetadataIndex(type, options)
-  const { data: detail, saveDetail } = useQueryMetadataDetail<T>(type, "", options)
-  const { data: history } = useQueryMetadataHistory(type, "", options)
+  const { getHistory } = useQueryMetadataHistory(type, "", options)
 
   // ✅ 在顶层调用 Hook 获取 form 索引
   const { data: formIndexes = [] } = useQueryMetadataIndex("form", options)
+
+  /**
+   * 获取详情数据
+   */
+  const getDetail = useCallback(async (ids: string | string[]) => {
+    const idArray = Array.isArray(ids) ? ids : [ids]
+    logger.debug("[useQueryMetadata] Getting details", { type, ids: idArray })
+    
+    try {
+      const { data } = await queryClient.fetchQuery({
+        queryKey: [`metadata-detail-${type}`, idArray],
+        queryFn: () => useQueryMetadataDetail(type, idArray, options).data
+      })
+      return Array.isArray(ids) ? data : data[0]
+    } catch (error) {
+      logger.error(`[useQueryMetadata] Error getting ${type} details`, error as Error)
+      throw error
+    }
+  }, [type, queryClient, options])
+
+  /**
+   * 加载列表
+   */
+  const load = useCallback(async () => {
+    logger.debug("[useQueryMetadata] Loading list", { type })
+    try {
+      const indexes = await queryClient.fetchQuery({
+        queryKey: [`metadata-index-${type}`]
+      })
+      return indexes
+    } catch (error) {
+      logger.error(`[useQueryMetadata] Error loading ${type} list`, error as Error)
+      throw error
+    }
+  }, [type, queryClient])
+
+  /**
+   * 加载列表(包含详情)
+   */
+  const loadWithDetails = useCallback(async () => {
+    logger.debug("[useQueryMetadata] Loading list with details", { type })
+    try {
+      const indexes = await load()
+      const details = await getDetail(indexes.map(idx => idx.id))
+      return details
+    } catch (error) {
+      logger.error(`[useQueryMetadata] Error loading ${type} list with details`, error as Error)
+      throw error
+    }
+  }, [type, load, getDetail])
+
+  /**
+   * 根据索引字段筛选并加载详情
+   */
+  const loadFilteredDetails = useCallback(async (filter: (index: MetadataIndex) => boolean) => {
+    logger.debug("[useQueryMetadata] Loading filtered details", { type })
+    try {
+      const indexes = await load()
+      const filteredIds = indexes.filter(filter).map(idx => idx.id)
+      return await getDetail(filteredIds)
+    } catch (error) {
+      logger.error(`[useQueryMetadata] Error loading filtered ${type} details`, error as Error)
+      throw error
+    }
+  }, [type, load, getDetail])
 
   /**
    * 创建新项目
@@ -65,6 +129,7 @@ export function useQueryMetadata<T = any>(type: string, options: QueryMetadataOp
         }
 
         // 保存详情
+        const { saveDetail } = useQueryMetadataDetail<T>(type, normalizedId, options)
         const detailSaved = await saveDetail(detail)
         if (!detailSaved) throw new Error("Failed to save detail")
 
@@ -91,7 +156,7 @@ export function useQueryMetadata<T = any>(type: string, options: QueryMetadataOp
         return null
       }
     },
-    [type, saveDetail, saveIndex, indexes]
+    [type, indexes, saveIndex, options]
   )
 
   /**
@@ -102,11 +167,7 @@ export function useQueryMetadata<T = any>(type: string, options: QueryMetadataOp
       logger.debug("[useQueryMetadata] Updating item", { type, id })
       setError(null)
       try {
-        const currentDetail = await queryClient.fetchQuery({
-          queryKey: [`metadata-detail-${type}`, id],
-          queryFn: () => detail,
-        })
-        
+        const currentDetail = await getDetail(id)
         if (!currentDetail) throw new Error("Item not found")
 
         const currentUser = await getCurrentAccountInfo()
@@ -130,6 +191,7 @@ export function useQueryMetadata<T = any>(type: string, options: QueryMetadataOp
         }
 
         // 保存详情
+        const { saveDetail } = useQueryMetadataDetail<T>(type, id, options)
         const detailSaved = await saveDetail(updatedDetail)
         if (!detailSaved) throw new Error("Failed to save detail")
 
@@ -159,7 +221,7 @@ export function useQueryMetadata<T = any>(type: string, options: QueryMetadataOp
         return null
       }
     },
-    [type, detail, queryClient, saveDetail, indexes, saveIndex]
+    [type, getDetail, indexes, saveIndex, options]
   )
 
   /**
@@ -257,18 +319,21 @@ export function useQueryMetadata<T = any>(type: string, options: QueryMetadataOp
   return {
     items: indexes,
     error,
-    detail,
-    history,
     isPending,
+    load,
+    loadWithDetails,
+    loadFilteredDetails,
     create,
     update,
     remove,
+    getDetail,
+    getHistory,
     checkTemplateUsage,
   }
 }
 
-export * from "./types"
-export * from "../utils"
-export { useQueryMetadataIndex } from "./useQueryMetadataIndex"
-export { useQueryMetadataDetail } from "./useQueryMetadataDetail"
-export { useQueryMetadataHistory } from "./useQueryMetadataHistory"
+export * from "@/hooks/metadata/react-query/types"
+export * from "@/hooks/metadata/utils"
+export { useQueryMetadataIndex } from "@/hooks/metadata/react-query/useQueryMetadataIndex"
+export { useQueryMetadataDetail } from "@/hooks/metadata/react-query/useQueryMetadataDetail"
+export { useQueryMetadataHistory } from "@/hooks/metadata/react-query/useQueryMetadataHistory"
