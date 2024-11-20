@@ -1,10 +1,18 @@
 import React from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card"
 import { motion, AnimatePresence } from "framer-motion"
 import ChartRenderer from "./ChartRenderer"
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table"
 import { cn } from "@/theme/cn"
-import { Tabs, Tab } from "@nextui-org/react"
+import { Tabs, Tab, Button } from "@nextui-org/react"
+import { Icon } from "@iconify/react"
+import { useNavigate } from "react-router-dom"
 
 // 添加安全的对象序列化函数
 const safeStringify = (value: any, depth: number = 0): string => {
@@ -83,31 +91,56 @@ interface AnalysisResultProps {
   }
 }
 
-// 动画变体配置
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-}
+// 空状态组件
+const EmptyState: React.FC = () => {
+  const navigate = useNavigate()
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 15,
-    },
-  },
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col items-center justify-center min-h-[400px] p-8"
+    >
+      <div className="w-48 h-48 mb-8 relative">
+        <motion.div
+          animate={{
+            scale: [1, 1.05, 1],
+            rotate: [0, -5, 5, 0],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+        >
+          <Icon 
+            icon="hugeicons:ai-chat-02"
+            className="w-full h-full text-primary/30"
+          />
+        </motion.div>
+      </div>
+      <h3 className="text-xl font-medium text-foreground mb-2">还没有分析数据</h3>
+      <p className="text-default-500 mb-8 text-center max-w-md">
+        使用 AI 助手来分析您的数据，生成图表和洞察报告
+      </p>
+      <Button 
+        color="primary" 
+        size="lg"
+        startContent={<Icon icon="hugeicons:ai-chat-02" className="w-5 h-5" />}
+        onClick={() => navigate("/we-chat-app/admin/reports")}
+      >
+        使用 AI 生成报表
+      </Button>
+    </motion.div>
+  )
 }
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
+  // 检查数据是否为空
+  if (!analysis || !analysis.summary || Object.keys(analysis.summary).length === 0) {
+    return <EmptyState />
+  }
+
   // 渲染摘要项
   const renderSummaryItem = (key: string, value: any) => {
     // 基础类型直接渲染
@@ -161,59 +194,6 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
             </div>
           ))}
         </div>
-      </motion.div>
-    )
-  }
-
-  // 其他渲染函数保持不变...
-  const renderCharts = () => {
-    if (!analysis.charts?.length) return null
-
-    if (analysis.charts.length === 1) {
-      return (
-        <motion.div variants={itemVariants} layout>
-          <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
-            <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
-              <CardTitle className='text-xl font-bold'>{analysis.charts[0].title || "数据可视化"}</CardTitle>
-              <CardDescription>图表分析与趋势</CardDescription>
-            </CardHeader>
-            <CardContent className='min-h-[400px] p-6'>
-              <ChartRenderer chart={analysis.charts[0]} />
-            </CardContent>
-          </Card>
-        </motion.div>
-      )
-    }
-
-    return (
-      <motion.div variants={itemVariants} layout>
-        <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
-          <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
-            <CardTitle className='text-xl font-bold'>数据可视化</CardTitle>
-            <CardDescription>图表分析与趋势</CardDescription>
-          </CardHeader>
-          <CardContent className='p-6'>
-            <Tabs
-              aria-label='图表分析'
-              className='w-full'
-              variant='underlined'
-              classNames={{
-                tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
-                cursor: "w-full bg-primary",
-                tab: "max-w-fit px-0 h-12",
-                tabContent: "group-data-[selected=true]:text-primary",
-              }}
-            >
-              {analysis.charts.map((chart, index) => (
-                <Tab key={index} title={chart.title || `图表 ${index + 1}`}>
-                  <div className='min-h-[400px] pt-4'>
-                    <ChartRenderer chart={chart} />
-                  </div>
-                </Tab>
-              ))}
-            </Tabs>
-          </CardContent>
-        </Card>
       </motion.div>
     )
   }
@@ -317,6 +297,82 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
                 </div>
               )}
             </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    )
+  }
+
+  // 动画变体配置
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
+    },
+  }
+
+  const renderCharts = () => {
+    if (!analysis.charts?.length) return null
+
+    if (analysis.charts.length === 1) {
+      return (
+        <motion.div variants={itemVariants} layout>
+          <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
+            <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
+              <CardTitle className='text-xl font-bold'>{analysis.charts[0].title || "数据可视化"}</CardTitle>
+              <CardDescription>图表分析与趋势</CardDescription>
+            </CardHeader>
+            <CardContent className='min-h-[400px] p-6'>
+              <ChartRenderer chart={analysis.charts[0]} />
+            </CardContent>
+          </Card>
+        </motion.div>
+      )
+    }
+
+    return (
+      <motion.div variants={itemVariants} layout>
+        <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
+          <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
+            <CardTitle className='text-xl font-bold'>数据可视化</CardTitle>
+            <CardDescription>图表分析与趋势</CardDescription>
+          </CardHeader>
+          <CardContent className='p-6'>
+            <Tabs
+              aria-label='图表分析'
+              className='w-full'
+              variant='underlined'
+              classNames={{
+                tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+                cursor: "w-full bg-primary",
+                tab: "max-w-fit px-0 h-12",
+                tabContent: "group-data-[selected=true]:text-primary",
+              }}
+            >
+              {analysis.charts.map((chart, index) => (
+                <Tab key={index} title={chart.title || `图表 ${index + 1}`}>
+                  <div className='min-h-[400px] pt-4'>
+                    <ChartRenderer chart={chart} />
+                  </div>
+                </Tab>
+              ))}
+            </Tabs>
           </CardContent>
         </Card>
       </motion.div>
