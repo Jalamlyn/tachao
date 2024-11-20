@@ -53,6 +53,7 @@
     "@react-aria/visually-hidden": "3.8.12",
     "@react-stately/data": "^3.11.4",
     "@tanstack/match-sorter-utils": "^8.19.4",
+    "@tanstack/react-query": "^5.60.6",
     "@tanstack/react-table": "^8.20.5",
     "@visactor/react-vtable": "^1.5.1",
     "@visactor/vtable": "^1.5.1",

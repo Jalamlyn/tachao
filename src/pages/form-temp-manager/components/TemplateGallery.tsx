@@ -36,21 +36,16 @@ interface TemplateGalleryProps {
 
 // 加载状态占位组件
 const LoadingPlaceholder = () => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6'>
     {[1, 2, 3, 4].map((key) => (
-      <motion.div
-        key={key}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        <Card className="w-full h-[240px] animate-pulse">
-          <CardBody className="p-0">
-            <div className="h-[160px] bg-default-200 rounded-lg" />
+      <motion.div key={key} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <Card className='w-full h-[240px] animate-pulse'>
+          <CardBody className='p-0'>
+            <div className='h-[160px] bg-default-200 rounded-lg' />
           </CardBody>
-          <CardFooter className="flex flex-col gap-3 px-4 py-3">
-            <div className="h-4 w-3/4 bg-default-200 rounded" />
-            <div className="h-3 w-1/2 bg-default-200 rounded" />
+          <CardFooter className='flex flex-col gap-3 px-4 py-3'>
+            <div className='h-4 w-3/4 bg-default-200 rounded' />
+            <div className='h-3 w-1/2 bg-default-200 rounded' />
           </CardFooter>
         </Card>
       </motion.div>
@@ -63,9 +58,9 @@ const EmptyState = ({ onCreateTemplate }: { onCreateTemplate: () => void }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    className="flex flex-col items-center justify-center min-h-[400px] p-8"
+    className='flex flex-col items-center justify-center min-h-[400px] p-8'
   >
-    <div className="w-48 h-48 mb-8 relative">
+    <div className='w-48 h-48 mb-8 relative'>
       <motion.div
         animate={{
           scale: [1, 1.05, 1],
@@ -77,18 +72,18 @@ const EmptyState = ({ onCreateTemplate }: { onCreateTemplate: () => void }) => (
           repeatType: "reverse",
         }}
       >
-        <Icon icon="fluent:document-add-48-regular" className="w-full h-full text-primary/30" />
+        <Icon icon='fluent:document-add-48-regular' className='w-full h-full text-primary/30' />
       </motion.div>
     </div>
-    <h3 className="text-xl font-medium text-foreground mb-2">还没有表单模板</h3>
-    <p className="text-default-500 mb-8 text-center max-w-md">
+    <h3 className='text-xl font-medium text-foreground mb-2'>还没有表单模板</h3>
+    <p className='text-default-500 mb-8 text-center max-w-md'>
       创建你的第一个表单模板，AI 助手会帮助你快速生成专业的表单
     </p>
     <Button
-      color="primary"
-      size="lg"
+      color='primary'
+      size='lg'
       onClick={onCreateTemplate}
-      startContent={<Icon icon="mdi:plus" className="w-5 h-5" />}
+      startContent={<Icon icon='mdi:plus' className='w-5 h-5' />}
     >
       生成表单模板
     </Button>
@@ -100,16 +95,16 @@ const ErrorState = ({ error, onRetry }: { error: Error; onRetry: () => void }) =
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    className="flex flex-col items-center justify-center min-h-[400px] p-8"
+    className='flex flex-col items-center justify-center min-h-[400px] p-8'
   >
-    <Icon icon="mdi:alert-circle" className="w-16 h-16 text-danger mb-4" />
-    <h3 className="text-xl font-medium text-danger mb-2">加载失败</h3>
-    <p className="text-default-500 mb-8 text-center max-w-md">{error.message || "请稍后重试"}</p>
+    <Icon icon='mdi:alert-circle' className='w-16 h-16 text-danger mb-4' />
+    <h3 className='text-xl font-medium text-danger mb-2'>加载失败</h3>
+    <p className='text-default-500 mb-8 text-center max-w-md'>{error.message || "请稍后重试"}</p>
     <Button
-      color="primary"
-      variant="flat"
+      color='primary'
+      variant='flat'
       onClick={onRetry}
-      startContent={<Icon icon="mdi:refresh" className="w-5 h-5" />}
+      startContent={<Icon icon='mdi:refresh' className='w-5 h-5' />}
     >
       重试
     </Button>
@@ -146,7 +141,6 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["templates"] })
-      message.success("模板删除成功")
       onClose()
     },
     onError: (error) => {
@@ -187,7 +181,6 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
       const shareLink = `${window.location.origin}/form-preview/${selectedTemplate.id}`
       try {
         await navigator.clipboard.writeText(shareLink)
-        message.success("链接已复制到剪贴板")
         onShareClose()
       } catch (error) {
         console.error("复制链接失败:", error)
@@ -202,7 +195,7 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
 
   return (
     <>
-      <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+      <motion.div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6'>
         <AnimatePresence>
           {templates.map((template) => (
             <motion.div
@@ -211,59 +204,59 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="h-full"
+              className='h-full'
             >
               <Card
                 isPressable
                 isHoverable
-                className="w-full h-[240px] group"
+                className='w-full h-[240px] group'
                 onPress={() => onTemplateSelect(template.id)}
               >
-                <CardBody className="p-0 relative overflow-hidden">
-                  <div className="w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 group-hover:scale-105 transition-transform duration-300">
+                <CardBody className='p-0 relative overflow-hidden'>
+                  <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 group-hover:scale-105 transition-transform duration-300'>
                     <Icon
-                      icon="fluent:form-28-filled"
-                      className="w-16 h-16 text-primary-400 group-hover:scale-110 transition-transform duration-300"
+                      icon='fluent:form-28-filled'
+                      className='w-16 h-16 text-primary-400 group-hover:scale-110 transition-transform duration-300'
                     />
                   </div>
                 </CardBody>
-                <CardFooter className="flex flex-col gap-3 px-4 py-3 bg-white">
-                  <div className="flex justify-between items-center w-full">
+                <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
+                  <div className='flex justify-between items-center w-full'>
                     <h4
-                      className="text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors duration-300"
+                      className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors duration-300'
                       title={template.title}
                     >
                       {template.title}
                     </h4>
                   </div>
-                  <div className="flex justify-between items-center w-full">
-                    <div className="flex gap-2">
+                  <div className='flex justify-between items-center w-full'>
+                    <div className='flex gap-2'>
                       <Button
                         isIconOnly
-                        size="sm"
-                        variant="light"
-                        className="text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300"
+                        size='sm'
+                        variant='light'
+                        className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
                         onClick={(e) => handleShareClick(template, e)}
                       >
-                        <Icon icon="mdi:share" className="w-4 h-4" />
+                        <Icon icon='mdi:share' className='w-4 h-4' />
                       </Button>
                       <Button
                         isIconOnly
-                        size="sm"
-                        variant="light"
-                        className="text-default-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-300"
+                        size='sm'
+                        variant='light'
+                        className='text-default-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-300'
                         onClick={(e) => handleAIEditClick(template, e)}
                       >
-                        <Icon icon="hugeicons:ai-chat-02" className="w-4 h-4" />
+                        <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
                       </Button>
                       <Button
                         isIconOnly
-                        size="sm"
-                        variant="light"
-                        className="text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300"
+                        size='sm'
+                        variant='light'
+                        className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
                         onClick={(e) => handleDeleteClick(template, e)}
                       >
-                        <Icon icon="mdi:delete" className="w-4 h-4" />
+                        <Icon icon='mdi:delete' className='w-4 h-4' />
                       </Button>
                     </div>
                   </div>
@@ -285,24 +278,24 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
         }}
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            <div className="flex items-center gap-2 text-danger">
-              <Icon icon="mdi:alert-circle" className="w-6 h-6" />
+          <ModalHeader className='flex flex-col gap-1'>
+            <div className='flex items-center gap-2 text-danger'>
+              <Icon icon='mdi:alert-circle' className='w-6 h-6' />
               <span>确认删除</span>
             </div>
           </ModalHeader>
           <ModalBody>
-            <p className="text-default-600">确定要删除模板 "{selectedTemplate?.title}" 吗？此操作不可撤销。</p>
+            <p className='text-default-600'>确定要删除模板 "{selectedTemplate?.title}" 吗？此操作不可撤销。</p>
           </ModalBody>
           <ModalFooter>
-            <Button color="default" variant="light" onPress={onClose}>
+            <Button color='default' variant='light' onPress={onClose}>
               取消
             </Button>
             <Button
-              color="danger"
+              color='danger'
               onPress={handleDeleteConfirm}
               isLoading={deleteMutation.isPending}
-              startContent={<Icon icon="mdi:delete" className="w-4 h-4" />}
+              startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
             >
               删除
             </Button>
@@ -321,10 +314,10 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
         }}
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">分享模板</ModalHeader>
+          <ModalHeader className='flex flex-col gap-1'>分享模板</ModalHeader>
           <ModalBody>
-            <div className="flex flex-col gap-4">
-              <p className="text-default-600">复制以下链接分享模板：</p>
+            <div className='flex flex-col gap-4'>
+              <p className='text-default-600'>复制以下链接分享模板：</p>
               <Input
                 readOnly
                 value={`${window.location.origin}/form-preview/${selectedTemplate?.id || ""}`}
@@ -333,15 +326,15 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
                   inputWrapper: "bg-default-50 hover:bg-default-100",
                 }}
                 endContent={
-                  <Button size="sm" variant="light" className="min-w-unit-16 h-unit-8" onClick={handleCopyShareLink}>
-                    <Icon icon="mdi:content-copy" className="w-4 h-4" />
+                  <Button size='sm' variant='light' className='min-w-unit-16 h-unit-8' onClick={handleCopyShareLink}>
+                    <Icon icon='mdi:content-copy' className='w-4 h-4' />
                   </Button>
                 }
               />
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="primary" onPress={onShareClose} startContent={<Icon icon="mdi:check" className="w-4 h-4" />}>
+            <Button color='primary' onPress={onShareClose} startContent={<Icon icon='mdi:check' className='w-4 h-4' />}>
               完成
             </Button>
           </ModalFooter>

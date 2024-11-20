@@ -206,7 +206,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         const formData = prepareFormData(values, templateInfo)
 
         if (previewMode) {
-          message.success("表单校验通过，预览模式下无法保存数据")
           return
         }
 

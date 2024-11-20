@@ -45,7 +45,6 @@ apiService.interceptors.response.use(
     console.log(error)
     if (error.response) {
       if (error.response.status === 401) {
-        message.error("登录过期，请重新登录")
         localStorage.removeItem(modelBaseUserToken)
         // window.location.href = `/we-chat-login`
       } else if (error.response.data.code === 400) {

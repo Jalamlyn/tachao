@@ -42,10 +42,7 @@ export const processMultiLevelHeaders = (keys: string[], handleEdit: (row: any) 
 
   const handleCopyColumnName = (e: React.MouseEvent, columnName: string) => {
     e.stopPropagation() // 阻止事件冒泡，防止触发排序
-    navigator.clipboard
-      .writeText(columnName)
-      .then(() => message.success("列名已复制到剪贴板"))
-      .catch(() => message.error("复制失败"))
+    navigator.clipboard.writeText(columnName).catch(() => message.error("复制失败"))
   }
 
   const renderColumnHeader = (column: any, label: string) => {
