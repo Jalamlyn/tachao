@@ -104,6 +104,7 @@ const AIReportEditor: React.FC = () => {
   const [previewComponent, setPreviewComponent] = useState<React.ReactNode>(null)
   const [selectedTab, setSelectedTab] = useState("data")
   const [flattenedData, setFlattenedData] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
   const accumulatedTextRef = useRef("")
 
@@ -139,10 +140,19 @@ const AIReportEditor: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
+        setIsLoading(true)
         if (templateId && formItems) {
-          const formData = formItems
-            .filter((item) => item.indexFields?.templateId === templateId)
-            .map((detail) => ({
+          // 1. 获取表单详情数据
+          const formDetails = await Promise.all(
+            formItems
+              .filter(item => item.indexFields?.templateId === templateId)
+              .map(item => formDetail(item.id))
+          )
+          
+          // 2. 处理有效的详情数据
+          const formData = formDetails
+            .filter(detail => detail !== null)
+            .map(detail => ({
               id: detail.id,
               ...detail.data,
             }))
@@ -155,6 +165,7 @@ const AIReportEditor: React.FC = () => {
             setFlattenedData(flattened)
           }
         } else if (reportId && reportDetail) {
+          // 3. 获取报表详情数据
           const detail = await reportDetail(reportId)
           if (detail?.data) {
             setResourceData(detail.data.data)
@@ -173,6 +184,8 @@ const AIReportEditor: React.FC = () => {
         console.error("[loadData] Error loading data:", error)
         message.error("数据加载失败")
         navigate("/we-chat-app/admin/resources")
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -183,7 +196,7 @@ const AIReportEditor: React.FC = () => {
       { label: "报表管理", href: "/we-chat-app/admin/reports" },
       { label: "AI 报表助手", href: `/we-chat-app/admin/reports/ai/${reportId || templateId}` },
     ])
-  }, [reportId, templateId, formItems, reportDetail, navigate, updateBreadcrumbs])
+  }, [reportId, templateId, formItems, reportDetail, formDetail, navigate, updateBreadcrumbs])
 
   const handleChunk = useCallback((chunk: string) => {
     accumulatedTextRef.current += chunk
@@ -356,7 +369,7 @@ const AIReportEditor: React.FC = () => {
   )
 
   // 显示加载状态
-  if (formLoading || reportLoading) {
+  if (formLoading || reportLoading || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Spinner label="加载中..." />
