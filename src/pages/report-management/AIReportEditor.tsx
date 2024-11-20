@@ -11,6 +11,7 @@ import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import { useVersionControl } from "@/hooks/useVersionControl"
 import AIEditor from "@/components/AIEditor"
+import { Icon } from "@iconify/react"
 
 interface Message {
   role: "user" | "assistant"
@@ -107,8 +108,27 @@ const AIReportEditor: React.FC = () => {
   const accumulatedTextRef = useRef("")
 
   // 使用 React Query hooks
-  const { items: formItems, error: formError, detail: formDetail } = useQueryMetadata("form")
-  const { items: reportItems, error: reportError, detail: reportDetail } = useQueryMetadata("report")
+  const { 
+    data: formItems, 
+    error: formError,
+    isLoading: formLoading,
+    getDetail: formDetail 
+  } = useQueryMetadata("form", {
+    suspense: false,
+    staleTime: 5000,
+    cacheTime: 30000
+  })
+
+  const {
+    data: reportItems,
+    error: reportError,
+    isLoading: reportLoading,
+    getDetail: reportDetail
+  } = useQueryMetadata("report", {
+    suspense: false,
+    staleTime: 5000,
+    cacheTime: 30000
+  })
 
   // 添加版本控制
   const versionControl = useVersionControl<{
@@ -135,11 +155,12 @@ const AIReportEditor: React.FC = () => {
             setFlattenedData(flattened)
           }
         } else if (reportId && reportDetail) {
-          if (reportDetail.data) {
-            setResourceData(reportDetail.data.data)
-            if (Array.isArray(reportDetail.data.data) && reportDetail.data.data.length > 0) {
-              const cols = generateColumns(reportDetail.data.data)
-              const flattened = flattenData(reportDetail.data.data)
+          const detail = await reportDetail(reportId)
+          if (detail?.data) {
+            setResourceData(detail.data.data)
+            if (Array.isArray(detail.data.data) && detail.data.data.length > 0) {
+              const cols = generateColumns(detail.data.data)
+              const flattened = flattenData(detail.data.data)
               setColumns(cols)
               setFlattenedData(flattened)
             }
@@ -162,7 +183,7 @@ const AIReportEditor: React.FC = () => {
       { label: "报表管理", href: "/we-chat-app/admin/reports" },
       { label: "AI 报表助手", href: `/we-chat-app/admin/reports/ai/${reportId || templateId}` },
     ])
-  }, [reportId, templateId, formItems, reportDetail])
+  }, [reportId, templateId, formItems, reportDetail, navigate, updateBreadcrumbs])
 
   const handleChunk = useCallback((chunk: string) => {
     accumulatedTextRef.current += chunk
@@ -211,7 +232,7 @@ const AIReportEditor: React.FC = () => {
         ]
       })
     }
-  }, [])
+  }, [previewContent])
 
   const reportAgent = {
     processCommand: async (command: string) => {
@@ -333,6 +354,24 @@ const AIReportEditor: React.FC = () => {
     },
     [previewContent, versionControl]
   )
+
+  // 显示加载状态
+  if (formLoading || reportLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Spinner label="加载中..." />
+      </div>
+    )
+  }
+
+  // 显示错误状态
+  if (formError || reportError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] text-danger">
+        <p>加载失败: {(formError || reportError)?.message}</p>
+      </div>
+    )
+  }
 
   const renderDataTable = () => {
     if (!columns.length || !flattenedData.length) {
