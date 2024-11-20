@@ -1,4 +1,5 @@
 import { useCallback } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getMetadata, setMetadata, getPublicMetaData } from "@/service/apis/api"
 import { MetadataDetail } from "./types"
 import { jsonParse, jsonStringify, logger } from "./utils"
@@ -8,7 +9,7 @@ interface UseMetadataDetailOptions {
 }
 
 /**
- * 元数据详情管理 Hook
+ * 元数据详情管理 Hook (传统实现)
  */
 export function useMetadataDetail<T = any>(type: string, options: UseMetadataDetailOptions = {}) {
   /**
@@ -87,5 +88,62 @@ export function useMetadataDetail<T = any>(type: string, options: UseMetadataDet
   return {
     getDetail,
     saveDetail,
+  }
+}
+
+/**
+ * 使用 React Query 的元数据详情管理 Hook
+ */
+export function useQueryMetadataDetail<T = any>(
+  type: string,
+  id: string | string[],
+  options: UseMetadataDetailOptions = {}
+) {
+  const queryClient = useQueryClient()
+  const idArray = Array.isArray(id) ? id : [id]
+
+  // 查询 hook
+  const query = useQuery({
+    queryKey: ['metadata', type, idArray, options.public],
+    queryFn: async () => {
+      const result = options.public 
+        ? await getPublicMetaData(idArray)
+        : await getMetadata(idArray)
+      
+      const details = result.data
+        .filter(item => item?.value)
+        .map(item => ({
+          ...jsonParse(item.value),
+          versionCode: item.versionCode,
+        } as MetadataDetail<T>))
+
+      return Array.isArray(id) ? details : details[0] || null
+    },
+    suspense: true, // 启用 Suspense 模式
+  })
+
+  // 修改 hook
+  const mutation = useMutation({
+    mutationFn: async (detail: MetadataDetail<T>) => {
+      await setMetadata(`${detail.id}`, jsonStringify(detail))
+      return detail
+    },
+    onSuccess: (detail) => {
+      // 更新查询缓存
+      queryClient.setQueryData(
+        ['metadata', type, Array.isArray(id) ? id : [id], options.public],
+        Array.isArray(id) ? (old: MetadataDetail<T>[]) => {
+          return old.map(item => item.id === detail.id ? detail : item)
+        } : detail
+      )
+    }
+  })
+
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    save: mutation.mutate,
+    isSaving: mutation.isPending
   }
 }
