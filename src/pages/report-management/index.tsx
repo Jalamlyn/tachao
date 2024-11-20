@@ -35,10 +35,14 @@ const ReportManagement: React.FC = () => {
       try {
         const result = await loadTemplates()
         if (result) {
-          setTemplates(result.map(item => ({
-            id: item.id,
-            title: item.title
-          })))
+          setTemplates(
+            result.map((item) => ({
+              id: item.id,
+              key: item.id,
+              title: item.title,
+              label: item.title,
+            }))
+          )
         }
       } catch (error) {
         console.error("Error loading templates:", error)
@@ -72,8 +76,8 @@ const ReportManagement: React.FC = () => {
     }
 
     const formCount = getFormCountByTemplate(selectedTemplate)
-    
-    if(formCount < 10) {
+
+    if (formCount < 10) {
       setShowGuideModal(true)
       return
     }
@@ -91,27 +95,23 @@ const ReportManagement: React.FC = () => {
   }
 
   const pageActions = (
-    <Button 
-      color="primary"
-      startContent={<Icon icon="mdi:plus" />}
-      onClick={handleCreateClick}
-    >
+    <Button color='primary' startContent={<Icon icon='mdi:plus' />} onClick={handleCreateClick}>
       创建报表
     </Button>
   )
-
+  console.log(selectedTemplate)
   return (
     <PageLayout title='报表管理' titleIcon='mdi:file-chart' actions={pageActions}>
-      <ReportGallery 
-        onReportSelect={handleReportSelect} 
+      <ReportGallery
+        onReportSelect={handleReportSelect}
         onCreateReport={handleCreateClick}
-        className='transition-all duration-300' 
+        className='transition-all duration-300'
       />
 
-      <Modal 
-        isOpen={isCreateModalOpen} 
+      <Modal
+        isOpen={isCreateModalOpen}
         onClose={handleCreateModalClose}
-        placement="center"
+        placement='center'
         classNames={{
           base: "max-w-md",
           header: "border-b",
@@ -120,19 +120,15 @@ const ReportManagement: React.FC = () => {
         }}
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">选择数据源</ModalHeader>
+          <ModalHeader className='flex flex-col gap-1'>选择数据源</ModalHeader>
           <ModalBody>
-            <TemplateSelect
-              templates={templates}
-              value={selectedTemplate}
-              onChange={handleTemplateSelect}
-            />
+            <TemplateSelect templates={templates} value={selectedTemplate} onChange={handleTemplateSelect} />
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" onPress={handleCreateModalClose}>
+            <Button variant='light' onPress={handleCreateModalClose}>
               取消
             </Button>
-            <Button color="primary" onPress={handleCreateConfirm} isLoading={loading}>
+            <Button color='primary' onPress={handleCreateConfirm} isLoading={loading}>
               确认
             </Button>
           </ModalFooter>

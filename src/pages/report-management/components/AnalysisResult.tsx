@@ -1,11 +1,5 @@
 import React from "react"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { motion, AnimatePresence } from "framer-motion"
 import ChartRenderer from "./ChartRenderer"
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table"
@@ -99,9 +93,9 @@ const EmptyState: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center min-h-[400px] p-8"
+      className='flex flex-col items-center justify-center min-h-[400px] p-8'
     >
-      <div className="w-48 h-48 mb-8 relative">
+      <div className='w-48 h-48 mb-8 relative'>
         <motion.div
           animate={{
             scale: [1, 1.05, 1],
@@ -113,24 +107,11 @@ const EmptyState: React.FC = () => {
             repeatType: "reverse",
           }}
         >
-          <Icon 
-            icon="hugeicons:ai-chat-02"
-            className="w-full h-full text-primary/30"
-          />
+          <Icon icon='hugeicons:ai-chat-02' className='w-full h-full text-primary/30' />
         </motion.div>
       </div>
-      <h3 className="text-xl font-medium text-foreground mb-2">还没有分析数据</h3>
-      <p className="text-default-500 mb-8 text-center max-w-md">
-        使用 AI 助手来分析您的数据，生成图表和洞察报告
-      </p>
-      <Button 
-        color="primary" 
-        size="lg"
-        startContent={<Icon icon="hugeicons:ai-chat-02" className="w-5 h-5" />}
-        onClick={() => navigate("/we-chat-app/admin/reports")}
-      >
-        使用 AI 生成报表
-      </Button>
+      <h3 className='text-xl font-medium text-foreground mb-2'>还没有分析数据</h3>
+      <p className='text-default-500 mb-8 text-center max-w-md'>使用 AI 助手来分析您的数据，生成图表和洞察报告</p>
     </motion.div>
   )
 }

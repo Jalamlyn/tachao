@@ -116,7 +116,7 @@ const getEmptyState = (hasTemplates: boolean): EmptyState => {
     title: '还没有报表',
     description: '选择一个表单模板开始创建你的第一个报表',
     action: {
-      text: '创建报表',
+      text: '去创建',
       href: '#'
     }
   }

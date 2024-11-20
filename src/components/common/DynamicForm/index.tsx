@@ -312,50 +312,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           </div>
         </div>
 
-        {/* 验证错误提示 */}
-        {Object.keys(validationErrors).length > 0 && (
-          <div className={cn(styles["form-card"], "bg-red-50 border-red-100")}>
-            <div className='space-y-2'>
-              {validationErrors.required && validationErrors.required.length > 0 && (
-                <div>
-                  <h3 className='text-red-600 font-medium mb-1'>必填字段错误:</h3>
-                  <ul className='list-disc list-inside space-y-1'>
-                    {validationErrors.required.map(({ field, message }, index) => (
-                      <li key={index} className='text-red-500'>
-                        {message}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {validationErrors.invalid && validationErrors.invalid.length > 0 && (
-                <div>
-                  <h3 className='text-red-600 font-medium mb-1'>格式错误:</h3>
-                  <ul className='list-disc list-inside space-y-1'>
-                    {validationErrors.invalid.map(({ field, message }, index) => (
-                      <li key={index} className='text-red-500'>
-                        {message}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {validationErrors.other && validationErrors.other.length > 0 && (
-                <div>
-                  <h3 className='text-red-600 font-medium mb-1'>其他错误:</h3>
-                  <ul className='list-disc list-inside space-y-1'>
-                    {validationErrors.other.map(({ field, message }, index) => (
-                      <li key={index} className='text-red-500'>
-                        {message}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* 基本信息 */}
         <div className={cn(styles["form-card"])}>
           <h2 className={cn(styles["form-title"])}>基本信息</h2>

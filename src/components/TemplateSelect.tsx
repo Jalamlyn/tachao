@@ -1,11 +1,5 @@
 import React from "react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectItem } from "@nextui-org/react"
 import { useFormCount } from "@/hooks/useFormCount"
 
 interface TemplateSelectProps {
@@ -19,22 +13,30 @@ export function TemplateSelect({ templates, value, onChange, className }: Templa
   const { getFormCountByTemplate } = useFormCount()
 
   return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className={`h-12 ${className}`}>
-        <SelectValue placeholder="请选择表单类型" />
-      </SelectTrigger>
-      <SelectContent>
-        {templates.map((template) => (
-          <SelectItem key={template.id} value={template.id}>
-            <div className="flex justify-between items-center w-full">
-              <span className="text-default-700">{template.title}</span>
-              <span className="text-sm text-muted-foreground">
-                {getFormCountByTemplate(template.id)} 张表单
-              </span>
+    <Select
+      label='选择表单类型'
+      placeholder='请选择表单类型'
+      selectedKeys={value ? [value] : []}
+      onChange={(e) => onChange(e.target.value)}
+      className={className}
+      classNames={{
+        base: "max-w-full",
+        trigger: "h-12",
+      }}
+    >
+      {templates.map((template) => (
+        <SelectItem
+          key={template.id}
+          endContent={
+            <div className='flex justify-between items-center w-full'>
+              <span className='text-default-700'>{template.title}</span>
+              <span className='text-small text-default-400'>{getFormCountByTemplate(template.id)} 张表单</span>
             </div>
-          </SelectItem>
-        ))}
-      </SelectContent>
+          }
+        >
+          {template.title}
+        </SelectItem>
+      ))}
     </Select>
   )
 }

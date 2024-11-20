@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import { Spinner } from "@nextui-org/react"
 import { useNavigate, useParams } from "react-router-dom"
-import { useQueryMetadata } from "@/hooks/metadata/react-query"
+import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import AIReportAgent from "@/service/agents/AIReportAgent"
-import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
+import AnalysisResult from "./components/AnalysisResult"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import { useVersionControl } from "@/hooks/useVersionControl"
 import AIEditor from "@/components/AIEditor"
@@ -104,32 +104,10 @@ const AIReportEditor: React.FC = () => {
   const [previewComponent, setPreviewComponent] = useState<React.ReactNode>(null)
   const [selectedTab, setSelectedTab] = useState("data")
   const [flattenedData, setFlattenedData] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(false)
 
   const accumulatedTextRef = useRef("")
-
-  // 使用 React Query hooks
-  const { 
-    items: formItems, 
-    error: formError,
-    isPending: formLoading,
-    getDetail: formDetail 
-  } = useQueryMetadata("form", {
-    suspense: false,
-    staleTime: 5000,
-    cacheTime: 30000
-  })
-
-  const {
-    items: reportItems,
-    error: reportError,
-    isPending: reportLoading,
-    getDetail: reportDetail
-  } = useQueryMetadata("report", {
-    suspense: false,
-    staleTime: 5000,
-    cacheTime: 30000
-  })
+  const { getDetail: getResourceDetail, loadFilteredDetails } = useMetadata("report")
+  const { loadFilteredDetails: loadFormFilteredDetails } = useMetadata("form")
 
   // 添加版本控制
   const versionControl = useVersionControl<{
@@ -140,38 +118,29 @@ const AIReportEditor: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        setIsLoading(true)
-        if (templateId && formItems) {
-          // 1. 获取表单详情数据
-          const formDetails = await Promise.all(
-            formItems
-              .filter(item => item.indexFields?.templateId === templateId)
-              .map(item => formDetail(item.id))
-          )
-          
-          // 2. 处理有效的详情数据
-          const formData = formDetails
-            .filter(detail => detail !== null)
-            .map(detail => ({
+        if (templateId) {
+          const formDetails = await loadFormFilteredDetails((index) => index.indexFields?.templateId === templateId)
+
+          if (formDetails.length > 0) {
+            const formData = formDetails.map((detail) => ({
               id: detail.id,
               ...detail.data,
             }))
 
-          if (formData.length > 0) {
             setResourceData(formData)
+
             const cols = generateColumns(formData)
             const flattened = flattenData(formData)
             setColumns(cols)
             setFlattenedData(flattened)
           }
-        } else if (reportId && reportDetail) {
-          // 3. 获取报表详情数据
-          const detail = await reportDetail(reportId)
-          if (detail?.data) {
-            setResourceData(detail.data.data)
-            if (Array.isArray(detail.data.data) && detail.data.data.length > 0) {
-              const cols = generateColumns(detail.data.data)
-              const flattened = flattenData(detail.data.data)
+        } else if (reportId) {
+          const resource = await getResourceDetail(reportId)
+          if (resource && resource.data) {
+            setResourceData(resource.data.data)
+            if (Array.isArray(resource.data.data) && resource.data.data.length > 0) {
+              const cols = generateColumns(resource.data.data)
+              const flattened = flattenData(resource.data.data)
               setColumns(cols)
               setFlattenedData(flattened)
             }
@@ -184,8 +153,6 @@ const AIReportEditor: React.FC = () => {
         console.error("[loadData] Error loading data:", error)
         message.error("数据加载失败")
         navigate("/we-chat-app/admin/resources")
-      } finally {
-        setIsLoading(false)
       }
     }
 
@@ -196,7 +163,7 @@ const AIReportEditor: React.FC = () => {
       { label: "报表管理", href: "/we-chat-app/admin/reports" },
       { label: "AI 报表助手", href: `/we-chat-app/admin/reports/ai/${reportId || templateId}` },
     ])
-  }, [reportId, templateId, formItems, reportDetail, formDetail, navigate, updateBreadcrumbs])
+  }, [reportId, templateId])
 
   const handleChunk = useCallback((chunk: string) => {
     accumulatedTextRef.current += chunk
@@ -245,7 +212,7 @@ const AIReportEditor: React.FC = () => {
         ]
       })
     }
-  }, [previewContent])
+  }, [])
 
   const reportAgent = {
     processCommand: async (command: string) => {
@@ -367,24 +334,6 @@ const AIReportEditor: React.FC = () => {
     },
     [previewContent, versionControl]
   )
-
-  // 显示加载状态
-  if (formLoading || reportLoading || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Spinner label="加载中..." />
-      </div>
-    )
-  }
-
-  // 显示错误状态
-  if (formError || reportError) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px] text-danger">
-        <p>加载失败: {(formError || reportError)?.message}</p>
-      </div>
-    )
-  }
 
   const renderDataTable = () => {
     if (!columns.length || !flattenedData.length) {
