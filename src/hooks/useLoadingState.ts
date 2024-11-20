@@ -27,20 +27,47 @@ interface LoadingState {
    */
   loading: boolean
   /**
+   * 是否为空状态
+   */
+  empty: boolean
+  /**
+   * 错误信息
+   */
+  error: Error | null
+  /**
    * 是否处于动画过渡中
    */
   animating: boolean
+}
+
+interface LoadingStateReturn {
   /**
-   * 手动设置loading状态
+   * 状态对象
+   */
+  state: LoadingState
+  /**
+   * 设置loading状态
    */
   setLoading: (loading: boolean) => void
   /**
-   * 包装异步函数,自动处理loading状态
+   * 设置空状态
+   */
+  setEmpty: (empty: boolean) => void
+  /**
+   * 设置错误状态
+   */
+  setError: (error: Error | null) => void
+  /**
+   * 重置所有状态
+   */
+  reset: () => void
+  /**
+   * 包装异步函数，自动处理loading状态
    */
   withLoading: <T>(promise: Promise<T>) => Promise<T>
 }
 
-export function useLoadingState(options: LoadingOptions = {}): LoadingState {
+export function useLoadingState(options: LoadingOptions = {}): LoadingStateReturn {
   const {
     delay = 200,
     minDuration = 500,
@@ -48,61 +75,93 @@ export function useLoadingState(options: LoadingOptions = {}): LoadingState {
     initialState = false
   } = options
 
-  const [loading, setLoadingState] = useState(initialState)
-  const [displayLoading, setDisplayLoading] = useState(initialState)
-  const [animating, setAnimating] = useState(false)
-  const [startTime, setStartTime] = useState<number | null>(null)
+  const [state, setState] = useState<LoadingState>({
+    loading: initialState,
+    empty: false,
+    error: null,
+    animating: false
+  })
 
-  // 处理loading状态变化
-  useEffect(() => {
-    let delayTimer: NodeJS.Timeout
-    let durationTimer: NodeJS.Timeout
+  const startTimeRef = useRef<number | null>(null)
+  const delayTimerRef = useRef<NodeJS.Timeout>()
+  const durationTimerRef = useRef<NodeJS.Timeout>()
 
+  const setLoading = useCallback((loading: boolean) => {
     if (loading) {
       // 延迟显示loading
-      delayTimer = setTimeout(() => {
-        setStartTime(Date.now())
-        setDisplayLoading(true)
-        if (animate) {
-          setAnimating(true)
-          setTimeout(() => setAnimating(false), 300) // 动画持续时间
-        }
+      delayTimerRef.current = setTimeout(() => {
+        startTimeRef.current = Date.now()
+        setState(prev => ({
+          ...prev,
+          loading: true,
+          animating: animate
+        }))
       }, delay)
     } else {
       // 确保最小显示时间
-      const currentDuration = startTime ? Date.now() - startTime : 0
+      const currentDuration = startTimeRef.current ? Date.now() - startTimeRef.current : 0
       const remainingDuration = Math.max(0, minDuration - currentDuration)
 
-      durationTimer = setTimeout(() => {
-        setDisplayLoading(false)
-        setStartTime(null)
-        if (animate) {
-          setAnimating(true)
-          setTimeout(() => setAnimating(false), 300) // 动画持续时间
-        }
+      durationTimerRef.current = setTimeout(() => {
+        setState(prev => ({
+          ...prev,
+          loading: false,
+          animating: animate
+        }))
+        startTimeRef.current = null
       }, remainingDuration)
     }
+  }, [delay, minDuration, animate])
 
-    return () => {
-      clearTimeout(delayTimer)
-      clearTimeout(durationTimer)
-    }
-  }, [loading, delay, minDuration, animate, startTime])
+  const setEmpty = useCallback((empty: boolean) => {
+    setState(prev => ({ ...prev, empty }))
+  }, [])
 
-  // 包装异步函数
+  const setError = useCallback((error: Error | null) => {
+    setState(prev => ({ ...prev, error }))
+  }, [])
+
+  const reset = useCallback(() => {
+    setState({
+      loading: false,
+      empty: false,
+      error: null,
+      animating: false
+    })
+    startTimeRef.current = null
+  }, [])
+
   const withLoading = useCallback(async <T>(promise: Promise<T>): Promise<T> => {
     try {
-      setLoadingState(true)
-      return await promise
+      setLoading(true)
+      const result = await promise
+      // 自动处理空状态
+      if (Array.isArray(result)) {
+        setEmpty(result.length === 0)
+      }
+      return result
+    } catch (error) {
+      setError(error as Error)
+      throw error
     } finally {
-      setLoadingState(false)
+      setLoading(false)
+    }
+  }, [setLoading, setEmpty, setError])
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      delayTimerRef.current && clearTimeout(delayTimerRef.current)
+      durationTimerRef.current && clearTimeout(durationTimerRef.current)
     }
   }, [])
 
   return {
-    loading: displayLoading,
-    animating,
-    setLoading: setLoadingState,
+    state,
+    setLoading,
+    setEmpty,
+    setError,
+    reset,
     withLoading
   }
 }
