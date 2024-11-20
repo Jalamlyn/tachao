@@ -78,6 +78,29 @@ export class ValidationManager {
       }
     }
 
+    // 校验流程确认字段
+    if (config.renderConfig.processSteps) {
+      console.log('[ValidationManager] validating process steps')
+      const processConfirmations = values.processConfirmations || {}
+      for (const step of config.renderConfig.processSteps) {
+        if (step.fields) {
+          const stepData = processConfirmations[step.key]?.formData || {}
+          for (const field of step.fields) {
+            console.log('[ValidationManager] validating process step field:', { step: step.key, field: field.name })
+            const error = await this.validateField(field, stepData[field.name], stepData)
+            if (error) {
+              console.log('[ValidationManager] process step field validation error:', {
+                step: step.key,
+                field: field.name,
+                error
+              })
+              errors[`processConfirmations.${step.key}.formData.${field.name}`] = error
+            }
+          }
+        }
+      }
+    }
+
     console.log('[ValidationManager] validateFields complete, errors:', errors)
     return errors
   }
@@ -211,20 +234,29 @@ export class ValidationManager {
       other?: string[]
     } = {}
 
-    Object.values(errors).forEach(error => {
+    Object.entries(errors).forEach(([field, error]) => {
       if (error.includes("不能为空")) {
         categorized.required = categorized.required || []
-        categorized.required.push(error)
+        categorized.required.push({
+          field,
+          message: error
+        })
       } else if (
         error.includes("有效") ||
         error.includes("格式") ||
         error.includes("类型")
       ) {
         categorized.invalid = categorized.invalid || []
-        categorized.invalid.push(error)
+        categorized.invalid.push({
+          field,
+          message: error
+        })
       } else {
         categorized.other = categorized.other || []
-        categorized.other.push(error)
+        categorized.other.push({
+          field,
+          message: error
+        })
       }
     })
 

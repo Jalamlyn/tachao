@@ -34,6 +34,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   const { getDetail, create: createMetadata, update: updateMetadata } = useMetadata("form")
   const { getDetail: getTemplateDetail } = useMetadata("template")
   const [formValues, setFormValues] = useState<any>(null)
+  const [validationErrors, setValidationErrors] = useState<{
+    required?: Array<{ field: string; message: string }>
+    invalid?: Array<{ field: string; message: string }>
+    other?: Array<{ field: string; message: string }>
+  }>({})
 
   useEffect(() => {
     const loadFormData = async () => {
@@ -58,16 +63,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       }
     }
 
-    // loadFormData()
+    loadFormData()
   }, [id, getDetail, initialValues])
 
   const { form, submitForm } = useDynamicForm(config, initialValues)
   const [isEditing, setIsEditing] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<{
-    required?: string[]
-    invalid?: string[]
-    other?: string[]
-  }>({})
   const printRef = useRef<HTMLDivElement>(null)
   const printId = useRef<string>()
 
@@ -123,22 +123,28 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   const handleValidationErrors = (errors?: string[]) => {
     if (!errors?.length) return
 
-    setValidationErrors({
-      required: errors.filter((err) => err.includes("不能为空")),
-      invalid: errors.filter((err) => err.includes("格式错误") || err.includes("不能早于")),
-      other: errors.filter((err) => !err.includes("不能为空") && !err.includes("格式错误")),
+    // 设置表单字段错误
+    const fieldErrors = form.formState.errors
+    Object.entries(fieldErrors).forEach(([field, error]) => {
+      form.setError(field, {
+        type: "custom",
+        message: error.message || String(error),
+      })
     })
 
-    message.error(
+    // 显示错误消息
+    const errorContent = (
       <div className='space-y-2'>
         {errors.map((error, index) => (
           <div key={index} className='flex items-center gap-2'>
-            <Icon icon='mdi:alert-circle' className='w-4 h-4' />
+            <Icon icon='mdi:alert-circle' className='w-4 h-4 text-red-500' />
             <span>{error}</span>
           </div>
         ))}
       </div>
     )
+
+    message.error(errorContent)
   }
 
   const handlePrint = useReactToPrint({
@@ -192,6 +198,21 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
         if (!success) {
           if (validationResult) {
+            // 设置表单字段错误
+            if (validationResult.fields) {
+              Object.entries(validationResult.fields).forEach(([field, error]) => {
+                form.setError(field, {
+                  type: "custom",
+                  message: error,
+                })
+              })
+            }
+
+            // 设置分类错误
+            if (validationResult.categorizedErrors) {
+              setValidationErrors(validationResult.categorizedErrors)
+            }
+
             handleValidationErrors(validationResult.errors)
           }
           return
@@ -213,6 +234,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           const result = await updateMetadata(id, formData)
           if (result) {
             setIsEditing(false)
+            message.success("保存成功")
           } else {
             throw new Error("更新失败")
           }
@@ -220,6 +242,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           const result = await createMetadata(formData)
           if (result) {
             setIsEditing(false)
+            message.success("创建成功")
           } else {
             throw new Error("创建失败")
           }
@@ -277,17 +300,61 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             )}
             {metadata.permissions?.edit && (
               <Button
-                variant='flat'
+                variant='bordered'
                 color={isEditing ? "warning" : "primary"}
                 className={cn(styles["button"], "w-full md:w-auto")}
                 onClick={() => setIsEditing(!isEditing)}
               >
                 <Icon icon={isEditing ? "mdi:pencil-off" : "mdi:pencil"} className='w-4 h-4' />
-                <span className='hidden md:inline ml-1'>{isEditing ? "取消编辑" : "编辑"}</span>
+                <span className='hidden md:inline ml-1'>{isEditing ? "取消填写" : "填写表单"}</span>
               </Button>
             )}
           </div>
         </div>
+
+        {/* 验证错误提示 */}
+        {Object.keys(validationErrors).length > 0 && (
+          <div className={cn(styles["form-card"], "bg-red-50 border-red-100")}>
+            <div className='space-y-2'>
+              {validationErrors.required && validationErrors.required.length > 0 && (
+                <div>
+                  <h3 className='text-red-600 font-medium mb-1'>必填字段错误:</h3>
+                  <ul className='list-disc list-inside space-y-1'>
+                    {validationErrors.required.map(({ field, message }, index) => (
+                      <li key={index} className='text-red-500'>
+                        {message}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {validationErrors.invalid && validationErrors.invalid.length > 0 && (
+                <div>
+                  <h3 className='text-red-600 font-medium mb-1'>格式错误:</h3>
+                  <ul className='list-disc list-inside space-y-1'>
+                    {validationErrors.invalid.map(({ field, message }, index) => (
+                      <li key={index} className='text-red-500'>
+                        {message}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {validationErrors.other && validationErrors.other.length > 0 && (
+                <div>
+                  <h3 className='text-red-600 font-medium mb-1'>其他错误:</h3>
+                  <ul className='list-disc list-inside space-y-1'>
+                    {validationErrors.other.map(({ field, message }, index) => (
+                      <li key={index} className='text-red-500'>
+                        {message}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 基本信息 */}
         <div className={cn(styles["form-card"])}>
