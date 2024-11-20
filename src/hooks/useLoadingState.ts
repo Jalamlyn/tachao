@@ -1,72 +1,34 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 interface LoadingOptions {
-  /**
-   * 延迟显示loading的时间(ms)
-   * 如果加载在这个时间内完成,则不显示loading状态
-   */
   delay?: number
-  /**
-   * loading状态的最小显示时间(ms)
-   * 确保loading状态至少显示这么长时间
-   */
   minDuration?: number
-  /**
-   * 是否启用动画效果
-   */
   animate?: boolean
-  /**
-   * 初始loading状态
-   */
   initialState?: boolean
+  suspense?: boolean
 }
 
 interface LoadingState {
-  /**
-   * 是否显示loading状态
-   */
   loading: boolean
-  /**
-   * 是否为空状态
-   */
   empty: boolean
-  /**
-   * 错误信息
-   */
   error: Error | null
-  /**
-   * 是否处于动画过渡中
-   */
   animating: boolean
 }
 
 interface LoadingStateReturn {
-  /**
-   * 状态对象
-   */
   state: LoadingState
-  /**
-   * 设置loading状态
-   */
   setLoading: (loading: boolean) => void
-  /**
-   * 设置空状态
-   */
   setEmpty: (empty: boolean) => void
-  /**
-   * 设置错误状态
-   */
   setError: (error: Error | null) => void
-  /**
-   * 重置所有状态
-   */
   reset: () => void
-  /**
-   * 包装异步函数，自动处理loading状态
-   */
   withLoading: <T>(promise: Promise<T>) => Promise<T>
 }
 
+/**
+ * @deprecated 使用 useQueryLoadingState 替代
+ * 这是传统的 loading state 实现，建议迁移到新的 React Query 实现
+ */
 export function useLoadingState(options: LoadingOptions = {}): LoadingStateReturn {
   const {
     delay = 200,
@@ -88,7 +50,6 @@ export function useLoadingState(options: LoadingOptions = {}): LoadingStateRetur
 
   const setLoading = useCallback((loading: boolean) => {
     if (loading) {
-      // 延迟显示loading
       delayTimerRef.current = setTimeout(() => {
         startTimeRef.current = Date.now()
         setState(prev => ({
@@ -98,7 +59,6 @@ export function useLoadingState(options: LoadingOptions = {}): LoadingStateRetur
         }))
       }, delay)
     } else {
-      // 确保最小显示时间
       const currentDuration = startTimeRef.current ? Date.now() - startTimeRef.current : 0
       const remainingDuration = Math.max(0, minDuration - currentDuration)
 
@@ -135,7 +95,6 @@ export function useLoadingState(options: LoadingOptions = {}): LoadingStateRetur
     try {
       setLoading(true)
       const result = await promise
-      // 自动处理空状态
       if (Array.isArray(result)) {
         setEmpty(result.length === 0)
       }
@@ -148,7 +107,6 @@ export function useLoadingState(options: LoadingOptions = {}): LoadingStateRetur
     }
   }, [setLoading, setEmpty, setError])
 
-  // 清理定时器
   useEffect(() => {
     return () => {
       delayTimerRef.current && clearTimeout(delayTimerRef.current)
@@ -165,3 +123,61 @@ export function useLoadingState(options: LoadingOptions = {}): LoadingStateRetur
     withLoading
   }
 }
+
+/**
+ * 基于 React Query 的新版 loading state 实现
+ * 提供更好的数据获取和缓存管理能力
+ */
+export function useQueryLoadingState<TData = unknown, TError = Error>(
+  queryKey: string | readonly unknown[],
+  queryFn: () => Promise<TData>,
+  options: LoadingOptions = {}
+) {
+  const {
+    delay = 200,
+    minDuration = 500,
+    animate = true,
+    suspense = false
+  } = options
+
+  const queryClient = useQueryClient()
+  const startTimeRef = useRef<number | null>(null)
+
+  const query = useQuery({
+    queryKey: Array.isArray(queryKey) ? queryKey : [queryKey],
+    queryFn: async () => {
+      startTimeRef.current = Date.now()
+      await new Promise(resolve => setTimeout(resolve, delay))
+      const result = await queryFn()
+      const elapsed = Date.now() - (startTimeRef.current || 0)
+      const remaining = Math.max(0, minDuration - elapsed)
+      if (remaining > 0) {
+        await new Promise(resolve => setTimeout(resolve, remaining))
+      }
+      return result
+    },
+    suspense
+  })
+
+  const state: LoadingState = {
+    loading: query.isLoading || query.isFetching,
+    empty: Array.isArray(query.data) ? query.data.length === 0 : false,
+    error: query.error as Error | null,
+    animating: animate && (query.isLoading || query.isFetching)
+  }
+
+  const reset = useCallback(() => {
+    queryClient.removeQueries({ queryKey: Array.isArray(queryKey) ? queryKey : [queryKey] })
+  }, [queryClient, queryKey])
+
+  return {
+    state,
+    data: query.data,
+    refetch: query.refetch,
+    reset,
+    query
+  }
+}
+
+// 导出默认的 useLoadingState 以保持兼容性
+export default useLoadingState
