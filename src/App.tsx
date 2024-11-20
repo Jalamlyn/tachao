@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { Navigate, Route, Routes, useNavigate, useLocation } from "react-router-dom"
 import { NextUIProvider } from "@nextui-org/react"
 import { useTranslation } from "react-i18next"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { getCurrentLanguage } from "./i18n"
 import WeChatLoginPage from "./pages/WeChatLoginPage"
 import FormRenderer from "./components/forms/FormRenderer"
@@ -13,9 +14,18 @@ import LandingPage from "./pages/LandingPage"
 import AIHomePage from "./pages/AIHomePage"
 import renderWeChatApp from "./apps/we-chat-app-admin/renderWeChatApp"
 import FormPreview from "./pages/form-temp-manager/components/FormPreview"
-// import Form from "./pages/form"
 import Form from "@/features/form"
 import ResourceDataTable from "./components/common/data-table/ResourceDataTable"
+
+// 创建 QueryClient 实例
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 
 function App() {
   const navigate = useNavigate()
@@ -37,48 +47,50 @@ function App() {
   }
 
   return (
-    <NextUIProvider navigate={navigate}>
-      <div className='min-h-screen'>
-        <Routes>
-          <Route path='/' element={<LandingPage />} />
-          <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <AIHomePage />}>
-            <Route index element={<Navigate to='management' replace />} />
-          </Route>
-          <Route path='/we-chat-login' element={<WeChatLoginPage />} />
-          <Route
-            path='/form-preview/:templateId'
-            element={
-              <div className='h-screen overflow-auto'>
-                <FormPreview />
-              </div>
-            }
-          />
-          <Route path='/form/:formId' element={<Form />} />
-          <Route
-            path='/forms/:id'
-            element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <FormRenderer />}
-          />
-          <Route
-            path='/forms/analysis'
-            element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <AnalysisPage />}
-          />
-          <Route
-            path='/resources/view/:id'
-            element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <ResourceDataTable />}
-          />
-          <Route
-            path='/reports/create'
-            element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <CreateReportPage />}
-          />
-          <Route
-            path='/reports/view/:id'
-            element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <ReadReportRenderer />}
-          />
-          {renderWeChatApp()}
-        </Routes>
-        <Toaster />
-      </div>
-    </NextUIProvider>
+    <QueryClientProvider client={queryClient}>
+      <NextUIProvider navigate={navigate}>
+        <div className='min-h-screen'>
+          <Routes>
+            <Route path='/' element={<LandingPage />} />
+            <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <AIHomePage />}>
+              <Route index element={<Navigate to='management' replace />} />
+            </Route>
+            <Route path='/we-chat-login' element={<WeChatLoginPage />} />
+            <Route
+              path='/form-preview/:templateId'
+              element={
+                <div className='h-screen overflow-auto'>
+                  <FormPreview />
+                </div>
+              }
+            />
+            <Route path='/form/:formId' element={<Form />} />
+            <Route
+              path='/forms/:id'
+              element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <FormRenderer />}
+            />
+            <Route
+              path='/forms/analysis'
+              element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <AnalysisPage />}
+            />
+            <Route
+              path='/resources/view/:id'
+              element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <ResourceDataTable />}
+            />
+            <Route
+              path='/reports/create'
+              element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <CreateReportPage />}
+            />
+            <Route
+              path='/reports/view/:id'
+              element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <ReadReportRenderer />}
+            />
+            {renderWeChatApp()}
+          </Routes>
+          <Toaster />
+        </div>
+      </NextUIProvider>
+    </QueryClientProvider>
   )
 }
 
