@@ -1,4 +1,4 @@
-import { useQueryMetadata } from "@/hooks/metadata/react-query"
+import { useQueryMetadata } from "@/hooks/react-query"
 
 export function useFormCount() {
   const { items: formItems } = useQueryMetadata("form")

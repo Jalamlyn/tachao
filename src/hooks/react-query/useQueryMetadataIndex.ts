@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getMetadata, setMetadata } from "@/service/apis/api"
-import { MetadataIndex } from "../types"
-import { jsonParse, jsonStringify, logger } from "../utils"
+import { MetadataIndex } from "../metadata/types"
+import { jsonParse, jsonStringify, logger } from "../metadata/utils"
 import { QueryMetadataOptions, QueryMetadataIndexResult } from "./types"
 
 /**

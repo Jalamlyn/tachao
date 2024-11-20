@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { queryMetadataHistory } from "@/service/apis/api"
-import { jsonParse, logger } from "../utils"
+import { jsonParse, logger } from "../metadata/utils"
 import { QueryMetadataOptions, QueryMetadataHistoryResult } from "./types"
 
 /**

@@ -1,4 +1,4 @@
-import { MetadataDetail, MetadataIndex } from "../types"
+import { MetadataDetail, MetadataIndex } from "../metadata/types"
 
 export interface QueryMetadataOptions {
   public?: boolean
@@ -44,4 +44,4 @@ export interface QueryMetadataHistoryResult {
   refetch: () => Promise<void>
 }
 
-export type { MetadataDetail, MetadataIndex } from "../types"
+export type { MetadataDetail, MetadataIndex } from "../metadata/types"

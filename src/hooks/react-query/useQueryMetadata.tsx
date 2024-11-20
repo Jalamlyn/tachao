@@ -5,10 +5,10 @@ import { deleteMetadata } from "@/service/apis/api"
 import { getCurrentAccountInfo } from "@/service/apis/user"
 import { MetadataDetail, MetadataIndex } from "@/hooks/metadata/types"
 import { generateMetadataId, logger } from "@/hooks/metadata/utils"
-import { useQueryMetadataIndex } from "@/hooks/metadata/react-query/useQueryMetadataIndex"
-import { useQueryMetadataDetail } from "@/hooks/metadata/react-query/useQueryMetadataDetail"
-import { useQueryMetadataHistory } from "@/hooks/metadata/react-query/useQueryMetadataHistory"
-import { QueryMetadataOptions } from "@/hooks/metadata/react-query/types"
+import { useQueryMetadataIndex } from "@/hooks/react-query/useQueryMetadataIndex"
+import { useQueryMetadataDetail } from "@/hooks/react-query/useQueryMetadataDetail"
+import { useQueryMetadataHistory } from "@/hooks/react-query/useQueryMetadataHistory"
+import { QueryMetadataOptions } from "@/hooks/react-query/types"
 import message from "@/components/Message"
 import { Button } from "@nextui-org/react"
 
@@ -332,8 +332,8 @@ export function useQueryMetadata<T = any>(type: string, options: QueryMetadataOp
   }
 }
 
-export * from "@/hooks/metadata/react-query/types"
+export * from "@/hooks/react-query/types"
 export * from "@/hooks/metadata/utils"
-export { useQueryMetadataIndex } from "@/hooks/metadata/react-query/useQueryMetadataIndex"
-export { useQueryMetadataDetail } from "@/hooks/metadata/react-query/useQueryMetadataDetail"
-export { useQueryMetadataHistory } from "@/hooks/metadata/react-query/useQueryMetadataHistory"
+export { useQueryMetadataIndex } from "@/hooks/react-query/useQueryMetadataIndex"
+export { useQueryMetadataDetail } from "@/hooks/react-query/useQueryMetadataDetail"
+export { useQueryMetadataHistory } from "@/hooks/react-query/useQueryMetadataHistory"

@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTransition } from "react"
 import { getMetadata, setMetadata, getPublicMetaData } from "@/service/apis/api"
-import { MetadataDetail } from "../types"
-import { jsonParse, jsonStringify, logger } from "../utils"
+import { MetadataDetail } from "../metadata/types"
+import { jsonParse, jsonStringify, logger } from "../metadata/utils"
 import { QueryMetadataOptions, QueryMetadataDetailResult } from "./types"
 
 /**

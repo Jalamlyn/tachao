@@ -18,7 +18,7 @@ import { MetadataDetail } from "@/hooks/metadata/types"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import message from "@/components/Message"
-import { useQueryMetadata, useQueryMetadataDetail } from "@/hooks/metadata/react-query"
+import { useQueryMetadata, useQueryMetadataDetail } from "@/hooks/react-query"
 import { ErrorBoundary } from "react-error-boundary"
 
 // 错误回退组件
