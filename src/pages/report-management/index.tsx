@@ -1,23 +1,27 @@
 import React, { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Select, SelectItem } from "@nextui-org/react"
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { useMetadata } from "@/hooks/useMetadata"
 import PageLayout from "@/components/PageLayout"
 import ReportGallery from "./components/ReportGallery"
 import message from "@/components/Message"
+import { useFormCount } from "@/hooks/useFormCount"
+import { GuideModal } from "@/components/GuideModal"
+import { TemplateSelect } from "@/components/TemplateSelect"
 
 const ReportManagement: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [showGuideModal, setShowGuideModal] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<string>("")
   const [templates, setTemplates] = useState<Array<{ id: string; title: string }>>([])
   const [loading, setLoading] = useState(false)
 
-  // 使用 useMetadata 获取模板列表
   const { load: loadTemplates } = useMetadata("template")
+  const { getFormCountByTemplate } = useFormCount()
 
   useEffect(() => {
     updateBreadcrumbs([
@@ -26,7 +30,6 @@ const ReportManagement: React.FC = () => {
     ])
   }, [])
 
-  // 加载模板列表
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
@@ -68,9 +71,15 @@ const ReportManagement: React.FC = () => {
       return
     }
 
+    const formCount = getFormCountByTemplate(selectedTemplate)
+    
+    if(formCount < 10) {
+      setShowGuideModal(true)
+      return
+    }
+
     setLoading(true)
     try {
-      // 直接通过路由参数传递模板ID
       navigate(`/we-chat-app/admin/reports/ai/create/${selectedTemplate}`)
       handleCreateModalClose()
     } catch (error) {
@@ -105,23 +114,19 @@ const ReportManagement: React.FC = () => {
         placement="center"
         classNames={{
           base: "max-w-md",
+          header: "border-b",
+          body: "py-6",
+          footer: "border-t",
         }}
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">选择数据源</ModalHeader>
           <ModalBody>
-            <Select
-              label="选择表单类型"
-              placeholder="请选择表单类型"
-              selectedKeys={selectedTemplate ? [selectedTemplate] : []}
-              onChange={(e) => handleTemplateSelect(e.target.value)}
-            >
-              {templates.map((template) => (
-                <SelectItem key={template.id} value={template.id}>
-                  {template.title}
-                </SelectItem>
-              ))}
-            </Select>
+            <TemplateSelect
+              templates={templates}
+              value={selectedTemplate}
+              onChange={handleTemplateSelect}
+            />
           </ModalBody>
           <ModalFooter>
             <Button variant="light" onPress={handleCreateModalClose}>
@@ -133,6 +138,13 @@ const ReportManagement: React.FC = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      <GuideModal
+        isOpen={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
+        formCount={getFormCountByTemplate(selectedTemplate)}
+        templateId={selectedTemplate}
+      />
     </PageLayout>
   )
 }
