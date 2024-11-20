@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React from "react"
 import {
   Card,
   CardBody,
@@ -12,13 +12,15 @@ import {
   ModalFooter,
   Input,
   Skeleton,
+  Tooltip,
 } from "@nextui-org/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
-import { useMetadata } from "@/hooks/useMetadata"
-import { useLoadingState } from "@/hooks/useLoadingState"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { getMetadata, setMetadata, deleteMetadata } from "@/service/apis/api"
 import message from "@/components/Message"
+import { jsonParse, jsonStringify } from "@/utils/codeParser"
 
 interface Template {
   id: string
@@ -28,53 +30,54 @@ interface Template {
 }
 
 interface TemplateGalleryProps {
-  templates?: Template[]
   onTemplateSelect: (templateId: string) => void
   className?: string
 }
 
-const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTemplates, onTemplateSelect, className }) => {
+const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, className }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isOpen: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure()
   const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(null)
-  const [internalTemplates, setInternalTemplates] = useState<Template[]>([])
-  const { remove, load } = useMetadata("template")
+  const queryClient = useQueryClient()
 
-  // 使用新的 loading 状态管理 hook
-  const { state, withLoading } = useLoadingState({
-    delay: 300,
-    minDuration: 500,
-    animate: true
+  // 使用 React Query 获取模板列表
+  const {
+    data: templates = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["templates"],
+    queryFn: async () => {
+      const result = await getMetadata(["template_index"])
+      if (result.data?.[0]?.value) {
+        return jsonParse(result.data[0].value) as Template[]
+      }
+      return []
+    },
   })
 
-  const templates = internalTemplates.length > 0 ? internalTemplates : propTemplates || []
-
-  const loadTemplates = async () => {
-    try {
-      const result = await withLoading(load())
-      if (result) {
-        setInternalTemplates(result)
-      }
-    } catch (error) {
-      console.error("加载模板列表失败:", error)
-      message.error("加载模板列表失败")
-    }
-  }
-
-  useEffect(() => {
-    loadTemplates()
-  }, [])
+  // 使用 React Query 的 mutation 来删除模板
+  const deleteMutation = useMutation({
+    mutationFn: async (templateId: string) => {
+      await deleteMetadata({ name: templateId })
+      const currentTemplates = templates.filter((t) => t.id !== templateId)
+      await setMetadata("template_index", jsonStringify(currentTemplates))
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["templates"] })
+      message.success("模板删除成功")
+      onClose()
+    },
+    onError: (error) => {
+      console.error("删除模板失败:", error)
+      message.error("删除模板失败")
+    },
+  })
 
   const handleDeleteConfirm = async () => {
     if (selectedTemplate) {
-      try {
-        await remove(selectedTemplate.id)
-        onClose()
-        await loadTemplates()
-      } catch (error) {
-        console.error("删除模板失败:", error)
-      }
+      deleteMutation.mutate(selectedTemplate.id)
     }
   }
 
@@ -104,6 +107,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
       const shareLink = `${window.location.origin}/form-preview/${selectedTemplate.id}`
       try {
         await navigator.clipboard.writeText(shareLink)
+        message.success("链接已复制到剪贴板")
         onShareClose()
       } catch (error) {
         console.error("复制链接失败:", error)
@@ -113,7 +117,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
   }
 
   // Loading 状态
-  if (state.loading) {
+  if (isLoading) {
     return (
       <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${className}`}>
         {[1, 2, 3, 4].map((key) => (
@@ -145,7 +149,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
   }
 
   // 错误状态
-  if (state.error) {
+  if (error) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -155,12 +159,12 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
         <Icon icon='mdi:alert-circle' className='w-16 h-16 text-danger mb-4' />
         <h3 className='text-xl font-medium text-danger mb-2'>加载失败</h3>
         <p className='text-default-500 mb-8 text-center max-w-md'>
-          {state.error.message || "请稍后重试"}
+          {(error as Error).message || "请稍后重试"}
         </p>
         <Button
           color='primary'
           variant='flat'
-          onClick={loadTemplates}
+          onClick={() => queryClient.invalidateQueries({ queryKey: ["templates"] })}
           startContent={<Icon icon='mdi:refresh' className='w-5 h-5' />}
         >
           重试
@@ -170,7 +174,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
   }
 
   // 空状态
-  if (state.empty || templates.length === 0) {
+  if (templates.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -310,6 +314,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
             <Button
               color='danger'
               onPress={handleDeleteConfirm}
+              isLoading={deleteMutation.isPending}
               startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
             >
               删除
