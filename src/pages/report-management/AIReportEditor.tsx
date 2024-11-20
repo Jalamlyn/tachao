@@ -109,9 +109,9 @@ const AIReportEditor: React.FC = () => {
 
   // 使用 React Query hooks
   const { 
-    data: formItems, 
+    items: formItems, 
     error: formError,
-    isLoading: formLoading,
+    isPending: formLoading,
     getDetail: formDetail 
   } = useQueryMetadata("form", {
     suspense: false,
@@ -120,9 +120,9 @@ const AIReportEditor: React.FC = () => {
   })
 
   const {
-    data: reportItems,
+    items: reportItems,
     error: reportError,
-    isLoading: reportLoading,
+    isPending: reportLoading,
     getDetail: reportDetail
   } = useQueryMetadata("report", {
     suspense: false,
