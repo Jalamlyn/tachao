@@ -32,6 +32,7 @@ interface Report {
 interface ReportGalleryProps {
   reports?: Report[]
   onReportSelect: (reportId: string) => void
+  onCreateReport?: () => void
   className?: string
 }
 
@@ -121,7 +122,7 @@ const getEmptyState = (hasTemplates: boolean): EmptyState => {
   }
 }
 
-const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onReportSelect, className }) => {
+const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onReportSelect, onCreateReport, className }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isOpen: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure()
@@ -222,7 +223,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
     return (
       <EmptyState 
         state={getEmptyState(templates.length > 0)} 
-        onCreateReport={() => navigate('/we-chat-app/admin/reports/create')} 
+        onCreateReport={onCreateReport}
       />
     )
   }

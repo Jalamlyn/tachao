@@ -93,7 +93,11 @@ const ReportManagement: React.FC = () => {
 
   return (
     <PageLayout title='报表管理' titleIcon='mdi:file-chart' actions={pageActions}>
-      <ReportGallery onReportSelect={handleReportSelect} className='transition-all duration-300' />
+      <ReportGallery 
+        onReportSelect={handleReportSelect} 
+        onCreateReport={handleCreateClick}
+        className='transition-all duration-300' 
+      />
 
       <Modal 
         isOpen={isCreateModalOpen} 
