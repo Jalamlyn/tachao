@@ -19,7 +19,7 @@ export class AIFormAgent implements IAIFormAgent {
   private static instance: AIFormAgent
   private _rawConfig: string | null = null
   private _cachedImage: string | null = null
-  private systemPrompt = `你是一个智能表单助手，负责帮助用户创建和检索表单。
+  private systemPrompt = `你是一个表单助手，负责帮助用户创建和检索表单。
 
 每次都生成一个完整的符合 DynamicFormConfig 类型的配置对象，不生成局部修改。
 ${

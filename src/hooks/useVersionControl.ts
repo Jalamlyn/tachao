@@ -12,9 +12,9 @@ export function useVersionControl<T>(initialData?: T) {
   const [currentIndex, setCurrentIndex] = useState(initialData ? 0 : -1)
 
   const addVersion = useCallback((newData: T) => {
-    setVersions((prev) => [...prev, { data: newData, timestamp: Date.now() }])
+    setVersions((prev) => [...prev.slice(0, currentIndex + 1), { data: newData, timestamp: Date.now() }])
     setCurrentIndex((prev) => prev + 1)
-  }, [])
+  }, [currentIndex])
 
   const rollback = useCallback(() => {
     if (currentIndex > 0) {
@@ -24,9 +24,10 @@ export function useVersionControl<T>(initialData?: T) {
     return null
   }, [currentIndex, versions])
 
-  const getCurrentVersion = useCallback(() => {
-    if (currentIndex >= 0 && versions[currentIndex]) {
-      return versions[currentIndex].data
+  const forward = useCallback(() => {
+    if (currentIndex < versions.length - 1) {
+      setCurrentIndex((prev) => prev + 1)
+      return versions[currentIndex + 1].data
     }
     return null
   }, [currentIndex, versions])
@@ -34,8 +35,16 @@ export function useVersionControl<T>(initialData?: T) {
   return {
     addVersion,
     rollback,
-    getCurrentVersion,
+    forward,
+    getCurrentVersion: useCallback(() => {
+      if (currentIndex >= 0 && versions[currentIndex]) {
+        return versions[currentIndex].data
+      }
+      return null
+    }, [currentIndex, versions]),
     hasHistory: currentIndex > 0,
+    canRollback: currentIndex > 0,
+    canForward: currentIndex < versions.length - 1,
     versions,
     currentIndex,
   }
