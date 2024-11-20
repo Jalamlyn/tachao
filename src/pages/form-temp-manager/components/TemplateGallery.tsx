@@ -11,11 +11,13 @@ import {
   ModalBody,
   ModalFooter,
   Input,
+  Skeleton,
 } from "@nextui-org/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
+import { useLoadingState } from "@/hooks/useLoadingState"
 import message from "@/components/Message"
 
 interface Template {
@@ -36,24 +38,27 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isOpen: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure()
   const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
   const [internalTemplates, setInternalTemplates] = useState<Template[]>([])
   const { remove, load } = useMetadata("template")
+
+  // 使用新的 loading 状态管理 hook
+  const { loading, withLoading } = useLoadingState({
+    delay: 300,
+    minDuration: 500,
+    animate: true
+  })
 
   const templates = internalTemplates.length > 0 ? internalTemplates : propTemplates || []
 
   const loadTemplates = async () => {
     try {
-      setIsLoading(true)
-      const result = await load()
+      const result = await withLoading(load())
       if (result) {
         setInternalTemplates(result)
       }
     } catch (error) {
       console.error("加载模板列表失败:", error)
       message.error("加载模板列表失败")
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -85,6 +90,15 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
     onShareOpen()
   }
 
+  const handleAIEditClick = async (template: Template, e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigate(`/we-chat-app/admin/documents/edit/${template.id}`)
+  }
+
+  const handleCreateTemplate = () => {
+    navigate("/we-chat-app/admin/documents/create")
+  }
+
   const handleCopyShareLink = async () => {
     if (selectedTemplate) {
       const shareLink = `${window.location.origin}/form-preview/${selectedTemplate.id}`
@@ -98,74 +112,150 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
     }
   }
 
-  const handleAIEditClick = async (template: Template, e: React.MouseEvent) => {
-    e.stopPropagation()
-    navigate(`/we-chat-app/admin/documents/edit/${template.id}`)
-  }
-
-  return (
-    <>
-      <motion.div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${className}`}>
-        {templates.map((template) => (
-          <motion.div key={template.id} layout className='h-full'>
-            <Card
-              isPressable
-              isHoverable
-              className='w-full h-[240px] group'
-              onPress={() => onTemplateSelect(template.id)}
-            >
-              <CardBody className='p-0 relative overflow-hidden'>
-                <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 group-hover:scale-105 transition-transform duration-300'>
-                  <Icon
-                    icon='fluent:form-28-filled'
-                    className='w-16 h-16 text-primary-400 group-hover:scale-110 transition-transform duration-300'
-                  />
-                </div>
+  // Loading 状态
+  if (loading) {
+    return (
+      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${className}`}>
+        {[1, 2, 3, 4].map((key) => (
+          <motion.div
+            key={key}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <Card className='w-full h-[240px]'>
+              <CardBody className='p-0'>
+                <Skeleton className='rounded-lg'>
+                  <div className='h-[160px] rounded-lg bg-default-300'></div>
+                </Skeleton>
               </CardBody>
-              <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
-                <div className='flex justify-between items-center w-full'>
-                  <h4
-                    className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors duration-300'
-                    title={template.title}
-                  >
-                    {template.title}
-                  </h4>
-                </div>
-                <div className='flex justify-between items-center w-full'>
-                  <div className='flex gap-2'>
-                    <Button
-                      isIconOnly
-                      size='sm'
-                      variant='light'
-                      className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
-                      onClick={(e) => handleShareClick(template, e)}
-                    >
-                      <Icon icon='mdi:share' className='w-4 h-4' />
-                    </Button>
-                    <Button
-                      isIconOnly
-                      size='sm'
-                      variant='light'
-                      className='text-default-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-300'
-                      onClick={(e) => handleAIEditClick(template, e)}
-                    >
-                      <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
-                    </Button>
-                    <Button
-                      isIconOnly
-                      size='sm'
-                      variant='light'
-                      className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
-                      onClick={(e) => handleDeleteClick(template, e)}
-                    >
-                      <Icon icon='mdi:delete' className='w-4 h-4' />
-                    </Button>
-                  </div>
-                </div>
+              <CardFooter className='flex flex-col gap-3 px-4 py-3'>
+                <Skeleton className='w-3/4 rounded'>
+                  <div className='h-4 rounded bg-default-200'></div>
+                </Skeleton>
+                <Skeleton className='w-1/2 rounded'>
+                  <div className='h-3 rounded bg-default-200'></div>
+                </Skeleton>
               </CardFooter>
             </Card>
           </motion.div>
         ))}
+      </div>
+    )
+  }
+
+  // 空状态
+  if (templates.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className='flex flex-col items-center justify-center min-h-[400px] p-8'
+      >
+        <div className='w-48 h-48 mb-8 relative'>
+          <motion.div
+            animate={{
+              scale: [1, 1.05, 1],
+              rotate: [0, -5, 5, 0],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              repeatType: "reverse",
+            }}
+          >
+            <Icon icon='fluent:document-add-48-regular' className='w-full h-full text-primary/30' />
+          </motion.div>
+        </div>
+        <h3 className='text-xl font-medium text-foreground mb-2'>还没有表单模板</h3>
+        <p className='text-default-500 mb-8 text-center max-w-md'>
+          创建你的第一个表单模板，AI 助手会帮助你快速生成专业的表单
+        </p>
+        <Button
+          color='primary'
+          size='lg'
+          onClick={handleCreateTemplate}
+          startContent={<Icon icon='mdi:plus' className='w-5 h-5' />}
+        >
+          生成表单模板
+        </Button>
+      </motion.div>
+    )
+  }
+
+  // 模板列表
+  return (
+    <>
+      <motion.div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${className}`}>
+        <AnimatePresence>
+          {templates.map((template) => (
+            <motion.div
+              key={template.id}
+              layout
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className='h-full'
+            >
+              <Card
+                isPressable
+                isHoverable
+                className='w-full h-[240px] group'
+                onPress={() => onTemplateSelect(template.id)}
+              >
+                <CardBody className='p-0 relative overflow-hidden'>
+                  <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 group-hover:scale-105 transition-transform duration-300'>
+                    <Icon
+                      icon='fluent:form-28-filled'
+                      className='w-16 h-16 text-primary-400 group-hover:scale-110 transition-transform duration-300'
+                    />
+                  </div>
+                </CardBody>
+                <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
+                  <div className='flex justify-between items-center w-full'>
+                    <h4
+                      className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors duration-300'
+                      title={template.title}
+                    >
+                      {template.title}
+                    </h4>
+                  </div>
+                  <div className='flex justify-between items-center w-full'>
+                    <div className='flex gap-2'>
+                      <Button
+                        isIconOnly
+                        size='sm'
+                        variant='light'
+                        className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+                        onClick={(e) => handleShareClick(template, e)}
+                      >
+                        <Icon icon='mdi:share' className='w-4 h-4' />
+                      </Button>
+                      <Button
+                        isIconOnly
+                        size='sm'
+                        variant='light'
+                        className='text-default-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-300'
+                        onClick={(e) => handleAIEditClick(template, e)}
+                      >
+                        <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
+                      </Button>
+                      <Button
+                        isIconOnly
+                        size='sm'
+                        variant='light'
+                        className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
+                        onClick={(e) => handleDeleteClick(template, e)}
+                      >
+                        <Icon icon='mdi:delete' className='w-4 h-4' />
+                      </Button>
+                    </div>
+                  </div>
+                </CardFooter>
+              </Card>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </motion.div>
 
       <Modal
