@@ -42,7 +42,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
   const { remove, load } = useMetadata("template")
 
   // 使用新的 loading 状态管理 hook
-  const { loading, withLoading } = useLoadingState({
+  const { state, withLoading } = useLoadingState({
     delay: 300,
     minDuration: 500,
     animate: true
@@ -113,7 +113,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
   }
 
   // Loading 状态
-  if (loading) {
+  if (state.loading) {
     return (
       <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${className}`}>
         {[1, 2, 3, 4].map((key) => (
@@ -144,8 +144,33 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ templates: propTempla
     )
   }
 
+  // 错误状态
+  if (state.error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className='flex flex-col items-center justify-center min-h-[400px] p-8'
+      >
+        <Icon icon='mdi:alert-circle' className='w-16 h-16 text-danger mb-4' />
+        <h3 className='text-xl font-medium text-danger mb-2'>加载失败</h3>
+        <p className='text-default-500 mb-8 text-center max-w-md'>
+          {state.error.message || "请稍后重试"}
+        </p>
+        <Button
+          color='primary'
+          variant='flat'
+          onClick={loadTemplates}
+          startContent={<Icon icon='mdi:refresh' className='w-5 h-5' />}
+        >
+          重试
+        </Button>
+      </motion.div>
+    )
+  }
+
   // 空状态
-  if (templates.length === 0) {
+  if (state.empty || templates.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
