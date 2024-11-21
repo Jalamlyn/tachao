@@ -154,6 +154,40 @@ const AIReportEditor: React.FC = () => {
     ])
   }, [])
 
+  useEffect(() => {
+    const currentVersion = versionControl.getCurrentVersion()
+    if (currentVersion?.rawConfig) {
+      setPreviewContent(currentVersion.rawConfig)
+      AIReportAgent.analyzeData(processedDataRef.current, currentVersion.rawConfig)
+        .then((analysis) => {
+          setPreviewComponent(
+            <ErrorBoundary
+              onReset={() => {
+                const prevVersion = versionControl.rollback()
+                if (prevVersion) {
+                  setPreviewContent(prevVersion.rawConfig || "")
+                  AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
+                    .then((analysis) => {
+                      setPreviewComponent(<AnalysisResult analysis={analysis} />)
+                    })
+                    .catch((error) => {
+                      message.error("分析数据失败")
+                      console.error(error)
+                    })
+                }
+              }}
+            >
+              <AnalysisResult analysis={analysis} />
+            </ErrorBoundary>
+          )
+        })
+        .catch((error) => {
+          message.error("分析数据失败")
+          console.error(error)
+        })
+    }
+  }, [versionControl.currentIndex])
+
   const handleChunk = useCallback((chunk: string) => {
     accumulatedTextRef.current += chunk
 
@@ -233,7 +267,7 @@ const AIReportEditor: React.FC = () => {
           command: command,
           onChunk: handleChunk,
           // 如果是更新模式(有 reportId)且有现有配置,则传入 rawConfig
-          ...(reportId && currentVersion?.rawConfig ? { rawConfig: currentVersion.rawConfig } : {})
+          ...(reportId && currentVersion?.rawConfig ? { rawConfig: currentVersion.rawConfig } : {}),
         })
 
         return result
