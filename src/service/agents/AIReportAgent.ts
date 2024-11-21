@@ -1,9 +1,9 @@
-import chatChunkClaude from "../chat/chat-chunk-claude-office"
-import { Message } from "./AIFormAgentTypes"
+import chatChunkClaude from "@/service/chat/chat-chunk-claude-office"
+import { Message } from "@/service/agents/AIFormAgentTypes"
 import { formulaService } from "@/services/formulaService"
 import { markdown as doc } from "@/pages/report-management/components/AnalysisResult.md"
-import generateSystemPrompt from "./prompts/report-agent-prompt"
-import { ProcessedData } from "/Users/jalam/Works/mo-repo/shata-ai-front/src/pages/report-management/utils/processReportData"
+import generateSystemPrompt from "@/service/agents/prompts/report-agent-prompt"
+import { ProcessedData } from "@/pages/report-management/utils/processReportData"
 
 export type ReportColumn = {
   header: string
@@ -14,21 +14,27 @@ interface AnalysisResult {
   type: "analyze"
   data: any[]
   analysis: {
-    summary: Record<string, number | string>
-    charts?: {
-      type: string
-      data: {
-        labels: string[]
-        values: number[]
+    summary: {
+      [key: string]: {
+        value: number | string | Record<string, any>
+        label: string
       }
-    }[]
+    }
+    charts?: Array<{
+      type: string
+      title: string
+      data: Array<{
+        name: string
+        value: number
+      }>
+    }>
     insights: string[]
     processAnalysis?: {
       summary?: {
-        totalProcessNodes: number
-        completedNodes: number
-        completionRate: string
-        averageProcessTime: string
+        totalProcessNodes: { value: number; label: string }
+        completedNodes: { value: number; label: string }
+        completionRate: { value: string; label: string }
+        averageProcessTime: { value: string; label: string }
       }
       nodeStatus?: Record<string, string>
       processDuration?: {

@@ -1,202 +1,289 @@
-// 基础提示词部分
-const basePrompt = `你是一个智能报表分析助手，负责帮助用户对数据进行分析。
-请仔细分析用户的需求，生成相应的分析代码。`
+// 基础数据结构定义
+const structureDefinition = `
+返回结果必须严格遵循以下数据结构:
 
-// 数据要求部分
-const dataRequirements = (data: any[]) => `
-这是需要你分析的数据的前3行:
-<data>
-${JSON.stringify(data.slice(0, 3), null, 2)}
-</data>
-
-数据总行数: ${data.length}
-`
-
-// 返回结构限制
-const returnStructureRequirements = `
-返回格式要求:
-1. 必须使用 <shata-ai-code> 标签包裹生成的代码
-2. 生成的代码必须直接返回一个符合以下结构的对象:
 {
   type: 'analyze',
-  data: data, // 保持原始数据不变
+  data: Array<any>,
   analysis: {
-    summary: {...},  // 必须在顶层
-    charts: [...],   // 必须在顶层
-    tables: [...],   // 必须在顶层
-    insights: [...], // 必须在顶层
-    processAnalysis: {...} // 可选,用于流程数据
+    // 统计摘要,包含关键指标
+    summary: {
+      [key: string]: {
+        value: number | string | Record<string, any>,
+        label: string  // 显示给用户的中文文本
+      }
+    },
+    
+    // 图表数据,必须在顶层
+    charts?: Array<{
+      type: string, // 图表类型
+      title: string, // 图表标题
+      data: Array<{
+        name: string,
+        value: number
+      }>
+    }>,
+    
+    // 表格数据,必须在顶层
+    tables?: Array<{
+      title: string,
+      columns: Array<{
+        key: string,
+        title: string
+      }>,
+      data: Array<any>
+    }>,
+    
+    // 数据洞察,必须在顶层
+    insights: Array<string>,
+
+    // 流程分析数据(可选)
+    processAnalysis?: {
+      // 流程概要信息
+      summary?: {
+        totalProcessNodes: {
+          value: number,
+          label: string
+        },
+        completedNodes: {
+          value: number,
+          label: string
+        },
+        completionRate: {
+          value: string,
+          label: string
+        },
+        averageProcessTime: {
+          value: string,
+          label: string
+        }
+      },
+      
+      // 节点状态信息
+      nodeStatus?: Record<string, string>,  // 必须是状态描述字符串
+      
+      // 流程耗时信息
+      processDuration?: {
+        total: string,                // 总耗时(必须是时间描述)
+        nodesDuration: Record<string, string>  // 各节点耗时(必须是时间描述)
+      },
+      
+      // 审批人工作量统计
+      approvers?: Record<string, number>,
+      
+      // 流程状态统计
+      processStatus?: Record<string, number>
+    }
   }
 }
-
-错误示例:
-❌ 不要这样写:
-<shata-ai-code>
-const analysis = {
-  fruitAnalysis: {  // ❌ 错误:不要创建额外的嵌套对象
-    charts: [...],  // ❌ 错误:charts不应该在嵌套对象中
-    tables: [...],  // ❌ 错误:tables不应该在嵌套对象中
-  }
-};
-</shata-ai-code>
-
-正确示例:
-✅ 应该这样写:
-<shata-ai-code>
-const result = {
-  type: 'analyze',
-  data: data,
-  analysis: {
-    summary: {...},
-    charts: [...],  // ✅ 正确:直接在顶层
-    tables: [...],  // ✅ 正确:直接在顶层
-    insights: [...] // ✅ 正确:直接在顶层
-  }
-};
-return result;
-</shata-ai-code>
 `
 
-// 核心要求部分
-const coreRequirements = `
-核心要求：
-1. 数据验证和计算
-   - 所有数值必须通过数据计算得出，禁止硬编码
-   - 必须对数据进行验证和空值检查
-   - 使用可选链操作符（?.）访问可能不存在的属性
-   - 对深层属性进行存在性检查
-   - 提供默认值处理异常情况
+// 数据计算规则
+const calculationRules = `
+重要规则:
+1. 所有统计值必须通过传入的data数据计算得到,不允许使用固定值或魔法数字
+2. 必须对data中的数值进行类型转换和有效性验证
+3. 必须处理空值和异常情况
+4. 时间相关的值必须转换为描述字符串(如:'2.5天')
+5. 状态描述必须使用字符串(如:'已完成','进行中')
+6. summary 中的每个字段必须包含 value 和 label，label 必须使用用户友好的中文描述
 
-2. 流程分析规范
-   - nodeStatus: 必须使用状态描述字符串（如：'已完成'、'进行中'）
-   - processDuration: 必须使用时间描述字符串（如：'5天'、'2小时'）
-   - 所有统计数据必须通过实际数据计算
-   - 审批人和状态统计必须基于实际数据
-`
-
-// 正确示例代码
-const correctExamples = `
-正确示例：
-// 基础统计计算
+示例计算代码:
+// 数据验证
 const validData = data.filter(item => item && typeof item === 'object');
+
+// 基础统计
 const totalCount = validData.length;
-const completedCount = validData.filter(item => item?.status === 'completed').length;
-const completionRate = \`\${((completedCount / totalCount) * 100).toFixed(2)}%\`;
+const completedCount = validData.filter(item => item.status === 'completed').length;
+const completionRate = totalCount > 0 ? \`\${((completedCount / totalCount) * 100).toFixed(1)}%\` : '0%';
 
-// 流程分析计算
-const processAnalysis = {
-  summary: {
-    totalProcessNodes: data.reduce((acc, item) => acc + (item?.nodes?.length || 0), 0),
-    completedNodes: data.filter(item => item?.status === 'completed').length,
-    completionRate: \`\${((completedCount / totalCount) * 100).toFixed(2)}%\`,
-    averageProcessTime: \`\${calculateAverageTime(data)}天\`
-  },
-  nodeStatus: data.reduce((acc, item) => {
-    if (item?.nodeName) {
-      acc[item.nodeName] = item.confirmed ? '已完成' : '进行中';
-    }
-    return acc;
-  }, {}),
-  processDuration: {
-    total: \`\${calculateTotalDuration(data)}天\`,
-    nodesDuration: calculateNodesDuration(data)
-  }
+// 流程节点统计
+const totalProcessNodes = validData.reduce((count, item) => {
+  return count + (Array.isArray(item.nodes) ? item.nodes.length : 0);
+}, 0);
+
+// 时间计算
+const averageTime = validData.reduce((total, item) => {
+  const duration = Number(item.duration) || 0;
+  return total + duration;
+}, 0) / (validData.length || 1);
+
+const formatDuration = (days) => {
+  if (days < 1) return \`\${(days * 24).toFixed(1)}小时\`;
+  return \`\${days.toFixed(1)}天\`;
+};
+
+// 节点状态映射
+const getNodeStatus = (status) => {
+  const statusMap = {
+    completed: '已完成',
+    processing: '进行中',
+    pending: '待处理'
+  };
+  return statusMap[status] || '未知状态';
 };
 `
 
-// 错误示例代码
-const incorrectExamples = `
-错误示例：
-// ❌ 错误：硬编码数值
-const wrongAnalysis = {
-  summary: {
-    totalProcessNodes: 5,           // 错误：直接写入数字
-    completedNodes: 3,              // 错误：直接写入数字
-    completionRate: '60%',          // 错误：直接写入百分比
-    averageProcessTime: '2.5天'     // 错误：直接写入时间
-  }
-};
+// 图表配置示例
+const chartExamples = `
+图表配置示例:
+// 饼图示例
+{
+  type: 'pie',
+  title: '状态分布',
+  data: [
+    { name: '已完成', value: completedCount },
+    { name: '进行中', value: processingCount },
+    { name: '待处理', value: pendingCount }
+  ]
+}
 
-// ❌ 错误：嵌套charts和tables
-const wrongStructure = {
-  analysis: {
-    dataAnalysis: {
-      charts: [...],  // 错误：不应该在嵌套对象中
-      tables: [...]   // 错误：不应该在嵌套对象中
-    }
-  }
-};
+// 柱状图示例
+{
+  type: 'bar',
+  title: '审批人工作量',
+  data: Object.entries(approverStats).map(([name, count]) => ({
+    name,
+    value: count
+  }))
+}
 `
 
-// 辅助函数示例
-const helperFunctions = `
-辅助函数示例：
-// 计算平均处理时间
-const calculateAverageTime = (data) => {
-  const times = data
-    .filter(item => item?.duration)
-    .map(item => item.duration);
-  return times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : 0;
-};
-
-// 安全的数据访问
-const safeGetValue = (obj, path, defaultValue = null) => {
-  return path.split('.').reduce((curr, key) => 
-    (curr && curr[key] !== undefined) ? curr[key] : defaultValue, 
-    obj
-  );
-};
+// 表格配置示例
+const tableExamples = `
+表格配置示例:
+{
+  title: '流程明细',
+  columns: [
+    { key: 'processId', title: '流程ID' },
+    { key: 'status', title: '状态' },
+    { key: 'duration', title: '耗时' },
+    { key: 'approver', title: '审批人' }
+  ],
+  data: validData.map(item => ({
+    processId: item.id,
+    status: getNodeStatus(item.status),
+    duration: formatDuration(item.duration),
+    approver: item.approver
+  }))
+}
 `
 
-// 返回格式要求
-const returnFormatRequirements = `
-返回格式要求：
-1. 使用 <shata-ai-code> 标签包裹生成的代码
-2. 直接返回可执行的 JavaScript 代码
-3. 不要将代码包装在函数定义中
-4. 直接使用传入的 data 参数
-5. 确保返回对象包含 type 和 data 字段
-6. 保持原始数据不变
-7. 统计结果放在 analysis 字段中
-
-返回示例：
-\`\`\`mo
-<shata-ai-code>
-const validData = data.filter(item => item && typeof item === 'object');
-const totalCount = validData.length;
-
+// 完整示例
+const fullExample = `
+完整示例:
 const result = {
   type: 'analyze',
   data: data,
   analysis: {
     summary: {
-      totalRecords: totalCount,
-      validRecords: validData.length,
-      completionRate: \`\${((validData.filter(item => item.completed).length / totalCount) * 100).toFixed(2)}%\`
+      totalCount: {
+        value: totalCount,
+        label: "总数量"
+      },
+      completedCount: {
+        value: completedCount,
+        label: "已完成数量"
+      },
+      completionRate: {
+        value: \`\${((completedCount / totalCount) * 100).toFixed(1)}%\`,
+        label: "完成率"
+      },
+      averageProcessTime: {
+        value: formatDuration(averageTime),
+        label: "平均处理时长"
+      }
     },
-    charts: [...],   // 必须在顶层
-    tables: [...],   // 必须在顶层
-    insights: [...]  // 必须在顶层
+    charts: [{
+      type: 'pie',
+      title: '状态分布',
+      data: [
+        { name: '已完成', value: completedCount },
+        { name: '进行中', value: processingCount }
+      ]
+    }],
+    tables: [{
+      title: '流程明细',
+      columns: [
+        { key: 'processId', title: '流程ID' },
+        { key: 'status', title: '状态' }
+      ],
+      data: validData.map(item => ({
+        processId: item.id,
+        status: getNodeStatus(item.status)
+      }))
+    }],
+    insights: [
+      \`总流程数: \${totalCount}个\`,
+      \`完成率: \${completionRate}\`,
+      \`平均处理时长: \${formatDuration(averageTime)}\`
+    ],
+    processAnalysis: {
+      summary: {
+        totalProcessNodes: {
+          value: totalProcessNodes,
+          label: "总节点数"
+        },
+        completedNodes: {
+          value: completedCount,
+          label: "已完成节点"
+        },
+        completionRate: {
+          value: completionRate,
+          label: "完成率"
+        },
+        averageProcessTime: {
+          value: formatDuration(averageTime),
+          label: "平均处理时长"
+        }
+      },
+      nodeStatus: validData.reduce((acc, item) => {
+        if (item.nodeName) {
+          acc[item.nodeName] = getNodeStatus(item.status);
+        }
+        return acc;
+      }, {}),
+      processDuration: {
+        total: formatDuration(totalDuration),
+        nodesDuration: calculateNodesDuration(validData)
+      },
+      approvers: calculateApproverStats(validData),
+      processStatus: calculateProcessStatus(validData)
+    }
   }
 };
-return result;
-</shata-ai-code>
-\`\`\`
 `
 
-// 生成完整的系统提示词
-export const generateSystemPrompt = (data: any[], doc: string): string => {
-  return `${basePrompt}
-${dataRequirements(data)}
-${returnStructureRequirements}
-${coreRequirements}
-${correctExamples}
-${incorrectExamples}
-${helperFunctions}
-${returnFormatRequirements}
+// 导出提示词生成函数
+const generateReportAnalysisPrompt = (data: any[]) => {
+  const basePrompt = `你是一个智能报表分析助手，负责帮助用户对数据进行分析。
+请仔细分析用户的需求，生成相应的分析代码。
 
-<doc>${doc}</doc>
+数据示例:
+${JSON.stringify(data.slice(0, 3), null, 2)}
+
+数据总行数: ${data.length}
+
+${structureDefinition}
+
+${calculationRules}
+
+${chartExamples}
+
+${tableExamples}
+
+${fullExample}
+
+请确保生成的代码:
+1. 严格遵循数据结构定义
+2. 所有值都通过data计算得到
+3. 进行适当的数据验证和类型转换
+4. 使用正确的时间和状态描述字符串
+5. charts、tables、insights必须在analysis的顶层
+6. summary 中的每个字段必须包含 value 和 label，label 必须使用用户友好的中文描述
 `
+
+  return basePrompt
 }
 
-export default generateSystemPrompt
+export default generateReportAnalysisPrompt
