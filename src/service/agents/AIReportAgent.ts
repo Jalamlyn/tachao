@@ -40,6 +40,13 @@ interface AnalysisResult {
   }
 }
 
+interface CommandResult {
+  success: boolean
+  message: string
+  rawConfig?: string
+  analysis?: AnalysisResult["analysis"]
+}
+
 type ResourceOperationResult = AnalysisResult
 
 interface ProcessCommandOptions {
@@ -87,11 +94,22 @@ export class AIReportAgent {
     }
   }
 
-  public async processCommand({ data, command, onChunk }: ProcessCommandOptions): Promise<{
-    success: boolean
-    message: string
-    analysis?: AnalysisResult["analysis"]
-  }> {
+  public async analyzeData(data: any[], rawConfig: string): Promise<AnalysisResult["analysis"]> {
+    try {
+      console.log("[AIReportAgent] Analyzing data with rawConfig")
+      const result = await this.executeCode(rawConfig, data)
+      if (!result || !result.type || !result.data) {
+        throw new Error("Invalid analysis result format")
+      }
+      console.log("[AIReportAgent] Data analysis completed successfully")
+      return result.analysis
+    } catch (error) {
+      console.error("[AIReportAgent] Error analyzing data:", error)
+      throw error
+    }
+  }
+
+  public async processCommand({ data, command, onChunk }: ProcessCommandOptions): Promise<CommandResult> {
     console.log("[AIReportAgent] Processing analysis command:", command)
 
     if (!data || !data.length) {
@@ -142,6 +160,7 @@ export class AIReportAgent {
       return {
         success: true,
         message: "分析完成",
+        rawConfig: generatedCode,
         analysis: result.analysis,
       }
     } catch (error) {
