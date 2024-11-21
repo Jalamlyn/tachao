@@ -18,6 +18,13 @@ import { generateColumns, flattenData, extractShataAICode } from "./utils/genera
 import { processReportData } from "./utils/processReportData"
 import { Message } from "./types"
 
+interface ReportAgentConfig {
+  data: ProcessedData
+  command: string
+  onChunk?: (chunk: string) => void
+  rawConfig?: string
+}
+
 const AIReportEditor: React.FC = () => {
   const navigate = useNavigate()
   const { reportId, templateId } = useParams<{ reportId: string; templateId: string }>()
@@ -218,10 +225,15 @@ const AIReportEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
+        // 获取当前版本的配置
+        const currentVersion = versionControl.getCurrentVersion()
+
         const result = await AIReportAgent.processCommand({
           data: processedData,
           command: command,
           onChunk: handleChunk,
+          // 如果是更新模式(有 reportId)且有现有配置,则传入 rawConfig
+          ...(reportId && currentVersion?.rawConfig ? { rawConfig: currentVersion.rawConfig } : {})
         })
 
         return result
@@ -490,7 +502,7 @@ const AIReportEditor: React.FC = () => {
           </ModalHeader>
           <ModalBody>
             <div className='space-y-4'>
-              <p className='text-gray-600'>恭喜！您的报表已经{reportId ? "更新" : "保存"}成功。现在您可以：</p>
+              <p className='text-default-600'>恭喜！您的报表已经{reportId ? "更新" : "保存"}成功。现在您可以：</p>
               <div className='flex flex-col gap-2'>
                 <div className='p-4 border rounded-lg bg-gray-50'>
                   <h3 className='font-medium mb-2'>查看报表</h3>
