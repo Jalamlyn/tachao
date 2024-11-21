@@ -49,10 +49,12 @@ const coreRequirements = `
 
 // 生成系统提示词
 const generateSystemPrompt = (data: any[], doc: string, existingConfig?: string): string => {
-  const modePrompt = existingConfig 
+  const modePrompt = existingConfig
     ? `
-当前报表配置:
+当前报表的分析代码:
+<report-code>
 ${existingConfig}
+</report-code>
 
 请根据上述配置和用户的需求，生成一个新的完整配置。在更新时：
 1. 保持现有配置的核心逻辑
@@ -68,7 +70,7 @@ ${existingConfig}
 3. 生成有意义的可视化图表
 4. 提供有价值的数据洞察
 5. 确保分析结果清晰易懂
-`;
+`
 
   return `${basePrompt}
 ${modePrompt}
