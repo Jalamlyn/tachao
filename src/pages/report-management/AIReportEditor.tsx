@@ -12,6 +12,8 @@ import ErrorBoundary from "@/components/ErrorBoundary"
 import { useVersionControl } from "@/hooks/useVersionControl"
 import AIEditor from "@/components/AIEditor"
 import { Icon } from "@iconify/react"
+import { useAsyncButton } from "@/hooks/useAsyncButton"
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 
 interface Message {
   role: "user" | "assistant"
@@ -104,10 +106,13 @@ const AIReportEditor: React.FC = () => {
   const [previewComponent, setPreviewComponent] = useState<React.ReactNode>(null)
   const [selectedTab, setSelectedTab] = useState("data")
   const [flattenedData, setFlattenedData] = useState<any[]>([])
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
+  const [savedReportId, setSavedReportId] = useState<string | null>(null)
 
   const accumulatedTextRef = useRef("")
   const { getDetail: getReportDetail, loadFilteredDetails } = useMetadata("report")
   const { loadFilteredDetails: loadFormFilteredDetails } = useMetadata("form")
+  const { create: createReport, update: updateReport } = useMetadata("report")
 
   // 添加版本控制
   const versionControl = useVersionControl<{
@@ -335,6 +340,72 @@ const AIReportEditor: React.FC = () => {
     [previewContent, versionControl]
   )
 
+  const { isLoading: isSaving, handleClick: handleSaveReport } = useAsyncButton(
+    async () => {
+      if (!reportData || !versionControl.getCurrentVersion()?.analysis) {
+        message.error("请先生成报表分析")
+        return
+      }
+
+      try {
+        const currentVersion = versionControl.getCurrentVersion()
+        const reportTitle = currentVersion?.analysis?.title || "新建报表"
+        
+        const saveData = {
+          title: reportTitle,
+          status: "active",
+          data: {
+            data: reportData,
+            analysis: currentVersion?.analysis,
+            rawConfig: currentVersion?.code
+          },
+          template: templateId ? {
+            id: templateId,
+            title: "模板报表",
+            type: "form"
+          } : undefined,
+          indexFields: {
+            templateId,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            size: reportData.length
+          }
+        }
+
+        let result
+        if (reportId) {
+          result = await updateReport(reportId, saveData)
+        } else {
+          result = await createReport(saveData)
+        }
+
+        if (result) {
+          setSavedReportId(result.id)
+          setIsSuccessModalOpen(true)
+          return result
+        } else {
+          throw new Error("保存报表失败")
+        }
+      } catch (error) {
+        console.error("保存报表失败:", error)
+        throw error
+      }
+    },
+    {
+      errorMessage: "保存报表失败"
+    }
+  )
+
+  const handleViewReport = () => {
+    if (savedReportId) {
+      navigate(`/report-preview/${savedReportId}`)
+    }
+  }
+
+  const handleGoToReports = () => {
+    navigate("/we-chat-app/admin/reports")
+  }
+
   const renderDataTable = () => {
     if (!columns.length || !flattenedData.length) {
       return (
@@ -372,8 +443,20 @@ const AIReportEditor: React.FC = () => {
     )
   }
 
+  const pageActions = (
+    <Button
+      color='primary'
+      onClick={handleSaveReport}
+      isDisabled={!versionControl.getCurrentVersion()?.analysis || isSaving}
+      isLoading={isSaving}
+      startContent={<Icon icon='mdi:content-save' className='w-4 h-4 mr-2' />}
+    >
+      {reportId ? "更新报表" : "保存报表"}
+    </Button>
+  )
+
   return (
-    <PageLayout title='AI 报表助手' titleIcon='hugeicons:ai-chat-02' className='p-0'>
+    <PageLayout title='AI 报表助手' titleIcon='hugeicons:ai-chat-02' className='p-0' actions={pageActions}>
       <AIEditor
         messages={messages}
         selectedTab={selectedTab}
@@ -404,6 +487,57 @@ const AIReportEditor: React.FC = () => {
         showCodeTab
         previewTabName='分析报表'
       />
+
+      <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} size='lg' placement='center'>
+        <ModalContent>
+          <ModalHeader className='flex flex-col gap-1'>
+            <div className='flex items-center gap-2'>
+              <Icon icon='mdi:check-circle' className='w-6 h-6 text-success' />
+              <span>报表{reportId ? "更新" : "保存"}成功</span>
+            </div>
+          </ModalHeader>
+          <ModalBody>
+            <div className='space-y-4'>
+              <p className='text-gray-600'>
+                恭喜！您的报表已经{reportId ? "更新" : "保存"}成功。现在您可以：
+              </p>
+              <div className='flex flex-col gap-2'>
+                <div className='p-4 border rounded-lg bg-gray-50'>
+                  <h3 className='font-medium mb-2'>查看报表</h3>
+                  <p className='text-sm text-gray-500 mb-4'>
+                    立即查看生成的报表内容和分析结果。
+                  </p>
+                  <Button
+                    color='primary'
+                    onClick={handleViewReport}
+                    startContent={<Icon icon='mdi:file-document-plus' className='w-4 h-4' />}
+                  >
+                    查看报表
+                  </Button>
+                </div>
+                <div className='p-4 border rounded-lg'>
+                  <h3 className='font-medium mb-2'>返回报表管理</h3>
+                  <p className='text-sm text-gray-500 mb-4'>
+                    返回报表列表查看或管理您的所有报表。
+                  </p>
+                  <Button
+                    variant='bordered'
+                    onClick={handleGoToReports}
+                    startContent={<Icon icon='mdi:format-list-bulleted' className='w-4 h-4' />}
+                  >
+                    查看所有报表
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant='light' onPress={() => setIsSuccessModalOpen(false)}>
+              关闭
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </PageLayout>
   )
 }
