@@ -3,6 +3,7 @@ import { Message } from "./AIFormAgentTypes"
 import { formulaService } from "@/services/formulaService"
 import { markdown as doc } from "@/pages/report-management/components/AnalysisResult.md"
 import generateSystemPrompt from "./prompts/report-agent-prompt"
+import { ProcessedData } from "/Users/jalam/Works/mo-repo/shata-ai-front/src/pages/report-management/utils/processReportData"
 
 export type ReportColumn = {
   header: string
@@ -50,14 +51,14 @@ interface CommandResult {
 type ResourceOperationResult = AnalysisResult
 
 interface ProcessCommandOptions {
-  data: any[]
+  data: ProcessedData
   command: string
   onChunk?: (chunk: string) => void
 }
 
 export class AIReportAgent {
   private static instance: AIReportAgent
-  private _data: any[] = []
+  private _data: ProcessedData | null = null
 
   private constructor() {
     console.log("[AIReportAgent] Instance created")
@@ -71,12 +72,12 @@ export class AIReportAgent {
     return AIReportAgent.instance
   }
 
-  public setData(data: any[]): void {
-    console.log("[AIReportAgent] Setting data, length:", data?.length)
+  public setData(data: ProcessedData): void {
+    console.log("[AIReportAgent] Setting data, length:", data?.flattenedData?.length)
     this._data = data
   }
 
-  private async executeCode(code: string, data: any[]): Promise<any> {
+  private async executeCode(code: string, data: ProcessedData): Promise<any> {
     try {
       console.log("[AIReportAgent] Executing analysis code")
       const wrappedCode = `
@@ -85,7 +86,7 @@ export class AIReportAgent {
         })(data, formulajs);
       `
       const executeFunction = new Function("data", "formulajs", wrappedCode)
-      const result = executeFunction(data, formulaService)
+      const result = executeFunction(data.flattenedData, formulaService)
       console.log("[AIReportAgent] Analysis completed successfully")
       return result
     } catch (error) {
@@ -94,7 +95,7 @@ export class AIReportAgent {
     }
   }
 
-  public async analyzeData(data: any[], rawConfig: string): Promise<AnalysisResult["analysis"]> {
+  public async analyzeData(data: ProcessedData, rawConfig: string): Promise<AnalysisResult["analysis"]> {
     try {
       console.log("[AIReportAgent] Analyzing data with rawConfig")
       const result = await this.executeCode(rawConfig, data)
@@ -112,7 +113,7 @@ export class AIReportAgent {
   public async processCommand({ data, command, onChunk }: ProcessCommandOptions): Promise<CommandResult> {
     console.log("[AIReportAgent] Processing analysis command:", command)
 
-    if (!data || !data.length) {
+    if (!data || !data.flattenedData.length) {
       console.log("[AIReportAgent] Invalid data provided")
       return {
         success: false,
@@ -121,7 +122,7 @@ export class AIReportAgent {
     }
 
     try {
-      const systemPrompt = generateSystemPrompt(data, doc)
+      const systemPrompt = generateSystemPrompt(data.flattenedData, doc)
       const messages: Message[] = [
         { role: "system", content: systemPrompt },
         { role: "user", content: command },

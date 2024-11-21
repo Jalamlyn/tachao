@@ -15,6 +15,7 @@ import { Icon } from "@iconify/react"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
 import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 import { generateColumns, flattenData, extractShataAICode } from "./utils/generateColumns"
+import { processReportData } from "./utils/processReportData"
 import { Message } from "./types"
 
 const AIReportEditor: React.FC = () => {
@@ -23,11 +24,14 @@ const AIReportEditor: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()
   const [messages, setMessages] = useState<Message[]>([])
   const [reportData, setReportData] = useState<any[]>([])
-  const [columns, setColumns] = useState<any[]>([])
+  const [processedData, setProcessedData] = useState<ReturnType<typeof processReportData>>({
+    columns: [],
+    flattenedData: [],
+    originalData: []
+  })
   const [previewContent, setPreviewContent] = useState<string>("")
   const [previewComponent, setPreviewComponent] = useState<React.ReactNode>(null)
   const [selectedTab, setSelectedTab] = useState("data")
-  const [flattenedData, setFlattenedData] = useState<any[]>([])
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
   const [savedReportId, setSavedReportId] = useState<string | null>(null)
   const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(null)
@@ -71,10 +75,8 @@ const AIReportEditor: React.FC = () => {
 
             // 4. 设置最新数据
             setReportData(formData)
-            const cols = generateColumns(formData)
-            const flattened = flattenData(formData)
-            setColumns(cols)
-            setFlattenedData(flattened)
+            const processed = processReportData(formData)
+            setProcessedData(processed)
           }
 
           // 5. 加载已有的分析结果
@@ -84,7 +86,7 @@ const AIReportEditor: React.FC = () => {
             })
 
             // 使用 rawConfig 重新分析数据
-            const analysis = await AIReportAgent.analyzeData(reportData, report.data.rawConfig)
+            const analysis = await AIReportAgent.analyzeData(processedData, report.data.rawConfig)
 
             setPreviewComponent(
               <ErrorBoundary
@@ -93,7 +95,7 @@ const AIReportEditor: React.FC = () => {
                   if (prevVersion) {
                     setPreviewContent(prevVersion.rawConfig || "")
                     // 重新分析并设置预览
-                    AIReportAgent.analyzeData(reportData, prevVersion.rawConfig || "")
+                    AIReportAgent.analyzeData(processedData, prevVersion.rawConfig || "")
                       .then((analysis) => {
                         setPreviewComponent(<AnalysisResult analysis={analysis} />)
                       })
@@ -120,10 +122,8 @@ const AIReportEditor: React.FC = () => {
             }))
 
             setReportData(formData)
-            const cols = generateColumns(formData)
-            const flattened = flattenData(formData)
-            setColumns(cols)
-            setFlattenedData(flattened)
+            const processed = processReportData(formData)
+            setProcessedData(processed)
           }
         }
       } catch (error) {
@@ -216,7 +216,7 @@ const AIReportEditor: React.FC = () => {
         setMessages((prev) => [...prev, assistantMessage])
 
         const result = await AIReportAgent.processCommand({
-          data: reportData,
+          data: processedData,
           command: command,
           onChunk: handleChunk,
         })
@@ -240,7 +240,7 @@ const AIReportEditor: React.FC = () => {
           })
 
           // 使用 rawConfig 分析数据
-          const analysis = await AIReportAgent.analyzeData(reportData, result.rawConfig)
+          const analysis = await AIReportAgent.analyzeData(processedData, result.rawConfig)
 
           // 设置预览组件
           setPreviewComponent(
@@ -249,7 +249,7 @@ const AIReportEditor: React.FC = () => {
                 const prevVersion = versionControl.rollback()
                 if (prevVersion) {
                   setPreviewContent(prevVersion.rawConfig || "")
-                  AIReportAgent.analyzeData(reportData, prevVersion.rawConfig || "")
+                  AIReportAgent.analyzeData(processedData, prevVersion.rawConfig || "")
                     .then((analysis) => {
                       setPreviewComponent(<AnalysisResult analysis={analysis} />)
                     })
@@ -286,7 +286,7 @@ const AIReportEditor: React.FC = () => {
                           const prevVersion = versionControl.rollback()
                           if (prevVersion) {
                             setPreviewContent(prevVersion.rawConfig || "")
-                            AIReportAgent.analyzeData(reportData, prevVersion.rawConfig || "")
+                            AIReportAgent.analyzeData(processedData, prevVersion.rawConfig || "")
                               .then((analysis) => {
                                 setPreviewComponent(<AnalysisResult analysis={analysis} />)
                               })
@@ -313,7 +313,7 @@ const AIReportEditor: React.FC = () => {
         }
       }
     },
-    [reportData, versionControl]
+    [processedData, versionControl]
   )
 
   const { isLoading: isSaving, handleClick: handleSaveReport } = useAsyncButton(
@@ -326,7 +326,7 @@ const AIReportEditor: React.FC = () => {
       try {
         const currentVersion = versionControl.getCurrentVersion()
         // 使用 rawConfig 重新分析数据获取标题
-        const analysis = await AIReportAgent.analyzeData(reportData, currentVersion?.rawConfig || "")
+        const analysis = await AIReportAgent.analyzeData(processedData, currentVersion?.rawConfig || "")
         const reportTitle = analysis?.title || "新建报表"
 
         const saveData = {
@@ -385,7 +385,7 @@ const AIReportEditor: React.FC = () => {
   }
 
   const renderDataTable = () => {
-    if (!columns.length || !flattenedData.length) {
+    if (!processedData.columns.length || !processedData.flattenedData.length) {
       return (
         <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
           <Spinner label='加载中...' />
@@ -398,7 +398,7 @@ const AIReportEditor: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              {columns.map((column) => (
+              {processedData.columns.map((column) => (
                 <TableHead className='min-w-24 bg-slate-50' key={column.accessorKey}>
                   {column.header}
                 </TableHead>
@@ -406,9 +406,9 @@ const AIReportEditor: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {flattenedData.map((row: any, rowIndex: number) => (
+            {processedData.flattenedData.map((row: any, rowIndex: number) => (
               <TableRow key={rowIndex}>
-                {columns.map((column) => (
+                {processedData.columns.map((column) => (
                   <TableCell key={`${rowIndex}-${column.accessorKey}`}>
                     {column.cell(row[column.accessorKey])}
                   </TableCell>
@@ -451,7 +451,7 @@ const AIReportEditor: React.FC = () => {
                 if (prevVersion) {
                   setPreviewContent(prevVersion.rawConfig || "")
                   // 重新分析并设置预览
-                  AIReportAgent.analyzeData(reportData, prevVersion.rawConfig || "")
+                  AIReportAgent.analyzeData(processedData, prevVersion.rawConfig || "")
                     .then((analysis) => {
                       setPreviewComponent(<AnalysisResult analysis={analysis} />)
                     })
