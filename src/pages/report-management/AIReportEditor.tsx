@@ -80,12 +80,12 @@ const AIReportEditor: React.FC = () => {
           // 5. 加载已有的分析结果
           if (report?.data?.rawConfig) {
             versionControl.addVersion({
-              rawConfig: report.data.rawConfig
+              rawConfig: report.data.rawConfig,
             })
 
             // 使用 rawConfig 重新分析数据
-            const analysis = await AIReportAgent.analyzeData(formData, report.data.rawConfig)
-            
+            const analysis = await AIReportAgent.analyzeData(reportData, report.data.rawConfig)
+
             setPreviewComponent(
               <ErrorBoundary
                 onReset={() => {
@@ -93,11 +93,11 @@ const AIReportEditor: React.FC = () => {
                   if (prevVersion) {
                     setPreviewContent(prevVersion.rawConfig || "")
                     // 重新分析并设置预览
-                    AIReportAgent.analyzeData(formData, prevVersion.rawConfig || "")
-                      .then(analysis => {
+                    AIReportAgent.analyzeData(reportData, prevVersion.rawConfig || "")
+                      .then((analysis) => {
                         setPreviewComponent(<AnalysisResult analysis={analysis} />)
                       })
-                      .catch(error => {
+                      .catch((error) => {
                         message.error("分析数据失败")
                         console.error(error)
                       })
@@ -236,100 +236,84 @@ const AIReportEditor: React.FC = () => {
         if (result.rawConfig) {
           // 保存新版本
           versionControl.addVersion({
-            rawConfig: result.rawConfig
+            rawConfig: result.rawConfig,
           })
 
           // 使用 rawConfig 分析数据
           const analysis = await AIReportAgent.analyzeData(reportData, result.rawConfig)
 
+          // 设置预览组件
+          setPreviewComponent(
+            <ErrorBoundary
+              onReset={() => {
+                const prevVersion = versionControl.rollback()
+                if (prevVersion) {
+                  setPreviewContent(prevVersion.rawConfig || "")
+                  AIReportAgent.analyzeData(reportData, prevVersion.rawConfig || "")
+                    .then((analysis) => {
+                      setPreviewComponent(<AnalysisResult analysis={analysis} />)
+                    })
+                    .catch((error) => {
+                      message.error("分析数据失败")
+                      console.error(error)
+                    })
+                }
+              }}
+            >
+              <AnalysisResult analysis={analysis} />
+            </ErrorBoundary>
+          )
+
+          // 更新消息状态
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
             if (lastMessage.role === "assistant") {
-              const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
-              const match = lastMessage.content.toString().match(regex)
-              const originalCode = match ? match[1].trim() : null
-
-              const messageWithCode = {
-                ...lastMessage,
-                content: (
-                  <div className='flex items-center gap-2 text-success'>
-                    <Icon icon='line-md:check-all' className='w-5 h-5' />
-                    <span>分析完成</span>
-                  </div>
-                ),
-                status: "success",
-                code: {
-                  preview: (
-                    <ErrorBoundary
-                      onReset={() => {
-                        const prevVersion = versionControl.rollback()
-                        if (prevVersion) {
-                          setPreviewContent(prevVersion.rawConfig || "")
-                          // 重新分析并设置预览
-                          AIReportAgent.analyzeData(reportData, prevVersion.rawConfig || "")
-                            .then(analysis => {
-                              setPreviewComponent(<AnalysisResult analysis={analysis} />)
-                            })
-                            .catch(error => {
-                              message.error("分析数据失败")
-                              console.error(error)
-                            })
-                        }
-                      }}
-                    >
-                      <AnalysisResult analysis={analysis} />
-                    </ErrorBoundary>
+              return [
+                ...prev.slice(0, -1),
+                {
+                  ...lastMessage,
+                  content: (
+                    <div className='flex items-center gap-2 text-success'>
+                      <Icon icon='line-md:check-all' className='w-5 h-5' />
+                      <span>分析完成</span>
+                    </div>
                   ),
-                  content: originalCode,
+                  status: "success",
+                  code: {
+                    preview: (
+                      <ErrorBoundary
+                        onReset={() => {
+                          const prevVersion = versionControl.rollback()
+                          if (prevVersion) {
+                            setPreviewContent(prevVersion.rawConfig || "")
+                            AIReportAgent.analyzeData(reportData, prevVersion.rawConfig || "")
+                              .then((analysis) => {
+                                setPreviewComponent(<AnalysisResult analysis={analysis} />)
+                              })
+                              .catch((error) => {
+                                message.error("分析数据失败")
+                                console.error(error)
+                              })
+                          }
+                        }}
+                      >
+                        <AnalysisResult analysis={analysis} />
+                      </ErrorBoundary>
+                    ),
+                    content: result.rawConfig,
+                  },
                 },
-              }
-
-              setSelectedTab("preview")
-              setPreviewComponent(
-                <ErrorBoundary
-                  onReset={() => {
-                    const prevVersion = versionControl.rollback()
-                    if (prevVersion) {
-                      setPreviewContent(prevVersion.rawConfig || "")
-                      // 重新分析并设置预览
-                      AIReportAgent.analyzeData(reportData, prevVersion.rawConfig || "")
-                        .then(analysis => {
-                          setPreviewComponent(<AnalysisResult analysis={analysis} />)
-                        })
-                        .catch(error => {
-                          message.error("分析数据失败")
-                          console.error(error)
-                        })
-                    }
-                  }}
-                >
-                  <AnalysisResult analysis={analysis} />
-                </ErrorBoundary>
-              )
-
-              return [...prev.slice(0, -1), messageWithCode]
+              ]
             }
             return prev
           })
+
+          // 切换到预览标签
+          setSelectedTab("preview")
         }
-      } else {
-        setMessages((prev) => {
-          const lastMessage = prev[prev.length - 1]
-          if (lastMessage.role === "assistant") {
-            return [
-              ...prev.slice(0, -1),
-              {
-                ...lastMessage,
-                content: result.message,
-                status: "error",
-              },
-            ]
-          }
-          return prev
-        })
       }
     },
-    [previewContent, versionControl, reportData]
+    [reportData, versionControl]
   )
 
   const { isLoading: isSaving, handleClick: handleSaveReport } = useAsyncButton(
@@ -468,10 +452,10 @@ const AIReportEditor: React.FC = () => {
                   setPreviewContent(prevVersion.rawConfig || "")
                   // 重新分析并设置预览
                   AIReportAgent.analyzeData(reportData, prevVersion.rawConfig || "")
-                    .then(analysis => {
+                    .then((analysis) => {
                       setPreviewComponent(<AnalysisResult analysis={analysis} />)
                     })
-                    .catch(error => {
+                    .catch((error) => {
                       message.error("分析数据失败")
                       console.error(error)
                     })
