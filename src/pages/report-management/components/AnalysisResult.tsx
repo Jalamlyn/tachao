@@ -52,7 +52,7 @@ class SummaryErrorBoundary extends React.Component<{ children: React.ReactNode }
 
 interface AnalysisResultProps {
   analysis: {
-    summary: Record<string, number | string | Record<string, any> | Array<{ name: string; count: number }>>
+    summary: Record<string, { value: number | string | Record<string, any>; label: string }>
     charts?: {
       type: string
       title: string
@@ -69,10 +69,10 @@ interface AnalysisResultProps {
     insights: string[]
     processAnalysis?: {
       summary?: {
-        totalProcessNodes: number
-        completedNodes: number
-        completionRate: string
-        averageProcessTime: string
+        totalProcessNodes: { value: number; label: string }
+        completedNodes: { value: number; label: string }
+        completionRate: { value: string; label: string }
+        averageProcessTime: { value: string; label: string }
       }
       nodeStatus?: Record<string, string>
       processDuration?: {
@@ -123,57 +123,15 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
   }
 
   // 渲染摘要项
-  const renderSummaryItem = (key: string, value: any) => {
-    // 基础类型直接渲染
-    if (typeof value !== "object" || value === null) {
-      return (
-        <motion.div
-          variants={itemVariants}
-          className='relative overflow-hidden rounded-xl bg-gradient-to-br from-background to-muted p-6 shadow-lg hover:shadow-xl transition-shadow duration-300'
-        >
-          <div className='text-sm text-muted-foreground font-medium mb-2'>{key}</div>
-          <div className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70'>
-            {String(value)}
-          </div>
-        </motion.div>
-      )
-    }
-
-    // 数组类型渲染
-    if (Array.isArray(value)) {
-      return (
-        <motion.div
-          variants={itemVariants}
-          className='rounded-xl bg-gradient-to-br from-background to-muted p-6 shadow-lg hover:shadow-xl transition-shadow duration-300'
-        >
-          <div className='text-sm text-muted-foreground font-medium mb-3'>{key}</div>
-          <div className='space-y-2'>
-            {value.map((item, index) => (
-              <div key={index} className='p-2 rounded-lg bg-background/50'>
-                {typeof item === "object" ? safeStringify(item) : String(item)}
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )
-    }
-
-    // 对象类型渲染
+  const renderSummaryItem = (key: string, item: { value: any; label: string }) => {
     return (
       <motion.div
         variants={itemVariants}
-        className='rounded-xl bg-gradient-to-br from-background to-muted p-6 shadow-lg hover:shadow-xl transition-shadow duration-300'
+        className='relative overflow-hidden rounded-xl bg-gradient-to-br from-background to-muted p-6 shadow-lg hover:shadow-xl transition-shadow duration-300'
       >
-        <div className='text-sm text-muted-foreground font-medium mb-3'>{key}</div>
-        <div className='space-y-2'>
-          {Object.entries(value).map(([subKey, subValue]) => (
-            <div key={subKey} className='flex justify-between items-center p-2 rounded-lg bg-background/50'>
-              <span className='font-medium'>{subKey}</span>
-              <span className='text-primary font-semibold'>
-                {typeof subValue === "object" ? safeStringify(subValue) : String(subValue)}
-              </span>
-            </div>
-          ))}
+        <div className='text-sm text-muted-foreground font-medium mb-2'>{item.label}</div>
+        <div className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70'>
+          {typeof item.value === 'object' ? safeStringify(item.value) : String(item.value)}
         </div>
       </motion.div>
     )
@@ -217,34 +175,16 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
             <div className='space-y-6'>
               {summary && (
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-                  <motion.div
-                    variants={itemVariants}
-                    className='rounded-xl bg-gradient-to-br from-background to-muted p-4 shadow'
-                  >
-                    <div className='text-sm text-muted-foreground'>总节点数</div>
-                    <div className='text-2xl font-bold text-primary'>{summary.totalProcessNodes}</div>
-                  </motion.div>
-                  <motion.div
-                    variants={itemVariants}
-                    className='rounded-xl bg-gradient-to-br from-background to-muted p-4 shadow'
-                  >
-                    <div className='text-sm text-muted-foreground'>已完成节点</div>
-                    <div className='text-2xl font-bold text-primary'>{summary.completedNodes}</div>
-                  </motion.div>
-                  <motion.div
-                    variants={itemVariants}
-                    className='rounded-xl bg-gradient-to-br from-background to-muted p-4 shadow'
-                  >
-                    <div className='text-sm text-muted-foreground'>完成率</div>
-                    <div className='text-2xl font-bold text-primary'>{summary.completionRate}</div>
-                  </motion.div>
-                  <motion.div
-                    variants={itemVariants}
-                    className='rounded-xl bg-gradient-to-br from-background to-muted p-4 shadow'
-                  >
-                    <div className='text-sm text-muted-foreground'>平均处理时长</div>
-                    <div className='text-2xl font-bold text-primary'>{summary.averageProcessTime}</div>
-                  </motion.div>
+                  {Object.entries(summary).map(([key, item]) => (
+                    <motion.div
+                      key={key}
+                      variants={itemVariants}
+                      className='rounded-xl bg-gradient-to-br from-background to-muted p-4 shadow'
+                    >
+                      <div className='text-sm text-muted-foreground'>{item.label}</div>
+                      <div className='text-2xl font-bold text-primary'>{item.value}</div>
+                    </motion.div>
+                  ))}
                 </div>
               )}
 
@@ -371,8 +311,8 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
           </CardHeader>
           <CardContent className='p-6'>
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {Object.entries(analysis.summary).map(([key, value]) => (
-                <SummaryErrorBoundary key={key}>{renderSummaryItem(key, value)}</SummaryErrorBoundary>
+              {Object.entries(analysis.summary).map(([key, item]) => (
+                <SummaryErrorBoundary key={key}>{renderSummaryItem(key, item)}</SummaryErrorBoundary>
               ))}
             </div>
           </CardContent>
