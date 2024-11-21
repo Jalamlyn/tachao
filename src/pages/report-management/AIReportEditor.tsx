@@ -108,6 +108,7 @@ const AIReportEditor: React.FC = () => {
   const [flattenedData, setFlattenedData] = useState<any[]>([])
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
   const [savedReportId, setSavedReportId] = useState<string | null>(null)
+  const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(null)
 
   const accumulatedTextRef = useRef("")
   const { getDetail: getReportDetail, loadFilteredDetails } = useMetadata("report")
@@ -123,8 +124,66 @@ const AIReportEditor: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        if (templateId) {
-          const formDetails = await loadFormFilteredDetails((index) => index.indexFields?.templateId === templateId)
+        if (reportId) {
+          // 1. 先获取报表信息
+          const report = await getReportDetail(reportId)
+          
+          // 2. 从报表中获取 templateId
+          const reportTemplateId = report?.data?.templateId
+          
+          if (!reportTemplateId) {
+            throw new Error("报表模板ID不存在")
+          }
+
+          setCurrentTemplateId(reportTemplateId)
+          
+          // 3. 使用 templateId 获取最新的表单数据
+          const formDetails = await loadFormFilteredDetails(
+            (index) => index.indexFields?.templateId === reportTemplateId
+          )
+
+          if (formDetails.length > 0) {
+            const formData = formDetails.map((detail) => ({
+              id: detail.id,
+              ...detail.data,
+            }))
+
+            // 4. 设置最新数据
+            setReportData(formData)
+            const cols = generateColumns(formData)
+            const flattened = flattenData(formData)
+            setColumns(cols)
+            setFlattenedData(flattened)
+          }
+
+          // 5. 加载已有的分析结果
+          if (report?.data?.analysis) {
+            versionControl.addVersion({
+              analysis: report.data.analysis,
+              code: report.data.rawConfig || null
+            })
+            setPreviewComponent(
+              <ErrorBoundary
+                onReset={() => {
+                  const prevVersion = versionControl.rollback()
+                  if (prevVersion) {
+                    setPreviewContent(prevVersion.code || "")
+                    setPreviewComponent(<AnalysisResult analysis={prevVersion.analysis} />)
+                  }
+                }}
+              >
+                <AnalysisResult analysis={report.data.analysis} />
+              </ErrorBoundary>
+            )
+            if (report.data.rawConfig) {
+              setPreviewContent(report.data.rawConfig)
+            }
+          }
+        } else if (templateId) {
+          setCurrentTemplateId(templateId)
+          const formDetails = await loadFormFilteredDetails(
+            (index) => index.indexFields?.templateId === templateId
+          )
 
           if (formDetails.length > 0) {
             const formData = formDetails.map((detail) => ({
@@ -133,49 +192,10 @@ const AIReportEditor: React.FC = () => {
             }))
 
             setReportData(formData)
-
             const cols = generateColumns(formData)
             const flattened = flattenData(formData)
             setColumns(cols)
             setFlattenedData(flattened)
-          }
-        } else if (reportId) {
-          const report = await getReportDetail(reportId)
-          if (report && report.data) {
-            setReportData(report.data.data)
-            if (Array.isArray(report.data.data) && report.data.data.length > 0) {
-              const cols = generateColumns(report.data.data)
-              const flattened = flattenData(report.data.data)
-              setColumns(cols)
-              setFlattenedData(flattened)
-            }
-
-            // 如果是编辑模式，加载已有的分析结果
-            if (report.data.analysis) {
-              versionControl.addVersion({
-                analysis: report.data.analysis,
-                code: report.data.rawConfig || null
-              })
-              setPreviewComponent(
-                <ErrorBoundary
-                  onReset={() => {
-                    const prevVersion = versionControl.rollback()
-                    if (prevVersion) {
-                      setPreviewContent(prevVersion.code || "")
-                      setPreviewComponent(<AnalysisResult analysis={prevVersion.analysis} />)
-                    }
-                  }}
-                >
-                  <AnalysisResult analysis={report.data.analysis} />
-                </ErrorBoundary>
-              )
-              if (report.data.rawConfig) {
-                setPreviewContent(report.data.rawConfig)
-              }
-            }
-          } else {
-            message.error("报表加载失败")
-            navigate("/we-chat-app/admin/reports")
           }
         }
       } catch (error) {
@@ -379,20 +399,19 @@ const AIReportEditor: React.FC = () => {
           title: reportTitle,
           status: "active",
           data: {
-            data: reportData,
+            templateId: currentTemplateId,  // 只存储模板ID
             analysis: currentVersion?.analysis,
             rawConfig: currentVersion?.code
           },
-          template: templateId ? {
-            id: templateId,
+          template: currentTemplateId ? {
+            id: currentTemplateId,
             title: "模板报表",
             type: "form"
           } : undefined,
           indexFields: {
-            templateId,
+            templateId: currentTemplateId,
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            size: reportData.length
+            updatedAt: new Date().toISOString()
           }
         }
 
