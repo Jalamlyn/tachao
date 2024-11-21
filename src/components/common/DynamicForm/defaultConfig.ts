@@ -68,7 +68,7 @@ export const defaultFormConfig: DynamicFormConfig = {
   orderNumberConfig: {
     prefix: 'DEFAULT',
     fieldName: 'orderNumber',
-    label: '表单编号(唯一)'
+    label: '表单编号'
   },
   toolbar: {
     buttons: defaultToolbarButtons
