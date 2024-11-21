@@ -208,7 +208,7 @@ ${this._rawConfig}
 }
 
 请生成包含两部分内容的 js 代码：
-1. 表单标题(title)：表单的名称
+1. 表单标题(title)：表单的名称,要有业务含义,不要随意变更
 2. 表单配置(config)：一个完整的符合 DynamicFormConfig 类型的配置 js 对象
 
 请使用如下格式返回：
