@@ -149,6 +149,30 @@ const AIReportEditor: React.FC = () => {
               setColumns(cols)
               setFlattenedData(flattened)
             }
+
+            // 如果是编辑模式，加载已有的分析结果
+            if (report.data.analysis) {
+              versionControl.addVersion({
+                analysis: report.data.analysis,
+                code: report.data.rawConfig || null
+              })
+              setPreviewComponent(
+                <ErrorBoundary
+                  onReset={() => {
+                    const prevVersion = versionControl.rollback()
+                    if (prevVersion) {
+                      setPreviewContent(prevVersion.code || "")
+                      setPreviewComponent(<AnalysisResult analysis={prevVersion.analysis} />)
+                    }
+                  }}
+                >
+                  <AnalysisResult analysis={report.data.analysis} />
+                </ErrorBoundary>
+              )
+              if (report.data.rawConfig) {
+                setPreviewContent(report.data.rawConfig)
+              }
+            }
           } else {
             message.error("报表加载失败")
             navigate("/we-chat-app/admin/reports")
