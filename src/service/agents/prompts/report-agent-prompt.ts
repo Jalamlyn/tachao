@@ -28,33 +28,6 @@ const returnStructureRequirements = `
     processAnalysis: {...} // 可选,用于流程数据
   }
 }
-
-错误示例:
-❌ 不要这样写:
-<shata-ai-code>
-const analysis = {
-  fruitAnalysis: {  // ❌ 错误:不要创建额外的嵌套对象
-    charts: [...],  // ❌ 错误:charts不应该在嵌套对象中
-    tables: [...],  // ❌ 错误:tables不应该在嵌套对象中
-  }
-};
-</shata-ai-code>
-
-正确示例:
-✅ 应该这样写:
-<shata-ai-code>
-const result = {
-  type: 'analyze',
-  data: data,
-  analysis: {
-    summary: {...},
-    charts: [...],  // ✅ 正确:直接在顶层
-    tables: [...],  // ✅ 正确:直接在顶层
-    insights: [...] // ✅ 正确:直接在顶层
-  }
-};
-return result;
-</shata-ai-code>
 `
 
 // 核心要求部分
@@ -74,129 +47,63 @@ const coreRequirements = `
    - 审批人和状态统计必须基于实际数据
 `
 
-// 正确示例代码
-const correctExamples = `
-正确示例：
-// 基础统计计算
-const validData = data.filter(item => item && typeof item === 'object');
-const totalCount = validData.length;
-const completedCount = validData.filter(item => item?.status === 'completed').length;
-const completionRate = \`\${((completedCount / totalCount) * 100).toFixed(2)}%\`;
+// 生成系统提示词
+const generateSystemPrompt = (data: any[], doc: string, existingConfig?: string): string => {
+  const modePrompt = existingConfig 
+    ? `
+当前报表配置:
+${existingConfig}
 
-// 流程分析计算
-const processAnalysis = {
-  summary: {
-    totalProcessNodes: data.reduce((acc, item) => acc + (item?.nodes?.length || 0), 0),
-    completedNodes: data.filter(item => item?.status === 'completed').length,
-    completionRate: \`\${((completedCount / totalCount) * 100).toFixed(2)}%\`,
-    averageProcessTime: \`\${calculateAverageTime(data)}天\`
-  },
-  nodeStatus: data.reduce((acc, item) => {
-    if (item?.nodeName) {
-      acc[item.nodeName] = item.confirmed ? '已完成' : '进行中';
-    }
-    return acc;
-  }, {}),
-  processDuration: {
-    total: \`\${calculateTotalDuration(data)}天\`,
-    nodesDuration: calculateNodesDuration(data)
-  }
-};
+请根据上述配置和用户的需求，生成一个新的完整配置。在更新时：
+1. 保持现有配置的核心逻辑
+2. 根据用户需求进行增量改进
+3. 确保与现有配置的兼容性
+4. 保留有效的数据分析方法
+5. 优化或扩展现有的图表和洞察
 `
+    : `
+请创建一个新的报表配置：
+1. 深入分析数据结构和特点
+2. 发现数据中的关键模式和趋势
+3. 生成有意义的可视化图表
+4. 提供有价值的数据洞察
+5. 确保分析结果清晰易懂
+`;
 
-// 错误示例代码
-const incorrectExamples = `
-错误示例：
-// ❌ 错误：硬编码数值
-const wrongAnalysis = {
-  summary: {
-    totalProcessNodes: 5,           // 错误：直接写入数字
-    completedNodes: 3,              // 错误：直接写入数字
-    completionRate: '60%',          // 错误：直接写入百分比
-    averageProcessTime: '2.5天'     // 错误：直接写入时间
-  }
-};
+  return `${basePrompt}
+${modePrompt}
+${dataRequirements(data)}
+${returnStructureRequirements}
+${coreRequirements}
 
-// ❌ 错误：嵌套charts和tables
-const wrongStructure = {
-  analysis: {
-    dataAnalysis: {
-      charts: [...],  // 错误：不应该在嵌套对象中
-      tables: [...]   // 错误：不应该在嵌套对象中
-    }
-  }
-};
-`
+<doc>${doc}</doc>
 
-// 辅助函数示例
-const helperFunctions = `
-辅助函数示例：
-// 计算平均处理时间
-const calculateAverageTime = (data) => {
-  const times = data
-    .filter(item => item?.duration)
-    .map(item => item.duration);
-  return times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : 0;
-};
+请使用 <shata-ai-code> 标签包裹你生成的代码，直接返回可执行的 JavaScript 代码。
+注意:
+1. 不要将代码包装在函数定义中
+2. 直接使用传入的 data 参数
+3. 直接返回分析结果对象
+4. 确保返回对象包含必要的 type 和 data 字段
+5. data 字段必须保持原始数据不变
+6. 统计结果放在 analysis 字段中
 
-// 安全的数据访问
-const safeGetValue = (obj, path, defaultValue = null) => {
-  return path.split('.').reduce((curr, key) => 
-    (curr && curr[key] !== undefined) ? curr[key] : defaultValue, 
-    obj
-  );
-};
-`
-
-// 返回格式要求
-const returnFormatRequirements = `
-返回格式要求：
-1. 使用 <shata-ai-code> 标签包裹生成的代码
-2. 直接返回可执行的 JavaScript 代码
-3. 不要将代码包装在函数定义中
-4. 直接使用传入的 data 参数
-5. 确保返回对象包含 type 和 data 字段
-6. 保持原始数据不变
-7. 统计结果放在 analysis 字段中
-
-返回示例：
+返回 markdown 格式示例,必须 \`\`\`mo 开头 \`\`\`结尾：
 \`\`\`mo
 <shata-ai-code>
-const validData = data.filter(item => item && typeof item === 'object');
-const totalCount = validData.length;
-
+// 直接处理数据,使用传入的 data 参数
 const result = {
   type: 'analyze',
-  data: data,
-  analysis: {
-    summary: {
-      totalRecords: totalCount,
-      validRecords: validData.length,
-      completionRate: \`\${((validData.filter(item => item.completed).length / totalCount) * 100).toFixed(2)}%\`
-    },
-    charts: [...],   // 必须在顶层
-    tables: [...],   // 必须在顶层
-    insights: [...]  // 必须在顶层
+  data: data,     // 保持原始数据不变
+  analysis: {     // 统计结果放在这里, 不要出现英文标签
+    summary: {...},
+    charts: [...],
+    insights: [...]
   }
 };
 return result;
 </shata-ai-code>
 \`\`\`
-`
-
-// 生成完整的系统提示词
-export const generateSystemPrompt = (data: any[], doc: string): string => {
-  return `${basePrompt}
-${dataRequirements(data)}
-${returnStructureRequirements}
-${coreRequirements}
-${correctExamples}
-${incorrectExamples}
-${helperFunctions}
-${returnFormatRequirements}
-
-<doc>${doc}</doc>
-`
+- 开头和结尾都不要做解释和说明`
 }
 
 export default generateSystemPrompt

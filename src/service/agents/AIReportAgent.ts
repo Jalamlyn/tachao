@@ -65,6 +65,7 @@ interface ProcessCommandOptions {
 export class AIReportAgent {
   private static instance: AIReportAgent
   private _data: ProcessedData | null = null
+  private _rawConfig: string | null = null
 
   private constructor() {
     console.log("[AIReportAgent] Instance created")
@@ -81,6 +82,30 @@ export class AIReportAgent {
   public setData(data: ProcessedData): void {
     console.log("[AIReportAgent] Setting data, length:", data?.flattenedData?.length)
     this._data = data
+  }
+
+  public getRawConfig(): string | null {
+    console.log("[AIReportAgent] getRawConfig called, returning:", this._rawConfig?.substring(0, 100) + "...")
+    return this._rawConfig
+  }
+
+  private setRawConfig(rawConfig: string | null): void {
+    console.log("[AIReportAgent] setRawConfig called with:", rawConfig?.substring(0, 100) + "...")
+    this._rawConfig = rawConfig
+  }
+
+  private validateConfig(config: string): boolean {
+    try {
+      // 验证配置格式
+      const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
+      const match = config.match(regex)
+      if (!match) {
+        throw new Error("Invalid configuration format")
+      }
+      return true
+    } catch (error) {
+      throw new Error(`Invalid report configuration: ${error.message}`)
+    }
   }
 
   private async executeCode(code: string, data: ProcessedData): Promise<any> {
@@ -116,7 +141,7 @@ export class AIReportAgent {
     }
   }
 
-  public async processCommand({ data, command, onChunk }: ProcessCommandOptions): Promise<CommandResult> {
+  public async processCommand({ data, command, onChunk, rawConfig }: ProcessCommandOptions & { rawConfig?: string }): Promise<CommandResult> {
     console.log("[AIReportAgent] Processing analysis command:", command)
 
     if (!data || !data.flattenedData.length) {
@@ -128,7 +153,11 @@ export class AIReportAgent {
     }
 
     try {
-      const systemPrompt = generateSystemPrompt(data.flattenedData, doc)
+      if (rawConfig) {
+        this.setRawConfig(rawConfig)
+      }
+
+      const systemPrompt = generateSystemPrompt(data.flattenedData, doc, this._rawConfig)
       const messages: Message[] = [
         { role: "system", content: systemPrompt },
         { role: "user", content: command },
@@ -156,12 +185,20 @@ export class AIReportAgent {
       }
       const generatedCode = match[1].trim()
 
+      // 验证生成的配置
+      if (!this.validateConfig(aiResponse)) {
+        throw new Error("Invalid generated configuration")
+      }
+
       const result = (await this.executeCode(generatedCode, data)) as ResourceOperationResult
 
       if (!result || !result.type || !result.data) {
         console.error("[AIReportAgent] Invalid analysis result format")
         throw new Error("Invalid analysis result format")
       }
+
+      // 更新当前配置
+      this.setRawConfig(generatedCode)
 
       console.log("[AIReportAgent] Analysis completed successfully")
       return {
