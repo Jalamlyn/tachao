@@ -52,7 +52,7 @@ class SummaryErrorBoundary extends React.Component<{ children: React.ReactNode }
 
 interface AnalysisResultProps {
   analysis: {
-    summary: Record<string, { value: number | string | Record<string, any>; label: string }>
+    summary: Record<string, { value: number | string | Record<string, any> | any[]; label: string }>
     charts?: {
       type: string
       title: string
@@ -122,6 +122,47 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
     return <EmptyState />
   }
 
+  // 渲染对象类型的 value
+  const renderObjectValue = (value: Record<string, any>) => {
+    return (
+      <div className="space-y-2">
+        {Object.entries(value).map(([key, val]) => (
+          <div key={key} className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">{key}</span>
+            <span className="font-medium">{renderSummaryValue(val)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // 渲染数组类型的 value  
+  const renderArrayValue = (value: any[]) => {
+    return (
+      <div className="space-y-1">
+        {value.map((item, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">#{index + 1}</span>
+            <span className="font-medium">{renderSummaryValue(item)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // 递归渲染不同类型的 value
+  const renderSummaryValue = (value: any): React.ReactNode => {
+    if (Array.isArray(value)) {
+      return renderArrayValue(value);
+    }
+    
+    if (typeof value === 'object' && value !== null) {
+      return renderObjectValue(value);
+    }
+    
+    return String(value);
+  };
+
   // 渲染摘要项
   const renderSummaryItem = (key: string, item: { value: any; label: string }) => {
     return (
@@ -131,7 +172,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
       >
         <div className='text-sm text-muted-foreground font-medium mb-2'>{item.label}</div>
         <div className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70'>
-          {typeof item.value === 'object' ? safeStringify(item.value) : String(item.value)}
+          {renderSummaryValue(item.value)}
         </div>
       </motion.div>
     )
