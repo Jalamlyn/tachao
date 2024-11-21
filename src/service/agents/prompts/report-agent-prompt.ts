@@ -10,6 +10,51 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 数据总行数: ${data.length}
 `
 
+// 返回结构限制
+const returnStructureRequirements = `
+返回格式要求:
+1. 必须使用 <shata-ai-code> 标签包裹生成的代码
+2. 生成的代码必须直接返回一个符合以下结构的对象:
+{
+  type: 'analyze',
+  data: data, // 保持原始数据不变
+  analysis: {
+    summary: {...},  // 必须在顶层
+    charts: [...],   // 必须在顶层
+    tables: [...],   // 必须在顶层
+    insights: [...], // 必须在顶层
+    processAnalysis: {...} // 可选,用于流程数据
+  }
+}
+
+错误示例:
+❌ 不要这样写:
+<shata-ai-code>
+const analysis = {
+  fruitAnalysis: {  // ❌ 错误:不要创建额外的嵌套对象
+    charts: [...],  // ❌ 错误:charts不应该在嵌套对象中
+    tables: [...],  // ❌ 错误:tables不应该在嵌套对象中
+  }
+};
+</shata-ai-code>
+
+正确示例:
+✅ 应该这样写:
+<shata-ai-code>
+const result = {
+  type: 'analyze',
+  data: data,
+  analysis: {
+    summary: {...},
+    charts: [...],  // ✅ 正确:直接在顶层
+    tables: [...],  // ✅ 正确:直接在顶层
+    insights: [...] // ✅ 正确:直接在顶层
+  }
+};
+return result;
+</shata-ai-code>
+`
+
 // 核心要求部分
 const coreRequirements = `
 核心要求：
@@ -69,6 +114,16 @@ const wrongAnalysis = {
     averageProcessTime: '2.5天'     // 错误：直接写入时间
   }
 };
+
+// ❌ 错误：嵌套charts和tables
+const wrongStructure = {
+  analysis: {
+    dataAnalysis: {
+      charts: [...],  // 错误：不应该在嵌套对象中
+      tables: [...]   // 错误：不应该在嵌套对象中
+    }
+  }
+};
 `
 
 // 辅助函数示例
@@ -116,7 +171,10 @@ const result = {
       totalRecords: totalCount,
       validRecords: validData.length,
       completionRate: \`\${((validData.filter(item => item.completed).length / totalCount) * 100).toFixed(2)}%\`
-    }
+    },
+    charts: [...],   // 必须在顶层
+    tables: [...],   // 必须在顶层
+    insights: [...]  // 必须在顶层
   }
 };
 return result;
@@ -128,6 +186,7 @@ return result;
 export const generateSystemPrompt = (data: any[], doc: string): string => {
   return `${basePrompt}
 ${dataRequirements(data)}
+${returnStructureRequirements}
 ${coreRequirements}
 ${correctExamples}
 ${incorrectExamples}
