@@ -129,7 +129,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
   const [selectedReport, setSelectedReport] = React.useState<Report | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [internalReports, setInternalReports] = useState<Report[]>([])
-  const { remove, load } = useMetadata("resource")
+  const { remove, load } = useMetadata("report")
   const { items: templates = [], load: loadTemplates } = useMetadata("template")
 
   const reports = internalReports.length > 0 ? internalReports : propReports || []

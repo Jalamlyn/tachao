@@ -4,8 +4,10 @@ const basePrompt = `你是一个智能报表分析助手，负责帮助用户对
 
 // 数据要求部分
 const dataRequirements = (data: any[]) => `
-数据示例:
+这是需要你分析的数据的前3行:
+<data>
 ${JSON.stringify(data.slice(0, 3), null, 2)}
+</data>
 
 数据总行数: ${data.length}
 `

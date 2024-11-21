@@ -27,8 +27,9 @@ const AIReportEditor: React.FC = () => {
   const [processedData, setProcessedData] = useState<ReturnType<typeof processReportData>>({
     columns: [],
     flattenedData: [],
-    originalData: []
+    originalData: [],
   })
+  const processedDataRef = useRef(null)
   const [previewContent, setPreviewContent] = useState<string>("")
   const [previewComponent, setPreviewComponent] = useState<React.ReactNode>(null)
   const [selectedTab, setSelectedTab] = useState("data")
@@ -77,6 +78,7 @@ const AIReportEditor: React.FC = () => {
             setReportData(formData)
             const processed = processReportData(formData)
             setProcessedData(processed)
+            processedDataRef.current = processed
           }
 
           // 5. 加载已有的分析结果
@@ -86,7 +88,7 @@ const AIReportEditor: React.FC = () => {
             })
 
             // 使用 rawConfig 重新分析数据
-            const analysis = await AIReportAgent.analyzeData(processedData, report.data.rawConfig)
+            const analysis = await AIReportAgent.analyzeData(processedDataRef.current, report.data.rawConfig)
 
             setPreviewComponent(
               <ErrorBoundary
@@ -95,7 +97,7 @@ const AIReportEditor: React.FC = () => {
                   if (prevVersion) {
                     setPreviewContent(prevVersion.rawConfig || "")
                     // 重新分析并设置预览
-                    AIReportAgent.analyzeData(processedData, prevVersion.rawConfig || "")
+                    AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
                       .then((analysis) => {
                         setPreviewComponent(<AnalysisResult analysis={analysis} />)
                       })
@@ -124,6 +126,7 @@ const AIReportEditor: React.FC = () => {
             setReportData(formData)
             const processed = processReportData(formData)
             setProcessedData(processed)
+            processedDataRef.current = processed
           }
         }
       } catch (error) {
@@ -240,7 +243,7 @@ const AIReportEditor: React.FC = () => {
           })
 
           // 使用 rawConfig 分析数据
-          const analysis = await AIReportAgent.analyzeData(processedData, result.rawConfig)
+          const analysis = await AIReportAgent.analyzeData(processedDataRef.current, result.rawConfig)
 
           // 设置预览组件
           setPreviewComponent(
@@ -249,7 +252,7 @@ const AIReportEditor: React.FC = () => {
                 const prevVersion = versionControl.rollback()
                 if (prevVersion) {
                   setPreviewContent(prevVersion.rawConfig || "")
-                  AIReportAgent.analyzeData(processedData, prevVersion.rawConfig || "")
+                  AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
                     .then((analysis) => {
                       setPreviewComponent(<AnalysisResult analysis={analysis} />)
                     })
@@ -286,7 +289,7 @@ const AIReportEditor: React.FC = () => {
                           const prevVersion = versionControl.rollback()
                           if (prevVersion) {
                             setPreviewContent(prevVersion.rawConfig || "")
-                            AIReportAgent.analyzeData(processedData, prevVersion.rawConfig || "")
+                            AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
                               .then((analysis) => {
                                 setPreviewComponent(<AnalysisResult analysis={analysis} />)
                               })
@@ -326,7 +329,7 @@ const AIReportEditor: React.FC = () => {
       try {
         const currentVersion = versionControl.getCurrentVersion()
         // 使用 rawConfig 重新分析数据获取标题
-        const analysis = await AIReportAgent.analyzeData(processedData, currentVersion?.rawConfig || "")
+        const analysis = await AIReportAgent.analyzeData(processedDataRef.current, currentVersion?.rawConfig || "")
         const reportTitle = analysis?.title || "新建报表"
 
         const saveData = {
@@ -451,7 +454,7 @@ const AIReportEditor: React.FC = () => {
                 if (prevVersion) {
                   setPreviewContent(prevVersion.rawConfig || "")
                   // 重新分析并设置预览
-                  AIReportAgent.analyzeData(processedData, prevVersion.rawConfig || "")
+                  AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
                     .then((analysis) => {
                       setPreviewComponent(<AnalysisResult analysis={analysis} />)
                     })

@@ -9,11 +9,15 @@ import { useMetadata } from "@/hooks/metadata"
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
-  const { items: forms } = useMetadata("form")
+  const { items: forms, load } = useMetadata("form")
 
   useEffect(() => {
     updateBreadcrumbs([{ label: "首页", href: "/we-chat-app/admin" }])
   }, [])
+  
+  useEffect(() => {
+    load()
+  }, [load])
 
   const stats = [
     {
