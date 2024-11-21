@@ -1,8 +1,8 @@
 import { Route, Routes } from "react-router-dom"
-import AdminPage from "./src/App"
-import ApplicationList from "./src/ApplicationList"
-import EnterpriseSettings from "./src/EnterpriseSettings"
-import AppDetail from "./src/AppDetail"
+import AdminPage from "@/apps/we-chat-app-admin/src/App"
+import ApplicationList from "@/apps/we-chat-app-admin/src/ApplicationList"
+import EnterpriseSettings from "@/apps/we-chat-app-admin/src/EnterpriseSettings"
+import AppDetail from "@/apps/we-chat-app-admin/src/AppDetail"
 import FormTempManager from "@/pages/form-temp-manager"
 import FormManager from "@/pages/form-manager"
 import FormPreview from "@/pages/form-temp-manager/components/FormPreview"
@@ -12,7 +12,7 @@ import ResourceManagement from "@/pages/resource-management"
 import ReportManagement from "@/pages/report-management"
 import AIResourceEditor from "@/pages/resource-management/AIResourceEditor"
 import AIReportEditor from "@/pages/report-management/AIReportEditor"
-import Dashboard from "./src/Dashboard"
+import Dashboard from "@/apps/we-chat-app-admin/src/Dashboard"
 
 export default function renderWeChatApp() {
   return (
@@ -31,6 +31,7 @@ export default function renderWeChatApp() {
       <Route path='resources/ai/:resourceId' element={<AIResourceEditor />} />
       <Route path='reports' element={<ReportManagement />} />
       <Route path='reports/ai/create/:templateId' element={<AIReportEditor />} />
+      <Route path='reports/ai/:reportId' element={<AIReportEditor />} />
       <Route path='ai-assistant' element={<FormAnalysis />} />
     </Route>
   )
