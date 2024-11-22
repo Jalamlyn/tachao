@@ -7,6 +7,7 @@ interface DynamicFormFieldsProps {
   fields: DynamicFormField[]
   form: UseFormReturn<any>
   isEditable?: boolean
+  onChange?: (fieldName: string, value: any) => void
 }
 
 const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = (props) => {

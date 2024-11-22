@@ -22,6 +22,19 @@ const ProcessStepForm: React.FC<ProcessStepFormProps> = ({
 }) => {
   if (!step.fields) return null
 
+  // 添加字段值变化处理函数
+  const handleFieldChange = (field: string, value: any) => {
+    // 使用正确的路径格式设置表单值
+    const formDataPath = `${fieldName}.${step.key}.formData.${field}`
+    console.log('Setting form value:', {
+      path: formDataPath,
+      value,
+      currentFormData: form.getValues(`${fieldName}.${step.key}.formData`),
+      allValues: form.getValues()
+    })
+    form.setValue(formDataPath, value)
+  }
+
   return (
     <motion.div
       className={cn(
@@ -55,7 +68,7 @@ const ProcessStepForm: React.FC<ProcessStepFormProps> = ({
           fields={step.fields}
           form={form}
           isEditable={isEditable && !isConfirmed}
-          orderNumberFieldConfig={undefined}
+          onChange={handleFieldChange}
         />
       </motion.div>
     </motion.div>
