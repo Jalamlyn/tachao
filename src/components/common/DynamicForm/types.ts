@@ -3,7 +3,7 @@ import { ReactNode } from "react"
 
 export type FormFieldType =
   | "text"
-  | "password" 
+  | "password"
   | "number"
   | "email"
   | "tel"
@@ -16,6 +16,7 @@ export type FormFieldType =
   | "image"
   | "custom"
   | "resource"
+  | "signature"
 
 export interface FormField {
   name: string
@@ -48,6 +49,11 @@ export interface FormField {
     form: UseFormReturn<any>
     isEditable: boolean
   }) => ReactNode
+  width?: number | string
+  height?: number
+  lineWidth?: number
+  lineColor?: string
+  className?: string
 }
 
 export interface TableColumn {
