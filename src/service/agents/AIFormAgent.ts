@@ -86,10 +86,12 @@ ${formulaService}
   }
 
   public cacheImage(imageData: string): void {
+    console.log("[AIFormAgent] cacheImage called")
     this._cachedImage = imageData
   }
 
   public clearCachedImage(): void {
+    console.log("[AIFormAgent] clearCachedImage called")
     this._cachedImage = null
   }
 
@@ -158,12 +160,12 @@ ${formulaService}
     let response = ""
     const messages: Message[] = [
       { role: "system", content: this.systemPrompt },
-      { role: "user", content: userInput },
+      { 
+        role: "user", 
+        content: userInput,
+        images: this._cachedImage ? [this._cachedImage] : undefined
+      }
     ]
-
-    if (this._cachedImage) {
-      messages.push({ role: "user", content: `[Uploaded Image: ${this._cachedImage}]` })
-    }
 
     await chatChunkClaude(
       messages,
@@ -175,6 +177,10 @@ ${formulaService}
       true,
       0
     )
+
+    // 清理缓存的图片
+    this.clearCachedImage()
+    
     return response
   }
 

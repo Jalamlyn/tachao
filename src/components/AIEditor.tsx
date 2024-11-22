@@ -6,6 +6,7 @@ import MessageCard from "@/components/MessageCard"
 import AICommandInput from "@/components/AICommandInput"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import message from "@/components/Message"
 
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
@@ -57,27 +58,37 @@ const ImageUploader: React.FC<{ agent: AIEditorProps["agent"] }> = ({ agent }) =
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        // 5MB limit
-        alert("图片大小不能超过5MB")
-        return
-      }
+    if (!file) return
 
-      setIsLoading(true)
-      try {
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          const base64 = reader.result as string
-          setPreview(base64)
-          agent.cacheImage?.(base64)
-          setIsLoading(false)
-        }
-        reader.readAsDataURL(file)
-      } catch (error) {
-        console.error("Error uploading image:", error)
+    if (file.size > 5 * 1024 * 1024) {
+      message.error("图片大小不能超过5MB")
+      return
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
+    if (!allowedTypes.includes(file.type)) {
+      message.error("只支持 JPG, PNG, GIF 格式")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64 = reader.result as string
+        setPreview(base64)
+        agent.cacheImage?.(base64)
         setIsLoading(false)
       }
+      reader.onerror = () => {
+        message.error("图片读取失败")
+        setIsLoading(false)
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error("Error uploading image:", error)
+      message.error("图片上传失败")
+      setIsLoading(false)
     }
   }
 
@@ -95,7 +106,7 @@ const ImageUploader: React.FC<{ agent: AIEditorProps["agent"] }> = ({ agent }) =
         type="file"
         ref={inputRef}
         className="hidden"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/gif"
         onChange={handleUpload}
       />
       <Button

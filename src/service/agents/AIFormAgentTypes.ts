@@ -31,6 +31,7 @@ export type AIResponseHandler = (chunk: string) => void
 export type Message = {
   role: "system" | "user" | "assistant"
   content: string
+  images?: string[]  // 添加图片数组字段
 }
 
 // AI表单代理接口
