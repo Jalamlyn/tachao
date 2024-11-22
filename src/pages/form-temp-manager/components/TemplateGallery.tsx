@@ -21,6 +21,7 @@ import { getMetadata, setMetadata, deleteMetadata } from "@/service/apis/api"
 import message from "@/components/Message"
 import { jsonParse, jsonStringify } from "@/utils"
 import ErrorBoundary from "@/components/ErrorBoundary"
+import RenameModal from "@/pages/form-temp-manager/components/RenameModal"
 
 interface Template {
   id: string
@@ -32,6 +33,42 @@ interface Template {
 interface TemplateGalleryProps {
   onTemplateSelect: (templateId: string) => void
   className?: string
+}
+
+// 空状态组件
+const EmptyState: React.FC = () => {
+  const navigate = useNavigate()
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className='flex flex-col items-center justify-center min-h-[400px] p-8'
+    >
+      <div className='w-48 h-48 mb-8 relative'>
+        <motion.div
+          animate={{
+            scale: [1, 1.05, 1],
+            rotate: [0, -5, 5, 0],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+        >
+          <Icon icon='fluent:document-add-48-regular' className='w-full h-full text-primary/30' />
+        </motion.div>
+      </div>
+      <h3 className='text-xl font-medium text-foreground mb-2'>还没有表单模板</h3>
+      <p className='text-default-500 mb-8 text-center max-w-md'>
+        创建你的第一个表单模板，AI 助手会帮助你快速生成专业的表单
+      </p>
+      <Button color='secondary' size='lg' onClick={() => navigate("/we-chat-app/admin/documents/create")}>
+        去创建
+      </Button>
+    </motion.div>
+  )
 }
 
 // 加载状态占位组件
@@ -53,65 +90,12 @@ const LoadingPlaceholder = () => (
   </div>
 )
 
-// 空状态组件
-const EmptyState = ({ onCreateTemplate }: { onCreateTemplate: () => void }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className='flex flex-col items-center justify-center min-h-[400px] p-8'
-  >
-    <div className='w-48 h-48 mb-8 relative'>
-      <motion.div
-        animate={{
-          scale: [1, 1.05, 1],
-          rotate: [0, -5, 5, 0],
-        }}
-        transition={{
-          duration: 3,
-          repeat: Infinity,
-          repeatType: "reverse",
-        }}
-      >
-        <Icon icon='fluent:document-add-48-regular' className='w-full h-full text-primary/30' />
-      </motion.div>
-    </div>
-    <h3 className='text-xl font-medium text-foreground mb-2'>还没有表单模板</h3>
-    <p className='text-default-500 mb-8 text-center max-w-md'>
-      创建你的第一个表单模板，AI 助手会帮助你快速生成专业的表单
-    </p>
-    <Button color='secondary' size='lg' onClick={onCreateTemplate}>
-      去创建
-    </Button>
-  </motion.div>
-)
-
-// 错误状态组件
-const ErrorState = ({ error, onRetry }: { error: Error; onRetry: () => void }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className='flex flex-col items-center justify-center min-h-[400px] p-8'
-  >
-    <Icon icon='mdi:alert-circle' className='w-16 h-16 text-danger mb-4' />
-    <h3 className='text-xl font-medium text-danger mb-2'>加载失败</h3>
-    <p className='text-default-500 mb-8 text-center max-w-md'>{error.message || "请稍后重试"}</p>
-    <Button
-      color='primary'
-      variant='flat'
-      onClick={onRetry}
-      startContent={<Icon icon='mdi:refresh' className='w-5 h-5' />}
-    >
-      重试
-    </Button>
-  </motion.div>
-)
-
-// 主要内容组件
-const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: string) => void }) => {
+const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, className }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isOpen: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure()
   const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(null)
+  const [isRenameModalOpen, setIsRenameModalOpen] = React.useState(false)
   const queryClient = useQueryClient()
 
   // 使用 React Query 获取模板列表，启用 suspense 模式
@@ -144,6 +128,30 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
     },
   })
 
+  // 使用 React Query 的 mutation 来重命名模板
+  const renameMutation = useMutation({
+    mutationFn: async ({ templateId, newTitle }: { templateId: string; newTitle: string }) => {
+      const currentTemplates = templates.map((t) =>
+        t.id === templateId
+          ? {
+              ...t,
+              title: newTitle,
+            }
+          : t
+      )
+      await setMetadata("template_index", jsonStringify(currentTemplates))
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["templates"] })
+      setIsRenameModalOpen(false)
+      setSelectedTemplate(null)
+    },
+    onError: (error) => {
+      console.error("重命名模板失败:", error)
+      throw error
+    },
+  })
+
   const handleDeleteConfirm = async () => {
     if (selectedTemplate) {
       deleteMutation.mutate(selectedTemplate.id)
@@ -162,13 +170,29 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
     onShareOpen()
   }
 
+  const handleRenameClick = (template: Template, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedTemplate(template)
+    setIsRenameModalOpen(true)
+  }
+
+  const handleRename = async (newTitle: string) => {
+    if (!selectedTemplate) return
+
+    try {
+      await renameMutation.mutateAsync({
+        templateId: selectedTemplate.id,
+        newTitle,
+      })
+    } catch (error) {
+      console.error("重命名模板失败:", error)
+      throw error
+    }
+  }
+
   const handleAIEditClick = async (template: Template, e: React.MouseEvent) => {
     e.stopPropagation()
     navigate(`/we-chat-app/admin/documents/edit/${template.id}`)
-  }
-
-  const handleCreateTemplate = () => {
-    navigate("/we-chat-app/admin/documents/create")
   }
 
   const handleCopyShareLink = async () => {
@@ -184,13 +208,19 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
     }
   }
 
+  // 如果正在加载，显示加载状态
+  if (!templates) {
+    return <LoadingPlaceholder />
+  }
+
+  // 如果没有模板，显示空状态
   if (templates.length === 0) {
-    return <EmptyState onCreateTemplate={handleCreateTemplate} />
+    return <EmptyState />
   }
 
   return (
     <>
-      <motion.div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6'>
+      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${className}`}>
         <AnimatePresence>
           {templates.map((template) => (
             <motion.div
@@ -239,6 +269,15 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
                         isIconOnly
                         size='sm'
                         variant='light'
+                        className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+                        onClick={(e) => handleRenameClick(template, e)}
+                      >
+                        <Icon icon='mdi:pencil' className='w-4 h-4' />
+                      </Button>
+                      <Button
+                        isIconOnly
+                        size='sm'
+                        variant='light'
                         className='text-default-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-300'
                         onClick={(e) => handleAIEditClick(template, e)}
                       >
@@ -260,7 +299,7 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
             </motion.div>
           ))}
         </AnimatePresence>
-      </motion.div>
+      </div>
 
       <Modal
         isOpen={isOpen}
@@ -289,7 +328,6 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
             <Button
               color='danger'
               onPress={handleDeleteConfirm}
-              isLoading={deleteMutation.isPending}
               startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
             >
               删除
@@ -335,17 +373,17 @@ const TemplateContent = ({ onTemplateSelect }: { onTemplateSelect: (templateId: 
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </>
-  )
-}
 
-const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, className }) => {
-  return (
-    <ErrorBoundary>
-      <Suspense fallback={<LoadingPlaceholder />}>
-        <TemplateContent onTemplateSelect={onTemplateSelect} />
-      </Suspense>
-    </ErrorBoundary>
+      <RenameModal
+        isOpen={isRenameModalOpen}
+        onClose={() => {
+          setIsRenameModalOpen(false)
+          setSelectedTemplate(null)
+        }}
+        onRename={handleRename}
+        initialTitle={selectedTemplate?.title || ""}
+      />
+    </>
   )
 }
 
