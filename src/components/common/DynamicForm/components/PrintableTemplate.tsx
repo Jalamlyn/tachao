@@ -16,6 +16,24 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     if (value === undefined || value === null || value === "") return "-"
 
     switch (type) {
+      case "signature":
+        // 验证是否为有效的base64图片数据
+        if (typeof value === "string" && value.startsWith("data:image")) {
+          return (
+            <img 
+              src={value}
+              alt="签名"
+              style={{
+                maxWidth: "200px",
+                maxHeight: "100px",
+                objectFit: "contain"
+              }}
+              className="print-signature"
+            />
+          )
+        }
+        // 如果不是有效的base64图片则不显示
+        return null
       case "date":
       case "datetime":
         return format(new Date(value), "yyyy-MM-dd HH:mm:ss")
@@ -46,21 +64,29 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
   // 渲染基本信息字段
   const renderBasicFields = () => {
     const basicInfo = ensureBasicInfo()
-    console.log('Basic info for printing:', basicInfo) // 添加日志以便调试
+    console.log('Basic info for printing:', basicInfo)
 
     return (
       <div className='grid grid-cols-2 gap-2'>
-        {renderConfig.basicFields.map((field) => (
-          <div
-            key={field.name}
-            className={cn("flex justify-between border-b border-gray-200 py-1", "print:break-inside-avoid")}
-          >
-            <span className='font-medium text-gray-700 text-sm'>{field.label}:</span>
-            <span className='min-w-[120px] text-right text-sm text-gray-900'>
-              {formatFieldValue(field.type, basicInfo[field.name])}
-            </span>
-          </div>
-        ))}
+        {renderConfig.basicFields.map((field) => {
+          const formattedValue = formatFieldValue(field.type, basicInfo[field.name])
+          // 如果是签名字段且没有有效值，则跳过渲染
+          if (field.type === "signature" && !formattedValue) {
+            return null
+          }
+
+          return (
+            <div
+              key={field.name}
+              className={cn("flex justify-between border-b border-gray-200 py-1", "print:break-inside-avoid")}
+            >
+              <span className='font-medium text-gray-700 text-sm'>{field.label}:</span>
+              <span className='min-w-[120px] text-right text-sm text-gray-900'>
+                {formattedValue}
+              </span>
+            </div>
+          )
+        })}
       </div>
     )
   }
@@ -91,17 +117,25 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
           <tbody>
             {data.tableData.map((row: any, index: number) => (
               <tr key={index} className='border-b border-gray-200'>
-                {renderConfig.table!.columns.map((column) => (
-                  <td
-                    key={column.key}
-                    className={cn(
-                      "border border-gray-300 p-1 text-sm",
-                      column.type === "number" && "text-right font-mono"
-                    )}
-                  >
-                    {formatFieldValue(column.type, row[column.key])}
-                  </td>
-                ))}
+                {renderConfig.table!.columns.map((column) => {
+                  const formattedValue = formatFieldValue(column.type, row[column.key])
+                  // 如果是签名字段且没有有效值，则显示空白单元格
+                  if (column.type === "signature" && !formattedValue) {
+                    return <td key={column.key} className="border border-gray-300 p-1 text-sm"></td>
+                  }
+
+                  return (
+                    <td
+                      key={column.key}
+                      className={cn(
+                        "border border-gray-300 p-1 text-sm",
+                        column.type === "number" && "text-right font-mono"
+                      )}
+                    >
+                      {formattedValue}
+                    </td>
+                  )
+                })}
               </tr>
             ))}
           </tbody>
@@ -154,14 +188,22 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
                   {/* 渲染步骤表单字段 */}
                   {step.fields && stepData.formData && (
                     <div className='mt-2 grid grid-cols-2 gap-2 text-xs'>
-                      {step.fields.map((field) => (
-                        <div key={field.name}>
-                          <span className='text-gray-500'>{field.label}：</span>
-                          <span className='text-gray-900'>
-                            {formatFieldValue(field.type, stepData.formData[field.name])}
-                          </span>
-                        </div>
-                      ))}
+                      {step.fields.map((field) => {
+                        const formattedValue = formatFieldValue(field.type, stepData.formData[field.name])
+                        // 如果是签名字段且没有有效值，则跳过渲染
+                        if (field.type === "signature" && !formattedValue) {
+                          return null
+                        }
+
+                        return (
+                          <div key={field.name}>
+                            <span className='text-gray-500'>{field.label}：</span>
+                            <span className='text-gray-900'>
+                              {formattedValue}
+                            </span>
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
@@ -247,6 +289,13 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
           .py-1 {
             padding-top: 2px !important;
             padding-bottom: 2px !important;
+          }
+          .print-signature {
+            max-width: 200px !important;
+            max-height: 100px !important;
+            object-fit: contain !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
         }
       `}</style>
