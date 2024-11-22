@@ -15,6 +15,7 @@ import AIHomePage from "./pages/AIHomePage"
 import renderWeChatApp from "./apps/we-chat-app-admin/renderWeChatApp"
 import FormPreview from "./pages/form-temp-manager/components/FormPreview"
 import Form from "@/pages/form"
+import Report from "@/pages/report"
 import ResourceDataTable from "./components/common/data-table/ResourceDataTable"
 
 // 创建 QueryClient 实例
@@ -38,7 +39,7 @@ function App() {
   }, [])
 
   const shouldRedirectToLogin = () => {
-    const publicPaths = ["/", "/we-chat-login"]
+    const publicPaths = ["/", "/we-chat-login", "/report"]
     if (!publicPaths.includes(location.pathname)) {
       const token = localStorage.getItem("model-base-user-token")
       return !token
@@ -65,6 +66,7 @@ function App() {
               }
             />
             <Route path='/form/:formId' element={<Form />} />
+            <Route path='/report/:reportId' element={<Report />} />
             <Route
               path='/forms/:id'
               element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <FormRenderer />}
