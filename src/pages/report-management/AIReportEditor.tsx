@@ -68,8 +68,8 @@ const AIReportEditor: React.FC = () => {
           setCurrentTemplateIds(reportTemplateIds)
 
           // 3. 使用 templateIds 获取最新的表单数据
-          const formDetails = await loadFormFilteredDetails(
-            (index) => reportTemplateIds.includes(index.indexFields?.templateId)
+          const formDetails = await loadFormFilteredDetails((index) =>
+            reportTemplateIds.includes(index.indexFields?.templateId)
           )
 
           if (formDetails.length > 0) {
@@ -119,11 +119,11 @@ const AIReportEditor: React.FC = () => {
           }
         } else {
           // 处理创建新报表的场景
-          const templateIds = searchParams.get('templateIds')?.split(',') || [templateId]
+          const templateIds = searchParams.get("templateIds")?.split(",") || [templateId]
           setCurrentTemplateIds(templateIds)
 
-          const formDetails = await loadFormFilteredDetails(
-            (index) => templateIds.includes(index.indexFields?.templateId)
+          const formDetails = await loadFormFilteredDetails((index) =>
+            templateIds.includes(index.indexFields?.templateId)
           )
 
           if (formDetails.length > 0) {
@@ -386,13 +386,14 @@ const AIReportEditor: React.FC = () => {
             templateIds: currentTemplateIds,
             rawConfig: currentVersion?.rawConfig,
           },
-          template: currentTemplateIds.length === 1
-            ? {
-                id: currentTemplateIds[0],
-                title: reportTitle,
-                type: "form",
-              }
-            : undefined,
+          template:
+            currentTemplateIds.length === 1
+              ? {
+                  id: currentTemplateIds[0],
+                  title: reportTitle,
+                  type: "form",
+                }
+              : undefined,
           indexFields: {
             templateIds: currentTemplateIds,
             createdAt: new Date().toISOString(),
@@ -469,11 +470,8 @@ const AIReportEditor: React.FC = () => {
     }, {})
 
     return (
-      <Tabs 
-        selectedKey={activeDataTab} 
-        onSelectionChange={(key) => setActiveDataTab(key as string)}
-      >
-        <Tab key="all" title="全部数据">
+      <Tabs selectedKey={activeDataTab} onSelectionChange={(key) => setActiveDataTab(key as string)}>
+        <Tab key='all' title='全部数据'>
           <DataTable
             columns={processedData.columns}
             flattenedData={processedData.flattenedData}
@@ -499,6 +497,7 @@ const AIReportEditor: React.FC = () => {
   return (
     <PageLayout title='AI 报表助手' titleIcon='hugeicons:ai-chat-02' className='p-0' actions={pageActions}>
       <AIEditor
+        imageUpload={false}
         messages={messages}
         selectedTab={selectedTab}
         onTabChange={setSelectedTab}

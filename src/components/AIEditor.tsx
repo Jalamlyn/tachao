@@ -138,6 +138,7 @@ const ImageUploader: React.FC<{ agent: AIEditorProps["agent"] }> = ({ agent }) =
 }
 
 const AIEditor: React.FC<AIEditorProps> = ({
+  imageUpload = true,
   messages,
   selectedTab,
   onTabChange,
@@ -180,7 +181,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
             </ScrollShadow>
 
             <div className='p-2'>
-              <ImageUploader agent={AIFormAgent} />
+              {imageUpload && <ImageUploader agent={AIFormAgent} />}
               <AICommandInput agent={agent} onResult={onCommandResult} />
             </div>
           </div>

@@ -160,11 +160,11 @@ ${formulaService}
     let response = ""
     const messages: Message[] = [
       { role: "system", content: this.systemPrompt },
-      { 
-        role: "user", 
+      {
+        role: "user",
         content: userInput,
-        images: this._cachedImage ? [this._cachedImage] : undefined
-      }
+        images: this._cachedImage ? [this._cachedImage] : undefined,
+      },
     ]
 
     await chatChunkClaude(
@@ -175,12 +175,14 @@ ${formulaService}
       },
       () => {},
       true,
-      0
+      0,
+      "YES",
+      "claude::claude-3-5-sonnet-20241022"
     )
 
     // 清理缓存的图片
     this.clearCachedImage()
-    
+
     return response
   }
 
