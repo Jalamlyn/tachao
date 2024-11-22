@@ -2,12 +2,13 @@ import React, { useEffect } from "react"
 import { useParams } from "react-router-dom"
 import { motion } from "framer-motion"
 import { aiLog } from "@/utils/AITraceLogger"
-import { useReportState } from "./hooks/useReportState"
-import { useReportData } from "./hooks/useReportData"
-import { ReportError } from "./components/ReportError"
-import { ReportLoading } from "./components/ReportLoading"
+import { useReportState } from "@/pages/report/hooks/useReportState"
+import { useReportData } from "@/pages/report/hooks/useReportData"
+import { ReportError } from "@/pages/report/components/ReportError"
+import { ReportLoading } from "@/pages/report/components/ReportLoading"
 import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
 import AIReportAgent from "@/service/agents/AIReportAgent"
+import { processReportData } from "@/pages/report-management/utils/processReportData"
 
 const Report: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>()
@@ -32,12 +33,11 @@ const Report: React.FC = () => {
           throw new Error("报表配置不存在")
         }
 
+        // 处理表单数据
+        const processedData = processReportData(data.data)
+
         // 使用 AIReportAgent 分析数据
-        const analysis = await AIReportAgent.analyzeData({
-          columns: [],
-          flattenedData: data.data,
-          originalData: data.data
-        }, data.rawConfig)
+        const analysis = await AIReportAgent.analyzeData(processedData, data.rawConfig)
 
         reportActions.setSuccess({
           reportConfig: data.rawConfig,
