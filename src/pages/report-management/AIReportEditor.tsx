@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import { useLocation, useNavigate, useParams } from "react-router-dom"
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
@@ -11,7 +11,7 @@ import { useVersionControl } from "@/hooks/useVersionControl"
 import AIEditor from "@/components/AIEditor"
 import { Icon } from "@iconify/react"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
-import { Button } from "@nextui-org/react"
+import { Button, Tabs, Tab } from "@nextui-org/react"
 import { generateColumns, flattenData, extractShataAICode } from "./utils/generateColumns"
 import { processReportData } from "./utils/processReportData"
 import { Message } from "./types"
@@ -21,6 +21,7 @@ import SuccessModal from "./components/SuccessModal"
 const AIReportEditor: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const { title } = location.state || {}
   const { reportId, templateId } = useParams<{ reportId: string; templateId: string }>()
   const { updateBreadcrumbs } = useBreadcrumb()
@@ -37,7 +38,8 @@ const AIReportEditor: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState("data")
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
   const [savedReportId, setSavedReportId] = useState<string | null>(null)
-  const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(null)
+  const [currentTemplateIds, setCurrentTemplateIds] = useState<string[]>([])
+  const [activeDataTab, setActiveDataTab] = useState<string>("all")
 
   const accumulatedTextRef = useRef("")
   const { getDetail: getReportDetail, loadFilteredDetails } = useMetadata("report")
@@ -57,22 +59,23 @@ const AIReportEditor: React.FC = () => {
           const report = await getReportDetail(reportId)
 
           // 2. 从报表中获取 templateId
-          const reportTemplateId = report?.data?.templateId
+          const reportTemplateIds = report?.data?.templateIds || [report?.data?.templateId]
 
-          if (!reportTemplateId) {
+          if (!reportTemplateIds?.length) {
             throw new Error("报表模板ID不存在")
           }
 
-          setCurrentTemplateId(reportTemplateId)
+          setCurrentTemplateIds(reportTemplateIds)
 
-          // 3. 使用 templateId 获取最新的表单数据
+          // 3. 使用 templateIds 获取最新的表单数据
           const formDetails = await loadFormFilteredDetails(
-            (index) => index.indexFields?.templateId === reportTemplateId
+            (index) => reportTemplateIds.includes(index.indexFields?.templateId)
           )
 
           if (formDetails.length > 0) {
             const formData = formDetails.map((detail) => ({
               id: detail.id,
+              templateId: detail.indexFields?.templateId,
               ...detail.data,
             }))
 
@@ -98,7 +101,6 @@ const AIReportEditor: React.FC = () => {
                   const prevVersion = versionControl.rollback()
                   if (prevVersion) {
                     setPreviewContent(prevVersion.rawConfig || "")
-                    // 重新分析并设置预览
                     AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
                       .then((analysis) => {
                         setPreviewComponent(<AnalysisResult analysis={analysis} />)
@@ -115,13 +117,19 @@ const AIReportEditor: React.FC = () => {
             )
             setPreviewContent(report.data.rawConfig)
           }
-        } else if (templateId) {
-          setCurrentTemplateId(templateId)
-          const formDetails = await loadFormFilteredDetails((index) => index.indexFields?.templateId === templateId)
+        } else {
+          // 处理创建新报表的场景
+          const templateIds = searchParams.get('templateIds')?.split(',') || [templateId]
+          setCurrentTemplateIds(templateIds)
+
+          const formDetails = await loadFormFilteredDetails(
+            (index) => templateIds.includes(index.indexFields?.templateId)
+          )
 
           if (formDetails.length > 0) {
             const formData = formDetails.map((detail) => ({
               id: detail.id,
+              templateId: detail.indexFields?.templateId,
               ...detail.data,
             }))
 
@@ -139,7 +147,7 @@ const AIReportEditor: React.FC = () => {
     }
 
     loadData()
-  }, [reportId, templateId])
+  }, [reportId, templateId, searchParams])
 
   useEffect(() => {
     updateBreadcrumbs([
@@ -375,18 +383,18 @@ const AIReportEditor: React.FC = () => {
           title: reportTitle,
           status: "active",
           data: {
-            templateId: currentTemplateId,
+            templateIds: currentTemplateIds,
             rawConfig: currentVersion?.rawConfig,
           },
-          template: currentTemplateId
+          template: currentTemplateIds.length === 1
             ? {
-                id: currentTemplateId,
+                id: currentTemplateIds[0],
                 title: reportTitle,
                 type: "form",
               }
             : undefined,
           indexFields: {
-            templateId: currentTemplateId,
+            templateIds: currentTemplateIds,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           },
@@ -438,6 +446,56 @@ const AIReportEditor: React.FC = () => {
     </Button>
   )
 
+  const renderDataView = () => {
+    if (currentTemplateIds.length <= 1) {
+      // 单模板场景 - 保持原有展示方式
+      return (
+        <DataTable
+          columns={processedData.columns}
+          flattenedData={processedData.flattenedData}
+          isLoading={!processedData.columns.length || !processedData.flattenedData.length}
+        />
+      )
+    }
+
+    // 多模板场景 - 使用 Tabs 展示
+    const templateData = reportData.reduce((acc, item) => {
+      const templateId = item.templateId
+      if (!acc[templateId]) {
+        acc[templateId] = []
+      }
+      acc[templateId].push(item)
+      return acc
+    }, {})
+
+    return (
+      <Tabs 
+        selectedKey={activeDataTab} 
+        onSelectionChange={(key) => setActiveDataTab(key as string)}
+      >
+        <Tab key="all" title="全部数据">
+          <DataTable
+            columns={processedData.columns}
+            flattenedData={processedData.flattenedData}
+            isLoading={!processedData.columns.length || !processedData.flattenedData.length}
+          />
+        </Tab>
+        {Object.entries(templateData).map(([templateId, data]) => {
+          const processed = processReportData(data as any[])
+          return (
+            <Tab key={templateId} title={`模板 ${templateId}`}>
+              <DataTable
+                columns={processed.columns}
+                flattenedData={processed.flattenedData}
+                isLoading={!processed.columns.length || !processed.flattenedData.length}
+              />
+            </Tab>
+          )
+        })}
+      </Tabs>
+    )
+  }
+
   return (
     <PageLayout title='AI 报表助手' titleIcon='hugeicons:ai-chat-02' className='p-0' actions={pageActions}>
       <AIEditor
@@ -455,7 +513,6 @@ const AIReportEditor: React.FC = () => {
                 const prevVersion = versionControl.rollback()
                 if (prevVersion) {
                   setPreviewContent(prevVersion.rawConfig || "")
-                  // 重新分析并设置预览
                   AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
                     .then((analysis) => {
                       setPreviewComponent(<AnalysisResult analysis={analysis} />)
@@ -471,13 +528,7 @@ const AIReportEditor: React.FC = () => {
             </ErrorBoundary>
           )
         }}
-        renderDataView={() => (
-          <DataTable
-            columns={processedData.columns}
-            flattenedData={processedData.flattenedData}
-            isLoading={!processedData.columns.length || !processedData.flattenedData.length}
-          />
-        )}
+        renderDataView={renderDataView}
         renderCodeView={(version) => (
           <pre>
             <code>{previewContent || version?.rawConfig || ""}</code>

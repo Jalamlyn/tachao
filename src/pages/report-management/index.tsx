@@ -16,7 +16,7 @@ const ReportManagement: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [showGuideModal, setShowGuideModal] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("")
+  const [selectedTemplates, setSelectedTemplates] = useState<string[]>([])
   const [templates, setTemplates] = useState<Array<{ id: string; title: string }>>([])
   const [loading, setLoading] = useState(false)
 
@@ -62,20 +62,22 @@ const ReportManagement: React.FC = () => {
 
   const handleCreateModalClose = () => {
     setIsCreateModalOpen(false)
-    setSelectedTemplate("")
+    setSelectedTemplates([])
   }
 
-  const handleTemplateSelect = (value: string) => {
-    setSelectedTemplate(value)
+  const handleTemplateSelect = (value: string[]) => {
+    setSelectedTemplates(value)
   }
 
   const handleCreateConfirm = async () => {
-    if (!selectedTemplate) {
-      message.error("请选择数据源")
+    if (selectedTemplates.length === 0) {
+      message.error("请至少选择一个数据源")
       return
     }
 
-    const formCount = getFormCountByTemplate(selectedTemplate)
+    // 兼容单模板和多模板场景
+    const templateId = selectedTemplates[0]
+    const formCount = getFormCountByTemplate(templateId)
 
     if (formCount < 10) {
       setShowGuideModal(true)
@@ -84,7 +86,14 @@ const ReportManagement: React.FC = () => {
 
     setLoading(true)
     try {
-      navigate(`/we-chat-app/admin/reports/ai/create/${selectedTemplate}`)
+      if (selectedTemplates.length === 1) {
+        // 单模板场景 - 保持原有路由格式
+        navigate(`/we-chat-app/admin/reports/ai/create/${templateId}`)
+      } else {
+        // 多模板场景 - 使用查询参数
+        const templateIds = selectedTemplates.join(',')
+        navigate(`/we-chat-app/admin/reports/ai/create?templateIds=${templateIds}`)
+      }
       handleCreateModalClose()
     } catch (error) {
       console.error("Error creating report:", error)
@@ -99,7 +108,7 @@ const ReportManagement: React.FC = () => {
       创建报表
     </Button>
   )
-  console.log(selectedTemplate)
+
   return (
     <PageLayout title='报表管理' titleIcon='mdi:file-chart' actions={pageActions}>
       <ReportGallery
@@ -122,7 +131,12 @@ const ReportManagement: React.FC = () => {
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>选择数据源</ModalHeader>
           <ModalBody>
-            <TemplateSelect templates={templates} value={selectedTemplate} onChange={handleTemplateSelect} />
+            <TemplateSelect 
+              templates={templates} 
+              value={selectedTemplates} 
+              onChange={handleTemplateSelect}
+              multiple={true} // 启用多选
+            />
           </ModalBody>
           <ModalFooter>
             <Button variant='light' onPress={handleCreateModalClose}>
@@ -138,8 +152,8 @@ const ReportManagement: React.FC = () => {
       <GuideModal
         isOpen={showGuideModal}
         onClose={() => setShowGuideModal(false)}
-        formCount={getFormCountByTemplate(selectedTemplate)}
-        templateId={selectedTemplate}
+        formCount={getFormCountByTemplate(selectedTemplates[0])}
+        templateId={selectedTemplates[0]}
       />
     </PageLayout>
   )
