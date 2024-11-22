@@ -53,7 +53,7 @@ const ReportManagement: React.FC = () => {
   }, [loadTemplates])
 
   const handleReportSelect = (reportId: string) => {
-    navigate(`/we-chat-app/admin/reports/ai/${reportId}`)
+    window.open(`/report/${reportId}`, "_blank")
   }
 
   const handleCreateClick = () => {

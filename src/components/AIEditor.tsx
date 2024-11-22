@@ -10,6 +10,7 @@ import message from "@/components/Message"
 
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
+import AIFormAgent from "@/service/agents/AIFormAgent"
 
 interface Message {
   role: "user" | "assistant"
@@ -65,7 +66,7 @@ const ImageUploader: React.FC<{ agent: AIEditorProps["agent"] }> = ({ agent }) =
       return
     }
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif"]
     if (!allowedTypes.includes(file.type)) {
       message.error("只支持 JPG, PNG, GIF 格式")
       return
@@ -101,38 +102,34 @@ const ImageUploader: React.FC<{ agent: AIEditorProps["agent"] }> = ({ agent }) =
   }
 
   return (
-    <div className="flex items-center gap-2 mb-2">
+    <div className='flex items-center gap-2 mb-2'>
       <input
-        type="file"
+        type='file'
         ref={inputRef}
-        className="hidden"
-        accept="image/jpeg,image/png,image/gif"
+        className='hidden'
+        accept='image/jpeg,image/png,image/gif'
         onChange={handleUpload}
       />
       <Button
-        variant="outline"
-        size="sm"
+        variant='outline'
+        size='sm'
         onClick={() => inputRef.current?.click()}
         disabled={isLoading}
-        className="flex items-center gap-2"
+        className='flex items-center gap-2'
       >
-        <Icon icon="mdi:image-plus" className="w-4 h-4" />
+        <Icon icon='mdi:image-plus' className='w-4 h-4' />
         {isLoading ? "上传中..." : "上传图片"}
       </Button>
       {preview && (
-        <div className="relative">
-          <img
-            src={preview}
-            alt="Preview"
-            className="w-16 h-16 object-cover rounded border border-default-200"
-          />
+        <div className='relative'>
+          <img src={preview} alt='Preview' className='w-16 h-16 object-cover rounded border border-default-200' />
           <Button
-            size="sm"
-            variant="ghost"
-            className="absolute -top-2 -right-2 p-0 min-w-unit-6 w-unit-6 h-unit-6 rounded-full"
+            size='sm'
+            variant='ghost'
+            className='absolute -top-2 -right-2 p-0 min-w-unit-6 w-unit-6 h-unit-6 rounded-full'
             onClick={handleClear}
           >
-            <Icon icon="mdi:close" className="w-3 h-3" />
+            <Icon icon='mdi:close' className='w-3 h-3' />
           </Button>
         </div>
       )}
@@ -182,9 +179,9 @@ const AIEditor: React.FC<AIEditorProps> = ({
               </div>
             </ScrollShadow>
 
-            <div className="p-2">
-              <ImageUploader agent={agent} />
-              <AICommandInput agent={agent} onResult={onCommandResult} />
+            <div className='p-2'>
+              <ImageUploader agent={AIFormAgent} />
+              <AICommandInput agent={AIFormAgent} onResult={onCommandResult} />
             </div>
           </div>
         </ResizablePanel>

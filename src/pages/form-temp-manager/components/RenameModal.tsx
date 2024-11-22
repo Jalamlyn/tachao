@@ -23,7 +23,6 @@ const RenameModal: React.FC<RenameModalProps> = ({ isOpen, onClose, onRename, in
     try {
       await onRename(title)
       onClose()
-      message.success("重命名成功")
     } catch (error) {
       console.error(error)
       message.error("重命名失败")

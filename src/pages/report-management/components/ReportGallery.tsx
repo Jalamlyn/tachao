@@ -39,7 +39,7 @@ interface ReportGalleryProps {
 
 // 空状态类型定义
 type EmptyState = {
-  type: 'no-template' | 'no-report'
+  type: "no-template" | "no-report"
   title: string
   description: string
   action: {
@@ -54,9 +54,9 @@ const EmptyState: React.FC<{
   onCreateReport?: () => void
 }> = ({ state, onCreateReport }) => {
   const navigate = useNavigate()
-  
+
   const handleAction = () => {
-    if (state.type === 'no-template') {
+    if (state.type === "no-template") {
       navigate(state.action.href)
     } else {
       onCreateReport?.()
@@ -67,9 +67,9 @@ const EmptyState: React.FC<{
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center min-h-[400px] p-8"
+      className='flex flex-col items-center justify-center min-h-[400px] p-8'
     >
-      <div className="w-48 h-48 mb-8 relative">
+      <div className='w-48 h-48 mb-8 relative'>
         <motion.div
           animate={{
             scale: [1, 1.05, 1],
@@ -81,17 +81,15 @@ const EmptyState: React.FC<{
             repeatType: "reverse",
           }}
         >
-          <Icon 
-            icon={state.type === 'no-template' ? 'fluent:document-add-48-regular' : 'mdi:file-chart'} 
-            className="w-full h-full text-primary/30"
+          <Icon
+            icon={state.type === "no-template" ? "fluent:document-add-48-regular" : "mdi:file-chart"}
+            className='w-full h-full text-primary/30'
           />
         </motion.div>
       </div>
-      <h3 className="text-xl font-medium text-foreground mb-2">{state.title}</h3>
-      <p className="text-default-500 mb-8 text-center max-w-md">
-        {state.description}
-      </p>
-      <Button color="secondary" size="lg" onClick={handleAction}>
+      <h3 className='text-xl font-medium text-foreground mb-2'>{state.title}</h3>
+      <p className='text-default-500 mb-8 text-center max-w-md'>{state.description}</p>
+      <Button color='secondary' size='lg' onClick={handleAction}>
         {state.action.text}
       </Button>
     </motion.div>
@@ -102,28 +100,33 @@ const EmptyState: React.FC<{
 const getEmptyState = (hasTemplates: boolean): EmptyState => {
   if (!hasTemplates) {
     return {
-      type: 'no-template',
-      title: '还没有可用的数据源',
-      description: '创建报表前需要先创建表单模板作为数据源',
+      type: "no-template",
+      title: "还没有可用的数据源",
+      description: "创建报表前需要先创建表单模板作为数据源",
       action: {
-        text: '去创建模板',
-        href: '/we-chat-app/admin/documents'
-      }
+        text: "去创建模板",
+        href: "/we-chat-app/admin/documents",
+      },
     }
   }
-  
+
   return {
-    type: 'no-report',
-    title: '还没有报表',
-    description: '选择一个表单模板开始创建你的第一个报表',
+    type: "no-report",
+    title: "还没有报表",
+    description: "选择一个表单模板开始创建你的第一个报表",
     action: {
-      text: '去创建',
-      href: '#'
-    }
+      text: "去创建",
+      href: "#",
+    },
   }
 }
 
-const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onReportSelect, onCreateReport, className }) => {
+const ReportGallery: React.FC<ReportGalleryProps> = ({
+  reports: propReports,
+  onReportSelect,
+  onCreateReport,
+  className,
+}) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isOpen: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure()
@@ -196,7 +199,11 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
 
   const handleAIAnalysisClick = async (report: Report, e: React.MouseEvent) => {
     e.stopPropagation()
-    navigate(`/we-chat-app/admin/reports/ai/${report.id}`)
+    navigate(`/we-chat-app/admin/reports/ai/${report.id}`, {
+      state: {
+        title: report.title,
+      },
+    })
   }
 
   const handleRenameClick = (report: Report, e: React.MouseEvent) => {
@@ -219,22 +226,13 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
     }
   }
 
-  // 格式化文件大小
-  const formatFileSize = (bytes?: number): string => {
-    if (!bytes) return "0 B"
-    const k = 1024
-    const sizes = ["B", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
-  }
-
   // 如果正在加载，显示加载状态
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center gap-4">
-          <Icon icon="eos-icons:loading" className="w-10 h-10 text-primary animate-spin" />
-          <span className="text-default-500">加载中...</span>
+      <div className='flex items-center justify-center min-h-[400px]'>
+        <div className='flex flex-col items-center gap-4'>
+          <Icon icon='eos-icons:loading' className='w-10 h-10 text-primary animate-spin' />
+          <span className='text-default-500'>加载中...</span>
         </div>
       </div>
     )
@@ -242,12 +240,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
 
   // 如果没有模板或报表，显示空状态
   if (!isLoading && (templates.length === 0 || reports.length === 0)) {
-    return (
-      <EmptyState 
-        state={getEmptyState(templates.length > 0)} 
-        onCreateReport={onCreateReport}
-      />
-    )
+    return <EmptyState state={getEmptyState(templates.length > 0)} onCreateReport={onCreateReport} />
   }
 
   return (
@@ -274,7 +267,6 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
                   </h4>
                 </div>
                 <div className='flex justify-between items-center w-full'>
-                  <span className='text-sm text-default-400'>{formatFileSize(report.indexFields?.size)}</span>
                   <div className='flex gap-2'>
                     <Button
                       isIconOnly

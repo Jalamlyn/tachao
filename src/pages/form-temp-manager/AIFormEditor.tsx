@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import { Icon } from "@iconify/react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react"
 import FormPreview from "./components/FormPreview"
 import { useFormState } from "./hooks/useFormState"
@@ -16,6 +16,8 @@ import AIEditor from "@/components/AIEditor"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { title } = location.state || {} // 避免 state 为 undefined 的情况
   const { templateId } = useParams<{ templateId: string }>()
   const isEditMode = Boolean(templateId)
   const { updateBreadcrumbs } = useBreadcrumb()
@@ -88,16 +90,15 @@ const AIFormEditor: React.FC = () => {
         message.error("请先生成表单")
         return
       }
-
       try {
         const templateData = {
-          title: formState.formConfig.metadata?.title || "新建模板",
+          title: title || "新建模板",
           type: "custom",
           status: "active",
           data: {
             rawConfig: formState.rawConfig,
             type: "custom",
-            name: formState.formConfig.metadata?.title || "新建模板",
+            name: title || "新建模板",
           },
         }
 

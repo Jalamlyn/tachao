@@ -12,6 +12,7 @@ import {
   ModalFooter,
   Input,
   Tooltip,
+  Spinner,
 } from "@nextui-org/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Icon } from "@iconify/react"
@@ -20,7 +21,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getMetadata, setMetadata, deleteMetadata } from "@/service/apis/api"
 import message from "@/components/Message"
 import { jsonParse, jsonStringify } from "@/utils"
-import ErrorBoundary from "@/components/ErrorBoundary"
 import RenameModal from "@/pages/form-temp-manager/components/RenameModal"
 
 interface Template {
@@ -72,23 +72,6 @@ const EmptyState: React.FC = () => {
 }
 
 // 加载状态占位组件
-const LoadingPlaceholder = () => (
-  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6'>
-    {[1, 2, 3, 4].map((key) => (
-      <motion.div key={key} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-        <Card className='w-full h-[240px] animate-pulse'>
-          <CardBody className='p-0'>
-            <div className='h-[160px] bg-default-200 rounded-lg' />
-          </CardBody>
-          <CardFooter className='flex flex-col gap-3 px-4 py-3'>
-            <div className='h-4 w-3/4 bg-default-200 rounded' />
-            <div className='h-3 w-1/2 bg-default-200 rounded' />
-          </CardFooter>
-        </Card>
-      </motion.div>
-    ))}
-  </div>
-)
 
 const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, className }) => {
   const navigate = useNavigate()
@@ -99,7 +82,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   const queryClient = useQueryClient()
 
   // 使用 React Query 获取模板列表，启用 suspense 模式
-  const { data: templates = [] } = useQuery({
+  const { data: templates = null } = useQuery({
     queryKey: ["templates"],
     queryFn: async () => {
       const result = await getMetadata(["template_index"])
@@ -192,7 +175,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
 
   const handleAIEditClick = async (template: Template, e: React.MouseEvent) => {
     e.stopPropagation()
-    navigate(`/we-chat-app/admin/documents/edit/${template.id}`)
+    navigate(`/we-chat-app/admin/documents/edit/${template.id}`, { state: { title: template.title } })
   }
 
   const handleCopyShareLink = async () => {
@@ -210,7 +193,14 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
 
   // 如果正在加载，显示加载状态
   if (!templates) {
-    return <LoadingPlaceholder />
+    return (
+      <div className='flex items-center justify-center min-h-[400px]'>
+        <div className='flex flex-col items-center gap-4'>
+          <Icon icon='eos-icons:loading' className='w-10 h-10 text-primary animate-spin' />
+          <span className='text-default-500'>加载中...</span>
+        </div>
+      </div>
+    )
   }
 
   // 如果没有模板，显示空状态
