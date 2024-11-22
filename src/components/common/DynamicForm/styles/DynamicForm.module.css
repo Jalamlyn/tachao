@@ -162,7 +162,7 @@
   background-color: var(--df-gray-50);
 }
 
-/* 新增: 计算字段样式 */
+/* 计算字段样式 */
 .calculated-field {
   background-color: var(--df-primary-50) !important;
   border-color: var(--df-primary-200) !important;
@@ -183,7 +183,7 @@
   opacity: 1;
 }
 
-/* 新增: 表格图例样式 */
+/* 表格图例样式 */
 .table-legend {
   display: flex;
   align-items: center;
@@ -305,5 +305,103 @@
 
   .table tr {
     break-inside: avoid;
+  }
+}
+
+/* 纸质表单风格 */
+.paper-form {
+  background: white;
+  border: 1px solid #000;
+  padding: 2rem;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+
+.paper-form:hover {
+  box-shadow: none !important;
+}
+
+/* 表格线框风格 */
+.paper-table {
+  border-collapse: collapse !important;
+  border-spacing: 0;
+  width: 100%;
+  border: 1px solid #000;
+}
+
+.paper-table th,
+.paper-table td {
+  border: 1px solid #000 !important;
+  padding: 0.75rem;
+  background: transparent !important;
+}
+
+.paper-table tr:hover {
+  background: transparent !important;
+}
+
+/* 输入框线框风格 */
+.paper-input {
+  border: 1px solid #000 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.paper-input:focus {
+  border-color: #000 !important;
+  box-shadow: none !important;
+}
+
+/* 表单区块线框风格 */
+.paper-section {
+  border: 1px solid #000;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* 纸质表单标题样式 */
+.paper-title {
+  border-bottom: 2px solid #000;
+  color: #000;
+  font-weight: bold;
+  text-align: center;
+  padding-bottom: 0.5rem;
+}
+
+/* 纸质表单按钮样式 */
+.paper-button {
+  border: 1px solid #000;
+  background: transparent;
+  color: #000;
+  border-radius: 0;
+}
+
+.paper-button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* 纸质表单流程步骤样式 */
+.paper-step {
+  border: 1px solid #000;
+  border-radius: 0;
+  background: transparent;
+}
+
+.paper-step.active {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* 打印优化 */
+@media print {
+  .paper-form,
+  .paper-table,
+  .paper-section,
+  .paper-step {
+    border-color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
