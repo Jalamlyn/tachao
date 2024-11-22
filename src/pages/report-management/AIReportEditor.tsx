@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import { Spinner } from "@nextui-org/react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import AIReportAgent from "@/service/agents/AIReportAgent"
 import AnalysisResult from "./components/AnalysisResult"
 import ErrorBoundary from "@/components/ErrorBoundary"
@@ -13,17 +11,12 @@ import { useVersionControl } from "@/hooks/useVersionControl"
 import AIEditor from "@/components/AIEditor"
 import { Icon } from "@iconify/react"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
+import { Button } from "@nextui-org/react"
 import { generateColumns, flattenData, extractShataAICode } from "./utils/generateColumns"
 import { processReportData } from "./utils/processReportData"
 import { Message } from "./types"
-
-interface ReportAgentConfig {
-  data: ProcessedData
-  command: string
-  onChunk?: (chunk: string) => void
-  rawConfig?: string
-}
+import DataTable from "./components/DataTable"
+import SuccessModal from "./components/SuccessModal"
 
 const AIReportEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -425,49 +418,12 @@ const AIReportEditor: React.FC = () => {
 
   const handleViewReport = () => {
     if (savedReportId) {
-      navigate(`/report-preview/${savedReportId}`)
+      window.open(`/report/${savedReportId}`, "_blank")
     }
   }
 
   const handleGoToReports = () => {
     navigate("/we-chat-app/admin/reports")
-  }
-
-  const renderDataTable = () => {
-    if (!processedData.columns.length || !processedData.flattenedData.length) {
-      return (
-        <div className='text-center py-12 text-gray-500 h-full flex flex-col justify-center items-center'>
-          <Spinner label='加载中...' />
-        </div>
-      )
-    }
-
-    return (
-      <div className='bg-white rounded-lg shadow'>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {processedData.columns.map((column) => (
-                <TableHead className='min-w-24 bg-slate-50' key={column.accessorKey}>
-                  {column.header}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {processedData.flattenedData.map((row: any, rowIndex: number) => (
-              <TableRow key={rowIndex}>
-                {processedData.columns.map((column) => (
-                  <TableCell key={`${rowIndex}-${column.accessorKey}`}>
-                    {column.cell(row[column.accessorKey])}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    )
   }
 
   const pageActions = (
@@ -515,7 +471,13 @@ const AIReportEditor: React.FC = () => {
             </ErrorBoundary>
           )
         }}
-        renderDataView={renderDataTable}
+        renderDataView={() => (
+          <DataTable
+            columns={processedData.columns}
+            flattenedData={processedData.flattenedData}
+            isLoading={!processedData.columns.length || !processedData.flattenedData.length}
+          />
+        )}
         renderCodeView={(version) => (
           <pre>
             <code>{previewContent || version?.rawConfig || ""}</code>
@@ -526,50 +488,12 @@ const AIReportEditor: React.FC = () => {
         previewTabName='分析报表'
       />
 
-      <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} size='lg' placement='center'>
-        <ModalContent>
-          <ModalHeader className='flex flex-col gap-1'>
-            <div className='flex items-center gap-2'>
-              <Icon icon='mdi:check-circle' className='w-6 h-6 text-success' />
-              <span>报表{reportId ? "更新" : "保存"}成功</span>
-            </div>
-          </ModalHeader>
-          <ModalBody>
-            <div className='space-y-4'>
-              <p className='text-default-600'>恭喜！您的报表已经{reportId ? "更新" : "保存"}成功。现在您可以：</p>
-              <div className='flex flex-col gap-2'>
-                <div className='p-4 border rounded-lg bg-gray-50'>
-                  <h3 className='font-medium mb-2'>查看报表</h3>
-                  <p className='text-sm text-gray-500 mb-4'>立即查看生成的报表内容和分析结果。</p>
-                  <Button
-                    color='primary'
-                    onClick={handleViewReport}
-                    startContent={<Icon icon='mdi:file-document-plus' className='w-4 h-4' />}
-                  >
-                    查看报表
-                  </Button>
-                </div>
-                <div className='p-4 border rounded-lg'>
-                  <h3 className='font-medium mb-2'>返回报表管理</h3>
-                  <p className='text-sm text-gray-500 mb-4'>返回报表列表查看或管理您的所有报表。</p>
-                  <Button
-                    variant='bordered'
-                    onClick={handleGoToReports}
-                    startContent={<Icon icon='mdi:format-list-bulleted' className='w-4 h-4' />}
-                  >
-                    查看所有报表
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant='light' onPress={() => setIsSuccessModalOpen(false)}>
-              关闭
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        onViewReport={handleViewReport}
+        onGoToReports={handleGoToReports}
+      />
     </PageLayout>
   )
 }
