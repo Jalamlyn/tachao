@@ -1,5 +1,5 @@
 import React from "react"
-import { Modal, Button, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
+import { Modal, Button, ModalContent, ModalHeader, ModalBody, ModalFooter, Chip } from "@nextui-org/react"
 import { useNavigate } from "react-router-dom"
 
 interface TemplateInfo {
@@ -16,10 +16,10 @@ interface GuideModalProps {
   templateId?: string
   // 新增多模板支持
   templates?: TemplateInfo[]
-  mode?: 'single' | 'multiple'
+  mode?: "single" | "multiple"
 }
 
-export function GuideModal({ isOpen, onClose, formCount, templateId, templates, mode = 'single' }: GuideModalProps) {
+export function GuideModal({ isOpen, onClose, formCount, templateId, templates, mode = "single" }: GuideModalProps) {
   const navigate = useNavigate()
 
   const renderSingleTemplateContent = () => {
@@ -35,7 +35,7 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
               <li>有了数据后再使用AI智能助手或创建报表</li>
             </ul>
           </div>
-        )
+        ),
       }
     }
 
@@ -50,14 +50,14 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
             <li>或使用AI智能助手直接分析现有数据</li>
           </ul>
         </div>
-      )
+      ),
     }
   }
 
   const renderMultiTemplateContent = (templates: TemplateInfo[]) => {
-    const emptyTemplates = templates.filter(t => t.formCount === 0)
-    const lowDataTemplates = templates.filter(t => t.formCount > 0 && t.formCount < 10)
-    
+    const emptyTemplates = templates.filter((t) => t.formCount === 0)
+    const lowDataTemplates = templates.filter((t) => t.formCount > 0 && t.formCount < 10)
+
     if (emptyTemplates.length > 0) {
       return {
         title: "部分模板暂无数据",
@@ -65,9 +65,10 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
           <div className='space-y-4'>
             <p className='text-default-600'>以下模板还没有任何表单数据:</p>
             <ul className='list-disc pl-6 space-y-2 text-default-600'>
-              {emptyTemplates.map(t => (
+              {emptyTemplates.map((t) => (
                 <li key={t.id}>
-                  {t.title} (模板ID: {t.id})
+                  {t.title}
+                  <Chip>(模板ID: {t.id})</Chip>
                 </li>
               ))}
             </ul>
@@ -77,7 +78,7 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
               <li>或者暂时移除这些没有数据的模板</li>
             </ul>
           </div>
-        )
+        ),
       }
     }
 
@@ -88,7 +89,7 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
           <div className='space-y-4'>
             <p className='text-default-600'>以下模板的表单数据较少:</p>
             <ul className='list-disc pl-6 space-y-2 text-default-600'>
-              {lowDataTemplates.map(t => (
+              {lowDataTemplates.map((t) => (
                 <li key={t.id}>
                   {t.title}: {t.formCount} 张表单 (建议至少10张)
                 </li>
@@ -100,7 +101,7 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
               <li>或使用AI智能助手直接分析现有数据</li>
             </ul>
           </div>
-        )
+        ),
       }
     }
 
@@ -158,8 +159,8 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
   }
 
   const renderMultiTemplateActions = (templates: TemplateInfo[]) => {
-    const hasEmptyTemplates = templates.some(t => t.formCount === 0)
-    
+    const hasEmptyTemplates = templates.some((t) => t.formCount === 0)
+
     return (
       <>
         <Button variant='light' onPress={onClose} className='min-w-[80px]'>
@@ -172,9 +173,9 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
               onClose()
               // 跳转到表单管理,带上空模板的ID
               const emptyIds = templates
-                .filter(t => t.formCount === 0)
-                .map(t => t.id)
-                .join(',')
+                .filter((t) => t.formCount === 0)
+                .map((t) => t.id)
+                .join(",")
               navigate(`/we-chat-app/admin/forms?templateIds=${emptyIds}`)
             }}
             className='min-w-[120px]'
@@ -188,7 +189,7 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
               onPress={() => {
                 onClose()
                 // 继续创建报表,使用所有选中的模板
-                const templateIds = templates.map(t => t.id).join(',')
+                const templateIds = templates.map((t) => t.id).join(",")
                 navigate(`/we-chat-app/admin/reports/ai/create?templateIds=${templateIds}`)
               }}
               className='min-w-[120px]'
@@ -199,7 +200,7 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
               color='secondary'
               onPress={() => {
                 onClose()
-                navigate('/we-chat-app/admin/ai-assistant')
+                navigate("/we-chat-app/admin/ai-assistant")
               }}
               className='min-w-[120px]'
             >
@@ -211,8 +212,10 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
     )
   }
 
-  const content = mode === 'single' ? renderSingleTemplateContent() : (templates ? renderMultiTemplateContent(templates) : null)
-  const actions = mode === 'single' ? renderSingleTemplateActions() : (templates ? renderMultiTemplateActions(templates) : null)
+  const content =
+    mode === "single" ? renderSingleTemplateContent() : templates ? renderMultiTemplateContent(templates) : null
+  const actions =
+    mode === "single" ? renderSingleTemplateActions() : templates ? renderMultiTemplateActions(templates) : null
 
   if (!content) return null
 
