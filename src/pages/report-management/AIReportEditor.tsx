@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react"
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
@@ -22,8 +22,8 @@ import { motion } from "framer-motion"
 // 空状态组件 - 分析报表
 const EmptyAnalysisState: React.FC = () => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
-      <div className="w-48 h-48 mb-8 relative">
+    <div className='flex flex-col items-center justify-center min-h-[400px] p-8'>
+      <div className='w-48 h-48 mb-8 relative'>
         <motion.div
           animate={{
             scale: [1, 1.05, 1],
@@ -35,22 +35,15 @@ const EmptyAnalysisState: React.FC = () => {
             repeatType: "reverse",
           }}
         >
-          <Icon 
-            icon="hugeicons:ai-chat-02" 
-            className="w-full h-full text-primary/30" 
-          />
+          <Icon icon='hugeicons:ai-chat-02' className='w-full h-full text-primary/30' />
         </motion.div>
       </div>
-      <h3 className="text-xl font-medium text-foreground mb-2">
-        开始分析您的数据
-      </h3>
-      <p className="text-default-500 mb-8 text-center max-w-md">
-        使用左侧的 AI 助手来分析您的数据，生成图表和洞察报告
-      </p>
-      <div className="flex flex-col gap-4 items-center">
-        <div className="p-4 bg-primary/5 rounded-lg">
-          <p className="text-sm text-default-600">示例提示语:</p>
-          <ul className="list-disc pl-6 space-y-2 text-primary">
+      <h3 className='text-xl font-medium text-foreground mb-2'>开始分析您的数据</h3>
+      <p className='text-default-500 mb-8 text-center max-w-md'>使用左侧的 AI 助手来分析您的数据，生成图表和洞察报告</p>
+      <div className='flex flex-col gap-4 items-center'>
+        <div className='p-4 bg-primary/5 rounded-lg'>
+          <p className='text-sm text-default-600'>示例提示语:</p>
+          <ul className='list-disc pl-6 space-y-2 text-primary'>
             <li>帮我分析数据的整体分布情况</li>
             <li>生成一个饼图展示状态分布</li>
             <li>计算各个指标的平均值</li>
@@ -64,8 +57,8 @@ const EmptyAnalysisState: React.FC = () => {
 // 空状态组件 - 代码视图
 const EmptyCodeState: React.FC = () => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
-      <div className="w-48 h-48 mb-8 relative">
+    <div className='flex flex-col items-center justify-center min-h-[400px] p-8'>
+      <div className='w-48 h-48 mb-8 relative'>
         <motion.div
           animate={{
             scale: [1, 1.05, 1],
@@ -76,20 +69,22 @@ const EmptyCodeState: React.FC = () => {
             repeatType: "reverse",
           }}
         >
-          <Icon 
-            icon="mdi:code-braces" 
-            className="w-full h-full text-primary/30" 
-          />
+          <Icon icon='mdi:code-braces' className='w-full h-full text-primary/30' />
         </motion.div>
       </div>
-      <h3 className="text-xl font-medium text-foreground mb-2">
-        等待生成分析代码
-      </h3>
-      <p className="text-default-500 mb-4 text-center max-w-md">
-        当 AI 助手生成分析结果后，这里会显示相应的代码
-      </p>
+      <h3 className='text-xl font-medium text-foreground mb-2'>等待生成分析代码</h3>
+      <p className='text-default-500 mb-4 text-center max-w-md'>当 AI 助手生成分析结果后，这里会显示相应的代码</p>
     </div>
   )
+}
+
+interface TemplateInfo {
+  id: string
+  title: string
+}
+
+interface TemplateInfoMap {
+  [key: string]: string
 }
 
 const AIReportEditor: React.FC = () => {
@@ -114,16 +109,36 @@ const AIReportEditor: React.FC = () => {
   const [savedReportId, setSavedReportId] = useState<string | null>(null)
   const [currentTemplateIds, setCurrentTemplateIds] = useState<string[]>([])
   const [activeDataTab, setActiveDataTab] = useState<string>("all")
+  const [templateInfoMap, setTemplateInfoMap] = useState<TemplateInfoMap>({})
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
 
   const accumulatedTextRef = useRef("")
   const { getDetail: getReportDetail, loadFilteredDetails } = useMetadata("report")
   const { loadFilteredDetails: loadFormFilteredDetails } = useMetadata("form")
+  const { loadFilteredDetails: loadTemplateFilteredDetails } = useMetadata("template")
   const { create: createReport, update: updateReport } = useMetadata("report")
 
   // 添加版本控制
   const versionControl = useVersionControl<{
     rawConfig: string | null
   }>()
+
+  const loadTemplateInfo = async (templateIds: string[]) => {
+    setIsLoadingTemplates(true)
+    try {
+      const templateDetails = await loadTemplateFilteredDetails((index) => templateIds.includes(index.id))
+      const templateMap = templateDetails.reduce((acc, template) => {
+        acc[template.id] = template.title
+        return acc
+      }, {} as Record<string, string>)
+      setTemplateInfoMap(templateMap)
+    } catch (error) {
+      console.error("Error loading template info:", error)
+      message.error("加载模板信息失败")
+    } finally {
+      setIsLoadingTemplates(false)
+    }
+  }
 
   useEffect(() => {
     const loadData = async () => {
@@ -140,6 +155,7 @@ const AIReportEditor: React.FC = () => {
           }
 
           setCurrentTemplateIds(reportTemplateIds)
+          await loadTemplateInfo(reportTemplateIds)
 
           // 3. 使用 templateIds 获取最新的表单数据
           const formDetails = await loadFormFilteredDetails((index) =>
@@ -195,6 +211,7 @@ const AIReportEditor: React.FC = () => {
           // 处理创建新报表的场景
           const templateIds = searchParams.get("templateIds")?.split(",") || [templateId]
           setCurrentTemplateIds(templateIds)
+          await loadTemplateInfo(templateIds)
 
           const formDetails = await loadFormFilteredDetails((index) =>
             templateIds.includes(index.indexFields?.templateId)
@@ -521,6 +538,10 @@ const AIReportEditor: React.FC = () => {
     </Button>
   )
 
+  const getTemplateTitle = (templateId: string) => {
+    return templateInfoMap[templateId] || `模板 ${templateId}`
+  }
+
   const renderDataView = () => {
     if (currentTemplateIds.length <= 1) {
       // 单模板场景 - 保持原有展示方式
@@ -555,8 +576,10 @@ const AIReportEditor: React.FC = () => {
         </Tab>
         {Object.entries(templateData).map(([templateId, data]) => {
           const processed = processReportData(data as any[])
+          const templateTitle = getTemplateTitle(templateId)
+          
           return (
-            <Tab key={templateId} title={`模板 ${templateId}`}>
+            <Tab key={templateId} title={templateTitle}>
               <DataTable
                 columns={processed.columns}
                 flattenedData={processed.flattenedData}
