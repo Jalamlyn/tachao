@@ -15,7 +15,8 @@ export interface ReportActions {
 export interface ReportData {
   id: string
   title: string
-  data: any
+  templateId: string
+  formData: any[]
   rawConfig: string
   [key: string]: any
 }

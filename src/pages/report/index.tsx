@@ -26,7 +26,7 @@ const Report: React.FC = () => {
       reportActions.setLoading()
 
       try {
-        // 加载报表数据
+        // 加载报表和表单数据
         const data = await loadReportData(reportId)
         
         if (!data.rawConfig) {
@@ -34,9 +34,9 @@ const Report: React.FC = () => {
         }
 
         // 处理表单数据
-        const processedData = processReportData(data.data)
+        const processedData = processReportData(data.formData)
 
-        // 使用 AIReportAgent 分析数据
+        // 使用处理后的数据进行分析
         const analysis = await AIReportAgent.analyzeData(processedData, data.rawConfig)
 
         reportActions.setSuccess({
