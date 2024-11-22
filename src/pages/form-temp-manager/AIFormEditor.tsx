@@ -92,13 +92,13 @@ const AIFormEditor: React.FC = () => {
       }
       try {
         const templateData = {
-          title: title || "新建模板",
+          title: title || formState.formConfig.metadata?.title || "新建模板",
           type: "custom",
           status: "active",
           data: {
             rawConfig: formState.rawConfig,
             type: "custom",
-            name: title || "新建模板",
+            name: title || formState.formConfig.metadata?.title || "新建模板",
           },
         }
 
@@ -209,6 +209,7 @@ const AIFormEditor: React.FC = () => {
         id: Date.now().toString(),
         timestamp: new Date().toLocaleTimeString(),
       }
+      debugger
       setMessages((prev) => [...prev, userMessage])
 
       const assistantMessage = {
