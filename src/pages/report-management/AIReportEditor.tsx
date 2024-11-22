@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react"
+import React from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
@@ -7,137 +7,27 @@ import PageLayout from "@/components/PageLayout"
 import AIReportAgent from "@/service/agents/AIReportAgent"
 import AnalysisResult from "./components/AnalysisResult"
 import ErrorBoundary from "@/components/ErrorBoundary"
-import { useVersionControl } from "@/hooks/useVersionControl"
 import AIEditor from "@/components/AIEditor"
 import { Icon } from "@iconify/react"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
 import { Button } from "@nextui-org/react"
-import { generateColumns, flattenData, extractShataAICode } from "./utils/generateColumns"
-import { processReportData } from "./utils/processReportData"
-import { Message } from "./types"
 import DataTable from "./components/DataTable"
 import SuccessModal from "./components/SuccessModal"
+import { useReportData } from "./hooks/useReportData"
+import { usePreviewContent } from "./hooks/usePreviewContent"
+import { useMessageHandling } from "./hooks/useMessageHandling"
+import { useSuccessModal } from "./hooks/useSuccessModal"
+import { useEffect } from "react"
 
 const AIReportEditor: React.FC = () => {
-  const navigate = useNavigate()
   const { reportId, templateId } = useParams<{ reportId: string; templateId: string }>()
   const { updateBreadcrumbs } = useBreadcrumb()
-  const [messages, setMessages] = useState<Message[]>([])
-  const [reportData, setReportData] = useState<any[]>([])
-  const [processedData, setProcessedData] = useState<ReturnType<typeof processReportData>>({
-    columns: [],
-    flattenedData: [],
-    originalData: [],
-  })
-  const processedDataRef = useRef(null)
-  const [previewContent, setPreviewContent] = useState<string>("")
-  const [previewComponent, setPreviewComponent] = useState<React.ReactNode>(null)
-  const [selectedTab, setSelectedTab] = useState("data")
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
-  const [savedReportId, setSavedReportId] = useState<string | null>(null)
-  const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(null)
-
-  const accumulatedTextRef = useRef("")
-  const { getDetail: getReportDetail, loadFilteredDetails } = useMetadata("report")
-  const { loadFilteredDetails: loadFormFilteredDetails } = useMetadata("form")
   const { create: createReport, update: updateReport } = useMetadata("report")
 
-  // 添加版本控制
-  const versionControl = useVersionControl<{
-    rawConfig: string | null
-  }>()
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        if (reportId) {
-          // 1. 先获取报表信息
-          const report = await getReportDetail(reportId)
-
-          // 2. 从报表中获取 templateId
-          const reportTemplateId = report?.data?.templateId
-
-          if (!reportTemplateId) {
-            throw new Error("报表模板ID不存在")
-          }
-
-          setCurrentTemplateId(reportTemplateId)
-
-          // 3. 使用 templateId 获取最新的表单数据
-          const formDetails = await loadFormFilteredDetails(
-            (index) => index.indexFields?.templateId === reportTemplateId
-          )
-
-          if (formDetails.length > 0) {
-            const formData = formDetails.map((detail) => ({
-              id: detail.id,
-              ...detail.data,
-            }))
-
-            // 4. 设置最新数据
-            setReportData(formData)
-            const processed = processReportData(formData)
-            setProcessedData(processed)
-            processedDataRef.current = processed
-          }
-
-          // 5. 加载已有的分析结果
-          if (report?.data?.rawConfig) {
-            versionControl.addVersion({
-              rawConfig: report.data.rawConfig,
-            })
-
-            // 使用 rawConfig 重新分析数据
-            const analysis = await AIReportAgent.analyzeData(processedDataRef.current, report.data.rawConfig)
-
-            setPreviewComponent(
-              <ErrorBoundary
-                onReset={() => {
-                  const prevVersion = versionControl.rollback()
-                  if (prevVersion) {
-                    setPreviewContent(prevVersion.rawConfig || "")
-                    // 重新分析并设置预览
-                    AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
-                      .then((analysis) => {
-                        setPreviewComponent(<AnalysisResult analysis={analysis} />)
-                      })
-                      .catch((error) => {
-                        message.error("分析数据失败")
-                        console.error(error)
-                      })
-                  }
-                }}
-              >
-                <AnalysisResult analysis={analysis} />
-              </ErrorBoundary>
-            )
-            setPreviewContent(report.data.rawConfig)
-          }
-        } else if (templateId) {
-          setCurrentTemplateId(templateId)
-          const formDetails = await loadFormFilteredDetails((index) => index.indexFields?.templateId === templateId)
-
-          if (formDetails.length > 0) {
-            const formData = formDetails.map((detail) => ({
-              id: detail.id,
-              ...detail.data,
-            }))
-
-            setReportData(formData)
-            const processed = processReportData(formData)
-            setProcessedData(processed)
-            processedDataRef.current = processed
-          }
-        }
-      } catch (error) {
-        console.error("[loadData] Error loading data:", error)
-        message.error("数据加载失败")
-        navigate("/we-chat-app/admin/reports")
-      }
-    }
-
-    loadData()
-  }, [reportId, templateId])
+  const { reportData, processedData, processedDataRef, currentTemplateId } = useReportData(reportId, templateId)
+  const { previewContent, setPreviewContent, previewComponent, setPreviewComponent, selectedTab, setSelectedTab, versionControl } = usePreviewContent()
+  const { messages, setMessages, handleChunk } = useMessageHandling()
+  const { isSuccessModalOpen, setIsSuccessModalOpen, savedReportId, setSavedReportId, handleViewReport, handleGoToReports } = useSuccessModal()
 
   useEffect(() => {
     updateBreadcrumbs([
@@ -147,96 +37,12 @@ const AIReportEditor: React.FC = () => {
     ])
   }, [])
 
-  useEffect(() => {
-    const currentVersion = versionControl.getCurrentVersion()
-    if (currentVersion?.rawConfig) {
-      setPreviewContent(currentVersion.rawConfig)
-      AIReportAgent.analyzeData(processedDataRef.current, currentVersion.rawConfig)
-        .then((analysis) => {
-          setPreviewComponent(
-            <ErrorBoundary
-              onReset={() => {
-                const prevVersion = versionControl.rollback()
-                if (prevVersion) {
-                  setPreviewContent(prevVersion.rawConfig || "")
-                  AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
-                    .then((analysis) => {
-                      setPreviewComponent(<AnalysisResult analysis={analysis} />)
-                    })
-                    .catch((error) => {
-                      message.error("分析数据失败")
-                      console.error(error)
-                    })
-                }
-              }}
-            >
-              <AnalysisResult analysis={analysis} />
-            </ErrorBoundary>
-          )
-        })
-        .catch((error) => {
-          message.error("分析数据失败")
-          console.error(error)
-        })
-    }
-  }, [versionControl.currentIndex])
-
-  const handleChunk = useCallback((chunk: string) => {
-    accumulatedTextRef.current += chunk
-
-    if (accumulatedTextRef.current.includes("<shata-ai-code>") && !previewContent) {
-      setMessages((prev) => {
-        const lastMessage = prev[prev.length - 1]
-        return [
-          ...prev.slice(0, -1),
-          {
-            ...lastMessage,
-            content: (
-              <div className='flex items-center gap-3 text-primary'>
-                <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10' />
-                <div className='flex flex-col'>
-                  <span className='font-medium text-sm'>AI 正在生成分析代码</span>
-                </div>
-              </div>
-            ),
-          },
-        ]
-      })
-
-      setSelectedTab("code")
-    }
-
-    if (previewContent || accumulatedTextRef.current.includes("<shata-ai-code>")) {
-      const newContent = accumulatedTextRef.current
-      setPreviewContent(newContent)
-
-      if (accumulatedTextRef.current.includes("</shata-ai-code>")) {
-        const code = extractShataAICode(accumulatedTextRef.current)
-        if (code) {
-          setPreviewContent(code)
-        }
-      }
-    } else {
-      setMessages((prev) => {
-        const lastMessage = prev[prev.length - 1]
-        return [
-          ...prev.slice(0, -1),
-          {
-            ...lastMessage,
-            content: lastMessage.content + chunk,
-          },
-        ]
-      })
-    }
-  }, [])
-
   const reportAgent = {
     processCommand: async (command: string) => {
       try {
-        accumulatedTextRef.current = ""
         setPreviewContent("")
 
-        const userMessage: Message = {
+        const userMessage = {
           role: "user",
           content: command,
           id: Date.now().toString(),
@@ -244,7 +50,7 @@ const AIReportEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, userMessage])
 
-        const assistantMessage: Message = {
+        const assistantMessage = {
           role: "assistant",
           content: "正在分析您的数据...",
           id: (Date.now() + 1).toString(),
@@ -252,14 +58,12 @@ const AIReportEditor: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        // 获取当前版本的配置
         const currentVersion = versionControl.getCurrentVersion()
 
         const result = await AIReportAgent.processCommand({
           data: processedData,
           command: command,
-          onChunk: handleChunk,
-          // 如果是更新模式(有 reportId)且有现有配置,则传入 rawConfig
+          onChunk: (chunk) => handleChunk(chunk, previewContent, setPreviewContent, setSelectedTab),
           ...(reportId && currentVersion?.rawConfig ? { rawConfig: currentVersion.rawConfig } : {}),
         })
 
@@ -272,91 +76,83 @@ const AIReportEditor: React.FC = () => {
     },
   }
 
-  const handleCommandResult = useCallback(
-    async (result) => {
-      if (result.success) {
-        if (result.rawConfig) {
-          // 保存新版本
-          versionControl.addVersion({
-            rawConfig: result.rawConfig,
-          })
+  const handleCommandResult = async (result) => {
+    if (result.success) {
+      if (result.rawConfig) {
+        versionControl.addVersion({
+          rawConfig: result.rawConfig,
+        })
 
-          // 使用 rawConfig 分析数据
-          const analysis = await AIReportAgent.analyzeData(processedDataRef.current, result.rawConfig)
+        const analysis = await AIReportAgent.analyzeData(processedDataRef.current, result.rawConfig)
 
-          // 设置预览组件
-          setPreviewComponent(
-            <ErrorBoundary
-              onReset={() => {
-                const prevVersion = versionControl.rollback()
-                if (prevVersion) {
-                  setPreviewContent(prevVersion.rawConfig || "")
-                  AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
-                    .then((analysis) => {
-                      setPreviewComponent(<AnalysisResult analysis={analysis} />)
-                    })
-                    .catch((error) => {
-                      message.error("分析数据失败")
-                      console.error(error)
-                    })
-                }
-              }}
-            >
-              <AnalysisResult analysis={analysis} />
-            </ErrorBoundary>
-          )
+        setPreviewComponent(
+          <ErrorBoundary
+            onReset={() => {
+              const prevVersion = versionControl.rollback()
+              if (prevVersion) {
+                setPreviewContent(prevVersion.rawConfig || "")
+                AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
+                  .then((analysis) => {
+                    setPreviewComponent(<AnalysisResult analysis={analysis} />)
+                  })
+                  .catch((error) => {
+                    message.error("分析数据失败")
+                    console.error(error)
+                  })
+              }
+            }}
+          >
+            <AnalysisResult analysis={analysis} />
+          </ErrorBoundary>
+        )
 
-          // 更新消息状态
-          setMessages((prev) => {
-            const lastMessage = prev[prev.length - 1]
-            if (lastMessage.role === "assistant") {
-              return [
-                ...prev.slice(0, -1),
-                {
-                  ...lastMessage,
-                  content: (
-                    <div className='flex items-center gap-2 text-success'>
-                      <Icon icon='line-md:check-all' className='w-5 h-5' />
-                      <span>分析完成</span>
-                    </div>
+        setMessages((prev) => {
+          const lastMessage = prev[prev.length - 1]
+          if (lastMessage.role === "assistant") {
+            return [
+              ...prev.slice(0, -1),
+              {
+                ...lastMessage,
+                content: (
+                  <div className='flex items-center gap-2 text-success'>
+                    <Icon icon='line-md:check-all' className='w-5 h-5' />
+                    <span>分析完成</span>
+                  </div>
+                ),
+                status: "success",
+                code: {
+                  preview: (
+                    <ErrorBoundary
+                      onReset={() => {
+                        const prevVersion = versionControl.rollback()
+                        if (prevVersion) {
+                          setPreviewContent(prevVersion.rawConfig || "")
+                          AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
+                            .then((analysis) => {
+                              setPreviewComponent(<AnalysisResult analysis={analysis} />)
+                            })
+                            .catch((error) => {
+                              message.error("分析数据失败")
+                              console.error(error)
+                            })
+                        }
+                      }}
+                    >
+                      <AnalysisResult analysis={analysis} />
+                    </ErrorBoundary>
                   ),
-                  status: "success",
-                  code: {
-                    preview: (
-                      <ErrorBoundary
-                        onReset={() => {
-                          const prevVersion = versionControl.rollback()
-                          if (prevVersion) {
-                            setPreviewContent(prevVersion.rawConfig || "")
-                            AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
-                              .then((analysis) => {
-                                setPreviewComponent(<AnalysisResult analysis={analysis} />)
-                              })
-                              .catch((error) => {
-                                message.error("分析数据失败")
-                                console.error(error)
-                              })
-                          }
-                        }}
-                      >
-                        <AnalysisResult analysis={analysis} />
-                      </ErrorBoundary>
-                    ),
-                    content: result.rawConfig,
-                  },
+                  content: result.rawConfig,
                 },
-              ]
-            }
-            return prev
-          })
+              },
+            ]
+          }
+          return prev
+        })
 
-          // 切换到预览标签
-          setSelectedTab("preview")
-        }
+        setSelectedTab("preview")
       }
-    },
-    [processedData, versionControl]
-  )
+    }
+  }
 
   const { isLoading: isSaving, handleClick: handleSaveReport } = useAsyncButton(
     async () => {
@@ -367,7 +163,6 @@ const AIReportEditor: React.FC = () => {
 
       try {
         const currentVersion = versionControl.getCurrentVersion()
-        // 使用 rawConfig 重新分析数据获取标题
         const analysis = await AIReportAgent.analyzeData(processedDataRef.current, currentVersion?.rawConfig || "")
         const reportTitle = analysis?.title || "新建报表"
 
@@ -416,16 +211,6 @@ const AIReportEditor: React.FC = () => {
     }
   )
 
-  const handleViewReport = () => {
-    if (savedReportId) {
-      window.open(`/report/${savedReportId}`, "_blank")
-    }
-  }
-
-  const handleGoToReports = () => {
-    navigate("/we-chat-app/admin/reports")
-  }
-
   const pageActions = (
     <Button
       color='primary'
@@ -455,7 +240,6 @@ const AIReportEditor: React.FC = () => {
                 const prevVersion = versionControl.rollback()
                 if (prevVersion) {
                   setPreviewContent(prevVersion.rawConfig || "")
-                  // 重新分析并设置预览
                   AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
                     .then((analysis) => {
                       setPreviewComponent(<AnalysisResult analysis={analysis} />)
