@@ -50,12 +50,12 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
   )
 
   return (
-    <div className='flex flex-col gap-2 p-4 bg-white'>
+    <div className='flex flex-col gap-2 bg-white'>
       <Textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyPress={handleKeyPress}
-        placeholder="请输入您的问题,AI 将帮您处理..."
+        placeholder='请输入您的问题,AI 将帮您处理...'
         className='flex-grow'
         classNames={{
           input: "py-2 text-medium",
@@ -64,7 +64,7 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
         minRows={1}
         maxRows={4}
         endContent={
-          <div className='flex items-center gap-2 pr-2'>
+          <div className='flex items-center gap-2'>
             <Button
               isIconOnly
               className={!input || isLoading ? "" : "bg-primary"}
@@ -78,11 +78,7 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
               {isLoading ? (
                 <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
               ) : (
-                <Icon
-                  className={!input ? "text-default-500" : "text-white"}
-                  icon='solar:arrow-up-linear'
-                  width={20}
-                />
+                <Icon className={!input ? "text-default-500" : "text-white"} icon='solar:arrow-up-linear' width={20} />
               )}
             </Button>
           </div>

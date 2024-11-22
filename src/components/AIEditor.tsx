@@ -181,7 +181,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
 
             <div className='p-2'>
               <ImageUploader agent={AIFormAgent} />
-              <AICommandInput agent={AIFormAgent} onResult={onCommandResult} />
+              <AICommandInput agent={agent} onResult={onCommandResult} />
             </div>
           </div>
         </ResizablePanel>

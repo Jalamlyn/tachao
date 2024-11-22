@@ -131,7 +131,7 @@ const AIFormEditor: React.FC = () => {
 
   const handleCreateDocument = () => {
     if (savedTemplateId) {
-      navigate(`/form-preview/${savedTemplateId}`)
+      window.open(`/form-preview/${savedTemplateId}`, "_blank")
     }
   }
 
