@@ -117,13 +117,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
               render={({ field }) => (
                 <FormItem className='flex-1'>
                   <FormControl>
-                    <Input 
-                      {...field} 
-                      disabled={!isFieldEditable} 
+                    <Input
+                      {...field}
+                      disabled={!isFieldEditable}
                       className={cn(
-                        'min-w-[120px] border-0 focus:ring-0 bg-transparent',
+                        "min-w-[120px] border-0 focus:ring-0 bg-transparent",
                         isCalculatedField && styles["calculated-field"]
-                      )} 
+                      )}
                     />
                   </FormControl>
                   <FormMessage />
@@ -240,10 +240,12 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger className={cn(
-                      "border-0 focus:ring-0 bg-transparent",
-                      isCalculatedField && styles["calculated-field"]
-                    )}>
+                    <SelectTrigger
+                      className={cn(
+                        "border-0 focus:ring-0 bg-transparent",
+                        isCalculatedField && styles["calculated-field"]
+                      )}
+                    >
                       <SelectValue placeholder={column.placeholder || "请选择"} />
                     </SelectTrigger>
                   </FormControl>
@@ -372,14 +374,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
       <div className='hidden md:block overflow-x-auto'>
         <Table>
-          <TableHeader>
+          <TableHeader className='bg-gray-100'>
             <TableRow>
               {config.columns.map((column) => (
-                <TableHead 
-                  key={column.key} 
-                  style={{ width: column.width }}
-                  className="border border-gray-200"
-                >
+                <TableHead key={column.key} style={{ width: column.width }} className='border border-gray-200'>
                   <div className='flex items-center gap-1'>
                     {column.title}
                     {column.calculate && (
@@ -392,19 +390,19 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                   </div>
                 </TableHead>
               ))}
-              {isEditable && <TableHead className="border border-gray-200">操作</TableHead>}
+              {isEditable && <TableHead className='border border-gray-200'>操作</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {fields.map((field, rowIndex) => (
               <TableRow key={field.id}>
                 {config.columns.map((column) => (
-                  <TableCell key={column.key} className="border border-gray-200">
+                  <TableCell key={column.key} className='border border-gray-200'>
                     {renderCell(column, rowIndex)}
                   </TableCell>
                 ))}
                 {isEditable && (
-                  <TableCell className="border border-gray-200">
+                  <TableCell className='border border-gray-200'>
                     <Button
                       isIconOnly
                       color='danger'
@@ -421,11 +419,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             {config.summary?.show && summaryData && (
               <TableRow className={cn("bg-default-50", config.summary.className)} style={config.summary.style}>
                 {config.columns.map((column) => (
-                  <TableCell key={column.key} className="border border-gray-200">
+                  <TableCell key={column.key} className='border border-gray-200'>
                     {renderSummaryCell(column)}
                   </TableCell>
                 ))}
-                {isEditable && <TableCell className="border border-gray-200" />}
+                {isEditable && <TableCell className='border border-gray-200' />}
               </TableRow>
             )}
           </TableBody>

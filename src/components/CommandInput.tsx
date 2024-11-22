@@ -61,7 +61,6 @@
 //           }
 
 //           const result = await agent.processCommand(commandContent, onChunk, config)
-//           debugger
 //           onCommand && onCommand(result)
 //         }
 //         setPrompt("")

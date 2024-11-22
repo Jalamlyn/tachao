@@ -7,28 +7,23 @@ import FormFieldWrapper from "./FormFieldWrapper"
 import BasicInput from "./BasicInput"
 import DateInput from "./DateInput"
 import { cn } from "@/theme/cn"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { motion } from "framer-motion"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
+import SignaturePad from "@/components/common/SignaturePad"
 
 // 新增: 获取选项的工具函数
 const getOptions = (field: DynamicFormField, form: UseFormReturn<any>) => {
   console.log("[DynamicForm] Getting options for field:", field.name)
-  
+
   if (typeof field.options === "function") {
     const options = field.options(form)
     console.log("[DynamicForm] Dynamic options:", options)
     return Array.isArray(options) ? options : []
   }
-  
+
   console.log("[DynamicForm] Static options:", field.options)
   return field.options || []
 }
@@ -39,11 +34,7 @@ interface DynamicFormFieldsProps {
   isEditable?: boolean
 }
 
-const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
-  fields,
-  form,
-  isEditable = true,
-}) => {
+const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isEditable = true }) => {
   const renderField = (field: DynamicFormField) => {
     if (field.hidden) return null
 
@@ -51,9 +42,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
     const basicInputTypes = ["text", "password", "email", "tel", "url"]
     if (basicInputTypes.includes(field.type)) {
       return (
-        <div className={cn(
-          "form-field-container"
-        )}>
+        <div className={cn("form-field-container")}>
           <FormFieldWrapper
             name={field.name}
             label={field.label}
@@ -107,7 +96,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             {(formField) => (
               <Input
                 {...formField}
-                type="number"
+                type='number'
                 className={cn(
                   "text-right font-mono w-full",
                   "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
@@ -116,9 +105,9 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
                 )}
                 placeholder={field.placeholder}
                 onChange={(e) => {
-                  formField.onChange(e);
+                  formField.onChange(e)
                   // 触发表单更新
-                  form.trigger(field.name);
+                  form.trigger(field.name)
                 }}
               />
             )}
@@ -140,9 +129,9 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
               <DateInput
                 field={formField}
                 onChange={(date) => {
-                  formField.onChange(date);
+                  formField.onChange(date)
                   // 触发表单更新
-                  form.trigger(field.name);
+                  form.trigger(field.name)
                 }}
               />
             )}
@@ -163,18 +152,20 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
               <Select
                 disabled={!isEditable || field.disabled}
                 onValueChange={(value) => {
-                  formField.onChange(value);
+                  formField.onChange(value)
                   // 触发表单更新
-                  form.trigger(field.name);
+                  form.trigger(field.name)
                 }}
                 value={formField.value || ""}
               >
-                <SelectTrigger className={cn(
-                  "w-full",
-                  "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
-                  "transition-colors",
-                  "placeholder:text-gray-400"
-                )}>
+                <SelectTrigger
+                  className={cn(
+                    "w-full",
+                    "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+                    "transition-colors",
+                    "placeholder:text-gray-400"
+                  )}
+                >
                   <SelectValue placeholder={field.placeholder || "请选择"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -205,7 +196,30 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             )}
           </FormFieldWrapper>
         )
-
+      case "signature":
+        return (
+          <FormFieldWrapper
+            name={field.name}
+            label={field.label}
+            form={form}
+            isEditable={isEditable}
+            disabled={field.disabled}
+            tooltip={field.tooltip}
+          >
+            {(formField) => (
+              <SignaturePad
+                width={field.width}
+                height={field.height}
+                lineWidth={field.lineWidth}
+                lineColor={field.lineColor}
+                disabled={!isEditable || field.disabled}
+                className={field.className}
+                value={formField.value}
+                onChange={formField.onChange}
+              />
+            )}
+          </FormFieldWrapper>
+        )
       case "file":
       case "image":
         return (
@@ -218,9 +232,9 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
             tooltip={field.tooltip}
           >
             {(formField) => (
-              <div className="flex items-center gap-2">
+              <div className='flex items-center gap-2'>
                 <Input
-                  type="file"
+                  type='file'
                   accept={field.accept}
                   onChange={async (e) => {
                     const file = e.target.files?.[0]
@@ -239,16 +253,16 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
                     }
                   }}
                   disabled={!isEditable || field.disabled}
-                  className="hidden"
+                  className='hidden'
                   id={field.name}
                 />
                 <Button
-                  as="label"
+                  as='label'
                   htmlFor={field.name}
-                  variant="bordered"
-                  size="sm"
+                  variant='bordered'
+                  size='sm'
                   isDisabled={!isEditable || field.disabled}
-                  startContent={<Icon icon="mdi:upload" className="w-4 h-4" />}
+                  startContent={<Icon icon='mdi:upload' className='w-4 h-4' />}
                   className={cn(
                     "font-medium",
                     "hover:bg-blue-50 hover:text-blue-600",
@@ -259,18 +273,18 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
                 </Button>
                 {formField.value && (
                   <>
-                    <span className="text-sm text-gray-500 truncate flex-1">
+                    <span className='text-sm text-gray-500 truncate flex-1'>
                       {formField.value instanceof File ? formField.value.name : formField.value}
                     </span>
                     <Button
                       isIconOnly
-                      variant="light"
-                      size="sm"
-                      color="danger"
+                      variant='light'
+                      size='sm'
+                      color='danger'
                       onClick={() => formField.onChange(null)}
                       isDisabled={!isEditable || field.disabled}
                     >
-                      <Icon icon="mdi:close" className="w-4 h-4" />
+                      <Icon icon='mdi:close' className='w-4 h-4' />
                     </Button>
                   </>
                 )}
@@ -305,17 +319,17 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({
   }
 
   return (
-    <div className={cn(
-      "grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6",
-      "form-fields-container"
-    )}>
+    <div className={cn("grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6", "form-fields-container")}>
       {fields.map((field) => (
-        <div key={field.name} className={cn(
-          "w-full",
-          "form-field-wrapper",
-          "hover:bg-gray-50/50 rounded-lg p-2 -m-2",
-          "transition-colors duration-200"
-        )}>
+        <div
+          key={field.name}
+          className={cn(
+            "w-full",
+            "form-field-wrapper",
+            "hover:bg-gray-50/50 rounded-lg p-2 -m-2",
+            "transition-colors duration-200"
+          )}
+        >
           {renderField(field)}
         </div>
       ))}

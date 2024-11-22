@@ -39,10 +39,8 @@
 /* 表单卡片样式 */
 .form-card {
   background-color: white;
-  border: 1px solid var(--df-gray-200);
-  border-radius: 1rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  padding: 1.5rem;
+  padding: 1rem;
   margin-bottom: 1.5rem;
   transition: all 0.2s ease-in-out;
 }

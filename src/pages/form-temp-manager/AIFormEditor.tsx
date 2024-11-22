@@ -209,7 +209,6 @@ const AIFormEditor: React.FC = () => {
         id: Date.now().toString(),
         timestamp: new Date().toLocaleTimeString(),
       }
-      debugger
       setMessages((prev) => [...prev, userMessage])
 
       const assistantMessage = {
