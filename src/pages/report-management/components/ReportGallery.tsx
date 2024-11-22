@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
+import RenameModal from "./RenameModal"
 
 interface Report {
   id: string
@@ -129,8 +130,9 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
   const [selectedReport, setSelectedReport] = React.useState<Report | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [internalReports, setInternalReports] = useState<Report[]>([])
-  const { remove, load } = useMetadata("report")
+  const { remove, load, update } = useMetadata("report")
   const { items: templates = [], load: loadTemplates } = useMetadata("template")
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false)
 
   const reports = internalReports.length > 0 ? internalReports : propReports || []
 
@@ -181,7 +183,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
 
   const handleCopyShareLink = async () => {
     if (selectedReport) {
-      const shareLink = `${window.location.origin}/report-preview/${selectedReport.id}`
+      const shareLink = `${window.location.origin}/report/${selectedReport.id}`
       try {
         await navigator.clipboard.writeText(shareLink)
         onShareClose()
@@ -195,6 +197,26 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
   const handleAIAnalysisClick = async (report: Report, e: React.MouseEvent) => {
     e.stopPropagation()
     navigate(`/we-chat-app/admin/reports/ai/${report.id}`)
+  }
+
+  const handleRenameClick = (report: Report, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedReport(report)
+    setIsRenameModalOpen(true)
+  }
+
+  const handleRename = async (newTitle: string) => {
+    if (!selectedReport) return
+
+    try {
+      await update(selectedReport.id, {
+        title: newTitle,
+      })
+      await loadReports()
+    } catch (error) {
+      console.error("重命名报表失败:", error)
+      throw error
+    }
   }
 
   // 格式化文件大小
@@ -262,6 +284,15 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
                       onClick={(e) => handleShareClick(report, e)}
                     >
                       <Icon icon='mdi:share' className='w-4 h-4' />
+                    </Button>
+                    <Button
+                      isIconOnly
+                      size='sm'
+                      variant='light'
+                      className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+                      onClick={(e) => handleRenameClick(report, e)}
+                    >
+                      <Icon icon='mdi:pencil' className='w-4 h-4' />
                     </Button>
                     <Button
                       isIconOnly
@@ -341,7 +372,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
               <p className='text-default-600'>复制以下链接分享报表：</p>
               <Input
                 readOnly
-                value={`${window.location.origin}/report-preview/${selectedReport?.id || ""}`}
+                value={`${window.location.origin}/report/${selectedReport?.id || ""}`}
                 classNames={{
                   input: "bg-default-50",
                   inputWrapper: "bg-default-50 hover:bg-default-100",
@@ -361,6 +392,16 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ reports: propReports, onR
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      <RenameModal
+        isOpen={isRenameModalOpen}
+        onClose={() => {
+          setIsRenameModalOpen(false)
+          setSelectedReport(null)
+        }}
+        onRename={handleRename}
+        initialTitle={selectedReport?.title || ""}
+      />
     </>
   )
 }
