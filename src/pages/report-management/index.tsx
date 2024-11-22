@@ -11,6 +11,8 @@ import { useFormCount } from "@/hooks/useFormCount"
 import { GuideModal } from "@/components/GuideModal"
 import { TemplateSelect } from "@/components/TemplateSelect"
 
+const MAX_TEMPLATE_SELECTION = 5
+
 const ReportManagement: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
@@ -19,6 +21,7 @@ const ReportManagement: React.FC = () => {
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>([])
   const [templates, setTemplates] = useState<Array<{ id: string; title: string }>>([])
   const [loading, setLoading] = useState(false)
+  const [guideModalTemplates, setGuideModalTemplates] = useState<Array<{ id: string; title: string; formCount: number }>>([])
 
   const { load: loadTemplates } = useMetadata("template")
   const { getFormCountByTemplate } = useFormCount()
@@ -66,6 +69,10 @@ const ReportManagement: React.FC = () => {
   }
 
   const handleTemplateSelect = (value: string[]) => {
+    if (value.length > MAX_TEMPLATE_SELECTION) {
+      message.warning(`最多只能选择 ${MAX_TEMPLATE_SELECTION} 个模板`)
+      return
+    }
     setSelectedTemplates(value)
   }
 
@@ -75,11 +82,21 @@ const ReportManagement: React.FC = () => {
       return
     }
 
-    // 兼容单模板和多模板场景
-    const templateId = selectedTemplates[0]
-    const formCount = getFormCountByTemplate(templateId)
+    if (selectedTemplates.length > MAX_TEMPLATE_SELECTION) {
+      message.error(`最多只能选择 ${MAX_TEMPLATE_SELECTION} 个模板`)
+      return
+    }
 
-    if (formCount < 10) {
+    // 获取每个模板的表单数量和标题
+    const templateInfos = selectedTemplates.map(id => ({
+      id,
+      title: templates.find(t => t.id === id)?.title || id,
+      formCount: getFormCountByTemplate(id)
+    }))
+
+    // 如果有模板的表单数量小于10,显示引导弹窗
+    if (templateInfos.some(t => t.formCount < 10)) {
+      setGuideModalTemplates(templateInfos)
       setShowGuideModal(true)
       return
     }
@@ -88,7 +105,7 @@ const ReportManagement: React.FC = () => {
     try {
       if (selectedTemplates.length === 1) {
         // 单模板场景 - 保持原有路由格式
-        navigate(`/we-chat-app/admin/reports/ai/create/${templateId}`)
+        navigate(`/we-chat-app/admin/reports/ai/create/${selectedTemplates[0]}`)
       } else {
         // 多模板场景 - 使用查询参数
         const templateIds = selectedTemplates.join(',')
@@ -131,12 +148,17 @@ const ReportManagement: React.FC = () => {
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>选择数据源</ModalHeader>
           <ModalBody>
-            <TemplateSelect 
-              templates={templates} 
-              value={selectedTemplates} 
-              onChange={handleTemplateSelect}
-              multiple={true} // 启用多选
-            />
+            <div className="space-y-4">
+              <TemplateSelect 
+                templates={templates} 
+                value={selectedTemplates} 
+                onChange={handleTemplateSelect}
+                multiple={true}
+              />
+              <p className="text-xs text-gray-500">
+                最多可选择 {MAX_TEMPLATE_SELECTION} 个模板
+              </p>
+            </div>
           </ModalBody>
           <ModalFooter>
             <Button variant='light' onPress={handleCreateModalClose}>
@@ -152,8 +174,10 @@ const ReportManagement: React.FC = () => {
       <GuideModal
         isOpen={showGuideModal}
         onClose={() => setShowGuideModal(false)}
-        formCount={getFormCountByTemplate(selectedTemplates[0])}
-        templateId={selectedTemplates[0]}
+        mode={selectedTemplates.length === 1 ? 'single' : 'multiple'}
+        formCount={selectedTemplates.length === 1 ? getFormCountByTemplate(selectedTemplates[0]) : undefined}
+        templateId={selectedTemplates.length === 1 ? selectedTemplates[0] : undefined}
+        templates={selectedTemplates.length > 1 ? guideModalTemplates : undefined}
       />
     </PageLayout>
   )
