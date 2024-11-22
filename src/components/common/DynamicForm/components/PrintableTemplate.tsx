@@ -26,8 +26,28 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     }
   }
 
+  // 确保基本信息数据的完整性
+  const ensureBasicInfo = () => {
+    // 合并顶级字段和 basicInfo 字段
+    const basicData = {
+      ...data, // 包含所有顶级字段
+      ...(data?.basicInfo || {}), // 如果存在 basicInfo，则合并
+    }
+
+    // 过滤掉特殊字段
+    const specialFields = ['tableData', 'processConfirmations', 'basicInfo']
+    const filteredData = Object.fromEntries(
+      Object.entries(basicData).filter(([key]) => !specialFields.includes(key))
+    )
+
+    return filteredData
+  }
+
   // 渲染基本信息字段
   const renderBasicFields = () => {
+    const basicInfo = ensureBasicInfo()
+    console.log('Basic info for printing:', basicInfo) // 添加日志以便调试
+
     return (
       <div className='grid grid-cols-2 gap-2'>
         {renderConfig.basicFields.map((field) => (
@@ -37,7 +57,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
           >
             <span className='font-medium text-gray-700 text-sm'>{field.label}:</span>
             <span className='min-w-[120px] text-right text-sm text-gray-900'>
-              {formatFieldValue(field.type, data?.basicInfo?.[field.name])}
+              {formatFieldValue(field.type, basicInfo[field.name])}
             </span>
           </div>
         ))}
@@ -97,7 +117,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     return (
       <div className='mt-3 space-y-2'>
         {renderConfig.processSteps.map((step) => {
-          const stepData = data.processConfirmations[step.key]
+          const stepData = data.processConfirmations[step.key] || {}
 
           return (
             <div key={step.key} className='process-step border-b border-gray-200 pb-2'>
