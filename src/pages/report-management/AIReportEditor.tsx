@@ -5,18 +5,92 @@ import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import AIReportAgent from "@/service/agents/AIReportAgent"
-import AnalysisResult from "./components/AnalysisResult"
+import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import { useVersionControl } from "@/hooks/useVersionControl"
 import AIEditor from "@/components/AIEditor"
 import { Icon } from "@iconify/react"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
 import { Button, Tabs, Tab } from "@nextui-org/react"
-import { generateColumns, flattenData, extractShataAICode } from "./utils/generateColumns"
-import { processReportData } from "./utils/processReportData"
-import { Message } from "./types"
-import DataTable from "./components/DataTable"
-import SuccessModal from "./components/SuccessModal"
+import { generateColumns, flattenData, extractShataAICode } from "@/pages/report-management/utils/generateColumns"
+import { processReportData } from "@/pages/report-management/utils/processReportData"
+import { Message } from "@/pages/report-management/types"
+import DataTable from "@/pages/report-management/components/DataTable"
+import SuccessModal from "@/pages/report-management/components/SuccessModal"
+import { motion } from "framer-motion"
+
+// 空状态组件 - 分析报表
+const EmptyAnalysisState: React.FC = () => {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
+      <div className="w-48 h-48 mb-8 relative">
+        <motion.div
+          animate={{
+            scale: [1, 1.05, 1],
+            rotate: [0, -5, 5, 0],
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+        >
+          <Icon 
+            icon="hugeicons:ai-chat-02" 
+            className="w-full h-full text-primary/30" 
+          />
+        </motion.div>
+      </div>
+      <h3 className="text-xl font-medium text-foreground mb-2">
+        开始分析您的数据
+      </h3>
+      <p className="text-default-500 mb-8 text-center max-w-md">
+        使用左侧的 AI 助手来分析您的数据，生成图表和洞察报告
+      </p>
+      <div className="flex flex-col gap-4 items-center">
+        <div className="p-4 bg-primary/5 rounded-lg">
+          <p className="text-sm text-default-600">示例提示语:</p>
+          <ul className="list-disc pl-6 space-y-2 text-primary">
+            <li>帮我分析数据的整体分布情况</li>
+            <li>生成一个饼图展示状态分布</li>
+            <li>计算各个指标的平均值</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 空状态组件 - 代码视图
+const EmptyCodeState: React.FC = () => {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
+      <div className="w-48 h-48 mb-8 relative">
+        <motion.div
+          animate={{
+            scale: [1, 1.05, 1],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+        >
+          <Icon 
+            icon="mdi:code-braces" 
+            className="w-full h-full text-primary/30" 
+          />
+        </motion.div>
+      </div>
+      <h3 className="text-xl font-medium text-foreground mb-2">
+        等待生成分析代码
+      </h3>
+      <p className="text-default-500 mb-4 text-center max-w-md">
+        当 AI 助手生成分析结果后，这里会显示相应的代码
+      </p>
+    </div>
+  )
+}
 
 const AIReportEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -54,7 +128,7 @@ const AIReportEditor: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        if (reportId) {
+        if (reportId && reportId !== "create") {
           // 1. 先获取报表信息
           const report = await getReportDetail(reportId)
 
@@ -476,6 +550,7 @@ const AIReportEditor: React.FC = () => {
             columns={processedData.columns}
             flattenedData={processedData.flattenedData}
             isLoading={!processedData.columns.length || !processedData.flattenedData.length}
+            showSourceIndicator
           />
         </Tab>
         {Object.entries(templateData).map(([templateId, data]) => {
@@ -494,6 +569,27 @@ const AIReportEditor: React.FC = () => {
     )
   }
 
+  // 引导提示组件
+  const renderGuideTip = () => {
+    if (!versionControl.getCurrentVersion()?.rawConfig) {
+      return (
+        <div className="absolute bottom-4 left-4 right-4 bg-primary/5 p-4 rounded-lg shadow-lg">
+          <div className="flex items-start gap-3">
+            <Icon icon="mdi:lightbulb" className="w-6 h-6 text-primary flex-shrink-0" />
+            <div>
+              <h4 className="font-medium text-foreground">开始使用提示</h4>
+              <p className="text-sm text-default-600 mt-1">
+                使用左侧的 AI 助手来分析您的数据。您可以输入自然语言来描述您想要的分析结果，
+                AI 将帮助您生成图表和洞察报告。
+              </p>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    return null
+  }
+
   return (
     <PageLayout title='AI 报表助手' titleIcon='hugeicons:ai-chat-02' className='p-0' actions={pageActions}>
       <AIEditor
@@ -505,7 +601,9 @@ const AIReportEditor: React.FC = () => {
         agent={reportAgent}
         versionControl={versionControl}
         renderPreview={(version) => {
-          if (!version?.rawConfig) return null
+          if (!version?.rawConfig) {
+            return <EmptyAnalysisState />
+          }
           return (
             <ErrorBoundary
               onReset={() => {
@@ -528,15 +626,22 @@ const AIReportEditor: React.FC = () => {
           )
         }}
         renderDataView={renderDataView}
-        renderCodeView={(version) => (
-          <pre>
-            <code>{previewContent || version?.rawConfig || ""}</code>
-          </pre>
-        )}
+        renderCodeView={(version) => {
+          if (!previewContent && !version?.rawConfig) {
+            return <EmptyCodeState />
+          }
+          return (
+            <pre className="p-4 bg-gray-900 text-gray-100 rounded-lg overflow-auto">
+              <code>{previewContent || version?.rawConfig || ""}</code>
+            </pre>
+          )
+        }}
         showDataTab
         showCodeTab
         previewTabName='分析报表'
       />
+
+      {renderGuideTip()}
 
       <SuccessModal
         isOpen={isSuccessModalOpen}
