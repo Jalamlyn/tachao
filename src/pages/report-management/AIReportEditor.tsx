@@ -127,10 +127,13 @@ const AIReportEditor: React.FC = () => {
     setIsLoadingTemplates(true)
     try {
       const templateDetails = await loadTemplateFilteredDetails((index) => templateIds.includes(index.id))
-      const templateMap = templateDetails.reduce((acc, template) => {
-        acc[template.id] = template.title
-        return acc
-      }, {} as Record<string, string>)
+      const templateMap = templateDetails.reduce(
+        (acc, template) => {
+          acc[template.id] = template.title
+          return acc
+        },
+        {} as Record<string, string>
+      )
       setTemplateInfoMap(templateMap)
     } catch (error) {
       console.error("Error loading template info:", error)
@@ -577,7 +580,7 @@ const AIReportEditor: React.FC = () => {
         {Object.entries(templateData).map(([templateId, data]) => {
           const processed = processReportData(data as any[])
           const templateTitle = getTemplateTitle(templateId)
-          
+
           return (
             <Tab key={templateId} title={templateTitle}>
               <DataTable
@@ -590,27 +593,6 @@ const AIReportEditor: React.FC = () => {
         })}
       </Tabs>
     )
-  }
-
-  // 引导提示组件
-  const renderGuideTip = () => {
-    if (!versionControl.getCurrentVersion()?.rawConfig) {
-      return (
-        <div className="absolute bottom-4 left-4 right-4 bg-primary/5 p-4 rounded-lg shadow-lg">
-          <div className="flex items-start gap-3">
-            <Icon icon="mdi:lightbulb" className="w-6 h-6 text-primary flex-shrink-0" />
-            <div>
-              <h4 className="font-medium text-foreground">开始使用提示</h4>
-              <p className="text-sm text-default-600 mt-1">
-                使用左侧的 AI 助手来分析您的数据。您可以输入自然语言来描述您想要的分析结果，
-                AI 将帮助您生成图表和洞察报告。
-              </p>
-            </div>
-          </div>
-        </div>
-      )
-    }
-    return null
   }
 
   return (
@@ -654,7 +636,7 @@ const AIReportEditor: React.FC = () => {
             return <EmptyCodeState />
           }
           return (
-            <pre className="p-4 bg-gray-900 text-gray-100 rounded-lg overflow-auto">
+            <pre className='p-4 bg-gray-900 text-gray-100 rounded-lg overflow-auto'>
               <code>{previewContent || version?.rawConfig || ""}</code>
             </pre>
           )
@@ -663,8 +645,6 @@ const AIReportEditor: React.FC = () => {
         showCodeTab
         previewTabName='分析报表'
       />
-
-      {renderGuideTip()}
 
       <SuccessModal
         isOpen={isSuccessModalOpen}

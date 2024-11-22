@@ -229,7 +229,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
               </div>
             </div>
             <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => onTabChange(key.toString())}>
-              {showDataTab && <Tab key='data' title='数据表格' />}
+              {showDataTab && <Tab key='data' title='数据源' />}
               <Tab key='preview' title={previewTabName}>
                 <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderPreview(currentVersion)}</div>
               </Tab>

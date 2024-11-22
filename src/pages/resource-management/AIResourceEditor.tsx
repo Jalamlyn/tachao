@@ -321,7 +321,7 @@ const AIResourceEditor: React.FC = () => {
           <ResizablePanel defaultSize={70} className='resizable-panel bg-slate-50'>
             <div className='h-full flex flex-col'>
               <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => setSelectedTab(key.toString())}>
-                <Tab key='data' title='数据表格'>
+                <Tab key='data' title='数据源'>
                   <div className='h-[calc(100vh-260px)] overflow-auto p-2'>
                     {resourceData ? (
                       renderDataTable()
