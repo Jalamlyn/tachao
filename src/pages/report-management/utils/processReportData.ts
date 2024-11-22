@@ -1,4 +1,4 @@
-import { generateColumns, flattenData } from "/Users/jalam/Works/mo-repo/shata-ai-front/src/pages/report-management/utils/generateColumns"
+import { generateColumns, flattenData } from "./generateColumns"
 
 export interface ProcessedData {
   columns: any[]
@@ -20,12 +20,19 @@ export function processReportData(formData: any[]): ProcessedData {
     }
   }
 
-  const columns = generateColumns(formData)
-  const flattenedData = flattenData(formData)
+  // 为每条数据添加来源标识
+  const enhancedData = formData.map(item => ({
+    ...item,
+    _sourceTemplateId: item.templateId,
+    _sourceTemplateName: `模板 ${item.templateId}`
+  }))
+
+  const columns = generateColumns(enhancedData)
+  const flattenedData = flattenData(enhancedData)
 
   return {
     columns,
     flattenedData,
-    originalData: formData
+    originalData: enhancedData
   }
 }
