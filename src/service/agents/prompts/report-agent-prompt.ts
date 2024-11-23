@@ -16,8 +16,10 @@ ${JSON.stringify(data.slice(0, 3), null, 2)}
 const returnStructureRequirements = `
 返回格式要求:
 1. 必须使用 <shata-ai-code> 标签包裹生成的代码
-2. 生成的代码必须直接返回一个符合以下结构的对象:
-{
+2. 生成的代码必须以 return 语句开头,返回一个完整的对象
+3. 返回的对象必须符合以下结构:
+
+return {
   type: 'analyze',
   data: data, // 保持原始数据不变
   analysis: {
@@ -27,7 +29,36 @@ const returnStructureRequirements = `
     insights: [...], // 必须在顶层
     processAnalysis: {...} // 可选,用于流程数据
   }
-}
+};
+
+示例代码:
+<shata-ai-code>
+return {
+  type: 'analyze',
+  data: data,
+  analysis: {
+    summary: {
+      totalCount: {
+        value: data?.length || 0,
+        label: '总数量'
+      }
+    },
+    charts: [{
+      type: 'pie',
+      title: '分布统计',
+      data: []
+    }],
+    insights: ['数据分析见解']
+  }
+};
+</shata-ai-code>
+
+注意:
+- 代码必须以 return 开头
+- 不要省略 return 语句
+- 确保代码可以在 Function 构造函数中执行
+- 保持与现有代码的兼容性
+- 不要删除或修改现有功能
 `
 
 // 核心要求部分
