@@ -1,3 +1,5 @@
+import { logger } from "@/utils/logger"
+
 // 基础提示词部分
 const basePrompt = `你是一个智能报表分析助手，负责帮助用户对数据进行分析。
 请仔细分析用户的需求，生成相应的分析代码。`
@@ -5,9 +7,7 @@ const basePrompt = `你是一个智能报表分析助手，负责帮助用户对
 // 数据要求部分
 const dataRequirements = (data: any[]) => `
 这是需要你分析的数据的前3行:
-<data>
 ${JSON.stringify(data.slice(0, 3), null, 2)}
-</data>
 
 数据总行数: ${data.length}
 `
@@ -47,65 +47,128 @@ const coreRequirements = `
    - 审批人和状态统计必须基于实际数据
 `
 
+// 新增: 多数据源基础配置要求
+const multiSourceBasicRequirements = `
+生成的分析结果必须包含:
+
+1. 数据源基础配置
+分析时请注意:
+- 每条数据都包含 _sourceTemplateId 和 _sourceTemplateName 字段标识数据来源
+- 需要对不同来源的数据进行分组统计
+- 在统计结果中标注数据来源
+
+返回结果必须符合以下结构:
+{
+  type: "analyze",
+  data: data, // 保持原始数据不变
+  analysis: {
+    // 数据源配置 - 必须包含
+    sources: {
+      [templateId: string]: {
+        id: string,      // 模板ID
+        title: string,   // 模板名称
+      }
+    },
+    
+    // 基础统计 - 每个统计项都需要包含数据源信息
+    summary: {
+      [key: string]: {
+        value: number | string,
+        label: string,
+        sourceId: string,    // 数据来源ID
+        sourceTitle: string  // 数据来源名称
+      }
+    },
+    
+    // 图表配置 - 需要标识数据来源
+    charts: [{
+      type: string,
+      title: string,
+      data: Array<{
+        name: string,
+        value: number,
+        sourceId: string,    // 数据来源ID
+        sourceTitle: string  // 数据来源名称
+      }>
+    }],
+    
+    // 洞察信息 - 需要标识相关的数据源
+    insights: Array<{
+      content: string,
+      sourceIds: string[]  // 相关的数据源ID数组
+    }>
+  }
+}
+`
+
+// 生成数据源信息
+function generateDataSourceInfo(data: any[], templateInfoMap: Record<string, string>): string {
+  const sourceGroups = Object.entries(templateInfoMap).map(([templateId, title]) => ({
+    templateId,
+    title,
+    count: data.filter(item => item._sourceTemplateId === templateId).length
+  }));
+
+  return `
+数据源信息:
+${sourceGroups.map(group => `- ${group.title} (${group.count} 条数据)`).join('\n')}
+
+数据结构说明:
+1. 每条数据都包含以下标识字段:
+   - _sourceTemplateId: 数据来源的模板ID
+   - _sourceTemplateName: 数据来源的模板名称
+2. 合并后的数据总行数: ${data.length}
+`
+}
+
+// 系统提示词选项接口
+interface SystemPromptOptions {
+  data: any[];
+  doc: string;
+  existingConfig?: string | null;
+  templateInfoMap?: Record<string, string>;
+}
+
 // 生成系统提示词
-const generateSystemPrompt = (data: any[], doc: string, existingConfig?: string): string => {
-  const modePrompt = existingConfig
-    ? `
-当前报表的分析代码:
-<report-code>
-${existingConfig}
-</report-code>
-
-请根据上述配置和用户的需求，生成一个新的完整配置。在更新时：
-1. 保持现有配置的核心逻辑
-2. 根据用户需求进行增量改进
-3. 确保与现有配置的兼容性
-4. 保留有效的数据分析方法
-5. 优化或扩展现有的图表和洞察
-`
-    : `
-请创建一个新的报表配置：
-1. 深入分析数据结构和特点
-2. 发现数据中的关键模式和趋势
-3. 生成有意义的可视化图表
-4. 提供有价值的数据洞察
-5. 确保分析结果清晰易懂
-`
-
+const generateSystemPrompt = ({
+  data,
+  doc,
+  existingConfig,
+  templateInfoMap = {}
+}: SystemPromptOptions): string => {
+  const isMultiSource = Object.keys(templateInfoMap).length > 1;
+  
   return `${basePrompt}
-${modePrompt}
-${dataRequirements(data)}
+${generateDataSourceInfo(data, templateInfoMap)}
+${isMultiSource ? multiSourceBasicRequirements : ''}
 ${returnStructureRequirements}
 ${coreRequirements}
 
 <doc>${doc}</doc>
 
-请使用 <shata-ai-code> 标签包裹你生成的代码，直接返回可执行的 JavaScript 代码。
+${existingConfig ? `
+当前报表的分析代码:
+<report-code>
+${existingConfig}
+</report-code>
+
+请根据上述配置和用户的需求,生成一个新的完整配置。注意:
+1. 保持现有配置的核心逻辑
+2. 根据用户需求进行增量改进
+3. 确保与现有配置的兼容性
+4. 保留有效的数据分析方法
+5. 优化或扩展现有的图表和洞察
+${isMultiSource ? '6. 确保包含完整的多数据源支持配置' : ''}
+` : ''}
+
+请使用 <shata-ai-code> 标签包裹你生成的代码,直接返回可执行的 JavaScript 代码。
 注意:
 1. 不要将代码包装在函数定义中
 2. 直接使用传入的 data 参数
 3. 直接返回分析结果对象
 4. 确保返回对象包含必要的 type 和 data 字段
 5. data 字段必须保持原始数据不变
-6. 统计结果放在 analysis 字段中
-
-返回 markdown 格式示例,必须 \`\`\`mo 开头 \`\`\`结尾：
-\`\`\`mo
-<shata-ai-code>
-// 直接处理数据,使用传入的 data 参数
-const result = {
-  type: 'analyze',
-  data: data,     // 保持原始数据不变
-  analysis: {     // 统计结果放在这里, 不要出现英文标签
-    summary: {...},
-    charts: [...],
-    insights: [...]
-  }
-};
-return result;
-</shata-ai-code>
-\`\`\`
-- 开头和结尾都不要做解释和说明`
+6. 统计结果放在 analysis 字段中`
 }
 
 export default generateSystemPrompt

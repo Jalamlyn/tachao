@@ -14,10 +14,18 @@ interface AnalysisResult {
   type: "analyze"
   data: any[]
   analysis: {
+    sources?: {
+      [templateId: string]: {
+        id: string
+        title: string
+      }
+    }
     summary: {
       [key: string]: {
         value: number | string | Record<string, any>
         label: string
+        sourceId?: string
+        sourceTitle?: string
       }
     }
     charts?: Array<{
@@ -26,9 +34,14 @@ interface AnalysisResult {
       data: Array<{
         name: string
         value: number
+        sourceId?: string
+        sourceTitle?: string
       }>
     }>
-    insights: string[]
+    insights: Array<{
+      content: string
+      sourceIds?: string[]
+    }>
     processAnalysis?: {
       summary?: {
         totalProcessNodes: { value: number; label: string }
@@ -62,10 +75,15 @@ interface ProcessCommandOptions {
   onChunk?: (chunk: string) => void
 }
 
+interface AIReportAgentConfig {
+  templateInfoMap?: Record<string, string>
+}
+
 export class AIReportAgent {
   private static instance: AIReportAgent
   private _data: ProcessedData | null = null
   private _rawConfig: string | null = null
+  private _templateInfoMap: Record<string, string> = {}
 
   private constructor() {
     console.log("[AIReportAgent] Instance created")
@@ -77,6 +95,12 @@ export class AIReportAgent {
       console.log("[AIReportAgent] New instance created")
     }
     return AIReportAgent.instance
+  }
+
+  public configure(config: AIReportAgentConfig): void {
+    if (config.templateInfoMap) {
+      this._templateInfoMap = config.templateInfoMap
+    }
   }
 
   public setData(data: ProcessedData): void {
@@ -96,7 +120,6 @@ export class AIReportAgent {
 
   private validateConfig(config: string): boolean {
     try {
-      // 验证配置格式
       const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
       const match = config.match(regex)
       if (!match) {
@@ -157,7 +180,13 @@ export class AIReportAgent {
         this.setRawConfig(rawConfig)
       }
 
-      const systemPrompt = generateSystemPrompt(data.flattenedData, doc, this._rawConfig)
+      const systemPrompt = generateSystemPrompt({
+        data: data.flattenedData,
+        doc,
+        existingConfig: this._rawConfig,
+        templateInfoMap: this._templateInfoMap
+      })
+
       const messages: Message[] = [
         { role: "system", content: systemPrompt },
         { role: "user", content: command },
@@ -185,7 +214,6 @@ export class AIReportAgent {
       }
       const generatedCode = match[1].trim()
 
-      // 验证生成的配置
       if (!this.validateConfig(aiResponse)) {
         throw new Error("Invalid generated configuration")
       }
@@ -197,7 +225,6 @@ export class AIReportAgent {
         throw new Error("Invalid analysis result format")
       }
 
-      // 更新当前配置
       this.setRawConfig(generatedCode)
 
       console.log("[AIReportAgent] Analysis completed successfully")
