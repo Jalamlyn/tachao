@@ -4,14 +4,6 @@ import { logger } from "@/utils/logger"
 const basePrompt = `你是一个智能报表分析助手，负责帮助用户对数据进行分析。
 请仔细分析用户的需求，生成相应的分析代码。`
 
-// 数据要求部分
-const dataRequirements = (data: any[]) => `
-这是需要你分析的数据的前3行:
-${JSON.stringify(data.slice(0, 3), null, 2)}
-
-数据总行数: ${data.length}
-`
-
 // 返回结构限制
 const returnStructureRequirements = `
 返回格式要求:
@@ -132,17 +124,49 @@ const multiSourceBasicRequirements = `
 }
 `
 
+// 新增: 数据分组和示例数据获取函数
+function getGroupedSampleData(data: any[]) {
+  // 按模板ID分组
+  const groups = data.reduce((acc, item) => {
+    const templateId = item._sourceTemplateId;
+    if (!acc[templateId]) {
+      acc[templateId] = [];
+    }
+    acc[templateId].push(item);
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  // 每组取前10条
+  return Object.entries(groups).reduce((acc, [templateId, items]) => {
+    acc[templateId] = items.slice(0, 10);
+    return acc;
+  }, {} as Record<string, any[]>);
+}
+
 // 生成数据源信息
 function generateDataSourceInfo(data: any[], templateInfoMap: Record<string, string>): string {
   const sourceGroups = Object.entries(templateInfoMap).map(([templateId, title]) => ({
     templateId,
     title,
-    count: data.filter(item => item._sourceTemplateId === templateId).length
-  }));
+    count: data.filter((item) => item._sourceTemplateId === templateId).length,
+  }))
 
+  // 获取分组后的示例数据
+  const sampleData = getGroupedSampleData(data);
+  
   return `
 数据源信息:
-${sourceGroups.map(group => `- ${group.title} (${group.count} 条数据)`).join('\n')}
+${sourceGroups.map((group) => `- ${group.title} (${group.count} 条数据)`).join("\n")}
+
+每个数据源的示例数据(前10条):
+${Object.entries(sampleData)
+  .map(
+    ([templateId, items]) => `
+${templateInfoMap[templateId] || `模板 ${templateId}`} 的示例数据:
+${JSON.stringify(items, null, 2)}
+`
+  )
+  .join("\n")}
 
 数据结构说明:
 1. 每条数据都包含以下标识字段:
@@ -154,30 +178,27 @@ ${sourceGroups.map(group => `- ${group.title} (${group.count} 条数据)`).join(
 
 // 系统提示词选项接口
 interface SystemPromptOptions {
-  data: any[];
-  doc: string;
-  existingConfig?: string | null;
-  templateInfoMap?: Record<string, string>;
+  data: any[]
+  doc: string
+  existingConfig?: string | null
+  templateInfoMap?: Record<string, string>
 }
 
 // 生成系统提示词
-const generateSystemPrompt = ({
-  data,
-  doc,
-  existingConfig,
-  templateInfoMap = {}
-}: SystemPromptOptions): string => {
-  const isMultiSource = Object.keys(templateInfoMap).length > 1;
-  
+const generateSystemPrompt = ({ data, doc, existingConfig, templateInfoMap = {} }: SystemPromptOptions): string => {
+  const isMultiSource = Object.keys(templateInfoMap).length > 1
+
   return `${basePrompt}
 ${generateDataSourceInfo(data, templateInfoMap)}
-${isMultiSource ? multiSourceBasicRequirements : ''}
+${isMultiSource ? multiSourceBasicRequirements : ""}
 ${returnStructureRequirements}
 ${coreRequirements}
 
 <doc>${doc}</doc>
 
-${existingConfig ? `
+${
+  existingConfig
+    ? `
 当前报表的分析代码:
 <report-code>
 ${existingConfig}
@@ -189,8 +210,10 @@ ${existingConfig}
 3. 确保与现有配置的兼容性
 4. 保留有效的数据分析方法
 5. 优化或扩展现有的图表和洞察
-${isMultiSource ? '6. 确保包含完整的多数据源支持配置' : ''}
-` : ''}
+${isMultiSource ? "6. 确保包含完整的多数据源支持配置" : ""}
+`
+    : ""
+}
 
 请使用 <shata-ai-code> 标签包裹你生成的代码,直接返回可执行的 JavaScript 代码。
 注意:
