@@ -7,83 +7,7 @@ import { cn } from "@/theme/cn"
 import { Tabs, Tab, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
-
-// 添加安全的对象序列化函数
-const safeStringify = (value: any, depth: number = 0): string => {
-  if (depth > 10) return "[Object]" // 防止过深递归
-
-  try {
-    if (value === null) return "null"
-    if (value === undefined) return "undefined"
-    if (typeof value === "function") return "[Function]"
-    if (typeof value !== "object") return String(value)
-
-    if (Array.isArray(value)) {
-      return `[${value.map((v) => safeStringify(v, depth + 1)).join(", ")}]`
-    }
-
-    const pairs = Object.entries(value).map(([k, v]) => `${k}: ${safeStringify(v, depth + 1)}`)
-    return `{${pairs.join(", ")}}`
-  } catch (error) {
-    return "[Error]"
-  }
-}
-
-// 添加错误边界组件
-class SummaryErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
-  state = { hasError: false }
-
-  static getDerivedStateFromError() {
-    return { hasError: true }
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className='p-4 text-danger'>
-          <p>数据渲染出错</p>
-        </div>
-      )
-    }
-
-    return this.props.children
-  }
-}
-
-interface AnalysisResultProps {
-  analysis: {
-    summary: Record<string, { value: number | string | Record<string, any> | any[]; label: string }>
-    charts?: {
-      type: string
-      title: string
-      data: any
-    }[]
-    tables?: {
-      title: string
-      columns: {
-        key: string
-        title: string
-      }[]
-      data: any[]
-    }[]
-    insights: string[]
-    processAnalysis?: {
-      summary?: {
-        totalProcessNodes: { value: number; label: string }
-        completedNodes: { value: number; label: string }
-        completionRate: { value: string; label: string }
-        averageProcessTime: { value: string; label: string }
-      }
-      nodeStatus?: Record<string, string>
-      processDuration?: {
-        total: string
-        nodesDuration: Record<string, string>
-      }
-      approvers?: Record<string, number>
-      processStatus?: Record<string, number>
-    }
-  }
-}
+import { MultiSourceAnalysisResult, MultiSourceSummaryItem } from "../types"
 
 // 空状态组件
 const EmptyState: React.FC = () => {
@@ -116,155 +40,81 @@ const EmptyState: React.FC = () => {
   )
 }
 
+// 渲染多数据源统计摘要
+const renderMultiSourceSummary = (summary: Record<string, MultiSourceSummaryItem>) => {
+  return Object.entries(summary).map(([key, item]) => (
+    <motion.div
+      key={key}
+      variants={{
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0 }
+      }}
+      className="relative overflow-hidden rounded-xl bg-gradient-to-br from-background to-muted p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+    >
+      <div className="text-sm text-muted-foreground font-medium mb-2">
+        {item.label}
+        {item.sourceTitle && (
+          <span className="ml-2 text-xs text-primary">
+            来自: {item.sourceTitle}
+          </span>
+        )}
+      </div>
+      <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
+        {typeof item.value === 'object' ? JSON.stringify(item.value) : item.value}
+      </div>
+    </motion.div>
+  ))
+}
+
+// 渲染多数据源图表
+const renderMultiSourceChart = (chart: MultiSourceAnalysisResult['charts'][0]) => {
+  return (
+    <ChartRenderer
+      chart={{
+        ...chart,
+        data: chart.data.map(item => ({
+          ...item,
+          name: item.sourceTitle ? `${item.name} (${item.sourceTitle})` : item.name
+        }))
+      }}
+    />
+  )
+}
+
+// 渲染多数据源洞察
+const renderMultiSourceInsights = (insights: MultiSourceAnalysisResult['insights']) => {
+  return insights.map((insight, index) => (
+    <motion.div
+      key={index}
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.1 }}
+      className="flex items-start gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 to-transparent border border-border/50"
+    >
+      <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-primary/10">
+        💡
+      </span>
+      <div>
+        <p className="text-foreground/90 leading-relaxed">{insight.content}</p>
+        {insight.sourceIds && insight.sourceIds.length > 0 && (
+          <div className="mt-2 flex gap-2">
+            {insight.sourceIds.map(sourceId => (
+              <span key={sourceId} className="text-xs text-primary bg-primary/10 px-2 py-1 rounded-full">
+                {sourceId}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  ))
+}
+
+interface AnalysisResultProps {
+  analysis: MultiSourceAnalysisResult
+}
+
 const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
-  // 检查数据是否为空
-  if (!analysis || !analysis.summary || Object.keys(analysis.summary).length === 0) {
-    return <EmptyState />
-  }
-
-  // 渲染对象类型的 value
-  const renderObjectValue = (value: Record<string, any>) => {
-    return (
-      <div className="space-y-2">
-        {Object.entries(value).map(([key, val]) => (
-          <div key={key} className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">{key}</span>
-            <span className="font-medium">{renderSummaryValue(val)}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // 渲染数组类型的 value  
-  const renderArrayValue = (value: any[]) => {
-    return (
-      <div className="space-y-1">
-        {value.map((item, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">#{index + 1}</span>
-            <span className="font-medium">{renderSummaryValue(item)}</span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // 递归渲染不同类型的 value
-  const renderSummaryValue = (value: any): React.ReactNode => {
-    if (Array.isArray(value)) {
-      return renderArrayValue(value);
-    }
-    
-    if (typeof value === 'object' && value !== null) {
-      return renderObjectValue(value);
-    }
-    
-    return String(value);
-  };
-
-  // 渲染摘要项
-  const renderSummaryItem = (key: string, item: { value: any; label: string }) => {
-    return (
-      <motion.div
-        variants={itemVariants}
-        className='relative overflow-hidden rounded-xl bg-gradient-to-br from-background to-muted p-6 shadow-lg hover:shadow-xl transition-shadow duration-300'
-      >
-        <div className='text-sm text-muted-foreground font-medium mb-2'>{item.label}</div>
-        <div className='text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70'>
-          {renderSummaryValue(item.value)}
-        </div>
-      </motion.div>
-    )
-  }
-
-  const renderProcessAnalysis = () => {
-    if (!analysis.processAnalysis) return null
-
-    const { summary, nodeStatus, processDuration, approvers, processStatus } = analysis.processAnalysis
-
-    const nodeStatusChartData = nodeStatus
-      ? {
-          type: "pie",
-          title: "流程节点状态分布",
-          data: Object.entries(nodeStatus).map(([name, status]) => ({
-            name,
-            value: status === "已完成" ? 1 : 0,
-          })),
-        }
-      : null
-
-    const approversChartData = approvers
-      ? {
-          type: "bar",
-          title: "审批人工作量统计",
-          data: Object.entries(approvers).map(([name, count]) => ({
-            name,
-            value: count,
-          })),
-        }
-      : null
-
-    return (
-      <motion.div variants={itemVariants}>
-        <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
-          <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
-            <CardTitle className='text-xl font-bold'>流程分析</CardTitle>
-            <CardDescription>流程执行情况统计</CardDescription>
-          </CardHeader>
-          <CardContent className='p-6'>
-            <div className='space-y-6'>
-              {summary && (
-                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-                  {Object.entries(summary).map(([key, item]) => (
-                    <motion.div
-                      key={key}
-                      variants={itemVariants}
-                      className='rounded-xl bg-gradient-to-br from-background to-muted p-4 shadow'
-                    >
-                      <div className='text-sm text-muted-foreground'>{item.label}</div>
-                      <div className='text-2xl font-bold text-primary'>{item.value}</div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-
-              {nodeStatusChartData && (
-                <div className='mt-6'>
-                  <ChartRenderer chart={nodeStatusChartData} />
-                </div>
-              )}
-
-              {approversChartData && (
-                <div className='mt-6'>
-                  <ChartRenderer chart={approversChartData} />
-                </div>
-              )}
-
-              {processDuration && (
-                <div className='mt-6'>
-                  <h3 className='text-lg font-semibold mb-3'>流程耗时分析</h3>
-                  <div className='space-y-2'>
-                    <div className='flex justify-between items-center p-2 rounded-lg bg-background/50'>
-                      <span className='font-medium'>总耗时</span>
-                      <span className='text-primary font-semibold'>{processDuration.total}</span>
-                    </div>
-                    {Object.entries(processDuration.nodesDuration).map(([node, duration]) => (
-                      <div key={node} className='flex justify-between items-center p-2 rounded-lg bg-background/50'>
-                        <span className='font-medium'>{node}</span>
-                        <span className='text-primary font-semibold'>{duration}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    )
-  }
-
   // 动画变体配置
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -289,60 +139,13 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
     },
   }
 
-  const renderCharts = () => {
-    if (!analysis.charts?.length) return null
-
-    if (analysis.charts.length === 1) {
-      return (
-        <motion.div variants={itemVariants} layout>
-          <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
-            <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
-              <CardTitle className='text-xl font-bold'>{analysis.charts[0].title || "数据可视化"}</CardTitle>
-              <CardDescription>图表分析与趋势</CardDescription>
-            </CardHeader>
-            <CardContent className='min-h-[400px] p-6'>
-              <ChartRenderer chart={analysis.charts[0]} />
-            </CardContent>
-          </Card>
-        </motion.div>
-      )
-    }
-
-    return (
-      <motion.div variants={itemVariants} layout>
-        <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
-          <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
-            <CardTitle className='text-xl font-bold'>数据可视化</CardTitle>
-            <CardDescription>图表分析与趋势</CardDescription>
-          </CardHeader>
-          <CardContent className='p-6'>
-            <Tabs
-              aria-label='图表分析'
-              className='w-full'
-              variant='underlined'
-              classNames={{
-                tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider",
-                cursor: "w-full bg-primary",
-                tab: "max-w-fit px-0 h-12",
-                tabContent: "group-data-[selected=true]:text-primary",
-              }}
-            >
-              {analysis.charts.map((chart, index) => (
-                <Tab key={index} title={chart.title || `图表 ${index + 1}`}>
-                  <div className='min-h-[400px] pt-4'>
-                    <ChartRenderer chart={chart} />
-                  </div>
-                </Tab>
-              ))}
-            </Tabs>
-          </CardContent>
-        </Card>
-      </motion.div>
-    )
+  // 检查数据是否为空
+  if (!analysis || !analysis.summary || Object.keys(analysis.summary).length === 0) {
+    return <EmptyState />
   }
 
   return (
-    <motion.div variants={containerVariants} initial='hidden' animate='show' className='space-y-6 p-4'>
+    <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6 p-4">
       {/* 统计摘要卡片 */}
       <motion.div variants={itemVariants}>
         <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
@@ -352,62 +155,23 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
           </CardHeader>
           <CardContent className='p-6'>
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {Object.entries(analysis.summary).map(([key, item]) => (
-                <SummaryErrorBoundary key={key}>{renderSummaryItem(key, item)}</SummaryErrorBoundary>
-              ))}
+              {renderMultiSourceSummary(analysis.summary)}
             </div>
           </CardContent>
         </Card>
       </motion.div>
 
-      {/* 流程分析卡片 */}
-      {renderProcessAnalysis()}
-
       {/* 图表展示 */}
-      <AnimatePresence>{renderCharts()}</AnimatePresence>
-
-      {/* 明细表格 */}
       <AnimatePresence>
-        {analysis.tables?.map((table, index) => (
+        {analysis.charts?.map((chart, index) => (
           <motion.div key={index} variants={itemVariants} layout>
             <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
               <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
-                <CardTitle className='text-xl font-bold'>{table.title || "数据明细"}</CardTitle>
-                <CardDescription>详细数据记录</CardDescription>
+                <CardTitle className='text-xl font-bold'>{chart.title}</CardTitle>
+                <CardDescription>数据可视化分析</CardDescription>
               </CardHeader>
-              <CardContent className='p-6'>
-                <div className='rounded-xl border border-border/50 overflow-hidden'>
-                  <Table>
-                    <TableHeader>
-                      <TableRow className='bg-muted/50'>
-                        {table.columns.map((column) => (
-                          <TableCell key={column.key} className='font-medium text-muted-foreground'>
-                            {column.title}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {table.data.map((row, rowIndex) => (
-                        <TableRow
-                          key={rowIndex}
-                          className={cn(
-                            "transition-colors hover:bg-muted/30",
-                            rowIndex % 2 === 0 ? "bg-background" : "bg-muted/50"
-                          )}
-                        >
-                          {table.columns.map((column) => (
-                            <TableCell key={`${rowIndex}-${column.key}`}>
-                              {typeof row[column.key] === "object"
-                                ? safeStringify(row[column.key])
-                                : String(row[column.key])}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+              <CardContent className='min-h-[400px] p-6'>
+                {renderMultiSourceChart(chart)}
               </CardContent>
             </Card>
           </motion.div>
@@ -423,20 +187,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
           </CardHeader>
           <CardContent className='p-6'>
             <div className='space-y-3'>
-              {analysis?.insights?.map((insight, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className='flex items-start gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 to-transparent border border-border/50'
-                >
-                  <span className='flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-primary/10 text-primary'>
-                    💡
-                  </span>
-                  <p className='text-foreground/90 leading-relaxed'>{insight}</p>
-                </motion.div>
-              ))}
+              {renderMultiSourceInsights(analysis.insights)}
             </div>
           </CardContent>
         </Card>
