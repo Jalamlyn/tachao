@@ -135,6 +135,10 @@ const AIReportEditor: React.FC = () => {
         {} as Record<string, string>
       )
       setTemplateInfoMap(templateMap)
+      // 配置 AIReportAgent
+      AIReportAgent.configure({
+        templateInfoMap: templateMap
+      })
     } catch (error) {
       console.error("Error loading template info:", error)
       message.error("加载模板信息失败")
