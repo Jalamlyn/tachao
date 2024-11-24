@@ -1,4 +1,5 @@
 import { logger } from "@/utils/logger"
+import { mapVisualizationGuide } from "./map-visualization-guide"
 
 // 基础提示词部分
 const basePrompt = `你是一个智能报表分析助手，负责帮助用户对数据进行分析。
@@ -51,23 +52,6 @@ return {
 - 确保代码可以在 Function 构造函数中执行
 - 保持与现有代码的兼容性
 - 不要删除或修改现有功能
-`
-
-// 核心要求部分
-const coreRequirements = `
-核心要求：
-1. 数据验证和计算
-   - 所有数值必须通过数据计算得出，禁止硬编码
-   - 必须对数据进行验证和空值检查
-   - 使用可选链操作符（?.）访问可能不存在的属性
-   - 对深层属性进行存在性检查
-   - 提供默认值处理异常情况
-
-2. 流程分析规范
-   - nodeStatus: 必须使用状态描述字符串（如：'已完成'、'进行中'）
-   - processDuration: 必须使用时间描述字符串（如：'5天'、'2小时'）
-   - 所有统计数据必须通过实际数据计算
-   - 审批人和状态统计必须基于实际数据
 `
 
 // 多数据源基础配置要求
@@ -240,7 +224,7 @@ const generateSystemPrompt = ({ data, doc, existingConfig, templateInfoMap = {} 
 ${generateDataSourceInfo(data, templateInfoMap)}
 ${isMultiSource ? multiSourceBasicRequirements : ""}
 ${returnStructureRequirements}
-${coreRequirements}
+${mapVisualizationGuide}
 
 <doc>${doc}</doc>
 
