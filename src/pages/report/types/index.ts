@@ -15,8 +15,29 @@ export interface ReportActions {
 export interface ReportData {
   id: string
   title: string
-  templateId: string
+  templateIds: string[]  // 修改为数组支持多模板
   formData: any[]
   rawConfig: string
   [key: string]: any
+}
+
+export interface ReportDetail {
+  id: string
+  type: string
+  title: string
+  status: string
+  data: {
+    templateIds: string[]  // 支持多模板
+    rawConfig: string
+  }
+  versionCode: string
+  modifiedBy: string
+  createdAt: string
+  updatedAt: string
+  indexFields: {
+    templateIds: string[]  // 支持多模板
+    createdAt: string
+    updatedAt: string
+    [key: string]: any
+  }
 }

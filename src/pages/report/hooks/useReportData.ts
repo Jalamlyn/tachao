@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useMetadata } from '@/hooks/useMetadata'
 import { aiLog } from '@/utils/AITraceLogger'
-import { ReportData } from '@/pages/report/types'
+import { ReportData, ReportDetail } from '@/pages/report/types'
 
 export const useReportData = () => {
   const { getDetail: getReportDetail } = useMetadata("report", { public: true })
@@ -13,32 +13,38 @@ export const useReportData = () => {
 
     try {
       // 1. 加载报表详情
-      const reportDetail = await getReportDetail(reportId)
+      const reportDetail = await getReportDetail(reportId) as ReportDetail
       if (!reportDetail) {
         throw new Error("未找到报表数据")
       }
 
-      // 2. 获取模板ID
-      const templateId = reportDetail.data?.templateId
-      if (!templateId) {
+      // 2. 获取模板ID数组
+      const templateIds = reportDetail.data?.templateIds
+      if (!templateIds?.length) {
         throw new Error("未找到模板ID")
       }
 
-      // 3. 加载表单数据
+      // 3. 加载所有模板的表单数据
       const formDetails = await loadFormFilteredDetails(
-        (index) => index.indexFields?.templateId === templateId
+        (index) => templateIds.includes(index.indexFields?.templateId)
       )
 
       // 4. 处理表单数据
       const formData = formDetails.map((detail) => ({
         id: detail.id,
+        templateId: detail.indexFields?.templateId, // 保留模板ID用于数据源识别
         ...detail.data,
       }))
+
+      aiLog.log("[useReportData] Data loaded successfully", {
+        templateCount: templateIds.length,
+        formCount: formData.length
+      })
 
       return {
         id: reportDetail.id,
         title: reportDetail.title,
-        templateId: templateId,
+        templateIds: templateIds,
         formData: formData,
         rawConfig: reportDetail.data?.rawConfig,
       }
