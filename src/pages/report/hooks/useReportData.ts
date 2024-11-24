@@ -6,6 +6,7 @@ import { ReportData, ReportDetail } from '@/pages/report/types'
 export const useReportData = () => {
   const { getDetail: getReportDetail } = useMetadata("report", { public: true })
   const { loadFilteredDetails: loadFormFilteredDetails } = useMetadata("form", { public: true })
+  const { loadFilteredDetails: loadTemplateFilteredDetails } = useMetadata("template", { public: true })
 
   const loadReportData = useCallback(async (reportId: string): Promise<ReportData> => {
     const traceId = aiLog.start()
@@ -24,15 +25,24 @@ export const useReportData = () => {
         throw new Error("未找到模板ID")
       }
 
-      // 3. 加载所有模板的表单数据
+      // 3. 加载模板信息
+      const templateDetails = await loadTemplateFilteredDetails(
+        (index) => templateIds.includes(index.id)
+      )
+      const templateInfoMap = templateDetails.reduce((acc, template) => {
+        acc[template.id] = template.title
+        return acc
+      }, {} as Record<string, string>)
+
+      // 4. 加载所有模板的表单数据
       const formDetails = await loadFormFilteredDetails(
         (index) => templateIds.includes(index.indexFields?.templateId)
       )
 
-      // 4. 处理表单数据
+      // 5. 处理表单数据
       const formData = formDetails.map((detail) => ({
         id: detail.id,
-        templateId: detail.indexFields?.templateId, // 保留模板ID用于数据源识别
+        templateId: detail.indexFields?.templateId,
         ...detail.data,
       }))
 
@@ -47,12 +57,13 @@ export const useReportData = () => {
         templateIds: templateIds,
         formData: formData,
         rawConfig: reportDetail.data?.rawConfig,
+        templateInfoMap: templateInfoMap
       }
     } catch (error) {
       aiLog.log("[useReportData] Error loading report data", { error })
       throw error
     }
-  }, [getReportDetail, loadFormFilteredDetails])
+  }, [getReportDetail, loadFormFilteredDetails, loadTemplateFilteredDetails])
 
   return { loadReportData }
 }

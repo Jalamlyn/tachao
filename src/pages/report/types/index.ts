@@ -18,6 +18,7 @@ export interface ReportData {
   templateIds: string[]  // 修改为数组支持多模板
   formData: any[]
   rawConfig: string
+  templateInfoMap: Record<string, string>  // 添加模板信息映射
   [key: string]: any
 }
 

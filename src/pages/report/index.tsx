@@ -33,6 +33,11 @@ const Report: React.FC = () => {
           throw new Error("报表配置不存在")
         }
 
+        // 配置 AIReportAgent
+        AIReportAgent.configure({
+          templateInfoMap: data.templateInfoMap
+        })
+
         // 处理表单数据
         const processedData = processReportData(data.formData)
 
