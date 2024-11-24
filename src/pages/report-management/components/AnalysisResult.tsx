@@ -204,7 +204,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
                         <TableRow>
                           {table.columns.map((column, columnIndex) => (
                             <TableCell key={columnIndex} className="font-medium">
-                              {column.title}
+                              {column.label} {/* 修改这里：使用 label 而不是 key */}
                             </TableCell>
                           ))}
                         </TableRow>
