@@ -137,7 +137,7 @@ const AIReportEditor: React.FC = () => {
       setTemplateInfoMap(templateMap)
       // 配置 AIReportAgent
       AIReportAgent.configure({
-        templateInfoMap: templateMap
+        templateInfoMap: templateMap,
       })
     } catch (error) {
       console.error("Error loading template info:", error)
@@ -572,7 +572,12 @@ const AIReportEditor: React.FC = () => {
     }, {})
 
     return (
-      <Tabs selectedKey={activeDataTab} onSelectionChange={(key) => setActiveDataTab(key as string)}>
+      <Tabs
+        size='sm'
+        variant='underlined'
+        selectedKey={activeDataTab}
+        onSelectionChange={(key) => setActiveDataTab(key as string)}
+      >
         <Tab key='all' title='全部数据'>
           <DataTable
             columns={processedData.columns}
