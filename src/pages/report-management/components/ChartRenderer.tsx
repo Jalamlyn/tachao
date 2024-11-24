@@ -59,9 +59,46 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-const ChartRenderer: React.FC<{ chart: ChartData }> = ({ chart }) => {
+// 获取响应式高度
+const getResponsiveHeight = (type: string): number => {
+  const isMobile = window.innerWidth < 768
+  switch (type.toLowerCase()) {
+    case "pie":
+      return isMobile ? 300 : 400
+    case "bar":
+      return isMobile ? 250 : 350
+    case "line":
+    case "area":
+      return isMobile ? 200 : 300
+    case "radar":
+      return isMobile ? 250 : 350
+    case "scatter":
+      return isMobile ? 250 : 350
+    case "radialBar":
+      return isMobile ? 300 : 400
+    case "treemap":
+      return isMobile ? 250 : 350
+    case "funnel":
+      return isMobile ? 300 : 400
+    case "composed":
+      return isMobile ? 300 : 400
+    case "sankey":
+      return isMobile ? 350 : 450
+    default:
+      return isMobile ? 250 : 350
+  }
+}
+
+// 获取移动端字体大小
+const getMobileFontSize = (): number => {
+  return window.innerWidth < 768 ? 10 : 12
+}
+
+const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => {
   // 通用的图表容器样式
-  const containerStyle = "aspect-[16/9] w-full"
+  const containerStyle = "w-full"
+  const fontSize = getMobileFontSize()
+  const height = getResponsiveHeight(chart.type)
 
   // 数据格式转换函数
   const transformPieData = (data: { labels: string[]; values: number[] }) => {
@@ -72,182 +109,221 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = ({ chart }) => {
     }))
   }
 
-  switch (chart.type.toLowerCase()) {
-    case "pie":
-      const pieData = Array.isArray(chart.data) ? chart.data : transformPieData(chart.data)
-      return (
-        <ChartContainer config={chartConfig} className={containerStyle}>
+  const renderChart = () => {
+    switch (chart.type.toLowerCase()) {
+      case "pie":
+        const pieData = Array.isArray(chart.data) ? chart.data : transformPieData(chart.data)
+        return (
           <PieChart>
             <Pie
               data={pieData}
-              cx='50%'
-              cy='50%'
+              cx="50%"
+              cy="50%"
               labelLine={true}
               label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-              outerRadius={80}
-              fill='#8884d8'
-              dataKey='value'
+              outerRadius={height * 0.35}
+              fill="#8884d8"
+              dataKey="value"
             >
               {pieData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
               ))}
             </Pie>
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend />
+            <Legend wrapperStyle={{ fontSize }} />
           </PieChart>
-        </ChartContainer>
-      )
+        )
 
-    case "bar":
-      return (
-        <ChartContainer config={chartConfig} className={containerStyle}>
+      case "bar":
+        return (
           <BarChart data={chart.data}>
-            <CartesianGrid strokeDasharray='3 3' />
-            <XAxis dataKey='name' />
-            <YAxis />
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="name"
+              tick={{ fontSize }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+              interval={0}
+            />
+            <YAxis tick={{ fontSize }} />
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend />
-            <Bar dataKey='value' fill={`var(--color-values)`} name='数值'>
+            <Legend wrapperStyle={{ fontSize }} />
+            <Bar dataKey="value" fill={`var(--color-values)`} name="数值">
               {chart.data.map((entry: any, index: number) => (
                 <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
               ))}
             </Bar>
           </BarChart>
-        </ChartContainer>
-      )
+        )
 
-    case "line":
-      return (
-        <ChartContainer config={chartConfig} className={containerStyle}>
+      case "line":
+        return (
           <LineChart data={chart.data}>
-            <CartesianGrid strokeDasharray='3 3' />
-            <XAxis dataKey='name' />
-            <YAxis />
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="name"
+              tick={{ fontSize }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+              interval={0}
+            />
+            <YAxis tick={{ fontSize }} />
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend />
+            <Legend wrapperStyle={{ fontSize }} />
             <Line
-              type='monotone'
-              dataKey='value'
+              type="monotone"
+              dataKey="value"
               stroke={CHART_COLORS[0]}
-              name='数值'
+              name="数值"
               dot={{ fill: CHART_COLORS[0] }}
               activeDot={{ r: 8 }}
             />
           </LineChart>
-        </ChartContainer>
-      )
+        )
 
-    case "area":
-      return (
-        <ChartContainer config={chartConfig} className={containerStyle}>
+      case "area":
+        return (
           <AreaChart data={chart.data}>
-            <CartesianGrid strokeDasharray='3 3' />
-            <XAxis dataKey='name' />
-            <YAxis />
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="name"
+              tick={{ fontSize }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+              interval={0}
+            />
+            <YAxis tick={{ fontSize }} />
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend />
-            <Area type='monotone' dataKey='value' fill={CHART_COLORS[0]} stroke={CHART_COLORS[0]} name='数值' />
+            <Legend wrapperStyle={{ fontSize }} />
+            <Area
+              type="monotone"
+              dataKey="value"
+              fill={CHART_COLORS[0]}
+              stroke={CHART_COLORS[0]}
+              name="数值"
+            />
           </AreaChart>
-        </ChartContainer>
-      )
+        )
 
-    case "radar":
-      return (
-        <ChartContainer config={chartConfig} className={containerStyle}>
-          <RadarChart cx='50%' cy='50%' outerRadius='80%' data={chart.data}>
+      case "radar":
+        return (
+          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chart.data}>
             <PolarGrid />
-            <PolarAngleAxis dataKey='name' />
-            <PolarRadiusAxis angle={30} domain={[0, "auto"]} />
-            <Radar name='数值' dataKey='value' stroke={CHART_COLORS[0]} fill={CHART_COLORS[0]} fillOpacity={0.6} />
+            <PolarAngleAxis dataKey="name" tick={{ fontSize }} />
+            <PolarRadiusAxis angle={30} domain={[0, "auto"]} tick={{ fontSize }} />
+            <Radar
+              name="数值"
+              dataKey="value"
+              stroke={CHART_COLORS[0]}
+              fill={CHART_COLORS[0]}
+              fillOpacity={0.6}
+            />
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend />
+            <Legend wrapperStyle={{ fontSize }} />
           </RadarChart>
-        </ChartContainer>
-      )
+        )
 
-    case "scatter":
-      return (
-        <ChartContainer config={chartConfig} className={containerStyle}>
+      case "scatter":
+        return (
           <ScatterChart>
-            <CartesianGrid strokeDasharray='3 3' />
-            <XAxis dataKey='name' type='category' />
-            <YAxis dataKey='value' />
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" type="category" tick={{ fontSize }} />
+            <YAxis dataKey="value" tick={{ fontSize }} />
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend />
-            <Scatter name='数值' data={chart.data} fill={CHART_COLORS[0]} />
+            <Legend wrapperStyle={{ fontSize }} />
+            <Scatter name="数值" data={chart.data} fill={CHART_COLORS[0]} />
           </ScatterChart>
-        </ChartContainer>
-      )
+        )
 
-    case "radialBar":
-      return (
-        <ChartContainer config={chartConfig} className={containerStyle}>
-          <RadialBarChart cx='50%' cy='50%' innerRadius='10%' outerRadius='80%' barSize={10} data={chart.data}>
+      case "radialBar":
+        return (
+          <RadialBarChart
+            cx="50%"
+            cy="50%"
+            innerRadius="10%"
+            outerRadius="80%"
+            barSize={10}
+            data={chart.data}
+          >
             <RadialBar
               minAngle={15}
-              label={{ fill: "#666", position: "insideStart" }}
+              label={{ fill: "#666", position: "insideStart", fontSize }}
               background
               clockWise={true}
-              dataKey='value'
+              dataKey="value"
             >
               {chart.data.map((entry: any, index: number) => (
                 <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
               ))}
             </RadialBar>
-            <Legend iconSize={10} layout='vertical' verticalAlign='middle' align='right' />
+            <Legend
+              iconSize={10}
+              layout="vertical"
+              verticalAlign="middle"
+              align="right"
+              wrapperStyle={{ fontSize }}
+            />
             <Tooltip content={<ChartTooltipContent />} />
           </RadialBarChart>
-        </ChartContainer>
-      )
+        )
 
-    case "treemap":
-      return (
-        <ChartContainer config={chartConfig} className={containerStyle}>
-          <Treemap data={chart.data} dataKey='value' aspectRatio={4 / 3} stroke='#fff' fill={CHART_COLORS[0]}>
+      case "treemap":
+        return (
+          <Treemap
+            data={chart.data}
+            dataKey="value"
+            aspectRatio={4 / 3}
+            stroke="#fff"
+            fill={CHART_COLORS[0]}
+          >
             <Tooltip content={<ChartTooltipContent />} />
           </Treemap>
-        </ChartContainer>
-      )
+        )
 
-    case "funnel":
-      return (
-        <ChartContainer config={chartConfig} className={containerStyle}>
+      case "funnel":
+        return (
           <FunnelChart>
             <Tooltip content={<ChartTooltipContent />} />
-            <Funnel dataKey='value' data={chart.data} isAnimationActive>
+            <Funnel dataKey="value" data={chart.data} isAnimationActive>
               {chart.data.map((entry: any, index: number) => (
                 <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
               ))}
             </Funnel>
           </FunnelChart>
-        </ChartContainer>
-      )
+        )
 
-    case "composed":
-      return (
-        <ChartContainer config={chartConfig} className={containerStyle}>
+      case "composed":
+        return (
           <ComposedChart data={chart.data}>
-            <CartesianGrid strokeDasharray='3 3' />
-            <XAxis dataKey='name' />
-            <YAxis />
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="name"
+              tick={{ fontSize }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+              interval={0}
+            />
+            <YAxis tick={{ fontSize }} />
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend />
-            <Bar dataKey='value' fill={CHART_COLORS[0]} name='主要数值' />
-            <Line type='monotone' dataKey='secondaryValue' stroke={CHART_COLORS[1]} name='次要数值' />
+            <Legend wrapperStyle={{ fontSize }} />
+            <Bar dataKey="value" fill={CHART_COLORS[0]} name="主要数值" />
+            <Line type="monotone" dataKey="secondaryValue" stroke={CHART_COLORS[1]} name="次要数值" />
             <Area
-              type='monotone'
-              dataKey='thirdValue'
+              type="monotone"
+              dataKey="thirdValue"
               fill={CHART_COLORS[2]}
               stroke={CHART_COLORS[2]}
-              name='第三数值'
+              name="第三数值"
             />
           </ComposedChart>
-        </ChartContainer>
-      )
+        )
 
-    case "sankey":
-      return (
-        <ChartContainer config={chartConfig} className={containerStyle}>
+      case "sankey":
+        return (
           <Sankey
             data={chart.data}
             node={{
@@ -261,12 +337,22 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = ({ chart }) => {
           >
             <Tooltip content={<ChartTooltipContent />} />
           </Sankey>
-        </ChartContainer>
-      )
+        )
 
-    default:
-      return null
+      default:
+        return null
+    }
   }
-}
+
+  return (
+    <ChartContainer config={chartConfig} className={containerStyle}>
+      <ResponsiveContainer width="100%" height={height}>
+        {renderChart()}
+      </ResponsiveContainer>
+    </ChartContainer>
+  )
+})
+
+ChartRenderer.displayName = "ChartRenderer"
 
 export default ChartRenderer
