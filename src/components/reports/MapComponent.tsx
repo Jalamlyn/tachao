@@ -1,6 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as echarts from 'echarts';
 import 'echarts/extension/bmap/bmap';
+import { Button } from '@nextui-org/react';
+import { Icon } from '@iconify/react';
 
 interface MapComponentProps {
   address?: string;
@@ -8,12 +10,21 @@ interface MapComponentProps {
     name: string;
     address: string;
     value: number;
-    orderCount: number; // 新增订单数量字段
+    orderCount: number;
   }>;
+  options?: {
+    center?: [number, number];
+    zoom?: number;
+    style?: 'normal' | 'satellite' | 'dark';
+    clustering?: boolean;
+  };
+  style?: React.CSSProperties;
 }
 
-const MapComponent: React.FC<MapComponentProps> = ({ address, data }) => {
+const MapComponent: React.FC<MapComponentProps> = ({ address, data, options = {}, style }) => {
   const chartRef = useRef<HTMLDivElement>(null);
+  const [isClustering, setIsClustering] = useState(options.clustering || false);
+  const [mapStyle, setMapStyle] = useState(options.style || 'normal');
 
   useEffect(() => {
     if (chartRef.current) {
@@ -40,14 +51,151 @@ const MapComponent: React.FC<MapComponentProps> = ({ address, data }) => {
         document.body.removeChild(script);
       };
     }
-  }, [address, data]);
+  }, [address, data, isClustering, mapStyle]);
 
   const getChartOption = () => {
+    const mapStyles: Record<string, any> = {
+      normal: [
+        {
+          featureType: 'water',
+          elementType: 'all',
+          stylers: {
+            color: '#d1d1d1'
+          }
+        },
+        {
+          featureType: 'land',
+          elementType: 'all',
+          stylers: {
+            color: '#f3f3f3'
+          }
+        },
+        {
+          featureType: 'railway',
+          elementType: 'all',
+          stylers: {
+            visibility: 'off'
+          }
+        },
+        {
+          featureType: 'highway',
+          elementType: 'all',
+          stylers: {
+            color: '#fdfdfd'
+          }
+        },
+        {
+          featureType: 'highway',
+          elementType: 'labels',
+          stylers: {
+            visibility: 'off'
+          }
+        },
+        {
+          featureType: 'arterial',
+          elementType: 'geometry',
+          stylers: {
+            color: '#fefefe'
+          }
+        },
+        {
+          featureType: 'arterial',
+          elementType: 'geometry.fill',
+          stylers: {
+            color: '#fefefe'
+          }
+        },
+        {
+          featureType: 'poi',
+          elementType: 'all',
+          stylers: {
+            visibility: 'off'
+          }
+        },
+        {
+          featureType: 'green',
+          elementType: 'all',
+          stylers: {
+            visibility: 'off'
+          }
+        },
+        {
+          featureType: 'subway',
+          elementType: 'all',
+          stylers: {
+            visibility: 'off'
+          }
+        },
+        {
+          featureType: 'manmade',
+          elementType: 'all',
+          stylers: {
+            color: '#d1d1d1'
+          }
+        },
+        {
+          featureType: 'local',
+          elementType: 'all',
+          stylers: {
+            color: '#d1d1d1'
+          }
+        },
+        {
+          featureType: 'arterial',
+          elementType: 'labels',
+          stylers: {
+            visibility: 'off'
+          }
+        },
+        {
+          featureType: 'boundary',
+          elementType: 'all',
+          stylers: {
+            color: '#fefefe'
+          }
+        },
+        {
+          featureType: 'building',
+          elementType: 'all',
+          stylers: {
+            color: '#d1d1d1'
+          }
+        },
+        {
+          featureType: 'label',
+          elementType: 'labels.text.fill',
+          stylers: {
+            color: '#999999'
+          }
+        }
+      ],
+      satellite: [],
+      dark: [
+        {
+          featureType: 'all',
+          elementType: 'all',
+          stylers: {
+            color: '#1b1b1b'
+          }
+        },
+        {
+          featureType: 'water',
+          elementType: 'all',
+          stylers: {
+            color: '#141414'
+          }
+        }
+      ]
+    };
+
     const option: echarts.EChartsOption = {
       backgroundColor: 'transparent',
       title: {
         text: '委托加工厂商分布图',
-        left: 'center'
+        left: 'center',
+        textStyle: {
+          color: mapStyle === 'dark' ? '#fff' : '#333'
+        }
       },
       tooltip: {
         trigger: 'item',
@@ -57,124 +205,11 @@ const MapComponent: React.FC<MapComponentProps> = ({ address, data }) => {
         }
       },
       bmap: {
-        center: [104.114129, 37.550339],
-        zoom: 5,
+        center: options.center || [104.114129, 37.550339],
+        zoom: options.zoom || 5,
         roam: true,
         mapStyle: {
-          styleJson: [
-            {
-              featureType: 'water',
-              elementType: 'all',
-              stylers: {
-                color: '#d1d1d1'
-              }
-            },
-            {
-              featureType: 'land',
-              elementType: 'all',
-              stylers: {
-                color: '#f3f3f3'
-              }
-            },
-            {
-              featureType: 'railway',
-              elementType: 'all',
-              stylers: {
-                visibility: 'off'
-              }
-            },
-            {
-              featureType: 'highway',
-              elementType: 'all',
-              stylers: {
-                color: '#fdfdfd'
-              }
-            },
-            {
-              featureType: 'highway',
-              elementType: 'labels',
-              stylers: {
-                visibility: 'off'
-              }
-            },
-            {
-              featureType: 'arterial',
-              elementType: 'geometry',
-              stylers: {
-                color: '#fefefe'
-              }
-            },
-            {
-              featureType: 'arterial',
-              elementType: 'geometry.fill',
-              stylers: {
-                color: '#fefefe'
-              }
-            },
-            {
-              featureType: 'poi',
-              elementType: 'all',
-              stylers: {
-                visibility: 'off'
-              }
-            },
-            {
-              featureType: 'green',
-              elementType: 'all',
-              stylers: {
-                visibility: 'off'
-              }
-            },
-            {
-              featureType: 'subway',
-              elementType: 'all',
-              stylers: {
-                visibility: 'off'
-              }
-            },
-            {
-              featureType: 'manmade',
-              elementType: 'all',
-              stylers: {
-                color: '#d1d1d1'
-              }
-            },
-            {
-              featureType: 'local',
-              elementType: 'all',
-              stylers: {
-                color: '#d1d1d1'
-              }
-            },
-            {
-              featureType: 'arterial',
-              elementType: 'labels',
-              stylers: {
-                visibility: 'off'
-              }
-            },
-            {
-              featureType: 'boundary',
-              elementType: 'all',
-              stylers: {
-                color: '#fefefe'
-              }
-            },
-            {
-              featureType: 'building',
-              elementType: 'all',
-              stylers: {
-                color: '#d1d1d1'
-              }
-            },
-            {
-              featureType: 'label',
-              elementType: 'labels.text.fill',
-              stylers: {
-                color: '#999999'
-              }
-            }
-          ]
+          styleJson: mapStyles[mapStyle]
         }
       },
       series: [
@@ -184,16 +219,15 @@ const MapComponent: React.FC<MapComponentProps> = ({ address, data }) => {
           coordinateSystem: 'bmap',
           data: [],
           symbolSize: (val: any) => {
-            return Math.sqrt(val[3]) * 5; // 使用订单数量来决定圆圈大小
+            return isClustering ? Math.sqrt(val[3]) * 3 : Math.sqrt(val[3]) * 5;
           },
           itemStyle: {
             color: (params: any) => {
-              // 使用金额来决定颜色深度
               const value = params.data.value[2];
-              const maxValue = Math.max(...data!.map(item => item.value));
-              const minValue = Math.min(...data!.map(item => item.value));
+              const maxValue = Math.max(...(data || []).map(item => item.value));
+              const minValue = Math.min(...(data || []).map(item => item.value));
               const normalizedValue = (value - minValue) / (maxValue - minValue);
-              return `rgba(255, 0, 0, ${0.2 + normalizedValue * 0.8})`; // 红色，透明度从0.2到1
+              return `rgba(255, 0, 0, ${0.2 + normalizedValue * 0.8})`;
             }
           },
           encode: {
@@ -229,7 +263,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ address, data }) => {
             {
               type: 'scatter',
               coordinateSystem: 'bmap',
-              data: [[point.lng, point.lat, 100, 1]], // 添加默认订单数量
+              data: [[point.lng, point.lat, 100, 1]],
               symbolSize: 20,
               itemStyle: {
                 color: 'red'
@@ -270,7 +304,29 @@ const MapComponent: React.FC<MapComponentProps> = ({ address, data }) => {
     });
   };
 
-  return <div ref={chartRef} style={{ width: '100%', height: '400px' }} />;
+  return (
+    <div className="relative">
+      <div ref={chartRef} style={{ width: '100%', height: '400px', ...style }} />
+      <div className="absolute top-2 right-2 flex gap-2">
+        <Button
+          size="sm"
+          color={isClustering ? "primary" : "default"}
+          onClick={() => setIsClustering(!isClustering)}
+          startContent={<Icon icon="mdi:cluster" className="w-4 h-4" />}
+        >
+          {isClustering ? '取消聚合' : '聚合显示'}
+        </Button>
+        <Button
+          size="sm"
+          color={mapStyle === 'dark' ? "primary" : "default"}
+          onClick={() => setMapStyle(mapStyle === 'normal' ? 'dark' : 'normal')}
+          startContent={<Icon icon={mapStyle === 'dark' ? "mdi:weather-night" : "mdi:weather-sunny"} className="w-4 h-4" />}
+        >
+          {mapStyle === 'dark' ? '亮色模式' : '暗色模式'}
+        </Button>
+      </div>
+    </div>
+  );
 };
 
 export default MapComponent;

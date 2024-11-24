@@ -12,6 +12,19 @@ export interface AnalysisData {
   }
 }
 
+export interface MapOptions {
+  center?: [number, number]
+  zoom?: number
+  style?: 'normal' | 'satellite' | 'dark'
+  clustering?: boolean
+}
+
+export interface MapMarkerStyle {
+  color?: string
+  size?: number
+  icon?: string
+}
+
 export interface MapChartData {
   type: 'map'
   title: string
@@ -21,6 +34,8 @@ export interface MapChartData {
     value: number
     orderCount?: number
   }>
+  options?: MapOptions
+  style?: MapMarkerStyle
 }
 
 export interface AnalysisResult {
@@ -50,6 +65,8 @@ export interface AnalysisResult {
         sourceId?: string
         sourceTitle?: string
       }> | MapChartData['data']
+      options?: MapOptions
+      style?: MapMarkerStyle
     }>
     insights: Array<{
       content: string
