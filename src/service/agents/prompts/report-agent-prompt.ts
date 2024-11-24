@@ -70,7 +70,7 @@ const coreRequirements = `
    - 审批人和状态统计必须基于实际数据
 `
 
-// 新增: 多数据源基础配置要求
+// 多数据源基础配置要求
 const multiSourceBasicRequirements = `
 生成的分析结果必须包含:
 
@@ -124,9 +124,65 @@ const multiSourceBasicRequirements = `
 }
 `
 
-// 新增: 数据分组和示例数据获取函数
-function getGroupedSampleData(data: any[]) {
-  // 按模板ID分组
+// 生成数据结构描述
+function generateDataStructureDescription(groups: Record<string, any[]>) {
+  return Object.entries(groups).map(([templateId, items]) => {
+    const firstItem = items[0];
+    const structure = Object.entries(firstItem).reduce((acc, [key, value]) => {
+      acc[key] = typeof value;
+      return acc;
+    }, {} as Record<string, string>);
+    
+    return `
+模板 ${templateId} 的数据字段和类型:
+${JSON.stringify(structure, null, 2)}
+    `;
+  }).join('\n');
+}
+
+// 生成实际数据展示
+function generateActualData(groups: Record<string, any[]>, templateInfoMap: Record<string, string>) {
+  return Object.entries(groups).map(([templateId, items]) => {
+    const templateTitle = templateInfoMap[templateId] || `模板 ${templateId}`;
+    const actualData = items.slice(0, 10);
+    
+    return `
+${templateTitle} (模板ID: ${templateId}) 的数据:
+${JSON.stringify(actualData, null, 2)}
+    `;
+  }).join('\n');
+}
+
+// 生成数据统计信息
+function generateDataStatistics(groups: Record<string, any[]>) {
+  return Object.entries(groups).map(([templateId, items]) => {
+    const numericColumns = Object.entries(items[0]).filter(([_, value]) => 
+      typeof value === 'number'
+    ).map(([key]) => key);
+
+    const statistics = numericColumns.map(column => {
+      const values = items.map(item => item[column]).filter(v => !isNaN(v));
+      const avg = values.reduce((a, b) => a + b, 0) / values.length;
+      const max = Math.max(...values);
+      const min = Math.min(...values);
+      
+      return `
+- ${column}:
+  平均值: ${avg.toFixed(2)}
+  最大值: ${max}
+  最小值: ${min}
+      `;
+    }).join('\n');
+
+    return `
+模板 ${templateId} 数值字段统计:
+${statistics}
+    `;
+  }).join('\n');
+}
+
+// 生成数据源信息
+function generateDataSourceInfo(data: any[], templateInfoMap: Record<string, string>): string {
   const groups = data.reduce((acc, item) => {
     const templateId = item._sourceTemplateId;
     if (!acc[templateId]) {
@@ -136,44 +192,36 @@ function getGroupedSampleData(data: any[]) {
     return acc;
   }, {} as Record<string, any[]>);
 
-  // 每组取前10条
-  return Object.entries(groups).reduce((acc, [templateId, items]) => {
-    acc[templateId] = items.slice(0, 10);
-    return acc;
-  }, {} as Record<string, any[]>);
-}
-
-// 生成数据源信息
-function generateDataSourceInfo(data: any[], templateInfoMap: Record<string, string>): string {
-  const sourceGroups = Object.entries(templateInfoMap).map(([templateId, title]) => ({
-    templateId,
-    title,
-    count: data.filter((item) => item._sourceTemplateId === templateId).length,
-  }))
-
-  // 获取分组后的示例数据
-  const sampleData = getGroupedSampleData(data);
-  
   return `
-数据源信息:
-${sourceGroups.map((group) => `- ${group.title} (${group.count} 条数据)`).join("\n")}
-
-每个数据源的示例数据(前10条):
-${Object.entries(sampleData)
-  .map(
-    ([templateId, items]) => `
-${templateInfoMap[templateId] || `模板 ${templateId}`} 的示例数据:
-${JSON.stringify(items, null, 2)}
-`
-  )
-  .join("\n")}
+数据源概览:
+${Object.entries(groups).map(([templateId, items]) => 
+  `- ${templateInfoMap[templateId] || `模板 ${templateId}`} (${items.length} 条数据)`
+).join('\n')}
 
 数据结构说明:
-1. 每条数据都包含以下标识字段:
-   - _sourceTemplateId: 数据来源的模板ID
-   - _sourceTemplateName: 数据来源的模板名称
-2. 合并后的数据总行数: ${data.length}
-`
+${generateDataStructureDescription(groups)}
+
+数据统计信息:
+${generateDataStatistics(groups)}
+
+实际数据:
+${generateActualData(groups, templateInfoMap)}
+
+数据访问说明:
+1. 获取特定模板的数据:
+   data.groups[templateId].data
+
+2. 获取模板信息:
+   data.groups[templateId].title
+
+3. 获取所有模板ID:
+   Object.keys(data.groups)
+
+4. 数据字段说明:
+   - _sourceTemplateId: string (数据来源模板ID)
+   - _sourceTemplateName: string (数据来源模板名称)
+   其他字段类型请参考上方数据结构说明
+`;
 }
 
 // 系统提示词选项接口
