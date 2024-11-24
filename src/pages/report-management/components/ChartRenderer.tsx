@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useMemo } from "react"
 import {
   Bar,
   BarChart,
@@ -59,46 +59,9 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-// 获取响应式高度
-const getResponsiveHeight = (type: string): number => {
-  const isMobile = window.innerWidth < 768
-  switch (type.toLowerCase()) {
-    case "pie":
-      return isMobile ? 300 : 400
-    case "bar":
-      return isMobile ? 250 : 350
-    case "line":
-    case "area":
-      return isMobile ? 200 : 300
-    case "radar":
-      return isMobile ? 250 : 350
-    case "scatter":
-      return isMobile ? 250 : 350
-    case "radialBar":
-      return isMobile ? 300 : 400
-    case "treemap":
-      return isMobile ? 250 : 350
-    case "funnel":
-      return isMobile ? 300 : 400
-    case "composed":
-      return isMobile ? 300 : 400
-    case "sankey":
-      return isMobile ? 350 : 450
-    default:
-      return isMobile ? 250 : 350
-  }
-}
-
-// 获取移动端字体大小
-const getMobileFontSize = (): number => {
-  return window.innerWidth < 768 ? 10 : 12
-}
-
 const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => {
-  // 通用的图表容器样式
-  const containerStyle = "w-full"
-  const fontSize = getMobileFontSize()
-  const height = getResponsiveHeight(chart.type)
+  const isMobile = useMemo(() => window.innerWidth < 768, [])
+  const fontSize = useMemo(() => isMobile ? 10 : 12, [isMobile])
 
   // 数据格式转换函数
   const transformPieData = (data: { labels: string[]; values: number[] }) => {
@@ -114,29 +77,43 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
       case "pie":
         const pieData = Array.isArray(chart.data) ? chart.data : transformPieData(chart.data)
         return (
-          <PieChart>
+          <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
             <Pie
               data={pieData}
               cx="50%"
               cy="50%"
-              labelLine={true}
-              label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-              outerRadius={height * 0.35}
-              fill="#8884d8"
+              innerRadius={0}
+              outerRadius="80%"
+              paddingAngle={2}
+              labelLine={{ strokeWidth: 1 }}
+              label={({ name, percent }) => 
+                isMobile 
+                  ? `${(percent * 100).toFixed(0)}%`
+                  : `${name}: ${(percent * 100).toFixed(0)}%`
+              }
               dataKey="value"
             >
               {pieData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
               ))}
             </Pie>
+            <Legend
+              layout={isMobile ? "horizontal" : "vertical"}
+              align="center"
+              verticalAlign="bottom"
+              wrapperStyle={{
+                fontSize,
+                padding: 10,
+                maxWidth: "100%",
+              }}
+            />
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend wrapperStyle={{ fontSize }} />
           </PieChart>
         )
 
       case "bar":
         return (
-          <BarChart data={chart.data}>
+          <BarChart data={chart.data} margin={{ top: 20, right: 20, bottom: 60, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="name"
@@ -148,8 +125,12 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
             />
             <YAxis tick={{ fontSize }} />
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend wrapperStyle={{ fontSize }} />
-            <Bar dataKey="value" fill={`var(--color-values)`} name="数值">
+            <Legend
+              wrapperStyle={{ fontSize, padding: 10 }}
+              verticalAlign="top"
+              height={36}
+            />
+            <Bar dataKey="value" fill={`var(--color-values)`} name="数值" maxBarSize={60}>
               {chart.data.map((entry: any, index: number) => (
                 <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
               ))}
@@ -159,7 +140,7 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
 
       case "line":
         return (
-          <LineChart data={chart.data}>
+          <LineChart data={chart.data} margin={{ top: 20, right: 20, bottom: 60, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="name"
@@ -171,7 +152,11 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
             />
             <YAxis tick={{ fontSize }} />
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend wrapperStyle={{ fontSize }} />
+            <Legend
+              wrapperStyle={{ fontSize, padding: 10 }}
+              verticalAlign="top"
+              height={36}
+            />
             <Line
               type="monotone"
               dataKey="value"
@@ -185,7 +170,7 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
 
       case "area":
         return (
-          <AreaChart data={chart.data}>
+          <AreaChart data={chart.data} margin={{ top: 20, right: 20, bottom: 60, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="name"
@@ -197,7 +182,11 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
             />
             <YAxis tick={{ fontSize }} />
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend wrapperStyle={{ fontSize }} />
+            <Legend
+              wrapperStyle={{ fontSize, padding: 10 }}
+              verticalAlign="top"
+              height={36}
+            />
             <Area
               type="monotone"
               dataKey="value"
@@ -210,7 +199,13 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
 
       case "radar":
         return (
-          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chart.data}>
+          <RadarChart
+            cx="50%"
+            cy="50%"
+            outerRadius="80%"
+            data={chart.data}
+            margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+          >
             <PolarGrid />
             <PolarAngleAxis dataKey="name" tick={{ fontSize }} />
             <PolarRadiusAxis angle={30} domain={[0, "auto"]} tick={{ fontSize }} />
@@ -222,18 +217,25 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
               fillOpacity={0.6}
             />
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend wrapperStyle={{ fontSize }} />
+            <Legend
+              wrapperStyle={{ fontSize, padding: 10 }}
+              verticalAlign="bottom"
+            />
           </RadarChart>
         )
 
       case "scatter":
         return (
-          <ScatterChart>
+          <ScatterChart margin={{ top: 20, right: 20, bottom: 60, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" type="category" tick={{ fontSize }} />
             <YAxis dataKey="value" tick={{ fontSize }} />
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend wrapperStyle={{ fontSize }} />
+            <Legend
+              wrapperStyle={{ fontSize, padding: 10 }}
+              verticalAlign="top"
+              height={36}
+            />
             <Scatter name="数值" data={chart.data} fill={CHART_COLORS[0]} />
           </ScatterChart>
         )
@@ -247,6 +249,7 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
             outerRadius="80%"
             barSize={10}
             data={chart.data}
+            margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
           >
             <RadialBar
               minAngle={15}
@@ -264,7 +267,7 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
               layout="vertical"
               verticalAlign="middle"
               align="right"
-              wrapperStyle={{ fontSize }}
+              wrapperStyle={{ fontSize, padding: 10 }}
             />
             <Tooltip content={<ChartTooltipContent />} />
           </RadialBarChart>
@@ -285,7 +288,7 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
 
       case "funnel":
         return (
-          <FunnelChart>
+          <FunnelChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
             <Tooltip content={<ChartTooltipContent />} />
             <Funnel dataKey="value" data={chart.data} isAnimationActive>
               {chart.data.map((entry: any, index: number) => (
@@ -297,7 +300,7 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
 
       case "composed":
         return (
-          <ComposedChart data={chart.data}>
+          <ComposedChart data={chart.data} margin={{ top: 20, right: 20, bottom: 60, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="name"
@@ -309,8 +312,12 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
             />
             <YAxis tick={{ fontSize }} />
             <Tooltip content={<ChartTooltipContent />} />
-            <Legend wrapperStyle={{ fontSize }} />
-            <Bar dataKey="value" fill={CHART_COLORS[0]} name="主要数值" />
+            <Legend
+              wrapperStyle={{ fontSize, padding: 10 }}
+              verticalAlign="top"
+              height={36}
+            />
+            <Bar dataKey="value" fill={CHART_COLORS[0]} name="主要数值" maxBarSize={60} />
             <Line type="monotone" dataKey="secondaryValue" stroke={CHART_COLORS[1]} name="次要数值" />
             <Area
               type="monotone"
@@ -334,6 +341,7 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
               stroke: CHART_COLORS[1],
             }}
             nodePadding={50}
+            margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
           >
             <Tooltip content={<ChartTooltipContent />} />
           </Sankey>
@@ -344,11 +352,28 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
     }
   }
 
+  const getChartHeight = () => {
+    const baseHeight = isMobile ? 300 : 400
+    switch (chart.type.toLowerCase()) {
+      case "pie":
+        return baseHeight
+      case "bar":
+      case "line":
+      case "area":
+      case "composed":
+        return baseHeight + 60 // 额外空间用于旋转的 x 轴标签
+      default:
+        return baseHeight
+    }
+  }
+
   return (
-    <ChartContainer config={chartConfig} className={containerStyle}>
-      <ResponsiveContainer width="100%" height={height}>
-        {renderChart()}
-      </ResponsiveContainer>
+    <ChartContainer config={chartConfig} className="w-full">
+      <div style={{ width: '100%', height: getChartHeight() }}>
+        <ResponsiveContainer width="100%" height="100%" aspect={undefined}>
+          {renderChart()}
+        </ResponsiveContainer>
+      </div>
     </ChartContainer>
   )
 })

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { motion, AnimatePresence } from "framer-motion"
 import ChartRenderer from "./ChartRenderer"
@@ -7,7 +7,7 @@ import { cn } from "@/theme/cn"
 import { Tabs, Tab, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
-import { MultiSourceAnalysisResult, MultiSourceSummaryItem } from "../types"
+import { MultiSourceAnalysisResult } from "../types"
 
 // 空状态组件
 const EmptyState: React.FC = () => {
@@ -47,6 +47,8 @@ interface AnalysisResultProps {
 }
 
 const AnalysisResult: React.FC<AnalysisResultProps> = React.memo(({ analysis }) => {
+  const isMobile = useMemo(() => window.innerWidth < 768, [])
+
   if (!analysis) {
     return <EmptyState />
   }
@@ -131,15 +133,17 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo(({ analysis }) 
                 <Tabs>
                   {charts.map((chart, index) => (
                     <Tab key={index} title={chart.title}>
-                      <div className="min-h-[300px] md:min-h-[400px] p-2 md:p-4">
+                      <div className="w-full" style={{ minHeight: isMobile ? 360 : 460 }}>
                         <ChartRenderer chart={chart} />
                       </div>
                     </Tab>
                   ))}
                 </Tabs>
-                <div className="md:hidden text-xs text-center text-gray-500 mt-2">
-                  左右滑动查看更多图表
-                </div>
+                {isMobile && charts.length > 1 && (
+                  <div className="text-xs text-center text-gray-500 mt-2">
+                    左右滑动查看更多图表
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -155,39 +159,41 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo(({ analysis }) 
                 <CardTitle className="text-lg md:text-xl font-bold">数据明细</CardTitle>
                 <CardDescription className="text-sm md:text-base">详细数据列表</CardDescription>
               </CardHeader>
-              <CardContent className="p-3 md:p-6 overflow-x-auto">
+              <CardContent className="p-3 md:p-6">
                 {tables.map((table, tableIndex) => (
                   <div key={tableIndex} className="space-y-4">
                     <h3 className="text-base md:text-lg font-semibold">{table.title}</h3>
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            {table.columns.map((column, columnIndex) => (
-                              <TableCell
-                                key={columnIndex}
-                                className="font-medium whitespace-nowrap text-sm md:text-base"
-                              >
-                                {column.label}
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {table.data.map((row, rowIndex) => (
-                            <TableRow key={rowIndex}>
+                    <div className="overflow-x-auto -mx-3 md:-mx-6">
+                      <div className="inline-block min-w-full align-middle p-3 md:p-6">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
                               {table.columns.map((column, columnIndex) => (
                                 <TableCell
                                   key={columnIndex}
-                                  className="whitespace-nowrap text-sm md:text-base"
+                                  className="font-medium whitespace-nowrap text-sm md:text-base"
                                 >
-                                  {row[column.key]}
+                                  {column.label}
                                 </TableCell>
                               ))}
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                          </TableHeader>
+                          <TableBody>
+                            {table.data.map((row, rowIndex) => (
+                              <TableRow key={rowIndex}>
+                                {table.columns.map((column, columnIndex) => (
+                                  <TableCell
+                                    key={columnIndex}
+                                    className="whitespace-nowrap text-sm md:text-base"
+                                  >
+                                    {row[column.key]}
+                                  </TableCell>
+                                ))}
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
                   </div>
                 ))}
