@@ -4,7 +4,7 @@ import { formulaService } from "@/services/formulaService"
 import { markdown as doc } from "@/pages/report-management/components/AnalysisResult.md"
 import generateSystemPrompt from "@/service/agents/prompts/report-agent-prompt"
 import { ProcessedData } from "@/pages/report-management/utils/processReportData"
-import { AnalysisData, AnalysisResult } from "@/service/agents/types/report-agent.types"
+import { AnalysisDataGroup, AnalysisData, AnalysisResult } from "./types/report-agent.types"
 
 export type ReportColumn = {
   header: string
@@ -32,26 +32,29 @@ interface AIReportAgentConfig {
 
 function prepareAnalysisData(data: ProcessedData, templateInfoMap: Record<string, string>): AnalysisData {
   // 按模板ID分组
-  const groups = data.originalData.reduce((acc, item) => {
-    const templateId = item._sourceTemplateId;
-    if (!acc[templateId]) {
-      acc[templateId] = {
-        id: templateId,
-        title: templateInfoMap[templateId] || `模板 ${templateId}`,
-        data: []
-      };
-    }
-    acc[templateId].data.push(item);
-    return acc;
-  }, {} as Record<string, AnalysisDataGroup>);
+  const groups = data.originalData.reduce(
+    (acc, item) => {
+      const templateId = item._sourceTemplateId
+      if (!acc[templateId]) {
+        acc[templateId] = {
+          id: templateId,
+          title: templateInfoMap[templateId] || `模板 ${templateId}`,
+          data: [],
+        }
+      }
+      acc[templateId].data.push(item)
+      return acc
+    },
+    {} as Record<string, AnalysisDataGroup>
+  )
 
   return {
     groups,
     metadata: {
       templateInfoMap,
-      columns: data.columns
-    }
-  };
+      columns: data.columns,
+    },
+  }
 }
 
 export class AIReportAgent {
@@ -139,17 +142,17 @@ export class AIReportAgent {
   public async analyzeData(data: ProcessedData, rawConfig: string): Promise<AnalysisResult["analysis"]> {
     try {
       console.log("[AIReportAgent] Analyzing data with rawConfig")
-      
+
       // 转换数据结构
       const analysisData = prepareAnalysisData(data, this._templateInfoMap)
-      
+
       // 执行分析
       const result = await this.executeCode(rawConfig, analysisData)
-      
+
       if (!result || !result.type || !result.data) {
         throw new Error("Invalid analysis result format")
       }
-      
+
       console.log("[AIReportAgent] Data analysis completed successfully")
       return result.analysis
     } catch (error) {

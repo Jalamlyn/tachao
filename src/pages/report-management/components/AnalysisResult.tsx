@@ -161,21 +161,72 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis }) => {
         </Card>
       </motion.div>
 
-      {/* 图表展示 */}
+      {/* 图表展示 - 使用 Tabs */}
       <AnimatePresence>
-        {analysis.charts?.map((chart, index) => (
-          <motion.div key={index} variants={itemVariants} layout>
+        {analysis.charts && analysis.charts.length > 0 && (
+          <motion.div variants={itemVariants} layout>
             <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
               <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
-                <CardTitle className='text-xl font-bold'>{chart.title}</CardTitle>
-                <CardDescription>数据可视化分析</CardDescription>
+                <CardTitle className='text-xl font-bold'>数据可视化</CardTitle>
+                <CardDescription>图表分析</CardDescription>
               </CardHeader>
-              <CardContent className='min-h-[400px] p-6'>
-                {renderMultiSourceChart(chart)}
+              <CardContent className='p-6'>
+                <Tabs>
+                  {analysis.charts.map((chart, index) => (
+                    <Tab key={index} title={chart.title}>
+                      <div className='min-h-[400px] p-4'>
+                        {renderMultiSourceChart(chart)}
+                      </div>
+                    </Tab>
+                  ))}
+                </Tabs>
               </CardContent>
             </Card>
           </motion.div>
-        ))}
+        )}
+      </AnimatePresence>
+
+      {/* 表格展示 */}
+      <AnimatePresence>
+        {analysis.tables && analysis.tables.length > 0 && (
+          <motion.div variants={itemVariants} layout>
+            <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
+              <CardHeader className='bg-gradient-to-r from-primary/10 to-primary/5'>
+                <CardTitle className='text-xl font-bold'>数据明细</CardTitle>
+                <CardDescription>详细数据列表</CardDescription>
+              </CardHeader>
+              <CardContent className='p-6'>
+                {analysis.tables.map((table, tableIndex) => (
+                  <div key={tableIndex} className="space-y-4">
+                    <h3 className="text-lg font-semibold">{table.title}</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          {table.columns.map((column, columnIndex) => (
+                            <TableCell key={columnIndex} className="font-medium">
+                              {column.title}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {table.data.map((row, rowIndex) => (
+                          <TableRow key={rowIndex}>
+                            {table.columns.map((column, columnIndex) => (
+                              <TableCell key={columnIndex}>
+                                {row[column.key]}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* 数据洞察 */}
