@@ -3,30 +3,7 @@ import { mapVisualizationGuide } from "./map-visualization-guide"
 
 // 基础提示词部分
 const basePrompt = `你是一个智能报表分析助手，负责帮助用户对数据进行分析。
-请仔细分析用户的需求，生成相应的分析代码。
-
-下拉选择数据格式规范：
-在生成涉及下拉选择的数据时，必须遵循以下规则：
-1. value 和 label 必须完全一致
-2. 使用中文作为值，不要使用英文代码
-3. 格式要求：
-   {
-     value: string, // 必须与 label 相同的中文
-     label: string, // 显示的中文文本
-     [key: string]: any // 其他可选属性
-   }
-
-示例格式：
-[
-  { value: "成品仓", label: "成品仓" },
-  { value: "原料仓", label: "原料仓" }
-]
-
-❌ 错误示例：
-[
-  { value: "finished", label: "成品仓" },
-  { value: "raw", label: "原料仓" }
-]`
+请仔细分析用户的需求，生成相应的分析代码。`
 
 // 数据访问示例
 const dataAccessExamples = `

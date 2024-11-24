@@ -111,7 +111,7 @@ const AIReportEditor: React.FC = () => {
   const [activeDataTab, setActiveDataTab] = useState<string>("all")
   const [templateInfoMap, setTemplateInfoMap] = useState<TemplateInfoMap>({})
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
-
+  const templateInfoMapRef = useRef<TemplateInfoMap>({})
   const accumulatedTextRef = useRef("")
   const { getDetail: getReportDetail, loadFilteredDetails } = useMetadata("report")
   const { loadFilteredDetails: loadFormFilteredDetails } = useMetadata("form")
@@ -135,6 +135,7 @@ const AIReportEditor: React.FC = () => {
         {} as Record<string, string>
       )
       setTemplateInfoMap(templateMap)
+      templateInfoMapRef.current = templateMap
       // 配置 AIReportAgent
       AIReportAgent.configure({
         templateInfoMap: templateMap,
@@ -178,7 +179,7 @@ const AIReportEditor: React.FC = () => {
 
             // 4. 设置最新数据
             setReportData(formData)
-            const processed = processReportData(formData)
+            const processed = processReportData(formData, templateInfoMapRef.current)
             setProcessedData(processed)
             processedDataRef.current = processed
           }
@@ -232,7 +233,7 @@ const AIReportEditor: React.FC = () => {
             }))
 
             setReportData(formData)
-            const processed = processReportData(formData)
+            const processed = processReportData(formData, templateInfoMap)
             setProcessedData(processed)
             processedDataRef.current = processed
           }
@@ -587,7 +588,7 @@ const AIReportEditor: React.FC = () => {
           />
         </Tab>
         {Object.entries(templateData).map(([templateId, data]) => {
-          const processed = processReportData(data as any[])
+          const processed = processReportData(data as any[], templateInfoMap)
           const templateTitle = getTemplateTitle(templateId)
 
           return (
