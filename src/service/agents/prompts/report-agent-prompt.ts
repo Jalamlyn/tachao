@@ -54,14 +54,14 @@ return {
 - 不要删除或修改现有功能
 `
 
-// 多数据源基础配置要求
-const multiSourceBasicRequirements = `
+// 数据源基础配置要求
+const dataSourceRequirements = `
 生成的分析结果必须包含:
 
 1. 数据源基础配置
 分析时请注意:
 - 每条数据都包含 _sourceTemplateId 和 _sourceTemplateName 字段标识数据来源
-- 需要对不同来源的数据进行分组统计
+- 数据按模板ID分组存储在 data.groups 中
 - 在统计结果中标注数据来源
 
 返回结果必须符合以下结构:
@@ -218,11 +218,9 @@ interface SystemPromptOptions {
 
 // 生成系统提示词
 const generateSystemPrompt = ({ data, doc, existingConfig, templateInfoMap = {} }: SystemPromptOptions): string => {
-  const isMultiSource = Object.keys(templateInfoMap).length > 1
-
   return `${basePrompt}
 ${generateDataSourceInfo(data, templateInfoMap)}
-${isMultiSource ? multiSourceBasicRequirements : ""}
+${dataSourceRequirements}
 ${returnStructureRequirements}
 ${mapVisualizationGuide}
 
@@ -242,7 +240,7 @@ ${existingConfig}
 3. 确保与现有配置的兼容性
 4. 保留有效的数据分析方法
 5. 优化或扩展现有的图表和洞察
-${isMultiSource ? "6. 确保包含完整的多数据源支持配置" : ""}
+6. 确保包含完整的数据源支持配置
 `
     : ""
 }
