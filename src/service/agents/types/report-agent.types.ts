@@ -12,6 +12,17 @@ export interface AnalysisData {
   }
 }
 
+export interface MapChartData {
+  type: 'map'
+  title: string
+  data: Array<{
+    name: string
+    address: string
+    value: number
+    orderCount?: number
+  }>
+}
+
 export interface AnalysisResult {
   type: "analyze"
   data: AnalysisData
@@ -38,7 +49,7 @@ export interface AnalysisResult {
         value: number
         sourceId?: string
         sourceTitle?: string
-      }>
+      }> | MapChartData['data']
     }>
     insights: Array<{
       content: string

@@ -31,6 +31,7 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import { ChartConfig, ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
+import MapComponent from "@/components/reports/MapComponent"
 
 // 更新图表配色方案，使用 CSS 变量
 const CHART_COLORS = [
@@ -72,8 +73,33 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
     }))
   }
 
+  const getChartHeight = () => {
+    const baseHeight = isMobile ? 300 : 400
+    switch (chart.type.toLowerCase()) {
+      case "pie":
+        return baseHeight
+      case "bar":
+      case "line":
+      case "area":
+      case "composed":
+        return baseHeight + 60 // 额外空间用于旋转的 x 轴标签
+      case "map":
+        return baseHeight + 100 // 地图需要更大的显示空间
+      default:
+        return baseHeight
+    }
+  }
+
   const renderChart = () => {
     switch (chart.type.toLowerCase()) {
+      case "map":
+        return (
+          <MapComponent
+            data={chart.data}
+            style={{ width: '100%', height: getChartHeight() }}
+          />
+        )
+
       case "pie":
         const pieData = Array.isArray(chart.data) ? chart.data : transformPieData(chart.data)
         return (
@@ -349,21 +375,6 @@ const ChartRenderer: React.FC<{ chart: ChartData }> = React.memo(({ chart }) => 
 
       default:
         return null
-    }
-  }
-
-  const getChartHeight = () => {
-    const baseHeight = isMobile ? 300 : 400
-    switch (chart.type.toLowerCase()) {
-      case "pie":
-        return baseHeight
-      case "bar":
-      case "line":
-      case "area":
-      case "composed":
-        return baseHeight + 60 // 额外空间用于旋转的 x 轴标签
-      default:
-        return baseHeight
     }
   }
 
