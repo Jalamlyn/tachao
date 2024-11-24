@@ -3,7 +3,30 @@ import { mapVisualizationGuide } from "./map-visualization-guide"
 
 // 基础提示词部分
 const basePrompt = `你是一个智能报表分析助手，负责帮助用户对数据进行分析。
-请仔细分析用户的需求，生成相应的分析代码。`
+请仔细分析用户的需求，生成相应的分析代码。
+
+下拉选择数据格式规范：
+在生成涉及下拉选择的数据时，必须遵循以下规则：
+1. value 和 label 必须完全一致
+2. 使用中文作为值，不要使用英文代码
+3. 格式要求：
+   {
+     value: string, // 必须与 label 相同的中文
+     label: string, // 显示的中文文本
+     [key: string]: any // 其他可选属性
+   }
+
+示例格式：
+[
+  { value: "成品仓", label: "成品仓" },
+  { value: "原料仓", label: "原料仓" }
+]
+
+❌ 错误示例：
+[
+  { value: "finished", label: "成品仓" },
+  { value: "raw", label: "原料仓" }
+]`
 
 // 数据访问示例
 const dataAccessExamples = `
@@ -343,77 +366,91 @@ const dataSourceRequirements = `
 
 // 生成数据结构描述
 function generateDataStructureDescription(groups: Record<string, any[]>) {
-  return Object.entries(groups).map(([templateId, items]) => {
-    const firstItem = items[0];
-    const structure = Object.entries(firstItem).reduce((acc, [key, value]) => {
-      acc[key] = typeof value;
-      return acc;
-    }, {} as Record<string, string>);
-    
-    return `
+  return Object.entries(groups)
+    .map(([templateId, items]) => {
+      const firstItem = items[0]
+      const structure = Object.entries(firstItem).reduce(
+        (acc, [key, value]) => {
+          acc[key] = typeof value
+          return acc
+        },
+        {} as Record<string, string>
+      )
+
+      return `
 模板 ${templateId} 的数据字段和类型:
 ${JSON.stringify(structure, null, 2)}
-    `;
-  }).join('\n');
+    `
+    })
+    .join("\n")
 }
 
 // 生成实际数据展示
 function generateActualData(groups: Record<string, any[]>, templateInfoMap: Record<string, string>) {
-  return Object.entries(groups).map(([templateId, items]) => {
-    const templateTitle = templateInfoMap[templateId] || `模板 ${templateId}`;
-    const actualData = items.slice(0, 10);
-    
-    return `
+  return Object.entries(groups)
+    .map(([templateId, items]) => {
+      const templateTitle = templateInfoMap[templateId] || `模板 ${templateId}`
+      const actualData = items.slice(0, 10)
+
+      return `
 ${templateTitle} (模板ID: ${templateId}) 的数据:
 ${JSON.stringify(actualData, null, 2)}
-    `;
-  }).join('\n');
+    `
+    })
+    .join("\n")
 }
 
 // 生成数据统计信息
 function generateDataStatistics(groups: Record<string, any[]>) {
-  return Object.entries(groups).map(([templateId, items]) => {
-    const numericColumns = Object.entries(items[0]).filter(([_, value]) => 
-      typeof value === 'number'
-    ).map(([key]) => key);
+  return Object.entries(groups)
+    .map(([templateId, items]) => {
+      const numericColumns = Object.entries(items[0])
+        .filter(([_, value]) => typeof value === "number")
+        .map(([key]) => key)
 
-    const statistics = numericColumns.map(column => {
-      const values = items.map(item => item[column]).filter(v => !isNaN(v));
-      const avg = values.reduce((a, b) => a + b, 0) / values.length;
-      const max = Math.max(...values);
-      const min = Math.min(...values);
-      
-      return `
+      const statistics = numericColumns
+        .map((column) => {
+          const values = items.map((item) => item[column]).filter((v) => !isNaN(v))
+          const avg = values.reduce((a, b) => a + b, 0) / values.length
+          const max = Math.max(...values)
+          const min = Math.min(...values)
+
+          return `
 - ${column}:
   平均值: ${avg.toFixed(2)}
   最大值: ${max}
   最小值: ${min}
-      `;
-    }).join('\n');
+      `
+        })
+        .join("\n")
 
-    return `
+      return `
 模板 ${templateId} 数值字段统计:
 ${statistics}
-    `;
-  }).join('\n');
+    `
+    })
+    .join("\n")
 }
 
 // 生成数据源信息
 function generateDataSourceInfo(data: any[], templateInfoMap: Record<string, string>): string {
-  const groups = data.reduce((acc, item) => {
-    const templateId = item._sourceTemplateId;
-    if (!acc[templateId]) {
-      acc[templateId] = [];
-    }
-    acc[templateId].push(item);
-    return acc;
-  }, {} as Record<string, any[]>);
+  const groups = data.reduce(
+    (acc, item) => {
+      const templateId = item._sourceTemplateId
+      if (!acc[templateId]) {
+        acc[templateId] = []
+      }
+      acc[templateId].push(item)
+      return acc
+    },
+    {} as Record<string, any[]>
+  )
 
   return `
 数据源概览:
-${Object.entries(groups).map(([templateId, items]) => 
-  `- ${templateInfoMap[templateId] || `模板 ${templateId}`} (${items.length} 条数据)`
-).join('\n')}
+${Object.entries(groups)
+  .map(([templateId, items]) => `- ${templateInfoMap[templateId] || `模板 ${templateId}`} (${items.length} 条数据)`)
+  .join("\n")}
 
 数据结构说明:
 ${generateDataStructureDescription(groups)}
@@ -438,7 +475,7 @@ ${generateActualData(groups, templateInfoMap)}
    - _sourceTemplateId: string (数据来源模板ID)
    - _sourceTemplateName: string (数据来源模板名称)
    其他字段类型请参考上方数据结构说明
-`;
+`
 }
 
 // 系统提示词选项接口
@@ -486,7 +523,8 @@ ${existingConfig}
 3. 直接返回分析结果对象
 4. 确保返回对象包含必要的 type 和 data 字段
 5. data 字段必须保持原始数据不变
-6. 统计结果放在 analysis 字段中`
+6. 统计结果放在 analysis 字段中
+`
 }
 
 export default generateSystemPrompt
