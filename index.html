@@ -26,6 +26,14 @@
       name="viewport"
     />
     <link href="/logo.ico" rel="icon" />
+    <!-- 百度地图API初始化 -->
+    <script type="text/javascript">
+      window.BMap_loadScriptTime = (new Date).getTime();
+      window.BMap = null;
+      window.initMap = function() {
+        console.log('BMap API loaded successfully');
+      };
+    </script>
   </head>
   <body>
     <div id="root"></div>
