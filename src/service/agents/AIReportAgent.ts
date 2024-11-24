@@ -4,60 +4,11 @@ import { formulaService } from "@/services/formulaService"
 import { markdown as doc } from "@/pages/report-management/components/AnalysisResult.md"
 import generateSystemPrompt from "@/service/agents/prompts/report-agent-prompt"
 import { ProcessedData } from "@/pages/report-management/utils/processReportData"
+import { AnalysisData, AnalysisResult } from "@/service/agents/types/report-agent.types"
 
 export type ReportColumn = {
   header: string
   accessorKey: string
-}
-
-interface AnalysisResult {
-  type: "analyze"
-  data: any[]
-  analysis: {
-    sources?: {
-      [templateId: string]: {
-        id: string
-        title: string
-      }
-    }
-    summary: {
-      [key: string]: {
-        value: number | string | Record<string, any>
-        label: string
-        sourceId?: string
-        sourceTitle?: string
-      }
-    }
-    charts?: Array<{
-      type: string
-      title: string
-      data: Array<{
-        name: string
-        value: number
-        sourceId?: string
-        sourceTitle?: string
-      }>
-    }>
-    insights: Array<{
-      content: string
-      sourceIds?: string[]
-    }>
-    processAnalysis?: {
-      summary?: {
-        totalProcessNodes: { value: number; label: string }
-        completedNodes: { value: number; label: string }
-        completionRate: { value: string; label: string }
-        averageProcessTime: { value: string; label: string }
-      }
-      nodeStatus?: Record<string, string>
-      processDuration?: {
-        total: string
-        nodesDuration: Record<string, string>
-      }
-      approvers?: Record<string, number>
-      processStatus?: Record<string, number>
-    }
-  }
 }
 
 interface CommandResult {
@@ -77,6 +28,30 @@ interface ProcessCommandOptions {
 
 interface AIReportAgentConfig {
   templateInfoMap?: Record<string, string>
+}
+
+function prepareAnalysisData(data: ProcessedData, templateInfoMap: Record<string, string>): AnalysisData {
+  // 按模板ID分组
+  const groups = data.originalData.reduce((acc, item) => {
+    const templateId = item._sourceTemplateId;
+    if (!acc[templateId]) {
+      acc[templateId] = {
+        id: templateId,
+        title: templateInfoMap[templateId] || `模板 ${templateId}`,
+        data: []
+      };
+    }
+    acc[templateId].data.push(item);
+    return acc;
+  }, {} as Record<string, AnalysisDataGroup>);
+
+  return {
+    groups,
+    metadata: {
+      templateInfoMap,
+      columns: data.columns
+    }
+  };
 }
 
 export class AIReportAgent {
@@ -131,16 +106,28 @@ export class AIReportAgent {
     }
   }
 
-  private async executeCode(code: string, data: ProcessedData): Promise<any> {
+  private async executeCode(code: string, data: AnalysisData): Promise<any> {
     try {
       console.log("[AIReportAgent] Executing analysis code")
       const wrappedCode = `
         return (function(data, formulajs) {
+          // data 结构:
+          // interface AnalysisData {
+          //   groups: Record<string, {
+          //     id: string
+          //     title: string
+          //     data: any[]
+          //   }>
+          //   metadata: {
+          //     templateInfoMap: Record<string, string>
+          //     columns: any[]
+          //   }
+          // }
           ${code}
         })(data, formulajs);
       `
       const executeFunction = new Function("data", "formulajs", wrappedCode)
-      const result = executeFunction(data.flattenedData, formulaService)
+      const result = executeFunction(data, formulaService)
       console.log("[AIReportAgent] Analysis completed successfully")
       return result
     } catch (error) {
@@ -152,10 +139,17 @@ export class AIReportAgent {
   public async analyzeData(data: ProcessedData, rawConfig: string): Promise<AnalysisResult["analysis"]> {
     try {
       console.log("[AIReportAgent] Analyzing data with rawConfig")
-      const result = await this.executeCode(rawConfig, data)
+      
+      // 转换数据结构
+      const analysisData = prepareAnalysisData(data, this._templateInfoMap)
+      
+      // 执行分析
+      const result = await this.executeCode(rawConfig, analysisData)
+      
       if (!result || !result.type || !result.data) {
         throw new Error("Invalid analysis result format")
       }
+      
       console.log("[AIReportAgent] Data analysis completed successfully")
       return result.analysis
     } catch (error) {
@@ -164,14 +158,19 @@ export class AIReportAgent {
     }
   }
 
-  public async processCommand({ data, command, onChunk, rawConfig }: ProcessCommandOptions & { rawConfig?: string }): Promise<CommandResult> {
+  public async processCommand({
+    data,
+    command,
+    onChunk,
+    rawConfig,
+  }: ProcessCommandOptions & { rawConfig?: string }): Promise<CommandResult> {
     console.log("[AIReportAgent] Processing analysis command:", command)
 
-    if (!data || !data.flattenedData.length) {
-      console.log("[AIReportAgent] Invalid data provided")
+    if (!data || !data.flattenedData.length || !data.originalData.length) {
+      console.log("[AIReportAgent] Invalid or incomplete data provided")
       return {
         success: false,
-        message: "请提供有效的数据",
+        message: "数据不完整,请检查数据源",
       }
     }
 
@@ -181,10 +180,10 @@ export class AIReportAgent {
       }
 
       const systemPrompt = generateSystemPrompt({
-        data: data.flattenedData,
+        data: data.originalData,
         doc,
         existingConfig: this._rawConfig,
-        templateInfoMap: this._templateInfoMap
+        templateInfoMap: this._templateInfoMap,
       })
 
       const messages: Message[] = [
@@ -218,7 +217,9 @@ export class AIReportAgent {
         throw new Error("Invalid generated configuration")
       }
 
-      const result = (await this.executeCode(generatedCode, data)) as ResourceOperationResult
+      // 转换数据结构
+      const analysisData = prepareAnalysisData(data, this._templateInfoMap)
+      const result = (await this.executeCode(generatedCode, analysisData)) as ResourceOperationResult
 
       if (!result || !result.type || !result.data) {
         console.error("[AIReportAgent] Invalid analysis result format")
