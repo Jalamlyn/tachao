@@ -1,16 +1,21 @@
-import React from "react"
+import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Card, CardBody, CardFooter } from "@nextui-org/react"
+import SearchInput from "@/components/SearchInput"
 
 export interface CardGalleryProps<T> {
   items: T[]
   renderCard: (item: T, index: number) => React.ReactNode
   emptyState?: React.ReactNode
   className?: string
-  containerClassName?: string 
+  containerClassName?: string
   loadingState?: React.ReactNode
   isLoading?: boolean
   gridClassName?: string
+  searchable?: boolean
+  searchFields?: (keyof T)[]
+  searchPlaceholder?: string
+  onSearch?: (searchValue: string) => void
+  customSearch?: (item: T, searchValue: string) => boolean
 }
 
 function CardGallery<T>({
@@ -22,23 +27,55 @@ function CardGallery<T>({
   loadingState,
   isLoading = false,
   gridClassName = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6",
+  searchable = false,
+  searchPlaceholder,
+  onSearch,
+  customSearch,
 }: CardGalleryProps<T>) {
+  const [searchValue, setSearchValue] = useState("")
+
+  const handleSearch = (value: string) => {
+    setSearchValue(value)
+    onSearch?.(value)
+  }
+
+  const filteredItems = React.useMemo(() => {
+    if (!searchValue || (!customSearch && !searchable)) return items
+
+    return items.filter((item) => {
+      if (customSearch) {
+        return customSearch(item, searchValue)
+      }
+      return false
+    })
+  }, [items, searchValue, customSearch, searchable])
+
   // 处理加载状态
   if (isLoading && loadingState) {
     return loadingState
   }
 
   // 处理空状态
-  if (!isLoading && (!items || items.length === 0) && emptyState) {
+  if (!isLoading && (!filteredItems || filteredItems.length === 0) && emptyState) {
     return emptyState
   }
 
   return (
     <div className={`h-full overflow-hidden ${containerClassName}`}>
       <div className={`h-full overflow-auto ${className}`}>
+        {searchable && (
+          <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm py-4 px-6">
+            <SearchInput
+              value={searchValue}
+              onChange={handleSearch}
+              placeholder={searchPlaceholder}
+              className="w-full max-w-sm"
+            />
+          </div>
+        )}
         <div className={gridClassName}>
           <AnimatePresence>
-            {items.map((item, index) => (
+            {filteredItems.map((item, index) => (
               <motion.div
                 key={index}
                 layout
