@@ -242,6 +242,9 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
         }}
         initialName={selectedReport?.title || ""}
         onRename={handleRename}
+        title="重命名报表"
+        inputLabel="报表名称" 
+        inputPlaceholder="请输入新的报表名称"
       />
     </>
   )

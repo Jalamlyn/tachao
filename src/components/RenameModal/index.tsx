@@ -1,58 +1,73 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input } from "@nextui-org/react"
 import message from "@/components/Message"
-import { RenameModalProps } from "./types"
+
+export interface RenameModalProps {
+  /**
+   * 控制模态框是否打开
+   */
+  isOpen: boolean
+  /**
+   * 关闭模态框的回调
+   */
+  onClose: () => void
+  /**
+   * 重命名操作的回调
+   */
+  onRename: (newName: string) => Promise<void>
+  /**
+   * 初始名称
+   */
+  initialName: string
+  /**
+   * 模态框标题
+   */
+  title?: string
+  /**
+   * 模态框描述文本
+   */
+  description?: string
+  /**
+   * 输入框标签文本
+   */
+  inputLabel?: string
+  /**
+   * 输入框占位符
+   */
+  inputPlaceholder?: string
+  /**
+   * 自定义验证规则
+   */
+  validate?: (value: string) => string | undefined
+}
 
 const RenameModal: React.FC<RenameModalProps> = ({
   isOpen,
   onClose,
-  initialName,
   onRename,
-  validationRules = {
-    required: true,
-    minLength: 1,
-    maxLength: 50,
-  },
+  initialName,
+  title = "重命名",
+  description,
+  inputLabel = "名称",
+  inputPlaceholder = "请输入新的名称",
+  validate,
 }) => {
   const [name, setName] = useState(initialName)
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (isOpen) {
-      setName(initialName)
-      setError(null)
-    }
-  }, [isOpen, initialName])
-
-  const validateName = (value: string): boolean => {
-    if (validationRules.required && !value.trim()) {
-      setError("名称不能为空")
-      return false
-    }
-
-    if (validationRules.minLength && value.length < validationRules.minLength) {
-      setError(`名称长度不能小于 ${validationRules.minLength} 个字符`)
-      return false
-    }
-
-    if (validationRules.maxLength && value.length > validationRules.maxLength) {
-      setError(`名称长度不能超过 ${validationRules.maxLength} 个字符`)
-      return false
-    }
-
-    if (validationRules.pattern && !validationRules.pattern.test(value)) {
-      setError("名称格式不正确")
-      return false
-    }
-
-    setError(null)
-    return true
-  }
+  const [error, setError] = useState<string>()
 
   const handleRename = async () => {
-    if (!validateName(name)) {
+    if (!name.trim()) {
+      setError("请输入名称")
       return
+    }
+
+    if (validate) {
+      const validationError = validate(name)
+      if (validationError) {
+        setError(validationError)
+        return
+      }
     }
 
     setIsLoading(true)
@@ -60,17 +75,23 @@ const RenameModal: React.FC<RenameModalProps> = ({
       await onRename(name)
       onClose()
     } catch (error) {
-      console.error("重命名失败:", error)
+      console.error(error)
       message.error("重命名失败")
     } finally {
       setIsLoading(false)
     }
   }
 
+  const handleClose = () => {
+    setName(initialName)
+    setError(undefined)
+    onClose()
+  }
+
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       classNames={{
         base: "max-w-md",
         header: "border-b",
@@ -79,22 +100,26 @@ const RenameModal: React.FC<RenameModalProps> = ({
       }}
     >
       <ModalContent>
-        <ModalHeader className='flex flex-col gap-1'>重命名</ModalHeader>
+        <ModalHeader className='flex flex-col gap-1'>
+          {title}
+          {description && <p className='text-sm text-default-500'>{description}</p>}
+        </ModalHeader>
         <ModalBody>
           <Input
-            label='名称'
+            label={inputLabel}
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder='请输入新的名称'
-            variant='bordered'
-            size='lg'
-            isInvalid={!!error}
+            onChange={(e) => {
+              setName(e.target.value)
+              setError(undefined)
+            }}
+            placeholder={inputPlaceholder}
+            variant='underlined'
             errorMessage={error}
-            onBlur={() => validateName(name)}
+            isInvalid={!!error}
           />
         </ModalBody>
         <ModalFooter>
-          <Button variant='light' onPress={onClose}>
+          <Button variant='light' onPress={handleClose}>
             取消
           </Button>
           <Button color='primary' onPress={handleRename} isLoading={isLoading}>

@@ -229,6 +229,9 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
         }}
         initialName={selectedTemplate?.title || ""}
         onRename={handleRename}
+        title="重命名模板"
+        inputLabel="模板名称"
+        inputPlaceholder="请输入新的模板名称"
       />
     </>
   )
