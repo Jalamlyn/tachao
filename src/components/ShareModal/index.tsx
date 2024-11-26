@@ -33,12 +33,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, title = "åˆ†äº
           <div className='flex flex-col gap-4'>
             {description && <p className='text-default-600'>{description}</p>}
             <Input
+              variant='underlined'
               readOnly
               value={shareUrl}
-              classNames={{
-                input: "bg-default-50",
-                inputWrapper: "bg-default-50 hover:bg-default-100",
-              }}
               endContent={
                 <Button size='sm' variant='light' className='min-w-unit-16 h-unit-8' onClick={handleCopyLink}>
                   <Icon icon='mdi:content-copy' className='w-4 h-4' />

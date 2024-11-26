@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input } from "@nextui-org/react"
 import message from "@/components/Message"
 
@@ -56,6 +56,13 @@ const RenameModal: React.FC<RenameModalProps> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string>()
 
+  // 监听 isOpen 和 initialName 的变化来更新内部状态
+  useEffect(() => {
+    if (isOpen && initialName) {
+      setName(initialName)
+    }
+  }, [isOpen, initialName])
+
   const handleRename = async () => {
     if (!name.trim()) {
       setError("请输入名称")
@@ -73,7 +80,7 @@ const RenameModal: React.FC<RenameModalProps> = ({
     setIsLoading(true)
     try {
       await onRename(name)
-      onClose()
+      handleClose()
     } catch (error) {
       console.error(error)
       message.error("重命名失败")
@@ -83,7 +90,7 @@ const RenameModal: React.FC<RenameModalProps> = ({
   }
 
   const handleClose = () => {
-    setName(initialName)
+    setName("")  // 重置内部状态
     setError(undefined)
     onClose()
   }
