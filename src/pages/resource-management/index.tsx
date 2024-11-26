@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
-import { Select, SelectItem } from "@nextui-org/react"
+import { Tabs, Tab } from "@nextui-org/react"
 import CreateResourceButton from "./components/CreateResourceButton"
 import WordUploadButton from "./components/WordUploadButton"
 import PDFUploadButton from "./components/PDFUploadButton"
@@ -16,7 +16,7 @@ const ResourceManagement: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
   const appId = import.meta.env.VITE_SHATA_AI_APP_ID
-  const [selectedType, setSelectedType] = useState<string>("excel")
+  const [selectedType, setSelectedType] = React.useState<string>("excel")
 
   useEffect(() => {
     updateBreadcrumbs([
@@ -27,7 +27,6 @@ const ResourceManagement: React.FC = () => {
 
   const handleSuccess = (data: any) => {
     message.success("上传成功")
-    // TODO: 处理上传成功后的逻辑
   }
 
   const handleError = (error: Error) => {
@@ -38,8 +37,8 @@ const ResourceManagement: React.FC = () => {
     window.open(`/resource/${resourceId}`, "_blank")
   }
 
-  const renderUploadButton = () => {
-    switch(selectedType) {
+  const renderUploadButton = (type: string) => {
+    switch(type) {
       case 'excel':
         return <CreateResourceButton appId={appId} isDisabled={false} />;
       case 'word':
@@ -49,74 +48,66 @@ const ResourceManagement: React.FC = () => {
       default:
         return null;
     }
-  };
+  }
+
+  const renderTabContent = (type: string) => (
+    <motion.div
+      key={type}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="flex flex-col gap-4"
+    >
+      <div className="flex justify-end">
+        {renderUploadButton(type)}
+      </div>
+      <ResourceGallery 
+        onResourceSelect={handleResourceSelect} 
+        className="transition-all duration-300"
+        filter={type}
+      />
+    </motion.div>
+  )
 
   return (
     <PageLayout 
-      title='资料管理' 
-      titleIcon='mdi:file-document' 
-      actions={
-        <motion.div 
-          className="flex items-center gap-4"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+      title="资料管理" 
+      titleIcon="mdi:file-document"
+    >
+      <div className="flex flex-col gap-4">
+        <Tabs 
+          selectedKey={selectedType} 
+          onSelectionChange={(key) => setSelectedType(key.toString())}
+          variant="underlined"
+          classNames={{
+            tabList: "gap-6",
+            cursor: "w-full bg-primary",
+            tab: "max-w-fit px-2 h-12",
+            tabContent: "group-data-[selected=true]:text-primary"
+          }}
         >
-          <Select
-            label="选择资源类型"
-            selectedKeys={[selectedType]}
-            onChange={(e) => setSelectedType(e.target.value)}
-            className="w-48"
-            classNames={{
-              trigger: "h-12 data-[hover=true]:bg-default-100 transition-colors duration-200",
-              value: "text-default-700",
-              label: "text-default-600",
-              innerWrapper: "gap-2",
-              listbox: "p-2",
-              popoverContent: "min-w-[200px]"
-            }}
-          >
-            {Object.entries(resourceTypes).map(([id, type]) => (
-              <SelectItem 
-                key={id} 
-                value={id}
-                className="data-[hover=true]:bg-default-100 transition-colors duration-200"
-              >
+          {Object.entries(resourceTypes).map(([id, type]) => (
+            <Tab
+              key={id}
+              title={
                 <div className="flex items-center gap-2">
-                  <Icon icon={type.icon} className={`
-                    w-5 h-5
-                    ${id === 'excel' ? 'text-green-600' : ''}
-                    ${id === 'word' ? 'text-blue-600' : ''}
-                    ${id === 'pdf' ? 'text-red-600' : ''}
-                  `} />
+                  <Icon 
+                    icon={type.icon} 
+                    className={`w-5 h-5
+                      ${id === 'excel' ? 'text-green-600 group-data-[selected=true]:text-primary' : ''}
+                      ${id === 'word' ? 'text-blue-600 group-data-[selected=true]:text-primary' : ''}
+                      ${id === 'pdf' ? 'text-red-600 group-data-[selected=true]:text-primary' : ''}
+                    `}
+                  />
                   <span>{type.name}</span>
                 </div>
-              </SelectItem>
-            ))}
-          </Select>
-
-          <motion.div
-            key={selectedType}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.2 }}
-          >
-            {renderUploadButton()}
-          </motion.div>
-        </motion.div>
-      }
-    >
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <ResourceGallery 
-          onResourceSelect={handleResourceSelect} 
-          className='transition-all duration-300'
-          filter={selectedType}
-        />
-      </motion.div>
+              }
+            >
+              {renderTabContent(id)}
+            </Tab>
+          ))}
+        </Tabs>
+      </div>
     </PageLayout>
   )
 }
