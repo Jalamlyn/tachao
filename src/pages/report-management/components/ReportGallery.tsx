@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useMemo } from "react"
 import {
   Card,
   CardBody,
@@ -137,6 +137,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({
   const { remove, load, update } = useMetadata("report")
   const { items: templates = [], load: loadTemplates } = useMetadata("template")
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false)
+  const [searchValue, setSearchValue] = useState("")
 
   const reports = internalReports.length > 0 ? internalReports : propReports || []
 
@@ -159,6 +160,14 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({
     loadReports()
     loadTemplates()
   }, [])
+
+  const filteredReports = useMemo(() => {
+    if (!searchValue.trim()) return reports
+
+    return reports.filter((report) =>
+      report.title.toLowerCase().includes(searchValue.toLowerCase())
+    )
+  }, [reports, searchValue])
 
   const handleDeleteConfirm = async () => {
     if (selectedReport) {
@@ -302,13 +311,16 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({
   return (
     <>
       <CardGallery
-        items={reports}
+        items={filteredReports}
         renderCard={renderCard}
         emptyState={<EmptyState state={getEmptyState(templates.length > 0)} onCreateReport={onCreateReport} />}
         loadingState={loadingState}
         isLoading={isLoading}
-        containerClassName="h-[calc(100vh-200px)]"
+        containerClassName='h-[calc(100vh-200px)]'
         className={className}
+        searchable
+        searchPlaceholder="搜索报表..."
+        onSearch={setSearchValue}
       />
 
       <Modal
@@ -380,7 +392,8 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({
             <Button color='primary' onPress={onShareClose} startContent={<Icon icon='mdi:check' className='w-4 h-4' />}>
               完成
             </Button>
-          </Modal</ModalContent>
+          </ModalFooter>
+        </ModalContent>
       </Modal>
 
       <RenameModal

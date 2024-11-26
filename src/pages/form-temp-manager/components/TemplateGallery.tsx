@@ -1,4 +1,4 @@
-import React, { Suspense } from "react"
+import React, { Suspense, useState, useMemo } from "react"
 import {
   Card,
   CardBody,
@@ -77,66 +77,49 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isOpen: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure()
   const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(null)
-  const [isRenameModalOpen, setIsRenameModalOpen] = React.useState(false)
-  const queryClient = useQueryClient()
+  const [isLoading, setIsLoading] = useState(false)
+  const [internalTemplates, setInternalTemplates] = useState<Template[]>([])
+  const { remove, load, update } = useMetadata("template")
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false)
+  const [searchValue, setSearchValue] = useState("")
 
-  // 使用 React Query 获取模板列表，启用 suspense 模式
-  const { data: templates = [], isLoading } = useQuery({
-    queryKey: ["templates"],
-    queryFn: async () => {
-      const result = await getMetadata(["template_index"])
-      if (result.data?.[0]?.value) {
-        return jsonParse(result.data[0].value) as Template[]
+  const loadTemplates = async () => {
+    try {
+      setIsLoading(true)
+      const result = await load()
+      if (result) {
+        setInternalTemplates(result)
       }
-      return []
-    },
-    suspense: false,
-  })
+    } catch (error) {
+      console.error("加载模板列表失败:", error)
+      message.error("加载模板列表失败")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-  // 使用 React Query 的 mutation 来删除模板
-  const deleteMutation = useMutation({
-    mutationFn: async (templateId: string) => {
-      await deleteMetadata({ name: templateId })
-      const currentTemplates = templates.filter((t) => t.id !== templateId)
-      await setMetadata("template_index", jsonStringify(currentTemplates))
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["templates"] })
-      onClose()
-    },
-    onError: (error) => {
-      console.error("删除模板失败:", error)
-      message.error("删除模板失败")
-    },
-  })
+  React.useEffect(() => {
+    loadTemplates()
+  }, [])
 
-  // 使用 React Query 的 mutation 来重命名模板
-  const renameMutation = useMutation({
-    mutationFn: async ({ templateId, newTitle }: { templateId: string; newTitle: string }) => {
-      const currentTemplates = templates.map((t) =>
-        t.id === templateId
-          ? {
-              ...t,
-              title: newTitle,
-            }
-          : t
-      )
-      await setMetadata("template_index", jsonStringify(currentTemplates))
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["templates"] })
-      setIsRenameModalOpen(false)
-      setSelectedTemplate(null)
-    },
-    onError: (error) => {
-      console.error("重命名模板失败:", error)
-      throw error
-    },
-  })
+  const filteredTemplates = useMemo(() => {
+    if (!searchValue.trim()) return internalTemplates
+
+    return internalTemplates.filter((template) =>
+      template.title.toLowerCase().includes(searchValue.toLowerCase())
+    )
+  }, [internalTemplates, searchValue])
 
   const handleDeleteConfirm = async () => {
     if (selectedTemplate) {
-      deleteMutation.mutate(selectedTemplate.id)
+      try {
+        await remove(selectedTemplate.id)
+        onClose()
+        await loadTemplates()
+      } catch (error) {
+        console.error("删除模板失败:", error)
+        message.error("删除模板失败")
+      }
     }
   }
 
@@ -152,31 +135,6 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     onShareOpen()
   }
 
-  const handleRenameClick = (template: Template, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setSelectedTemplate(template)
-    setIsRenameModalOpen(true)
-  }
-
-  const handleRename = async (newTitle: string) => {
-    if (!selectedTemplate) return
-
-    try {
-      await renameMutation.mutateAsync({
-        templateId: selectedTemplate.id,
-        newTitle,
-      })
-    } catch (error) {
-      console.error("重命名模板失败:", error)
-      throw error
-    }
-  }
-
-  const handleAIEditClick = async (template: Template, e: React.MouseEvent) => {
-    e.stopPropagation()
-    navigate(`/we-chat-app/admin/documents/edit/${template.id}`, { state: { title: template.title } })
-  }
-
   const handleCopyShareLink = async () => {
     if (selectedTemplate) {
       const shareLink = `${window.location.origin}/form-preview/${selectedTemplate.id}`
@@ -187,6 +145,31 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
         console.error("复制链接失败:", error)
         message.error("复制链接失败")
       }
+    }
+  }
+
+  const handleAIEditClick = async (template: Template, e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigate(`/we-chat-app/admin/documents/edit/${template.id}`, { state: { title: template.title } })
+  }
+
+  const handleRenameClick = (template: Template, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedTemplate(template)
+    setIsRenameModalOpen(true)
+  }
+
+  const handleRename = async (newTitle: string) => {
+    if (!selectedTemplate) return
+
+    try {
+      await update(selectedTemplate.id, {
+        title: newTitle,
+      })
+      await loadTemplates()
+    } catch (error) {
+      console.error("重命名模板失败:", error)
+      throw error
     }
   }
 
@@ -265,13 +248,16 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   return (
     <>
       <CardGallery
-        items={templates}
+        items={filteredTemplates}
         renderCard={renderCard}
         emptyState={<EmptyState />}
         loadingState={loadingState}
         isLoading={isLoading}
-        containerClassName="h-[calc(100vh-200px)]"
+        containerClassName='h-[calc(100vh-200px)]'
         className={className}
+        searchable
+        searchPlaceholder="搜索模板..."
+        onSearch={setSearchValue}
       />
 
       <Modal
