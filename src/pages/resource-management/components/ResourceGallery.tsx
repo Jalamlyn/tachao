@@ -5,18 +5,13 @@ import {
   CardFooter,
   Button,
   useDisclosure,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Input,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
-import { motion } from "framer-motion"
 import message from "@/components/Message"
 import CardGallery from "@/components/CardGallery"
+import EmptyState from "@/components/EmptyState"
+import ConfirmModal from "@/components/ConfirmModal"
 import { useMetadata } from "@/hooks/useMetadata"
 
 interface Resource {
@@ -36,39 +31,9 @@ interface ResourceGalleryProps {
   className?: string
 }
 
-// 空状态组件
-const EmptyState: React.FC = () => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className='flex flex-col items-center justify-center min-h-[400px] p-8'
-    >
-      <div className='w-48 h-48 mb-8 relative'>
-        <motion.div
-          animate={{
-            scale: [1, 1.05, 1],
-            rotate: [0, -5, 5, 0],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
-        >
-          <Icon icon='mdi:file-excel' className='w-full h-full text-success/30' />
-        </motion.div>
-      </div>
-      <h3 className='text-xl font-medium text-foreground mb-2'>还没有上传表格</h3>
-      <p className='text-default-500 mb-8 text-center max-w-md'>上传你的第一个表格,开始使用 AI 进行数据分析</p>
-    </motion.div>
-  )
-}
-
 const ResourceGallery: React.FC<ResourceGalleryProps> = ({ onResourceSelect, className }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const { isOpen: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure()
   const [selectedResource, setSelectedResource] = React.useState<Resource | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [internalResources, setInternalResources] = useState<Resource[]>([])
@@ -162,7 +127,13 @@ const ResourceGallery: React.FC<ResourceGalleryProps> = ({ onResourceSelect, cla
       <CardGallery
         items={internalResources}
         renderCard={renderCard}
-        emptyState={<EmptyState />}
+        emptyState={
+          <EmptyState
+            type="no-data"
+            title="还没有上传表格"
+            description="上传你的第一个表格,开始使用 AI 进行数据分析"
+          />
+        }
         loadingState={loadingState}
         isLoading={isLoading}
         containerClassName='h-[calc(100vh-200px)]'
@@ -177,40 +148,13 @@ const ResourceGallery: React.FC<ResourceGalleryProps> = ({ onResourceSelect, cla
         }
       />
 
-      <Modal
+      <ConfirmModal
+        type="delete"
         isOpen={isOpen}
         onClose={onClose}
-        classNames={{
-          base: "max-w-md",
-          header: "border-b",
-          body: "py-6",
-          footer: "border-t",
-        }}
-      >
-        <ModalContent>
-          <ModalHeader className='flex flex-col gap-1'>
-            <div className='flex items-center gap-2 text-danger'>
-              <Icon icon='mdi:alert-circle' className='w-6 h-6' />
-              <span>确认删除</span>
-            </div>
-          </ModalHeader>
-          <ModalBody>
-            <p className='text-default-600'>确定要删除表格 "{selectedResource?.title}" 吗？此操作不可撤销。</p>
-          </ModalBody>
-          <ModalFooter>
-            <Button color='default' variant='light' onPress={onClose}>
-              取消
-            </Button>
-            <Button
-              color='danger'
-              onPress={handleDeleteConfirm}
-              startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
-            >
-              删除
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        content={`确定要删除表格 "${selectedResource?.title}" 吗？此操作不可撤销。`}
+        onConfirm={handleDeleteConfirm}
+      />
     </>
   )
 }

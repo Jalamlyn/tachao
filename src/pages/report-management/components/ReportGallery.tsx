@@ -1,133 +1,35 @@
-import React, { useEffect, useState, useMemo } from "react"
+import React, { useState } from "react"
 import {
   Card,
   CardBody,
   CardFooter,
   Button,
   useDisclosure,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Input,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
-import { motion, AnimatePresence } from "framer-motion"
-import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
-import RenameModal from "./RenameModal"
 import CardGallery from "@/components/CardGallery"
+import EmptyState from "@/components/EmptyState"
+import ConfirmModal from "@/components/ConfirmModal"
+import ShareModal from "@/components/ShareModal"
+import RenameModal from "@/components/RenameModal"
+import { useMetadata } from "@/hooks/useMetadata"
 
 interface Report {
   id: string
   title: string
   status: string
   updatedAt: string
-  indexFields?: {
-    size?: number
-    fileName?: string
-  }
 }
 
 interface ReportGalleryProps {
-  reports?: Report[]
   onReportSelect: (reportId: string) => void
   onCreateReport?: () => void
   className?: string
 }
 
-// 空状态类型定义
-type EmptyState = {
-  type: "no-template" | "no-report"
-  title: string
-  description: string
-  action: {
-    text: string
-    href: string
-  }
-}
-
-// 空状态组件
-const EmptyState: React.FC<{
-  state: EmptyState
-  onCreateReport?: () => void
-}> = ({ state, onCreateReport }) => {
-  const navigate = useNavigate()
-
-  const handleAction = () => {
-    if (state.type === "no-template") {
-      navigate(state.action.href)
-    } else {
-      onCreateReport?.()
-    }
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className='flex flex-col items-center justify-center min-h-[400px] p-8'
-    >
-      <div className='w-48 h-48 mb-8 relative'>
-        <motion.div
-          animate={{
-            scale: [1, 1.05, 1],
-            rotate: [0, -5, 5, 0],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
-        >
-          <Icon
-            icon={state.type === "no-template" ? "fluent:document-add-48-regular" : "mdi:file-chart"}
-            className='w-full h-full text-primary/30'
-          />
-        </motion.div>
-      </div>
-      <h3 className='text-xl font-medium text-foreground mb-2'>{state.title}</h3>
-      <p className='text-default-500 mb-8 text-center max-w-md'>{state.description}</p>
-      <Button color='secondary' size='lg' onClick={handleAction}>
-        {state.action.text}
-      </Button>
-    </motion.div>
-  )
-}
-
-// 获取空状态配置
-const getEmptyState = (hasTemplates: boolean): EmptyState => {
-  if (!hasTemplates) {
-    return {
-      type: "no-template",
-      title: "还没有可用的数据源",
-      description: "创建报表前需要先创建表单模板作为数据源",
-      action: {
-        text: "去创建模板",
-        href: "/we-chat-app/admin/documents",
-      },
-    }
-  }
-
-  return {
-    type: "no-report",
-    title: "还没有报表",
-    description: "选择一个表单模板开始创建你的第一个报表",
-    action: {
-      text: "去创建",
-      href: "#",
-    },
-  }
-}
-
-const ReportGallery: React.FC<ReportGalleryProps> = ({
-  reports: propReports,
-  onReportSelect,
-  onCreateReport,
-  className,
-}) => {
+const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateReport, className }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isOpen: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure()
@@ -138,8 +40,6 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({
   const { items: templates = [], load: loadTemplates } = useMetadata("template")
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false)
   const [searchValue, setSearchValue] = useState("")
-
-  const reports = internalReports.length > 0 ? internalReports : propReports || []
 
   const loadReports = async () => {
     try {
@@ -156,16 +56,10 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({
     }
   }
 
-  useEffect(() => {
+  React.useEffect(() => {
     loadReports()
     loadTemplates()
   }, [])
-
-  const filteredReports = useMemo(() => {
-    if (!searchValue.trim()) return reports
-
-    return reports.filter((report) => report.title.toLowerCase().includes(searchValue.toLowerCase()))
-  }, [reports, searchValue])
 
   const handleDeleteConfirm = async () => {
     if (selectedReport) {
@@ -190,19 +84,6 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({
     e.stopPropagation()
     setSelectedReport(report)
     onShareOpen()
-  }
-
-  const handleCopyShareLink = async () => {
-    if (selectedReport) {
-      const shareLink = `${window.location.origin}/report/${selectedReport.id}`
-      try {
-        await navigator.clipboard.writeText(shareLink)
-        onShareClose()
-      } catch (error) {
-        console.error("复制链接失败:", error)
-        message.error("复制链接失败")
-      }
-    }
   }
 
   const handleAIAnalysisClick = async (report: Report, e: React.MouseEvent) => {
@@ -306,12 +187,28 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({
     </div>
   )
 
+  const hasTemplates = templates.length > 0
+
   return (
     <>
       <CardGallery
-        items={reports}
+        items={internalReports}
         renderCard={renderCard}
-        emptyState={<EmptyState state={getEmptyState(templates.length > 0)} onCreateReport={onCreateReport} />}
+        emptyState={
+          <EmptyState
+            type="no-data"
+            title={hasTemplates ? "还没有报表" : "还没有可用的数据源"}
+            description={
+              hasTemplates 
+                ? "选择一个表单模板开始创建你的第一个报表"
+                : "创建报表前需要先创建表单模板作为数据源"
+            }
+            action={{
+              text: hasTemplates ? "去创建" : "去创建模板",
+              onClick: hasTemplates ? onCreateReport : () => navigate("/we-chat-app/admin/documents")
+            }}
+          />
+        }
         loadingState={loadingState}
         isLoading={isLoading}
         containerClassName='h-[calc(100vh-200px)]'
@@ -323,78 +220,19 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({
         customSearch={(report, value) => report.title.toLowerCase().includes(value.toLowerCase())}
       />
 
-      <Modal
+      <ConfirmModal
+        type="delete"
         isOpen={isOpen}
         onClose={onClose}
-        classNames={{
-          base: "max-w-md",
-          header: "border-b",
-          body: "py-6",
-          footer: "border-t",
-        }}
-      >
-        <ModalContent>
-          <ModalHeader className='flex flex-col gap-1'>
-            <div className='flex items-center gap-2 text-danger'>
-              <Icon icon='mdi:alert-circle' className='w-6 h-6' />
-              <span>确认删除</span>
-            </div>
-          </ModalHeader>
-          <ModalBody>
-            <p className='text-default-600'>确定要删除报表 "{selectedReport?.title}" 吗？此操作不可撤销。</p>
-          </ModalBody>
-          <ModalFooter>
-            <Button color='default' variant='light' onPress={onClose}>
-              取消
-            </Button>
-            <Button
-              color='danger'
-              onPress={handleDeleteConfirm}
-              startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
-            >
-              删除
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        content={`确定要删除报表 "${selectedReport?.title}" 吗？此操作不可撤销。`}
+        onConfirm={handleDeleteConfirm}
+      />
 
-      <Modal
+      <ShareModal
         isOpen={isShareOpen}
         onClose={onShareClose}
-        classNames={{
-          base: "max-w-md",
-          header: "border-b",
-          body: "py-6",
-          footer: "border-t",
-        }}
-      >
-        <ModalContent>
-          <ModalHeader className='flex flex-col gap-1'>分享报表</ModalHeader>
-          <ModalBody>
-            <div className='flex flex-col gap-4'>
-              <p className='text-default-600'>复制以下链接分享报表：</p>
-              <Input
-                readOnly
-                value={`${window.location.origin}/report/${selectedReport?.id || ""}`}
-                classNames={{
-                  input: "bg-default-50",
-                  inputWrapper: "bg-default-50 hover:bg-default-100",
-                }}
-                endContent={
-                  <Button size='sm' variant='light' className='min-w-unit-16 h-unit-8' onClick={handleCopyShareLink}>
-                    <Icon icon='mdi:content-copy' className='w-4 h-4' />
-                  </Button>
-                }
-              />
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button color='primary' onPress={onShareClose} startContent={<Icon icon='mdi:check' className='w-4 h-4' />}>
-              完成
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        shareUrl={`${window.location.origin}/report/${selectedReport?.id || ""}`}
+      />
 
       <RenameModal
         isOpen={isRenameModalOpen}
@@ -402,8 +240,8 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({
           setIsRenameModalOpen(false)
           setSelectedReport(null)
         }}
+        initialName={selectedReport?.title || ""}
         onRename={handleRename}
-        initialTitle={selectedReport?.title || ""}
       />
     </>
   )

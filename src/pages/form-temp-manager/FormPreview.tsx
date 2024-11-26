@@ -1,0 +1,151 @@
+import React, { useState, useEffect } from "react"
+import { Icon } from "@iconify/react"
+import {
+  Button,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+  Spinner,
+} from "@nextui-org/react"
+import { useParams } from "react-router-dom"
+import DynamicForm from "@/components/common/DynamicForm"
+import type { DynamicFormConfig } from "@/components/common/DynamicForm/types"
+import message from "@/components/Message"
+import { useMetadata } from "@/hooks/useMetadata"
+import { parseFormConfig } from "@/utils/codeParser"
+import EmptyState from "@/components/EmptyState"
+
+interface FormPreviewProps {
+  config: DynamicFormConfig | null
+  previewMode?: boolean
+}
+
+const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMode = false }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [loadedConfig, setLoadedConfig] = useState<DynamicFormConfig | null>(null)
+  const { templateId } = useParams<any>()
+  const { getDetail } = useMetadata<{ config: DynamicFormConfig }>("template")
+
+  useEffect(() => {
+    const loadFormConfig = async () => {
+      if (propConfig) {
+        setLoadedConfig(propConfig)
+        return
+      }
+
+      if (templateId) {
+        setIsLoading(true)
+        setError(null)
+        try {
+          const result = await getDetail(templateId)
+          if (result && result.data.rawConfig) {
+            const { config } = await parseFormConfig(result.data.rawConfig)
+            setLoadedConfig(config)
+          } else {
+            setError("未找到表单配置")
+          }
+        } catch (err) {
+          console.error("加载表单配置失败:", err)
+          setError("加载表单配置失败")
+        } finally {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadFormConfig()
+  }, [templateId, propConfig, getDetail])
+
+  const config = propConfig || loadedConfig
+  const shareLink = `${window.location.origin}/form-preview/${config?.id || ""}`
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink)
+    } catch (err) {
+      message.error("复制失败，请手动复制")
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className='flex flex-col items-center justify-center h-screen'>
+        <Spinner
+          label='加载中...'
+          classNames={{
+            wrapper: "w-12 h-12",
+            label: "text-xl font-medium text-default-600 mt-4",
+          }}
+        />
+      </div>
+    )
+  }
+
+  if (error) {
+    return <EmptyState type="error" title={error} />
+  }
+
+  return (
+    <div className='relative h-full bg-background'>
+      {config ? (
+        <div className='h-full'>
+          <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
+            <DynamicForm previewMode={previewMode} config={config} templateId={templateId} />
+          </div>
+        </div>
+      ) : (
+        <EmptyState
+          type="no-data"
+          title="开始创建表单"
+          description="请先生成或选择一个表单模板来预览"
+          icon={<Icon icon='mdi:form' className='w-20 h-20 text-default-400' />}
+        />
+      )}
+
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        classNames={{
+          base: "max-w-md",
+          header: "border-b",
+          body: "py-6",
+          footer: "border-t",
+        }}
+      >
+        <ModalContent>
+          <ModalHeader className='flex flex-col gap-1'>分享表单</ModalHeader>
+          <ModalBody>
+            <div className='flex items-center gap-2 bg-default-50 p-3 rounded-lg'>
+              <input
+                type='text'
+                value={shareLink}
+                readOnly
+                className='flex-1 p-2 bg-transparent border-none focus:outline-none text-default-700'
+              />
+              <Button
+                color='primary'
+                variant='flat'
+                onClick={handleCopyLink}
+                startContent={<Icon icon='mdi:content-copy' className='w-4 h-4' />}
+              >
+                复制
+              </Button>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button color='danger' variant='light' onPress={onClose}>
+              关闭
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </div>
+  )
+}
+
+export default FormPreview
