@@ -26,7 +26,7 @@ const ResourceManagement: React.FC = () => {
   useEffect(() => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
-      { label: "表格管理", href: "/we-chat-app/admin/resources" },
+      { label: "资料管理", href: "/we-chat-app/admin/resources" },
     ])
   }, [])
 
@@ -77,7 +77,7 @@ const ResourceManagement: React.FC = () => {
   )
 
   return (
-    <PageLayout title='表格管理' titleIcon='mdi:file-document' actions={pageActions}>
+    <PageLayout title='资料管理' titleIcon='mdi:file-document' actions={pageActions}>
       <MetadataTable
         type='resource'
         columns={columns}

@@ -23,7 +23,7 @@ export const items: SidebarItem[] = [
     key: "resources",
     href: "/we-chat-app/admin/resources",
     icon: "mdi:file-document",
-    title: "表格管理",
+    title: "资料管理",
   },
   {
     key: "ai-assistant",
