@@ -101,9 +101,9 @@ const ImageUploadButton: React.FC<ImageUploadProps> = ({ onSuccess, onError }) =
     <>
       <Button
         onClick={onOpen}
-        color="warning"
-        startContent={<Icon icon="mdi:image" className="text-xl" />}
-        className="bg-yellow-600 hover:bg-yellow-700 transition-all duration-200"
+        color='warning'
+        startContent={<Icon icon='mdi:image' className='text-xl' />}
+        className='bg-yellow-600 hover:bg-yellow-700 transition-all duration-200 text-white'
       >
         上传图片资料
       </Button>
@@ -111,7 +111,7 @@ const ImageUploadButton: React.FC<ImageUploadProps> = ({ onSuccess, onError }) =
       <Modal
         isOpen={isOpen}
         onClose={handleClose}
-        size="2xl"
+        size='2xl'
         classNames={{
           base: "bg-background",
           header: "border-b-1 border-default-200",
@@ -120,19 +120,15 @@ const ImageUploadButton: React.FC<ImageUploadProps> = ({ onSuccess, onError }) =
         }}
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <Icon icon="mdi:image" className="text-yellow-600 text-2xl" />
-              <span className="text-xl font-semibold">上传图片资料</span>
+          <ModalHeader className='flex flex-col gap-1'>
+            <div className='flex items-center gap-2'>
+              <Icon icon='mdi:image' className='text-yellow-600 text-2xl' />
+              <span className='text-xl font-semibold'>上传图片资料</span>
             </div>
           </ModalHeader>
           <ModalBody>
-            <div className="space-y-6">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
+            <div className='space-y-6'>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={handleDragOver}
@@ -147,33 +143,23 @@ const ImageUploadButton: React.FC<ImageUploadProps> = ({ onSuccess, onError }) =
                   `}
                 >
                   {previewUrl ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <Image
-                        src={previewUrl}
-                        alt="Preview"
-                        className="w-32 h-32 object-cover rounded-lg"
-                      />
-                      <Chip size="sm" color="primary" variant="flat">
+                    <div className='flex flex-col items-center gap-2'>
+                      <Image src={previewUrl} alt='Preview' className='w-32 h-32 object-cover rounded-lg' />
+                      <Chip size='sm' color='primary' variant='flat'>
                         {file && (file.size / 1024 / 1024).toFixed(2)} MB
                       </Chip>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center gap-2">
-                      <Icon icon="mdi:upload" className="w-12 h-12 text-default-400" />
-                      <span className="font-medium text-default-600">点击选择或拖拽图片到这里</span>
-                      <span className="text-sm text-default-400">支持 jpg, png, gif 等常见图片格式</span>
+                    <div className='flex flex-col items-center gap-2'>
+                      <Icon icon='mdi:upload' className='w-12 h-12 text-default-400' />
+                      <span className='font-medium text-default-600'>点击选择或拖拽图片到这里</span>
+                      <span className='text-sm text-default-400'>支持 jpg, png, gif 等常见图片格式</span>
                     </div>
                   )}
                 </div>
               </motion.div>
 
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                onChange={handleFileSelect}
-              />
+              <input ref={fileInputRef} type='file' accept='image/*' className='sr-only' onChange={handleFileSelect} />
 
               <AnimatePresence>
                 {file && (
@@ -181,15 +167,15 @@ const ImageUploadButton: React.FC<ImageUploadProps> = ({ onSuccess, onError }) =
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="rounded-xl border border-default-200 bg-default-50 p-4"
+                    className='rounded-xl border border-default-200 bg-default-50 p-4'
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-default-700">图片信息</span>
-                      <div className="flex gap-2">
-                        <Chip size="sm" variant="flat" color="primary">
+                    <div className='flex items-center justify-between'>
+                      <span className='text-sm font-medium text-default-700'>图片信息</span>
+                      <div className='flex gap-2'>
+                        <Chip size='sm' variant='flat' color='primary'>
                           {file.type.split("/")[1].toUpperCase()}
                         </Chip>
-                        <Chip size="sm" variant="flat" color="primary">
+                        <Chip size='sm' variant='flat' color='primary'>
                           {(file.size / 1024 / 1024).toFixed(2)} MB
                         </Chip>
                       </div>
@@ -198,27 +184,27 @@ const ImageUploadButton: React.FC<ImageUploadProps> = ({ onSuccess, onError }) =
                 )}
               </AnimatePresence>
 
-              <div className="space-y-4">
+              <div className='space-y-4'>
                 <Input
-                  label="图片描述"
-                  placeholder="请输入图片描述（选填）"
+                  label='图片描述'
+                  placeholder='请输入图片描述（选填）'
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  variant="bordered"
+                  variant='bordered'
                 />
               </div>
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button color="danger" variant="light" onPress={handleClose} className="font-medium">
+            <Button color='danger' variant='light' onPress={handleClose} className='font-medium'>
               取消
             </Button>
             <Button
-              color="primary"
+              color='primary'
               onPress={handleUpload}
               isDisabled={!file}
-              className="font-medium bg-yellow-600 hover:bg-yellow-700"
-              startContent={<Icon icon="mdi:upload" />}
+              className='font-medium bg-yellow-600 hover:bg-yellow-700'
+              startContent={<Icon icon='mdi:upload' />}
             >
               上传
             </Button>

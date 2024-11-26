@@ -112,7 +112,6 @@ const WordUploadButton: React.FC<WordUploadProps> = ({
         color="primary"
         startContent={<Icon icon="mdi:file-word" className="text-xl" />}
         className="bg-blue-600 hover:bg-blue-700 transition-all duration-200"
-        size="lg"
       >
         上传Word文档
       </Button>

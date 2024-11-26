@@ -157,11 +157,12 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
     <>
       <Button
         onClick={onOpen}
-        color='primary'
-        startContent={<Icon icon='mdi:upload' width='20' height='20' />}
+        color='success'
+        className='text-white'
+        startContent={<Icon icon='mdi:file-excel' width='20' height='20' />}
         isDisabled={isDisabled}
       >
-        上传 Excel
+        上传Excel表格
       </Button>
       <Modal placement='top-center' isOpen={isOpen} onClose={onClose} size='2xl'>
         <ModalContent>

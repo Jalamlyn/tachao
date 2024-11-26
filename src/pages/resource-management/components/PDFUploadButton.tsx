@@ -105,7 +105,6 @@ const PDFUploadButton: React.FC<PDFUploadProps> = ({
         color="primary"
         startContent={<Icon icon="mdi:file-pdf" className="text-xl" />}
         className="bg-red-600 hover:bg-red-700 transition-all duration-200"
-        size="lg"
       >
         上传PDF文档
       </Button>
