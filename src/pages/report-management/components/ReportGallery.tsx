@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 import RenameModal from "./RenameModal"
+import CardGallery from "@/components/CardGallery"
 
 interface Report {
   id: string
@@ -226,91 +227,89 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({
     }
   }
 
-  // 如果正在加载，显示加载状态
-  if (isLoading) {
-    return (
-      <div className='flex items-center justify-center min-h-[400px]'>
-        <div className='flex flex-col items-center gap-4'>
-          <Icon icon='eos-icons:loading' className='w-10 h-10 text-primary animate-spin' />
-          <span className='text-default-500'>加载中...</span>
+  const renderCard = (report: Report) => (
+    <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onReportSelect(report.id)}>
+      <CardBody className='p-0 relative overflow-hidden'>
+        <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-green-100 to-green-50 group-hover:scale-105 transition-transform duration-300'>
+          <Icon
+            icon='mdi:file-chart'
+            className='w-16 h-16 text-green-400 group-hover:scale-110 transition-transform duration-300'
+          />
         </div>
-      </div>
-    )
-  }
+      </CardBody>
+      <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
+        <div className='flex justify-between items-center w-full'>
+          <h4
+            className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-green-500 transition-colors duration-300'
+            title={report.title}
+          >
+            {report.title}
+          </h4>
+        </div>
+        <div className='flex justify-between items-center w-full'>
+          <div className='flex gap-2'>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+              onClick={(e) => handleShareClick(report, e)}
+            >
+              <Icon icon='mdi:share' className='w-4 h-4' />
+            </Button>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+              onClick={(e) => handleRenameClick(report, e)}
+            >
+              <Icon icon='mdi:pencil' className='w-4 h-4' />
+            </Button>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-green-500 hover:bg-green-50 transition-colors duration-300'
+              onClick={(e) => handleAIAnalysisClick(report, e)}
+            >
+              <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
+            </Button>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
+              onClick={(e) => handleDeleteClick(report, e)}
+            >
+              <Icon icon='mdi:delete' className='w-4 h-4' />
+            </Button>
+          </div>
+        </div>
+      </CardFooter>
+    </Card>
+  )
 
-  // 如果没有模板或报表，显示空状态
-  if (!isLoading && (templates.length === 0 || reports.length === 0)) {
-    return <EmptyState state={getEmptyState(templates.length > 0)} onCreateReport={onCreateReport} />
-  }
+  const loadingState = (
+    <div className='flex items-center justify-center min-h-[400px]'>
+      <div className='flex flex-col items-center gap-4'>
+        <Icon icon='eos-icons:loading' className='w-10 h-10 text-primary animate-spin' />
+        <span className='text-default-500'>加载中...</span>
+      </div>
+    </div>
+  )
 
   return (
     <>
-      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${className}`}>
-        {reports.map((report) => (
-          <div key={report.id} className='h-full'>
-            <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onReportSelect(report.id)}>
-              <CardBody className='p-0 relative overflow-hidden'>
-                <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-green-100 to-green-50 group-hover:scale-105 transition-transform duration-300'>
-                  <Icon
-                    icon='mdi:file-chart'
-                    className='w-16 h-16 text-green-400 group-hover:scale-110 transition-transform duration-300'
-                  />
-                </div>
-              </CardBody>
-              <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
-                <div className='flex justify-between items-center w-full'>
-                  <h4
-                    className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-green-500 transition-colors duration-300'
-                    title={report.title}
-                  >
-                    {report.title}
-                  </h4>
-                </div>
-                <div className='flex justify-between items-center w-full'>
-                  <div className='flex gap-2'>
-                    <Button
-                      isIconOnly
-                      size='sm'
-                      variant='light'
-                      className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
-                      onClick={(e) => handleShareClick(report, e)}
-                    >
-                      <Icon icon='mdi:share' className='w-4 h-4' />
-                    </Button>
-                    <Button
-                      isIconOnly
-                      size='sm'
-                      variant='light'
-                      className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
-                      onClick={(e) => handleRenameClick(report, e)}
-                    >
-                      <Icon icon='mdi:pencil' className='w-4 h-4' />
-                    </Button>
-                    <Button
-                      isIconOnly
-                      size='sm'
-                      variant='light'
-                      className='text-default-400 hover:text-green-500 hover:bg-green-50 transition-colors duration-300'
-                      onClick={(e) => handleAIAnalysisClick(report, e)}
-                    >
-                      <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
-                    </Button>
-                    <Button
-                      isIconOnly
-                      size='sm'
-                      variant='light'
-                      className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
-                      onClick={(e) => handleDeleteClick(report, e)}
-                    >
-                      <Icon icon='mdi:delete' className='w-4 h-4' />
-                    </Button>
-                  </div>
-                </div>
-              </CardFooter>
-            </Card>
-          </div>
-        ))}
-      </div>
+      <CardGallery
+        items={reports}
+        renderCard={renderCard}
+        emptyState={<EmptyState state={getEmptyState(templates.length > 0)} onCreateReport={onCreateReport} />}
+        loadingState={loadingState}
+        isLoading={isLoading}
+        containerClassName="h-[calc(100vh-200px)]"
+        className={className}
+      />
 
       <Modal
         isOpen={isOpen}
@@ -381,8 +380,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({
             <Button color='primary' onPress={onShareClose} startContent={<Icon icon='mdi:check' className='w-4 h-4' />}>
               完成
             </Button>
-          </ModalFooter>
-        </ModalContent>
+          </Modal</ModalContent>
       </Modal>
 
       <RenameModal

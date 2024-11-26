@@ -22,6 +22,7 @@ import { getMetadata, setMetadata, deleteMetadata } from "@/service/apis/api"
 import message from "@/components/Message"
 import { jsonParse, jsonStringify } from "@/utils"
 import RenameModal from "@/pages/form-temp-manager/components/RenameModal"
+import CardGallery from "@/components/CardGallery"
 
 interface Template {
   id: string
@@ -71,8 +72,6 @@ const EmptyState: React.FC = () => {
   )
 }
 
-// 加载状态占位组件
-
 const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, className }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -82,7 +81,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   const queryClient = useQueryClient()
 
   // 使用 React Query 获取模板列表，启用 suspense 模式
-  const { data: templates = null } = useQuery({
+  const { data: templates = [], isLoading } = useQuery({
     queryKey: ["templates"],
     queryFn: async () => {
       const result = await getMetadata(["template_index"])
@@ -191,105 +190,89 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     }
   }
 
-  // 如果正在加载，显示加载状态
-  if (!templates) {
-    return (
-      <div className='flex items-center justify-center min-h-[400px]'>
-        <div className='flex flex-col items-center gap-4'>
-          <Icon icon='eos-icons:loading' className='w-10 h-10 text-primary animate-spin' />
-          <span className='text-default-500'>加载中...</span>
+  const renderCard = (template: Template) => (
+    <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onTemplateSelect(template.id)}>
+      <CardBody className='p-0 relative overflow-hidden'>
+        <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 group-hover:scale-105 transition-transform duration-300'>
+          <Icon
+            icon='fluent:document-add-48-regular'
+            className='w-16 h-16 text-primary-400 group-hover:scale-110 transition-transform duration-300'
+          />
         </div>
-      </div>
-    )
-  }
+      </CardBody>
+      <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
+        <div className='flex justify-between items-center w-full'>
+          <h4
+            className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors duration-300'
+            title={template.title}
+          >
+            {template.title}
+          </h4>
+        </div>
+        <div className='flex justify-between items-center w-full'>
+          <div className='flex gap-2'>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+              onClick={(e) => handleShareClick(template, e)}
+            >
+              <Icon icon='mdi:share' className='w-4 h-4' />
+            </Button>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+              onClick={(e) => handleRenameClick(template, e)}
+            >
+              <Icon icon='mdi:pencil' className='w-4 h-4' />
+            </Button>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-300'
+              onClick={(e) => handleAIEditClick(template, e)}
+            >
+              <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
+            </Button>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
+              onClick={(e) => handleDeleteClick(template, e)}
+            >
+              <Icon icon='mdi:delete' className='w-4 h-4' />
+            </Button>
+          </div>
+        </div>
+      </CardFooter>
+    </Card>
+  )
 
-  // 如果没有模板，显示空状态
-  if (templates.length === 0) {
-    return <EmptyState />
-  }
+  const loadingState = (
+    <div className='flex items-center justify-center min-h-[400px]'>
+      <div className='flex flex-col items-center gap-4'>
+        <Icon icon='eos-icons:loading' className='w-10 h-10 text-primary animate-spin' />
+        <span className='text-default-500'>加载中...</span>
+      </div>
+    </div>
+  )
 
   return (
     <>
-      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 ${className}`}>
-        <AnimatePresence>
-          {templates.map((template) => (
-            <motion.div
-              key={template.id}
-              layout
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className='h-full'
-            >
-              <Card
-                isPressable
-                isHoverable
-                className='w-full h-[240px] group'
-                onPress={() => onTemplateSelect(template.id)}
-              >
-                <CardBody className='p-0 relative overflow-hidden'>
-                  <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 group-hover:scale-105 transition-transform duration-300'>
-                    <Icon
-                      icon='fluent:form-28-filled'
-                      className='w-16 h-16 text-primary-400 group-hover:scale-110 transition-transform duration-300'
-                    />
-                  </div>
-                </CardBody>
-                <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
-                  <div className='flex justify-between items-center w-full'>
-                    <h4
-                      className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors duration-300'
-                      title={template.title}
-                    >
-                      {template.title}
-                    </h4>
-                  </div>
-                  <div className='flex justify-between items-center w-full'>
-                    <div className='flex gap-2'>
-                      <Button
-                        isIconOnly
-                        size='sm'
-                        variant='light'
-                        className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
-                        onClick={(e) => handleShareClick(template, e)}
-                      >
-                        <Icon icon='mdi:share' className='w-4 h-4' />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        size='sm'
-                        variant='light'
-                        className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
-                        onClick={(e) => handleRenameClick(template, e)}
-                      >
-                        <Icon icon='mdi:pencil' className='w-4 h-4' />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        size='sm'
-                        variant='light'
-                        className='text-default-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-300'
-                        onClick={(e) => handleAIEditClick(template, e)}
-                      >
-                        <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        size='sm'
-                        variant='light'
-                        className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
-                        onClick={(e) => handleDeleteClick(template, e)}
-                      >
-                        <Icon icon='mdi:delete' className='w-4 h-4' />
-                      </Button>
-                    </div>
-                  </div>
-                </CardFooter>
-              </Card>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+      <CardGallery
+        items={templates}
+        renderCard={renderCard}
+        emptyState={<EmptyState />}
+        loadingState={loadingState}
+        isLoading={isLoading}
+        containerClassName="h-[calc(100vh-200px)]"
+        className={className}
+      />
 
       <Modal
         isOpen={isOpen}
