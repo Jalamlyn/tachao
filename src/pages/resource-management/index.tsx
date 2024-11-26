@@ -5,6 +5,7 @@ import { Tabs, Tab } from "@nextui-org/react"
 import CreateResourceButton from "./components/CreateResourceButton"
 import WordUploadButton from "./components/WordUploadButton"
 import PDFUploadButton from "./components/PDFUploadButton"
+import ImageUploadButton from "./components/ImageUploadButton"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import ResourceGallery from "./components/ResourceGallery"
@@ -41,13 +42,15 @@ const ResourceManagement: React.FC = () => {
   const renderUploadButton = (type: string) => {
     switch(type) {
       case 'excel':
-        return <CreateResourceButton appId={appId} isDisabled={false} />;
+        return <CreateResourceButton appId={appId} isDisabled={false} />
       case 'word':
-        return <WordUploadButton onSuccess={handleSuccess} onError={handleError} />;
+        return <WordUploadButton onSuccess={handleSuccess} onError={handleError} />
       case 'pdf':
-        return <PDFUploadButton onSuccess={handleSuccess} onError={handleError} />;
+        return <PDFUploadButton onSuccess={handleSuccess} onError={handleError} />
+      case 'image':
+        return <ImageUploadButton onSuccess={handleSuccess} onError={handleError} />
       default:
-        return null;
+        return null
     }
   }
 
@@ -102,6 +105,7 @@ const ResourceManagement: React.FC = () => {
                       ${id === 'excel' ? 'text-green-600 group-data-[selected=true]:text-primary' : ''}
                       ${id === 'word' ? 'text-blue-600 group-data-[selected=true]:text-primary' : ''}
                       ${id === 'pdf' ? 'text-red-600 group-data-[selected=true]:text-primary' : ''}
+                      ${id === 'image' ? 'text-yellow-600 group-data-[selected=true]:text-primary' : ''}
                     `}
                   />
                   <span>{type.name}</span>

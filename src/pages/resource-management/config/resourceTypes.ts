@@ -1,7 +1,8 @@
-import { ResourceTypeConfig } from '../types';
-import ExcelPreview from '../components/previews/ExcelPreview';
-import WordPreview from '../components/previews/WordPreview';
-import PDFPreview from '../components/previews/PDFPreview';
+import { ResourceTypeConfig } from '../types'
+import ExcelPreview from '../components/previews/ExcelPreview'
+import WordPreview from '../components/previews/WordPreview'
+import PDFPreview from '../components/previews/PDFPreview'
+import ImagePreview from '../components/previews/ImagePreview'
 
 export const resourceTypes: ResourceTypeConfig = {
   excel: {
@@ -24,5 +25,12 @@ export const resourceTypes: ResourceTypeConfig = {
     icon: 'mdi:file-pdf',
     description: '支持.pdf格式的文档',
     previewComponent: PDFPreview,
+  },
+  image: {
+    id: 'image',
+    name: '图片资料',
+    icon: 'mdi:image',
+    description: '支持jpg,png,gif等常见图片格式',
+    previewComponent: ImagePreview,
   }
-};
+}
