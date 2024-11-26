@@ -215,7 +215,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
         className={className}
         searchable
         searchFields={["title"]}
-        searchPlaceholder='搜索报表...'
+        searchPlaceholder='搜索报表名称...'
         onSearch={setSearchValue}
         customSearch={(report, value) => report.title.toLowerCase().includes(value.toLowerCase())}
       />

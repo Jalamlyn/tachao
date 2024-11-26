@@ -202,7 +202,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
         className={className}
         searchable
         searchFields={["title"]}
-        searchPlaceholder='搜索模板...'
+        searchPlaceholder='搜索模板名称...'
         onSearch={setSearchValue}
         customSearch={(template, value) => template.title.toLowerCase().includes(value.toLowerCase())}
       />

@@ -8,8 +8,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, title = "分�
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl)
-      message.success("链接已复制")
-      onClose()
+      message.success("链接已复制, 快去分享吧!")
     } catch (error) {
       console.error("复制链接失败:", error)
       message.error("复制链接失败")

@@ -1,11 +1,5 @@
 import React, { useState } from "react"
-import {
-  Card,
-  CardBody,
-  CardFooter,
-  Button,
-  useDisclosure,
-} from "@nextui-org/react"
+import { Card, CardBody, CardFooter, Button, useDisclosure } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import message from "@/components/Message"
@@ -128,11 +122,7 @@ const ResourceGallery: React.FC<ResourceGalleryProps> = ({ onResourceSelect, cla
         items={internalResources}
         renderCard={renderCard}
         emptyState={
-          <EmptyState
-            type="no-data"
-            title="还没有上传表格"
-            description="上传你的第一个表格,开始使用 AI 进行数据分析"
-          />
+          <EmptyState type='no-data' title='还没有上传 Excel' description='上传你的第一个表格,开始使用 AI 进行数据分析' />
         }
         loadingState={loadingState}
         isLoading={isLoading}
@@ -140,7 +130,7 @@ const ResourceGallery: React.FC<ResourceGalleryProps> = ({ onResourceSelect, cla
         className={className}
         searchable
         searchFields={["title", "indexFields.fileName"]}
-        searchPlaceholder='搜索表格名称或文件名...'
+        searchPlaceholder='搜索资料名称...'
         onSearch={setSearchValue}
         customSearch={(resource, value) =>
           resource.title.toLowerCase().includes(value.toLowerCase()) ||
@@ -149,7 +139,7 @@ const ResourceGallery: React.FC<ResourceGalleryProps> = ({ onResourceSelect, cla
       />
 
       <ConfirmModal
-        type="delete"
+        type='delete'
         isOpen={isOpen}
         onClose={onClose}
         content={`确定要删除表格 "${selectedResource?.title}" 吗？此操作不可撤销。`}

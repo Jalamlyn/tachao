@@ -161,15 +161,15 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
         startContent={<Icon icon='mdi:upload' width='20' height='20' />}
         isDisabled={isDisabled}
       >
-        上传表格
+        上传 Excel
       </Button>
       <Modal placement='top-center' isOpen={isOpen} onClose={onClose} size='2xl'>
         <ModalContent>
-          <ModalHeader>上传表格</ModalHeader>
+          <ModalHeader>上传 Excel</ModalHeader>
           <ModalBody>
             <Input
-              label='表格名称'
-              placeholder='请输入表格名称'
+              label='Excel 名称'
+              placeholder='请输入Excel 名称'
               value={resourceName}
               onChange={(e) => setResourceName(e.target.value)}
               required

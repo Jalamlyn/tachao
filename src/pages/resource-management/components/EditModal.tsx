@@ -67,8 +67,8 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, resource, onSave
         <ModalBody>
           <div className="space-y-4">
             <Input
-              label="表格名称"
-              placeholder="请输入表格名称"
+              label="Excel 名称"
+              placeholder="请输入Excel 名称"
               value={name}
               onChange={(e) => setName(e.target.value)}
               variant="bordered"

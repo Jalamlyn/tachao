@@ -72,11 +72,11 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onUpload }) 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl">
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">上传表格</ModalHeader>
+        <ModalHeader className="flex flex-col gap-1">上传 Excel</ModalHeader>
         <ModalBody>
           <Input
-            label="表格名称"
-            placeholder="请输入表格名称"
+            label="Excel 名称"
+            placeholder="请输入Excel 名称"
             value={resourceName}
             onChange={(e) => setResourceName(e.target.value)}
             required
