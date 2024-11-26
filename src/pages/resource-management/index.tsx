@@ -11,6 +11,7 @@ import ResourceGallery from "./components/ResourceGallery"
 import { resourceTypes } from "./config/resourceTypes"
 import message from "@/components/Message"
 import { motion } from "framer-motion"
+import SearchInput from "@/components/SearchInput"
 
 const ResourceManagement: React.FC = () => {
   const navigate = useNavigate()
@@ -50,6 +51,13 @@ const ResourceManagement: React.FC = () => {
     }
   }
 
+  const renderHeader = (searchProps: { value: string; onChange: (value: string) => void; placeholder?: string }) => (
+    <div className="flex justify-between items-center gap-4">
+      <SearchInput {...searchProps} className="flex-1 max-w-xl" />
+      {renderUploadButton(selectedType)}
+    </div>
+  )
+
   const renderTabContent = (type: string) => (
     <motion.div
       key={type}
@@ -58,13 +66,10 @@ const ResourceManagement: React.FC = () => {
       transition={{ duration: 0.3 }}
       className="flex flex-col gap-4"
     >
-      <div className="flex justify-end">
-        {renderUploadButton(type)}
-      </div>
       <ResourceGallery 
         onResourceSelect={handleResourceSelect} 
         className="transition-all duration-300"
-        filter={type}
+        renderHeader={renderHeader}
       />
     </motion.div>
   )

@@ -23,9 +23,14 @@ interface Resource {
 interface ResourceGalleryProps {
   onResourceSelect: (resourceId: string) => void
   className?: string
+  renderHeader?: (searchProps: {
+    value: string
+    onChange: (value: string) => void
+    placeholder?: string
+  }) => React.ReactNode
 }
 
-const ResourceGallery: React.FC<ResourceGalleryProps> = ({ onResourceSelect, className }) => {
+const ResourceGallery: React.FC<ResourceGalleryProps> = ({ onResourceSelect, className, renderHeader }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [selectedResource, setSelectedResource] = React.useState<Resource | null>(null)
@@ -136,6 +141,7 @@ const ResourceGallery: React.FC<ResourceGalleryProps> = ({ onResourceSelect, cla
           resource.title.toLowerCase().includes(value.toLowerCase()) ||
           resource.indexFields.fileName.toLowerCase().includes(value.toLowerCase())
         }
+        renderHeader={renderHeader}
       />
 
       <ConfirmModal

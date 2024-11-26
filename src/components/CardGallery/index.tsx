@@ -19,6 +19,11 @@ export interface CardGalleryProps<T> {
   searchPlaceholder?: string
   onSearch?: (searchValue: string) => void
   customSearch?: (item: T, searchValue: string) => boolean
+  renderHeader?: (searchProps: {
+    value: string
+    onChange: (value: string) => void
+    placeholder?: string
+  }) => React.ReactNode
 }
 
 const DefaultSearchEmptyState: React.FC<{
@@ -49,6 +54,7 @@ function CardGallery<T>({
   searchPlaceholder,
   onSearch,
   customSearch,
+  renderHeader,
 }: CardGalleryProps<T>) {
   const [searchValue, setSearchValue] = useState("")
 
@@ -129,12 +135,20 @@ function CardGallery<T>({
       <div className={`h-full overflow-auto ${className}`}>
         {searchable && (
           <div className='sticky top-0 z-10 bg-background/80 backdrop-blur-sm py-3 px-4'>
-            <SearchInput
-              value={searchValue}
-              onChange={handleSearch}
-              placeholder={searchPlaceholder}
-              className='w-full max-w-sm'
-            />
+            {renderHeader ? (
+              renderHeader({
+                value: searchValue,
+                onChange: handleSearch,
+                placeholder: searchPlaceholder,
+              })
+            ) : (
+              <SearchInput
+                value={searchValue}
+                onChange={handleSearch}
+                placeholder={searchPlaceholder}
+                className='w-full max-w-sm'
+              />
+            )}
           </div>
         )}
         {renderContent()}
