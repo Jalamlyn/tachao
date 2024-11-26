@@ -118,17 +118,17 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
   const renderCard = (report: Report) => (
     <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onReportSelect(report.id)}>
       <CardBody className='p-0 relative overflow-hidden'>
-        <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-green-100 to-green-50 group-hover:scale-105 transition-transform duration-300'>
+        <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-red-100 to-red-50 group-hover:scale-105 transition-transform duration-300'>
           <Icon
             icon='mdi:file-chart'
-            className='w-16 h-16 text-green-400 group-hover:scale-110 transition-transform duration-300'
+            className='w-16 h-16 text-red-400 group-hover:scale-110 transition-transform duration-300'
           />
         </div>
       </CardBody>
       <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
         <div className='flex justify-between items-center w-full'>
           <h4
-            className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-green-500 transition-colors duration-300'
+            className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-red-500 transition-colors duration-300'
             title={report.title}
           >
             {report.title}
@@ -158,7 +158,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
               isIconOnly
               size='sm'
               variant='light'
-              className='text-default-400 hover:text-green-500 hover:bg-green-50 transition-colors duration-300'
+              className='text-default-400 hover:text-red-500 hover:bg-red-50 transition-colors duration-300'
               onClick={(e) => handleAIAnalysisClick(report, e)}
             >
               <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
