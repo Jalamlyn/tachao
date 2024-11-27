@@ -15406,11 +15406,6 @@ map-visit@^1.0.0:
   dependencies:
     object-visit "^1.0.0"
 
-mapvgl@^1.0.0-beta.189:
-  version "1.0.0-beta.191"
-  resolved "https://registry.yarnpkg.com/mapvgl/-/mapvgl-1.0.0-beta.191.tgz#3e77a834ffcf44385512390ecd0b484b267dd2ba"
-  integrity sha512-kbcLSXPSZybMgvJ0RTPEpISC6hpc27P/UwYCFASKLRe6Z7LC0Z11FwNXvQT/jkAK/LdBm2GqsE9i+GQViqRIYg==
-
 markdown-it@^12.0.0:
   version "12.3.2"
   resolved "https://registry.yarnpkg.com/markdown-it/-/markdown-it-12.3.2.tgz#bf92ac92283fe983fe4de8ff8abfb5ad72cd0c90"
@@ -18942,14 +18937,6 @@ react-app-polyfill@^1.0.5:
     regenerator-runtime "^0.13.3"
     whatwg-fetch "^3.0.0"
 
-react-bmapgl@^0.2.28:
-  version "0.2.28"
-  resolved "https://registry.yarnpkg.com/react-bmapgl/-/react-bmapgl-0.2.28.tgz#b04fd995f5469fb3e67369577b5bb248712dbf3a"
-  integrity sha512-qqIyuoDril0424/MQA418D20KtvNeE7MBRnWL1EttaX/kNfGzAUjJRoVzROD8bLiDytYSzvodyr+hl0/6MniCQ==
-  dependencies:
-    mapvgl "^1.0.0-beta.189"
-    shallowequal "^1.1.0"
-
 react-day-picker@^8.10.1:
   version "8.10.1"
   resolved "https://registry.yarnpkg.com/react-day-picker/-/react-day-picker-8.10.1.tgz#4762ec298865919b93ec09ba69621580835b8e80"
@@ -20348,7 +20335,7 @@ shallow-clone@^3.0.0:
   dependencies:
     kind-of "^6.0.2"
 
-shallowequal@1.1.0, shallowequal@^1.1.0:
+shallowequal@1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/shallowequal/-/shallowequal-1.1.0.tgz#188d521de95b9087404fd4dcb68b13df0ae4e7f8"
   integrity sha512-y0m1JoUZSlPAjXVtPPW70aZWfIL/dSP7AFkRnniLCrK/8MDKog3TySTBmckD+RObVxH0v4Tox67+F14PdED2oQ==
