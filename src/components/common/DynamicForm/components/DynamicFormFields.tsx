@@ -5,8 +5,13 @@ import { Tabs, Tab } from "@nextui-org/react"
 import { cn } from "@/theme/cn"
 import FormFields from "./FormFields"
 
+interface FieldsWithGroups {
+  groups: FormFieldGroup[]
+  defaultGroup?: string
+}
+
 interface DynamicFormFieldsProps {
-  fields: DynamicFormField[] | { groups: FormFieldGroup[], defaultGroup?: string }
+  fields: DynamicFormField[] | FieldsWithGroups
   form: UseFormReturn<any>
   isEditable?: boolean
   onChange?: (fieldName: string, value: any) => void
@@ -14,15 +19,17 @@ interface DynamicFormFieldsProps {
 
 const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, form, isEditable, onChange }) => {
   // 检查是否使用分组配置
-  if (Array.isArray(fields)) {
-    return <FormFields fields={fields} form={form} isEditable={isEditable} onChange={onChange} />
+  if (!fields || typeof fields !== 'object' || !('groups' in fields)) {
+    // 处理普通字段数组
+    const fieldArray = Array.isArray(fields) ? fields : [fields]
+    return <FormFields fields={fieldArray} form={form} isEditable={isEditable} onChange={onChange} />
   }
 
   // 处理分组配置
-  const { groups, defaultGroup } = fields
+  const { groups, defaultGroup } = fields as FieldsWithGroups
   const [selectedGroup, setSelectedGroup] = React.useState(defaultGroup || groups[0]?.key)
 
-  if (!groups.length) {
+  if (!groups?.length) {
     return null
   }
 
