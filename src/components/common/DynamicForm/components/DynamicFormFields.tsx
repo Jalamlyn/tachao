@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { UseFormReturn } from "react-hook-form"
 import { FormField as DynamicFormField, FormFieldGroup } from "../types"
-import { Tabs, Tab } from "@nextui-org/react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/theme/cn"
 import FormFields from "./FormFields"
 
@@ -19,7 +19,7 @@ interface DynamicFormFieldsProps {
 
 const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, form, isEditable, onChange }) => {
   // 检查是否使用分组配置
-  if (!fields || typeof fields !== 'object' || !('groups' in fields)) {
+  if (!fields || typeof fields !== "object" || !("groups" in fields)) {
     // 处理普通字段数组
     const fieldArray = Array.isArray(fields) ? fields : [fields]
     return <FormFields fields={fieldArray} form={form} isEditable={isEditable} onChange={onChange} />
@@ -34,40 +34,33 @@ const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, fo
   }
 
   return (
-    <div className="space-y-6">
-      <Tabs 
-        selectedKey={selectedGroup} 
-        onSelectionChange={(key) => setSelectedGroup(key.toString())}
-        variant="underlined"
-        classNames={{
-          tabList: "gap-6",
-          cursor: "w-full bg-primary",
-          tab: "max-w-fit px-2 h-12",
-          tabContent: "group-data-[selected=true]:text-primary"
-        }}
-      >
-        {groups.map((group) => (
-          <Tab
-            key={group.key}
-            title={
-              <div className="flex items-center gap-2">
-                {group.icon && <span className="text-xl">{group.icon}</span>}
-                <span>{group.title}</span>
-              </div>
-            }
-          >
-            <div className={cn("py-4", "transition-all duration-200")}>
-              {group.description && (
-                <p className="text-sm text-gray-500 mb-4">{group.description}</p>
+    <div className='space-y-6'>
+      <Tabs value={selectedGroup} onValueChange={setSelectedGroup} className="w-full">
+        <TabsList className="w-full">
+          {groups.map((group) => (
+            <TabsTrigger
+              key={group.key}
+              value={group.key}
+              className={cn(
+                "flex items-center gap-2",
+                "data-[state=active]:bg-primary-50 data-[state=active]:text-primary-600",
+                "transition-all duration-200"
               )}
-              <FormFields
-                fields={group.fields}
-                form={form}
-                isEditable={isEditable}
-                onChange={onChange}
-              />
-            </div>
-          </Tab>
+            >
+              {group.icon && <span className='text-xl'>{group.icon}</span>}
+              <span>{group.title}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {groups.map((group) => (
+          <TabsContent
+            key={group.key}
+            value={group.key}
+            className={cn("py-4", "transition-all duration-200")}
+          >
+            {group.description && <p className='text-sm text-gray-500 mb-4'>{group.description}</p>}
+            <FormFields fields={group.fields} form={form} isEditable={isEditable} onChange={onChange} />
+          </TabsContent>
         ))}
       </Tabs>
     </div>
