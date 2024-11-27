@@ -12,6 +12,7 @@ DynamicForm 是一个灵活的动态表单组件，支持以下功能：
 - 动态联动
 - AI 生成的公式计算
 - 手写签名
+- 字段分组管理
 
 ## 基础类型
 
@@ -78,6 +79,20 @@ interface FormField {
   lineWidth?: number // 签名笔画宽度
   lineColor?: string // 签名笔画颜色
   className?: string // 自定义类名
+}
+```
+
+### FormFieldGroup
+
+表单字段分组配置接口：
+
+```typescript
+interface FormFieldGroup {
+  key: string        // 分组键名
+  title: string      // 分组标题
+  fields: FormField[] // 分组中的字段
+  description?: string // 分组描述
+  icon?: string      // 分组图标
 }
 ```
 
@@ -194,6 +209,53 @@ interface DynamicFormConfig {
   validate?: (values: any, context?: ValidationContext) => Promise<ValidationResult> | ValidationResult // 表单验证函数
 }
 ```
+
+### 分组字段配置
+
+基本字段支持分组配置,使用 Tab 形式展示:
+
+```typescript
+{
+  renderConfig: {
+    basicFields: {
+      groups: [
+        {
+          key: "basicInfo",
+          title: "基本信息",
+          icon: "📋",  // 可选
+          description: "产品基本信息", // 可选
+          fields: [
+            {
+              name: "productName",
+              label: "产品名称",
+              type: "text"
+            }
+          ]
+        },
+        {
+          key: "priceInfo",
+          title: "价格信息",
+          fields: [
+            {
+              name: "price",
+              label: "单价",
+              type: "number"
+            }
+          ]
+        }
+      ],
+      defaultGroup: "basicInfo" // 可选,默认选中的分组
+    }
+  }
+}
+```
+
+分组字段特性:
+- 支持多个分组,每个分组显示为一个 Tab
+- 每个分组可以有自己的标题、图标和描述
+- 分组之间可以自由切换
+- 表单数据保持统一管理
+- 向后兼容,支持原有的非分组配置方式
 
 watch 函数示例：只使用单个 watch 来监听所有字段的变化
 
@@ -348,7 +410,10 @@ interface ProcessStep {
 
 ```typescript
 interface FormRenderConfig {
-  basicFields: FormField[] // 基础字段配置，用于渲染基本表单字段
+  basicFields: FormField[] | {
+    groups: FormFieldGroup[],
+    defaultGroup?: string
+  } // 基础字段配置，用于渲染基本表单字段
   table?: TableConfig // 表格配置，用于渲染动态表格
   processSteps?: ProcessStep[] // 流程步骤配置，用于渲染流程确认步骤
 }
