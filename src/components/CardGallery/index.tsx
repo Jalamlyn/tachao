@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Button } from "@nextui-org/react"
+import { Button, ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import SearchInput from "@/components/SearchInput"
 
@@ -151,7 +151,7 @@ function CardGallery<T>({
             )}
           </div>
         )}
-        {renderContent()}
+        <ScrollShadow>{renderContent()}</ScrollShadow>
       </div>
     </div>
   )
