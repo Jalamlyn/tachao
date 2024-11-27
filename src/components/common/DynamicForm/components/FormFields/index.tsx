@@ -373,7 +373,9 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             "w-full",
             "form-field-wrapper",
             "hover:bg-gray-50/50 rounded-lg p-2 -m-2",
-            "transition-colors duration-200"
+            "transition-colors duration-200",
+            // 为 resource 类型字段添加跨列类名
+            field.type === "resource" && "md:col-span-2"
           )}
         >
           {renderField(field)}
