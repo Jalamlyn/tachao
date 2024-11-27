@@ -1,10 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from "react"
-import { ScrollShadow, Tabs, Tab } from "@nextui-org/react"
+import { ScrollShadow, Tabs, Tab, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import MessageCard from "@/components/MessageCard"
 import AICommandInput from "@/components/AICommandInput"
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import message from "@/components/Message"
 
@@ -111,7 +110,7 @@ const ImageUploader: React.FC<{ agent: AIEditorProps["agent"] }> = ({ agent }) =
         onChange={handleUpload}
       />
       <Button
-        variant='outline'
+        variant='flat'
         size='sm'
         onClick={() => inputRef.current?.click()}
         disabled={isLoading}

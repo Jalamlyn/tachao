@@ -88,11 +88,11 @@ interface FormField {
 
 ```typescript
 interface FormFieldGroup {
-  key: string        // 分组键名
-  title: string      // 分组标题
+  key: string // 分组键名
+  title: string // 分组标题
   fields: FormField[] // 分组中的字段
   description?: string // 分组描述
-  icon?: string      // 分组图标
+  icon?: string // 分组图标
 }
 ```
 
@@ -251,6 +251,7 @@ interface DynamicFormConfig {
 ```
 
 分组字段特性:
+
 - 支持多个分组,每个分组显示为一个 Tab
 - 每个分组可以有自己的标题、图标和描述
 - 分组之间可以自由切换
@@ -410,10 +411,12 @@ interface ProcessStep {
 
 ```typescript
 interface FormRenderConfig {
-  basicFields: FormField[] | {
-    groups: FormFieldGroup[],
-    defaultGroup?: string
-  } // 基础字段配置，用于渲染基本表单字段
+  basicFields:
+    | FormField[]
+    | {
+        groups: FormFieldGroup[]
+        defaultGroup?: string
+      } // 基础字段配置，用于渲染基本表单字段
   table?: TableConfig // 表格配置，用于渲染动态表格
   processSteps?: ProcessStep[] // 流程步骤配置，用于渲染流程确认步骤
 }
@@ -493,4 +496,129 @@ validate: (values) => {
 2. 公式支持基本的数学运算和 Formula.js 提供的函数。
 3. 出于安全考虑，某些 JavaScript 函数（如 `eval`）在公式中是被禁止的。
 4. 计算是通过 FormulaService 进行的，它提供了安全的公式评估机制。
+```
+
+### FormRenderConfig
+
+表单渲染配置接口：
+
+```typescript
+interface FormRenderConfig {
+  basicFields: FormField[] | {
+    groups: FormFieldGroup[],
+    defaultGroup?: string
+  } // 基础字段配置，用于渲染基本表单字段
+  table?: TableConfig // 表格配置，用于渲染动态表格
+  processSteps?: ProcessStep[] // 流程步骤配置，用于渲染流程确认步骤
+  metadata?: {
+    title?: string // 表单标题
+    description?: string // 表单描述
+    permissions?: {
+      edit?: boolean // 编辑权限
+      delete?: boolean // 删除权限
+      print?: boolean // 打印权限
+    }
+  }
+}
+FormFieldGroup
+表单字段分组配置接口：
+
+interface FormFieldGroup {
+  key: string // 分组键名
+  title: string // 分组标题
+  fields: FormField[] // 分组中的字段
+  description?: string // 分组描述
+  icon?: string | ReactNode // 支持字符串或 React 组件作为图标
+}
+[中间的内容保持不变,直到验证部分]
+
+表单验证示例
+validate: async (values, context) => {
+  // 1. 基础字段验证
+  const basicErrors = await validateBasicFields(values)
+  if (basicErrors) {
+    return {
+      valid: false,
+      errors: basicErrors.errors,
+      fields: basicErrors.fields,
+      categorizedErrors: {
+        required: basicErrors.required,
+        invalid: basicErrors.invalid
+      }
+    }
+  }
+
+  // 2. 表格数据验证
+  if (values.tableData?.length) {
+    const tableErrors = await validateTableData(values.tableData)
+    if (tableErrors) {
+      return {
+        valid: false,
+        errors: tableErrors.map(err => `第${err.row}行: ${err.message}`),
+        fields: tableErrors.reduce((acc, err) => {
+          acc[`tableData.${err.row}.${err.field}`] = err.message
+          return acc
+        }, {})
+      }
+    }
+  }
+
+  // 3. 流程确认验证
+  if (values.processConfirmations) {
+    const processErrors = validateProcessConfirmations(values.processConfirmations)
+    if (processErrors) {
+      return {
+        valid: false,
+        errors: processErrors.map(err => `${err.step}: ${err.message}`),
+        fields: processErrors.reduce((acc, err) => {
+          acc[`processConfirmations.${err.step}.${err.field}`] = err.message
+          return acc
+        }, {})
+      }
+    }
+  }
+
+  // 4. 业务规则验证
+  const businessErrors = await validateBusinessRules(values, context)
+  if (businessErrors) {
+    return {
+      valid: false,
+      errors: businessErrors.messages,
+      fields: businessErrors.fields,
+      warnings: businessErrors.warnings
+    }
+  }
+
+  return { valid: true }
+}
+计算字段配置
+在 TableColumn 配置中，计算字段支持以下高级特性：
+
+{
+  key: "totalPrice",
+  title: "总价",
+  type: "number",
+  calculate: {
+    // 计算公式，可以使用 row 访问当前行的所有字段
+    formula: "row.quantity * row.unitPrice * (1 - (row.discount || 0))",
+
+    // 依赖字段列表，当这些字段变化时触发计算
+    dependencies: ["quantity", "unitPrice", "discount"],
+
+    // 计算触发时机
+    timing: "onChange", // 'onChange' | 'onBlur' | 'manual'
+
+    // 计算错误时的默认值
+    fallback: 0,
+
+    // 结果格式化
+    format: "0.00", // 数字格式化模式
+
+    // 计算结果验证
+    validate: (value) => {
+      if (value < 0) return "计算结果不能为负数"
+      return undefined
+    }
+  }
+}
 ```

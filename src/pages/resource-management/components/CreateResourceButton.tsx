@@ -102,12 +102,12 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
         return
       }
 
-      const data = await readExcel(file, headerType === "multiple")
+      const excelResult = await readExcel(file, headerType === "multiple")
 
-      // 使用 useMetadata hook 创建资源
+      // 修复数据结构:直接使用Excel读取返回的数据,不再额外包装data层
       const result = await createResource({
         title: resourceName,
-        data: data,
+        data: excelResult.data, // 直接使用Excel读取的数据,不再包装
         status: "active",
         indexFields: {
           appId: appId,
@@ -117,7 +117,7 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
         },
       })
 
-      if (result) {
+      if (excelResult) {
         onClose()
       } else {
         throw new Error("创建失败")

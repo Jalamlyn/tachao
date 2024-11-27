@@ -50,6 +50,7 @@ export class AIFormAgent implements IAIFormAgent {
   public async parseConfig(rawConfig: string) {
     try {
       const parsedConfig = await parseFormConfig(rawConfig)
+      debugger
       return parsedConfig
     } catch (error) {
       console.error("Error parsing form config:", error)
