@@ -13,7 +13,7 @@ import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
 import SignaturePad from "@/components/common/SignaturePad"
-import ResourceSelectButton from "@/components/common/ResourceSelectButton"
+import ResourceFieldGroup from "@/components/common/ResourceFieldGroup"
 
 interface DynamicFormFieldsProps {
   fields: DynamicFormField[]
@@ -210,43 +210,19 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             tooltip={field.tooltip}
           >
             {(formField) => (
-              <div className="flex items-center gap-2">
-                <Input
-                  {...formField}
-                  disabled={true}
-                  className="flex-1"
-                  placeholder={field.resourceConfig?.placeholder || "请选择"}
-                />
-                {isEditable && !field.disabled && field.resourceConfig && (
-                  <ResourceSelectButton
-                    resourceName={field.resourceConfig.resourceName}
-                    appId={field.resourceConfig.appId}
-                    selectionMode={field.resourceConfig.selectionMode}
-                    onSelect={(selected) => {
-                      if (selected.length > 0) {
-                        const value = field.resourceConfig?.valueField 
-                          ? selected[0][field.resourceConfig.valueField]
-                          : selected[0]
-                        const displayValue = field.resourceConfig?.displayField 
-                          ? selected[0][field.resourceConfig.displayField]
-                          : value
-                        formField.onChange(value)
-                        onChange?.(field.name, value)
-                        // 更新显示值
-                        const inputElement = document.querySelector(`input[name="${field.name}"]`) as HTMLInputElement
-                        if (inputElement) {
-                          inputElement.value = displayValue
-                        }
-                      }
-                    }}
-                    buttonText="选择"
-                    buttonProps={{
-                      size: "sm",
-                      className: "px-2 py-1 h-8",
-                    }}
-                  />
-                )}
-              </div>
+              <ResourceFieldGroup
+                resourceTitle={field.resourceConfig?.resourceTitle || ""}
+                value={formField.value}
+                onChange={(value) => {
+                  formField.onChange(value)
+                  onChange?.(field.name, value)
+                }}
+                disabled={!isEditable || field.disabled}
+                onDataSelect={(data) => {
+                  console.log('Selected data:', data)
+                }}
+                form={form}
+              />
             )}
           </FormFieldWrapper>
         )

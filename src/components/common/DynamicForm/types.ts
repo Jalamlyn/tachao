@@ -19,12 +19,7 @@ export type FormFieldType =
   | "signature"
 
 export interface ResourceConfig {
-  resourceName: string
-  appId: string
-  selectionMode?: "single" | "multiple"
-  displayField?: string
-  valueField?: string
-  placeholder?: string
+  resourceTitle: string
 }
 
 export interface FormField {
