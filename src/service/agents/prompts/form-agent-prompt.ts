@@ -20,6 +20,74 @@ ${rawConfig}
 - 基本信息
 - 流程信息, 不生成确认按钮,系统会自动生成
 
+表单字段分组支持两种方式:
+
+1. 静态分组:
+- type: 'static'
+- 需要手动配置所有字段
+- 适用于固定结构的表单
+
+示例:
+{
+  type: 'static',
+  key: 'basicInfo',
+  title: '基本信息',
+  fields: [
+    {
+      name: 'name',
+      label: '名称',
+      type: 'text'
+    }
+    // ... 其他字段
+  ]
+}
+
+2. 动态分组:
+- type: 'dynamic'
+- 字段根据资源数据自动生成
+- 只需配置资源标题
+- 第一个字段自动变为数据选择按钮
+- 其他字段自动设置为只读
+
+示例:
+{
+  type: 'dynamic',
+  key: 'productInfo',
+  title: '产品信息',
+  resourceTitle: '产品列表' // 资源标题,用于查询数据
+}
+
+完整配置示例:
+{
+  renderConfig: {
+    basicFields: {
+      groups: [
+        // 静态分组
+        {
+          type: 'static',
+          key: 'basicInfo',
+          title: '基本信息',
+          fields: [
+            {
+              name: 'name',
+              label: '名称',
+              type: 'text'
+            }
+          ]
+        },
+        // 动态分组
+        {
+          type: 'dynamic',
+          key: 'productInfo',
+          title: '产品信息',
+          resourceTitle: '产品列表'
+        }
+      ],
+      defaultGroup: 'basicInfo'
+    }
+  }
+}
+
 下拉选择数据格式规范：
 在生成涉及下拉选择的数据时，必须遵循以下规则：
 1. value 和 label 必须完全一致
