@@ -67,7 +67,7 @@ const ResourceFieldGroup: React.FC<ResourceFieldGroupProps> = ({
     if (form) {
       Object.entries(data).forEach(([key, value]) => {
         form.setValue(key, value, {
-          shouldValidate: false
+          shouldValidate: false,
         })
       })
     }
@@ -102,7 +102,6 @@ const ResourceFieldGroup: React.FC<ResourceFieldGroupProps> = ({
           >
             选择 {resourceTitle}
           </Button>
-          {selectedData && <span className='text-sm text-gray-500'>已选择: {selectedData[fields[0]?.key]}</span>}
         </div>
         {selectedData && (
           <div>
@@ -167,17 +166,7 @@ const ResourceFieldGroup: React.FC<ResourceFieldGroupProps> = ({
 }
 
 const getFieldIcon = (key: string): string => {
-  const iconMap: Record<string, string> = {
-    name: "mdi:account",
-    phone: "mdi:phone",
-    email: "mdi:email",
-    address: "mdi:map-marker",
-    company: "mdi:office-building",
-    department: "mdi:sitemap",
-    position: "mdi:badge-account",
-    default: "mdi:format-list-text",
-  }
-  return iconMap[key.toLowerCase()] || iconMap.default
+  return "mdi:format-list-text"
 }
 
 export default ResourceFieldGroup
