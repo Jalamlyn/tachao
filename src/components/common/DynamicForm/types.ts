@@ -18,6 +18,15 @@ export type FormFieldType =
   | "resource"
   | "signature"
 
+export interface ResourceConfig {
+  resourceName: string
+  appId: string
+  selectionMode?: "single" | "multiple"
+  displayField?: string
+  valueField?: string
+  placeholder?: string
+}
+
 export interface FormField {
   name: string
   label: string
@@ -38,11 +47,7 @@ export interface FormField {
     disabled?: boolean
   }>)
   accept?: string
-  resourceConfig?: {
-    resourceName: string
-    appId: string
-    selectionMode?: "single" | "multiple"
-  }
+  resourceConfig?: ResourceConfig
   onUpload?: (file: File) => Promise<void>
   render?: (props: {
     field: any
@@ -76,11 +81,7 @@ export interface TableColumn {
     label: string
     value: string | number
   }>
-  resourceConfig?: {
-    resourceName: string
-    appId: string
-    selectionMode?: "single" | "multiple"
-  }
+  resourceConfig?: ResourceConfig
   render?: (value: any, record: any, index: number) => ReactNode
   summary?: {
     calculate?: (records: any[]) => any
