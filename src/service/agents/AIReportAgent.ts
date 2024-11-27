@@ -1,4 +1,4 @@
-import chatChunkClaude from "@/service/chat/chat-chunk-claude-office"
+import chatChunk from "@/service/chat/chat-chunk-openai-office"
 import { Message } from "@/service/agents/AIFormAgentTypes"
 import { formulaService } from "@/services/formulaService"
 import { markdown as doc } from "@/pages/report-management/components/AnalysisResult.md"
@@ -195,7 +195,7 @@ export class AIReportAgent {
       ]
 
       let aiResponse = ""
-      await chatChunkClaude(
+      await chatChunk(
         messages,
         (chunk: string) => {
           aiResponse += chunk

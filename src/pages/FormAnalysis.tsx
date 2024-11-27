@@ -4,7 +4,8 @@ import { Icon } from "@iconify/react"
 import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadata"
 import message from "@/components/Message"
 import MessageCard from "@/components/MessageCard"
-import chatChunkClaude from "@/service/chat/chat-chunk-claude-office"
+// import chatChunkClaude from "@/service/chat/chat-chunk-claude-office"
+import chatChunk from "@/service/chat/chat-chunk-openai-office"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
@@ -65,7 +66,7 @@ const FormAnalysis: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        await chatChunkClaude(
+        await chatChunk(
           [
             {
               role: "system",
