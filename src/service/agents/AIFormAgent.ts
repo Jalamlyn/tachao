@@ -1,4 +1,5 @@
-import chatChunkClaude from "../chat/chat-chunk-claude-office"
+// import chatChunkClaude from "../chat/chat-chunk-claude-office"
+import chatChunkOpenAIOffice from "../chat/chat-chunk-openai-office"
 import chatChunkQwen from "../chat/chat-siliconflow"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
@@ -190,7 +191,7 @@ ${formulaService}
       },
     ]
 
-    await chatChunkClaude(
+    await chatChunkOpenAIOffice(
       messages,
       (chunk: string) => {
         response += chunk

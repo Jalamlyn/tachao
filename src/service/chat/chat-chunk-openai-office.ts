@@ -3,7 +3,15 @@ import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { events } from "fetch-event-stream"
 
-export default async function chatChunkOpenAIOffice(messages, onChunk, onCancel, isFirst = true, temperature = 0, overFlag = "YES", baseModel = "openai::gpt-4") {
+export default async function chatChunkOpenAIOffice(
+  messages,
+  onChunk,
+  onCancel,
+  isFirst = true,
+  temperature = 0,
+  overFlag = "YES",
+  baseModel = "openai::gpt-4"
+) {
   let _messages = messages
   if (isFirst) {
     _messages = messages.map((msg, index) => {
@@ -28,18 +36,15 @@ export default async function chatChunkOpenAIOffice(messages, onChunk, onCancel,
   const modelSupplierData = localDB.getItem("model-supplier-data") || []
   const supplierInfo = modelSupplierData.find((supplier) => supplier.id === provider)
 
-  if (!supplierInfo) {
-    throw new Error(`未找到服务商信息：${provider}`)
-  }
-
-  const apiKey = supplierInfo.apiKey
-  const apiEndPoint = supplierInfo.endpoint || "https://api.openai.com/v1/chat/completions"
+  const apiKey = "5d5c1f3cc91b440b8391851b2eadfb1c"
+  const apiEndPoint =
+    "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview"
 
   const payload = {
-    model: model,
+    // model: model,
     messages: _messages,
     temperature,
-    max_tokens: 4096,
+    max_tokens: 8192,
     stream: true,
   }
 
@@ -52,11 +57,12 @@ export default async function chatChunkOpenAIOffice(messages, onChunk, onCancel,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        // Authorization: `Bearer ${apiKey}`,
+        "api-key": `${apiKey}`,
       },
       body: jsonStringify(payload),
       signal: controller.signal,
-      timeout: 60000,
+      timeout: 30000,
     })
 
     if (!response.ok) {
