@@ -1,8 +1,7 @@
 import React, { useEffect } from "react"
-import { Input } from "@/components/ui/input"
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
-import { Chip } from "@nextui-org/react"
+import { Input } from "@nextui-org/react"
 
 interface OrderNumberFieldProps {
   form: UseFormReturn<any>
@@ -43,11 +42,8 @@ const OrderNumberField: React.FC<OrderNumberFieldProps> = ({
       name={fieldName}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>
-            <Chip color='secondary'>{label}</Chip>
-          </FormLabel>
           <FormControl>
-            <Input {...field} disabled />
+            <Input {...field} disabled variant='flat' />
           </FormControl>
           <FormMessage />
         </FormItem>

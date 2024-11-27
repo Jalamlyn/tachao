@@ -35,29 +35,17 @@ const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, fo
 
   return (
     <div className='space-y-6'>
-      <Tabs value={selectedGroup} onValueChange={setSelectedGroup} className="w-full">
-        <TabsList className="w-full">
+      <Tabs value={selectedGroup} onValueChange={setSelectedGroup}>
+        <TabsList>
           {groups.map((group) => (
-            <TabsTrigger
-              key={group.key}
-              value={group.key}
-              className={cn(
-                "flex items-center gap-2",
-                "data-[state=active]:bg-primary-50 data-[state=active]:text-primary-600",
-                "transition-all duration-200"
-              )}
-            >
+            <TabsTrigger key={group.key} value={group.key}>
               {group.icon && <span className='text-xl'>{group.icon}</span>}
               <span>{group.title}</span>
             </TabsTrigger>
           ))}
         </TabsList>
         {groups.map((group) => (
-          <TabsContent
-            key={group.key}
-            value={group.key}
-            className={cn("py-4", "transition-all duration-200")}
-          >
+          <TabsContent key={group.key} value={group.key} className={cn("py-4", "transition-all duration-200")}>
             {group.description && <p className='text-sm text-gray-500 mb-4'>{group.description}</p>}
             <FormFields fields={group.fields} form={form} isEditable={isEditable} onChange={onChange} />
           </TabsContent>

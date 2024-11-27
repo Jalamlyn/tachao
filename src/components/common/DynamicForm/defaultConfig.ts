@@ -3,76 +3,69 @@ import { DynamicFormConfig, ToolbarButton } from "./types"
 // 默认工具栏按钮配置
 export const defaultToolbarButtons: ToolbarButton[] = [
   {
-    key: 'save',
-    label: '保存',
-    icon: 'mdi:content-save',
-    color: 'primary',
-    variant: 'flat',
+    key: "save",
+    label: "保存",
+    icon: "mdi:content-save",
+    color: "primary",
+    variant: "flat",
     onClick: () => {
-      console.log('Default save action')
-    }
+      console.log("Default save action")
+    },
   },
   {
-    key: 'edit',
-    label: '编辑',
-    icon: 'mdi:pencil',
-    color: 'primary',
-    variant: 'flat',
+    key: "edit",
+    label: "编辑",
+    icon: "mdi:pencil",
+    color: "primary",
+    variant: "flat",
     onClick: () => {
-      console.log('Default edit action')
-    }
+      console.log("Default edit action")
+    },
   },
   {
-    key: 'print',
-    label: '打印',
-    icon: 'mdi:printer',
-    color: 'primary',
-    variant: 'flat',
+    key: "print",
+    label: "打印",
+    icon: "mdi:printer",
+    color: "primary",
+    variant: "flat",
     onClick: () => {
-      console.log('Default print action')
-    }
+      console.log("Default print action")
+    },
   },
   {
-    key: 'cancel',
-    label: '取消',
-    icon: 'mdi:close',
-    color: 'default',
-    variant: 'flat',
+    key: "cancel",
+    label: "取消",
+    icon: "mdi:close",
+    color: "default",
+    variant: "flat",
     onClick: () => {
-      console.log('Default cancel action')
-    }
-  }
+      console.log("Default cancel action")
+    },
+  },
 ]
 
 // 默认表单配置
 export const defaultFormConfig: DynamicFormConfig = {
   metadata: {
-    title: '默认表单',
-    description: '这是一个默认的动态表单配置',
+    title: "默认表单",
+    description: "这是一个默认的动态表单配置",
     permissions: {
       edit: true,
       delete: true,
-      print: true
-    }
+      print: true,
+    },
   },
   renderConfig: {
-    basicFields: [
-      {
-        name: 'defaultField',
-        label: '默认字段',
-        type: 'text',
-        required: true
-      }
-    ]
+    basicFields: [],
   },
   orderNumberConfig: {
-    prefix: 'DEFAULT',
-    fieldName: 'orderNumber',
-    label: '表单编号'
+    prefix: "DG",
+    fieldName: "orderNumber",
+    label: "表单编号",
   },
   toolbar: {
-    buttons: defaultToolbarButtons
-  }
+    buttons: defaultToolbarButtons,
+  },
 }
 
 // 默认页面样式
@@ -105,16 +98,16 @@ export const defaultAnimationConfig = {
   transition: {
     type: "spring",
     stiffness: 100,
-    damping: 15
-  }
+    damping: 15,
+  },
 }
 
 // 默认验证消息
 export const defaultValidationMessages = {
-  required: '此字段为必填项',
-  email: '请输入有效的邮箱地址',
-  url: '请输入有效的URL地址',
-  tel: '请输入有效的电话号码',
-  number: '请输入有效的数字',
-  date: '请输入有效的日期'
+  required: "此字段为必填项",
+  email: "请输入有效的邮箱地址",
+  url: "请输入有效的URL地址",
+  tel: "请输入有效的电话号码",
+  number: "请输入有效的数字",
+  date: "请输入有效的日期",
 }
