@@ -56,6 +56,29 @@ export interface FormField {
   className?: string
 }
 
+// 静态分组配置
+export interface StaticFieldGroup {
+  type: 'static'
+  key: string
+  title: string
+  fields: FormField[]
+  description?: string
+  icon?: string
+}
+
+// 动态分组配置
+export interface DynamicFieldGroup {
+  type: 'dynamic'
+  key: string
+  title: string
+  resourceTitle: string
+  description?: string
+  icon?: string
+}
+
+// 分组类型联合
+export type FormFieldGroup = StaticFieldGroup | DynamicFieldGroup
+
 export interface TableColumn {
   key: string
   title: string
@@ -120,17 +143,7 @@ export interface FormMetadata {
   }
 }
 
-// 新增: 表单字段分组配置
-export interface FormFieldGroup {
-  key: string
-  title: string
-  fields: FormField[]
-  description?: string
-  icon?: string
-}
-
 export interface FormRenderConfig {
-  // 修改: 支持分组的基本字段配置
   basicFields: FormField[] | {
     groups: FormFieldGroup[]
     defaultGroup?: string
