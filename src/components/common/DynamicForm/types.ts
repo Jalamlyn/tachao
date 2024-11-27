@@ -17,7 +17,6 @@ export type FormFieldType =
   | "custom"
   | "resource"
   | "signature"
-  | "resource-group" // 新增资源组类型
 
 export interface FormField {
   name: string
@@ -55,7 +54,14 @@ export interface FormField {
   lineWidth?: number
   lineColor?: string
   className?: string
-  resourceTitle?: string // 新增资源标题配置
+}
+
+export interface FormFieldGroup {
+  key: string
+  title: string
+  fields: FormField[]
+  description?: string
+  icon?: string
 }
 
 export interface TableColumn {
@@ -123,7 +129,10 @@ export interface FormMetadata {
 }
 
 export interface FormRenderConfig {
-  basicFields: FormField[]
+  basicFields: FormField[] | {
+    groups: FormFieldGroup[]
+    defaultGroup?: string
+  }
   table?: TableConfig
   processSteps?: ProcessStep[]
 }
