@@ -120,8 +120,21 @@ export interface FormMetadata {
   }
 }
 
+// 新增: 表单字段分组配置
+export interface FormFieldGroup {
+  key: string
+  title: string
+  fields: FormField[]
+  description?: string
+  icon?: string
+}
+
 export interface FormRenderConfig {
-  basicFields: FormField[]
+  // 修改: 支持分组的基本字段配置
+  basicFields: FormField[] | {
+    groups: FormFieldGroup[]
+    defaultGroup?: string
+  }
   table?: TableConfig
   processSteps?: ProcessStep[]
 }
