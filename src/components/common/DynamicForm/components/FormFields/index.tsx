@@ -21,7 +21,7 @@ interface DynamicFormFieldsProps {
   onChange?: (fieldName: string, value: any) => void
 }
 
-const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isEditable = true, onChange }) => {
+const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isEditable, onChange }) => {
   const renderField = (field: DynamicFormField) => {
     if (field.hidden) return null
 

@@ -1,9 +1,9 @@
 import React from "react"
 import { UseFormReturn } from "react-hook-form"
 import { FormField as DynamicFormField, FormFieldGroup } from "../types"
-import DynamicFormFields from "./FormFields"
 import { Tabs, Tab } from "@nextui-org/react"
 import { cn } from "@/theme/cn"
+import FormFields from "./FormFields"
 
 interface DynamicFormFieldsProps {
   fields: DynamicFormField[] | { groups: FormFieldGroup[], defaultGroup?: string }
@@ -15,7 +15,7 @@ interface DynamicFormFieldsProps {
 const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, form, isEditable, onChange }) => {
   // 检查是否使用分组配置
   if (Array.isArray(fields)) {
-    return <DynamicFormFields fields={fields} form={form} isEditable={isEditable} onChange={onChange} />
+    return <FormFields fields={fields} form={form} isEditable={isEditable} onChange={onChange} />
   }
 
   // 处理分组配置
@@ -53,7 +53,7 @@ const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, fo
               {group.description && (
                 <p className="text-sm text-gray-500 mb-4">{group.description}</p>
               )}
-              <DynamicFormFields
+              <FormFields
                 fields={group.fields}
                 form={form}
                 isEditable={isEditable}
