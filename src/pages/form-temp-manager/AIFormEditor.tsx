@@ -305,12 +305,12 @@ const AIFormEditor: React.FC = () => {
       try {
         await pendingVersionSave.save(useCurrentVersion)
         pendingVersionSave.resolve()
+        setIsVersionSelectModalOpen(false) // 只在成功后关闭Modal
       } catch (error) {
         pendingVersionSave.reject(error)
-        throw error // 继续抛出错误以中断执行流程
+        // 不要在这里关闭Modal,让用户看到错误状态
       } finally {
         setPendingVersionSave(null)
-        setIsVersionSelectModalOpen(false)
       }
     }
   }

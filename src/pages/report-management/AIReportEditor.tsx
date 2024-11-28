@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
@@ -12,77 +12,13 @@ import AIEditor from "@/components/AIEditor"
 import { Icon } from "@iconify/react"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
 import { Button, Tabs, Tab } from "@nextui-org/react"
-import { generateColumns, flattenData, extractShataAICode } from "@/pages/report-management/utils/generateColumns"
+import { extractShataAICode } from "@/pages/report-management/utils/generateColumns"
 import { processReportData } from "@/pages/report-management/utils/processReportData"
 import { Message } from "@/pages/report-management/types"
 import DataTable from "@/pages/report-management/components/DataTable"
 import SuccessModal from "@/pages/report-management/components/SuccessModal"
-import { motion } from "framer-motion"
 import VersionSelectModal from "@/components/VersionSelectModal"
-
-// 空状态组件 - 分析报表
-const EmptyAnalysisState: React.FC = () => {
-  return (
-    <div className='flex flex-col items-center justify-center min-h-[400px] p-8'>
-      <div className='w-48 h-48 mb-8 relative'>
-        <motion.div
-          animate={{
-            scale: [1, 1.05, 1],
-            rotate: [0, -5, 5, 0],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
-        >
-          <Icon icon='hugeicons:ai-chat-02' className='w-full h-full text-primary/30' />
-        </motion.div>
-      </div>
-      <h3 className='text-xl font-medium text-foreground mb-2'>开始分析您的数据</h3>
-      <p className='text-default-500 mb-8 text-center max-w-md'>使用左侧的 AI 助手来分析您的数据，生成图表和洞察报告</p>
-      <div className='flex flex-col gap-4 items-center'>
-        <div className='p-4 bg-primary/5 rounded-lg'>
-          <p className='text-sm text-default-600'>示例提示语:</p>
-          <ul className='list-disc pl-6 space-y-2 text-primary'>
-            <li>帮我分析数据的整体分布情况</li>
-            <li>生成一个饼图展示状态分布</li>
-            <li>计算各个指标的平均值</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// 空状态组件 - 代码视图
-const EmptyCodeState: React.FC = () => {
-  return (
-    <div className='flex flex-col items-center justify-center min-h-[400px] p-8'>
-      <div className='w-48 h-48 mb-8 relative'>
-        <motion.div
-          animate={{
-            scale: [1, 1.05, 1],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
-        >
-          <Icon icon='mdi:code-braces' className='w-full h-full text-primary/30' />
-        </motion.div>
-      </div>
-      <h3 className='text-xl font-medium text-foreground mb-2'>等待生成分析代码</h3>
-      <p className='text-default-500 mb-4 text-center max-w-md'>当 AI 助手生成分析结果后，这里会显示相应的代码</p>
-    </div>
-  )
-}
-
-interface TemplateInfo {
-  id: string
-  title: string
-}
+import { EmptyAnalysisState, EmptyCodeState } from "./components/EmptyState"
 
 interface TemplateInfoMap {
   [key: string]: string
@@ -614,16 +550,20 @@ const AIReportEditor: React.FC = () => {
     if (pendingVersionSave) {
       try {
         await pendingVersionSave.save(useCurrentVersion)
+        pendingVersionSave.resolve()
+        setIsVersionSelectModalOpen(false)  // 只在成功时关闭Modal
       } catch (error) {
         pendingVersionSave.reject(error)
+        // 出错时不关闭Modal,让用户可以看到错误并重试
+      } finally {
+        setPendingVersionSave(null)
       }
-      setPendingVersionSave(null)
     }
-    setIsVersionSelectModalOpen(false)
   }
 
   // 新增：处理版本选择取消
   const handleVersionSelectCancel = () => {
+    debugger
     if (pendingVersionSave) {
       pendingVersionSave.reject(new Error("用户取消选择版本"))
       setPendingVersionSave(null)
