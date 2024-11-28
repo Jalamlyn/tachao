@@ -51,7 +51,7 @@ const AIFormEditor: React.FC = () => {
     handleTitleConfirm,
     handleTitleCancel,
     handleVersionSelectConfirm,
-    handleVersionSelectCancel
+    handleVersionSelectCancel,
   } = useAIFormStore()
 
   const { state: formState, setFormConfig, setRawConfig, handleError } = useFormState()
@@ -65,6 +65,7 @@ const AIFormEditor: React.FC = () => {
 
   useEffect(() => {
     setMessages([])
+    setSuccessModalOpen(false)
   }, [])
 
   useEffect(() => {
@@ -440,13 +441,7 @@ const AIFormEditor: React.FC = () => {
         latestVersionIndex={versionControl.versions.length - 1}
       />
 
-      {renderSaveModal(
-        isSuccessModalOpen,
-        setSuccessModalOpen,
-        isEditMode,
-        handleCreateDocument,
-        handleGoToTemplates
-      )}
+      {renderSaveModal(isSuccessModalOpen, setSuccessModalOpen, isEditMode, handleCreateDocument, handleGoToTemplates)}
     </PageLayout>
   )
 }

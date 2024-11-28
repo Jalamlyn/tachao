@@ -205,47 +205,35 @@ export function MetadataTable<T extends MetadataDetail>({
     if (!pagination || total === 0) return null
 
     return (
-      <div className="flex justify-between items-center px-4 py-3 bg-default-50 rounded-lg mt-4">
-        <div className="text-small text-default-600 flex items-center gap-1">
-          <Icon icon="mdi:file-document-outline" className="w-4 h-4" />
-          共 {total} 条记录
+      <div className='flex justify-between items-center px-4 py-3 bg-default-50 rounded-lg mt-4'>
+        <div className='text-small text-default-600 flex items-center gap-1'>
+          <Icon icon='mdi:file-document-outline' className='w-4 h-4' />共 {total} 条记录
         </div>
-        <div className="flex gap-4 items-center">
+        <div className='flex gap-4 items-center'>
           <Select
-            size="sm"
+            size='sm'
             value={pageSize.toString()}
             onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-            className="w-[140px]"
+            className='w-[140px]'
             classNames={{
               trigger: "h-unit-8 min-h-unit-8 py-0.5 shadow-sm hover:shadow transition-shadow duration-200",
               value: "text-small",
               listbox: "text-small",
             }}
-            startContent={<Icon icon="mdi:format-list-numbered" className="text-default-500 w-4 h-4" />}
-            aria-label="选择每页显示条数"
+            startContent={<Icon icon='mdi:format-list-numbered' className='text-default-500 w-4 h-4' />}
+            aria-label='选择每页显示条数'
           >
             {pagination.pageSizeOptions?.map((size) => (
               <SelectItem
                 key={size}
                 value={size}
-                className="data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary"
+                className='data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary'
               >
                 {size} 条/页
               </SelectItem>
             ))}
           </Select>
-          <Pagination
-            total={Math.ceil(total / pageSize)}
-            page={currentPage}
-            onChange={handlePageChange}
-            showControls
-            classNames={{
-              wrapper: "gap-0.5 overflow-visible shadow-sm rounded-lg",
-              item: "w-8 h-8 text-small font-medium data-[active=true]:bg-primary data-[active=true]:text-white",
-              next: "bg-default-100",
-              prev: "bg-default-100",
-            }}
-          />
+          <Pagination total={Math.ceil(total / pageSize)} page={currentPage} onChange={handlePageChange} showControls />
         </div>
       </div>
     )
@@ -256,7 +244,7 @@ export function MetadataTable<T extends MetadataDetail>({
       {renderToolbar()}
 
       <motion.div
-        className='h-[calc(100vh-280px)]'
+        className='h-[calc(100vh-400px)]'
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, delay: 0.1 }}
