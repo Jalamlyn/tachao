@@ -41,7 +41,7 @@ const Dashboard: React.FC = () => {
       path: "/we-chat-app/admin/forms",
     },
     { label: "查看报表", icon: "mdi:chart-box-outline", path: "/we-chat-app/admin/reports" },
-    { label: "数据管理", icon: "mdi:file-document", path: "/we-chat-app/admin/resources" },
+    { label: "资料管理", icon: "mdi:file-document", path: "/we-chat-app/admin/resources" },
     { label: "企业设置", icon: "solar:settings-outline", path: "/we-chat-app/admin/settings" },
   ]
 
