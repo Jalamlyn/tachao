@@ -29,7 +29,11 @@ const AIFormEditor: React.FC = () => {
   // 新增：标题输入Modal的状态
   const [isTitleModalOpen, setIsTitleModalOpen] = useState(false)
   const [newTitle, setNewTitle] = useState("")
-  const [pendingSave, setPendingSave] = useState<((title: string) => Promise<void>) | null>(null)
+  const [pendingSave, setPendingSave] = useState<{
+    resolve: (value: void | PromiseLike<void>) => void
+    reject: (reason?: any) => void
+    save: (title: string) => Promise<void>
+  } | null>(null)
 
   const { state: formState, setFormConfig, setRawConfig, handleError } = useFormState()
 
@@ -99,31 +103,35 @@ const AIFormEditor: React.FC = () => {
         const initialTitle = title || formState.formConfig.metadata?.title || ""
         setNewTitle(initialTitle)
         setIsTitleModalOpen(true)
-        return new Promise<void>((resolve) => {
-          setPendingSave(async (confirmedTitle: string) => {
-            try {
-              const templateData = {
-                title: confirmedTitle,
-                type: "custom",
-                status: "active",
-                data: {
-                  rawConfig: formState.rawConfig,
+        
+        return new Promise<void>((resolve, reject) => {
+          setPendingSave({
+            resolve,
+            reject,
+            save: async (confirmedTitle: string) => {
+              try {
+                const templateData = {
+                  title: confirmedTitle,
                   type: "custom",
-                  name: confirmedTitle,
-                },
-              }
+                  status: "active",
+                  data: {
+                    rawConfig: formState.rawConfig,
+                    type: "custom",
+                    name: confirmedTitle,
+                  },
+                }
 
-              const result = await createTemplate(templateData)
-              if (result) {
-                setSavedTemplateId(result.id)
-                setIsSuccessModalOpen(true)
-              } else {
-                throw new Error("保存模板失败")
+                const result = await createTemplate(templateData)
+                if (result) {
+                  setSavedTemplateId(result.id)
+                  setIsSuccessModalOpen(true)
+                  resolve()
+                } else {
+                  reject(new Error("保存模板失败"))
+                }
+              } catch (error) {
+                reject(error)
               }
-              resolve()
-            } catch (error) {
-              handleError(error)
-              throw error
             }
           })
         })
@@ -177,7 +185,20 @@ const AIFormEditor: React.FC = () => {
     }
 
     if (pendingSave) {
-      await pendingSave(trimmedTitle)
+      try {
+        await pendingSave.save(trimmedTitle)
+      } catch (error) {
+        pendingSave.reject(error)
+      }
+      setPendingSave(null)
+    }
+    setIsTitleModalOpen(false)
+  }
+
+  // 修改：处理取消保存
+  const handleTitleCancel = () => {
+    if (pendingSave) {
+      pendingSave.reject(new Error("用户取消保存"))
       setPendingSave(null)
     }
     setIsTitleModalOpen(false)
@@ -362,7 +383,7 @@ const AIFormEditor: React.FC = () => {
       />
 
       {/* 新增：标题输入Modal */}
-      <Modal isOpen={isTitleModalOpen} onClose={() => setIsTitleModalOpen(false)} size='sm'>
+      <Modal isOpen={isTitleModalOpen} onClose={handleTitleCancel} size='sm'>
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>输入表单模板标题</ModalHeader>
           <ModalBody>
@@ -373,14 +394,14 @@ const AIFormEditor: React.FC = () => {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && newTitle.trim()) {
                   handleTitleConfirm()
                 }
               }}
             />
           </ModalBody>
           <ModalFooter>
-            <Button color='danger' variant='light' onPress={() => setIsTitleModalOpen(false)}>
+            <Button color='danger' variant='light' onPress={handleTitleCancel}>
               取消
             </Button>
             <Button color='primary' onPress={handleTitleConfirm} isDisabled={!newTitle.trim()}>
