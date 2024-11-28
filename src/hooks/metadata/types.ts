@@ -5,17 +5,17 @@ import { logger } from "@/utils/logger"
  */
 export interface MetadataIndex {
   id: string
-  type: string // 'form' | 'template' | 'resource' 等
-  title: string
+  type: string
+  title: string       // 统一的title字段
   status: string
   updatedAt: string
-  // 新增: 模板相关字段
+  // 保留template相关字段以保证兼容性
   template?: {
     id: string
     title: string
     type: string
   }
-  // 新增: 索引字段
+  // 索引字段
   indexFields?: {
     templateId?: string
     templateTitle?: string
@@ -34,13 +34,14 @@ export interface MetadataIndex {
 export interface MetadataDetail<T = any> {
   id: string
   type: string
-  title: string
+  title: string        // 统一的title字段
   status: string
   data: T
   versionCode: number
   modifiedBy: string
   createdAt: string
   updatedAt: string
+  // 保留template相关字段以保证兼容性
   template?: {
     id: string
     title: string

@@ -47,14 +47,14 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
         const detail: MetadataDetail<T> = {
           id: normalizedId,
           type,
-          title: data.title || "",
+          title: data.title || "",  // 使用统一的title
           status: data.status || "draft",
           data: data.data as T,
           versionCode: 1,
           modifiedBy: currentUser.name || currentUser.email || "Unknown",
           createdAt: now,
           updatedAt: now,
-          template: data.template,
+          template: data.template,  // 保留template字段以保证兼容性
           indexFields: {
             ...(data.indexFields || {}),
             createdAt: now,
@@ -63,7 +63,6 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
             templateTitle: data.template?.title,
             templateType: data.template?.type,
           },
-          ...data,
         }
 
         // 保存详情
@@ -75,10 +74,10 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
         const newIndex: MetadataIndex = {
           id: normalizedId,
           type,
-          title: detail.title,
+          title: detail.title,  // 使用统一的title
           status: detail.status,
           updatedAt: now,
-          template: detail.template,
+          template: detail.template,  // 保留template字段以保证兼容性
           indexFields: detail.indexFields,
         }
         indexes.push(newIndex)
@@ -118,9 +117,10 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
         const updatedDetail: MetadataDetail<T> = {
           ...currentDetail,
           ...data,
+          title: data.title || currentDetail.title,  // 确保title更新
           updatedAt: now,
           modifiedBy: currentUser.name || currentUser.email || "Unknown",
-          template: data.template || currentDetail.template,
+          template: data.template || currentDetail.template,  // 保留template字段以保证兼容性
           indexFields: {
             ...(currentDetail.indexFields || {}),
             ...(data.indexFields || {}),
@@ -142,10 +142,10 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
           indexes[index] = {
             id,
             type,
-            title: updatedDetail.title,
+            title: updatedDetail.title,  // 使用统一的title
             status: updatedDetail.status,
             updatedAt: now,
-            template: updatedDetail.template,
+            template: updatedDetail.template,  // 保留template字段以保证兼容性
             indexFields: updatedDetail.indexFields,
           }
           const indexSaved = await saveIndex(indexes)
@@ -272,10 +272,10 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
       const simpleDetails = indexes.map((index) => ({
         id: index.id,
         type: index.type,
-        title: index.title,
+        title: index.title,  // 使用统一的title
         status: index.status,
         updatedAt: index.updatedAt,
-        template: index.template,
+        template: index.template,  // 保留template字段以保证兼容性
         indexFields: index.indexFields,
         data: {} as T,
         versionCode: 0,
