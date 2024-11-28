@@ -14,10 +14,8 @@ import ErrorBoundary from "@/components/ErrorBoundary"
 import { useVersionControl } from "@/hooks/useVersionControl"
 import AIEditor from "@/components/AIEditor"
 import VersionSelectModal from "@/components/VersionSelectModal"
-
-interface UseMetadataOptions {
-  public?: boolean
-}
+import { renderSaveModal } from "./renderSaveModal"
+import { renderTitleModal } from "./renderTitleModal"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -153,7 +151,7 @@ const AIFormEditor: React.FC = () => {
                           setIsSuccessModalOpen(true)
                           resolve()
                         } else {
-                          reject(new Error("保存模板失败"))
+                          throw new Error("保存模板失败")
                         }
                       } catch (error) {
                         reject(error)
@@ -179,11 +177,12 @@ const AIFormEditor: React.FC = () => {
                     setIsSuccessModalOpen(true)
                     resolve()
                   } else {
-                    reject(new Error("更新模板失败"))
+                    throw new Error("更新模板失败")
                   }
                 }
               } catch (error) {
                 reject(error)
+                throw error // 重要：继续抛出错误以中断执行流程
               }
             },
           })
@@ -196,7 +195,7 @@ const AIFormEditor: React.FC = () => {
         const initialTitle = title || formState.formConfig.metadata?.title || ""
         setNewTitle(initialTitle)
         setIsTitleModalOpen(true)
-        
+
         return new Promise<void>((resolve, reject) => {
           setPendingSave({
             resolve,
@@ -220,12 +219,12 @@ const AIFormEditor: React.FC = () => {
                   setIsSuccessModalOpen(true)
                   resolve()
                 } else {
-                  reject(new Error("保存模板失败"))
+                  throw new Error("保存模板失败")
                 }
               } catch (error) {
                 reject(error)
               }
-            }
+            },
           })
         })
       }
@@ -280,12 +279,15 @@ const AIFormEditor: React.FC = () => {
     if (pendingSave) {
       try {
         await pendingSave.save(trimmedTitle)
+        pendingSave.resolve()
       } catch (error) {
         pendingSave.reject(error)
+        throw error // 继续抛出错误以中断执行流程
+      } finally {
+        setPendingSave(null)
+        setIsTitleModalOpen(false)
       }
-      setPendingSave(null)
     }
-    setIsTitleModalOpen(false)
   }
 
   // 修改：处理取消保存
@@ -297,20 +299,23 @@ const AIFormEditor: React.FC = () => {
     setIsTitleModalOpen(false)
   }
 
-  // 新增：处理版本选择确认
+  // 修改：处理版本选择确认
   const handleVersionSelectConfirm = async (useCurrentVersion: boolean) => {
     if (pendingVersionSave) {
       try {
         await pendingVersionSave.save(useCurrentVersion)
+        pendingVersionSave.resolve()
       } catch (error) {
         pendingVersionSave.reject(error)
+        throw error // 继续抛出错误以中断执行流程
+      } finally {
+        setPendingVersionSave(null)
+        setIsVersionSelectModalOpen(false)
       }
-      setPendingVersionSave(null)
     }
-    setIsVersionSelectModalOpen(false)
   }
 
-  // 新增：处理版本选择取消
+  // 修改：处理版本选择取消
   const handleVersionSelectCancel = () => {
     if (pendingVersionSave) {
       pendingVersionSave.reject(new Error("用户取消选择版本"))
@@ -498,33 +503,7 @@ const AIFormEditor: React.FC = () => {
       />
 
       {/* 标题输入Modal */}
-      <Modal isOpen={isTitleModalOpen} onClose={handleTitleCancel} size='sm'>
-        <ModalContent>
-          <ModalHeader className='flex flex-col gap-1'>输入表单模板标题</ModalHeader>
-          <ModalBody>
-            <Input
-              autoFocus
-              label="标题"
-              placeholder="请输入表单模板标题"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && newTitle.trim()) {
-                  handleTitleConfirm()
-                }
-              }}
-            />
-          </ModalBody>
-          <ModalFooter>
-            <Button color='danger' variant='light' onPress={handleTitleCancel}>
-              取消
-            </Button>
-            <Button color='primary' onPress={handleTitleConfirm} isDisabled={!newTitle.trim()}>
-              确认
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      {renderTitleModal(isTitleModalOpen, handleTitleCancel, newTitle, handleTitleConfirm, setNewTitle)}
 
       {/* 版本选择Modal */}
       <VersionSelectModal
@@ -535,50 +514,13 @@ const AIFormEditor: React.FC = () => {
         latestVersionIndex={versionControl.versions.length - 1}
       />
 
-      <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} size='lg' placement='center'>
-        <ModalContent>
-          <ModalHeader className='flex flex-col gap-1'>
-            <div className='flex items-center gap-2'>
-              <Icon icon='mdi:check-circle' className='w-6 h-6 text-success' />
-              <span>模板{isEditMode ? "更新" : "保存"}成功</span>
-            </div>
-          </ModalHeader>
-          <ModalBody>
-            <div className='space-y-4'>
-              <p className='text-gray-600'>恭喜！您的表单模板已经{isEditMode ? "更新" : "保存"}成功。现在您可以：</p>
-              <div className='flex flex-col gap-2'>
-                <div className='p-4 border rounded-lg bg-gray-50'>
-                  <h3 className='font-medium mb-2'>创建新表单</h3>
-                  <p className='text-sm text-gray-500 mb-4'>使用这个模板立即创建一个新的表单，开始记录您的业务数据。</p>
-                  <Button
-                    color='primary'
-                    onClick={handleCreateDocument}
-                    startContent={<Icon icon='mdi:file-document-plus' className='w-4 h-4' />}
-                  >
-                    创建表单
-                  </Button>
-                </div>
-                <div className='p-4 border rounded-lg'>
-                  <h3 className='font-medium mb-2'>返回模板管理</h3>
-                  <p className='text-sm text-gray-500 mb-4'>返回模板列表查看或管理您的所有表单模板。</p>
-                  <Button
-                    variant='bordered'
-                    onClick={handleGoToTemplates}
-                    startContent={<Icon icon='mdi:format-list-bulleted' className='w-4 h-4' />}
-                  >
-                    查看所有模板
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant='light' onPress={() => setIsSuccessModalOpen(false)}>
-              关闭
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      {renderSaveModal(
+        isSuccessModalOpen,
+        setIsSuccessModalOpen,
+        isEditMode,
+        handleCreateDocument,
+        handleGoToTemplates
+      )}
     </PageLayout>
   )
 }
