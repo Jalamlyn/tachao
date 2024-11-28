@@ -31,35 +31,31 @@ const AIFormEditor: React.FC = () => {
     messages,
     selectedTab,
     previewContent,
+    isTitleModalOpen,
+    isVersionSelectModalOpen,
+    isSuccessModalOpen,
+    newTitle,
+    savedTemplateId,
     setMessages,
     addMessage,
     setSelectedTab,
     setPreviewContent,
     updateLastMessage,
+    setTitleModalOpen,
+    setVersionSelectModalOpen,
+    setSuccessModalOpen,
+    setNewTitle,
+    setSavedTemplateId,
+    setPendingSave,
+    setPendingVersionSave,
+    handleTitleConfirm,
+    handleTitleCancel,
+    handleVersionSelectConfirm,
+    handleVersionSelectCancel
   } = useAIFormStore()
 
-  const [isTitleModalOpen, setIsTitleModalOpen] = useState(false)
-  const [newTitle, setNewTitle] = useState("")
-  const [pendingSave, setPendingSave] = useState<{
-    resolve: (value: void | PromiseLike<void>) => void
-    reject: (reason?: any) => void
-    save: (title: string) => Promise<void>
-  } | null>(null)
-
-  const [isVersionSelectModalOpen, setIsVersionSelectModalOpen] = useState(false)
-  const [pendingVersionSave, setPendingVersionSave] = useState<{
-    resolve: (value: void | PromiseLike<void>) => void
-    reject: (reason?: any) => void
-    save: (useCurrentVersion: boolean) => Promise<void>
-  } | null>(null)
-
   const { state: formState, setFormConfig, setRawConfig, handleError } = useFormState()
-
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
-  const [savedTemplateId, setSavedTemplateId] = useState<string | null>(null)
-
   const { create: createTemplate, getDetail: getTemplateDetail, update: updateTemplate } = useMetadata("template")
-
   const versionControl = useVersionControl<{
     formConfig: any
     rawConfig: string
@@ -139,7 +135,7 @@ const AIFormEditor: React.FC = () => {
 
                 if (!isEditMode) {
                   setNewTitle(title || versionToSave.formConfig.metadata?.title || "")
-                  setIsTitleModalOpen(true)
+                  setTitleModalOpen(true)
                   setPendingSave({
                     resolve,
                     reject,
@@ -159,7 +155,7 @@ const AIFormEditor: React.FC = () => {
                         const result = await createTemplate(templateData)
                         if (result) {
                           setSavedTemplateId(result.id)
-                          setIsSuccessModalOpen(true)
+                          setSuccessModalOpen(true)
                           resolve()
                         } else {
                           throw new Error("保存模板失败")
@@ -184,7 +180,7 @@ const AIFormEditor: React.FC = () => {
                   const result = await updateTemplate(templateId, templateData)
                   if (result) {
                     setSavedTemplateId(templateId)
-                    setIsSuccessModalOpen(true)
+                    setSuccessModalOpen(true)
                     resolve()
                   } else {
                     throw new Error("更新模板失败")
@@ -196,14 +192,14 @@ const AIFormEditor: React.FC = () => {
               }
             },
           })
-          setIsVersionSelectModalOpen(true)
+          setVersionSelectModalOpen(true)
         })
       }
 
       if (!isEditMode) {
         const initialTitle = title || formState.formConfig.metadata?.title || ""
         setNewTitle(initialTitle)
-        setIsTitleModalOpen(true)
+        setTitleModalOpen(true)
 
         return new Promise<void>((resolve, reject) => {
           setPendingSave({
@@ -225,7 +221,7 @@ const AIFormEditor: React.FC = () => {
                 const result = await createTemplate(templateData)
                 if (result) {
                   setSavedTemplateId(result.id)
-                  setIsSuccessModalOpen(true)
+                  setSuccessModalOpen(true)
                   resolve()
                 } else {
                   throw new Error("保存模板失败")
@@ -253,7 +249,7 @@ const AIFormEditor: React.FC = () => {
         const result = await updateTemplate(templateId, templateData)
         if (result) {
           setSavedTemplateId(templateId)
-          setIsSuccessModalOpen(true)
+          setSuccessModalOpen(true)
         } else {
           throw new Error("更新模板失败")
         }
@@ -275,56 +271,6 @@ const AIFormEditor: React.FC = () => {
 
   const handleGoToTemplates = () => {
     navigate("/we-chat-app/admin/documents")
-  }
-
-  const handleTitleConfirm = async () => {
-    const trimmedTitle = newTitle.trim()
-    if (!trimmedTitle) {
-      return
-    }
-
-    if (pendingSave) {
-      try {
-        await pendingSave.save(trimmedTitle)
-        pendingSave.resolve()
-      } catch (error) {
-        pendingSave.reject(error)
-        throw error
-      } finally {
-        setPendingSave(null)
-        setIsTitleModalOpen(false)
-      }
-    }
-  }
-
-  const handleTitleCancel = () => {
-    if (pendingSave) {
-      pendingSave.reject(new Error("用户取消保存"))
-      setPendingSave(null)
-    }
-    setIsTitleModalOpen(false)
-  }
-
-  const handleVersionSelectConfirm = async (useCurrentVersion: boolean) => {
-    if (pendingVersionSave) {
-      try {
-        await pendingVersionSave.save(useCurrentVersion)
-        pendingVersionSave.resolve()
-        setIsVersionSelectModalOpen(false)
-      } catch (error) {
-        pendingVersionSave.reject(error)
-      } finally {
-        setPendingVersionSave(null)
-      }
-    }
-  }
-
-  const handleVersionSelectCancel = () => {
-    if (pendingVersionSave) {
-      pendingVersionSave.reject(new Error("用户取消选择版本"))
-      setPendingVersionSave(null)
-    }
-    setIsVersionSelectModalOpen(false)
   }
 
   const handleChunk = useCallback(
@@ -496,7 +442,7 @@ const AIFormEditor: React.FC = () => {
 
       {renderSaveModal(
         isSuccessModalOpen,
-        setIsSuccessModalOpen,
+        setSuccessModalOpen,
         isEditMode,
         handleCreateDocument,
         handleGoToTemplates
