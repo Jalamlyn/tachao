@@ -192,8 +192,11 @@ export function MetadataTable<T extends MetadataDetail>({
         transition={{ duration: 0.3, delay: 0.1 }}
       >
         <Table
+          isHeaderSticky
           aria-label={`${type} table`}
           classNames={{
+            base: "max-h-[calc(100vh-280px)] overflow-scroll",
+            table: "min-h-[400px]",
             wrapper: "min-h-[222px] shadow-sm rounded-lg overflow-hidden",
             th: "bg-default-100 text-default-800 text-xs uppercase tracking-wider",
             td: "text-sm",
