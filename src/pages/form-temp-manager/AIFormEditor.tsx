@@ -16,6 +16,7 @@ import AIEditor from "@/components/AIEditor"
 import VersionSelectModal from "@/components/VersionSelectModal"
 import { renderSaveModal } from "./renderSaveModal"
 import { renderTitleModal } from "./renderTitleModal"
+import { useAIFormStore } from "./store/useAIFormStore"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -24,12 +25,19 @@ const AIFormEditor: React.FC = () => {
   const { templateId } = useParams<{ templateId: string }>()
   const isEditMode = Boolean(templateId)
   const { updateBreadcrumbs } = useBreadcrumb()
-  const [messages, setMessages] = useState<any[]>([])
-  const [selectedTab, setSelectedTab] = useState("preview")
-  const [previewContent, setPreviewContent] = useState<string>("")
-  const accumulatedTextRef = useRef("")
+  
+  // 使用zustand store
+  const { 
+    messages,
+    selectedTab,
+    previewContent,
+    setMessages,
+    addMessage,
+    setSelectedTab,
+    setPreviewContent,
+    updateLastMessage
+  } = useAIFormStore()
 
-  // 新增：标题输入Modal的状态
   const [isTitleModalOpen, setIsTitleModalOpen] = useState(false)
   const [newTitle, setNewTitle] = useState("")
   const [pendingSave, setPendingSave] = useState<{
@@ -38,7 +46,6 @@ const AIFormEditor: React.FC = () => {
     save: (title: string) => Promise<void>
   } | null>(null)
 
-  // 新增：版本选择Modal的状态
   const [isVersionSelectModalOpen, setIsVersionSelectModalOpen] = useState(false)
   const [pendingVersionSave, setPendingVersionSave] = useState<{
     resolve: (value: void | PromiseLike<void>) => void
@@ -57,6 +64,8 @@ const AIFormEditor: React.FC = () => {
     formConfig: any
     rawConfig: string
   }>()
+
+  const accumulatedTextRef = useRef("")
 
   useEffect(() => {
     const loadTemplateData = async () => {
@@ -109,7 +118,6 @@ const AIFormEditor: React.FC = () => {
         return
       }
 
-      // 检查是否在查看历史版本
       if (versionControl.currentIndex < versionControl.versions.length - 1) {
         return new Promise<void>((resolve, reject) => {
           setPendingVersionSave({
@@ -126,7 +134,6 @@ const AIFormEditor: React.FC = () => {
                 }
 
                 if (!isEditMode) {
-                  // 创建模式
                   setNewTitle(title || versionToSave.formConfig.metadata?.title || "")
                   setIsTitleModalOpen(true)
                   setPendingSave({
@@ -159,7 +166,6 @@ const AIFormEditor: React.FC = () => {
                     },
                   })
                 } else {
-                  // 编辑模式
                   const templateData = {
                     title: title || versionToSave.formConfig.metadata?.title || "新建模板",
                     type: "custom",
@@ -182,7 +188,7 @@ const AIFormEditor: React.FC = () => {
                 }
               } catch (error) {
                 reject(error)
-                throw error // 重要：继续抛出错误以中断执行流程
+                throw error
               }
             },
           })
@@ -190,7 +196,6 @@ const AIFormEditor: React.FC = () => {
         })
       }
 
-      // 如果不是历史版本，走原来的保存逻辑
       if (!isEditMode) {
         const initialTitle = title || formState.formConfig.metadata?.title || ""
         setNewTitle(initialTitle)
@@ -229,7 +234,6 @@ const AIFormEditor: React.FC = () => {
         })
       }
 
-      // 编辑模式直接保存
       try {
         const templateData = {
           title: title || formState.formConfig.metadata?.title || "新建模板",
@@ -269,7 +273,6 @@ const AIFormEditor: React.FC = () => {
     navigate("/we-chat-app/admin/documents")
   }
 
-  // 修改：处理标题确认
   const handleTitleConfirm = async () => {
     const trimmedTitle = newTitle.trim()
     if (!trimmedTitle) {
@@ -282,7 +285,7 @@ const AIFormEditor: React.FC = () => {
         pendingSave.resolve()
       } catch (error) {
         pendingSave.reject(error)
-        throw error // 继续抛出错误以中断执行流程
+        throw error
       } finally {
         setPendingSave(null)
         setIsTitleModalOpen(false)
@@ -290,7 +293,6 @@ const AIFormEditor: React.FC = () => {
     }
   }
 
-  // 修改：处理取消保存
   const handleTitleCancel = () => {
     if (pendingSave) {
       pendingSave.reject(new Error("用户取消保存"))
@@ -299,23 +301,20 @@ const AIFormEditor: React.FC = () => {
     setIsTitleModalOpen(false)
   }
 
-  // 修改：处理版本选择确认
   const handleVersionSelectConfirm = async (useCurrentVersion: boolean) => {
     if (pendingVersionSave) {
       try {
         await pendingVersionSave.save(useCurrentVersion)
         pendingVersionSave.resolve()
-        setIsVersionSelectModalOpen(false) // 只在成功后关闭Modal
+        setIsVersionSelectModalOpen(false)
       } catch (error) {
         pendingVersionSave.reject(error)
-        // 不要在这里关闭Modal,让用户看到错误状态
       } finally {
         setPendingVersionSave(null)
       }
     }
   }
 
-  // 修改：处理版本选择取消
   const handleVersionSelectCancel = () => {
     if (pendingVersionSave) {
       pendingVersionSave.reject(new Error("用户取消选择版本"))
@@ -332,21 +331,14 @@ const AIFormEditor: React.FC = () => {
         const errorMatch = accumulatedTextRef.current.match(/<shata-ai-error>([\s\S]*?)<\/shata-ai-error>/)
         if (errorMatch) {
           const errorMessage = errorMatch[1].trim()
-          setMessages((prev) => {
-            const lastMessage = prev[prev.length - 1]
-            return [
-              ...prev.slice(0, -1),
-              {
-                ...lastMessage,
-                content: (
-                  <div className='flex items-center gap-2 text-danger'>
-                    <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-                    <span>{errorMessage}</span>
-                  </div>
-                ),
-                status: "error",
-              },
-            ]
+          updateLastMessage({
+            content: (
+              <div className='flex items-center gap-2 text-danger'>
+                <Icon icon='mdi:alert-circle' className='w-5 h-5' />
+                <span>{errorMessage}</span>
+              </div>
+            ),
+            status: "error",
           })
           accumulatedTextRef.current = ""
           return
@@ -354,22 +346,15 @@ const AIFormEditor: React.FC = () => {
       }
 
       if (accumulatedTextRef.current.includes("<shata-ai-form>")) {
-        setMessages((prev) => {
-          const lastMessage = prev[prev.length - 1]
-          return [
-            ...prev.slice(0, -1),
-            {
-              ...lastMessage,
-              content: (
-                <div className='flex items-center gap-3 text-primary'>
-                  <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10' />
-                  <div className='flex flex-col'>
-                    <span className='font-medium text-sm'>AI 正在生成表单配置</span>
-                  </div>
-                </div>
-              ),
-            },
-          ]
+        updateLastMessage({
+          content: (
+            <div className='flex items-center gap-3 text-primary'>
+              <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10' />
+              <div className='flex flex-col'>
+                <span className='font-medium text-sm'>AI 正在生成表单配置</span>
+              </div>
+            </div>
+          ),
         })
         setSelectedTab("code")
       }
@@ -379,7 +364,7 @@ const AIFormEditor: React.FC = () => {
         setPreviewContent(newContent)
       }
     },
-    [previewContent]
+    [previewContent, updateLastMessage, setSelectedTab, setPreviewContent]
   )
 
   const formAgent = {
@@ -390,7 +375,7 @@ const AIFormEditor: React.FC = () => {
         id: Date.now().toString(),
         timestamp: new Date().toLocaleTimeString(),
       }
-      setMessages((prev) => [...prev, userMessage])
+      addMessage(userMessage)
 
       const assistantMessage = {
         role: "assistant",
@@ -398,7 +383,7 @@ const AIFormEditor: React.FC = () => {
         id: (Date.now() + 1).toString(),
         timestamp: new Date().toLocaleTimeString(),
       }
-      setMessages((prev) => [...prev, assistantMessage])
+      addMessage(assistantMessage)
 
       setPreviewContent("")
 
@@ -434,28 +419,21 @@ const AIFormEditor: React.FC = () => {
           setFormConfig(result.data.config)
           setRawConfig(result.data.rawConfig)
 
-          setMessages((prev) => {
-            const lastMessage = prev[prev.length - 1]
-            return [
-              ...prev.slice(0, -1),
-              {
-                ...lastMessage,
-                content: (
-                  <div className='flex items-center gap-2 text-success'>
-                    <Icon icon='line-md:check-all' className='w-5 h-5' />
-                    <span>表单生成完成</span>
-                  </div>
-                ),
-                status: "success",
-              },
-            ]
+          updateLastMessage({
+            content: (
+              <div className='flex items-center gap-2 text-success'>
+                <Icon icon='line-md:check-all' className='w-5 h-5' />
+                <span>表单生成完成</span>
+              </div>
+            ),
+            status: "success",
           })
 
           setSelectedTab("preview")
         }
       }
     },
-    [setFormConfig, setRawConfig, versionControl]
+    [setFormConfig, setRawConfig, versionControl, updateLastMessage, setSelectedTab]
   )
 
   const pageActions = (
@@ -502,10 +480,8 @@ const AIFormEditor: React.FC = () => {
         previewTabName='表单预览'
       />
 
-      {/* 标题输入Modal */}
       {renderTitleModal(isTitleModalOpen, handleTitleCancel, newTitle, handleTitleConfirm, setNewTitle)}
 
-      {/* 版本选择Modal */}
       <VersionSelectModal
         isOpen={isVersionSelectModalOpen}
         onClose={handleVersionSelectCancel}
