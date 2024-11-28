@@ -1,5 +1,6 @@
-import { markdown as dynamicFormAdvanced } from "@/components/common/DynamicForm/dynamic-form-advanced.md"
-import { markdown as dynamicForm } from "@/components/common/DynamicForm/dynamic-form.md"
+import { markdown as dynamicFormAdvanced } from "@/components/common/DynamicForm/docs/dynamic-form-advanced.md"
+import { markdown as dynamicForm } from "@/components/common/DynamicForm/docs/dynamic-form.md"
+import { markdown as fieldTypes } from "@/components/common/DynamicForm/docs/field-types.md"
 import { markdown as formulaService } from "@/services/formulaService.md"
 
 const processStepsGuide = `
@@ -258,6 +259,8 @@ ${resourceFieldGuide}
 # 动态表单配置文档
 ${dynamicForm}
 ${dynamicFormAdvanced}
+${fieldTypes}
+
 # 动态表单计算公式文档
 ${formulaService}
 </doc>
