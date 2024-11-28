@@ -29,7 +29,7 @@ const AIFormEditor: React.FC = () => {
   // 新增：标题输入Modal的状态
   const [isTitleModalOpen, setIsTitleModalOpen] = useState(false)
   const [newTitle, setNewTitle] = useState("")
-  const [pendingSave, setPendingSave] = useState<(() => Promise<void>) | null>(null)
+  const [pendingSave, setPendingSave] = useState<((title: string) => Promise<void>) | null>(null)
 
   const { state: formState, setFormConfig, setRawConfig, handleError } = useFormState()
 
@@ -96,19 +96,20 @@ const AIFormEditor: React.FC = () => {
 
       // 修改：保存前先获取标题
       if (!isEditMode) {
-        setNewTitle(title || formState.formConfig.metadata?.title || "")
+        const initialTitle = title || formState.formConfig.metadata?.title || ""
+        setNewTitle(initialTitle)
         setIsTitleModalOpen(true)
         return new Promise<void>((resolve) => {
-          setPendingSave(() => async () => {
+          setPendingSave(async (confirmedTitle: string) => {
             try {
               const templateData = {
-                title: newTitle || "新建模板",
+                title: confirmedTitle,
                 type: "custom",
                 status: "active",
                 data: {
                   rawConfig: formState.rawConfig,
                   type: "custom",
-                  name: newTitle || "新建模板",
+                  name: confirmedTitle,
                 },
               }
 
@@ -168,10 +169,15 @@ const AIFormEditor: React.FC = () => {
     navigate("/we-chat-app/admin/documents")
   }
 
-  // 新增：处理标题确认
+  // 修改：处理标题确认
   const handleTitleConfirm = async () => {
+    const trimmedTitle = newTitle.trim()
+    if (!trimmedTitle) {
+      return
+    }
+
     if (pendingSave) {
-      await pendingSave()
+      await pendingSave(trimmedTitle)
       setPendingSave(null)
     }
     setIsTitleModalOpen(false)
