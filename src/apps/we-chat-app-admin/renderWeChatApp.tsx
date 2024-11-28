@@ -9,6 +9,7 @@ import FormPreview from "@/pages/form-temp-manager/components/FormPreview"
 import AIFormEditor from "@/pages/form-temp-manager/AIFormEditor"
 import FormAnalysis from "@/pages/FormAnalysis"
 import ResourceManagement from "@/pages/resource-management"
+import ResourceDetail from "@/pages/resource-management/ResourceDetail"
 import ReportManagement from "@/pages/report-management"
 import AIResourceEditor from "@/pages/resource-management/AIResourceEditor"
 import AIReportEditor from "@/pages/report-management/AIReportEditor"
@@ -28,6 +29,7 @@ export default function renderWeChatApp() {
       <Route path='documents/edit/:templateId' element={<AIFormEditor />} />
       <Route path='form-preview/:formId' element={<FormPreview />} />
       <Route path='resources' element={<ResourceManagement />} />
+      <Route path='resources/:resourceId' element={<ResourceDetail />} />
       <Route path='resources/ai/:resourceId' element={<AIResourceEditor />} />
       <Route path='reports' element={<ReportManagement />} />
       <Route path='reports/ai/create/:templateId' element={<AIReportEditor />} />

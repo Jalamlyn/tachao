@@ -77,8 +77,17 @@ const ResourceGallery: React.FC<ResourceGalleryProps> = ({ onResourceSelect, cla
     onOpen()
   }
 
+  const handleCardClick = (resource: Resource) => {
+    const type = resource.indexFields?.type?.toLowerCase()
+    if (type === "excel") {
+      navigate(`/we-chat-app/admin/resources/${resource.id}`)
+    } else {
+      message.info("暂不支持该类型资源的预览")
+    }
+  }
+
   const renderCard = (resource: Resource) => (
-    <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onResourceSelect(resource.id)}>
+    <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => handleCardClick(resource)}>
       <CardBody className='p-0 relative overflow-hidden'>
         <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-success-100 to-success-50 group-hover:scale-105 transition-transform duration-300'>
           <Icon
