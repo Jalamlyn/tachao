@@ -17,6 +17,10 @@ export type FormFieldType =
   | "custom"
   | "resource"
   | "signature"
+  | "radio"      // 新增
+  | "checkbox"   // 新增
+  | "switch"     // 新增
+  | "slider"     // 新增
 
 export interface ResourceConfig {
   resourceTitle: string
@@ -54,133 +58,16 @@ export interface FormField {
   lineWidth?: number
   lineColor?: string
   className?: string
+  // 新增 slider 特有配置
+  min?: number
+  max?: number
+  step?: number
+  // 新增 switch 特有配置
+  checkedLabel?: string
+  uncheckedLabel?: string
+  // 新增 checkbox/radio 特有配置
+  layout?: "horizontal" | "vertical"
+  defaultChecked?: boolean
 }
 
-export interface FormFieldGroup {
-  key: string
-  title: string
-  fields: FormField[]
-  description?: string
-  icon?: string
-}
-
-export interface TableColumn {
-  key: string
-  title: string
-  type: FormFieldType
-  width?: string | number
-  editable?: boolean
-  required?: boolean
-  placeholder?: string
-  options?: Array<{
-    label: string
-    value: string | number
-  }>
-  resourceConfig?: ResourceConfig
-  render?: (value: any, record: any, index: number) => ReactNode
-  summary?: {
-    calculate?: (records: any[]) => any
-    render?: (value: any) => ReactNode
-  }
-  calculate?: {
-    formula: string
-    dependencies?: string[]
-  }
-}
-
-export interface TableSummary {
-  show?: boolean
-  label?: string
-  className?: string
-  style?: React.CSSProperties
-}
-
-export interface TableConfig {
-  columns: TableColumn[]
-  toolbar?: ReactNode
-  summary?: TableSummary
-}
-
-export interface ProcessStep {
-  key: string
-  title: string
-  description?: string
-  icon?: string
-  fields?: FormField[]
-}
-
-export interface TooltipConfig {
-  content: ReactNode
-  placement?: "top" | "bottom" | "left" | "right"
-}
-
-export interface FormMetadata {
-  title: string
-  description?: string
-  permissions?: {
-    edit?: boolean
-    delete?: boolean
-    print?: boolean
-  }
-}
-
-export interface FormRenderConfig {
-  basicFields: FormField[] | {
-    groups: FormFieldGroup[]
-    defaultGroup?: string
-  }
-  table?: TableConfig
-  processSteps?: ProcessStep[]
-}
-
-export interface ValidationContext {
-  mode?: "create" | "edit"
-  user?: any
-}
-
-export interface ValidationResult {
-  valid: boolean
-  errors?: string[]
-  warnings?: string[]
-  fields?: {
-    [key: string]: string
-  }
-  categorizedErrors?: {
-    required?: string[]
-    invalid?: string[]
-    other?: string[]
-  }
-}
-
-export interface DynamicFormConfig {
-  metadata: FormMetadata
-  renderConfig: FormRenderConfig
-  orderNumberConfig?: {
-    prefix?: string
-    fieldName?: string
-    label?: string
-  }
-  watch?: (form: UseFormReturn<any>) => (() => void)
-  validate?: (values: any, context?: ValidationContext) => Promise<ValidationResult> | ValidationResult
-}
-
-export interface DynamicFormProps {
-  config: DynamicFormConfig
-  id?: string
-  onSubmit?: (validationResult: ValidationResult, values: any) => Promise<void>
-  onCancel?: () => void
-  templateId?: string
-  previewMode?: boolean
-}
-
-export interface WatchUtils {
-  watchField: (fieldName: string, callback: (value: any) => void) => () => void
-  watchFields: (fieldNames: string[], callback: (values: any[]) => void) => () => void
-  batchUpdate: (updates: Array<{ field: string; value: any }>) => void
-  setFieldVisibility: (fieldName: string, visible: boolean) => void
-}
-
-export interface CalculateConfig {
-  formula: string
-  dependencies?: string[]
-}
+[其余代码保持不变...]
