@@ -13,6 +13,11 @@ import { useAsyncButton } from "@/hooks/useAsyncButton"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import { useVersionControl } from "@/hooks/useVersionControl"
 import AIEditor from "@/components/AIEditor"
+import VersionSelectModal from "@/components/VersionSelectModal"
+
+interface UseMetadataOptions {
+  public?: boolean
+}
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -33,6 +38,14 @@ const AIFormEditor: React.FC = () => {
     resolve: (value: void | PromiseLike<void>) => void
     reject: (reason?: any) => void
     save: (title: string) => Promise<void>
+  } | null>(null)
+
+  // 新增：版本选择Modal的状态
+  const [isVersionSelectModalOpen, setIsVersionSelectModalOpen] = useState(false)
+  const [pendingVersionSave, setPendingVersionSave] = useState<{
+    resolve: (value: void | PromiseLike<void>) => void
+    reject: (reason?: any) => void
+    save: (useCurrentVersion: boolean) => Promise<void>
   } | null>(null)
 
   const { state: formState, setFormConfig, setRawConfig, handleError } = useFormState()
@@ -98,7 +111,87 @@ const AIFormEditor: React.FC = () => {
         return
       }
 
-      // 修改：保存前先获取标题
+      // 检查是否在查看历史版本
+      if (versionControl.currentIndex < versionControl.versions.length - 1) {
+        return new Promise<void>((resolve, reject) => {
+          setPendingVersionSave({
+            resolve,
+            reject,
+            save: async (useCurrentVersion: boolean) => {
+              try {
+                const versionToSave = useCurrentVersion
+                  ? versionControl.getCurrentVersion()
+                  : versionControl.versions[versionControl.versions.length - 1].data
+
+                if (!versionToSave) {
+                  throw new Error("无效的版本数据")
+                }
+
+                if (!isEditMode) {
+                  // 创建模式
+                  setNewTitle(title || versionToSave.formConfig.metadata?.title || "")
+                  setIsTitleModalOpen(true)
+                  setPendingSave({
+                    resolve,
+                    reject,
+                    save: async (confirmedTitle: string) => {
+                      try {
+                        const templateData = {
+                          title: confirmedTitle,
+                          type: "custom",
+                          status: "active",
+                          data: {
+                            rawConfig: versionToSave.rawConfig,
+                            type: "custom",
+                            name: confirmedTitle,
+                          },
+                        }
+
+                        const result = await createTemplate(templateData)
+                        if (result) {
+                          setSavedTemplateId(result.id)
+                          setIsSuccessModalOpen(true)
+                          resolve()
+                        } else {
+                          reject(new Error("保存模板失败"))
+                        }
+                      } catch (error) {
+                        reject(error)
+                      }
+                    },
+                  })
+                } else {
+                  // 编辑模式
+                  const templateData = {
+                    title: title || versionToSave.formConfig.metadata?.title || "新建模板",
+                    type: "custom",
+                    status: "active",
+                    data: {
+                      rawConfig: versionToSave.rawConfig,
+                      type: "custom",
+                      name: title || versionToSave.formConfig.metadata?.title || "新建模板",
+                    },
+                  }
+
+                  const result = await updateTemplate(templateId, templateData)
+                  if (result) {
+                    setSavedTemplateId(templateId)
+                    setIsSuccessModalOpen(true)
+                    resolve()
+                  } else {
+                    reject(new Error("更新模板失败"))
+                  }
+                }
+              } catch (error) {
+                reject(error)
+              }
+            },
+          })
+          setIsVersionSelectModalOpen(true)
+        })
+      }
+
+      // 如果不是历史版本，走原来的保存逻辑
       if (!isEditMode) {
         const initialTitle = title || formState.formConfig.metadata?.title || ""
         setNewTitle(initialTitle)
@@ -202,6 +295,28 @@ const AIFormEditor: React.FC = () => {
       setPendingSave(null)
     }
     setIsTitleModalOpen(false)
+  }
+
+  // 新增：处理版本选择确认
+  const handleVersionSelectConfirm = async (useCurrentVersion: boolean) => {
+    if (pendingVersionSave) {
+      try {
+        await pendingVersionSave.save(useCurrentVersion)
+      } catch (error) {
+        pendingVersionSave.reject(error)
+      }
+      setPendingVersionSave(null)
+    }
+    setIsVersionSelectModalOpen(false)
+  }
+
+  // 新增：处理版本选择取消
+  const handleVersionSelectCancel = () => {
+    if (pendingVersionSave) {
+      pendingVersionSave.reject(new Error("用户取消选择版本"))
+      setPendingVersionSave(null)
+    }
+    setIsVersionSelectModalOpen(false)
   }
 
   const handleChunk = useCallback(
@@ -382,7 +497,7 @@ const AIFormEditor: React.FC = () => {
         previewTabName='表单预览'
       />
 
-      {/* 新增：标题输入Modal */}
+      {/* 标题输入Modal */}
       <Modal isOpen={isTitleModalOpen} onClose={handleTitleCancel} size='sm'>
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>输入表单模板标题</ModalHeader>
@@ -410,6 +525,15 @@ const AIFormEditor: React.FC = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* 版本选择Modal */}
+      <VersionSelectModal
+        isOpen={isVersionSelectModalOpen}
+        onClose={handleVersionSelectCancel}
+        onConfirm={handleVersionSelectConfirm}
+        currentVersionIndex={versionControl.currentIndex}
+        latestVersionIndex={versionControl.versions.length - 1}
+      />
 
       <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} size='lg' placement='center'>
         <ModalContent>
