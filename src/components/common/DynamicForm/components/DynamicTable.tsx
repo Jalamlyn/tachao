@@ -373,61 +373,84 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       {config.toolbar}
 
       <div className='hidden md:block overflow-x-auto'>
-        <Table>
-          <TableHeader className='bg-gray-100'>
-            <TableRow>
-              {config.columns.map((column) => (
-                <TableHead key={column.key} style={{ width: column.width }} className='border border-gray-200'>
-                  <div className='flex items-center gap-1'>
-                    {column.title}
-                    {column.calculate && (
-                      <Icon
-                        icon='mdi:calculator'
-                        className={styles["calculated-field-icon"]}
-                        title='计算字段 - 由公式自动计算'
-                      />
-                    )}
-                  </div>
-                </TableHead>
-              ))}
-              {isEditable && <TableHead className='border border-gray-200'>操作</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {fields.map((field, rowIndex) => (
-              <TableRow key={field.id}>
-                {config.columns.map((column) => (
-                  <TableCell key={column.key} className='border border-gray-200'>
-                    {renderCell(column, rowIndex)}
-                  </TableCell>
-                ))}
-                {isEditable && (
-                  <TableCell className='border border-gray-200'>
-                    <Button
-                      isIconOnly
-                      color='danger'
-                      variant='light'
-                      size='sm'
-                      onClick={() => handleDeleteRow(rowIndex)}
+        <div className='min-w-full inline-block align-middle'>
+          <div className='overflow-x-auto border rounded-lg'>
+            <Table>
+              <TableHeader className='bg-gray-100'>
+                <TableRow>
+                  {config.columns.map((column) => (
+                    <TableHead 
+                      key={column.key} 
+                      style={{ 
+                        width: column.width,
+                        minWidth: column.width || '80px'
+                      }} 
+                      className='border border-gray-200 whitespace-nowrap'
                     >
-                      <Icon icon='mdi:delete' className='w-4 h-4' />
-                    </Button>
-                  </TableCell>
-                )}
-              </TableRow>
-            ))}
-            {config.summary?.show && summaryData && (
-              <TableRow className={cn("bg-default-50", config.summary.className)} style={config.summary.style}>
-                {config.columns.map((column) => (
-                  <TableCell key={column.key} className='border border-gray-200'>
-                    {renderSummaryCell(column)}
-                  </TableCell>
+                      <div className='flex items-center gap-1'>
+                        {column.title}
+                        {column.calculate && (
+                          <Icon
+                            icon='mdi:calculator'
+                            className={styles["calculated-field-icon"]}
+                            title='计算字段 - 由公式自动计算'
+                          />
+                        )}
+                      </div>
+                    </TableHead>
+                  ))}
+                  {isEditable && <TableHead className='border border-gray-200 w-[80px]'>操作</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {fields.map((field, rowIndex) => (
+                  <TableRow key={field.id}>
+                    {config.columns.map((column) => (
+                      <TableCell 
+                        key={column.key} 
+                        className='border border-gray-200'
+                        style={{
+                          minWidth: column.width || '80px'
+                        }}
+                      >
+                        {renderCell(column, rowIndex)}
+                      </TableCell>
+                    ))}
+                    {isEditable && (
+                      <TableCell className='border border-gray-200 w-[80px]'>
+                        <Button
+                          isIconOnly
+                          color='danger'
+                          variant='light'
+                          size='sm'
+                          onClick={() => handleDeleteRow(rowIndex)}
+                        >
+                          <Icon icon='mdi:delete' className='w-4 h-4' />
+                        </Button>
+                      </TableCell>
+                    )}
+                  </TableRow>
                 ))}
-                {isEditable && <TableCell className='border border-gray-200' />}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                {config.summary?.show && summaryData && (
+                  <TableRow className={cn("bg-default-50", config.summary.className)} style={config.summary.style}>
+                    {config.columns.map((column) => (
+                      <TableCell 
+                        key={column.key} 
+                        className='border border-gray-200'
+                        style={{
+                          minWidth: column.width || '80px'
+                        }}
+                      >
+                        {renderSummaryCell(column)}
+                      </TableCell>
+                    ))}
+                    {isEditable && <TableCell className='border border-gray-200 w-[80px]' />}
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       </div>
 
       <div className='space-y-4 md:hidden'>
