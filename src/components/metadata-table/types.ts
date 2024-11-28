@@ -14,6 +14,12 @@ export interface Action<T = any> {
   onClick: (record: T) => void | Promise<void>
 }
 
+export interface PaginationConfig {
+  pageSize?: number
+  defaultPageSize?: number
+  pageSizeOptions?: number[]
+}
+
 export interface ToolbarConfig {
   // 是否显示搜索框
   showSearch?: boolean
@@ -39,6 +45,8 @@ export interface MetadataTableProps<T extends MetadataDetail = MetadataDetail> {
   actions?: Action<T>[]
   // 自定义空状态
   emptyContent?: React.ReactNode
+  // 分页配置
+  pagination?: PaginationConfig | false
   // 事件回调
   onDataChange?: (data: T[]) => void
   onError?: (error: Error) => void

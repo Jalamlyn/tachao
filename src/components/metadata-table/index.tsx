@@ -15,6 +15,7 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Pagination,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useMetadataTable } from "./useMetadataTable"
@@ -30,6 +31,7 @@ export function MetadataTable<T extends MetadataDetail>({
   toolbar,
   actions = [],
   emptyContent,
+  pagination = { defaultPageSize: 10, pageSizeOptions: [10, 20, 50, 100] },
   onDataChange,
   onError,
 }: MetadataTableProps<T>) {
@@ -37,13 +39,26 @@ export function MetadataTable<T extends MetadataDetail>({
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [recordToDelete, setRecordToDelete] = React.useState<T | null>(null)
 
-  const { data, loading, searchValue, isEmptySearchResult, handleSearch, handleRefresh, handleDelete } =
-    useMetadataTable<T>({
-      type,
-      searchFields: toolbar?.searchProps?.fields,
-      onDataChange,
-      onError,
-    })
+  const {
+    data,
+    loading,
+    searchValue,
+    isEmptySearchResult,
+    currentPage,
+    pageSize,
+    total,
+    handleSearch,
+    handleRefresh,
+    handleDelete,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useMetadataTable<T>({
+    type,
+    searchFields: toolbar?.searchProps?.fields,
+    pagination,
+    onDataChange,
+    onError,
+  })
 
   const handleDeleteClick = useCallback((record: T) => {
     setRecordToDelete(record)
@@ -79,7 +94,10 @@ export function MetadataTable<T extends MetadataDetail>({
               className='w-[300px]'
               placeholder={toolbar.searchProps?.placeholder || "搜索..."}
               startContent={
-                <Icon icon='mingcute:search-ai-line' className='text-default-400 pointer-events-none flex-shrink-0 w-5 h-5' />
+                <Icon
+                  icon='mingcute:search-ai-line'
+                  className='text-default-400 pointer-events-none flex-shrink-0 w-5 h-5'
+                />
               }
               value={searchValue}
               onClear={() => handleSearch("")}
@@ -181,6 +199,42 @@ export function MetadataTable<T extends MetadataDetail>({
     )
   }
 
+  const renderPagination = () => {
+    if (!pagination || total === 0) return null
+
+    return (
+      <div className="flex justify-between items-center px-2 py-4">
+        <div className="text-small text-default-400">
+          共 {total} 条记录
+        </div>
+        <div className="flex gap-2 items-center">
+          <select
+            className="text-small p-2 rounded-md border border-default-200 focus:outline-none focus:ring-2 focus:ring-primary"
+            value={pageSize}
+            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+          >
+            {pagination.pageSizeOptions?.map((size) => (
+              <option key={size} value={size}>
+                {size} 条/页
+              </option>
+            ))}
+          </select>
+          <Pagination
+            total={Math.ceil(total / pageSize)}
+            page={currentPage}
+            onChange={handlePageChange}
+            showControls
+            classNames={{
+              wrapper: "gap-0 overflow-visible h-8",
+              item: "w-8 h-8",
+              cursor: "bg-primary text-white font-medium",
+            }}
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className='metadata-table space-y-4'>
       {renderToolbar()}
@@ -195,7 +249,7 @@ export function MetadataTable<T extends MetadataDetail>({
           isHeaderSticky
           aria-label={`${type} table`}
           classNames={{
-            base: "max-h-[calc(100vh-280px)] overflow-scroll",
+            base: "max-h-[calc(100vh-420px)] overflow-scroll",
             table: "min-h-[400px]",
             wrapper: "min-h-[222px] shadow-sm rounded-lg overflow-hidden",
             th: "bg-default-100 text-default-800 text-xs uppercase tracking-wider",
@@ -237,6 +291,7 @@ export function MetadataTable<T extends MetadataDetail>({
             )}
           </TableBody>
         </Table>
+        {renderPagination()}
       </motion.div>
 
       <Modal
