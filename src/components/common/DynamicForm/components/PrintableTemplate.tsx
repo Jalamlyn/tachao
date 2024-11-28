@@ -9,11 +9,36 @@ interface PrintableTemplateProps {
 }
 
 const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ config, data }, ref) => {
-  const { metadata, renderConfig } = config
+  // 标准化配置
+  const normalizeConfig = (rawConfig: any): DynamicFormConfig => {
+    if (!rawConfig) return rawConfig
+
+    // 如果配置来自模板
+    if (rawConfig.config?.renderConfig) {
+      return {
+        metadata: {
+          title: rawConfig.title || "表单",
+          description: rawConfig.description,
+          permissions: {
+            edit: true,
+            delete: true,
+            print: true
+          }
+        },
+        renderConfig: rawConfig.config.renderConfig,
+        orderNumberConfig: rawConfig.config.orderNumberConfig
+      }
+    }
+
+    return rawConfig
+  }
+
+  const normalizedConfig = normalizeConfig(config)
+  const { metadata, renderConfig } = normalizedConfig
 
   // 格式化字段值
   const formatFieldValue = (type: string, value: any) => {
-    if (value === undefined || value === null || value === "") return "-"
+    if (value === undefined || value === null || value === "") return "____________"
 
     switch (type) {
       case "signature":
@@ -32,15 +57,20 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
             />
           )
         }
-        // 如果不是有效的base64图片则不显示
-        return null
+        // 如果不是有效的base64图片则显示占位符
+        return "____________"
       case "date":
       case "datetime":
-        return format(new Date(value), "yyyy-MM-dd HH:mm:ss")
+      case "time":
+        try {
+          return format(new Date(value), "yyyy-MM-dd HH:mm:ss")
+        } catch {
+          return "____________"
+        }
       case "number":
-        return typeof value === "number" ? value.toFixed(2) : value
+        return typeof value === "number" ? value.toFixed(2) : "____________"
       default:
-        return value
+        return value || "____________"
     }
   }
 
@@ -52,44 +82,71 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
       ...(data?.basicInfo || {}), // 如果存在 basicInfo，则合并
     }
 
-    // 过滤掉特殊字段
-    const specialFields = ["tableData", "processConfirmations", "basicInfo"]
-    const filteredData = Object.fromEntries(Object.entries(basicData).filter(([key]) => !specialFields.includes(key)))
-
-    return filteredData
+    // 只过滤掉特定的系统字段
+    const systemFields = ["tableData", "processConfirmations"]
+    return Object.fromEntries(Object.entries(basicData).filter(([key]) => !systemFields.includes(key)))
   }
 
   // 渲染基本信息字段
   const renderBasicFields = () => {
     const basicInfo = ensureBasicInfo()
-    console.log("Basic info for printing:", basicInfo)
 
-    return (
-      <div className='grid grid-cols-2 gap-2'>
-        {renderConfig.basicFields.map((field) => {
-          const formattedValue = formatFieldValue(field.type, basicInfo[field.name])
-          // 如果是签名字段且没有有效值，则跳过渲染
-          if (field.type === "signature" && !formattedValue) {
-            return null
-          }
-
-          return (
+    // 检查是否使用分组配置
+    if (Array.isArray(renderConfig.basicFields)) {
+      return (
+        <div className='grid grid-cols-2 gap-2'>
+          {renderConfig.basicFields.map((field) => (
             <div
               key={field.name}
               className={cn("flex justify-between border-b border-gray-200 py-1", "print:break-inside-avoid")}
             >
               <span className='font-medium text-gray-700 text-sm'>{field.label}:</span>
-              <span className='min-w-[120px] text-right text-sm text-gray-900'>{formattedValue}</span>
+              <span className='min-w-[120px] text-right text-sm text-gray-900'>
+                {formatFieldValue(field.type, basicInfo[field.name])}
+              </span>
             </div>
-          )
-        })}
+          ))}
+        </div>
+      )
+    }
+
+    // 处理分组配置
+    const { groups } = renderConfig.basicFields
+    return (
+      <div className='space-y-4'>
+        {groups.map((group) => (
+          <div key={group.key} className='print:break-inside-avoid'>
+            <h3 className='text-sm font-medium text-gray-900 mb-2 pb-1 border-b'>
+              {group.icon && <span className='mr-1'>{group.icon}</span>}
+              {group.title}
+            </h3>
+            {group.description && <p className='text-xs text-gray-500 mb-2'>{group.description}</p>}
+            <div className='grid grid-cols-2 gap-2'>
+              {group.fields.map((field) => (
+                <div
+                  key={field.name}
+                  className={cn("flex justify-between border-b border-gray-200 py-1", "print:break-inside-avoid")}
+                >
+                  <span className='font-medium text-gray-700 text-sm'>{field.label}:</span>
+                  <span className='min-w-[120px] text-right text-sm text-gray-900'>
+                    {formatFieldValue(field.type, basicInfo[field.name])}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     )
   }
 
   // 渲染表格数据
   const renderTable = () => {
-    if (!renderConfig.table || !data?.tableData?.length) return null
+    if (!renderConfig.table) return null
+
+    const tableData = data?.tableData || []
+    // 如果没有数据，显示至少一行空行
+    const displayData = tableData.length > 0 ? tableData : [{}]
 
     return (
       <div className='mt-3'>
@@ -111,27 +168,19 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
             </tr>
           </thead>
           <tbody>
-            {data.tableData.map((row: any, index: number) => (
+            {displayData.map((row: any, index: number) => (
               <tr key={index} className='border-b border-gray-200'>
-                {renderConfig.table!.columns.map((column) => {
-                  const formattedValue = formatFieldValue(column.type, row[column.key])
-                  // 如果是签名字段且没有有效值，则显示空白单元格
-                  if (column.type === "signature" && !formattedValue) {
-                    return <td key={column.key} className='border border-gray-300 p-1 text-sm'></td>
-                  }
-
-                  return (
-                    <td
-                      key={column.key}
-                      className={cn(
-                        "border border-gray-300 p-1 text-sm",
-                        column.type === "number" && "text-right font-mono"
-                      )}
-                    >
-                      {formattedValue}
-                    </td>
-                  )
-                })}
+                {renderConfig.table!.columns.map((column) => (
+                  <td
+                    key={column.key}
+                    className={cn(
+                      "border border-gray-300 p-1 text-sm",
+                      column.type === "number" && "text-right font-mono"
+                    )}
+                  >
+                    {formatFieldValue(column.type, row[column.key])}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
@@ -142,12 +191,14 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
 
   // 渲染流程确认信息
   const renderProcessSteps = () => {
-    if (!renderConfig.processSteps || !data?.processConfirmations) return null
+    if (!renderConfig.processSteps) return null
+
+    const processConfirmations = data?.processConfirmations || {}
 
     return (
       <div className='mt-3 space-y-2'>
         {renderConfig.processSteps.map((step) => {
-          const stepData = data.processConfirmations[step.key] || {}
+          const stepData = processConfirmations[step.key] || {}
 
           return (
             <div key={step.key} className='process-step border-b border-gray-200 pb-2'>
@@ -165,41 +216,33 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
                 </div>
               </div>
 
-              {stepData?.confirmed && (
+              {step.fields && (
                 <div className='step-content'>
                   <div className='grid grid-cols-2 gap-2 text-xs mt-1'>
                     <div>
                       <span className='text-gray-500'>确认人：</span>
-                      <span className='text-gray-900'>{stepData.confirmer}</span>
+                      <span className='text-gray-900'>{stepData?.confirmer || "____________"}</span>
                     </div>
                     <div>
                       <span className='text-gray-500'>确认时间：</span>
                       <span className='text-gray-900'>
-                        {stepData.confirmationDate &&
-                          format(new Date(stepData.confirmationDate), "yyyy-MM-dd HH:mm:ss")}
+                        {stepData?.confirmationDate
+                          ? format(new Date(stepData.confirmationDate), "yyyy-MM-dd HH:mm:ss")
+                          : "____________"}
                       </span>
                     </div>
                   </div>
 
-                  {/* 渲染步骤表单字段 */}
-                  {step.fields && stepData.formData && (
-                    <div className='mt-2 grid grid-cols-2 gap-2 text-xs'>
-                      {step.fields.map((field) => {
-                        const formattedValue = formatFieldValue(field.type, stepData.formData[field.name])
-                        // 如果是签名字段且没有有效值，则跳过渲染
-                        if (field.type === "signature" && !formattedValue) {
-                          return null
-                        }
-
-                        return (
-                          <div key={field.name}>
-                            <span className='text-gray-500'>{field.label}：</span>
-                            <span className='text-gray-900'>{formattedValue}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
+                  <div className='mt-2 grid grid-cols-2 gap-2 text-xs'>
+                    {step.fields.map((field) => (
+                      <div key={field.name}>
+                        <span className='text-gray-500'>{field.label}：</span>
+                        <span className='text-gray-900'>
+                          {formatFieldValue(field.type, stepData?.formData?.[field.name])}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
