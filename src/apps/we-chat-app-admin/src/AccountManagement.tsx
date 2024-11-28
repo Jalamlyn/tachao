@@ -19,6 +19,7 @@ import {
   Chip,
   Tooltip,
   Spinner,
+  ScrollShadow,
 } from "@nextui-org/react"
 import { PlusIcon, EditIcon, DeleteIcon, UserPlusIcon, EyeIcon } from "lucide-react"
 import {
@@ -30,7 +31,7 @@ import {
   updateRamAccount,
   queryRamAccountDetail,
 } from "@/service/apis/api"
-import { useBreadcrumb } from '@/contexts/BreadcrumbContext'
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 
 const AccountManagement: React.FC = () => {
   const [accounts, setAccounts] = useState([])
@@ -48,12 +49,12 @@ const AccountManagement: React.FC = () => {
   useEffect(() => {
     fetchAccounts()
     fetchRoles()
-    
+
     // 更新面包屑
     updateBreadcrumbs([
-      { label: '首页', href: '/we-chat-app/admin' },
-      { label: '企业设置', href: '/we-chat-app/admin/settings' },
-      { label: '账号管理', href: '/we-chat-app/admin/settings#accounts' }
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "企业设置", href: "/we-chat-app/admin/settings" },
+      { label: "账号管理", href: "/we-chat-app/admin/settings#accounts" },
     ])
   }, [])
 
@@ -200,7 +201,15 @@ const AccountManagement: React.FC = () => {
         </Button>
       </div>
 
-      <Table aria-label='账号列表'>
+      <Table
+        isHeaderSticky
+        aria-label='账号列表'
+        classNames={{
+          base: "max-h-[calc(100vh-420px)] overflow-scroll",
+          wrapper: "rounded-none",
+          table: "min-h-[400px]",
+        }}
+      >
         <TableHeader columns={columns}>
           {(column) => (
             <TableColumn key={column.uid} align={column.uid === "actions" ? "center" : "start"}>
@@ -208,6 +217,7 @@ const AccountManagement: React.FC = () => {
             </TableColumn>
           )}
         </TableHeader>
+
         <TableBody items={accounts} isLoading={isLoading} loadingContent={<Spinner label='加载中...' />}>
           {(item) => (
             <TableRow key={item.id}>{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}</TableRow>

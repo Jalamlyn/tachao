@@ -97,6 +97,7 @@ const ResourceManagement: React.FC = () => {
           {Object.entries(resourceTypes).map(([id, type]) => (
             <Tab
               key={id}
+              isDisabled={type.disabled}
               title={
                 <div className="flex items-center gap-2">
                   <Icon 

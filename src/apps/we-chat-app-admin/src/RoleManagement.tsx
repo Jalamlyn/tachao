@@ -170,7 +170,14 @@ const RoleManagement: React.FC = () => {
         </Button>
       </div>
 
-      <Table aria-label='角色列表' isHeaderSticky>
+      <Table
+        aria-label='角色列表'
+        isHeaderSticky
+        classNames={{
+          base: "max-h-[calc(100vh-420px)] overflow-scroll",
+          table: "min-h-[400px]",
+        }}
+      >
         <TableHeader columns={columns}>
           {(column) => (
             <TableColumn key={column.uid} align={column.uid === "actions" ? "center" : "start"}>

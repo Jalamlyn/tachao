@@ -1,5 +1,5 @@
-import chatChunkOpenAIOffice from "../chat/chat-chunk-openai-office"
-import chatChunkQwen from "../chat/chat-siliconflow"
+import chatChunk from "../chat/chat-chunk-openai-office"
+// import chatChunk from "../chat/chat-siliconflow"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
@@ -120,7 +120,7 @@ export class AIFormAgent implements IAIFormAgent {
       },
     ]
 
-    await chatChunkOpenAIOffice(
+    await chatChunk(
       messages,
       (chunk: string) => {
         response += chunk

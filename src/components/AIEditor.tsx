@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from "react"
 import { ScrollShadow, Tabs, Tab, Button } from "@nextui-org/react"
+import { Button as SButton } from "@/components/ui/button"
 import { Icon } from "@iconify/react"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import MessageCard from "@/components/MessageCard"
@@ -122,14 +123,14 @@ const ImageUploader: React.FC<{ agent: AIEditorProps["agent"] }> = ({ agent }) =
       {preview && (
         <div className='relative'>
           <img src={preview} alt='Preview' className='w-16 h-16 object-cover rounded border border-default-200' />
-          <Button
+          <SButton
             size='sm'
             variant='ghost'
             className='absolute -top-2 -right-2 p-0 min-w-unit-6 w-unit-6 h-unit-6 rounded-full'
             onClick={handleClear}
           >
             <Icon icon='mdi:close' className='w-3 h-3' />
-          </Button>
+          </SButton>
         </div>
       )}
     </div>

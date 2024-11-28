@@ -12,22 +12,6 @@ export default async function chatChunkDeepseek(
   overFlag = "YES",
   baseModel = "deepseek::deepseek-chat"
 ) {
-  const [provider, model] = baseModel.split("::")
-  const modelSupplierData = localDB.getItem("model-supplier-data") || [
-    {
-      id: "deepseek",
-      name: "DeepSeek",
-      apiKey: "sk-2ef828934e1f422d8ae5c4f71770cef1",
-      endpoint: "https://api.deepseek.com/chat/completions",
-      isDefault: false,
-    },
-  ]
-  const supplierInfo = modelSupplierData.find((supplier) => supplier.id === provider)
-
-  if (!supplierInfo) {
-    throw new Error(`未找到服务商信息：${provider}`)
-  }
-
   const apiKey = "sk-gdgylduvkxdhdzpyjdfpqdcmvcwmmqhoazmnfwjecxwvzuur"
   const apiEndPoint = "https://api.siliconflow.cn/v1/chat/completions"
 

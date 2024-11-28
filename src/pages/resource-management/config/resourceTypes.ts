@@ -18,6 +18,7 @@ export const resourceTypes: ResourceTypeConfig = {
     icon: 'mdi:file-word',
     description: '支持.docx,.doc格式的Word文档',
     previewComponent: WordPreview,
+    disabled: true
   },
   pdf: {
     id: 'pdf',
@@ -25,6 +26,8 @@ export const resourceTypes: ResourceTypeConfig = {
     icon: 'mdi:file-pdf',
     description: '支持.pdf格式的文档',
     previewComponent: PDFPreview,
+    disabled: true
+
   },
   image: {
     id: 'image',
@@ -32,5 +35,6 @@ export const resourceTypes: ResourceTypeConfig = {
     icon: 'mdi:image',
     description: '支持jpg,png,gif等常见图片格式',
     previewComponent: ImagePreview,
+    disabled: true
   }
 }

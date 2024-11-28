@@ -76,7 +76,7 @@ const ResourceFieldGroup: React.FC<ResourceFieldGroupProps> = ({
   return (
     <div
       className={cn(
-        "rounded-xl border border-gray-200 bg-white transition-all duration-200",
+        "mt-2 rounded-xl border border-gray-200 bg-white transition-all duration-200",
         "hover:border-primary-100 hover:shadow-sm"
       )}
     >
