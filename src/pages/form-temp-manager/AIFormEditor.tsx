@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import { Icon } from "@iconify/react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react"
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input } from "@nextui-org/react"
 import FormPreview from "./components/FormPreview"
 import { useFormState } from "./hooks/useFormState"
 import AIFormAgent from "@/service/agents/AIFormAgent"
@@ -17,7 +17,7 @@ import AIEditor from "@/components/AIEditor"
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { title } = location.state || {} // 避免 state 为 undefined 的情况
+  const { title } = location.state || {}
   const { templateId } = useParams<{ templateId: string }>()
   const isEditMode = Boolean(templateId)
   const { updateBreadcrumbs } = useBreadcrumb()
@@ -26,6 +26,11 @@ const AIFormEditor: React.FC = () => {
   const [previewContent, setPreviewContent] = useState<string>("")
   const accumulatedTextRef = useRef("")
 
+  // 新增：标题输入Modal的状态
+  const [isTitleModalOpen, setIsTitleModalOpen] = useState(false)
+  const [newTitle, setNewTitle] = useState("")
+  const [pendingSave, setPendingSave] = useState<(() => Promise<void>) | null>(null)
+
   const { state: formState, setFormConfig, setRawConfig, handleError } = useFormState()
 
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
@@ -33,7 +38,6 @@ const AIFormEditor: React.FC = () => {
 
   const { create: createTemplate, getDetail: getTemplateDetail, update: updateTemplate } = useMetadata("template")
 
-  // 添加版本控制
   const versionControl = useVersionControl<{
     formConfig: any
     rawConfig: string
@@ -51,7 +55,6 @@ const AIFormEditor: React.FC = () => {
               setRawConfig(template.data.rawConfig)
               setPreviewContent(template.data.rawConfig)
 
-              // 初始化版本控制
               versionControl.addVersion({
                 formConfig: parsedConfig.config,
                 rawConfig: template.data.rawConfig,
@@ -90,6 +93,42 @@ const AIFormEditor: React.FC = () => {
         message.error("请先生成表单")
         return
       }
+
+      // 修改：保存前先获取标题
+      if (!isEditMode) {
+        setNewTitle(title || formState.formConfig.metadata?.title || "")
+        setIsTitleModalOpen(true)
+        return new Promise<void>((resolve) => {
+          setPendingSave(() => async () => {
+            try {
+              const templateData = {
+                title: newTitle || "新建模板",
+                type: "custom",
+                status: "active",
+                data: {
+                  rawConfig: formState.rawConfig,
+                  type: "custom",
+                  name: newTitle || "新建模板",
+                },
+              }
+
+              const result = await createTemplate(templateData)
+              if (result) {
+                setSavedTemplateId(result.id)
+                setIsSuccessModalOpen(true)
+              } else {
+                throw new Error("保存模板失败")
+              }
+              resolve()
+            } catch (error) {
+              handleError(error)
+              throw error
+            }
+          })
+        })
+      }
+
+      // 编辑模式直接保存
       try {
         const templateData = {
           title: title || formState.formConfig.metadata?.title || "新建模板",
@@ -102,22 +141,12 @@ const AIFormEditor: React.FC = () => {
           },
         }
 
-        if (isEditMode && templateId) {
-          const result = await updateTemplate(templateId, templateData)
-          if (result) {
-            setSavedTemplateId(templateId)
-            setIsSuccessModalOpen(true)
-          } else {
-            throw new Error("更新模板失败")
-          }
+        const result = await updateTemplate(templateId, templateData)
+        if (result) {
+          setSavedTemplateId(templateId)
+          setIsSuccessModalOpen(true)
         } else {
-          const result = await createTemplate(templateData)
-          if (result) {
-            setSavedTemplateId(result.id)
-            setIsSuccessModalOpen(true)
-          } else {
-            throw new Error("保存模板失败")
-          }
+          throw new Error("更新模板失败")
         }
       } catch (error) {
         handleError(error)
@@ -139,16 +168,23 @@ const AIFormEditor: React.FC = () => {
     navigate("/we-chat-app/admin/documents")
   }
 
+  // 新增：处理标题确认
+  const handleTitleConfirm = async () => {
+    if (pendingSave) {
+      await pendingSave()
+      setPendingSave(null)
+    }
+    setIsTitleModalOpen(false)
+  }
+
   const handleChunk = useCallback(
     (chunk: string) => {
       accumulatedTextRef.current += chunk
 
-      // 检查是否包含错误信息
       if (accumulatedTextRef.current.includes("<shata-ai-error>")) {
         const errorMatch = accumulatedTextRef.current.match(/<shata-ai-error>([\s\S]*?)<\/shata-ai-error>/)
         if (errorMatch) {
           const errorMessage = errorMatch[1].trim()
-          // 更新最后一条消息为错误信息
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
             return [
@@ -165,13 +201,11 @@ const AIFormEditor: React.FC = () => {
               },
             ]
           })
-          // 清空累积的文本
           accumulatedTextRef.current = ""
-          return // 不更新预览内容
+          return
         }
       }
 
-      // 原有的表单生成逻辑
       if (accumulatedTextRef.current.includes("<shata-ai-form>")) {
         setMessages((prev) => {
           const lastMessage = prev[prev.length - 1]
@@ -245,7 +279,6 @@ const AIFormEditor: React.FC = () => {
       accumulatedTextRef.current = ""
       if (result?.type === "support") {
         if (result.data?.config) {
-          // 保存新版本
           versionControl.addVersion({
             formConfig: result.data.config,
             rawConfig: result.data.rawConfig,
@@ -321,6 +354,35 @@ const AIFormEditor: React.FC = () => {
         showCodeTab
         previewTabName='表单预览'
       />
+
+      {/* 新增：标题输入Modal */}
+      <Modal isOpen={isTitleModalOpen} onClose={() => setIsTitleModalOpen(false)} size='sm'>
+        <ModalContent>
+          <ModalHeader className='flex flex-col gap-1'>输入表单模板标题</ModalHeader>
+          <ModalBody>
+            <Input
+              autoFocus
+              label="标题"
+              placeholder="请输入表单模板标题"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleTitleConfirm()
+                }
+              }}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button color='danger' variant='light' onPress={() => setIsTitleModalOpen(false)}>
+              取消
+            </Button>
+            <Button color='primary' onPress={handleTitleConfirm} isDisabled={!newTitle.trim()}>
+              确认
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} size='lg' placement='center'>
         <ModalContent>
