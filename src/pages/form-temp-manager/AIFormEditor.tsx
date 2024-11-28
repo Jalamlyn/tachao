@@ -25,9 +25,9 @@ const AIFormEditor: React.FC = () => {
   const { templateId } = useParams<{ templateId: string }>()
   const isEditMode = Boolean(templateId)
   const { updateBreadcrumbs } = useBreadcrumb()
-  
+
   // 使用zustand store
-  const { 
+  const {
     messages,
     selectedTab,
     previewContent,
@@ -35,7 +35,7 @@ const AIFormEditor: React.FC = () => {
     addMessage,
     setSelectedTab,
     setPreviewContent,
-    updateLastMessage
+    updateLastMessage,
   } = useAIFormStore()
 
   const [isTitleModalOpen, setIsTitleModalOpen] = useState(false)
@@ -66,6 +66,10 @@ const AIFormEditor: React.FC = () => {
   }>()
 
   const accumulatedTextRef = useRef("")
+
+  useEffect(() => {
+    setMessages([])
+  }, [])
 
   useEffect(() => {
     const loadTemplateData = async () => {
