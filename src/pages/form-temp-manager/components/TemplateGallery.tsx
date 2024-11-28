@@ -1,11 +1,5 @@
-import React, { useState } from "react"
-import {
-  Card,
-  CardBody,
-  CardFooter,
-  Button,
-  useDisclosure,
-} from "@nextui-org/react"
+import React, { useState, useCallback, useMemo } from "react"
+import { Card, CardBody, CardFooter, Button, useDisclosure, Chip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import message from "@/components/Message"
@@ -14,7 +8,9 @@ import EmptyState from "@/components/EmptyState"
 import ConfirmModal from "@/components/ConfirmModal"
 import ShareModal from "@/components/ShareModal"
 import RenameModal from "@/components/RenameModal"
+import TagManageModal from "@/components/TagManageModal"
 import { useMetadata } from "@/hooks/metadata"
+import { useTagManagement } from "@/hooks/useTagManagement"
 
 interface Template {
   id: string
@@ -38,6 +34,16 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   const { remove, load, update } = useMetadata("template")
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false)
   const [searchValue, setSearchValue] = useState("")
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [isTagManageModalOpen, setIsTagManageModalOpen] = useState(false)
+
+  const {
+    tagsIndex,
+    loading: tagsLoading,
+    filterItemsByTags,
+    getItemTags,
+    updateItemTags
+  } = useTagManagement('template')
 
   const loadTemplates = async () => {
     try {
@@ -108,6 +114,23 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     }
   }
 
+  // 预处理筛选结果
+  const filteredTemplates = useMemo(() => {
+    if (!internalTemplates) return [];
+    
+    // 先按标签筛选
+    let filtered = filterItemsByTags(internalTemplates, selectedTags);
+    
+    // 再按搜索词筛选
+    if (searchValue) {
+      filtered = filtered.filter(template =>
+        template.title.toLowerCase().includes(searchValue.toLowerCase())
+      );
+    }
+    
+    return filtered;
+  }, [internalTemplates, selectedTags, searchValue, filterItemsByTags]);
+
   const renderCard = (template: Template) => (
     <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onTemplateSelect(template.id)}>
       <CardBody className='p-0 relative overflow-hidden'>
@@ -167,9 +190,77 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
             </Button>
           </div>
         </div>
+        {/* 显示标签 */}
+        {tagsIndex && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {getItemTags(template.id).map(tag => (
+              <Chip
+                key={tag.id}
+                size="sm"
+                color={tag.color as any}
+                variant="flat"
+              >
+                {tag.name}
+              </Chip>
+            ))}
+          </div>
+        )}
       </CardFooter>
     </Card>
   )
+
+  // 自定义头部渲染
+  const renderHeader = useCallback(({ value, onChange, placeholder }) => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <input
+            type="text"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            placeholder={placeholder}
+            className="w-full max-w-sm px-3 py-2 rounded-lg border border-default-200 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+        <Button
+          color="primary"
+          variant="flat"
+          onClick={() => setIsTagManageModalOpen(true)}
+          startContent={<Icon icon="mdi:tag-plus" />}
+        >
+          管理标签
+        </Button>
+      </div>
+      
+      {/* 标签选择器 */}
+      {tagsIndex && (
+        <div className="flex flex-wrap gap-2">
+          {tagsIndex.tags
+            .filter(tag => tag.type === 'template')
+            .map(tag => (
+              <Chip
+                key={tag.id}
+                color={tag.color as any}
+                variant={selectedTags.includes(tag.id) ? "solid" : "flat"}
+                onClick={() => {
+                  setSelectedTags(prev =>
+                    prev.includes(tag.id)
+                      ? prev.filter(id => id !== tag.id)
+                      : [...prev, tag.id]
+                  );
+                }}
+                className="cursor-pointer"
+              >
+                {tag.name}
+                <span className="ml-2 text-xs">
+                  ({tagsIndex.relations.template.byTag[tag.id]?.length || 0})
+                </span>
+              </Chip>
+            ))}
+        </div>
+      )}
+    </div>
+  ), [selectedTags, tagsIndex]);
 
   const loadingState = (
     <div className='flex items-center justify-center min-h-[400px]'>
@@ -183,7 +274,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   return (
     <>
       <CardGallery
-        items={internalTemplates}
+        items={filteredTemplates}
         renderCard={renderCard}
         emptyState={
           <EmptyState
@@ -197,14 +288,14 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
           />
         }
         loadingState={loadingState}
-        isLoading={isLoading}
+        isLoading={isLoading || tagsLoading}
         containerClassName='h-[calc(100vh-200px)]'
         className={className}
         searchable
         searchFields={["title"]}
         searchPlaceholder='搜索模板名称...'
         onSearch={setSearchValue}
-        customSearch={(template, value) => template.title.toLowerCase().includes(value.toLowerCase())}
+        renderHeader={renderHeader}
       />
 
       <ConfirmModal
@@ -232,6 +323,12 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
         title="重命名模板"
         inputLabel="模板名称"
         inputPlaceholder="请输入新的模板名称"
+      />
+
+      <TagManageModal
+        isOpen={isTagManageModalOpen}
+        onClose={() => setIsTagManageModalOpen(false)}
+        type="template"
       />
     </>
   )

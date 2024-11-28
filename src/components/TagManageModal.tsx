@@ -1,0 +1,184 @@
+import React, { useState } from "react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Select, SelectItem, Chip } from "@nextui-org/react";
+import { Icon } from "@iconify/react";
+import { useTagManagement } from "@/hooks/useTagManagement";
+import { TagType } from "@/types/tag";
+import message from "@/components/Message";
+
+interface TagManageModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  type: TagType;
+}
+
+const TAG_COLORS = [
+  { value: "primary", label: "蓝色" },
+  { value: "success", label: "绿色" },
+  { value: "warning", label: "黄色" },
+  { value: "danger", label: "红色" },
+  { value: "secondary", label: "紫色" }
+];
+
+const TagManageModal: React.FC<TagManageModalProps> = ({
+  isOpen,
+  onClose,
+  type
+}) => {
+  const {
+    tagsIndex,
+    createTag,
+    deleteTag,
+    getTagUsageCount
+  } = useTagManagement(type);
+
+  const [newTagName, setNewTagName] = useState("");
+  const [selectedColor, setSelectedColor] = useState("primary");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleCreateTag = async () => {
+    if (!newTagName.trim()) {
+      message.error('请输入标签名称');
+      return;
+    }
+
+    // 检查标签名是否重复
+    if (tagsIndex?.tags.some(tag => 
+      tag.type === type && tag.name.toLowerCase() === newTagName.trim().toLowerCase()
+    )) {
+      message.error('标签名称已存在');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await createTag({
+        name: newTagName.trim(),
+        color: selectedColor,
+        type
+      });
+
+      setNewTagName("");
+      setSelectedColor("primary");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteTag = async (tagId: string) => {
+    const usageCount = getTagUsageCount(tagId);
+    if (usageCount > 0) {
+      message.error(`无法删除标签，当前有 ${usageCount} 个项目正在使用此标签`);
+      return;
+    }
+
+    try {
+      await deleteTag(tagId);
+    } catch (error) {
+      console.error('Error deleting tag:', error);
+    }
+  };
+
+  return (
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose}
+      size="2xl"
+      scrollBehavior="inside"
+    >
+      <ModalContent>
+        <ModalHeader className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <Icon icon="mdi:tag-multiple" className="w-6 h-6" />
+            <span>管理标签</span>
+          </div>
+        </ModalHeader>
+        <ModalBody>
+          <div className="space-y-6">
+            {/* 创建新标签 */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">创建新标签</h3>
+              <div className="flex gap-2">
+                <Input
+                  value={newTagName}
+                  onChange={e => setNewTagName(e.target.value)}
+                  placeholder="输入标签名称"
+                  className="flex-1"
+                  maxLength={20}
+                  onKeyPress={e => {
+                    if (e.key === 'Enter' && newTagName.trim()) {
+                      handleCreateTag();
+                    }
+                  }}
+                />
+                <Select
+                  value={selectedColor}
+                  onChange={e => setSelectedColor(e.target.value)}
+                  className="w-32"
+                >
+                  {TAG_COLORS.map(color => (
+                    <SelectItem key={color.value} value={color.value}>
+                      {color.label}
+                    </SelectItem>
+                  ))}
+                </Select>
+                <Button
+                  color="primary"
+                  onClick={handleCreateTag}
+                  isLoading={isSubmitting}
+                  startContent={<Icon icon="mdi:plus" />}
+                >
+                  创建
+                </Button>
+              </div>
+            </div>
+
+            {/* 现有标签列表 */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">现有标签</h3>
+              <div className="flex flex-wrap gap-2 min-h-[100px]">
+                {tagsIndex?.tags
+                  .filter(tag => tag.type === type)
+                  .map(tag => {
+                    const usageCount = getTagUsageCount(tag.id);
+                    return (
+                      <Chip
+                        key={tag.id}
+                        color={tag.color as any}
+                        variant="flat"
+                        onClose={usageCount === 0 ? () => handleDeleteTag(tag.id) : undefined}
+                        className="h-8"
+                      >
+                        {tag.name}
+                        <span className="ml-2 text-xs">
+                          ({usageCount})
+                        </span>
+                      </Chip>
+                    );
+                  })}
+                {(!tagsIndex?.tags.length || !tagsIndex?.tags.filter(tag => tag.type === type).length) && (
+                  <div className="flex items-center justify-center w-full h-[100px] text-default-400">
+                    暂无标签
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 使用说明 */}
+            <div className="text-sm text-default-400 space-y-1">
+              <p>• 标签一旦创建后名称不可修改</p>
+              <p>• 只有未被使用的标签才能删除</p>
+              <p>• 标签名称最长20个字符</p>
+            </div>
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="danger" variant="light" onPress={onClose}>
+            关闭
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+};
+
+export default TagManageModal;
