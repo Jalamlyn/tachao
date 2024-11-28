@@ -23,6 +23,7 @@ interface FormFieldWrapperProps {
   form: UseFormReturn<any>
   isEditable?: boolean
   disabled?: boolean
+  required?: boolean
   showWhen?: {
     field: string
     value: any
@@ -38,6 +39,7 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
   form,
   isEditable = true,
   disabled,
+  required,
 }) => {
   return (
     <motion.div variants={tooltipAnimation} initial='hidden' animate='visible'>
@@ -47,7 +49,12 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
         render={({ field }) => (
           <FormItem className='w-full'>
             <div className='flex items-center gap-1'>
-              <FormLabel className='text-sm font-medium text-primary-500'>{label}</FormLabel>
+              <FormLabel className='text-sm font-medium text-primary-500'>
+                {label}
+                {required && (
+                  <span className="text-red-500 ml-1">*</span>
+                )}
+              </FormLabel>
               {tooltip && (
                 <Popover>
                   <PopoverTrigger asChild>

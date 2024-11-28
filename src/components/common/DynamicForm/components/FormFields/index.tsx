@@ -38,6 +38,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             isEditable={isEditable}
             disabled={field.disabled}
             tooltip={field.tooltip}
+            required={field.required}
           >
             {(formField) => (
               <BasicInput 
@@ -66,6 +67,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             isEditable={isEditable}
             disabled={field.disabled}
             tooltip={field.tooltip}
+            required={field.required}
           >
             {(formField) => (
               <Textarea
@@ -95,6 +97,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             isEditable={isEditable}
             disabled={field.disabled}
             tooltip={field.tooltip}
+            required={field.required}
           >
             {(formField) => (
               <Input
@@ -126,6 +129,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             isEditable={isEditable}
             disabled={field.disabled}
             tooltip={field.tooltip}
+            required={field.required}
           >
             {(formField) => (
               <DateInput
@@ -150,6 +154,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             isEditable={isEditable}
             disabled={field.disabled}
             tooltip={field.tooltip}
+            required={field.required}
           >
             {(formField) => (
               <Select
@@ -208,6 +213,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             isEditable={isEditable}
             disabled={field.disabled}
             tooltip={field.tooltip}
+            required={field.required}
           >
             {(formField) => (
               <ResourceFieldGroup
@@ -236,6 +242,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             isEditable={isEditable}
             disabled={field.disabled}
             tooltip={field.tooltip}
+            required={field.required}
           >
             {(formField) => (
               <SignaturePad
@@ -265,6 +272,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             isEditable={isEditable}
             disabled={field.disabled}
             tooltip={field.tooltip}
+            required={field.required}
           >
             {(formField) => (
               <div className="flex items-center gap-2">
@@ -342,6 +350,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             isEditable={isEditable}
             disabled={field.disabled}
             tooltip={field.tooltip}
+            required={field.required}
           >
             {(formField) =>
               field?.render({
