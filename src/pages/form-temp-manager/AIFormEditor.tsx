@@ -16,7 +16,6 @@ import AIEditor from "@/components/AIEditor"
 import VersionSelectModal from "@/components/VersionSelectModal"
 import { renderSaveModal } from "./renderSaveModal"
 import { renderTitleModal } from "./renderTitleModal"
-import { useTemplateData } from "@/hooks/useTemplateData"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -59,29 +58,38 @@ const AIFormEditor: React.FC = () => {
     rawConfig: string
   }>()
 
-  const { loading, error, loadTemplate } = useTemplateData(templateId, isEditMode)
-
   useEffect(() => {
-    const init = async () => {
-      try {
-        const result = await loadTemplate()
-        if (result) {
-          setFormConfig(result.formConfig)
-          setRawConfig(result.rawConfig)
-          setPreviewContent(result.rawConfig)
+    const loadTemplateData = async () => {
+      if (isEditMode && templateId) {
+        try {
+          const template = await getTemplateDetail(templateId)
+          if (template && template.data.rawConfig) {
+            const parsedConfig = await AIFormAgent.parseConfig(template.data.rawConfig)
+            if (parsedConfig) {
+              setFormConfig(parsedConfig.config)
+              setRawConfig(template.data.rawConfig)
+              setPreviewContent(template.data.rawConfig)
 
-          versionControl.addVersion({
-            formConfig: result.formConfig,
-            rawConfig: result.rawConfig,
-          })
+              versionControl.addVersion({
+                formConfig: parsedConfig.config,
+                rawConfig: template.data.rawConfig,
+              })
+            } else {
+              message.error("模板解析失败")
+              navigate("/we-chat-app/admin/documents")
+            }
+          } else {
+            message.error("模板加载失败")
+            navigate("/we-chat-app/admin/documents")
+          }
+        } catch (error) {
+          handleError(error)
+          navigate("/we-chat-app/admin/documents")
         }
-      } catch (error) {
-        handleError(error)
-        navigate("/we-chat-app/admin/documents")
       }
     }
 
-    init()
+    loadTemplateData()
     AIFormAgent.clearCachedImage()
 
     updateBreadcrumbs([
@@ -461,28 +469,6 @@ const AIFormEditor: React.FC = () => {
       {isEditMode ? "更新表单模板" : "保存表单模板"}
     </Button>
   )
-
-  if (loading) {
-    return (
-      <div className='flex items-center justify-center h-screen'>
-        <div className='flex flex-col items-center gap-4'>
-          <Icon icon='eos-icons:loading' className='w-10 h-10 text-primary animate-spin' />
-          <span className='text-default-500'>加载中...</span>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className='flex items-center justify-center h-screen'>
-        <div className='flex flex-col items-center gap-4'>
-          <Icon icon='mdi:alert-circle' className='w-10 h-10 text-danger' />
-          <span className='text-danger'>{error}</span>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <PageLayout title='AI 表单助手' titleIcon='mdi:form-select' actions={pageActions}>
