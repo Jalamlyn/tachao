@@ -79,7 +79,7 @@ export function MetadataTable<T extends MetadataDetail>({
               className='w-[300px]'
               placeholder={toolbar.searchProps?.placeholder || "搜索..."}
               startContent={
-                <Icon icon='mingcute:search-ai-line' className='text-default-400 pointer-events-none flex-shrink-0' />
+                <Icon icon='mingcute:search-ai-line' className='text-default-400 pointer-events-none flex-shrink-0 w-5 h-5' />
               }
               value={searchValue}
               onClear={() => handleSearch("")}

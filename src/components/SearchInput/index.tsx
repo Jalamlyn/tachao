@@ -49,7 +49,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
       onChange={handleChange}
       placeholder={placeholder}
       className={className}
-      startContent={<Icon icon='mdi:magnify' className='text-default-400 w-5 h-5' />}
+      startContent={<Icon icon='mingcute:search-ai-fill' className='text-default-400 w-5 h-5' />}
       endContent={
         internalValue ? (
           <button className='focus:outline-none' onClick={handleClear}>

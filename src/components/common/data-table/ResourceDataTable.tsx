@@ -258,7 +258,6 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
       {/* 添加标题 */}
       <div className='mb-6'>
         <h1 className='text-2xl font-bold text-gray-800'>{resource.name}</h1>
-        <p className='text-sm text-gray-500 mt-1'>数据管理</p>
       </div>
 
       <ResourceDataTableToolbar

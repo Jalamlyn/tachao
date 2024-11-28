@@ -171,12 +171,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ initialData, columns = [], 
       </div>
 
       <div className='flex justify-end space-x-4 px-6 py-4 border-t'>
-        <Button
-          type='submit'
-          onClick={form.handleSubmit(handleSubmit)}
-          disabled={isLoading}
-          className='min-w-[120px] bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-indigo-500/50 transition-all duration-200'
-        >
+        <Button type='submit' onClick={form.handleSubmit(handleSubmit)} disabled={isLoading} className='min-w-[120px]'>
           {isLoading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
           {initialData ? "更新" : "保存"}
         </Button>

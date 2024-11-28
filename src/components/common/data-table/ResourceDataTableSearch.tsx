@@ -3,6 +3,7 @@ import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { Icon } from "@iconify/react"
 
 interface DebouncedInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange"> {
   value: string | number
@@ -63,10 +64,10 @@ const DebouncedInput: React.FC<DebouncedInputProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
-
-        <Search
-          className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 
-          transition-colors group-hover:text-primary'
+        <Icon
+          icon='mingcute:search-ai-fill'
+          className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 
+          transition-colors group-hover:text-primary h-5 w-5'
         />
 
         <input
@@ -124,7 +125,7 @@ const DebouncedInput: React.FC<DebouncedInputProps> = ({
         <Button
           onClick={handleSearch}
           className={cn(
-            "h-10 px-4 min-w-[100px]",
+            "h-10 px-4",
             "bg-primary text-white shadow-sm",
             "hover:bg-primary/90 hover:shadow-md",
             "active:scale-95 transition-all duration-200",

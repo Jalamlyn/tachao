@@ -41,11 +41,7 @@ export function ResourceDataTableToolbar<TData>({
         useButton={true}
       />
       <div className='flex justify-center items-center gap-4'>
-        <Button
-          variant='outline'
-          onClick={onAddNew}
-          className='border-indigo-600 text-indigo-600 hover:bg-indigo-50 transition-colors'
-        >
+        <Button onClick={onAddNew}>
           <Plus className='mr-2 h-4 w-4' />
           新增
         </Button>
@@ -63,10 +59,7 @@ export function ResourceDataTableToolbar<TData>({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant='outline'
-              className='border-indigo-600 text-indigo-600 hover:bg-indigo-50 transition-colors'
-            >
+            <Button variant="secondary">
               <Download className='mr-2 h-4 w-4' />
               导出Excel
               <ChevronDown className='ml-2 h-4 w-4' />
@@ -89,7 +82,7 @@ export function ResourceDataTableToolbar<TData>({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant='outline' className='border-gray-500 text-gray-500 hover:bg-gray-50 transition-colors'>
+            <Button variant='secondary'>
               列设置 <ChevronDown className='ml-2 h-4 w-4' />
             </Button>
           </DropdownMenuTrigger>
