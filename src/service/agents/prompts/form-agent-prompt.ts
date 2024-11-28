@@ -211,42 +211,6 @@ ${rawConfig}
 - 基本信息
 - 流程信息, 不生成确认按钮,系统会自动生成
 
-表单字段分组支持静态分组:
-{
-  key: 'basicInfo',
-  title: '基本信息',
-  fields: [
-    {
-      name: 'name',
-      label: '名称',
-      type: 'text'
-    }
-    // ... 其他字段
-  ]
-}
-
-完整配置示例:
-{
-  renderConfig: {
-    basicFields: {
-      groups: [
-        {
-          key: 'basicInfo',
-          title: '基本信息',
-          fields: [
-            {
-              name: 'name',
-              label: '名称',
-              type: 'text'
-            }
-          ]
-        }
-      ],
-      defaultGroup: 'basicInfo'
-    }
-  }
-}
-
 下拉选择数据格式规范：
 在生成涉及下拉选择的数据时，必须遵循以下规则：
 1. value 和 label 必须完全一致

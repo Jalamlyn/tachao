@@ -44,6 +44,11 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
           const result = await getDetail(templateId)
           if (result && result.data.rawConfig) {
             const { config } = await parseFormConfig(result.data.rawConfig)
+            if (!config.metadata) {
+              config.metadata = {
+                title: result.title,
+              }
+            }
             setLoadedConfig(config)
           } else {
             setError("未找到表单配置")

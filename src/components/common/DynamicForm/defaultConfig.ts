@@ -47,6 +47,8 @@ export const defaultToolbarButtons: ToolbarButton[] = [
 // 默认表单配置
 export const defaultFormConfig: DynamicFormConfig = {
   metadata: {
+    title: "默认表单",
+    description: "",
     permissions: {
       edit: true,
       delete: true,

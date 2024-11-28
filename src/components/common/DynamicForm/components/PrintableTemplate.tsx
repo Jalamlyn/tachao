@@ -20,15 +20,15 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
         // 验证是否为有效的base64图片数据
         if (typeof value === "string" && value.startsWith("data:image")) {
           return (
-            <img 
+            <img
               src={value}
-              alt="签名"
+              alt='签名'
               style={{
                 maxWidth: "200px",
                 maxHeight: "100px",
-                objectFit: "contain"
+                objectFit: "contain",
               }}
-              className="print-signature"
+              className='print-signature'
             />
           )
         }
@@ -53,10 +53,8 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     }
 
     // 过滤掉特殊字段
-    const specialFields = ['tableData', 'processConfirmations', 'basicInfo']
-    const filteredData = Object.fromEntries(
-      Object.entries(basicData).filter(([key]) => !specialFields.includes(key))
-    )
+    const specialFields = ["tableData", "processConfirmations", "basicInfo"]
+    const filteredData = Object.fromEntries(Object.entries(basicData).filter(([key]) => !specialFields.includes(key)))
 
     return filteredData
   }
@@ -64,7 +62,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
   // 渲染基本信息字段
   const renderBasicFields = () => {
     const basicInfo = ensureBasicInfo()
-    console.log('Basic info for printing:', basicInfo)
+    console.log("Basic info for printing:", basicInfo)
 
     return (
       <div className='grid grid-cols-2 gap-2'>
@@ -81,9 +79,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
               className={cn("flex justify-between border-b border-gray-200 py-1", "print:break-inside-avoid")}
             >
               <span className='font-medium text-gray-700 text-sm'>{field.label}:</span>
-              <span className='min-w-[120px] text-right text-sm text-gray-900'>
-                {formattedValue}
-              </span>
+              <span className='min-w-[120px] text-right text-sm text-gray-900'>{formattedValue}</span>
             </div>
           )
         })}
@@ -121,7 +117,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
                   const formattedValue = formatFieldValue(column.type, row[column.key])
                   // 如果是签名字段且没有有效值，则显示空白单元格
                   if (column.type === "signature" && !formattedValue) {
-                    return <td key={column.key} className="border border-gray-300 p-1 text-sm"></td>
+                    return <td key={column.key} className='border border-gray-300 p-1 text-sm'></td>
                   }
 
                   return (
@@ -198,9 +194,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
                         return (
                           <div key={field.name}>
                             <span className='text-gray-500'>{field.label}：</span>
-                            <span className='text-gray-900'>
-                              {formattedValue}
-                            </span>
+                            <span className='text-gray-900'>{formattedValue}</span>
                           </div>
                         )
                       })}
@@ -224,26 +218,13 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
       </div>
 
       {/* 基本信息 */}
-      <div className='mb-4'>
-        <h2 className='text-base font-semibold text-gray-900 mb-2'>基本信息</h2>
-        {renderBasicFields()}
-      </div>
+      <div className='mb-4'>{renderBasicFields()}</div>
 
       {/* 表格数据 */}
-      {renderConfig.table && (
-        <div className='mb-4'>
-          <h2 className='text-base font-semibold text-gray-900 mb-2'>明细信息</h2>
-          {renderTable()}
-        </div>
-      )}
+      {renderConfig.table && <div className='mb-4'>{renderTable()}</div>}
 
       {/* 流程确认 */}
-      {renderConfig.processSteps && (
-        <div className='mb-4'>
-          <h2 className='text-base font-semibold text-gray-900 mb-2'>流程确认</h2>
-          {renderProcessSteps()}
-        </div>
-      )}
+      {renderConfig.processSteps && <div className='mb-4'>{renderProcessSteps()}</div>}
 
       {/* 打印样式 */}
       <style type='text/css' media='print'>{`

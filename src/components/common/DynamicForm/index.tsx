@@ -192,7 +192,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   const handleFormSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
-      debugger
       try {
         const { success, validationResult, values, error } = await submitForm(form.getValues())
 
