@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Select, SelectItem, Chip, ScrollShadow } from "@nextui-org/react";
 import { Icon } from "@iconify/react";
 import { useTagManagement } from "@/hooks/useTagManagement";
@@ -33,7 +33,7 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
     lastUpdate
   } = useTagManagement(type);
 
-  const updateTags = useTagStore(state => state.updateTags);
+  const { updateTags, setHasChanges, hasChanges, resetChanges } = useTagStore();
 
   const [newTagName, setNewTagName] = useState("");
   const [selectedColor, setSelectedColor] = useState("primary");
@@ -63,7 +63,7 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
       if (result) {
         setNewTagName("");
         setSelectedColor("primary");
-        updateTags(); // 更新标签状态
+        setHasChanges(true); // 标记发生变化
       }
     } finally {
       setIsSubmitting(false);
@@ -80,17 +80,21 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
     try {
       const success = await deleteTag(tagId);
       if (success) {
-        updateTags(); // 更新标签状态
+        setHasChanges(true); // 标记发生变化
       }
     } catch (error) {
       console.error('Error deleting tag:', error);
     }
   };
 
-  const handleClose = () => {
-    updateTags(); // 关闭时更新标签状态
+  const handleClose = useCallback(() => {
+    if (hasChanges) {
+      updateTags(); // 只在有变化时更新
+    } else {
+      resetChanges(); // 重置状态
+    }
     onClose();
-  };
+  }, [hasChanges, updateTags, resetChanges, onClose]);
 
   return (
     <Modal 

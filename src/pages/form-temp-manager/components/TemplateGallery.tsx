@@ -46,13 +46,16 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     loadTagsIndex
   } = useTagManagement('template')
 
+  // 使用 selector 函数来优化更新
   const tagsVersion = useTagStore(state => state.tagsVersion)
 
   const { remove, load, update } = useMetadata("template")
 
   // 监听标签版本变化，重新加载标签数据
   useEffect(() => {
-    loadTagsIndex()
+    if (tagsVersion > 0) { // 只在真正的更新时重新加载
+      loadTagsIndex()
+    }
   }, [tagsVersion])
 
   const loadTemplates = async () => {
@@ -124,7 +127,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     }
   }
 
-  // 预处理筛选结果
+  // 使用 useMemo 优化筛选逻辑
   const filteredTemplates = useMemo(() => {
     if (!internalTemplates) return [];
     
@@ -141,7 +144,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     return filtered;
   }, [internalTemplates, selectedTags, searchValue, filterItemsByTags]);
 
-  const renderCard = (template: Template) => (
+  const renderCard = useCallback((template: Template) => (
     <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onTemplateSelect(template.id)}>
       <CardBody className='p-0 relative overflow-hidden'>
         <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 group-hover:scale-105 transition-transform duration-300'>
@@ -200,26 +203,29 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
             </Button>
           </div>
         </div>
-        {/* 显示标签 */}
+        {/* 使用 memo 优化标签渲染 */}
         {tagsIndex && (
           <div className="flex flex-wrap gap-1 mt-2">
-            {getItemTags(template.id).map(tag => (
-              <Chip
-                key={tag.id}
-                size="sm"
-                color={tag.color as any}
-                variant="flat"
-              >
-                {tag.name}
-              </Chip>
-            ))}
+            {useMemo(() => 
+              getItemTags(template.id).map(tag => (
+                <Chip
+                  key={tag.id}
+                  size="sm"
+                  color={tag.color as any}
+                  variant="flat"
+                >
+                  {tag.name}
+                </Chip>
+              )),
+              [template.id, getItemTags]
+            )}
           </div>
         )}
       </CardFooter>
     </Card>
-  )
+  ), [onTemplateSelect, handleShareClick, handleRenameClick, handleAIEditClick, handleDeleteClick, getItemTags, tagsIndex]);
 
-  // 自定义头部渲染
+  // 使用 useCallback 优化 header 渲染
   const renderHeader = useCallback(({ value, onChange, placeholder }) => (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -242,31 +248,34 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
         </Button>
       </div>
       
-      {/* 标签选择器 */}
+      {/* 使用 memo 优化标签选择器渲染 */}
       {tagsIndex && (
         <div className="flex flex-wrap gap-2">
-          {tagsIndex.tags
-            .filter(tag => tag.type === 'template')
-            .map(tag => (
-              <Chip
-                key={tag.id}
-                color={tag.color as any}
-                variant={selectedTags.includes(tag.id) ? "solid" : "flat"}
-                onClick={() => {
-                  setSelectedTags(prev =>
-                    prev.includes(tag.id)
-                      ? prev.filter(id => id !== tag.id)
-                      : [...prev, tag.id]
-                  );
-                }}
-                className="cursor-pointer"
-              >
-                {tag.name}
-                <span className="ml-2 text-xs">
-                  ({tagsIndex.relations.template.byTag[tag.id]?.length || 0})
-                </span>
-              </Chip>
-            ))}
+          {useMemo(() => 
+            tagsIndex.tags
+              .filter(tag => tag.type === 'template')
+              .map(tag => (
+                <Chip
+                  key={tag.id}
+                  color={tag.color as any}
+                  variant={selectedTags.includes(tag.id) ? "solid" : "flat"}
+                  onClick={() => {
+                    setSelectedTags(prev =>
+                      prev.includes(tag.id)
+                        ? prev.filter(id => id !== tag.id)
+                        : [...prev, tag.id]
+                    );
+                  }}
+                  className="cursor-pointer"
+                >
+                  {tag.name}
+                  <span className="ml-2 text-xs">
+                    ({tagsIndex.relations.template.byTag[tag.id]?.length || 0})
+                  </span>
+                </Chip>
+              )),
+            [tagsIndex.tags, selectedTags]
+          )}
         </div>
       )}
     </div>
