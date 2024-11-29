@@ -8,9 +8,14 @@ import EmptyState from '@/components/EmptyState'
 interface AppGalleryProps {
   apps: AppIndex[]
   isLoading?: boolean
+  onDevelopClick: (app: AppIndex) => void  // 添加这个属性
 }
 
-export const AppGallery: React.FC<AppGalleryProps> = ({ apps, isLoading }) => {
+export const AppGallery: React.FC<AppGalleryProps> = ({ 
+  apps, 
+  isLoading,
+  onDevelopClick  // 接收属性
+}) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -33,7 +38,11 @@ export const AppGallery: React.FC<AppGalleryProps> = ({ apps, isLoading }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
       {apps.map((app) => (
-        <AppCard key={app.id} app={app} />
+        <AppCard 
+          key={app.id} 
+          app={app} 
+          onDevelopClick={onDevelopClick}  // 传递给 AppCard
+        />
       ))}
     </div>
   )
