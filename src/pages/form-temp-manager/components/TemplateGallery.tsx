@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react"
-import { Card, CardBody, CardFooter, Button, useDisclosure, Chip } from "@nextui-org/react"
+import { Card, CardBody, CardFooter, Button, useDisclosure, Chip, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, ScrollShadow, Checkbox } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
@@ -26,6 +26,85 @@ interface TemplateGalleryProps {
   className?: string
 }
 
+// 新增的EditTagsModal组件
+const EditTagsModal: React.FC<{
+  isOpen: boolean
+  onClose: () => void
+  template: Template | null
+  tagsIndex: any
+  onUpdateTags: (templateId: string, tagIds: string[]) => Promise<void>
+}> = ({ isOpen, onClose, template, tagsIndex, onUpdateTags }) => {
+  const { getItemTags } = useTagManagement("template")
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (template && tagsIndex) {
+      const currentTags = getItemTags(template.id)
+      setSelectedTags(currentTags.map(tag => tag.id))
+    }
+  }, [template, tagsIndex, getItemTags])
+
+  const handleConfirm = async () => {
+    if (!template) return
+    setIsSubmitting(true)
+    try {
+      await onUpdateTags(template.id, selectedTags)
+      onClose()
+    } catch (error) {
+      console.error("Error updating tags:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+      <ModalContent>
+        <ModalHeader className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <Icon icon="mdi:tag-multiple" className="w-6 h-6" />
+            <span>编辑标签 - {template?.title}</span>
+          </div>
+        </ModalHeader>
+        <ModalBody>
+          <ScrollShadow className="max-h-[400px]">
+            <div className="space-y-4">
+              {tagsIndex?.tags
+                .filter((tag: any) => tag.type === "template")
+                .map((tag: any) => (
+                  <div key={tag.id} className="flex items-center gap-3">
+                    <Checkbox
+                      isSelected={selectedTags.includes(tag.id)}
+                      onValueChange={(isSelected) => {
+                        setSelectedTags(prev =>
+                          isSelected
+                            ? [...prev, tag.id]
+                            : prev.filter(id => id !== tag.id)
+                        )
+                      }}
+                    />
+                    <Chip color={tag.color as any} variant="flat">
+                      {tag.name}
+                    </Chip>
+                  </div>
+                ))}
+            </div>
+          </ScrollShadow>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="danger" variant="light" onPress={onClose}>
+            取消
+          </Button>
+          <Button color="primary" onPress={handleConfirm} isLoading={isSubmitting}>
+            确认
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  )
+}
+
 const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, className }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
@@ -37,6 +116,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   const [searchValue, setSearchValue] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [isTagManageModalOpen, setIsTagManageModalOpen] = useState(false)
+  const [isEditTagsModalOpen, setIsEditTagsModalOpen] = useState(false)
 
   const {
     tagsIndex,
@@ -44,6 +124,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     filterItemsByTags,
     getItemTags,
     loadTagsIndex,
+    updateItemTags
   } = useTagManagement("template")
 
   const tagsVersion = useTagStore((state) => state.tagsVersion)
@@ -111,6 +192,12 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     setIsRenameModalOpen(true)
   }
 
+  const handleEditTagsClick = (template: Template, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedTemplate(template)
+    setIsEditTagsModalOpen(true)
+  }
+
   const handleRename = async (newTitle: string) => {
     if (!selectedTemplate) return
 
@@ -127,6 +214,18 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
 
   const handleClearTags = () => {
     setSelectedTags([])
+  }
+
+  const handleUpdateTags = async (templateId: string, tagIds: string[]) => {
+    try {
+      await updateItemTags(templateId, tagIds)
+      message.success("标签更新成功")
+      await loadTemplates()
+    } catch (error) {
+      console.error("Error updating tags:", error)
+      message.error("更新标签失败")
+      throw error
+    }
   }
 
   const filteredTemplates = useMemo(() => {
@@ -188,6 +287,15 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
               onClick={(e) => handleAIEditClick(template, e)}
             >
               <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
+            </Button>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+              onClick={(e) => handleEditTagsClick(template, e)}
+            >
+              <Icon icon='mdi:tag-multiple' className='w-4 h-4' />
             </Button>
             <Button
               isIconOnly
@@ -263,7 +371,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
                 .filter((tag) => tag.type === "template")
                 .map((tag) => (
                   <motion.div
-                    key={tag.id}
+                    key={`${tag.id}-${tagsVersion}`}
                     layout
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -297,7 +405,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
         )}
       </div>
     ),
-    [selectedTags, tagsIndex]
+    [selectedTags, tagsIndex, tagsVersion]
   )
 
   const renderEmptyState = () => {
@@ -389,6 +497,17 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
       />
 
       <TagManageModal isOpen={isTagManageModalOpen} onClose={() => setIsTagManageModalOpen(false)} type='template' />
+
+      <EditTagsModal
+        isOpen={isEditTagsModalOpen}
+        onClose={() => {
+          setIsEditTagsModalOpen(false)
+          setSelectedTemplate(null)
+        }}
+        template={selectedTemplate}
+        tagsIndex={tagsIndex}
+        onUpdateTags={handleUpdateTags}
+      />
     </>
   )
 }
