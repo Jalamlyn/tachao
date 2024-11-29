@@ -22,6 +22,10 @@ export interface AppIndex {
   status: 'active' | 'inactive'
   createdAt: string
   updatedAt: string
+  indexFields?: {
+    templateIds: string[]
+    reportIds: string[]
+  }
 }
 
 export interface CreateAppInput {
@@ -29,13 +33,22 @@ export interface CreateAppInput {
   description?: string
 }
 
+export interface UpdateAppConfigInput {
+  templateIds: string[]
+  reportIds: string[]
+}
+
 // Store 类型定义
 interface AppStore {
   // 状态
   isCreateModalOpen: boolean
+  isDevelopModalOpen: boolean
+  selectedApp: AppIndex | null
   
   // UI Actions
   setCreateModalOpen: (isOpen: boolean) => void
+  setDevelopModalOpen: (isOpen: boolean) => void
+  setSelectedApp: (app: AppIndex | null) => void
   reset: () => void
 
   // Query Hooks
@@ -52,19 +65,32 @@ interface AppStore {
     isCreating: boolean
     error: Error | null
   }
+
+  useUpdateAppConfig: () => {
+    updateAppConfig: (appId: string, input: UpdateAppConfigInput) => Promise<void>
+    isUpdating: boolean
+    error: Error | null
+  }
 }
 
 export const useAppStore = create<AppStore>((set, get) => ({
   // 初始状态
   isCreateModalOpen: false,
+  isDevelopModalOpen: false,
+  selectedApp: null,
 
   // UI Actions
   setCreateModalOpen: (isOpen) => set({ isCreateModalOpen: isOpen }),
-  reset: () => set({ isCreateModalOpen: false }),
+  setDevelopModalOpen: (isOpen) => set({ isDevelopModalOpen: isOpen }),
+  setSelectedApp: (app) => set({ selectedApp: app }),
+  reset: () => set({ 
+    isCreateModalOpen: false, 
+    isDevelopModalOpen: false,
+    selectedApp: null 
+  }),
 
   // Query Hooks
   useApps: () => {
-    // 使用 react-query 的 useQuery
     const { data, isLoading, error, refetch } = useQuery({
       queryKey: QUERY_KEYS.apps,
       queryFn: async () => {
@@ -87,7 +113,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   // Mutation Hooks
   useCreateApp: () => {
-    // 使用 react-query 的 useMutation
     const mutation = useMutation({
       mutationFn: async (input: CreateAppInput) => {
         const newApp: AppIndex = {
@@ -95,7 +120,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
           title: input.title,
           status: 'active',
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
+          indexFields: {
+            templateIds: [],
+            reportIds: []
+          }
         }
 
         // 获取当前数据
@@ -123,6 +152,50 @@ export const useAppStore = create<AppStore>((set, get) => ({
     return {
       createApp: mutation.mutateAsync,
       isCreating: mutation.isPending,
+      error: mutation.error as Error | null
+    }
+  },
+
+  useUpdateAppConfig: () => {
+    const mutation = useMutation({
+      mutationFn: async ({ appId, input }: { appId: string; input: UpdateAppConfigInput }) => {
+        // 获取当前数据
+        const currentData = queryClient.getQueryData<AppIndex[]>(QUERY_KEYS.apps) || []
+        const updatedData = currentData.map(app => {
+          if (app.id === appId) {
+            return {
+              ...app,
+              indexFields: {
+                ...app.indexFields,
+                templateIds: input.templateIds,
+                reportIds: input.reportIds
+              },
+              updatedAt: new Date().toISOString()
+            }
+          }
+          return app
+        })
+
+        // 更新数据
+        await setMetadata('app_index', JSON.stringify(updatedData))
+      },
+      onSuccess: () => {
+        // 更新查询缓存
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.apps })
+        // 关闭模态框
+        get().setDevelopModalOpen(false)
+        get().setSelectedApp(null)
+        message.success('应用配置更新成功')
+      },
+      onError: (error) => {
+        console.error('Failed to update app config:', error)
+        message.error('更新应用配置失败')
+      }
+    })
+
+    return {
+      updateAppConfig: mutation.mutateAsync,
+      isUpdating: mutation.isPending,
       error: mutation.error as Error | null
     }
   }

@@ -1,13 +1,17 @@
 import React from 'react'
 import { Card, CardBody, CardFooter, Button, Chip } from '@nextui-org/react'
 import { Icon } from '@iconify/react'
+import { useNavigate } from 'react-router-dom'
 import { AppIndex } from '../store/useAppStore'
 
 interface AppCardProps {
   app: AppIndex
+  onDevelopClick: (app: AppIndex) => void
 }
 
-export const AppCard: React.FC<AppCardProps> = ({ app }) => {
+export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
+  const navigate = useNavigate()
+
   return (
     <Card className="w-full hover:shadow-lg transition-shadow duration-300">
       <CardBody className="p-4">
@@ -29,6 +33,14 @@ export const AppCard: React.FC<AppCardProps> = ({ app }) => {
             <p className="text-small text-default-500">
               创建于 {new Date(app.createdAt).toLocaleDateString()}
             </p>
+            <div className="flex gap-2 mt-2">
+              <Chip size="sm" variant="flat" color="primary">
+                {app.indexFields?.templateIds?.length || 0} 个表单
+              </Chip>
+              <Chip size="sm" variant="flat" color="secondary">
+                {app.indexFields?.reportIds?.length || 0} 个报表
+              </Chip>
+            </div>
           </div>
         </div>
       </CardBody>
@@ -37,15 +49,18 @@ export const AppCard: React.FC<AppCardProps> = ({ app }) => {
           size="sm" 
           variant="flat"
           startContent={<Icon icon="mdi:eye" className="w-4 h-4" />}
+          onPress={() => navigate(`/app/${app.id}`)}
         >
-          查看详情
+          访问应用
         </Button>
         <Button 
           size="sm" 
           variant="light"
-          startContent={<Icon icon="mdi:cog" className="w-4 h-4" />}
+          color="primary"
+          startContent={<Icon icon="mdi:code" className="w-4 h-4" />}
+          onPress={() => onDevelopClick(app)}
         >
-          设置
+          开发
         </Button>
       </CardFooter>
     </Card>

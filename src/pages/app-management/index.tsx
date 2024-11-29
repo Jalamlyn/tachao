@@ -6,28 +6,30 @@ import PageLayout from "@/components/PageLayout"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { AppGallery } from "./components/AppGallery"
 import { CreateAppModal } from "./components/CreateAppModal"
+import { DevelopModal } from "./components/DevelopModal"
 import { useAppStore } from "./store/useAppStore"
 
 const AppManagement: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
   
-  // 使用 store 中的所有功能
   const {
     isCreateModalOpen,
+    isDevelopModalOpen,
+    selectedApp,
     setCreateModalOpen,
+    setDevelopModalOpen,
+    setSelectedApp,
     useApps,
     useCreateApp,
+    useUpdateAppConfig,
     reset
   } = useAppStore()
 
-  // 使用查询 hook
   const { apps, isLoading } = useApps()
-  
-  // 使用变更 hook
   const { createApp, isCreating } = useCreateApp()
+  const { updateAppConfig, isUpdating } = useUpdateAppConfig()
 
-  // 清理函数
   useEffect(() => {
     return () => reset()
   }, [reset])
@@ -38,6 +40,16 @@ const AppManagement: React.FC = () => {
       { label: "应用管理", href: "/we-chat-app/admin/apps" },
     ])
   }, [updateBreadcrumbs])
+
+  const handleDevelopClick = (app: AppIndex) => {
+    setSelectedApp(app)
+    setDevelopModalOpen(true)
+  }
+
+  const handleDevelopSubmit = async (templateIds: string[], reportIds: string[]) => {
+    if (!selectedApp) return
+    await updateAppConfig(selectedApp.id, { templateIds, reportIds })
+  }
 
   const pageActions = (
     <Button 
@@ -52,7 +64,11 @@ const AppManagement: React.FC = () => {
   return (
     <PageLayout title="应用管理" titleIcon="mdi:apps" actions={pageActions}>
       <div className="h-[calc(100vh-200px)] overflow-auto">
-        <AppGallery apps={apps} isLoading={isLoading} />
+        <AppGallery 
+          apps={apps} 
+          isLoading={isLoading} 
+          onDevelopClick={handleDevelopClick}
+        />
       </div>
 
       <CreateAppModal
@@ -60,6 +76,17 @@ const AppManagement: React.FC = () => {
         onClose={() => setCreateModalOpen(false)}
         onSubmit={createApp}
         isLoading={isCreating}
+      />
+
+      <DevelopModal
+        isOpen={isDevelopModalOpen}
+        onClose={() => {
+          setDevelopModalOpen(false)
+          setSelectedApp(null)
+        }}
+        app={selectedApp}
+        onSubmit={handleDevelopSubmit}
+        isLoading={isUpdating}
       />
     </PageLayout>
   )
