@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Select, SelectItem, Chip } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Select, SelectItem, Chip, ScrollShadow } from "@nextui-org/react";
 import { Icon } from "@iconify/react";
 import { useTagManagement } from "@/hooks/useTagManagement";
 import { TagType } from "@/types/tag";
@@ -28,7 +28,8 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
     tagsIndex,
     createTag,
     deleteTag,
-    getTagUsageCount
+    getTagUsageCount,
+    lastUpdate
   } = useTagManagement(type);
 
   const [newTagName, setNewTagName] = useState("");
@@ -51,14 +52,16 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
     
     setIsSubmitting(true);
     try {
-      await createTag({
+      const result = await createTag({
         name: newTagName.trim(),
         color: selectedColor,
         type
       });
 
-      setNewTagName("");
-      setSelectedColor("primary");
+      if (result) {
+        setNewTagName("");
+        setSelectedColor("primary");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -135,14 +138,17 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
             {/* 现有标签列表 */}
             <div className="space-y-2">
               <h3 className="text-sm font-medium">现有标签</h3>
-              <div className="flex flex-wrap gap-2 min-h-[100px]">
+              <ScrollShadow 
+                className="flex flex-wrap gap-2 min-h-[100px] max-h-[300px] overflow-y-auto p-2"
+                hideScrollBar={false}
+              >
                 {tagsIndex?.tags
                   .filter(tag => tag.type === type)
                   .map(tag => {
                     const usageCount = getTagUsageCount(tag.id);
                     return (
                       <Chip
-                        key={tag.id}
+                        key={`${tag.id}-${lastUpdate}`}
                         color={tag.color as any}
                         variant="flat"
                         onClose={usageCount === 0 ? () => handleDeleteTag(tag.id) : undefined}
@@ -160,7 +166,7 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
                     暂无标签
                   </div>
                 )}
-              </div>
+              </ScrollShadow>
             </div>
 
             {/* 使用说明 */}

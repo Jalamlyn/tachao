@@ -7,6 +7,7 @@ export const useTagManagement = (type: TagType) => {
   const { getDetail, create, update } = useMetadata("tags")
   const [tagsIndex, setTagsIndex] = useState<TagsIndex | null>(null)
   const [loading, setLoading] = useState(false)
+  const [lastUpdate, setLastUpdate] = useState(Date.now())
 
   // 加载标签索引
   const loadTagsIndex = async () => {
@@ -50,6 +51,7 @@ export const useTagManagement = (type: TagType) => {
       message.error("加载标签数据失败")
     } finally {
       setLoading(false)
+      setLastUpdate(Date.now())
     }
   }
 
@@ -68,6 +70,7 @@ export const useTagManagement = (type: TagType) => {
       
       if (result?.data) {
         setTagsIndex(result.data)
+        setLastUpdate(Date.now())
         return true
       }
       return false
@@ -108,6 +111,9 @@ export const useTagManagement = (type: TagType) => {
 
       const saved = await saveTagsIndex(updatedIndex)
       if (saved) {
+        // 立即更新本地状态
+        setTagsIndex(updatedIndex)
+        setLastUpdate(Date.now())
         message.success("标签创建成功")
         return newTag
       }
@@ -153,6 +159,9 @@ export const useTagManagement = (type: TagType) => {
 
       const saved = await saveTagsIndex(updatedIndex)
       if (saved) {
+        // 立即更新本地状态
+        setTagsIndex(updatedIndex)
+        setLastUpdate(Date.now())
         message.success("标签删除成功")
         return true
       }
@@ -204,7 +213,11 @@ export const useTagManagement = (type: TagType) => {
         relations: updatedRelations,
       }
 
-      return await saveTagsIndex(updatedIndex)
+      const saved = await saveTagsIndex(updatedIndex)
+      if (saved) {
+        setLastUpdate(Date.now())
+      }
+      return saved
     } catch (error) {
       console.error("Error updating item tags:", error)
       message.error("更新标签关系失败")
@@ -247,6 +260,7 @@ export const useTagManagement = (type: TagType) => {
   return {
     tagsIndex,
     loading,
+    lastUpdate,
     loadTagsIndex,
     createTag,
     deleteTag,
