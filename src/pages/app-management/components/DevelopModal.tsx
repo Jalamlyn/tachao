@@ -11,6 +11,7 @@ import {
 } from '@nextui-org/react'
 import { useMetadata } from '@/hooks/useMetadata'
 import { AppIndex } from '../store/useAppStore'
+import message from '@/components/Message'
 
 interface DevelopModalProps {
   isOpen: boolean
@@ -52,7 +53,17 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({
   }, [isOpen, app])
 
   const handleSubmit = async () => {
-    await onSubmit(selectedTemplateIds, selectedReportIds)
+    if (!app?.id) {
+      message.error("应用ID不能为空")
+      return
+    }
+
+    try {
+      await onSubmit(selectedTemplateIds, selectedReportIds)
+    } catch (error) {
+      console.error('Error submitting app config:', error)
+      message.error(error instanceof Error ? error.message : '更新应用配置失败')
+    }
   }
 
   if (!app) return null

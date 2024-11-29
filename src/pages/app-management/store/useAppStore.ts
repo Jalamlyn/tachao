@@ -156,6 +156,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
     const mutation = useMutation({
       mutationFn: async ({ appId, input }: { appId: string; input: UpdateAppConfigInput }) => {
         try {
+          // 验证参数
+          if (!appId) {
+            throw new Error("应用ID不能为空")
+          }
+
+          console.log('Updating app config:', { appId, input })
+
           // 从服务器获取最新数据
           const result = await getMetadata(["app_index"])
           if (!result.data?.[0]?.value) {
@@ -169,7 +176,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
           const targetApp = currentData.find(app => app.id === appId)
           if (!targetApp) {
-            throw new Error("未找到目标应用")
+            throw new Error(`未找到目标应用(ID: ${appId})`)
           }
 
           const updatedData = currentData.map((app) => {
