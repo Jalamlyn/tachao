@@ -4,11 +4,21 @@ import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import PageLayout from "@/components/PageLayout"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
-import EmptyState from "@/components/EmptyState"
+import { AppGallery } from "./components/AppGallery"
+import { CreateAppModal } from "./components/CreateAppModal"
+import { useAppManagement } from "./hooks/useAppManagement"
 
 const AppManagement: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
+  const {
+    apps,
+    isLoading,
+    isCreateModalOpen,
+    setIsCreateModalOpen,
+    handleCreateApp,
+    isCreating
+  } = useAppManagement()
 
   useEffect(() => {
     updateBreadcrumbs([
@@ -18,25 +28,27 @@ const AppManagement: React.FC = () => {
   }, [])
 
   const pageActions = (
-    <Button color="primary" startContent={<Icon icon="mdi:plus" />}>
+    <Button 
+      color="primary" 
+      startContent={<Icon icon="mdi:plus" />}
+      onPress={() => setIsCreateModalOpen(true)}
+    >
       创建应用
     </Button>
   )
 
   return (
     <PageLayout title="应用管理" titleIcon="mdi:apps" actions={pageActions}>
-      <div className="h-[calc(100vh-200px)] flex items-center justify-center">
-        <EmptyState
-          type="no-data"
-          title="暂无应用"
-          description="创建您的第一个应用"
-          icon={<Icon icon="mdi:apps" className="w-20 h-20 text-default-400" />}
-          action={{
-            text: "创建应用",
-            onClick: () => console.log("Create app clicked"),
-          }}
-        />
+      <div className="h-[calc(100vh-200px)] overflow-auto">
+        <AppGallery apps={apps} isLoading={isLoading} />
       </div>
+
+      <CreateAppModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateApp}
+        isLoading={isCreating}
+      />
     </PageLayout>
   )
 }
