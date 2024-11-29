@@ -2,16 +2,16 @@ import { type SidebarItem } from "./sidebar"
 
 export const items: SidebarItem[] = [
   {
+    key: "apps",
+    href: "/we-chat-app/admin/apps",
+    icon: "mdi:apps",
+    title: "应用管理",
+  },
+  {
     key: "documents",
     href: "/we-chat-app/admin/documents",
     icon: "solar:document-outline",
     title: "表单模板管理",
-  },
-  {
-    key: "forms",
-    href: "/we-chat-app/admin/forms",
-    icon: "solar:document-text-line-duotone",
-    title: "表单管理",
   },
   {
     key: "reports",
@@ -20,16 +20,16 @@ export const items: SidebarItem[] = [
     title: "报表管理",
   },
   {
-    key: "apps",
-    href: "/we-chat-app/admin/apps",
-    icon: "mdi:apps",
-    title: "应用管理",
-  },
-  {
     key: "resources",
     href: "/we-chat-app/admin/resources",
     icon: "mdi:file-document",
     title: "资料管理",
+  },
+  {
+    key: "forms",
+    href: "/we-chat-app/admin/forms",
+    icon: "solar:document-text-line-duotone",
+    title: "表单管理",
   },
   {
     key: "ai-assistant",
