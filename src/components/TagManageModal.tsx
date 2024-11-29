@@ -14,10 +14,15 @@ interface TagManageModalProps {
 
 const TAG_COLORS = [
   { value: "primary", label: "蓝色" },
+  { value: "secondary", label: "紫色" },
   { value: "success", label: "绿色" },
   { value: "warning", label: "黄色" },
   { value: "danger", label: "红色" },
-  { value: "secondary", label: "紫色" }
+  { value: "default", label: "灰色" },
+  { value: "content1", label: "浅灰色" },
+  { value: "content2", label: "深灰色" },
+  { value: "content3", label: "暗色" },
+  { value: "content4", label: "浅色" }
 ];
 
 const TagManageModal: React.FC<TagManageModalProps> = ({
@@ -131,12 +136,27 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
                   value={selectedColor}
                   onChange={e => setSelectedColor(e.target.value)}
                   className="w-32"
+                  items={TAG_COLORS}
+                  renderValue={(items) => {
+                    const selectedItem = items[0];
+                    return (
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full bg-${selectedItem?.data?.value}-500`} />
+                        <span>{selectedItem?.data?.label}</span>
+                      </div>
+                    );
+                  }}
                 >
-                  {TAG_COLORS.map(color => (
-                    <SelectItem key={color.value} value={color.value}>
+                  {(color) => (
+                    <SelectItem 
+                      key={color.value} 
+                      value={color.value}
+                      className="flex items-center gap-2"
+                    >
+                      <div className={`w-3 h-3 rounded-full bg-${color.value}-500`} />
                       {color.label}
                     </SelectItem>
-                  ))}
+                  )}
                 </Select>
                 <Button
                   color="primary"
