@@ -37,6 +37,7 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCreateTag = async () => {
+    debugger
     if (!newTagName.trim()) {
       message.error('请输入标签名称');
       return;

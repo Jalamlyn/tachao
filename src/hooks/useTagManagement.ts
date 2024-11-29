@@ -29,6 +29,7 @@ export const useTagManagement = (type: TagType) => {
 
         // 创建新的标签索引
         await setMetadata("tags_index", JSON.stringify(initialIndex))
+        debugger
         setTagsIndex(initialIndex)
       }
     } catch (error) {
@@ -58,6 +59,7 @@ export const useTagManagement = (type: TagType) => {
 
   // 创建新标签 - 使用乐观更新
   const createTag = async (tag: Omit<Tag, "id" | "createdAt" | "updatedAt">) => {
+    debugger
     if (!tagsIndex) return null
 
     // 1. 创建新标签对象
@@ -80,7 +82,7 @@ export const useTagManagement = (type: TagType) => {
         },
       },
     }
-    
+
     // 立即更新UI
     setTagsIndex(optimisticIndex)
     setLastUpdate(Date.now())
@@ -89,10 +91,9 @@ export const useTagManagement = (type: TagType) => {
       // 3. 执行实际的API调用
       const saved = await saveTagsIndex(optimisticIndex)
       if (saved) {
-        message.success("标签创建成功")
         return newTag
       }
-      
+
       // 4. 如果保存失败,回滚状态
       setTagsIndex(tagsIndex)
       setLastUpdate(Date.now())
@@ -148,7 +149,6 @@ export const useTagManagement = (type: TagType) => {
       // 3. 执行实际的API调用
       const saved = await saveTagsIndex(optimisticIndex)
       if (saved) {
-        message.success("标签删除成功")
         return true
       }
 
