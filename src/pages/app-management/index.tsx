@@ -6,32 +6,44 @@ import PageLayout from "@/components/PageLayout"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { AppGallery } from "./components/AppGallery"
 import { CreateAppModal } from "./components/CreateAppModal"
-import { useAppManagement } from "./hooks/useAppManagement"
+import { useAppStore } from "./store/useAppStore"
 
 const AppManagement: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
+  
+  // 使用 store 中的所有功能
   const {
-    apps,
-    isLoading,
     isCreateModalOpen,
-    setIsCreateModalOpen,
-    handleCreateApp,
-    isCreating
-  } = useAppManagement()
+    setCreateModalOpen,
+    useApps,
+    useCreateApp,
+    reset
+  } = useAppStore()
+
+  // 使用查询 hook
+  const { apps, isLoading } = useApps()
+  
+  // 使用变更 hook
+  const { createApp, isCreating } = useCreateApp()
+
+  // 清理函数
+  useEffect(() => {
+    return () => reset()
+  }, [reset])
 
   useEffect(() => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "应用管理", href: "/we-chat-app/admin/apps" },
     ])
-  }, [])
+  }, [updateBreadcrumbs])
 
   const pageActions = (
     <Button 
       color="primary" 
       startContent={<Icon icon="mdi:plus" />}
-      onPress={() => setIsCreateModalOpen(true)}
+      onPress={() => setCreateModalOpen(true)}
     >
       创建应用
     </Button>
@@ -45,8 +57,8 @@ const AppManagement: React.FC = () => {
 
       <CreateAppModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateApp}
+        onClose={() => setCreateModalOpen(false)}
+        onSubmit={createApp}
         isLoading={isCreating}
       />
     </PageLayout>

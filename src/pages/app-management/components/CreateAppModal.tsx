@@ -8,7 +8,7 @@ import {
   Button,
   Input
 } from '@nextui-org/react'
-import { CreateAppInput } from '../types'
+import { CreateAppInput } from '../store/useAppStore'
 
 interface CreateAppModalProps {
   isOpen: boolean

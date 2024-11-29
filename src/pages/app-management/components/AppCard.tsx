@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card, CardBody, CardFooter, Button, Chip } from '@nextui-org/react'
 import { Icon } from '@iconify/react'
-import { AppIndex } from '../types'
+import { AppIndex } from '../store/useAppStore'
 
 interface AppCardProps {
   app: AppIndex
