@@ -38,7 +38,7 @@ const TAG_COLORS = [
   { value: "gray", label: "浅色" },
 ]
 
-const EditTagsModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type }) => {
+const TagManageModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type }) => {
   const { tagsIndex, createTag, deleteTag, getTagUsageCount, lastUpdate } = useTagManagement(type)
 
   const { updateTags, setHasChanges, hasChanges, resetChanges } = useTagStore()
@@ -46,6 +46,7 @@ const EditTagsModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type })
   const [newTagName, setNewTagName] = useState("")
   const [selectedColor, setSelectedColor] = useState("primary")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAllSelected, setIsAllSelected] = useState(false)
   const [selectedTags, setSelectedTags] = useState<string[]>([])
 
   const handleCreateTag = async () => {
@@ -105,10 +106,17 @@ const EditTagsModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type })
     onClose()
   }, [hasChanges, updateTags, resetChanges, onClose])
 
-  const handleTagSelect = (tagId: string, isSelected: boolean) => {
-    setSelectedTags((prev) =>
-      isSelected ? [...prev, tagId] : prev.filter((id) => id !== tagId)
-    )
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allTagIds = tagsIndex?.tags
+        .filter((tag) => tag.type === type)
+        .map((tag) => tag.id) || []
+      setSelectedTags(allTagIds)
+      setIsAllSelected(true)
+    } else {
+      setSelectedTags([])
+      setIsAllSelected(false)
+    }
   }
 
   return (
@@ -174,6 +182,14 @@ const EditTagsModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type })
 
             <div className='space-y-2'>
               <h3 className='text-sm font-medium'>现有标签</h3>
+              <div className="flex items-center gap-2 mb-2 px-2">
+                <Checkbox
+                  isSelected={isAllSelected}
+                  onValueChange={handleSelectAll}
+                >
+                  全选
+                </Checkbox>
+              </div>
               <ScrollShadow
                 className='flex flex-col gap-2 min-h-[100px] max-h-[300px] overflow-y-auto p-2'
                 hideScrollBar={false}
@@ -182,29 +198,34 @@ const EditTagsModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type })
                   .filter((tag) => tag.type === type)
                   .map((tag) => {
                     const usageCount = getTagUsageCount(tag.id)
+                    const isSelected = selectedTags.includes(tag.id)
+                    
                     return (
-                      <div key={`${tag.id}-${lastUpdate}`} className='flex items-center justify-between p-2 rounded-lg bg-default-100'>
-                        <div className='flex items-center gap-3'>
-                          <Checkbox
-                            isSelected={selectedTags.includes(tag.id)}
-                            onValueChange={(isSelected) => handleTagSelect(tag.id, isSelected)}
-                            color={tag.color as any}
+                      <div key={`${tag.id}-${lastUpdate}`} className="flex items-center gap-2 group hover:bg-default-100 rounded-lg p-1 transition-colors">
+                        <Checkbox
+                          isSelected={isSelected}
+                          onValueChange={(checked) => {
+                            setSelectedTags((prev) =>
+                              checked 
+                                ? [...prev, tag.id]
+                                : prev.filter((id) => id !== tag.id)
+                            )
+                          }}
+                          classNames={{
+                            base: "inline-flex max-w-md w-full items-center",
+                            label: "w-full"
+                          }}
+                        >
+                          <Chip
+                            variant='flat'
+                            color='default'
+                            onClose={usageCount === 0 ? () => handleDeleteTag(tag.id) : undefined}
+                            className={`h-8 bg-${tag.color}-500 text-white w-full justify-between`}
                           >
-                            <span className='ml-2'>{tag.name}</span>
-                            <span className='ml-2 text-xs text-default-400'>({usageCount})</span>
-                          </Checkbox>
-                        </div>
-                        {usageCount === 0 && (
-                          <Button
-                            size='sm'
-                            variant='light'
-                            color='danger'
-                            isIconOnly
-                            onClick={() => handleDeleteTag(tag.id)}
-                          >
-                            <Icon icon='mdi:delete' className='w-4 h-4' />
-                          </Button>
-                        )}
+                            <span>{tag.name}</span>
+                            <span className='text-xs'>({usageCount})</span>
+                          </Chip>
+                        </Checkbox>
                       </div>
                     )
                   })}
@@ -231,4 +252,4 @@ const EditTagsModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type })
   )
 }
 
-export default EditTagsModal
+export default TagManageModal
