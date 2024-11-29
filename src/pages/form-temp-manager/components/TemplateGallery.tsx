@@ -1,5 +1,20 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react"
-import { Card, CardBody, CardFooter, Button, useDisclosure, Chip, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, ScrollShadow, Checkbox } from "@nextui-org/react"
+import React, { useState, useCallback } from "react"
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  Input,
+  Select,
+  SelectItem,
+  Chip,
+  ScrollShadow,
+  Card,
+  CardBody,
+  CardFooter,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
@@ -26,7 +41,6 @@ interface TemplateGalleryProps {
   className?: string
 }
 
-// 新增的EditTagsModal组件
 const EditTagsModal: React.FC<{
   isOpen: boolean
   onClose: () => void
@@ -38,7 +52,7 @@ const EditTagsModal: React.FC<{
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (template && tagsIndex) {
       const currentTags = getItemTags(template.id)
       setSelectedTags(currentTags.map(tag => tag.id))
@@ -74,17 +88,16 @@ const EditTagsModal: React.FC<{
                 .filter((tag: any) => tag.type === "template")
                 .map((tag: any) => (
                   <div key={tag.id} className="flex items-center gap-3">
-                    <Checkbox
-                      isSelected={selectedTags.includes(tag.id)}
-                      onValueChange={(isSelected) => {
+                    <Chip
+                      color={tag.color as any}
+                      variant={selectedTags.includes(tag.id) ? "solid" : "bordered"}
+                      onClick={() => {
                         setSelectedTags(prev =>
-                          isSelected
-                            ? [...prev, tag.id]
-                            : prev.filter(id => id !== tag.id)
+                          prev.includes(tag.id) ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
                         )
                       }}
-                    />
-                    <Chip color={tag.color as any} variant="flat">
+                      className="cursor-pointer transition-transform hover:scale-105"
+                    >
                       {tag.name}
                     </Chip>
                   </div>
@@ -131,7 +144,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
 
   const { remove, load, update } = useMetadata("template")
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (tagsVersion > 0) {
       loadTagsIndex()
     }
@@ -219,7 +232,6 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   const handleUpdateTags = async (templateId: string, tagIds: string[]) => {
     try {
       await updateItemTags(templateId, tagIds)
-      message.success("标签更新成功")
       await loadTemplates()
     } catch (error) {
       console.error("Error updating tags:", error)
@@ -228,7 +240,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     }
   }
 
-  const filteredTemplates = useMemo(() => {
+  const filteredTemplates = React.useMemo(() => {
     if (!internalTemplates) return []
 
     let filtered = filterItemsByTags(internalTemplates, selectedTags)
@@ -241,7 +253,22 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   }, [internalTemplates, selectedTags, searchValue, filterItemsByTags])
 
   const renderCard = (template: Template) => (
-    <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onTemplateSelect(template.id)}>
+    <Card isPressable isHoverable className='w-full h-[240px] group relative' onPress={() => onTemplateSelect(template.id)}>
+      {/* 标签显示在右上角 */}
+      <div className="absolute top-2 right-2 z-10 flex flex-wrap gap-1 max-w-[70%] justify-end">
+        {tagsIndex && getItemTags(template.id).map((tag) => (
+          <Chip
+            key={tag.id}
+            size="sm"
+            color={tag.color as any}
+            variant="flat"
+            className="bg-background/60 backdrop-blur-sm"
+          >
+            {tag.name}
+          </Chip>
+        ))}
+      </div>
+      
       <CardBody className='p-0 relative overflow-hidden'>
         <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 group-hover:scale-105 transition-transform duration-300'>
           <Icon
@@ -308,15 +335,6 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
             </Button>
           </div>
         </div>
-        {tagsIndex && (
-          <div className='flex flex-wrap gap-1 mt-2'>
-            {getItemTags(template.id).map((tag) => (
-              <Chip key={tag.id} size='sm' color={tag.color as any} variant='flat'>
-                {tag.name}
-              </Chip>
-            ))}
-          </div>
-        )}
       </CardFooter>
     </Card>
   )
