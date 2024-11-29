@@ -2,7 +2,7 @@ import React from "react"
 import { Card, CardBody, CardFooter, Button, Chip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
-import { AppIndex } from "../store/useAppStore"
+import { AppIndex, useAppStore } from "../store/useAppStore"
 
 interface AppCardProps {
   app: AppIndex
@@ -11,6 +11,12 @@ interface AppCardProps {
 
 export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
   const navigate = useNavigate()
+  const { setDeleteModalOpen, setAppToDelete } = useAppStore()
+
+  const handleDelete = () => {
+    setAppToDelete(app)
+    setDeleteModalOpen(true)
+  }
 
   return (
     <Card className='w-full hover:shadow-lg transition-shadow duration-300'>
@@ -55,6 +61,15 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
           onPress={() => onDevelopClick(app)}
         >
           配置应用
+        </Button>
+        <Button
+          size='sm'
+          variant='light'
+          color='danger'
+          startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
+          onPress={handleDelete}
+        >
+          删除
         </Button>
       </CardFooter>
     </Card>

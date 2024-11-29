@@ -1,6 +1,6 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Button } from "@nextui-org/react"
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import PageLayout from "@/components/PageLayout"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
@@ -16,19 +16,25 @@ const AppManagement: React.FC = () => {
   const {
     isCreateModalOpen,
     isDevelopModalOpen,
+    isDeleteModalOpen,
     selectedApp,
+    appToDelete,
     setCreateModalOpen,
     setDevelopModalOpen,
+    setDeleteModalOpen,
     setSelectedApp,
+    setAppToDelete,
     useApps,
     useCreateApp,
     useUpdateAppConfig,
+    useDeleteApp,
     reset,
   } = useAppStore()
 
   const { apps, isLoading } = useApps()
   const { createApp, isCreating } = useCreateApp()
   const { updateAppConfig, isUpdating } = useUpdateAppConfig()
+  const { deleteApp, isDeleting } = useDeleteApp()
 
   useEffect(() => {
     return () => reset()
@@ -52,6 +58,11 @@ const AppManagement: React.FC = () => {
       appId: selectedApp.id,
       input: { templateIds, reportIds }
     })
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!appToDelete) return
+    await deleteApp(appToDelete.id)
   }
 
   const pageActions = (
@@ -83,6 +94,41 @@ const AppManagement: React.FC = () => {
         onSubmit={handleDevelopSubmit}
         isLoading={isUpdating}
       />
+
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false)
+          setAppToDelete(null)
+        }}
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">确认删除</ModalHeader>
+          <ModalBody>
+            <p>
+              确定要删除应用 "{appToDelete?.title}" 吗？此操作不可恢复。
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="light"
+              onPress={() => {
+                setDeleteModalOpen(false)
+                setAppToDelete(null)
+              }}
+            >
+              取消
+            </Button>
+            <Button
+              color="danger"
+              onPress={handleDeleteConfirm}
+              isLoading={isDeleting}
+            >
+              确认删除
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </PageLayout>
   )
 }
