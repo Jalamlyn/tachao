@@ -30,20 +30,8 @@ const EmptyState: React.FC<EmptyStateProps> = ({
       animate={{ opacity: 1, y: 0 }}
       className={`flex flex-col items-center justify-center min-h-[400px] p-8 ${className}`}
     >
-      <div className='w-48 h-48 mb-8 relative'>
-        <motion.div
-          animate={{
-            scale: [1, 1.05, 1],
-            rotate: [0, -5, 5, 0],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
-        >
-          {icon || <Icon icon={getDefaultIcon()} className='w-full h-full text-primary/30' />}
-        </motion.div>
+      <div className='w-48 h-48 mb-8 relative flex justify-center items-center'>
+        {icon || <Icon icon={getDefaultIcon()} className='w-full h-full text-primary/30' />}
       </div>
       <h3 className='text-xl font-medium text-foreground mb-2'>{title}</h3>
       {description && <p className='text-default-500 mb-8 text-center max-w-md'>{description}</p>}

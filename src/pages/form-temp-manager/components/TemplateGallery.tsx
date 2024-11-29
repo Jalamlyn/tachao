@@ -244,7 +244,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className='absolute right-0 top-0 z-10'
+                  className='absolute right-2 top-1.5 z-10'
                 >
                   <Button
                     size='sm'
@@ -258,7 +258,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
                 </motion.div>
               )}
             </AnimatePresence>
-            <div className='flex flex-wrap gap-2 min-h-[40px] p-2 rounded-lg bg-default-50'>
+            <div className='flex flex-wrap items-center gap-2 min-h-[40px] p-2 rounded-lg bg-default-50'>
               {tagsIndex.tags
                 .filter((tag) => tag.type === "template")
                 .map((tag) => (
@@ -271,7 +271,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
                   >
                     <Chip
                       color={tag.color as any}
-                      variant={selectedTags.includes(tag.id) ? "solid" : "flat"}
+                      variant={selectedTags.includes(tag.id) ? "solid" : "bordered"}
                       onClick={() => {
                         setSelectedTags((prev) =>
                           prev.includes(tag.id) ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
@@ -315,7 +315,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
               </Button>
             </div>
           }
-          icon={<Icon icon='mdi:filter-off' className='w-20 h-20 text-default-400' />}
+          icon={<Icon icon='mdi:filter-off' className='w-32 h-32 text-default-600' />}
         />
       )
     }
