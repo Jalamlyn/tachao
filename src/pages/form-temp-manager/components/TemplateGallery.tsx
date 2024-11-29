@@ -1,20 +1,25 @@
-import React, { useState, useCallback } from "react"
-import { useDisclosure } from "@nextui-org/react"
+import React, { useState } from "react"
+import {
+  Card,
+  CardBody,
+  CardFooter,
+  Button,
+  useDisclosure,
+  Chip,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import message from "@/components/Message"
 import CardGallery from "@/components/CardGallery"
+import EmptyState from "@/components/EmptyState"
 import ConfirmModal from "@/components/ConfirmModal"
 import ShareModal from "@/components/ShareModal"
 import RenameModal from "@/components/RenameModal"
 import TagManageModal from "@/components/TagManageModal"
-import { useMetadata } from "@/hooks/metadata"
+import EditTagsModal from "@/components/EditTagsModal"
+import { useMetadata } from "@/hooks/useMetadata"
 import { useTagManagement } from "@/hooks/useTagManagement"
 import { useTagStore } from "@/stores/useTagStore"
-import { getRenderCard } from "./getRenderCard"
-import { getRenderEmptyState } from "./getRenderEmptyState"
-import { EditTagsModal } from "./EditTagsModal"
-import { getRenderHeader } from "./getRenderHeader"
 
 export interface Template {
   id: string
@@ -52,13 +57,13 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
 
   const tagsVersion = useTagStore((state) => state.tagsVersion)
 
-  const { remove, load, update } = useMetadata("template")
-
   React.useEffect(() => {
     if (tagsVersion > 0) {
       loadTagsIndex()
     }
   }, [tagsVersion])
+
+  const { remove, load, update } = useMetadata("template")
 
   const loadTemplates = async () => {
     try {
@@ -150,33 +155,199 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     }
   }
 
-  const filteredTemplates = React.useMemo(() => {
-    if (!internalTemplates) return []
+  const renderCard = (template: Template) => (
+    <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onTemplateSelect(template.id)}>
+      <CardBody className='p-0 relative overflow-hidden'>
+        <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 group-hover:scale-105 transition-transform duration-300'>
+          <Icon
+            icon='fluent:document-add-48-regular'
+            className='w-16 h-16 text-primary-400 group-hover:scale-110 transition-transform duration-300'
+          />
+        </div>
+        {/* 标签显示在右上角 */}
+        <div className='absolute top-2 right-2 z-10 flex flex-wrap gap-1 max-w-[70%] justify-end'>
+          {tagsIndex &&
+            getItemTags(template.id).map((tag) => (
+              <Chip
+                key={tag.id}
+                size='sm'
+                color={tag.color as any}
+                variant='flat'
+                className='bg-background/60 backdrop-blur-sm'
+              >
+                {tag.name}
+              </Chip>
+            ))}
+        </div>
+      </CardBody>
+      <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
+        <div className='flex justify-between items-center w-full'>
+          <h4
+            className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors duration-300'
+            title={template.title}
+          >
+            {template.title}
+          </h4>
+        </div>
+        <div className='flex justify-between items-center w-full'>
+          <div className='flex gap-2'>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+              onClick={(e) => handleShareClick(template, e)}
+            >
+              <Icon icon='mdi:share' className='w-4 h-4' />
+            </Button>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+              onClick={(e) => handleRenameClick(template, e)}
+            >
+              <Icon icon='mdi:pencil' className='w-4 h-4' />
+            </Button>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-300'
+              onClick={(e) => handleAIEditClick(template, e)}
+            >
+              <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
+            </Button>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+              onClick={(e) => handleEditTagsClick(template, e)}
+            >
+              <Icon icon='mdi:tag-multiple' className='w-4 h-4' />
+            </Button>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
+              onClick={(e) => handleDeleteClick(template, e)}
+            >
+              <Icon icon='mdi:delete' className='w-4 h-4' />
+            </Button>
+          </div>
+        </div>
+      </CardFooter>
+    </Card>
+  )
 
-    let filtered = filterItemsByTags(internalTemplates, selectedTags)
+  const renderEmptyState = () => {
+    if (selectedTags.length > 0) {
+      const tagNames = selectedTags
+        .map((tagId) => tagsIndex?.tags.find((tag) => tag.id === tagId)?.name)
+        .filter(Boolean)
+        .join("、")
 
-    if (searchValue) {
-      filtered = filtered.filter((template) => template.title.toLowerCase().includes(searchValue.toLowerCase()))
+      return (
+        <EmptyState
+          type='no-data'
+          title={`未找到匹配的表单模板`}
+          description={
+            <div className='space-y-2'>
+              <p>当前筛选标签：{tagNames}</p>
+              <Button color='primary' variant='flat' onClick={handleClearTags}>
+                清除筛选
+              </Button>
+            </div>
+          }
+          icon={<Icon icon='mdi:filter-off' className='w-32 h-32 text-default-600' />}
+        />
+      )
     }
 
-    return filtered
-  }, [internalTemplates, selectedTags, searchValue, filterItemsByTags])
+    return (
+      <EmptyState
+        type='no-data'
+        title='还没有表单模板'
+        description='创建你的第一个表单模板，AI 助手会帮助你快速生成专业的表单'
+        action={{
+          text: "去创建",
+          onClick: () => navigate("/we-chat-app/admin/documents/create"),
+        }}
+      />
+    )
+  }
+
+  const renderHeader = ({ value, onChange, placeholder }) => (
+    <div className='space-y-4'>
+      <div className='flex items-center justify-between'>
+        <div className='flex-1'>
+          <input
+            type='text'
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            className='w-full max-w-sm px-3 py-2 rounded-lg border border-default-200 focus:outline-none focus:ring-2 focus:ring-primary'
+          />
+        </div>
+        <Button
+          color='primary'
+          variant='flat'
+          onClick={() => setIsTagManageModalOpen(true)}
+          startContent={<Icon icon='mdi:tag-plus' />}
+        >
+          管理标签
+        </Button>
+      </div>
+
+      {tagsIndex && (
+        <div className='relative'>
+          {selectedTags.length > 0 && (
+            <div className='absolute right-2 top-1.5 z-10'>
+              <Button
+                size='sm'
+                variant='flat'
+                color='default'
+                onClick={handleClearTags}
+                startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
+              >
+                清除筛选
+              </Button>
+            </div>
+          )}
+          <div className='flex flex-wrap items-center gap-2 min-h-[40px] p-2 rounded-lg bg-default-50'>
+            {tagsIndex.tags
+              .filter((tag) => tag.type === "template")
+              .map((tag) => (
+                <Chip
+                  key={`${tag.id}-${tagsVersion}`}
+                  startContent={selectedTags.includes(tag.id) && <Icon className='ml-2 w-5 h-5' icon='line-md:check-all' />}
+                  onClick={() => {
+                    setSelectedTags((prev) =>
+                      prev.includes(tag.id) ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
+                    )
+                  }}
+                  className={`cursor-pointer transition-transform hover:scale-105 bg-${tag.color}-500 text-white`}
+                >
+                  <div className='flex justify-center items-center'>
+                    {tag.name}
+                    <span className='ml-2 text-xs'>({tagsIndex.relations.template.byTag[tag.id]?.length || 0})</span>
+                  </div>
+                </Chip>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 
   return (
     <>
       <CardGallery
-        items={filteredTemplates}
-        renderCard={getRenderCard(
-          onTemplateSelect,
-          tagsIndex,
-          getItemTags,
-          handleShareClick,
-          handleRenameClick,
-          handleAIEditClick,
-          handleEditTagsClick,
-          handleDeleteClick
-        )}
-        emptyState={getRenderEmptyState(selectedTags, tagsIndex, handleClearTags, navigate)()}
+        items={internalTemplates}
+        renderCard={renderCard}
+        emptyState={renderEmptyState()}
         loadingState={
           <div className='flex items-center justify-center min-h-[400px]'>
             <div className='flex flex-col items-center gap-4'>
@@ -192,14 +363,8 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
         searchFields={["title"]}
         searchPlaceholder='搜索模板名称...'
         onSearch={setSearchValue}
-        renderHeader={getRenderHeader(
-          setIsTagManageModalOpen,
-          tagsIndex,
-          selectedTags,
-          setSelectedTags,
-          handleClearTags,
-          tagsVersion
-        )}
+        customSearch={(template, value) => template.title.toLowerCase().includes(value.toLowerCase())}
+        renderHeader={renderHeader}
       />
 
       <ConfirmModal
@@ -229,7 +394,11 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
         inputPlaceholder='请输入新的模板名称'
       />
 
-      <TagManageModal isOpen={isTagManageModalOpen} onClose={() => setIsTagManageModalOpen(false)} type='template' />
+      <TagManageModal
+        isOpen={isTagManageModalOpen}
+        onClose={() => setIsTagManageModalOpen(false)}
+        type='template'
+      />
 
       <EditTagsModal
         isOpen={isEditTagsModalOpen}
@@ -237,7 +406,8 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
           setIsEditTagsModalOpen(false)
           setSelectedTemplate(null)
         }}
-        template={selectedTemplate}
+        item={selectedTemplate}
+        type="template"
         tagsIndex={tagsIndex}
         onUpdateTags={handleUpdateTags}
       />
