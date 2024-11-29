@@ -12,7 +12,7 @@ import { useAppStore } from "./store/useAppStore"
 const AppManagement: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
-  
+
   const {
     isCreateModalOpen,
     isDevelopModalOpen,
@@ -23,7 +23,7 @@ const AppManagement: React.FC = () => {
     useApps,
     useCreateApp,
     useUpdateAppConfig,
-    reset
+    reset,
   } = useAppStore()
 
   const { apps, isLoading } = useApps()
@@ -39,7 +39,7 @@ const AppManagement: React.FC = () => {
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "应用管理", href: "/we-chat-app/admin/apps" },
     ])
-  }, [updateBreadcrumbs])
+  }, [])
 
   const handleDevelopClick = (app: AppIndex) => {
     setSelectedApp(app)
@@ -48,27 +48,22 @@ const AppManagement: React.FC = () => {
 
   const handleDevelopSubmit = async (templateIds: string[], reportIds: string[]) => {
     if (!selectedApp) return
-    await updateAppConfig(selectedApp.id, { templateIds, reportIds })
+    await updateAppConfig({
+      appId: selectedApp.id,
+      input: { templateIds, reportIds }
+    })
   }
 
   const pageActions = (
-    <Button 
-      color="primary" 
-      startContent={<Icon icon="mdi:plus" />}
-      onPress={() => setCreateModalOpen(true)}
-    >
+    <Button color='primary' startContent={<Icon icon='mdi:plus' />} onPress={() => setCreateModalOpen(true)}>
       创建应用
     </Button>
   )
 
   return (
-    <PageLayout title="应用管理" titleIcon="mdi:apps" actions={pageActions}>
-      <div className="h-[calc(100vh-200px)] overflow-auto">
-        <AppGallery 
-          apps={apps} 
-          isLoading={isLoading} 
-          onDevelopClick={handleDevelopClick}
-        />
+    <PageLayout title='应用管理' titleIcon='mdi:apps' actions={pageActions}>
+      <div className='h-[calc(100vh-200px)] overflow-auto'>
+        <AppGallery apps={apps} isLoading={isLoading} onDevelopClick={handleDevelopClick} />
       </div>
 
       <CreateAppModal
