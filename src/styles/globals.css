@@ -28,6 +28,16 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    
+    /* 新增内容颜色变量 */
+    --content1: 220 14% 96%;
+    --content2: 220 13% 91%;
+    --content3: 220 13% 86%;
+    --content4: 220 13% 81%;
+    --content1-foreground: 222.2 47.4% 11.2%;
+    --content2-foreground: 222.2 47.4% 11.2%;
+    --content3-foreground: 222.2 47.4% 11.2%;
+    --content4-foreground: 222.2 47.4% 11.2%;
   }
 
   .dark {
@@ -55,6 +65,16 @@
     --chart-3: 262 83% 58%;
     --chart-4: 135 94% 39%;
     --chart-2: 25 95% 53%;
+
+    /* 新增暗色主题内容颜色变量 */
+    --content1: 220 13% 15%;
+    --content2: 220 13% 21%;
+    --content3: 220 13% 27%;
+    --content4: 220 13% 33%;
+    --content1-foreground: 0 0% 98%;
+    --content2-foreground: 0 0% 98%;
+    --content3-foreground: 0 0% 98%;
+    --content4-foreground: 0 0% 98%;
   }
 }
 
