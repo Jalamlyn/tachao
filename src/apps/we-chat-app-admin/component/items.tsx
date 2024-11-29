@@ -20,6 +20,12 @@ export const items: SidebarItem[] = [
     title: "报表管理",
   },
   {
+    key: "apps",
+    href: "/we-chat-app/admin/apps",
+    icon: "mdi:apps",
+    title: "应用管理",
+  },
+  {
     key: "resources",
     href: "/we-chat-app/admin/resources",
     icon: "mdi:file-document",

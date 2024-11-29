@@ -14,6 +14,7 @@ import ReportManagement from "@/pages/report-management"
 import AIResourceEditor from "@/pages/resource-management/AIResourceEditor"
 import AIReportEditor from "@/pages/report-management/AIReportEditor"
 import Dashboard from "@/apps/we-chat-app-admin/src/Dashboard"
+import AppManagement from "@/pages/app-management"
 
 export default function renderWeChatApp() {
   return (
@@ -35,6 +36,7 @@ export default function renderWeChatApp() {
       <Route path='reports/ai/create/:templateId' element={<AIReportEditor />} />
       <Route path='reports/ai/:reportId' element={<AIReportEditor />} />
       <Route path='ai-assistant' element={<FormAnalysis />} />
+      <Route path='apps' element={<AppManagement />} />
     </Route>
   )
 }
