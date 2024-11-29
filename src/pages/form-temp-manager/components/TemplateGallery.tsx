@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from "react"
 import { Card, CardBody, CardFooter, Button, useDisclosure, Chip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
 import message from "@/components/Message"
 import CardGallery from "@/components/CardGallery"
 import EmptyState from "@/components/EmptyState"
@@ -42,18 +43,15 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     loading: tagsLoading,
     filterItemsByTags,
     getItemTags,
-    updateItemTags,
-    loadTagsIndex
-  } = useTagManagement('template')
+    loadTagsIndex,
+  } = useTagManagement("template")
 
-  // 使用 selector 函数来优化更新
-  const tagsVersion = useTagStore(state => state.tagsVersion)
+  const tagsVersion = useTagStore((state) => state.tagsVersion)
 
   const { remove, load, update } = useMetadata("template")
 
-  // 监听标签版本变化，重新加载标签数据
   useEffect(() => {
-    if (tagsVersion > 0) { // 只在真正的更新时重新加载
+    if (tagsVersion > 0) {
       loadTagsIndex()
     }
   }, [tagsVersion])
@@ -127,24 +125,23 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     }
   }
 
-  // 使用 useMemo 优化筛选逻辑
-  const filteredTemplates = useMemo(() => {
-    if (!internalTemplates) return [];
-    
-    // 先按标签筛选
-    let filtered = filterItemsByTags(internalTemplates, selectedTags);
-    
-    // 再按搜索词筛选
-    if (searchValue) {
-      filtered = filtered.filter(template =>
-        template.title.toLowerCase().includes(searchValue.toLowerCase())
-      );
-    }
-    
-    return filtered;
-  }, [internalTemplates, selectedTags, searchValue, filterItemsByTags]);
+  const handleClearTags = () => {
+    setSelectedTags([])
+  }
 
-  const renderCard = useCallback((template: Template) => (
+  const filteredTemplates = useMemo(() => {
+    if (!internalTemplates) return []
+
+    let filtered = filterItemsByTags(internalTemplates, selectedTags)
+
+    if (searchValue) {
+      filtered = filtered.filter((template) => template.title.toLowerCase().includes(searchValue.toLowerCase()))
+    }
+
+    return filtered
+  }, [internalTemplates, selectedTags, searchValue, filterItemsByTags])
+
+  const renderCard = (template: Template) => (
     <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onTemplateSelect(template.id)}>
       <CardBody className='p-0 relative overflow-hidden'>
         <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 group-hover:scale-105 transition-transform duration-300'>
@@ -203,100 +200,145 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
             </Button>
           </div>
         </div>
-        {/* 使用 memo 优化标签渲染 */}
         {tagsIndex && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {useMemo(() => 
-              getItemTags(template.id).map(tag => (
-                <Chip
-                  key={tag.id}
-                  size="sm"
-                  color={tag.color as any}
-                  variant="flat"
-                >
-                  {tag.name}
-                </Chip>
-              )),
-              [template.id, getItemTags]
-            )}
+          <div className='flex flex-wrap gap-1 mt-2'>
+            {getItemTags(template.id).map((tag) => (
+              <Chip key={tag.id} size='sm' color={tag.color as any} variant='flat'>
+                {tag.name}
+              </Chip>
+            ))}
           </div>
         )}
       </CardFooter>
     </Card>
-  ), [onTemplateSelect, handleShareClick, handleRenameClick, handleAIEditClick, handleDeleteClick, getItemTags, tagsIndex]);
+  )
 
-  // 使用 useCallback 优化 header 渲染
-  const renderHeader = useCallback(({ value, onChange, placeholder }) => (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <input
-            type="text"
-            value={value}
-            onChange={e => onChange(e.target.value)}
-            placeholder={placeholder}
-            className="w-full max-w-sm px-3 py-2 rounded-lg border border-default-200 focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+  const renderHeader = useCallback(
+    ({ value, onChange, placeholder }) => (
+      <div className='space-y-4'>
+        <div className='flex items-center justify-between'>
+          <div className='flex-1'>
+            <input
+              type='text'
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder={placeholder}
+              className='w-full max-w-sm px-3 py-2 rounded-lg border border-default-200 focus:outline-none focus:ring-2 focus:ring-primary'
+            />
+          </div>
+          <Button
+            color='primary'
+            variant='flat'
+            onClick={() => setIsTagManageModalOpen(true)}
+            startContent={<Icon icon='mdi:tag-plus' />}
+          >
+            管理标签
+          </Button>
         </div>
-        <Button
-          color="primary"
-          variant="flat"
-          onClick={() => setIsTagManageModalOpen(true)}
-          startContent={<Icon icon="mdi:tag-plus" />}
-        >
-          管理标签
-        </Button>
-      </div>
-      
-      {/* 使用 memo 优化标签选择器渲染 */}
-      {tagsIndex && (
-        <div className="flex flex-wrap gap-2">
-          {useMemo(() => 
-            tagsIndex.tags
-              .filter(tag => tag.type === 'template')
-              .map(tag => (
-                <Chip
-                  key={tag.id}
-                  color={tag.color as any}
-                  variant={selectedTags.includes(tag.id) ? "solid" : "flat"}
-                  onClick={() => {
-                    setSelectedTags(prev =>
-                      prev.includes(tag.id)
-                        ? prev.filter(id => id !== tag.id)
-                        : [...prev, tag.id]
-                    );
-                  }}
-                  className="cursor-pointer"
+
+        {tagsIndex && (
+          <div className='relative'>
+            <AnimatePresence>
+              {selectedTags.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className='absolute right-0 top-0 z-10'
                 >
-                  {tag.name}
-                  <span className="ml-2 text-xs">
-                    ({tagsIndex.relations.template.byTag[tag.id]?.length || 0})
-                  </span>
-                </Chip>
-              )),
-            [tagsIndex.tags, selectedTags]
-          )}
-        </div>
-      )}
-    </div>
-  ), [selectedTags, tagsIndex]);
+                  <Button
+                    size='sm'
+                    variant='flat'
+                    color='default'
+                    onClick={handleClearTags}
+                    startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
+                  >
+                    清除筛选
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <div className='flex flex-wrap gap-2 min-h-[40px] p-2 rounded-lg bg-default-50'>
+              {tagsIndex.tags
+                .filter((tag) => tag.type === "template")
+                .map((tag) => (
+                  <motion.div
+                    key={tag.id}
+                    layout
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  >
+                    <Chip
+                      color={tag.color as any}
+                      variant={selectedTags.includes(tag.id) ? "solid" : "flat"}
+                      onClick={() => {
+                        setSelectedTags((prev) =>
+                          prev.includes(tag.id) ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
+                        )
+                      }}
+                      className='cursor-pointer transition-transform hover:scale-105'
+                      classNames={{
+                        base: "transition-all duration-200",
+                        content: "transition-colors duration-200",
+                      }}
+                    >
+                      {tag.name}
+                      <span className='ml-2 text-xs'>({tagsIndex.relations.template.byTag[tag.id]?.length || 0})</span>
+                    </Chip>
+                  </motion.div>
+                ))}
+            </div>
+          </div>
+        )}
+      </div>
+    ),
+    [selectedTags, tagsIndex]
+  )
+
+  const renderEmptyState = () => {
+    if (selectedTags.length > 0) {
+      const tagNames = selectedTags
+        .map((tagId) => tagsIndex?.tags.find((tag) => tag.id === tagId)?.name)
+        .filter(Boolean)
+        .join("、")
+
+      return (
+        <EmptyState
+          type='no-data'
+          title={`未找到匹配的表单模板`}
+          description={
+            <div className='space-y-2'>
+              <p>当前筛选标签：{tagNames}</p>
+              <Button color='primary' variant='flat' onClick={handleClearTags}>
+                清除筛选
+              </Button>
+            </div>
+          }
+          icon={<Icon icon='mdi:filter-off' className='w-20 h-20 text-default-400' />}
+        />
+      )
+    }
+
+    return (
+      <EmptyState
+        type='no-data'
+        title='还没有表单模板'
+        description='创建你的第一个表单模板，AI 助手会帮助你快速生成专业的表单'
+        action={{
+          text: "去创建",
+          onClick: () => navigate("/we-chat-app/admin/documents/create"),
+        }}
+      />
+    )
+  }
 
   return (
     <>
       <CardGallery
         items={filteredTemplates}
         renderCard={renderCard}
-        emptyState={
-          <EmptyState
-            type="no-data"
-            title="还没有表单模板"
-            description="创建你的第一个表单模板，AI 助手会帮助你快速生成专业的表单"
-            action={{
-              text: "去创建",
-              onClick: () => navigate("/we-chat-app/admin/documents/create")
-            }}
-          />
-        }
+        emptyState={renderEmptyState()}
         loadingState={
           <div className='flex items-center justify-center min-h-[400px]'>
             <div className='flex flex-col items-center gap-4'>
@@ -316,7 +358,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
       />
 
       <ConfirmModal
-        type="delete"
+        type='delete'
         isOpen={isOpen}
         onClose={onClose}
         content={`确定要删除模板 "${selectedTemplate?.title}" 吗？此操作不可撤销。`}
@@ -337,16 +379,12 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
         }}
         initialName={selectedTemplate?.title || ""}
         onRename={handleRename}
-        title="重命名模板"
-        inputLabel="模板名称"
-        inputPlaceholder="请输入新的模板名称"
+        title='重命名模板'
+        inputLabel='模板名称'
+        inputPlaceholder='请输入新的模板名称'
       />
 
-      <TagManageModal
-        isOpen={isTagManageModalOpen}
-        onClose={() => setIsTagManageModalOpen(false)}
-        type="template"
-      />
+      <TagManageModal isOpen={isTagManageModalOpen} onClose={() => setIsTagManageModalOpen(false)} type='template' />
     </>
   )
 }
