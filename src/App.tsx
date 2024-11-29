@@ -17,6 +17,7 @@ import FormPreview from "./pages/form-temp-manager/components/FormPreview"
 import Form from "@/pages/form"
 import Report from "@/pages/report"
 import ResourceDataTable from "./components/common/data-table/ResourceDataTable"
+import AppEntry from "./pages/app-management/components/AppEntry"
 
 // 创建 QueryClient 实例
 const queryClient = new QueryClient({
@@ -67,6 +68,7 @@ function App() {
             />
             <Route path='/form/:formId' element={<Form />} />
             <Route path='/report/:reportId' element={<Report />} />
+            <Route path='/apps/:appId' element={<AppEntry />} />
             <Route
               path='/forms/:id'
               element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <FormRenderer />}
