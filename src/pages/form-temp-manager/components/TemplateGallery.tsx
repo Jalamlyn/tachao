@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react"
+import React, { useState, useCallback, useMemo, useEffect } from "react"
 import { Card, CardBody, CardFooter, Button, useDisclosure, Chip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -11,6 +11,7 @@ import RenameModal from "@/components/RenameModal"
 import TagManageModal from "@/components/TagManageModal"
 import { useMetadata } from "@/hooks/metadata"
 import { useTagManagement } from "@/hooks/useTagManagement"
+import { useTagStore } from "@/stores/useTagStore"
 
 interface Template {
   id: string
@@ -31,7 +32,6 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [internalTemplates, setInternalTemplates] = useState<Template[]>([])
-  const { remove, load, update } = useMetadata("template")
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false)
   const [searchValue, setSearchValue] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -42,8 +42,18 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     loading: tagsLoading,
     filterItemsByTags,
     getItemTags,
-    updateItemTags
+    updateItemTags,
+    loadTagsIndex
   } = useTagManagement('template')
+
+  const tagsVersion = useTagStore(state => state.tagsVersion)
+
+  const { remove, load, update } = useMetadata("template")
+
+  // 监听标签版本变化，重新加载标签数据
+  useEffect(() => {
+    loadTagsIndex()
+  }, [tagsVersion])
 
   const loadTemplates = async () => {
     try {
@@ -262,15 +272,6 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     </div>
   ), [selectedTags, tagsIndex]);
 
-  const loadingState = (
-    <div className='flex items-center justify-center min-h-[400px]'>
-      <div className='flex flex-col items-center gap-4'>
-        <Icon icon='eos-icons:loading' className='w-10 h-10 text-primary animate-spin' />
-        <span className='text-default-500'>加载中...</span>
-      </div>
-    </div>
-  )
-
   return (
     <>
       <CardGallery
@@ -287,7 +288,14 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
             }}
           />
         }
-        loadingState={loadingState}
+        loadingState={
+          <div className='flex items-center justify-center min-h-[400px]'>
+            <div className='flex flex-col items-center gap-4'>
+              <Icon icon='eos-icons:loading' className='w-10 h-10 text-primary animate-spin' />
+              <span className='text-default-500'>加载中...</span>
+            </div>
+          </div>
+        }
         isLoading={isLoading || tagsLoading}
         containerClassName='h-[calc(100vh-200px)]'
         className={className}

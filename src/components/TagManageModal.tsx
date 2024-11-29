@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react";
 import { useTagManagement } from "@/hooks/useTagManagement";
 import { TagType } from "@/types/tag";
 import message from "@/components/Message";
+import { useTagStore } from "@/stores/useTagStore";
 
 interface TagManageModalProps {
   isOpen: boolean;
@@ -32,18 +33,18 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
     lastUpdate
   } = useTagManagement(type);
 
+  const updateTags = useTagStore(state => state.updateTags);
+
   const [newTagName, setNewTagName] = useState("");
   const [selectedColor, setSelectedColor] = useState("primary");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCreateTag = async () => {
-    debugger
     if (!newTagName.trim()) {
       message.error('请输入标签名称');
       return;
     }
 
-    // 检查标签名是否重复
     if (tagsIndex?.tags.some(tag => 
       tag.type === type && tag.name.toLowerCase() === newTagName.trim().toLowerCase()
     )) {
@@ -62,6 +63,7 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
       if (result) {
         setNewTagName("");
         setSelectedColor("primary");
+        updateTags(); // 更新标签状态
       }
     } finally {
       setIsSubmitting(false);
@@ -76,16 +78,24 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
     }
 
     try {
-      await deleteTag(tagId);
+      const success = await deleteTag(tagId);
+      if (success) {
+        updateTags(); // 更新标签状态
+      }
     } catch (error) {
       console.error('Error deleting tag:', error);
     }
   };
 
+  const handleClose = () => {
+    updateTags(); // 关闭时更新标签状态
+    onClose();
+  };
+
   return (
     <Modal 
       isOpen={isOpen} 
-      onClose={onClose}
+      onClose={handleClose}
       size="2xl"
       scrollBehavior="inside"
     >
@@ -98,7 +108,6 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
         </ModalHeader>
         <ModalBody>
           <div className="space-y-6">
-            {/* 创建新标签 */}
             <div className="space-y-2">
               <h3 className="text-sm font-medium">创建新标签</h3>
               <div className="flex gap-2">
@@ -136,7 +145,6 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
               </div>
             </div>
 
-            {/* 现有标签列表 */}
             <div className="space-y-2">
               <h3 className="text-sm font-medium">现有标签</h3>
               <ScrollShadow 
@@ -170,7 +178,6 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
               </ScrollShadow>
             </div>
 
-            {/* 使用说明 */}
             <div className="text-sm text-default-400 space-y-1">
               <p>• 标签一旦创建后名称不可修改</p>
               <p>• 只有未被使用的标签才能删除</p>
@@ -179,7 +186,7 @@ const TagManageModal: React.FC<TagManageModalProps> = ({
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button color="danger" variant="light" onPress={onClose}>
+          <Button color="danger" variant="light" onPress={handleClose}>
             关闭
           </Button>
         </ModalFooter>
