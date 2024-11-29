@@ -29,7 +29,6 @@ export const useTagManagement = (type: TagType) => {
 
         // 创建新的标签索引
         await setMetadata("tags_index", JSON.stringify(initialIndex))
-        debugger
         setTagsIndex(initialIndex)
       }
     } catch (error) {
@@ -59,7 +58,6 @@ export const useTagManagement = (type: TagType) => {
 
   // 创建新标签 - 使用乐观更新
   const createTag = async (tag: Omit<Tag, "id" | "createdAt" | "updatedAt">) => {
-    debugger
     if (!tagsIndex) return null
 
     // 1. 创建新标签对象

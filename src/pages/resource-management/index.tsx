@@ -40,14 +40,14 @@ const ResourceManagement: React.FC = () => {
   }
 
   const renderUploadButton = (type: string) => {
-    switch(type) {
-      case 'excel':
+    switch (type) {
+      case "excel":
         return <CreateResourceButton appId={appId} isDisabled={false} />
-      case 'word':
+      case "word":
         return <WordUploadButton onSuccess={handleSuccess} onError={handleError} />
-      case 'pdf':
+      case "pdf":
         return <PDFUploadButton onSuccess={handleSuccess} onError={handleError} />
-      case 'image':
+      case "image":
         return <ImageUploadButton onSuccess={handleSuccess} onError={handleError} />
       default:
         return null
@@ -55,8 +55,8 @@ const ResourceManagement: React.FC = () => {
   }
 
   const renderHeader = (searchProps: { value: string; onChange: (value: string) => void; placeholder?: string }) => (
-    <div className="flex justify-between items-center gap-4">
-      <SearchInput {...searchProps} className="flex-1 max-w-xl" />
+    <div className='flex justify-between items-center gap-4'>
+      <SearchInput {...searchProps} className='flex-1 max-w-xl' />
       {renderUploadButton(selectedType)}
     </div>
   )
@@ -67,31 +67,28 @@ const ResourceManagement: React.FC = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="flex flex-col gap-4"
+      className='flex flex-col gap-4'
     >
-      <ResourceGallery 
-        onResourceSelect={handleResourceSelect} 
-        className="transition-all duration-300"
+      <ResourceGallery
+        onResourceSelect={handleResourceSelect}
+        className='transition-all duration-300'
         renderHeader={renderHeader}
       />
     </motion.div>
   )
 
   return (
-    <PageLayout 
-      title="资料管理" 
-      titleIcon="mdi:file-document"
-    >
-      <div className="flex flex-col gap-4">
-        <Tabs 
-          selectedKey={selectedType} 
+    <PageLayout title='资料管理' titleIcon='mdi:file-document'>
+      <div className='flex flex-col gap-4'>
+        <Tabs
+          selectedKey={selectedType}
           onSelectionChange={(key) => setSelectedType(key.toString())}
-          variant="underlined"
+          variant='underlined'
           classNames={{
             tabList: "gap-6",
             cursor: "w-full bg-primary",
             tab: "max-w-fit px-2 h-12",
-            tabContent: "group-data-[selected=true]:text-primary"
+            tabContent: "group-data-[selected=true]:text-primary",
           }}
         >
           {Object.entries(resourceTypes).map(([id, type]) => (
@@ -99,14 +96,14 @@ const ResourceManagement: React.FC = () => {
               key={id}
               isDisabled={type.disabled}
               title={
-                <div className="flex items-center gap-2">
-                  <Icon 
-                    icon={type.icon} 
+                <div className='flex items-center gap-2'>
+                  <Icon
+                    icon={type.icon}
                     className={`w-5 h-5
-                      ${id === 'excel' ? 'text-green-600 group-data-[selected=true]:text-primary' : ''}
-                      ${id === 'word' ? 'text-blue-600 group-data-[selected=true]:text-primary' : ''}
-                      ${id === 'pdf' ? 'text-red-600 group-data-[selected=true]:text-primary' : ''}
-                      ${id === 'image' ? 'text-yellow-600 group-data-[selected=true]:text-primary' : ''}
+                      ${id === "excel" ? "text-green-600 group-data-[selected=true]:text-primary" : ""}
+                      ${id === "word" ? "text-blue-600 group-data-[selected=true]:text-primary" : ""}
+                      ${id === "pdf" ? "text-red-600 group-data-[selected=true]:text-primary" : ""}
+                      ${id === "image" ? "text-yellow-600 group-data-[selected=true]:text-primary" : ""}
                     `}
                   />
                   <span>{type.name}</span>

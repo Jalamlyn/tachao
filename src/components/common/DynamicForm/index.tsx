@@ -233,7 +233,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           const result = await updateMetadata(id, formData)
           if (result) {
             setIsEditing(false)
-            message.success("保存成功")
           } else {
             throw new Error("更新失败")
           }
@@ -241,7 +240,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           const result = await createMetadata(formData)
           if (result) {
             setIsEditing(false)
-            message.success("创建成功")
           } else {
             throw new Error("创建失败")
           }

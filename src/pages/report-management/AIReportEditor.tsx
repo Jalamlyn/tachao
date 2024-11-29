@@ -563,7 +563,6 @@ const AIReportEditor: React.FC = () => {
 
   // 新增：处理版本选择取消
   const handleVersionSelectCancel = () => {
-    debugger
     if (pendingVersionSave) {
       pendingVersionSave.reject(new Error("用户取消选择版本"))
       setPendingVersionSave(null)

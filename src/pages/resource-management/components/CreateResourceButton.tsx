@@ -72,8 +72,6 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
           // 输出一些数据统计
           console.log("数据行数:", result.data.length)
           console.log("数据列数:", Object.keys(result.data[0] || {}).length)
-
-          message.success(`文件解析成功！CSV格式节省了${compressionRatio}%的空间`)
         } else {
           throw new Error("文件解析结果无效")
         }

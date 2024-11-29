@@ -137,9 +137,10 @@ const TagManageModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type }
                   renderValue={(items) => {
                     const selectedItem = items[0]
                     return (
-                      <span className={`w-3 h-3 rounded-full bg-${selectedItem?.data?.value}-500`}>
-                        {selectedItem?.data?.label}
-                      </span>
+                      <div className='flex gap-2 items-center'>
+                        <div className={`w-3 h-3 rounded-full bg-${selectedItem?.data?.value}-500`}></div>
+                        <span>{selectedItem?.data?.label}</span>
+                      </div>
                     )
                   }}
                 >
@@ -176,10 +177,10 @@ const TagManageModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type }
                     return (
                       <Chip
                         key={`${tag.id}-${lastUpdate}`}
-                        color={tag.color as any}
                         variant='flat'
+                        color='default'
                         onClose={usageCount === 0 ? () => handleDeleteTag(tag.id) : undefined}
-                        className='h-8'
+                        className={`h-8 bg-${tag.color}-500 text-white`}
                       >
                         {tag.name}
                         <span className='ml-2 text-xs'>({usageCount})</span>
