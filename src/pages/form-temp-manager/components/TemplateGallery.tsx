@@ -283,8 +283,12 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
                         content: "transition-colors duration-200",
                       }}
                     >
-                      {tag.name}
-                      <span className='ml-2 text-xs'>({tagsIndex.relations.template.byTag[tag.id]?.length || 0})</span>
+                      <div className='flex justify-center items-center'>
+                        {tag.name}
+                        <span className='ml-2 text-xs'>
+                          ({tagsIndex.relations.template.byTag[tag.id]?.length || 0})
+                        </span>
+                      </div>
                     </Chip>
                   </motion.div>
                 ))}

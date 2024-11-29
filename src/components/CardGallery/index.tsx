@@ -116,7 +116,7 @@ function CardGallery<T>({
   }
 
   return (
-    <div className={`h-full overflow-hidden ${containerClassName}`}>
+    <div className={`${containerClassName}`}>
       <div className={`h-full overflow-auto ${className}`}>
         {searchable && (
           <div className='sticky top-0 z-10 bg-background/80 backdrop-blur-sm py-3 px-4'>
