@@ -24,7 +24,6 @@ export const useCreateApp = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['apps'] })
-      message.success('应用创建成功')
     },
     onError: (error) => {
       console.error('Failed to create app:', error)
