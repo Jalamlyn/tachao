@@ -1,10 +1,9 @@
 import { useState, useCallback, useEffect } from "react"
-import { useMetadata } from "@/hooks/metadata"
+import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { Tag, TagsIndex, TagType } from "@/types/tag"
 import message from "@/components/Message"
 
 export const useTagManagement = (type: TagType) => {
-  const { getDetail, create, update } = useMetadata("tags")
   const [tagsIndex, setTagsIndex] = useState<TagsIndex | null>(null)
   const [loading, setLoading] = useState(false)
   const [lastUpdate, setLastUpdate] = useState(Date.now())
@@ -13,9 +12,10 @@ export const useTagManagement = (type: TagType) => {
   const loadTagsIndex = async () => {
     setLoading(true)
     try {
-      const index = await getDetail("tags_index")
-      if (index) {
-        setTagsIndex(index.data)
+      const result = await getMetadata(["tags_index"])
+      if (result.data?.[0]?.value) {
+        const index = JSON.parse(result.data[0].value)
+        setTagsIndex(index)
       } else {
         // 创建初始结构
         const initialIndex: TagsIndex = {
@@ -27,24 +27,9 @@ export const useTagManagement = (type: TagType) => {
           },
         }
 
-        // 使用 create 创建新的标签索引
-        const result = await create({
-          id: "tags_index",
-          title: "Tags Index",
-          type: "tags",
-          status: "active",
-          data: initialIndex,
-          indexFields: {
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }
-        })
-
-        if (result?.data) {
-          setTagsIndex(result.data)
-        } else {
-          throw new Error("Failed to create tags index")
-        }
+        // 创建新的标签索引
+        await setMetadata("tags_index", JSON.stringify(initialIndex))
+        setTagsIndex(initialIndex)
       }
     } catch (error) {
       console.error("Error loading tags index:", error)
@@ -58,20 +43,8 @@ export const useTagManagement = (type: TagType) => {
   // 保存标签索引的辅助函数
   const saveTagsIndex = async (newIndex: TagsIndex) => {
     try {
-      const result = await update("tags_index", {
-        title: "Tags Index",
-        type: "tags",
-        status: "active",
-        data: newIndex,
-        indexFields: {
-          updatedAt: new Date().toISOString(),
-        }
-      })
-      
-      if (result?.data) {
-        return true
-      }
-      return false
+      await setMetadata("tags_index", JSON.stringify(newIndex))
+      return true
     } catch (error) {
       console.error("Error saving tags index:", error)
       return false
