@@ -5,6 +5,7 @@ import {
   CardFooter,
   Button,
   useDisclosure,
+  Chip,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -14,7 +15,11 @@ import EmptyState from "@/components/EmptyState"
 import ConfirmModal from "@/components/ConfirmModal"
 import ShareModal from "@/components/ShareModal"
 import RenameModal from "@/components/RenameModal"
+import TagManageModal from "@/components/TagManageModal"
 import { useMetadata } from "@/hooks/useMetadata"
+import { useTagManagement } from "@/hooks/useTagManagement"
+import { useTagStore } from "@/stores/useTagStore"
+import { EditTagsModal } from "./EditTagsModal"
 
 interface Report {
   id: string
@@ -40,6 +45,27 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
   const { items: templates = [], load: loadTemplates } = useMetadata("template")
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false)
   const [searchValue, setSearchValue] = useState("")
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [isTagManageModalOpen, setIsTagManageModalOpen] = useState(false)
+  const [isEditTagsModalOpen, setIsEditTagsModalOpen] = useState(false)
+
+  // 使用标签管理 hook
+  const {
+    tagsIndex,
+    loading: tagsLoading,
+    filterItemsByTags,
+    getItemTags,
+    loadTagsIndex,
+    updateItemTags,
+  } = useTagManagement("report")
+
+  const tagsVersion = useTagStore((state) => state.tagsVersion)
+
+  React.useEffect(() => {
+    if (tagsVersion > 0) {
+      loadTagsIndex()
+    }
+  }, [tagsVersion])
 
   const loadReports = async () => {
     try {
@@ -101,6 +127,12 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
     setIsRenameModalOpen(true)
   }
 
+  const handleEditTagsClick = (report: Report, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedReport(report)
+    setIsEditTagsModalOpen(true)
+  }
+
   const handleRename = async (newTitle: string) => {
     if (!selectedReport) return
 
@@ -115,6 +147,21 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
     }
   }
 
+  const handleClearTags = () => {
+    setSelectedTags([])
+  }
+
+  const handleUpdateTags = async (reportId: string, tagIds: string[]) => {
+    try {
+      await updateItemTags(reportId, tagIds)
+      await loadReports()
+    } catch (error) {
+      console.error("Error updating tags:", error)
+      message.error("更新标签失败")
+      throw error
+    }
+  }
+
   const renderCard = (report: Report) => (
     <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onReportSelect(report.id)}>
       <CardBody className='p-0 relative overflow-hidden'>
@@ -123,6 +170,21 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
             icon='mdi:file-chart'
             className='w-16 h-16 text-red-400 group-hover:scale-110 transition-transform duration-300'
           />
+        </div>
+        {/* 标签显示在右上角 */}
+        <div className='absolute top-2 right-2 z-10 flex flex-wrap gap-1 max-w-[70%] justify-end'>
+          {tagsIndex &&
+            getItemTags(report.id).map((tag) => (
+              <Chip
+                key={tag.id}
+                size='sm'
+                color={tag.color as any}
+                variant='flat'
+                className='bg-background/60 backdrop-blur-sm'
+              >
+                {tag.name}
+              </Chip>
+            ))}
         </div>
       </CardBody>
       <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
@@ -167,6 +229,15 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
               isIconOnly
               size='sm'
               variant='light'
+              className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+              onClick={(e) => handleEditTagsClick(report, e)}
+            >
+              <Icon icon='mdi:tag-multiple' className='w-4 h-4' />
+            </Button>
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
               className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
               onClick={(e) => handleDeleteClick(report, e)}
             >
@@ -188,6 +259,69 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
   )
 
   const hasTemplates = templates.length > 0
+
+  const renderHeader = ({ value, onChange, placeholder }) => (
+    <div className='space-y-4'>
+      <div className='flex items-center justify-between'>
+        <div className='flex-1'>
+          <input
+            type='text'
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            className='w-full max-w-sm px-3 py-2 rounded-lg border border-default-200 focus:outline-none focus:ring-2 focus:ring-primary'
+          />
+        </div>
+        <Button
+          color='primary'
+          variant='flat'
+          onClick={() => setIsTagManageModalOpen(true)}
+          startContent={<Icon icon='mdi:tag-plus' />}
+        >
+          管理标签
+        </Button>
+      </div>
+
+      {tagsIndex && (
+        <div className='relative'>
+          {selectedTags.length > 0 && (
+            <div className='absolute right-2 top-1.5 z-10'>
+              <Button
+                size='sm'
+                variant='flat'
+                color='default'
+                onClick={handleClearTags}
+                startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
+              >
+                清除筛选
+              </Button>
+            </div>
+          )}
+          <div className='flex flex-wrap items-center gap-2 min-h-[40px] p-2 rounded-lg bg-default-50'>
+            {tagsIndex.tags
+              .filter((tag) => tag.type === "report")
+              .map((tag) => (
+                <Chip
+                  key={`${tag.id}-${tagsVersion}`}
+                  startContent={selectedTags.includes(tag.id) && <Icon className='ml-2 w-5 h-5' icon='line-md:check-all' />}
+                  onClick={() => {
+                    setSelectedTags((prev) =>
+                      prev.includes(tag.id) ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
+                    )
+                  }}
+                  className={`cursor-pointer transition-transform hover:scale-105 bg-${tag.color}-500 text-white`}
+                >
+                  <div className='flex justify-center items-center'>
+                    {tag.name}
+                    <span className='ml-2 text-xs'>({tagsIndex.relations.report.byTag[tag.id]?.length || 0})</span>
+                  </div>
+                </Chip>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 
   return (
     <>
@@ -218,6 +352,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
         searchPlaceholder='搜索报表名称...'
         onSearch={setSearchValue}
         customSearch={(report, value) => report.title.toLowerCase().includes(value.toLowerCase())}
+        renderHeader={renderHeader}
       />
 
       <ConfirmModal
@@ -245,6 +380,23 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
         title="重命名报表"
         inputLabel="报表名称" 
         inputPlaceholder="请输入新的报表名称"
+      />
+
+      <TagManageModal
+        isOpen={isTagManageModalOpen}
+        onClose={() => setIsTagManageModalOpen(false)}
+        type="report"
+      />
+
+      <EditTagsModal
+        isOpen={isEditTagsModalOpen}
+        onClose={() => {
+          setIsEditTagsModalOpen(false)
+          setSelectedReport(null)
+        }}
+        template={selectedReport}
+        tagsIndex={tagsIndex}
+        onUpdateTags={handleUpdateTags}
       />
     </>
   )
