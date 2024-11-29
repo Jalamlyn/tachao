@@ -16,10 +16,10 @@ import ConfirmModal from "@/components/ConfirmModal"
 import ShareModal from "@/components/ShareModal"
 import RenameModal from "@/components/RenameModal"
 import TagManageModal from "@/components/TagManageModal"
+import EditTagsModal from "@/components/EditTagsModal"
 import { useMetadata } from "@/hooks/useMetadata"
 import { useTagManagement } from "@/hooks/useTagManagement"
 import { useTagStore } from "@/stores/useTagStore"
-import { EditTagsModal } from "./EditTagsModal"
 
 interface Report {
   id: string
@@ -394,7 +394,8 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
           setIsEditTagsModalOpen(false)
           setSelectedReport(null)
         }}
-        template={selectedReport}
+        item={selectedReport}
+        type="report"
         tagsIndex={tagsIndex}
         onUpdateTags={handleUpdateTags}
       />
