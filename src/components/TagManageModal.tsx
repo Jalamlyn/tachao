@@ -192,7 +192,7 @@ const TagManageModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type }
                 )}
               </ScrollShadow>
             </div>
-            <div className='bg-yellow-500 bg-gray-500 bg-indigo-500 bg-slate-500 bg-orange-500 bg-green-500 bg-sky-500'></div>
+            <div className='bg-yellow-500 bg-gray-500 bg-indigo-500 bg-slate-500 bg-orange-500 bg-green-500 bg-sky-500 bg-blue-500'></div>
             <div className='text-sm text-default-400 space-y-1'>
               <p>• 标签一旦创建后名称不可修改</p>
               <p>• 只有未被使用的标签才能删除</p>
