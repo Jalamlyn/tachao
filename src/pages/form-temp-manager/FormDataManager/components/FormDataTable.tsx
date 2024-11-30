@@ -22,6 +22,12 @@ import {
   DropdownMenuTrigger,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuGroup,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -38,7 +44,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import * as XLSX from 'xlsx'
+import * as XLSX from "xlsx"
 import message from "@/components/Message"
 
 interface FormDataTableProps {
@@ -64,8 +70,8 @@ const getPinningStyles = (column: Column<any>): CSSProperties => {
     boxShadow: isLastLeftPinnedColumn
       ? "-2px 0 4px -4px gray inset"
       : isFirstRightPinnedColumn
-      ? "2px 0 4px -4px gray inset"
-      : undefined,
+        ? "2px 0 4px -4px gray inset"
+        : undefined,
     opacity: isPinned ? 0.95 : 1,
     zIndex: isPinned ? 1 : 0,
   }
@@ -77,17 +83,17 @@ const getNestedValue = (obj: any, path: string) => {
 }
 
 // 辅助函数：展平对象
-const flattenObject = (obj: any, prefix = '') => {
+const flattenObject = (obj: any, prefix = "") => {
   return Object.keys(obj).reduce((acc: any, k: string) => {
-    const pre = prefix.length ? prefix + '.' : '';
-    if (typeof obj[k] === 'object' && obj[k] !== null && !Array.isArray(obj[k])) {
-      Object.assign(acc, flattenObject(obj[k], pre + k));
+    const pre = prefix.length ? prefix + "." : ""
+    if (typeof obj[k] === "object" && obj[k] !== null && !Array.isArray(obj[k])) {
+      Object.assign(acc, flattenObject(obj[k], pre + k))
     } else {
-      acc[pre + k] = obj[k];
+      acc[pre + k] = obj[k]
     }
-    return acc;
-  }, {});
-};
+    return acc
+  }, {})
+}
 
 // 辅助函数：生成多级表头配置
 const generateColumns = (obj: any, parentKey: string = "", level: number = 0): ColumnDef<any>[] => {
@@ -153,6 +159,66 @@ const getAllNestedColumns = (columns: any[]): any[] => {
     }
     return [...acc, column]
   }, [])
+}
+
+// 辅助函数：处理父列可见性变化
+const handleParentColumnVisibility = (column: any, value: boolean) => {
+  // 获取所有子列
+  const childColumns = getAllNestedColumns(column.columns || [])
+  // 统一设置可见性
+  childColumns.forEach((childColumn) => {
+    if (childColumn.toggleVisibility) {
+      childColumn.toggleVisibility(value)
+    }
+  })
+}
+
+// 辅助函数：检查列是否有任何可见的子列
+const hasVisibleChildren = (column: any): boolean => {
+  if (!column.columns) return column.getIsVisible()
+  return column.columns.some((subColumn: any) => hasVisibleChildren(subColumn))
+}
+
+// 递归渲染列显示控制项
+const renderColumnVisibilityItems = (columns: any[], level = 0) => {
+  return columns.map((column) => {
+    if (column.columns) {
+      const isParentVisible = hasVisibleChildren(column)
+      return (
+        <DropdownMenuSub key={column.id}>
+          <DropdownMenuSubTrigger className="capitalize">
+            <span className="flex items-center gap-2">
+              <Checkbox 
+                checked={isParentVisible}
+                onCheckedChange={(checked) => handleParentColumnVisibility(column, !!checked)}
+              />
+              {column.header}
+            </span>
+          </DropdownMenuSubTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuSubContent className="min-w-[8rem]">
+              <div className="pl-2">
+                {renderColumnVisibilityItems(column.columns, level + 1)}
+              </div>
+            </DropdownMenuSubContent>
+          </DropdownMenuPortal>
+        </DropdownMenuSub>
+      )
+    }
+
+    if (!column.getCanHide()) return null
+
+    return (
+      <DropdownMenuCheckboxItem
+        key={column.id}
+        className="capitalize"
+        checked={column.getIsVisible()}
+        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+      >
+        {column.header || column.id}
+      </DropdownMenuCheckboxItem>
+    )
+  })
 }
 
 const FormDataTable: React.FC<FormDataTableProps> = ({
@@ -304,60 +370,31 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
     setRowSelection({})
   }
 
-  const handleExportExcel = (type: 'all' | 'selected') => {
+  const handleExportExcel = (type: "all" | "selected") => {
     try {
       let exportData
-      if (type === 'selected') {
+      if (type === "selected") {
         const selectedRows = table.getSelectedRowModel().rows
         if (selectedRows.length === 0) {
-          message.warning('请先选择要导出的数据')
+          message.warning("请先选择要导出的数据")
           return
         }
-        exportData = selectedRows.map(row => row.original)
+        exportData = selectedRows.map((row) => row.original)
       } else {
         exportData = data
       }
 
       // 展平嵌套数据
-      const flattenedData = exportData.map(item => flattenObject(item))
+      const flattenedData = exportData.map((item) => flattenObject(item))
 
       const wb = XLSX.utils.book_new()
       const ws = XLSX.utils.json_to_sheet(flattenedData)
-      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
-      XLSX.writeFile(wb, 'export.xlsx')
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
+      XLSX.writeFile(wb, "export.xlsx")
     } catch (error) {
-      console.error('Export failed:', error)
-      message.error('导出失败')
+      console.error("Export failed:", error)
+      message.error("导出失败")
     }
-  }
-
-  // 递归渲染列设置选项
-  const renderColumnVisibilityItems = (columns: any[], level = 0) => {
-    return columns.map((column) => {
-      if (column.columns) {
-        return (
-          <div key={column.id} className="space-y-1">
-            <div className="px-2 py-1.5 text-sm font-semibold">{column.header}</div>
-            <div className="pl-4 space-y-1">
-              {renderColumnVisibilityItems(column.columns, level + 1)}
-            </div>
-          </div>
-        )
-      }
-
-      if (!column.getCanHide()) return null
-
-      return (
-        <DropdownMenuCheckboxItem
-          key={column.id}
-          className='capitalize'
-          checked={column.getIsVisible()}
-          onCheckedChange={(value) => column.toggleVisibility(!!value)}
-        >
-          {column.id}
-        </DropdownMenuCheckboxItem>
-      )
-    })
   }
 
   if (isLoading) {
@@ -382,11 +419,7 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
         </div>
         <div className='flex items-center space-x-2'>
           {Object.keys(rowSelection).length > 0 && (
-            <Button
-              variant='outline'
-              className='text-red-600'
-              onClick={handleBatchDelete}
-            >
+            <Button variant='outline' className='text-red-600' onClick={handleBatchDelete}>
               <Trash2 className='mr-2 h-4 w-4' />
               批量删除
             </Button>
@@ -400,9 +433,9 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
-              <DropdownMenuItem onClick={() => handleExportExcel('all')}>导出所有数据</DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleExportExcel('selected')}
+              <DropdownMenuItem onClick={() => handleExportExcel("all")}>导出所有数据</DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleExportExcel("selected")}
                 disabled={!Object.keys(rowSelection).length}
               >
                 导出选中数据
@@ -417,8 +450,14 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end' className='w-[200px]'>
-              <ScrollArea className='h-[400px]'>
-                {renderColumnVisibilityItems(table.getAllColumns())}
+              <DropdownMenuLabel>选择要显示的列</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <ScrollArea className="h-[400px] px-1">
+                {table.getAllColumns().length === 0 ? (
+                  <div className='p-2 text-sm text-gray-500'>暂无可用列</div>
+                ) : (
+                  renderColumnVisibilityItems(table.getAllColumns())
+                )}
               </ScrollArea>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -520,9 +559,7 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>确认删除</AlertDialogTitle>
-            <AlertDialogDescription>
-              此操作将永久删除该条数据，删除后将无法恢复。确定要继续吗？
-            </AlertDialogDescription>
+            <AlertDialogDescription>此操作将永久删除该条数据，删除后将无法恢复。确定要继续吗？</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className='hover:bg-gray-100 transition-colors'>取消</AlertDialogCancel>
