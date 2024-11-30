@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import * as XLSX from 'xlsx'
+import message from "@/components/Message"
 
 interface FormDataTableProps {
   data: any[]
@@ -74,6 +75,19 @@ const getPinningStyles = (column: Column<any>): CSSProperties => {
 const getNestedValue = (obj: any, path: string) => {
   return path.split(".").reduce((acc, part) => acc && acc[part], obj)
 }
+
+// 辅助函数：展平对象
+const flattenObject = (obj: any, prefix = '') => {
+  return Object.keys(obj).reduce((acc: any, k: string) => {
+    const pre = prefix.length ? prefix + '.' : '';
+    if (typeof obj[k] === 'object' && obj[k] !== null && !Array.isArray(obj[k])) {
+      Object.assign(acc, flattenObject(obj[k], pre + k));
+    } else {
+      acc[pre + k] = obj[k];
+    }
+    return acc;
+  }, {});
+};
 
 // 辅助函数：生成多级表头配置
 const generateColumns = (obj: any, parentKey: string = "", level: number = 0): ColumnDef<any>[] => {
@@ -128,6 +142,16 @@ const generateColumns = (obj: any, parentKey: string = "", level: number = 0): C
       })
     }
     return acc
+  }, [])
+}
+
+// 辅助函数：递归获取所有列（包括嵌套列）
+const getAllNestedColumns = (columns: any[]): any[] => {
+  return columns.reduce((acc: any[], column) => {
+    if (column.columns) {
+      return [...acc, column, ...getAllNestedColumns(column.columns)]
+    }
+    return [...acc, column]
   }, [])
 }
 
@@ -294,14 +318,46 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
         exportData = data
       }
 
+      // 展平嵌套数据
+      const flattenedData = exportData.map(item => flattenObject(item))
+
       const wb = XLSX.utils.book_new()
-      const ws = XLSX.utils.json_to_sheet(exportData)
+      const ws = XLSX.utils.json_to_sheet(flattenedData)
       XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
       XLSX.writeFile(wb, 'export.xlsx')
     } catch (error) {
       console.error('Export failed:', error)
       message.error('导出失败')
     }
+  }
+
+  // 递归渲染列设置选项
+  const renderColumnVisibilityItems = (columns: any[], level = 0) => {
+    return columns.map((column) => {
+      if (column.columns) {
+        return (
+          <div key={column.id} className="space-y-1">
+            <div className="px-2 py-1.5 text-sm font-semibold">{column.header}</div>
+            <div className="pl-4 space-y-1">
+              {renderColumnVisibilityItems(column.columns, level + 1)}
+            </div>
+          </div>
+        )
+      }
+
+      if (!column.getCanHide()) return null
+
+      return (
+        <DropdownMenuCheckboxItem
+          key={column.id}
+          className='capitalize'
+          checked={column.getIsVisible()}
+          onCheckedChange={(value) => column.toggleVisibility(!!value)}
+        >
+          {column.id}
+        </DropdownMenuCheckboxItem>
+      )
+    })
   }
 
   if (isLoading) {
@@ -360,23 +416,9 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
                 <ChevronDown className='ml-2 h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align='end' className='w-[150px]'>
-              <ScrollArea className='h-[200px]'>
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className='capitalize'
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                      >
-                        {column.id}
-                      </DropdownMenuCheckboxItem>
-                    )
-                  })}
+            <DropdownMenuContent align='end' className='w-[200px]'>
+              <ScrollArea className='h-[400px]'>
+                {renderColumnVisibilityItems(table.getAllColumns())}
               </ScrollArea>
             </DropdownMenuContent>
           </DropdownMenu>
