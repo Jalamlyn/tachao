@@ -286,11 +286,16 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         >
           <div>
             <h1 className={cn(styles["form-title"])}>{metadata.title}</h1>
-            {metadata.description && (
-              <p className={cn(styles["form-description"], "text-gray-500 mt-1 text-sm break-all")}>
-                {metadata.description}
-              </p>
-            )}
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-2'>
+              <OrderNumberField
+                form={form}
+                prefix={orderNumberConfig.prefix}
+                fieldName={orderNumberConfig.fieldName}
+                label={orderNumberConfig.label}
+                disabled={!isEditing}
+                isUpdating={isUpdating}
+              />
+            </div>
           </div>
           <div className='flex gap-2 flex-wrap'>
             {metadata.permissions?.print && (
@@ -321,16 +326,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         {/* 基本信息 */}
         <div className={cn(styles["form-card"])}>
           <h2 className={cn(styles["form-title"])}>基本信息</h2>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-2'>
-            <OrderNumberField
-              form={form}
-              prefix={orderNumberConfig.prefix}
-              fieldName={orderNumberConfig.fieldName}
-              label={orderNumberConfig.label}
-              disabled={!isEditing}
-              isUpdating={isUpdating}
-            />
-          </div>
           <DynamicFormFields fields={renderConfig.basicFields} form={form} isEditable={isEditing} />
         </div>
 

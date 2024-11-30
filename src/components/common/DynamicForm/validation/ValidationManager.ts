@@ -111,19 +111,19 @@ export class ValidationManager {
 
     // 必填校验
     if (field.required) {
-      if (field.type === 'resource') {
+      if (field.type === "resource") {
         // 对resource类型进行特殊处理
-        if (!value || typeof value !== 'object' || Object.keys(value).length === 0) {
+        if (!value || typeof value !== "object" || Object.keys(value).length === 0) {
           console.log("[ValidationManager] resource field validation failed - empty value:", field.name)
           return `${field.label}不能为空`
         }
         // 检查资料对象的关键属性是否存在
-        const requiredProps = ['id', 'title'] // 可以根据实际需求调整必需属性
-        const missingProps = requiredProps.filter(prop => !value[prop])
+        const requiredProps = ["id", "title"] // 可以根据实际需求调整必需属性
+        const missingProps = requiredProps.filter((prop) => !value[prop])
         if (missingProps.length > 0) {
           console.log("[ValidationManager] resource field validation failed - missing properties:", {
             field: field.name,
-            missingProps
+            missingProps,
           })
           return `${field.label}数据不完整`
         }
@@ -166,19 +166,19 @@ export class ValidationManager {
     console.log("[ValidationManager] validateTableCell start:", { column, value, row })
 
     if (column.required) {
-      if (column.type === 'resource') {
+      if (column.type === "resource") {
         // 对表格中的resource类型进行特殊处理
-        if (!value || typeof value !== 'object' || Object.keys(value).length === 0) {
+        if (!value || typeof value !== "object" || Object.keys(value).length === 0) {
           console.log("[ValidationManager] table resource cell validation failed:", column.key)
           return `${column.title}不能为空`
         }
         // 检查资料对象的关键属性是否存在
-        const requiredProps = ['id', 'title']
-        const missingProps = requiredProps.filter(prop => !value[prop])
+        const requiredProps = ["id", "title"]
+        const missingProps = requiredProps.filter((prop) => !value[prop])
         if (missingProps.length > 0) {
           console.log("[ValidationManager] table resource cell validation failed - missing properties:", {
             column: column.key,
-            missingProps
+            missingProps,
           })
           return `${column.title}数据不完整`
         }
@@ -207,7 +207,6 @@ export class ValidationManager {
     console.log("[ValidationManager] validateFieldType start:", { type, value })
 
     if (!value) return undefined
-
     switch (type) {
       case "resource":
         if (value && typeof value === "object") {

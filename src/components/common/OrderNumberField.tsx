@@ -52,7 +52,7 @@ const OrderNumberField: React.FC<OrderNumberFieldProps> = ({
       render={({ field }) => (
         <FormItem>
           <FormControl>
-            <Input {...field} disabled={disabled} variant='flat' />
+            <Input className='min-w-60' size='sm' {...field} isDisabled variant='underlined' />
           </FormControl>
           <FormMessage />
         </FormItem>
