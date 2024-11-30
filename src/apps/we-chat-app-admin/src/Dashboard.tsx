@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback } from "react"
-import { Card, CardBody, CardHeader, Button, Chip, Divider, Input, useDisclosure } from "@nextui-org/react"
+import React, { useEffect } from "react"
+import { Card, CardBody, CardHeader, Button, Chip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { motion, AnimatePresence } from "framer-motion"
 import { useMetadata } from "@/hooks/metadata"
+import { usePendingTasksStore } from "@/stores/usePendingTasksStore"
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
@@ -13,6 +14,7 @@ const Dashboard: React.FC = () => {
   const { items: reports, load: loadReports } = useMetadata("report")
   const { items: resources, load: loadResources } = useMetadata("resource")
   const { items: apps, load: loadApps } = useMetadata("app_index")
+  const { tasks, loadTasks } = usePendingTasksStore()
 
   useEffect(() => {
     updateBreadcrumbs([{ label: "首页", href: "/we-chat-app/admin" }])
@@ -24,11 +26,12 @@ const Dashboard: React.FC = () => {
         loadForms(),
         loadReports(),
         loadResources(),
-        loadApps()
+        loadApps(),
+        loadTasks()
       ])
     }
     loadData()
-  }, [loadForms, loadReports, loadResources, loadApps])
+  }, [loadForms, loadReports, loadResources, loadApps, loadTasks])
 
   const stats = [
     {
@@ -66,45 +69,6 @@ const Dashboard: React.FC = () => {
     { label: "查看报表", icon: "mdi:chart-box-outline", path: "/we-chat-app/admin/reports" },
     { label: "资料管理", icon: "mdi:file-document", path: "/we-chat-app/admin/resources" },
     { label: "企业设置", icon: "solar:settings-outline", path: "/we-chat-app/admin/settings" },
-  ]
-
-  const recentActivities = [
-    {
-      id: "1",
-      title: "新的数据同步请求",
-      description: "来自销售部门的数据同步申请需要您的审批",
-      time: "10分钟前",
-      type: "sync",
-      status: "pending",
-      priority: "high",
-      department: "销售部",
-      user: "张经理",
-      avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-    },
-    {
-      id: "2", 
-      title: "系统权限申请",
-      description: "人力资源部门请求访问表单管理系统的权限",
-      time: "30分钟前",
-      type: "auth",
-      status: "pending",
-      priority: "medium",
-      department: "人力资源",
-      user: "李主管",
-      avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024c",
-    },
-    {
-      id: "3",
-      title: "报表访问授权",
-      description: "财务部门申请查看月度销售报表的权限",
-      time: "2小时前",
-      type: "report",
-      status: "pending",
-      priority: "low",
-      department: "财务部",
-      user: "王总监",
-      avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024b",
-    }
   ]
 
   const getActivityIcon = (type: string) => {
@@ -253,22 +217,33 @@ const Dashboard: React.FC = () => {
           className='lg:col-span-2'
         >
           <Card className='hover:shadow-lg transition-all duration-300'>
-            <CardHeader className='flex gap-3 px-6 pt-6'>
-              <Icon icon='solar:bell-bing-linear' className='w-6 h-6 text-primary' />
-              <div className='flex flex-col'>
-                <p className='text-lg font-semibold'>待处理事项</p>
-                <p className='text-small text-default-500'>需要您审批或处理的任务</p>
+            <CardHeader className='flex justify-between items-center px-6 pt-6'>
+              <div className='flex gap-3'>
+                <Icon icon='solar:bell-bing-linear' className='w-6 h-6 text-primary' />
+                <div className='flex flex-col'>
+                  <p className='text-lg font-semibold'>待处理事项</p>
+                  <p className='text-small text-default-500'>需要您审批或处理的任务</p>
+                </div>
               </div>
+              <Button
+                variant="light"
+                color="primary"
+                size="sm"
+                endContent={<Icon icon="solar:arrow-right-linear" />}
+                onPress={() => navigate("/we-chat-app/admin/pending-tasks")}
+              >
+                查看更多
+              </Button>
             </CardHeader>
             <CardBody>
               <AnimatePresence>
-                {recentActivities.map((activity, index) => (
+                {tasks.slice(0, 3).map((activity, index) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className='flex items-start gap-4 p-4 rounded-lg hover:bg-default-100 transition-all border-b last:border-b-0'
+                    className='flex items-start gap-4 p-4 hover:bg-default-100 transition-all border-b last:border-b-0'
                   >
                     <div className='relative'>
                       <img src={activity.avatar} alt={activity.user} className='w-10 h-10 rounded-full' />
@@ -306,6 +281,11 @@ const Dashboard: React.FC = () => {
                     </div>
                   </motion.div>
                 ))}
+                {tasks.length === 0 && (
+                  <div className='flex items-center justify-center py-8 text-default-400'>
+                    <p>暂无待处理事项</p>
+                  </div>
+                )}
               </AnimatePresence>
             </CardBody>
           </Card>

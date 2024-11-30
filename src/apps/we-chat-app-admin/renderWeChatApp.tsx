@@ -16,6 +16,7 @@ import AIReportEditor from "@/pages/report-management/AIReportEditor"
 import Dashboard from "@/apps/we-chat-app-admin/src/Dashboard"
 import AppManagement from "@/pages/app-management"
 import AppEntry from "@/pages/app-management/components/AppEntry"
+import PendingTasks from "@/pages/pending-tasks"
 
 export default function renderWeChatApp() {
   return (
@@ -38,6 +39,7 @@ export default function renderWeChatApp() {
       <Route path='reports/ai/:reportId' element={<AIReportEditor />} />
       <Route path='ai-assistant' element={<FormAnalysis />} />
       <Route path='apps' element={<AppManagement />} />
+      <Route path='pending-tasks' element={<PendingTasks />} />
     </Route>
   )
 }

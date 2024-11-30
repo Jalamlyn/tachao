@@ -32,6 +32,12 @@ export const items: SidebarItem[] = [
     title: "表单管理",
   },
   {
+    key: "pending-tasks",
+    href: "/we-chat-app/admin/pending-tasks",
+    icon: "solar:list-check-bold",
+    title: "待办事项",
+  },
+  {
     key: "ai-assistant",
     href: "/we-chat-app/admin/ai-assistant",
     icon: "hugeicons:ai-chat-02",
