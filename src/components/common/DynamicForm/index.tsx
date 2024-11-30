@@ -220,7 +220,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
         if (onSubmit) {
           await onSubmit(validationResult!, values)
-          setIsUpdating(new Date().getTime())
           // 提交成功后重置表单
           form.reset()
           return
@@ -252,7 +251,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             throw new Error("创建失败")
           }
         }
-
+        setIsUpdating(new Date().getTime())
         message.success("提交成功")
       } catch (error) {
         console.error("Form submission error:", error)
