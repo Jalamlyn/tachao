@@ -1,6 +1,6 @@
-import React from "react"
+import React, { useState } from "react"
 import { motion, useSpring } from "framer-motion"
-import { Card, CardBody, Button } from "@nextui-org/react"
+import { Card, CardBody, Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import ScrollAnimation from "./ScrollAnimation"
 import { useSwipeable } from "react-swipeable"
@@ -60,7 +60,88 @@ const features = [
   }
 ]
 
+const solutions = [
+  {
+    title: "数据收集与分析",
+    icon: "mdi:database",
+    color: "from-blue-500/90 to-cyan-600/90",
+    scenarios: [
+      {
+        name: "问卷调查",
+        description: "智能生成调查问卷，自动分析结果",
+        features: ["智能表单生成", "实时数据分析", "可视化报表"],
+        icon: "mdi:form-select"
+      },
+      {
+        name: "数据统计",
+        description: "多维度数据统计与分析",
+        features: ["多维分析", "趋势预测", "异常检测"],
+        icon: "mdi:chart-box"
+      },
+      {
+        name: "报表生成",
+        description: "自动生成专业分析报表",
+        features: ["自动报表", "数据可视化", "深度洞察"],
+        icon: "mdi:file-chart"
+      }
+    ]
+  },
+  {
+    title: "业务流程管理",
+    icon: "mdi:sitemap",
+    color: "from-purple-500/90 to-pink-600/90",
+    scenarios: [
+      {
+        name: "表单审批",
+        description: "智能化审批流程管理",
+        features: ["智能路由", "自动提醒", "进度追踪"],
+        icon: "mdi:clipboard-check"
+      },
+      {
+        name: "数据录入",
+        description: "高效的数据采集与验证",
+        features: ["智能识别", "自动校验", "批量处理"],
+        icon: "mdi:database-plus"
+      },
+      {
+        name: "结果统计",
+        description: "全面的结果分析与展示",
+        features: ["实时统计", "多维分析", "趋势预测"],
+        icon: "mdi:chart-timeline"
+      }
+    ]
+  },
+  {
+    title: "信息管理系统",
+    icon: "mdi:cog",
+    color: "from-green-500/90 to-emerald-600/90",
+    scenarios: [
+      {
+        name: "员工信息管理",
+        description: "一站式员工信息管理平台",
+        features: ["信息录入", "档案管理", "数据分析"],
+        icon: "mdi:account-group"
+      },
+      {
+        name: "客户数据管理",
+        description: "智能化客户关系管理",
+        features: ["客户画像", "行为分析", "互动追踪"],
+        icon: "mdi:account-supervisor"
+      },
+      {
+        name: "业务数据分析",
+        description: "深度业务数据分析与决策",
+        features: ["业务分析", "决策支持", "预测模型"],
+        icon: "mdi:chart-scatter-plot"
+      }
+    ]
+  }
+]
+
 const Features: React.FC = () => {
+  const [showMoreFeatures, setShowMoreFeatures] = useState(false)
+  const [selectedSolution, setSelectedSolution] = useState<number>(0)
+
   // 优化动画性能
   const springConfig = { mass: 1, stiffness: 100, damping: 30 }
   const scaleSpring = useSpring(1, springConfig)
@@ -68,18 +149,36 @@ const Features: React.FC = () => {
   // 添加手势支持
   const handlers = useSwipeable({
     onSwipedLeft: (eventData) => {
-      // 向左滑动到下一个部分
       const nextSection = document.getElementById("benefits")
       nextSection?.scrollIntoView({ behavior: "smooth" })
     },
     onSwipedRight: (eventData) => {
-      // 向右滑动到上一个部分
       const prevSection = document.getElementById("hero")
       prevSection?.scrollIntoView({ behavior: "smooth" })
     },
     preventDefaultTouchmoveEvent: true,
     trackMouse: true
   })
+
+  const modalVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { 
+      opacity: 1, 
+      scale: 1,
+      transition: {
+        duration: 0.3,
+        ease: "easeOut"
+      }
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.95,
+      transition: {
+        duration: 0.2,
+        ease: "easeIn"
+      }
+    }
+  }
 
   return (
     <div 
@@ -157,11 +256,98 @@ const Features: React.FC = () => {
                 <Icon icon='mdi:arrow-right' />
               </motion.div>
             }
+            onPress={() => setShowMoreFeatures(true)}
           >
             探索更多功能
           </Button>
         </ScrollAnimation>
       </div>
+
+      <Modal 
+        isOpen={showMoreFeatures}
+        onClose={() => setShowMoreFeatures(false)}
+        size="5xl"
+        scrollBehavior="inside"
+        backdrop="blur"
+        classNames={{
+          backdrop: "bg-primary-dark/50 backdrop-blur-md",
+          base: "bg-primary-dark/90 border border-white/20",
+          header: "border-b border-white/10",
+          body: "py-6",
+          footer: "border-t border-white/10"
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              <ModalHeader className="flex flex-col gap-1">
+                <h2 className="text-2xl font-bold text-white">场景解决方案</h2>
+                <p className="text-white/60 text-sm">为不同场景提供专业解决方案</p>
+              </ModalHeader>
+              <ModalBody>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {solutions.map((solution, index) => (
+                    <Card 
+                      key={index}
+                      className={`bg-gradient-to-br ${solution.color} hover:scale-105 transition-transform duration-300`}
+                      isPressable
+                      onPress={() => setSelectedSolution(index)}
+                    >
+                      <CardBody className="p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <Icon icon={solution.icon} className="text-3xl text-white" />
+                          <h3 className="text-xl font-bold text-white">{solution.title}</h3>
+                        </div>
+                        <div className="space-y-4">
+                          {solution.scenarios.map((scenario, idx) => (
+                            <div key={idx} className="bg-white/10 rounded-lg p-4">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Icon icon={scenario.icon} className="text-xl text-white" />
+                                <h4 className="font-semibold text-white">{scenario.name}</h4>
+                              </div>
+                              <p className="text-white/80 text-sm mb-3">{scenario.description}</p>
+                              <div className="flex flex-wrap gap-2">
+                                {scenario.features.map((feature, fidx) => (
+                                  <span 
+                                    key={fidx}
+                                    className="text-xs bg-white/20 text-white px-2 py-1 rounded-full"
+                                  >
+                                    {feature}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  color="danger"
+                  variant="light"
+                  onPress={onClose}
+                >
+                  关闭
+                </Button>
+                <Button
+                  className="bg-white text-primary-dark"
+                  onPress={onClose}
+                >
+                  立即体验
+                </Button>
+              </ModalFooter>
+            </motion.div>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   )
 }
