@@ -182,24 +182,24 @@ const hasVisibleChildren = (column: any): boolean => {
 // 递归渲染列显示控制项
 const renderColumnVisibilityItems = (columns: any[], level = 0) => {
   return columns.map((column) => {
+    const columnHeader = typeof column.header === 'function' ? column.id : column.header
+    
     if (column.columns) {
       const isParentVisible = hasVisibleChildren(column)
       return (
         <DropdownMenuSub key={column.id}>
-          <DropdownMenuSubTrigger className="capitalize">
-            <span className="flex items-center gap-2">
-              <Checkbox 
+          <DropdownMenuSubTrigger className='capitalize'>
+            <span className='flex items-center gap-2'>
+              <Checkbox
                 checked={isParentVisible}
                 onCheckedChange={(checked) => handleParentColumnVisibility(column, !!checked)}
               />
-              {column.header}
+              {columnHeader}
             </span>
           </DropdownMenuSubTrigger>
           <DropdownMenuPortal>
-            <DropdownMenuSubContent className="min-w-[8rem]">
-              <div className="pl-2">
-                {renderColumnVisibilityItems(column.columns, level + 1)}
-              </div>
+            <DropdownMenuSubContent className='min-w-[8rem]'>
+              <div className='pl-2'>{renderColumnVisibilityItems(column.columns, level + 1)}</div>
             </DropdownMenuSubContent>
           </DropdownMenuPortal>
         </DropdownMenuSub>
@@ -211,11 +211,11 @@ const renderColumnVisibilityItems = (columns: any[], level = 0) => {
     return (
       <DropdownMenuCheckboxItem
         key={column.id}
-        className="capitalize"
+        className='capitalize'
         checked={column.getIsVisible()}
         onCheckedChange={(value) => column.toggleVisibility(!!value)}
       >
-        {column.header || column.id}
+        {columnHeader}
       </DropdownMenuCheckboxItem>
     )
   })
@@ -231,12 +231,23 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
 }) => {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
   const [globalFilter, setGlobalFilter] = useState("")
   const [showDeleteAlert, setShowDeleteAlert] = useState(false)
   const [showSingleDeleteAlert, setShowSingleDeleteAlert] = useState(false)
   const [deletingRow, setDeletingRow] = useState<any>(null)
+
+  // 初始化所有列为可见
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
+    const allVisible: VisibilityState = {}
+    if (data && data.length > 0) {
+      const flattenedObj = flattenObject(data[0])
+      Object.keys(flattenedObj).forEach(key => {
+        allVisible[key] = true
+      })
+    }
+    return allVisible
+  })
 
   const columns = React.useMemo(() => {
     if (!data || data.length === 0) return []
@@ -452,7 +463,7 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
             <DropdownMenuContent align='end' className='w-[200px]'>
               <DropdownMenuLabel>选择要显示的列</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <ScrollArea className="h-[400px] px-1">
+              <ScrollArea className='h-[400px] px-1'>
                 {table.getAllColumns().length === 0 ? (
                   <div className='p-2 text-sm text-gray-500'>暂无可用列</div>
                 ) : (
