@@ -16,7 +16,6 @@ export const useFormData = () => {
       if (!formDetail) {
         throw new Error("未找到表单数据");
       }
-      debugger
       const formTemplateId = formDetail.templateId;
       if (!formTemplateId) {
         throw new Error("未找到模板ID");
