@@ -110,9 +110,27 @@ export class ValidationManager {
     console.log("[ValidationManager] validateField start:", { field, value, allValues })
 
     // 必填校验
-    if (field.required && (value === undefined || value === null || value === "")) {
-      console.log("[ValidationManager] required field validation failed:", field.name)
-      return `${field.label}不能为空`
+    if (field.required) {
+      if (field.type === 'resource') {
+        // 对resource类型进行特殊处理
+        if (!value || typeof value !== 'object' || Object.keys(value).length === 0) {
+          console.log("[ValidationManager] resource field validation failed - empty value:", field.name)
+          return `${field.label}不能为空`
+        }
+        // 检查资料对象的关键属性是否存在
+        const requiredProps = ['id', 'title'] // 可以根据实际需求调整必需属性
+        const missingProps = requiredProps.filter(prop => !value[prop])
+        if (missingProps.length > 0) {
+          console.log("[ValidationManager] resource field validation failed - missing properties:", {
+            field: field.name,
+            missingProps
+          })
+          return `${field.label}数据不完整`
+        }
+      } else if (value === undefined || value === null || value === "") {
+        console.log("[ValidationManager] required field validation failed:", field.name)
+        return `${field.label}不能为空`
+      }
     }
 
     // 类型校验
@@ -147,9 +165,27 @@ export class ValidationManager {
   static async validateTableCell(column: TableColumn, value: any, row: any): Promise<string | undefined> {
     console.log("[ValidationManager] validateTableCell start:", { column, value, row })
 
-    if (column.required && (value === undefined || value === null || value === "")) {
-      console.log("[ValidationManager] required table cell validation failed:", column.key)
-      return `${column.title}不能为空`
+    if (column.required) {
+      if (column.type === 'resource') {
+        // 对表格中的resource类型进行特殊处理
+        if (!value || typeof value !== 'object' || Object.keys(value).length === 0) {
+          console.log("[ValidationManager] table resource cell validation failed:", column.key)
+          return `${column.title}不能为空`
+        }
+        // 检查资料对象的关键属性是否存在
+        const requiredProps = ['id', 'title']
+        const missingProps = requiredProps.filter(prop => !value[prop])
+        if (missingProps.length > 0) {
+          console.log("[ValidationManager] table resource cell validation failed - missing properties:", {
+            column: column.key,
+            missingProps
+          })
+          return `${column.title}数据不完整`
+        }
+      } else if (value === undefined || value === null || value === "") {
+        console.log("[ValidationManager] required table cell validation failed:", column.key)
+        return `${column.title}不能为空`
+      }
     }
 
     // 类型校验
@@ -173,6 +209,15 @@ export class ValidationManager {
     if (!value) return undefined
 
     switch (type) {
+      case "resource":
+        if (value && typeof value === "object") {
+          // 资料类型的基本格式验证
+          if (!value.id || !value.title) {
+            console.log("[ValidationManager] resource validation failed - invalid format")
+            return "资料数据格式无效"
+          }
+        }
+        break
       case "signature":
         if (typeof value === "string" && /^data:image\/[a-z]+;base64,/.test(value)) {
           return undefined
@@ -232,7 +277,7 @@ export class ValidationManager {
     } = {}
 
     Object.entries(errors).forEach(([field, error]) => {
-      if (error.includes("不能为空")) {
+      if (error.includes("不能为空") || error.includes("数据不完整")) {
         categorized.required = categorized.required || []
         categorized.required.push({
           field,
