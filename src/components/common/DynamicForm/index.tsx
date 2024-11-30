@@ -252,7 +252,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           }
         }
         setIsUpdating(new Date().getTime())
-        message.success("提交成功")
       } catch (error) {
         console.error("Form submission error:", error)
         message.error("提交失败，请重试")

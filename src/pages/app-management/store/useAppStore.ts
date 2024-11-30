@@ -225,7 +225,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
             // 关闭模态框
             get().setDevelopModalOpen(false)
             get().setSelectedApp(null)
-            message.success("应用配置更新成功")
           } catch (error) {
             // 如果保存失败，回滚缓存
             queryClient.setQueryData(QUERY_KEYS.apps, currentData)
