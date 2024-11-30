@@ -69,7 +69,22 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
         }
       case "number":
         return typeof value === "number" ? value.toFixed(2) : "____________"
+      case "resource":
+        if (typeof value === "object" && value !== null) {
+          // 如果是资源对象，返回其名称或标题字段，如果都没有则返回 JSON 字符串
+          return value.name || value.title || JSON.stringify(value)
+        }
+        return value || "____________"
       default:
+        if (typeof value === "object" && value !== null) {
+          try {
+            // 对于对象类型，尝试获取常用的显示字段，如果都没有则转为 JSON 字符串
+            return value.name || value.title || value.label || value.value || JSON.stringify(value)
+          } catch (error) {
+            console.error("Error formatting object value:", error)
+            return "____________"
+          }
+        }
         return value || "____________"
     }
   }
