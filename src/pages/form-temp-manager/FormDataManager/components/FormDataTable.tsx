@@ -181,6 +181,7 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
           </DropdownMenuContent>
         </DropdownMenu>
       ),
+      enablePinning: true,
     }
 
     // 生成数据列配置
@@ -198,6 +199,10 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
       columnVisibility,
       rowSelection,
       globalFilter,
+      columnPinning: {
+        left: ["select"],
+        right: ["actions"],
+      },
     },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
@@ -371,7 +376,7 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
       {/* 分页 */}
       <div className='flex items-center justify-between space-x-2 py-4'>
         <div className='flex-1 text-sm text-muted-foreground'>
-          {table.getFilteredSelectedRowModel().rows.length} 条已选择，共 {table.getFilteredRowModel().rows.length} 条
+          {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} 行选中
         </div>
         <div className='space-x-2'>
           <Button
