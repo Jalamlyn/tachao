@@ -70,26 +70,66 @@ const Dashboard: React.FC = () => {
 
   const recentActivities = [
     {
-      title: "功能开发中",
-      time: "敬请期待",
-      type: "development",
-      user: "系统",
-      avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024e",
+      id: "1",
+      title: "新的数据同步请求",
+      description: "来自销售部门的数据同步申请需要您的审批",
+      time: "10分钟前",
+      type: "sync",
+      status: "pending",
+      priority: "high",
+      department: "销售部",
+      user: "张经理",
+      avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
     },
+    {
+      id: "2", 
+      title: "系统权限申请",
+      description: "人力资源部门请求访问表单管理系统的权限",
+      time: "30分钟前",
+      type: "auth",
+      status: "pending",
+      priority: "medium",
+      department: "人力资源",
+      user: "李主管",
+      avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024c",
+    },
+    {
+      id: "3",
+      title: "报表访问授权",
+      description: "财务部门申请查看月度销售报表的权限",
+      time: "2小时前",
+      type: "report",
+      status: "pending",
+      priority: "low",
+      department: "财务部",
+      user: "王总监",
+      avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024b",
+    }
   ]
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case "development":
-        return "solar:code-square-linear"
-      case "update":
-        return "solar:pen-new-square-linear"
-      case "create":
-        return "solar:add-circle-linear"
+      case "sync":
+        return "solar:refresh-circle-linear"
+      case "auth":
+        return "solar:shield-user-linear"
       case "report":
-        return "solar:chart-2-linear"
+        return "solar:document-lock-linear"
       default:
         return "solar:info-circle-linear"
+    }
+  }
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "high":
+        return "danger"
+      case "medium":
+        return "warning"
+      case "low":
+        return "primary"
+      default:
+        return "default"
     }
   }
 
@@ -214,9 +254,10 @@ const Dashboard: React.FC = () => {
         >
           <Card className='hover:shadow-lg transition-all duration-300'>
             <CardHeader className='flex gap-3 px-6 pt-6'>
+              <Icon icon='solar:bell-bing-linear' className='w-6 h-6 text-primary' />
               <div className='flex flex-col'>
-                <p className='text-lg font-semibold'>最近活动</p>
-                <p className='text-small text-default-500'>系统最新动态</p>
+                <p className='text-lg font-semibold'>待处理事项</p>
+                <p className='text-small text-default-500'>需要您审批或处理的任务</p>
               </div>
             </CardHeader>
             <CardBody>
@@ -227,42 +268,40 @@ const Dashboard: React.FC = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className='flex items-center gap-4 p-4 rounded-lg hover:bg-default-100 transition-all'
+                    className='flex items-start gap-4 p-4 rounded-lg hover:bg-default-100 transition-all border-b last:border-b-0'
                   >
                     <div className='relative'>
                       <img src={activity.avatar} alt={activity.user} className='w-10 h-10 rounded-full' />
                       <div
-                        className={`absolute -bottom-1 -right-1 p-1 rounded-full bg-${activity.type === "development" ? "warning" : activity.type === "update" ? "primary" : activity.type === "create" ? "success" : "warning"}/10`}
+                        className={`absolute -bottom-1 -right-1 p-1 rounded-full bg-${getPriorityColor(activity.priority)}/10`}
                       >
                         <Icon
                           icon={getActivityIcon(activity.type)}
-                          className={`w-4 h-4 text-${activity.type === "development" ? "warning" : activity.type === "update" ? "primary" : activity.type === "create" ? "success" : "warning"}`}
+                          className={`w-4 h-4 text-${getPriorityColor(activity.priority)}`}
                         />
                       </div>
                     </div>
                     <div className='flex-1'>
-                      <div className='flex items-center gap-2'>
-                        <p className='font-medium'>{activity.title}</p>
-                        <Chip
-                          size='sm'
-                          variant='flat'
-                          color={
-                            activity.type === "development"
-                              ? "warning"
-                              : activity.type === "update"
-                                ? "primary"
-                                : activity.type === "create"
-                                  ? "success"
-                                  : "warning"
-                          }
-                        >
-                          {activity.type}
-                        </Chip>
+                      <div className='flex items-center justify-between'>
+                        <div className='flex items-center gap-2'>
+                          <p className='font-medium'>{activity.title}</p>
+                          <Chip
+                            size='sm'
+                            variant='flat'
+                            color={getPriorityColor(activity.priority)}
+                          >
+                            {activity.priority === 'high' ? '紧急' : activity.priority === 'medium' ? '普通' : '低优先级'}
+                          </Chip>
+                        </div>
+                        <span className='text-small text-default-400'>{activity.time}</span>
                       </div>
-                      <div className='flex items-center gap-2 text-small text-default-500'>
-                        <span>{activity.time}</span>
-                        <span>•</span>
-                        <span>{activity.user}</span>
+                      <p className='text-small text-default-500 mt-1'>{activity.description}</p>
+                      <div className='flex items-center gap-2 mt-2'>
+                        <Chip size='sm' variant='flat' color='default'>
+                          {activity.department}
+                        </Chip>
+                        <span className='text-small text-default-400'>•</span>
+                        <span className='text-small text-default-500'>{activity.user}</span>
                       </div>
                     </div>
                   </motion.div>
