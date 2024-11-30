@@ -1,12 +1,5 @@
 import React, { useState } from "react"
-import {
-  Card,
-  CardBody,
-  CardFooter,
-  Button,
-  useDisclosure,
-  Chip,
-} from "@nextui-org/react"
+import { Card, CardBody, CardFooter, Button, useDisclosure, Chip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import message from "@/components/Message"
@@ -20,29 +13,33 @@ import EditTagsModal from "@/components/EditTagsModal"
 import { useMetadata } from "@/hooks/useMetadata"
 import { useTagManagement } from "@/hooks/useTagManagement"
 import { useTagStore } from "@/stores/useTagStore"
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  DropdownSection,
+} from "@nextui-org/react"
 
-interface Report {
+export interface Template {
   id: string
   title: string
   status: string
   updatedAt: string
 }
 
-interface ReportGalleryProps {
-  onReportSelect: (reportId: string) => void
-  onCreateReport?: () => void
+interface TemplateGalleryProps {
+  onTemplateSelect: (templateId: string) => void
   className?: string
 }
 
-const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateReport, className }) => {
+const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, className }) => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const { isOpen: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure()
-  const [selectedReport, setSelectedReport] = React.useState<Report | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = React.useState<Template | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [internalReports, setInternalReports] = useState<Report[]>([])
-  const { remove, load, update } = useMetadata("report")
-  const { items: templates = [], load: loadTemplates } = useMetadata("template")
+  const [internalTemplates, setInternalTemplates] = useState<Template[]>([])
   const [isRenameModalOpen, setIsRenameModalOpen] = useState(false)
   const [searchValue, setSearchValue] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -56,7 +53,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
     getItemTags,
     loadTagsIndex,
     updateItemTags,
-  } = useTagManagement("report")
+  } = useTagManagement("template")
 
   const tagsVersion = useTagStore((state) => state.tagsVersion)
 
@@ -66,92 +63,84 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
     }
   }, [tagsVersion])
 
-  const loadReports = async () => {
+  const { remove, load, update } = useMetadata("template")
+
+  const loadTemplates = async () => {
     try {
       setIsLoading(true)
       const result = await load()
       if (result) {
-        setInternalReports(result)
+        setInternalTemplates(result)
       }
     } catch (error) {
-      console.error("加载报表列表失败:", error)
-      message.error("加载报表列表失败")
+      console.error("加载模板列表失败:", error)
+      message.error("加载模板列表失败")
     } finally {
       setIsLoading(false)
     }
   }
 
   React.useEffect(() => {
-    loadReports()
     loadTemplates()
   }, [])
 
   const handleDeleteConfirm = async () => {
-    if (selectedReport) {
+    if (selectedTemplate) {
       try {
-        await remove(selectedReport.id)
+        await remove(selectedTemplate.id)
         onClose()
-        await loadReports()
+        await loadTemplates()
       } catch (error) {
-        console.error("删除报表失败:", error)
-        message.error("删除报表失败")
+        console.error("删除模板失败:", error)
+        message.error("删除模板失败")
       }
     }
   }
 
-  const handleDeleteClick = (report: Report, e: React.MouseEvent) => {
+  const handleDeleteClick = (template: Template, e: React.MouseEvent) => {
     e.stopPropagation()
-    setSelectedReport(report)
+    setSelectedTemplate(template)
     onOpen()
   }
 
-  const handleShareClick = (report: Report, e: React.MouseEvent) => {
+  const handleShareClick = (template: Template, e: React.MouseEvent) => {
     e.stopPropagation()
-    setSelectedReport(report)
+    setSelectedTemplate(template)
     onShareOpen()
   }
 
-  const handleAIAnalysisClick = async (report: Report, e: React.MouseEvent) => {
+  const handleAIEditClick = async (template: Template, e: React.MouseEvent) => {
     e.stopPropagation()
-    navigate(`/we-chat-app/admin/reports/ai/${report.id}`, {
-      state: {
-        title: report.title,
-      },
-    })
+    navigate(`/we-chat-app/admin/documents/edit/${template.id}`, { state: { title: template.title } })
   }
 
-  const handleRenameClick = (report: Report, e: React.MouseEvent) => {
+  const handleRenameClick = (template: Template, e: React.MouseEvent) => {
     e.stopPropagation()
-    setSelectedReport(report)
+    setSelectedTemplate(template)
     setIsRenameModalOpen(true)
   }
 
-  const handleEditTagsClick = (report: Report, e: React.MouseEvent) => {
+  const handleEditTagsClick = (template: Template, e: React.MouseEvent) => {
     e.stopPropagation()
-    setSelectedReport(report)
+    setSelectedTemplate(template)
     setIsEditTagsModalOpen(true)
   }
 
-  const handleDataManageClick = (report: Report, e: React.MouseEvent) => {
+  const handleDataManageClick = (template: Template, e: React.MouseEvent) => {
     e.stopPropagation()
-    navigate(`/we-chat-app/admin/templates/${report.id}/data`, {
-      state: {
-        title: report.title,
-        templateId: report.id,
-      },
-    })
+    navigate(`/we-chat-app/admin/documents/data/${template.id}`, { state: { title: template.title } })
   }
 
   const handleRename = async (newTitle: string) => {
-    if (!selectedReport) return
+    if (!selectedTemplate) return
 
     try {
-      await update(selectedReport.id, {
+      await update(selectedTemplate.id, {
         title: newTitle,
       })
-      await loadReports()
+      await loadTemplates()
     } catch (error) {
-      console.error("重命名报表失败:", error)
+      console.error("重命名模板失败:", error)
       throw error
     }
   }
@@ -160,10 +149,10 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
     setSelectedTags([])
   }
 
-  const handleUpdateTags = async (reportId: string, tagIds: string[]) => {
+  const handleUpdateTags = async (templateId: string, tagIds: string[]) => {
     try {
-      await updateItemTags(reportId, tagIds)
-      await loadReports()
+      await updateItemTags(templateId, tagIds)
+      await loadTemplates()
     } catch (error) {
       console.error("Error updating tags:", error)
       message.error("更新标签失败")
@@ -171,19 +160,19 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
     }
   }
 
-  const renderCard = (report: Report) => (
-    <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onReportSelect(report.id)}>
+  const renderCard = (template: Template) => (
+    <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onTemplateSelect(template.id)}>
       <CardBody className='p-0 relative overflow-hidden'>
-        <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-red-100 to-red-50 group-hover:scale-105 transition-transform duration-300'>
+        <div className='w-full h-[160px] flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 group-hover:scale-105 transition-transform duration-300'>
           <Icon
-            icon='mdi:file-chart'
-            className='w-16 h-16 text-red-400 group-hover:scale-110 transition-transform duration-300'
+            icon='fluent:document-add-48-regular'
+            className='w-16 h-16 text-primary-400 group-hover:scale-110 transition-transform duration-300'
           />
         </div>
         {/* 标签显示在右上角 */}
         <div className='absolute top-2 right-2 z-10 flex flex-wrap gap-1 max-w-[70%] justify-end'>
           {tagsIndex &&
-            getItemTags(report.id).map((tag) => (
+            getItemTags(template.id).map((tag) => (
               <Chip
                 key={tag.id}
                 size='sm'
@@ -199,10 +188,10 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
       <CardFooter className='flex flex-col gap-3 px-4 py-3 bg-white'>
         <div className='flex justify-between items-center w-full'>
           <h4
-            className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-red-500 transition-colors duration-300'
-            title={report.title}
+            className='text-lg font-medium text-foreground truncate max-w-[200px] group-hover:text-primary transition-colors duration-300'
+            title={template.title}
           >
-            {report.title}
+            {template.title}
           </h4>
         </div>
         <div className='flex justify-between items-center w-full'>
@@ -211,73 +200,111 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
               isIconOnly
               size='sm'
               variant='light'
-              className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
-              onClick={(e) => handleShareClick(report, e)}
-            >
-              <Icon icon='mdi:share' className='w-4 h-4' />
-            </Button>
-            <Button
-              isIconOnly
-              size='sm'
-              variant='light'
-              className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
-              onClick={(e) => handleRenameClick(report, e)}
-            >
-              <Icon icon='mdi:pencil' className='w-4 h-4' />
-            </Button>
-            <Button
-              isIconOnly
-              size='sm'
-              variant='light'
-              className='text-default-400 hover:text-red-500 hover:bg-red-50 transition-colors duration-300'
-              onClick={(e) => handleAIAnalysisClick(report, e)}
+              className='text-default-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-300'
+              onClick={(e) => handleAIEditClick(template, e)}
             >
               <Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />
             </Button>
-            <Button
-              isIconOnly
-              size='sm'
-              variant='light'
-              className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
-              onClick={(e) => handleEditTagsClick(report, e)}
-            >
-              <Icon icon='mdi:tag-multiple' className='w-4 h-4' />
-            </Button>
-            <Button
-              isIconOnly
-              size='sm'
-              variant='light'
-              className='text-default-400 hover:text-blue-500 hover:bg-blue-50 transition-colors duration-300'
-              onClick={(e) => handleDataManageClick(report, e)}
-              title="数据管理"
-            >
-              <Icon icon='mdi:database' className='w-4 h-4' />
-            </Button>
-            <Button
-              isIconOnly
-              size='sm'
-              variant='light'
-              className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
-              onClick={(e) => handleDeleteClick(report, e)}
-            >
-              <Icon icon='mdi:delete' className='w-4 h-4' />
-            </Button>
+
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  isIconOnly
+                  size='sm'
+                  variant='light'
+                  className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+                >
+                  <Icon icon='mdi:dots-vertical' className='w-4 h-4' />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label='模板操作'>
+                <DropdownSection title='常用操作'>
+                  <DropdownItem
+                    key='data'
+                    startContent={<Icon icon='mdi:database' className='w-4 h-4' />}
+                    onClick={(e) => handleDataManageClick(template, e)}
+                  >
+                    数据管理
+                  </DropdownItem>
+                  <DropdownItem
+                    key='share'
+                    startContent={<Icon icon='mdi:share' className='w-4 h-4' />}
+                    onClick={(e) => handleShareClick(template, e)}
+                  >
+                    分享
+                  </DropdownItem>
+                </DropdownSection>
+                <DropdownSection title='模板设置'>
+                  <DropdownItem
+                    key='rename'
+                    startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
+                    onClick={(e) => handleRenameClick(template, e)}
+                  >
+                    重命名
+                  </DropdownItem>
+                  <DropdownItem
+                    key='tags'
+                    startContent={<Icon icon='mdi:tag-multiple' className='w-4 h-4' />}
+                    onClick={(e) => handleEditTagsClick(template, e)}
+                  >
+                    标签管理
+                  </DropdownItem>
+                </DropdownSection>
+                <DropdownSection title='危险操作'>
+                  <DropdownItem
+                    key='delete'
+                    className='text-danger'
+                    color='danger'
+                    startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
+                    onClick={(e) => handleDeleteClick(template, e)}
+                  >
+                    删除
+                  </DropdownItem>
+                </DropdownSection>
+              </DropdownMenu>
+            </Dropdown>
           </div>
         </div>
       </CardFooter>
     </Card>
   )
 
-  const loadingState = (
-    <div className='flex items-center justify-center min-h-[400px]'>
-      <div className='flex flex-col items-center gap-4'>
-        <Icon icon='eos-icons:loading' className='w-10 h-10 text-primary animate-spin' />
-        <span className='text-default-500'>加载中...</span>
-      </div>
-    </div>
-  )
+  const renderEmptyState = () => {
+    if (selectedTags.length > 0) {
+      const tagNames = selectedTags
+        .map((tagId) => tagsIndex?.tags.find((tag) => tag.id === tagId)?.name)
+        .filter(Boolean)
+        .join("、")
 
-  const hasTemplates = templates.length > 0
+      return (
+        <EmptyState
+          type='no-data'
+          title={`未找到匹配的表单模板`}
+          description={
+            <div className='space-y-2'>
+              <p>当前筛选标签：{tagNames}</p>
+              <Button color='primary' variant='flat' onClick={handleClearTags}>
+                清除筛选
+              </Button>
+            </div>
+          }
+          icon={<Icon icon='mdi:filter-off' className='w-32 h-32 text-default-600' />}
+        />
+      )
+    }
+
+    return (
+      <EmptyState
+        type='no-data'
+        title='还没有表单模板'
+        description='创建你的第一个表单模板，AI 助手会帮助你快速生成专业的表单'
+        action={{
+          text: "去创建",
+          onClick: () => navigate("/we-chat-app/admin/documents/create"),
+        }}
+      />
+    )
+  }
 
   const renderHeader = ({ value, onChange, placeholder }) => (
     <div className='space-y-4'>
@@ -318,11 +345,13 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
           )}
           <div className='flex flex-wrap items-center gap-2 min-h-[40px] p-2 rounded-lg bg-default-50'>
             {tagsIndex.tags
-              .filter((tag) => tag.type === "report")
+              .filter((tag) => tag.type === "template")
               .map((tag) => (
                 <Chip
                   key={`${tag.id}-${tagsVersion}`}
-                  startContent={selectedTags.includes(tag.id) && <Icon className='ml-2 w-5 h-5' icon='line-md:check-all' />}
+                  startContent={
+                    selectedTags.includes(tag.id) && <Icon className='ml-2 w-5 h-5' icon='line-md:check-all' />
+                  }
                   onClick={() => {
                     setSelectedTags((prev) =>
                       prev.includes(tag.id) ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
@@ -332,7 +361,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
                 >
                   <div className='flex justify-center items-center'>
                     {tag.name}
-                    <span className='ml-2 text-xs'>({tagsIndex.relations.report.byTag[tag.id]?.length || 0})</span>
+                    <span className='ml-2 text-xs'>({tagsIndex.relations.template.byTag[tag.id]?.length || 0})</span>
                   </div>
                 </Chip>
               ))}
@@ -345,76 +374,65 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
   return (
     <>
       <CardGallery
-        items={internalReports}
+        items={internalTemplates}
         renderCard={renderCard}
-        emptyState={
-          <EmptyState
-            type="no-data"
-            title={hasTemplates ? "还没有报表" : "还没有可用的数据源"}
-            description={
-              hasTemplates 
-                ? "选择一个表单模板开始创建你的第一个报表"
-                : "创建报表前需要先创建表单模板作为数据源"
-            }
-            action={{
-              text: hasTemplates ? "去创建" : "去创建模板",
-              onClick: hasTemplates ? onCreateReport : () => navigate("/we-chat-app/admin/documents")
-            }}
-          />
+        emptyState={renderEmptyState()}
+        loadingState={
+          <div className='flex items-center justify-center min-h-[400px]'>
+            <div className='flex flex-col items-center gap-4'>
+              <Icon icon='eos-icons:loading' className='w-10 h-10 text-primary animate-spin' />
+              <span className='text-default-500'>加载中...</span>
+            </div>
+          </div>
         }
-        loadingState={loadingState}
-        isLoading={isLoading}
+        isLoading={isLoading || tagsLoading}
         containerClassName='h-[calc(100vh-200px)]'
         className={className}
         searchable
         searchFields={["title"]}
-        searchPlaceholder='搜索报表名称...'
+        searchPlaceholder='搜索模板名称...'
         onSearch={setSearchValue}
-        customSearch={(report, value) => report.title.toLowerCase().includes(value.toLowerCase())}
+        customSearch={(template, value) => template.title.toLowerCase().includes(value.toLowerCase())}
         renderHeader={renderHeader}
       />
 
       <ConfirmModal
-        type="delete"
+        type='delete'
         isOpen={isOpen}
         onClose={onClose}
-        content={`确定要删除报表 "${selectedReport?.title}" 吗？此操作不可撤销。`}
+        content={`确定要删除模板 "${selectedTemplate?.title}" 吗？此操作不可撤销。`}
         onConfirm={handleDeleteConfirm}
       />
 
       <ShareModal
         isOpen={isShareOpen}
         onClose={onShareClose}
-        shareUrl={`${window.location.origin}/report/${selectedReport?.id || ""}`}
+        shareUrl={`${window.location.origin}/form-preview/${selectedTemplate?.id || ""}`}
       />
 
       <RenameModal
         isOpen={isRenameModalOpen}
         onClose={() => {
           setIsRenameModalOpen(false)
-          setSelectedReport(null)
+          setSelectedTemplate(null)
         }}
-        initialName={selectedReport?.title || ""}
+        initialName={selectedTemplate?.title || ""}
         onRename={handleRename}
-        title="重命名报表"
-        inputLabel="报表名称" 
-        inputPlaceholder="请输入新的报表名称"
+        title='重命名模板'
+        inputLabel='模板名称'
+        inputPlaceholder='请输入新的模板名称'
       />
 
-      <TagManageModal
-        isOpen={isTagManageModalOpen}
-        onClose={() => setIsTagManageModalOpen(false)}
-        type="report"
-      />
+      <TagManageModal isOpen={isTagManageModalOpen} onClose={() => setIsTagManageModalOpen(false)} type='template' />
 
       <EditTagsModal
         isOpen={isEditTagsModalOpen}
         onClose={() => {
           setIsEditTagsModalOpen(false)
-          setSelectedReport(null)
+          setSelectedTemplate(null)
         }}
-        item={selectedReport}
-        type="report"
+        item={selectedTemplate}
+        type='template'
         tagsIndex={tagsIndex}
         onUpdateTags={handleUpdateTags}
       />
@@ -422,4 +440,4 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
   )
 }
 
-export default ReportGallery
+export default TemplateGallery
