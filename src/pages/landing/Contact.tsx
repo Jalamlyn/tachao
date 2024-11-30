@@ -25,8 +25,8 @@ const Contact: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="text-white/90">
                   <Icon icon="mdi:rocket-launch" className="text-3xl mb-2 text-blue-400" />
-                  <h3 className="font-bold mb-1">快速部署</h3>
-                  <p className="text-sm text-white/70">10分钟完成配置</p>
+                  <h3 className="font-bold mb-1">10分钟部署</h3>
+                  <p className="text-sm text-white/70">快速上手使用</p>
                 </div>
                 <div className="text-white/90">
                   <Icon icon="mdi:shield-check" className="text-3xl mb-2 text-green-400" />
@@ -35,8 +35,8 @@ const Contact: React.FC = () => {
                 </div>
                 <div className="text-white/90">
                   <Icon icon="mdi:headphones" className="text-3xl mb-2 text-purple-400" />
-                  <h3 className="font-bold mb-1">专业支持</h3>
-                  <p className="text-sm text-white/70">7x24小时服务</p>
+                  <h3 className="font-bold mb-1">专属支持</h3>
+                  <p className="text-sm text-white/70">一对一指导服务</p>
                 </div>
               </div>
 
@@ -59,8 +59,19 @@ const Contact: React.FC = () => {
               </div>
 
               {/* 补充信息 */}
-              <div className="mt-8 text-white/60 text-sm">
-                <p>无需信用卡 · 14天免费试用 · 专业技术支持</p>
+              <div className="mt-8 text-white/60 text-sm space-y-2">
+                <p className="flex items-center justify-center gap-2">
+                  <Icon icon="mdi:star" className="text-yellow-400" />
+                  无需信用卡 · 14天免费试用
+                </p>
+                <p className="flex items-center justify-center gap-2">
+                  <Icon icon="mdi:rocket-launch" className="text-blue-400" />
+                  10分钟快速部署 · 专属客服指导
+                </p>
+                <p className="flex items-center justify-center gap-2">
+                  <Icon icon="mdi:diamond" className="text-purple-400" />
+                  初创企业特惠 · 灵活扩展方案
+                </p>
               </div>
             </CardBody>
           </Card>

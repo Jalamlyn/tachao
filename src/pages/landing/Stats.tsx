@@ -1,12 +1,37 @@
 import React from "react"
 import { motion } from "framer-motion"
 import { Card } from "@nextui-org/react"
+import { Icon } from "@iconify/react"
 
 const stats = [
-  { number: "1000+", label: "企业客户", description: "持续信赖与支持" },
-  { number: "100万+", label: "表单生成", description: "智能高效处理" },
-  { number: "98%", label: "数据准确率", description: "AI智能校验" },
-  { number: "75%", label: "效率提升", description: "显著降低人工成本" },
+  { 
+    number: "75%", 
+    label: "效率提升", 
+    description: "AI智能化管理",
+    icon: "mdi:trending-up",
+    color: "text-green-400"
+  },
+  { 
+    number: "98%", 
+    label: "数据准确率", 
+    description: "智能校验保障",
+    icon: "mdi:shield-check",
+    color: "text-blue-400"
+  },
+  { 
+    number: "50%", 
+    label: "成本节省", 
+    description: "降低人工成本",
+    icon: "mdi:currency-usd",
+    color: "text-purple-400"
+  },
+  { 
+    number: "10分钟", 
+    label: "快速部署", 
+    description: "即刻开始使用",
+    icon: "mdi:rocket-launch",
+    color: "text-pink-400"
+  }
 ]
 
 const Stats: React.FC = () => {
@@ -27,6 +52,10 @@ const Stats: React.FC = () => {
                 whileHover={{ scale: 1.05 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
+                <Icon 
+                  icon={stat.icon} 
+                  className={`text-3xl ${stat.color} mb-4 mx-auto`}
+                />
                 <h3 className='text-3xl md:text-4xl font-bold text-white mb-2'>{stat.number}</h3>
                 <p className='text-white/80 font-medium mb-1'>{stat.label}</p>
                 <p className='text-white/60 text-sm'>{stat.description}</p>
@@ -41,10 +70,13 @@ const Stats: React.FC = () => {
           whileInView={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
           viewport={{ once: true }}
-          className="text-center mt-12"
+          className="text-center mt-12 space-y-2"
         >
           <p className="text-white/70 text-sm">
-            数据统计截至 2024 年 1 月
+            基于行业平均水平估算
+          </p>
+          <p className="text-white/60 text-xs">
+            实际效果可能因企业情况而异
           </p>
         </motion.div>
       </div>

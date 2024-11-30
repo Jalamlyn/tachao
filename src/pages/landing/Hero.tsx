@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { motion, useScroll, useTransform, useSpring } from "framer-motion"
 import { Button } from "@nextui-org/react"
+import { Icon } from "@iconify/react"
 import { useSwipeable } from "react-swipeable"
 
 interface HeroProps {
@@ -160,16 +161,16 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         <motion.div variants={itemVariants} className="space-y-4">
           <div className="flex flex-wrap justify-center gap-4 text-white/80">
             <div className="flex items-center space-x-2">
-              <span className="text-green-400">✓</span>
-              <span>智能表单自动生成</span>
+              <Icon icon="mdi:robot" className="text-blue-400" />
+              <span>AI智能助手</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-green-400">✓</span>
-              <span>数据分析决策支持</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-green-400">✓</span>
+              <Icon icon="mdi:trending-up" className="text-green-400" />
               <span>效率提升75%</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Icon icon="mdi:rocket-launch" className="text-purple-400" />
+              <span>10分钟部署</span>
             </div>
           </div>
         </motion.div>
@@ -202,9 +203,20 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           variants={itemVariants}
           className="mt-8 md:mt-12"
         >
-          <p className="text-white/60 text-sm mb-2">已被1000+企业信赖</p>
-          <div className="flex justify-center items-center gap-6 opacity-50">
-            <span className="text-white text-xs">合作伙伴徽标展示区</span>
+          <p className="text-white/60 text-sm mb-4">创新技术，值得信赖</p>
+          <div className="flex justify-center items-center gap-6">
+            <div className="text-white/70 text-sm flex items-center gap-2">
+              <Icon icon="mdi:shield-check" className="text-green-400" />
+              安全可靠
+            </div>
+            <div className="text-white/70 text-sm flex items-center gap-2">
+              <Icon icon="mdi:rocket-launch" className="text-blue-400" />
+              持续创新
+            </div>
+            <div className="text-white/70 text-sm flex items-center gap-2">
+              <Icon icon="mdi:24-hours" className="text-purple-400" />
+              专业支持
+            </div>
           </div>
         </motion.div>
       </motion.div>
