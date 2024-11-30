@@ -33,6 +33,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   const [isLoading, setIsLoading] = useState(false)
   const { getDetail, create: createMetadata, update: updateMetadata } = useMetadata("form")
   const { getDetail: getTemplateDetail } = useMetadata("template")
+  const [isUpdating, setIsUpdating] = useState(0)
   const [formValues, setFormValues] = useState<any>(null)
   const [validationErrors, setValidationErrors] = useState<{
     required?: Array<{ field: string; message: string }>
@@ -219,6 +220,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
         if (onSubmit) {
           await onSubmit(validationResult!, values)
+          setIsUpdating(new Date().getTime())
           // 提交成功后重置表单
           form.reset()
           return
@@ -327,6 +329,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               fieldName={orderNumberConfig.fieldName}
               label={orderNumberConfig.label}
               disabled={!isEditing}
+              isUpdating={isUpdating}
             />
           </div>
           <DynamicFormFields fields={renderConfig.basicFields} form={form} isEditable={isEditing} />

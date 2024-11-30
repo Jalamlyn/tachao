@@ -284,7 +284,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
             // 关闭删除确认框
             get().setDeleteModalOpen(false)
             get().setAppToDelete(null)
-            message.success("应用删除成功")
           } catch (error) {
             // 如果保存失败，回滚缓存
             queryClient.setQueryData(QUERY_KEYS.apps, currentData)

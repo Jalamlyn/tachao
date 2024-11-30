@@ -70,7 +70,7 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
     try {
       // TODO: 替换为实际的API调用
       // 模拟API延迟
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000))
       set({ tasks: mockTasks })
     } catch (error) {
       console.error("Error loading tasks:", error)
@@ -82,16 +82,13 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
   updateTaskStatus: async (taskId, status) => {
     try {
       // TODO: 替换为实际的API调用
-      await new Promise(resolve => setTimeout(resolve, 500))
-      set(state => ({
-        tasks: state.tasks.map(task =>
-          task.id === taskId ? { ...task, status } : task
-        )
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      set((state) => ({
+        tasks: state.tasks.map((task) => (task.id === taskId ? { ...task, status } : task)),
       }))
-      message.success("更新任务状态成功")
     } catch (error) {
       console.error("Error updating task status:", error)
       message.error("更新任务状态失败")
     }
-  }
+  },
 }))

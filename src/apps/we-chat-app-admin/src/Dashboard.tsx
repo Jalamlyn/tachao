@@ -1,11 +1,11 @@
 import React, { useEffect } from "react"
-import { Card, CardBody, CardHeader, Button, Chip } from "@nextui-org/react"
+import { Card, CardBody, CardHeader, Button, Chip, ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { motion, AnimatePresence } from "framer-motion"
 import { useMetadata } from "@/hooks/metadata"
-import { usePendingTasksStore } from "@/stores/usePendingTasksStore"
+import { usePendingTasksStore } from "@/pages/pending-tasks/store/usePendingTasksStore"
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
@@ -19,16 +19,10 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     updateBreadcrumbs([{ label: "首页", href: "/we-chat-app/admin" }])
   }, [])
-  
+
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([
-        loadForms(),
-        loadReports(),
-        loadResources(),
-        loadApps(),
-        loadTasks()
-      ])
+      await Promise.all([loadForms(), loadReports(), loadResources(), loadApps(), loadTasks()])
     }
     loadData()
   }, [loadForms, loadReports, loadResources, loadApps, loadTasks])
@@ -226,67 +220,69 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
               <Button
-                variant="light"
-                color="primary"
-                size="sm"
-                endContent={<Icon icon="solar:arrow-right-linear" />}
+                variant='light'
+                color='primary'
+                size='sm'
+                endContent={<Icon icon='solar:arrow-right-linear' />}
                 onPress={() => navigate("/we-chat-app/admin/pending-tasks")}
               >
                 查看更多
               </Button>
             </CardHeader>
-            <CardBody>
-              <AnimatePresence>
-                {tasks.slice(0, 3).map((activity, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className='flex items-start gap-4 p-4 hover:bg-default-100 transition-all border-b last:border-b-0'
-                  >
-                    <div className='relative'>
-                      <img src={activity.avatar} alt={activity.user} className='w-10 h-10 rounded-full' />
-                      <div
-                        className={`absolute -bottom-1 -right-1 p-1 rounded-full bg-${getPriorityColor(activity.priority)}/10`}
-                      >
-                        <Icon
-                          icon={getActivityIcon(activity.type)}
-                          className={`w-4 h-4 text-${getPriorityColor(activity.priority)}`}
-                        />
-                      </div>
-                    </div>
-                    <div className='flex-1'>
-                      <div className='flex items-center justify-between'>
-                        <div className='flex items-center gap-2'>
-                          <p className='font-medium'>{activity.title}</p>
-                          <Chip
-                            size='sm'
-                            variant='flat'
-                            color={getPriorityColor(activity.priority)}
-                          >
-                            {activity.priority === 'high' ? '紧急' : activity.priority === 'medium' ? '普通' : '低优先级'}
-                          </Chip>
+            <CardBody className='max-h-60'>
+              <ScrollShadow>
+                <AnimatePresence>
+                  {tasks.slice(0, 3).map((activity, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className='flex items-start gap-4 p-4 hover:bg-default-100 transition-all border-b last:border-b-0'
+                    >
+                      <div className='relative'>
+                        <img src={activity.avatar} alt={activity.user} className='w-10 h-10 rounded-full' />
+                        <div
+                          className={`absolute -bottom-1 -right-1 p-1 rounded-full bg-${getPriorityColor(activity.priority)}/10`}
+                        >
+                          <Icon
+                            icon={getActivityIcon(activity.type)}
+                            className={`w-4 h-4 text-${getPriorityColor(activity.priority)}`}
+                          />
                         </div>
-                        <span className='text-small text-default-400'>{activity.time}</span>
                       </div>
-                      <p className='text-small text-default-500 mt-1'>{activity.description}</p>
-                      <div className='flex items-center gap-2 mt-2'>
-                        <Chip size='sm' variant='flat' color='default'>
-                          {activity.department}
-                        </Chip>
-                        <span className='text-small text-default-400'>•</span>
-                        <span className='text-small text-default-500'>{activity.user}</span>
+                      <div className='flex-1'>
+                        <div className='flex items-center justify-between'>
+                          <div className='flex items-center gap-2'>
+                            <p className='font-medium'>{activity.title}</p>
+                            <Chip size='sm' variant='flat' color={getPriorityColor(activity.priority)}>
+                              {activity.priority === "high"
+                                ? "紧急"
+                                : activity.priority === "medium"
+                                  ? "普通"
+                                  : "低优先级"}
+                            </Chip>
+                          </div>
+                          <span className='text-small text-default-400'>{activity.time}</span>
+                        </div>
+                        <p className='text-small text-default-500 mt-1'>{activity.description}</p>
+                        <div className='flex items-center gap-2 mt-2'>
+                          <Chip size='sm' variant='flat' color='default'>
+                            {activity.department}
+                          </Chip>
+                          <span className='text-small text-default-400'>•</span>
+                          <span className='text-small text-default-500'>{activity.user}</span>
+                        </div>
                       </div>
+                    </motion.div>
+                  ))}
+                  {tasks.length === 0 && (
+                    <div className='flex items-center justify-center py-8 text-default-400'>
+                      <p>暂无待处理事项</p>
                     </div>
-                  </motion.div>
-                ))}
-                {tasks.length === 0 && (
-                  <div className='flex items-center justify-center py-8 text-default-400'>
-                    <p>暂无待处理事项</p>
-                  </div>
-                )}
-              </AnimatePresence>
+                  )}
+                </AnimatePresence>
+              </ScrollShadow>
             </CardBody>
           </Card>
         </motion.div>

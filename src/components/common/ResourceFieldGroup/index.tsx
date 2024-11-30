@@ -72,7 +72,6 @@ const ResourceFieldGroup: React.FC<ResourceFieldGroupProps> = ({
       })
     }
   }
-
   return (
     <div
       className={cn(
