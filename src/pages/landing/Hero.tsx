@@ -95,7 +95,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         animate="visible"
         className="text-center max-w-4xl mx-auto px-4 relative z-10 space-y-8 md:space-y-12"
       >
-        {/* Logo 区域 - 调整尺寸和效果 */}
+        {/* Logo 区域 */}
         <motion.div 
           variants={itemVariants} 
           className="mb-6 md:mb-8"
@@ -149,22 +149,30 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         {/* 标题区域 */}
         <motion.div variants={itemVariants} className="space-y-4">
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-            沙塔智能 - 智慧企业服务专家
+            让天下没有难管的企业
           </h1>
           <p className="text-lg md:text-2xl text-white/80">
-            让 AI 为企业赋能，提升效率，降低成本
+            AI 赋能企业管理 · 智能化一站式解决方案
           </p>
         </motion.div>
 
-        {/* 描述文字 */}
-        <motion.p
-          variants={itemVariants}
-          className="text-base md:text-xl text-white/70 max-w-2xl mx-auto"
-        >
-          自动生成表单和报表，智能分析企业经营数据，
-          <br className="hidden md:block" />
-          为中小企业提供智能化解决方案
-        </motion.p>
+        {/* 核心价值主张 */}
+        <motion.div variants={itemVariants} className="space-y-4">
+          <div className="flex flex-wrap justify-center gap-4 text-white/80">
+            <div className="flex items-center space-x-2">
+              <span className="text-green-400">✓</span>
+              <span>智能表单自动生成</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-green-400">✓</span>
+              <span>数据分析决策支持</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-green-400">✓</span>
+              <span>效率提升75%</span>
+            </div>
+          </div>
+        </motion.div>
 
         {/* 按钮区域 */}
         <motion.div
@@ -177,7 +185,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
               transform hover:scale-105 active:scale-95 transition-all duration-300"
             onClick={onGetStarted}
           >
-            立即开始
+            免费体验
           </Button>
           <Button
             size="lg"
@@ -185,16 +193,19 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             className="text-white border-white hover:bg-white/10 font-medium px-8 w-full md:w-auto
               transform hover:scale-105 active:scale-95 transition-all duration-300"
           >
-            了解更多
+            查看演示
           </Button>
         </motion.div>
 
-        {/* 客户数量信息 */}
+        {/* 信任背书 */}
         <motion.div
           variants={itemVariants}
-          className="mt-8 md:mt-12 text-white/60 text-sm"
+          className="mt-8 md:mt-12"
         >
-          <p>已服务超过 1000+ 企业客户</p>
+          <p className="text-white/60 text-sm mb-2">已被1000+企业信赖</p>
+          <div className="flex justify-center items-center gap-6 opacity-50">
+            <span className="text-white text-xs">合作伙伴徽标展示区</span>
+          </div>
         </motion.div>
       </motion.div>
     </div>

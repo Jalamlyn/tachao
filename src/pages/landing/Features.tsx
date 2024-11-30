@@ -8,28 +8,56 @@ import { useSwipeable } from "react-swipeable"
 const features = [
   {
     icon: "hugeicons:ai-chat-02",
-    title: "AI 智能生成",
-    description: "自动生成标准化表单和报表，减少人工错误",
-    details: ["智能识别数据", "自动填充字段", "格式标准化", "实时校验"],
+    title: "智能表单系统",
+    description: "AI驱动的智能表单系统，自动生成、验证和管理",
+    details: [
+      "AI辅助表单生成",
+      "智能数据验证",
+      "动态表单渲染",
+      "多端自适应展示"
+    ],
     color: "from-cyan-500/90 to-blue-600/90",
     shadowColor: "shadow-blue-500/20",
   },
   {
     icon: "mdi:chart-line",
-    title: "数据分析",
-    description: "智能分析企业经营数据，提供决策支持",
-    details: ["多维度分析", "趋势预测", "异常预警", "决策建议"],
+    title: "数据分析报表",
+    description: "深度数据分析，智能生成可视化报表",
+    details: [
+      "多维度数据分析",
+      "AI辅助洞察",
+      "实时数据监控",
+      "智能决策支持"
+    ],
     color: "from-violet-500/90 to-purple-600/90",
     shadowColor: "shadow-purple-500/20",
   },
   {
     icon: "mdi:lightning-bolt",
-    title: "效率提升",
-    description: "显著提升工作效率，节省人力成本",
-    details: ["批量处理", "自动化流程", "快速生成", "一键导出"],
+    title: "高效任务管理",
+    description: "智能化的任务分配、追踪和管理系统",
+    details: [
+      "智能任务分配",
+      "实时进度追踪",
+      "自动化工作流",
+      "团队协作管理"
+    ],
     color: "from-amber-500/90 to-orange-600/90",
     shadowColor: "shadow-orange-500/20",
   },
+  {
+    icon: "mdi:apps",
+    title: "应用资源管理",
+    description: "一站式应用和资源管理平台",
+    details: [
+      "统一应用管理",
+      "智能资源分配",
+      "多维度权限控制",
+      "资源智能分析"
+    ],
+    color: "from-green-500/90 to-emerald-600/90",
+    shadowColor: "shadow-emerald-500/20",
+  }
 ]
 
 const Features: React.FC = () => {
@@ -60,11 +88,13 @@ const Features: React.FC = () => {
     >
       <div className='container mx-auto px-4'>
         <ScrollAnimation className='text-center mb-8 md:mb-16'>
-          <h2 className='text-2xl md:text-4xl font-bold text-white mb-4'>强大的功能特性</h2>
-          <p className='text-white/80 text-base md:text-lg max-w-2xl mx-auto'>让企业管理更智能、更高效</p>
+          <h2 className='text-2xl md:text-4xl font-bold text-white mb-4'>企业管理的智能化解决方案</h2>
+          <p className='text-white/80 text-base md:text-lg max-w-2xl mx-auto'>
+            集成AI技术，提供全方位的企业管理工具，让管理更简单高效
+          </p>
         </ScrollAnimation>
 
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8'>
           {features.map((feature, index) => (
             <ScrollAnimation key={index}>
               <motion.div 
@@ -128,7 +158,7 @@ const Features: React.FC = () => {
               </motion.div>
             }
           >
-            了解更多功能
+            探索更多功能
           </Button>
         </ScrollAnimation>
       </div>

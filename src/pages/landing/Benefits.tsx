@@ -8,28 +8,28 @@ const benefits = [
   {
     icon: "mdi:shield-check",
     title: "智能防错",
-    description: "AI 智能识别异常数据，降低人工错误率",
+    description: "AI智能识别异常数据，自动校验，准确率达98%",
     color: "from-blue-500/90 to-blue-600/90",
     shadowColor: "shadow-blue-500/20",
   },
   {
     icon: "mdi:clock-fast",
     title: "效率提升",
-    description: "自动生成表单和报表，节省 75% 工作时间",
+    description: "自动化工作流程，提升工作效率75%以上",
     color: "from-green-500/90 to-green-600/90",
     shadowColor: "shadow-green-500/20",
   },
   {
     icon: "mdi:chart-box",
     title: "数据洞察",
-    description: "智能分析经营数据，提供决策建议",
+    description: "AI深度分析数据，提供精准决策建议",
     color: "from-purple-500/90 to-purple-600/90",
     shadowColor: "shadow-purple-500/20",
   },
   {
     icon: "mdi:cloud-sync",
-    title: "实时同步",
-    description: "数据实时更新，随时随地查看经营状况",
+    title: "实时协同",
+    description: "多端数据实时同步，随时随地管理企业",
     color: "from-pink-500/90 to-pink-600/90",
     shadowColor: "shadow-pink-500/20",
   },
@@ -67,7 +67,7 @@ const Benefits: React.FC = () => {
       <div className='container mx-auto px-4 relative z-10'>
         <ScrollAnimation className='text-center mb-16'>
           <h2 className='text-3xl md:text-4xl font-bold text-white mb-4'>为什么选择沙塔智能</h2>
-          <p className='text-white/80 text-lg max-w-2xl mx-auto'>智能化解决方案，让企业管理更简单</p>
+          <p className='text-white/80 text-lg max-w-2xl mx-auto'>让企业管理更简单，让决策更智能</p>
         </ScrollAnimation>
 
         <motion.div
@@ -101,6 +101,73 @@ const Benefits: React.FC = () => {
             </motion.div>
           ))}
         </motion.div>
+
+        {/* 应用场景展示 */}
+        <ScrollAnimation className='mt-20'>
+          <div className='text-center mb-12'>
+            <h3 className='text-2xl md:text-3xl font-bold text-white mb-4'>适用多种企业场景</h3>
+            <p className='text-white/80 text-lg'>无论企业规模大小，都能找到适合的解决方案</p>
+          </div>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+            <Card className='bg-white/10 backdrop-blur-sm'>
+              <CardBody className='p-6'>
+                <h4 className='text-xl font-bold text-white mb-4'>中小企业</h4>
+                <ul className='space-y-2'>
+                  <li className='text-white/80 flex items-center'>
+                    <Icon icon='mdi:check' className='mr-2 text-green-400' />
+                    快速部署，成本可控
+                  </li>
+                  <li className='text-white/80 flex items-center'>
+                    <Icon icon='mdi:check' className='mr-2 text-green-400' />
+                    智能化管理工具
+                  </li>
+                  <li className='text-white/80 flex items-center'>
+                    <Icon icon='mdi:check' className='mr-2 text-green-400' />
+                    提升运营效率
+                  </li>
+                </ul>
+              </CardBody>
+            </Card>
+            <Card className='bg-white/10 backdrop-blur-sm'>
+              <CardBody className='p-6'>
+                <h4 className='text-xl font-bold text-white mb-4'>企业集团</h4>
+                <ul className='space-y-2'>
+                  <li className='text-white/80 flex items-center'>
+                    <Icon icon='mdi:check' className='mr-2 text-green-400' />
+                    多层级管理支持
+                  </li>
+                  <li className='text-white/80 flex items-center'>
+                    <Icon icon='mdi:check' className='mr-2 text-green-400' />
+                    数据统一分析
+                  </li>
+                  <li className='text-white/80 flex items-center'>
+                    <Icon icon='mdi:check' className='mr-2 text-green-400' />
+                    跨部门协同
+                  </li>
+                </ul>
+              </CardBody>
+            </Card>
+            <Card className='bg-white/10 backdrop-blur-sm'>
+              <CardBody className='p-6'>
+                <h4 className='text-xl font-bold text-white mb-4'>创业公司</h4>
+                <ul className='space-y-2'>
+                  <li className='text-white/80 flex items-center'>
+                    <Icon icon='mdi:check' className='mr-2 text-green-400' />
+                    灵活扩展能力
+                  </li>
+                  <li className='text-white/80 flex items-center'>
+                    <Icon icon='mdi:check' className='mr-2 text-green-400' />
+                    快速迭代适应
+                  </li>
+                  <li className='text-white/80 flex items-center'>
+                    <Icon icon='mdi:check' className='mr-2 text-green-400' />
+                    降低管理成本
+                  </li>
+                </ul>
+              </CardBody>
+            </Card>
+          </div>
+        </ScrollAnimation>
       </div>
     </section>
   )
