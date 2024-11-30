@@ -9,15 +9,26 @@ import { useMetadata } from "@/hooks/metadata"
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
-  const { items: forms, load } = useMetadata("form")
+  const { items: forms, load: loadForms } = useMetadata("form")
+  const { items: reports, load: loadReports } = useMetadata("report")
+  const { items: resources, load: loadResources } = useMetadata("resource")
+  const { items: apps, load: loadApps } = useMetadata("app_index")
 
   useEffect(() => {
     updateBreadcrumbs([{ label: "首页", href: "/we-chat-app/admin" }])
   }, [])
   
   useEffect(() => {
-    load()
-  }, [load])
+    const loadData = async () => {
+      await Promise.all([
+        loadForms(),
+        loadReports(),
+        loadResources(),
+        loadApps()
+      ])
+    }
+    loadData()
+  }, [loadForms, loadReports, loadResources, loadApps])
 
   const stats = [
     {
@@ -27,10 +38,22 @@ const Dashboard: React.FC = () => {
       color: "primary",
     },
     {
-      label: "已归档",
-      value: "开发中",
-      icon: "solar:archive-linear",
-      color: "default",
+      label: "报表数量",
+      value: reports.length.toString(),
+      icon: "solar:chart-2-linear",
+      color: "success",
+    },
+    {
+      label: "资料数量",
+      value: resources.length.toString(),
+      icon: "solar:folder-with-files-linear",
+      color: "warning",
+    },
+    {
+      label: "应用数量",
+      value: apps.length.toString(),
+      icon: "solar:widget-linear",
+      color: "secondary",
     },
   ]
 
@@ -109,7 +132,7 @@ const Dashboard: React.FC = () => {
         }}
         initial='hidden'
         animate='visible'
-        className='grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-4'
+        className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'
       >
         {stats.map((stat, index) => (
           <motion.div
