@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, CSSProperties } from "react"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -10,6 +10,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  Column,
 } from "@tanstack/react-table"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -45,6 +46,27 @@ interface FormDataTableProps {
   onRefresh?: () => void
   onEdit?: (row: any) => void
   onDelete?: (row: any) => void
+}
+
+// 固定列样式处理函数
+const getPinningStyles = (column: Column<any>): CSSProperties => {
+  const isPinned = column.getIsPinned()
+  const isLastLeftPinnedColumn = isPinned === "left" && column.getIsLastColumn("left")
+  const isFirstRightPinnedColumn = isPinned === "right" && column.getIsFirstColumn("right")
+
+  return {
+    position: isPinned ? "sticky" : "relative",
+    left: isPinned === "left" ? `${column.getStart("left")}px` : undefined,
+    right: isPinned === "right" ? `${column.getAfter("right")}px` : undefined,
+    backgroundColor: isPinned ? "#ffffff" : undefined,
+    boxShadow: isLastLeftPinnedColumn
+      ? "-2px 0 4px -4px gray inset"
+      : isFirstRightPinnedColumn
+      ? "2px 0 4px -4px gray inset"
+      : undefined,
+    opacity: isPinned ? 0.95 : 1,
+    zIndex: isPinned ? 1 : 0,
+  }
 }
 
 // 辅助函数：获取对象的值，支持嵌套路径
@@ -330,7 +352,7 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
       </div>
 
       {/* 表格 */}
-      <div className='rounded-md border'>
+      <div className='rounded-md border overflow-x-auto'>
         <Table>
           <TableHeader className='sticky top-0 z-10 bg-gray-100 border-b border-gray-200'>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -339,6 +361,7 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
+                    style={getPinningStyles(header.column)}
                     className='border-r border-gray-200 last:border-r-0'
                   >
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -356,7 +379,11 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell className='border-r border-gray-200 last:border-r-0' key={cell.id}>
+                    <TableCell
+                      className='border-r border-gray-200 last:border-r-0'
+                      key={cell.id}
+                      style={getPinningStyles(cell.column)}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
