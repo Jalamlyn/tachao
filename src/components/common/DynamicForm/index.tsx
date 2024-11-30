@@ -219,6 +219,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
         if (onSubmit) {
           await onSubmit(validationResult!, values)
+          // 提交成功后重置表单
+          form.reset()
           return
         }
 
@@ -233,6 +235,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           const result = await updateMetadata(id, formData)
           if (result) {
             setIsEditing(false)
+            // 更新成功后重置表单
+            form.reset()
           } else {
             throw new Error("更新失败")
           }
@@ -240,10 +244,14 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           const result = await createMetadata(formData)
           if (result) {
             setIsEditing(false)
+            // 创建成功后重置表单
+            form.reset()
           } else {
             throw new Error("创建失败")
           }
         }
+
+        message.success("提交成功")
       } catch (error) {
         console.error("Form submission error:", error)
         message.error("提交失败，请重试")
