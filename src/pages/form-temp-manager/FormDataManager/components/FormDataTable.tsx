@@ -38,6 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import * as XLSX from 'xlsx'
 
 interface FormDataTableProps {
   data: any[]
@@ -246,7 +247,9 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
   }, [rowSelection, data, onSelectionChange])
 
   const handleEdit = (row: any) => {
-    window.open(`/form/${row.id}`, '_blank')
+    if (onEdit) {
+      onEdit(row)
+    }
   }
 
   const handleSingleDelete = (row: any) => {
@@ -275,6 +278,30 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
     }
     setShowDeleteAlert(false)
     setRowSelection({})
+  }
+
+  const handleExportExcel = (type: 'all' | 'selected') => {
+    try {
+      let exportData
+      if (type === 'selected') {
+        const selectedRows = table.getSelectedRowModel().rows
+        if (selectedRows.length === 0) {
+          message.warning('请先选择要导出的数据')
+          return
+        }
+        exportData = selectedRows.map(row => row.original)
+      } else {
+        exportData = data
+      }
+
+      const wb = XLSX.utils.book_new()
+      const ws = XLSX.utils.json_to_sheet(exportData)
+      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
+      XLSX.writeFile(wb, 'export.xlsx')
+    } catch (error) {
+      console.error('Export failed:', error)
+      message.error('导出失败')
+    }
   }
 
   if (isLoading) {
@@ -317,8 +344,13 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
-              <DropdownMenuItem>导出所有数据</DropdownMenuItem>
-              <DropdownMenuItem disabled={!Object.keys(rowSelection).length}>导出选中数据</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExportExcel('all')}>导出所有数据</DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => handleExportExcel('selected')}
+                disabled={!Object.keys(rowSelection).length}
+              >
+                导出选中数据
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <DropdownMenu>
