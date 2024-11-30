@@ -46,43 +46,74 @@ export class ValidationManager {
     }
   }
 
+  private static getNestedValue(obj: any, path: string): any {
+    const parts = path.split('.')
+    let value = obj
+    for (const part of parts) {
+      if (value === undefined || value === null) return undefined
+      value = value[part]
+    }
+    return value
+  }
+
   private static async validateGroupFields(
     groups: FormFieldGroup[],
     values: any,
     parentPath: string = ''
   ): Promise<Record<string, string>> {
     const traceId = aiLog.start()
-    aiLog.log("[ValidationManager] validateGroupFields start", { groups, values, parentPath })
-    
     const errors: Record<string, string> = {}
     
+    aiLog.log("[validateGroupFields] start validation", {
+      groupsCount: groups.length,
+      values,
+      parentPath
+    })
+
     for (const group of groups) {
-      aiLog.log(`[ValidationManager] validating group: ${group.title}`, { groupKey: group.key })
+      aiLog.log(`[validateGroupFields] processing group: ${group.title}`, {
+        groupKey: group.key,
+        fieldsCount: group.fields.length
+      })
+
       for (const field of group.fields) {
-        const fieldPath = parentPath ? `${parentPath}.${field.name}` : field.name
-        const fieldValue = parentPath ? values?.[field.name] : values?.[field.name]
+        // 构建字段路径
+        const fieldPath = parentPath 
+          ? `${parentPath}.${field.name}`
+          : field.name
+
+        // 获取字段值 - 修改这里的逻辑
+        const fieldValue = parentPath
+          ? this.getNestedValue(values, fieldPath)
+          : values[field.name]
         
-        aiLog.log(`[ValidationManager] validating field in group`, {
+        aiLog.log("[validateGroupFields] field details", {
           group: group.title,
           field: field.name,
           fieldPath,
-          fieldValue
+          fieldValue,
+          parentPath,
+          fullValues: values,
+          valueExists: fieldValue !== undefined
         })
         
         const error = await this.validateField(field, fieldValue, values)
         
         if (error) {
           errors[fieldPath] = `[${group.title}] ${error}`
-          aiLog.log(`[ValidationManager] field validation error in group`, {
-            group: group.title,
-            field: field.name,
-            error
+          aiLog.log("[validateGroupFields] validation error", {
+            field: fieldPath,
+            error,
+            groupTitle: group.title
           })
         }
       }
     }
     
-    aiLog.log("[ValidationManager] validateGroupFields complete", { errors })
+    aiLog.log("[validateGroupFields] validation complete", {
+      errorsCount: Object.keys(errors).length,
+      errors
+    })
     aiLog.print(traceId)
     return errors
   }
@@ -91,7 +122,11 @@ export class ValidationManager {
   static async validateFields(values: any, config: DynamicFormConfig): Promise<Record<string, string>> {
     const traceId = aiLog.start()
     const errors: Record<string, string> = {}
-    aiLog.log("[ValidationManager] validateFields start", { values, config })
+    aiLog.log("[ValidationManager] validateFields start", { 
+      values,
+      config,
+      basicFieldsType: Array.isArray(config.renderConfig.basicFields) ? 'array' : 'groups'
+    })
 
     try {
       // 校验基本字段
@@ -116,7 +151,12 @@ export class ValidationManager {
         // 处理分组字段
         aiLog.log("[ValidationManager] validating grouped fields", { 
           groupCount: basicFields.groups.length,
-          groups: basicFields.groups.map(g => g.title)
+          groups: basicFields.groups.map(g => ({
+            key: g.key,
+            title: g.title,
+            fieldsCount: g.fields.length,
+            fieldNames: g.fields.map(f => f.name)
+          }))
         })
         const groupErrors = await this.validateGroupFields(basicFields.groups, values)
         Object.assign(errors, groupErrors)
