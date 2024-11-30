@@ -42,22 +42,20 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
 
     switch (type) {
       case "signature":
-        // 验证是否为有效的base64图片数据
         if (typeof value === "string" && value.startsWith("data:image")) {
           return (
             <img
               src={value}
               alt='签名'
               style={{
-                maxWidth: "200px",
-                maxHeight: "100px",
+                maxWidth: "120px",
+                maxHeight: "60px",
                 objectFit: "contain",
               }}
               className='print-signature'
             />
           )
         }
-        // 如果不是有效的base64图片则显示占位符
         return "____________"
       case "date":
       case "datetime":
@@ -71,15 +69,21 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
         return typeof value === "number" ? value.toFixed(2) : "____________"
       case "resource":
         if (typeof value === "object" && value !== null) {
-          // 如果是资源对象，返回其名称或标题字段，如果都没有则返回 JSON 字符串
-          return value.name || value.title || JSON.stringify(value)
+          const fields = Object.entries(value)
+            .filter(([_, v]) => v != null && v !== "")
+            .map(([k, v]) => `${v}`)
+            .join("，")
+          return fields || "____________"
         }
         return value || "____________"
       default:
         if (typeof value === "object" && value !== null) {
           try {
-            // 对于对象类型，尝试获取常用的显示字段，如果都没有则转为 JSON 字符串
-            return value.name || value.title || value.label || value.value || JSON.stringify(value)
+            const fields = Object.entries(value)
+              .filter(([_, v]) => v != null && v !== "")
+              .map(([k, v]) => `${v}`)
+              .join("，")
+            return fields || "____________"
           } catch (error) {
             console.error("Error formatting object value:", error)
             return "____________"
@@ -91,71 +95,61 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
 
   // 确保基本信息数据的完整性
   const ensureBasicInfo = () => {
-    // 合并顶级字段和 basicInfo 字段
     const basicData = {
-      ...data, // 包含所有顶级字段
-      ...(data?.basicInfo || {}), // 如果存在 basicInfo，则合并
+      ...data,
+      ...(data?.basicInfo || {}),
     }
 
-    // 只过滤掉特定的系统字段
     const systemFields = ["tableData", "processConfirmations"]
     return Object.fromEntries(Object.entries(basicData).filter(([key]) => !systemFields.includes(key)))
   }
 
   // 渲染基本信息字段
-  // 渲染基本信息字段
   const renderBasicFields = () => {
     const basicInfo = ensureBasicInfo()
 
-    // 检查是否使用分组配置
     if (
       !renderConfig.basicFields ||
       typeof renderConfig.basicFields !== "object" ||
       !("groups" in renderConfig.basicFields)
     ) {
-      // 处理普通字段数组
       const fieldArray = Array.isArray(renderConfig.basicFields) ? renderConfig.basicFields : []
       return (
-        <div className='grid grid-cols-2 gap-2'>
-          {fieldArray.map((field) => (
-            <div
-              key={field.name}
-              className={cn("flex justify-between border-b border-gray-200 py-1", "print:break-inside-avoid")}
-            >
-              <span className='font-medium text-gray-700 text-sm'>{field.label}:</span>
-              <span className='min-w-[120px] text-right text-sm text-gray-900'>
-                {formatFieldValue(field.type, basicInfo[field.name])}
-              </span>
-            </div>
-          ))}
-        </div>
+        <table className='w-full border-collapse'>
+          <tbody>
+            {fieldArray.map((field, index) => (
+              <tr key={field.name} className={index % 2 === 0 ? "bg-gray-50" : ""}>
+                <td className='border border-gray-300 p-2 w-[200px] font-medium text-gray-700'>{field.label}</td>
+                <td className='border border-gray-300 p-2'>{formatFieldValue(field.type, basicInfo[field.name])}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )
     }
 
-    // 处理分组配置
     const { groups } = renderConfig.basicFields
     return (
-      <div className='space-y-4'>
+      <div className='space-y-6'>
         {groups.map((group) => (
           <div key={group.key} className='print:break-inside-avoid'>
-            <h3 className='text-sm font-medium text-gray-900 mb-2 pb-1 border-b'>
-              {group.icon && <span className='mr-1'>{group.icon}</span>}
-              {group.title}
-            </h3>
-            {group.description && <p className='text-xs text-gray-500 mb-2'>{group.description}</p>}
-            <div className='grid grid-cols-2 gap-2'>
-              {group.fields.map((field) => (
-                <div
-                  key={field.name}
-                  className={cn("flex justify-between border-b border-gray-200 py-1", "print:break-inside-avoid")}
-                >
-                  <span className='font-medium text-gray-700 text-sm'>{field.label}:</span>
-                  <span className='min-w-[120px] text-right text-sm text-gray-900'>
-                    {formatFieldValue(field.type, basicInfo[field.name])}
-                  </span>
-                </div>
-              ))}
+            <div className='flex items-center gap-2 mb-3 pb-2 border-b-2 border-gray-300'>
+              {group.icon && <span className='text-gray-500'>{group.icon}</span>}
+              <h3 className='text-base font-bold text-gray-800'>{group.title}</h3>
             </div>
+            {group.description && (
+              <p className='text-sm text-gray-500 mb-3 italic'>{group.description}</p>
+            )}
+            <table className='w-full border-collapse'>
+              <tbody>
+                {group.fields.map((field, index) => (
+                  <tr key={field.name} className={index % 2 === 0 ? "bg-gray-50" : ""}>
+                    <td className='border border-gray-300 p-2 w-[200px] font-medium text-gray-700'>{field.label}</td>
+                    <td className='border border-gray-300 p-2'>{formatFieldValue(field.type, basicInfo[field.name])}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ))}
       </div>
@@ -167,19 +161,18 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     if (!renderConfig.table) return null
 
     const tableData = data?.tableData || []
-    // 如果没有数据，显示至少一行空行
     const displayData = tableData.length > 0 ? tableData : [{}]
 
     return (
-      <div className='mt-3'>
-        <table className='w-full border-collapse text-sm'>
+      <div className='mt-6'>
+        <table className='w-full border-collapse'>
           <thead>
-            <tr className='bg-gray-50'>
-              {renderConfig.table.columns.map((column) => (
+            <tr className='bg-gray-100'>
+              {renderConfig.table.columns.map((column, index) => (
                 <th
                   key={column.key}
                   className={cn(
-                    "border border-gray-300 p-1 text-sm font-medium text-left",
+                    "border border-gray-300 p-2 text-sm font-bold text-gray-800",
                     column.type === "number" && "text-right"
                   )}
                   style={{ width: column.width }}
@@ -190,13 +183,13 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
             </tr>
           </thead>
           <tbody>
-            {displayData.map((row: any, index: number) => (
-              <tr key={index} className='border-b border-gray-200'>
+            {displayData.map((row: any, rowIndex: number) => (
+              <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-50" : ""}>
                 {renderConfig.table!.columns.map((column) => (
                   <td
                     key={column.key}
                     className={cn(
-                      "border border-gray-300 p-1 text-sm",
+                      "border border-gray-300 p-2 text-sm",
                       column.type === "number" && "text-right font-mono"
                     )}
                   >
@@ -218,18 +211,20 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     const processConfirmations = data?.processConfirmations || {}
 
     return (
-      <div className='mt-3 space-y-2'>
+      <div className='mt-6 space-y-6'>
         {renderConfig.processSteps.map((step) => {
           const stepData = processConfirmations[step.key] || {}
 
           return (
-            <div key={step.key} className='process-step border-b border-gray-200 pb-2'>
-              <div className='flex justify-between mb-1'>
-                <div>
-                  <span className='font-medium text-gray-900 text-sm'>{step.title}</span>
-                  {step.description && <p className='text-gray-500 text-xs mt-0.5'>{step.description}</p>}
+            <div key={step.key} className='process-step border border-gray-300 rounded-lg p-4'>
+              <div className='flex justify-between items-center mb-3 pb-2 border-b border-gray-200'>
+                <div className='flex items-center gap-2'>
+                  <span className='font-bold text-gray-800'>{step.title}</span>
+                  {step.description && (
+                    <span className='text-sm text-gray-500 italic'>({step.description})</span>
+                  )}
                 </div>
-                <div className='text-xs'>
+                <div className='text-sm font-medium'>
                   {stepData?.confirmed ? (
                     <span className='text-green-600'>已确认</span>
                   ) : (
@@ -238,34 +233,36 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
                 </div>
               </div>
 
-              {step.fields && (
-                <div className='step-content'>
-                  <div className='grid grid-cols-2 gap-2 text-xs mt-1'>
-                    <div>
-                      <span className='text-gray-500'>确认人：</span>
-                      <span className='text-gray-900'>{stepData?.confirmer || "____________"}</span>
-                    </div>
-                    <div>
-                      <span className='text-gray-500'>确认时间：</span>
-                      <span className='text-gray-900'>
-                        {stepData?.confirmationDate
-                          ? format(new Date(stepData.confirmationDate), "yyyy-MM-dd HH:mm:ss")
-                          : "____________"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className='mt-2 grid grid-cols-2 gap-2 text-xs'>
-                    {step.fields.map((field) => (
-                      <div key={field.name}>
-                        <span className='text-gray-500'>{field.label}：</span>
-                        <span className='text-gray-900'>
-                          {formatFieldValue(field.type, stepData?.formData?.[field.name])}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+              <div className='grid grid-cols-2 gap-4 mb-3'>
+                <div className='flex items-center gap-2'>
+                  <span className='text-sm text-gray-500'>确认人：</span>
+                  <span className='text-sm font-medium'>{stepData?.confirmer || "____________"}</span>
                 </div>
+                <div className='flex items-center gap-2'>
+                  <span className='text-sm text-gray-500'>确认时间：</span>
+                  <span className='text-sm font-medium'>
+                    {stepData?.confirmationDate
+                      ? format(new Date(stepData.confirmationDate), "yyyy-MM-dd HH:mm:ss")
+                      : "____________"}
+                  </span>
+                </div>
+              </div>
+
+              {step.fields && (
+                <table className='w-full border-collapse'>
+                  <tbody>
+                    {step.fields.map((field, index) => (
+                      <tr key={field.name} className={index % 2 === 0 ? "bg-gray-50" : ""}>
+                        <td className='border border-gray-300 p-2 w-[200px] text-sm font-medium text-gray-700'>
+                          {field.label}
+                        </td>
+                        <td className='border border-gray-300 p-2 text-sm'>
+                          {formatFieldValue(field.type, stepData?.formData?.[field.name])}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </div>
           )
@@ -274,25 +271,90 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     )
   }
 
+  // 渲染页脚
+  const renderFooter = () => {
+    return (
+      <div className='mt-8 pt-4 border-t-2 border-gray-300'>
+        <div className='grid grid-cols-2 gap-8'>
+          <div className='space-y-4'>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm text-gray-500'>制单人：</span>
+              <span className='flex-1 border-b border-gray-300'>____________</span>
+            </div>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm text-gray-500'>日期：</span>
+              <span className='flex-1 border-b border-gray-300'>____________</span>
+            </div>
+          </div>
+          <div className='space-y-4'>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm text-gray-500'>审核人：</span>
+              <span className='flex-1 border-b border-gray-300'>____________</span>
+            </div>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm text-gray-500'>日期：</span>
+              <span className='flex-1 border-b border-gray-300'>____________</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div ref={ref} className='p-4 bg-white'>
-      {/* 表单标题 */}
-      <div className='text-center mb-4'>
-        <h1 className='text-xl font-bold text-gray-900'>{metadata.title}</h1>
-        {metadata.description && <p className='text-gray-500 mt-1 text-xs'>{metadata.description}</p>}
+    <div ref={ref} className='p-8 bg-white max-w-[210mm] mx-auto'>
+      {/* 页眉 */}
+      <div className='text-center mb-8 pb-4 border-b-2 border-gray-300'>
+        <h1 className='text-2xl font-bold text-gray-900 mb-2'>{metadata.title}</h1>
+        {metadata.description && (
+          <p className='text-sm text-gray-500 italic'>{metadata.description}</p>
+        )}
+        <div className='absolute top-8 right-8 text-sm text-gray-500'>
+          <div>单号：{data?.orderNumber || "____________"}</div>
+          <div>日期：{format(new Date(), "yyyy-MM-dd")}</div>
+        </div>
       </div>
 
       {/* 基本信息 */}
-      <div className='mb-4'>{renderBasicFields()}</div>
+      <div className='mb-6'>
+        <div className='flex items-center gap-2 mb-3'>
+          <div className='w-1 h-6 bg-gray-800'></div>
+          <h2 className='text-lg font-bold text-gray-800'>基本信息</h2>
+        </div>
+        {renderBasicFields()}
+      </div>
 
       {/* 表格数据 */}
-      {renderConfig.table && <div className='mb-4'>{renderTable()}</div>}
+      {renderConfig.table && (
+        <div className='mb-6'>
+          <div className='flex items-center gap-2 mb-3'>
+            <div className='w-1 h-6 bg-gray-800'></div>
+            <h2 className='text-lg font-bold text-gray-800'>明细信息</h2>
+          </div>
+          {renderTable()}
+        </div>
+      )}
 
       {/* 流程确认 */}
-      {renderConfig.processSteps && <div className='mb-4'>{renderProcessSteps()}</div>}
+      {renderConfig.processSteps && (
+        <div className='mb-6'>
+          <div className='flex items-center gap-2 mb-3'>
+            <div className='w-1 h-6 bg-gray-800'></div>
+            <h2 className='text-lg font-bold text-gray-800'>流程确认</h2>
+          </div>
+          {renderProcessSteps()}
+        </div>
+      )}
+
+      {/* 页脚 */}
+      {renderFooter()}
 
       {/* 打印样式 */}
       <style type='text/css' media='print'>{`
+        @page {
+          size: A4;
+          margin: 20mm;
+        }
         @media print {
           html, body {
             margin: 0 !important;
@@ -300,12 +362,10 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
             overflow: visible !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+            background: white !important;
           }
           .process-step {
             break-inside: avoid;
-          }
-          .step-content {
-            margin-bottom: 0.5rem;
           }
           table { 
             border-collapse: collapse;
@@ -313,35 +373,57 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
           }
           th, td {
             border: 1px solid #000 !important;
-            padding: 4px !important;
+            padding: 8px !important;
           }
           h1 {
-            font-size: 16px !important;
-            margin-bottom: 8px !important;
+            font-size: 24px !important;
+            margin-bottom: 12px !important;
           }
           h2 {
-            font-size: 14px !important;
-            margin-bottom: 4px !important;
-          }
-          p {
-            margin: 0 !important;
-          }
-          .mb-4 {
+            font-size: 18px !important;
             margin-bottom: 8px !important;
           }
-          .gap-2 {
-            gap: 4px !important;
+          .mb-6 {
+            margin-bottom: 24px !important;
           }
-          .py-1 {
-            padding-top: 2px !important;
-            padding-bottom: 2px !important;
+          .mb-3 {
+            margin-bottom: 12px !important;
           }
-          .print-signature {
-            max-width: 200px !important;
-            max-height: 100px !important;
-            object-fit: contain !important;
+          .p-8 {
+            padding: 32px !important;
+          }
+          .bg-gray-50 {
+            background-color: #f9fafb !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+          }
+          .bg-gray-100 {
+            background-color: #f3f4f6 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .print-signature {
+            max-width: 120px !important;
+            max-height: 60px !important;
+            object-fit: contain !important;
+          }
+          .text-gray-500 {
+            color: #6b7280 !important;
+          }
+          .text-gray-700 {
+            color: #374151 !important;
+          }
+          .text-gray-800 {
+            color: #1f2937 !important;
+          }
+          .text-gray-900 {
+            color: #111827 !important;
+          }
+          .border-gray-300 {
+            border-color: #d1d5db !important;
+          }
+          .border-gray-200 {
+            border-color: #e5e7eb !important;
           }
         }
       `}</style>
