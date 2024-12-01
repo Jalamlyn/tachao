@@ -5,7 +5,7 @@ import EmptyState from "@/components/EmptyState"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Spinner, Avatar, Input } from "@nextui-org/react"
+import { Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { format, addDays } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -13,6 +13,8 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CalendarIcon } from "@radix-ui/react-icons"
 import { DateRange } from "react-day-picker"
+import { FormTypeAIModal } from "./FormTypeTabs/FormTypeAIModal"
+import { FormTypeTabs } from "./FormTypeTabs"
 
 // 统计卡片组件
 interface StatCardProps {
@@ -88,7 +90,7 @@ function CalendarDateRangePicker({ className }: React.HTMLAttributes<HTMLDivElem
   )
 }
 
-// 导航组件
+// 主导航组件
 function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
   return (
     <nav className={cn("flex items-center space-x-4 lg:space-x-6", className)} {...props}>
@@ -108,34 +110,6 @@ function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
   )
 }
 
-// 搜索组件
-function Search() {
-  return (
-    <div>
-      <Input
-        type="search"
-        placeholder="搜索..."
-        className="md:w-[100px] lg:w-[300px]"
-      />
-    </div>
-  )
-}
-
-// 用户导航组件
-function UserNav() {
-  return (
-    <Avatar
-      isBordered
-      as="button"
-      className="transition-transform"
-      color="secondary"
-      name="Jason Hughes"
-      size="sm"
-      src="https://i.pravatar.cc/150?u=a042581f4e29026704d"
-    />
-  )
-}
-
 // 主仪表盘组件
 export const AppEntryDashboard: React.FC = () => {
   const { appId } = useParams<{ appId: string }>()
@@ -143,6 +117,7 @@ export const AppEntryDashboard: React.FC = () => {
   const { items: templates = [], load: loadTemplates } = useMetadata("template")
   const { items: reports = [], load: loadReports } = useMetadata("report")
   const { items: forms = [], load: loadForms } = useMetadata("form")
+  const [isAIModalOpen, setIsAIModalOpen] = React.useState(false)
 
   React.useEffect(() => {
     const loadData = async () => {
@@ -177,8 +152,14 @@ export const AppEntryDashboard: React.FC = () => {
         <div className="flex h-16 items-center px-4">
           <MainNav className="mx-6" />
           <div className="ml-auto flex items-center space-x-4">
-            <Search />
-            <UserNav />
+            <Button
+              color="primary"
+              variant="flat"
+              startContent={<Icon icon="hugeicons:ai-chat-02" className="w-4 h-4" />}
+              onPress={() => setIsAIModalOpen(true)}
+            >
+              AI 分析
+            </Button>
           </div>
         </div>
       </div>
@@ -187,7 +168,6 @@ export const AppEntryDashboard: React.FC = () => {
           <h2 className="text-3xl font-bold tracking-tight">{app.title}</h2>
           <div className="flex items-center space-x-2">
             <CalendarDateRangePicker />
-            <Button>导出数据</Button>
           </div>
         </div>
         <Tabs defaultValue="overview" className="space-y-4">
@@ -226,37 +206,102 @@ export const AppEntryDashboard: React.FC = () => {
               />
             </div>
 
-            {/* 报表展示区域 */}
+            {/* 表单和报表展示区域 */}
             <div className="grid gap-4 md:grid-cols-2">
-              {appReports.map(report => (
-                <Card key={report.id} className="col-span-1">
-                  <CardHeader>
-                    <CardTitle>{report.title}</CardTitle>
-                    <CardDescription>{report.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <iframe
-                      src={`/report/${report.id}`}
-                      className="w-full h-[400px] border-0"
-                      title={report.title}
-                    />
-                  </CardContent>
-                </Card>
-              ))}
+              {/* 表单模板区域 */}
+              <Card className="col-span-1">
+                <CardHeader>
+                  <CardTitle>表单模板</CardTitle>
+                  <CardDescription>可用的表单模板列表</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {appTemplates.map((template) => (
+                      <div
+                        key={template.id}
+                        className="p-4 rounded-lg border border-default-200 hover:border-primary transition-colors"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h3 className="font-medium">{template.title}</h3>
+                            <p className="text-small text-default-500">{template.description || "点击开始填写表单"}</p>
+                          </div>
+                          <Button
+                            color="primary"
+                            variant="flat"
+                            onPress={() => window.open(`/form-preview/${template.id}`, "_blank")}
+                          >
+                            开始填写
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {appTemplates.length === 0 && (
+                      <div className="text-center py-8 text-default-500">暂无可用的表单模板</div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 报表区域 */}
+              <Card className="col-span-1">
+                <CardHeader>
+                  <CardTitle>数据报表</CardTitle>
+                  <CardDescription>可用的数据报表列表</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {appReports.map((report) => (
+                      <div
+                        key={report.id}
+                        className="p-4 rounded-lg border border-default-200 hover:border-primary transition-colors"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h3 className="font-medium">{report.title}</h3>
+                            <p className="text-small text-default-500">{report.description || "点击查看报表详情"}</p>
+                          </div>
+                          <Button
+                            color="primary"
+                            variant="flat"
+                            onPress={() => window.open(`/report/${report.id}`, "_blank")}
+                          >
+                            查看报表
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {appReports.length === 0 && (
+                      <div className="text-center py-8 text-default-500">暂无可用的数据报表</div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* 无报表时显示提示 */}
-            {appReports.length === 0 && (
-              <EmptyState
-                type="no-data"
-                title="暂无报表"
-                description="请在应用配置中添加需要展示的报表"
-                icon={<Icon icon="mdi:chart-box" className="w-20 h-20 text-default-400" />}
-              />
-            )}
+            {/* 表单管理区域 */}
+            <Card>
+              <CardHeader>
+                <CardTitle>表单管理</CardTitle>
+                <CardDescription>所有已提交的表单列表</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FormTypeTabs forms={appForms} isLoading={isLoading} />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* AI 分析模态框 */}
+      <FormTypeAIModal
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        formType="all"
+        context={JSON.stringify(appForms)}
+        onUpdateHistory={() => {}}
+        onClearHistory={() => {}}
+      />
     </div>
   )
 }
