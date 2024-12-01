@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Spinner, Avatar, Input } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
 import { format, addDays } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
@@ -15,7 +14,32 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "@radix-ui/react-icons"
 import { DateRange } from "react-day-picker"
 
-// 自定义日期选择器组件
+// 统计卡片组件
+interface StatCardProps {
+  title: string
+  value: number | string
+  icon: string
+  description?: string
+}
+
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, description }) => {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Icon icon={icon} className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        {description && (
+          <p className="text-xs text-muted-foreground">{description}</p>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// 日期选择器组件
 function CalendarDateRangePicker({ className }: React.HTMLAttributes<HTMLDivElement>) {
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: new Date(2023, 0, 20),
@@ -64,7 +88,7 @@ function CalendarDateRangePicker({ className }: React.HTMLAttributes<HTMLDivElem
   )
 }
 
-// 自定义导航组件
+// 导航组件
 function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
   return (
     <nav className={cn("flex items-center space-x-4 lg:space-x-6", className)} {...props}>
@@ -112,116 +136,7 @@ function UserNav() {
   )
 }
 
-// 数据概览组件
-function Overview() {
-  const data = [
-    { name: "1月", total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: "2月", total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: "3月", total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: "4月", total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: "5月", total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: "6月", total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: "7月", total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: "8月", total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: "9月", total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: "10月", total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: "11月", total: Math.floor(Math.random() * 5000) + 1000 },
-    { name: "12月", total: Math.floor(Math.random() * 5000) + 1000 },
-  ]
-
-  return (
-    <ResponsiveContainer width="100%" height={350}>
-      <BarChart data={data}>
-        <XAxis
-          dataKey="name"
-          stroke="#888888"
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
-        />
-        <YAxis
-          stroke="#888888"
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={(value) => `${value}`}
-        />
-        <Bar
-          dataKey="total"
-          fill="currentColor"
-          radius={[4, 4, 0, 0]}
-          className="fill-primary"
-        />
-      </BarChart>
-    </ResponsiveContainer>
-  )
-}
-
-// 最近提交组件
-function RecentSubmissions() {
-  const recentData = [
-    {
-      id: 1,
-      name: "张三",
-      email: "zhangsan@example.com",
-      time: "10分钟前",
-      form: "员工入职表"
-    },
-    {
-      id: 2,
-      name: "李四",
-      email: "lisi@example.com",
-      time: "25分钟前",
-      form: "请假申请"
-    },
-    {
-      id: 3,
-      name: "王五",
-      email: "wangwu@example.com",
-      time: "1小时前",
-      form: "报销单"
-    },
-    {
-      id: 4,
-      name: "赵六",
-      email: "zhaoliu@example.com",
-      time: "2小时前",
-      form: "项目申请"
-    },
-    {
-      id: 5,
-      name: "钱七",
-      email: "qianqi@example.com",
-      time: "3小时前",
-      form: "设备维修"
-    }
-  ]
-
-  return (
-    <div className="space-y-8">
-      {recentData.map((item) => (
-        <div key={item.id} className="flex items-center">
-          <Avatar
-            isBordered
-            className="h-9 w-9"
-            src={`https://i.pravatar.cc/150?u=${item.id}`}
-          />
-          <div className="ml-4 space-y-1">
-            <p className="text-sm font-medium leading-none">{item.name}</p>
-            <p className="text-sm text-muted-foreground">
-              {item.email}
-            </p>
-          </div>
-          <div className="ml-auto text-sm">
-            <p className="font-medium">{item.form}</p>
-            <p className="text-muted-foreground">{item.time}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
+// 主仪表盘组件
 export const AppEntryDashboard: React.FC = () => {
   const { appId } = useParams<{ appId: string }>()
   const { items: apps = [], load: loadApps, isLoading } = useMetadata("app")
@@ -253,6 +168,9 @@ export const AppEntryDashboard: React.FC = () => {
   const appReports = reports.filter((report) => app.indexFields?.reportIds?.includes(report.id))
   const appForms = forms.filter((form) => app.indexFields?.templateIds?.includes(form.template?.id))
 
+  // 计算活跃用户数（基于表单提交者）
+  const activeUsers = new Set(appForms.map(form => form.submitter?.id)).size
+
   return (
     <div className="hidden flex-col md:flex">
       <div className="border-b">
@@ -280,77 +198,62 @@ export const AppEntryDashboard: React.FC = () => {
             <TabsTrigger value="settings">设置</TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="space-y-4">
+            {/* 统计卡片 */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">总表单数</CardTitle>
-                  <Icon icon="mdi:form-select" className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{appForms.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    +20.1% 较上月
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">模板数量</CardTitle>
-                  <Icon icon="mdi:file-document-multiple" className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{appTemplates.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    +180.1% 较上月
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">报表数量</CardTitle>
-                  <Icon icon="mdi:chart-box" className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{appReports.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    +19% 较上月
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">活跃用户</CardTitle>
-                  <Icon icon="mdi:account-multiple" className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">+573</div>
-                  <p className="text-xs text-muted-foreground">
-                    +201 较上小时
-                  </p>
-                </CardContent>
-              </Card>
+              <StatCard
+                title="表单总数"
+                value={appForms.length}
+                icon="mdi:form-select"
+                description="所有已提交的表单"
+              />
+              <StatCard
+                title="模板数量"
+                value={appTemplates.length}
+                icon="mdi:file-document-multiple"
+                description="可用的表单模板"
+              />
+              <StatCard
+                title="报表数量"
+                value={appReports.length}
+                icon="mdi:chart-box"
+                description="数据分析报表"
+              />
+              <StatCard
+                title="活跃用户"
+                value={activeUsers}
+                icon="mdi:account-multiple"
+                description="提交过表单的用户"
+              />
             </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-              <Card className="col-span-4">
-                <CardHeader>
-                  <CardTitle>数据概览</CardTitle>
-                </CardHeader>
-                <CardContent className="pl-2">
-                  <Overview />
-                </CardContent>
-              </Card>
-              <Card className="col-span-3">
-                <CardHeader>
-                  <CardTitle>最近提交</CardTitle>
-                  <CardDescription>
-                    最近提交的表单数据
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <RecentSubmissions />
-                </CardContent>
-              </Card>
+
+            {/* 报表展示区域 */}
+            <div className="grid gap-4 md:grid-cols-2">
+              {appReports.map(report => (
+                <Card key={report.id} className="col-span-1">
+                  <CardHeader>
+                    <CardTitle>{report.title}</CardTitle>
+                    <CardDescription>{report.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <iframe
+                      src={`/report/${report.id}`}
+                      className="w-full h-[400px] border-0"
+                      title={report.title}
+                    />
+                  </CardContent>
+                </Card>
+              ))}
             </div>
+
+            {/* 无报表时显示提示 */}
+            {appReports.length === 0 && (
+              <EmptyState
+                type="no-data"
+                title="暂无报表"
+                description="请在应用配置中添加需要展示的报表"
+                icon={<Icon icon="mdi:chart-box" className="w-20 h-20 text-default-400" />}
+              />
+            )}
           </TabsContent>
         </Tabs>
       </div>
