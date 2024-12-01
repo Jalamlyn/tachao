@@ -52,11 +52,11 @@ const AppManagement: React.FC = () => {
     setDevelopModalOpen(true)
   }
 
-  const handleDevelopSubmit = async (templateIds: string[], reportIds: string[]) => {
+  const handleDevelopSubmit = async (templateIds: string[], reportIds: string[], template: "default" | "dashboard") => {
     if (!selectedApp) return
     await updateAppConfig({
       appId: selectedApp.id,
-      input: { templateIds, reportIds }
+      input: { templateIds, reportIds, template }
     })
   }
 
