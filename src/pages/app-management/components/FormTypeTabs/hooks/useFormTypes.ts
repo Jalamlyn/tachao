@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react"
 import { MetadataDetail } from "@/hooks/metadata/types"
-import { FormType } from "../types"
+
+export interface FormType {
+  templateId: string
+  label: string
+  forms: MetadataDetail[]
+}
 
 export const useFormTypes = (forms: MetadataDetail[]) => {
   const [formTypes, setFormTypes] = useState<FormType[]>([])
@@ -9,15 +14,17 @@ export const useFormTypes = (forms: MetadataDetail[]) => {
     const types = new Map<string, FormType>()
     
     forms.forEach(form => {
-      const type = form.type || "default"
-      if (!types.has(type)) {
-        types.set(type, {
-          type,
-          label: type === "default" ? "默认分类" : type,
+      const templateId = form.template?.id || "uncategorized"
+      const templateTitle = form.template?.title || "未分类表单"
+      
+      if (!types.has(templateId)) {
+        types.set(templateId, {
+          templateId,
+          label: templateTitle,
           forms: []
         })
       }
-      types.get(type)!.forms.push(form)
+      types.get(templateId)!.forms.push(form)
     })
 
     setFormTypes(Array.from(types.values()))

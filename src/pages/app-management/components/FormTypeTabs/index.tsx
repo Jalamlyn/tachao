@@ -17,22 +17,18 @@ export const FormTypeTabs: React.FC<FormTypeTabsProps> = ({ forms, isLoading }) 
   const { chatHistories, updateHistory, clearHistory, getChatHistory } = useChatHistory()
   const [selectedType, setSelectedType] = useState<string>("")
   const [isAIModalOpen, setIsAIModalOpen] = useState(false)
+  
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
 
   const handleTabChange = (type: string) => {
     setSelectedType(type)
+    setCurrentPage(1) // 切换Tab时重置页码
   }
 
-  const handleOpenAIModal = () => {
-    setIsAIModalOpen(true)
-  }
-
-  const handleCloseAIModal = () => {
-    setIsAIModalOpen(false)
-  }
-
-  const getFormsContext = (type: string) => {
-    const typeForms = formTypes.find((t) => t.type === type)?.forms || []
-    return typeForms.map((form) => JSON.stringify(form)).join("\n")
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
   }
 
   return (
@@ -45,7 +41,7 @@ export const FormTypeTabs: React.FC<FormTypeTabsProps> = ({ forms, isLoading }) 
       >
         {formTypes.map((type) => (
           <Tab
-            key={type.type}
+            key={type.templateId}
             title={
               <div className="flex items-center gap-2">
                 <span>{type.label}</span>
@@ -59,12 +55,18 @@ export const FormTypeTabs: React.FC<FormTypeTabsProps> = ({ forms, isLoading }) 
                   color="primary"
                   variant="flat"
                   startContent={<Icon icon="mdi:robot" className="w-4 h-4" />}
-                  onPress={handleOpenAIModal}
+                  onPress={() => setIsAIModalOpen(true)}
                 >
                   AI 分析
                 </Button>
               </div>
-              <FormTypeTable forms={type.forms} isLoading={isLoading} />
+              <FormTypeTable 
+                forms={type.forms}
+                isLoading={isLoading}
+                page={currentPage}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+              />
             </div>
           </Tab>
         ))}
@@ -72,12 +74,12 @@ export const FormTypeTabs: React.FC<FormTypeTabsProps> = ({ forms, isLoading }) 
 
       <FormTypeAIModal
         isOpen={isAIModalOpen}
-        onClose={handleCloseAIModal}
+        onClose={() => setIsAIModalOpen(false)}
         formType={selectedType}
         chatHistory={getChatHistory(selectedType)}
         onUpdateHistory={updateHistory}
         onClearHistory={clearHistory}
-        context={getFormsContext(selectedType)}
+        context={formTypes.find(t => t.templateId === selectedType)?.forms.map(f => JSON.stringify(f)).join("\n") || ""}
       />
     </div>
   )

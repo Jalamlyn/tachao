@@ -9,6 +9,7 @@ import {
   Chip,
   Button,
   Tooltip,
+  Pagination
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { MetadataDetail } from "@/hooks/metadata/types"
@@ -16,9 +17,24 @@ import { MetadataDetail } from "@/hooks/metadata/types"
 interface FormTypeTableProps {
   forms: MetadataDetail[]
   isLoading?: boolean
+  page: number
+  pageSize: number
+  onPageChange: (page: number) => void
 }
 
-export const FormTypeTable: React.FC<FormTypeTableProps> = ({ forms, isLoading }) => {
+export const FormTypeTable: React.FC<FormTypeTableProps> = ({
+  forms,
+  isLoading,
+  page,
+  pageSize,
+  onPageChange
+}) => {
+  // 计算分页数据
+  const start = (page - 1) * pageSize
+  const end = start + pageSize
+  const paginatedForms = forms.slice(start, end)
+  const totalPages = Math.ceil(forms.length / pageSize)
+
   const formatDate = (dateString: string) => {
     if (!dateString) return ""
     return new Date(dateString).toLocaleString("zh-CN", {
@@ -63,6 +79,21 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({ forms, isLoading }
         wrapper: "min-h-[400px]",
       }}
       isLoading={isLoading}
+      bottomContent={
+        forms.length > 0 ? (
+          <div className="flex w-full justify-center">
+            <Pagination
+              isCompact
+              showControls
+              showShadow
+              color="primary"
+              page={page}
+              total={totalPages}
+              onChange={onPageChange}
+            />
+          </div>
+        ) : null
+      }
     >
       <TableHeader>
         <TableColumn>标题</TableColumn>
@@ -71,7 +102,7 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({ forms, isLoading }
         <TableColumn>时间</TableColumn>
         <TableColumn>操作</TableColumn>
       </TableHeader>
-      <TableBody items={forms}>
+      <TableBody items={paginatedForms}>
         {(form) => (
           <TableRow key={form.id}>
             <TableCell>
@@ -96,17 +127,15 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({ forms, isLoading }
               </div>
             </TableCell>
             <TableCell>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="flat"
-                  color="primary"
-                  startContent={<Icon icon="mdi:eye" className="w-4 h-4" />}
-                  onPress={() => window.open(`/form/${form.id}`, "_blank")}
-                >
-                  查看
-                </Button>
-              </div>
+              <Button
+                size="sm"
+                variant="flat"
+                color="primary"
+                startContent={<Icon icon="mdi:eye" className="w-4 h-4" />}
+                onPress={() => window.open(`/form/${form.id}`, "_blank")}
+              >
+                查看
+              </Button>
             </TableCell>
           </TableRow>
         )}
