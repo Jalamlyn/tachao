@@ -3,16 +3,10 @@ import { useParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
 import EmptyState from "@/components/EmptyState"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { format, addDays } from "date-fns"
-import { cn } from "@/lib/utils"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon } from "@radix-ui/react-icons"
-import { DateRange } from "react-day-picker"
+import { Button } from "@nextui-org/react"
 import { FormTypeAIModal } from "./FormTypeTabs/FormTypeAIModal"
 import { FormTypeTabs } from "./FormTypeTabs"
 
@@ -38,75 +32,6 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, description }) 
         )}
       </CardContent>
     </Card>
-  )
-}
-
-// 日期选择器组件
-function CalendarDateRangePicker({ className }: React.HTMLAttributes<HTMLDivElement>) {
-  const [date, setDate] = React.useState<DateRange | undefined>({
-    from: new Date(2023, 0, 20),
-    to: addDays(new Date(2023, 0, 20), 20),
-  })
-
-  return (
-    <div className={cn("grid gap-2", className)}>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            id="date"
-            variant={"outline"}
-            className={cn(
-              "w-[260px] justify-start text-left font-normal",
-              !date && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
-                <>
-                  {format(date.from, "LLL dd, y")} -{" "}
-                  {format(date.to, "LLL dd, y")}
-                </>
-              ) : (
-                format(date.from, "LLL dd, y")
-              )
-            ) : (
-              <span>选择日期范围</span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={date?.from}
-            selected={date}
-            onSelect={setDate}
-            numberOfMonths={2}
-          />
-        </PopoverContent>
-      </Popover>
-    </div>
-  )
-}
-
-// 主导航组件
-function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
-  return (
-    <nav className={cn("flex items-center space-x-4 lg:space-x-6", className)} {...props}>
-      <Button variant="link" className="text-sm font-medium">
-        概览
-      </Button>
-      <Button variant="link" className="text-sm font-medium text-muted-foreground">
-        表单
-      </Button>
-      <Button variant="link" className="text-sm font-medium text-muted-foreground">
-        报表
-      </Button>
-      <Button variant="link" className="text-sm font-medium text-muted-foreground">
-        设置
-      </Button>
-    </nav>
   )
 }
 
@@ -148,27 +73,9 @@ export const AppEntryDashboard: React.FC = () => {
 
   return (
     <div className="hidden flex-col md:flex">
-      <div className="border-b">
-        <div className="flex h-16 items-center px-4">
-          <MainNav className="mx-6" />
-          <div className="ml-auto flex items-center space-x-4">
-            <Button
-              color="primary"
-              variant="flat"
-              startContent={<Icon icon="hugeicons:ai-chat-02" className="w-4 h-4" />}
-              onPress={() => setIsAIModalOpen(true)}
-            >
-              AI 分析
-            </Button>
-          </div>
-        </div>
-      </div>
       <div className="flex-1 space-y-4 p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">{app.title}</h2>
-          <div className="flex items-center space-x-2">
-            <CalendarDateRangePicker />
-          </div>
         </div>
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>
