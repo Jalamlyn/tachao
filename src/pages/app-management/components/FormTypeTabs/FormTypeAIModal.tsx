@@ -40,7 +40,7 @@ export const FormTypeAIModal: React.FC<FormTypeAIModalProps> = ({
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [currentAssistantMessage, setCurrentAssistantMessage] = useState<ChatMessage | null>(null)
+  const [assistantMessageId, setAssistantMessageId] = useState<string | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -65,14 +65,17 @@ export const FormTypeAIModal: React.FC<FormTypeAIModalProps> = ({
     setIsLoading(true)
 
     try {
+      const newAssistantMessageId = (Date.now() + 1).toString()
+      setAssistantMessageId(newAssistantMessageId)
+      
       const assistantMessage: ChatMessage = {
         role: "assistant",
         content: "",
-        id: (Date.now() + 1).toString(),
+        id: newAssistantMessageId,
       }
-      setCurrentAssistantMessage(assistantMessage)
       onUpdateHistory(formType, assistantMessage)
 
+      let accumulatedContent = ""
       await chatMoV2(
         [
           {
@@ -83,16 +86,11 @@ export const FormTypeAIModal: React.FC<FormTypeAIModalProps> = ({
           userMessage,
         ],
         (chunk) => {
-          setCurrentAssistantMessage((prev) => {
-            if (prev) {
-              const updatedMessage = {
-                ...prev,
-                content: (prev.content || "") + chunk,
-              }
-              onUpdateHistory(formType, updatedMessage)
-              return updatedMessage
-            }
-            return prev
+          accumulatedContent += chunk
+          onUpdateHistory(formType, {
+            role: "assistant",
+            content: accumulatedContent,
+            id: newAssistantMessageId,
           })
         },
         () => {},
@@ -103,7 +101,7 @@ export const FormTypeAIModal: React.FC<FormTypeAIModalProps> = ({
       console.error("Error in chat:", error)
     } finally {
       setIsLoading(false)
-      setCurrentAssistantMessage(null)
+      setAssistantMessageId(null)
     }
   }
 
@@ -142,7 +140,7 @@ export const FormTypeAIModal: React.FC<FormTypeAIModalProps> = ({
         <ModalBody>
           <ScrollShadow className="flex-grow mb-4 pr-2">
             <AnimatePresence mode="wait">
-              {chatHistory?.messages.map((message) => (
+              {(chatHistory?.messages || []).map((message) => (
                 <motion.div
                   key={message.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -152,9 +150,9 @@ export const FormTypeAIModal: React.FC<FormTypeAIModalProps> = ({
                 >
                   <MessageCard
                     avatar={message.role === "assistant" ? mo2 : user}
-                    message={message.content}
+                    message={message.content || (message.id === assistantMessageId ? "正在思考..." : "")}
                     role={message.role}
-                    status="success"
+                    status={message.id === assistantMessageId ? "streaming" : "success"}
                     className="mb-4"
                   />
                 </motion.div>
