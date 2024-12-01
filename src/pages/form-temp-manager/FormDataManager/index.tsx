@@ -6,6 +6,7 @@ import { useMetadata } from "@/hooks/useMetadata"
 import PageLayout from "@/components/PageLayout"
 import FormDataTable from "./components/FormDataTable"
 import message from "@/components/Message"
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 
 const FormDataManager: React.FC = () => {
   const { templateId } = useParams<{ templateId: string }>()
@@ -15,6 +16,7 @@ const FormDataManager: React.FC = () => {
   const [formData, setFormData] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [selectedRows, setSelectedRows] = useState<string[]>([])
+  const { updateBreadcrumbs } = useBreadcrumb()
 
   const { loadFilteredDetails, remove } = useMetadata("form")
 
@@ -37,6 +39,14 @@ const FormDataManager: React.FC = () => {
   useEffect(() => {
     loadFormData()
   }, [templateId])
+
+  useEffect(() => {
+    updateBreadcrumbs([
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "表单模板管理", href: "/we-chat-app/admin/documents" },
+      { label: `${title || "表单"} - 数据管理`, href: "" },
+    ])
+  }, [])
 
   // 处理数据统计
   const statistics = useMemo(() => {
