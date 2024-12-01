@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
 import { AppIndex } from "../store/useAppStore"
 import EmptyState from "@/components/EmptyState"
+import { FormTypeTabs } from "./FormTypeTabs"
 
 export const AppEntry: React.FC = () => {
   const { appId } = useParams<{ appId: string }>()
@@ -12,10 +13,11 @@ export const AppEntry: React.FC = () => {
   const { items: apps = [], load: loadApps, isLoading } = useMetadata("app")
   const { items: templates = [], load: loadTemplates } = useMetadata("template")
   const { items: reports = [], load: loadReports } = useMetadata("report")
+  const { items: forms = [], load: loadForms } = useMetadata("form")
 
   React.useEffect(() => {
     const loadData = async () => {
-      await Promise.all([loadApps(), loadTemplates(), loadReports()])
+      await Promise.all([loadApps(), loadTemplates(), loadReports(), loadForms()])
     }
     loadData()
   }, [])
@@ -35,6 +37,7 @@ export const AppEntry: React.FC = () => {
 
   const appTemplates = templates.filter((template) => app.indexFields?.templateIds?.includes(template.id))
   const appReports = reports.filter((report) => app.indexFields?.reportIds?.includes(report.id))
+  const appForms = forms.filter((form) => app.indexFields?.templateIds?.includes(form.template?.id))
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-primary-50 to-background p-4 md:p-8'>
@@ -116,6 +119,17 @@ export const AppEntry: React.FC = () => {
             </CardBody>
           </Card>
         </div>
+
+        {/* 表单类型分类区域 */}
+        <Card className='p-4'>
+          <CardBody className='space-y-6'>
+            <div className='flex items-center gap-2'>
+              <Icon icon='mdi:file-document-multiple' className='w-6 h-6 text-primary' />
+              <h2 className='text-xl font-semibold'>表单管理</h2>
+            </div>
+            <FormTypeTabs forms={appForms} isLoading={isLoading} />
+          </CardBody>
+        </Card>
       </div>
     </div>
   )
