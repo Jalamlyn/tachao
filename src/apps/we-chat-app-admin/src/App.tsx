@@ -13,6 +13,7 @@ import { items } from "../component/items"
 import Logo from "../component/logo/Logo"
 import { BreadcrumbProvider } from "../../../contexts/BreadcrumbContext"
 import GlobalBreadcrumb from "../../../components/GlobalBreadcrumb"
+import ServiceSupportModal from "./ServiceSupportModal"
 
 export default function Component() {
   const { isOpen, onOpenChange } = useDisclosure()
@@ -21,13 +22,16 @@ export default function Component() {
   const location = useLocation()
   const navigate = useNavigate()
   const { userInfo, loading } = useGlobalUser()
+  const { isOpen: isServiceModalOpen, onOpen: onServiceModalOpen, onClose: onServiceModalClose } = useDisclosure()
 
   const onToggle = React.useCallback(() => {
     setIsCollapsed((prev) => !prev)
   }, [])
+
   const handleLogout = () => {
     navigate("/we-chat-login")
   }
+
   return (
     <BreadcrumbProvider>
       <div className='flex h-screen w-full gap-4 overflow-hidden'>
@@ -112,21 +116,44 @@ export default function Component() {
               <Tooltip content='Support' isDisabled={!isCollapsed} placement='right'>
                 <Button
                   fullWidth
-                  className={cn("justify-start truncate text-default-600 data-[hover=true]:text-foreground", {
-                    "justify-center": isCollapsed,
-                  })}
-                  isIconOnly={isCollapsed}
+                  className={cn(
+                    "relative justify-start truncate bg-gradient-to-r from-primary-500/20 to-secondary-500/20 hover:from-primary-500/30 hover:to-secondary-500/30 transition-all duration-300",
+                    "group overflow-hidden",
+                    {
+                      "justify-center": isCollapsed,
+                    }
+                  )}
                   startContent={
                     isCollapsed ? null : (
-                      <Icon className='flex-none text-default-600' icon='solar:info-circle-line-duotone' width={24} />
+                      <div className="relative">
+                        <Icon className='flex-none text-primary-500' icon='solar:info-circle-line-duotone' width={24} />
+                        <span className="absolute -right-1 -top-1">
+                          <span className="relative flex h-2 w-2">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75"></span>
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500"></span>
+                          </span>
+                        </span>
+                      </div>
                     )
                   }
-                  variant='light'
+                  variant='flat'
+                  onPress={onServiceModalOpen}
                 >
                   {isCollapsed ? (
-                    <Icon className='text-default-500' icon='solar:info-circle-line-duotone' width={24} />
+                    <div className="relative">
+                      <Icon className='text-primary-500' icon='solar:info-circle-line-duotone' width={24} />
+                      <span className="absolute -right-1 -top-1">
+                        <span className="relative flex h-2 w-2">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75"></span>
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500"></span>
+                        </span>
+                      </span>
+                    </div>
                   ) : (
-                    "服务支持"
+                    <span className="font-medium text-primary-700">增值服务</span>
+                  )}
+                  {!isCollapsed && (
+                    <div className="absolute inset-0 -z-10 bg-gradient-to-r from-primary-500/10 to-secondary-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
                   )}
                 </Button>
               </Tooltip>
@@ -166,6 +193,9 @@ export default function Component() {
             <Outlet />
           </div>
         </div>
+
+        {/* Service Support Modal */}
+        <ServiceSupportModal isOpen={isServiceModalOpen} onClose={onServiceModalClose} />
       </div>
     </BreadcrumbProvider>
   )
