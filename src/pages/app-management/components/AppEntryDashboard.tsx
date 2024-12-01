@@ -4,9 +4,8 @@ import { useMetadata } from "@/hooks/useMetadata"
 import EmptyState from "@/components/EmptyState"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Spinner } from "@nextui-org/react"
+import { Spinner, Input, Button, Select, SelectItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { Button } from "@nextui-org/react"
 import { FormTypeAIModal } from "./FormTypeTabs/FormTypeAIModal"
 import { FormTypeTabs } from "./FormTypeTabs"
 
@@ -43,6 +42,8 @@ export const AppEntryDashboard: React.FC = () => {
   const { items: reports = [], load: loadReports } = useMetadata("report")
   const { items: forms = [], load: loadForms } = useMetadata("form")
   const [isAIModalOpen, setIsAIModalOpen] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState("")
+  const [statusFilter, setStatusFilter] = React.useState("all")
 
   React.useEffect(() => {
     const loadData = async () => {
@@ -71,6 +72,20 @@ export const AppEntryDashboard: React.FC = () => {
   // 计算活跃用户数（基于表单提交者）
   const activeUsers = new Set(appForms.map(form => form.submitter?.id)).size
 
+  // 过滤表单
+  const filteredForms = appForms.filter(form => {
+    const matchesSearch = form.title.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesStatus = statusFilter === "all" || form.status === statusFilter
+    return matchesSearch && matchesStatus
+  })
+
+  // 获取本月新增报表数量
+  const getNewReportsCount = () => {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    return appReports.filter(report => new Date(report.createdAt) >= startOfMonth).length
+  }
+
   return (
     <div className="hidden flex-col md:flex">
       <div className="flex-1 space-y-4 p-8 pt-6">
@@ -82,10 +97,10 @@ export const AppEntryDashboard: React.FC = () => {
             <TabsTrigger value="overview">概览</TabsTrigger>
             <TabsTrigger value="forms">表单</TabsTrigger>
             <TabsTrigger value="reports">报表</TabsTrigger>
-            <TabsTrigger value="settings">设置</TabsTrigger>
           </TabsList>
+          
+          {/* 概览 Tab */}
           <TabsContent value="overview" className="space-y-4">
-            {/* 统计卡片 */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 title="表单总数"
@@ -113,9 +128,7 @@ export const AppEntryDashboard: React.FC = () => {
               />
             </div>
 
-            {/* 表单和报表展示区域 */}
             <div className="grid gap-4 md:grid-cols-2">
-              {/* 表单模板区域 */}
               <Card className="col-span-1">
                 <CardHeader>
                   <CardTitle>表单模板</CardTitle>
@@ -150,7 +163,6 @@ export const AppEntryDashboard: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* 报表区域 */}
               <Card className="col-span-1">
                 <CardHeader>
                   <CardTitle>数据报表</CardTitle>
@@ -185,17 +197,108 @@ export const AppEntryDashboard: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
 
-            {/* 表单管理区域 */}
+          {/* 表单 Tab */}
+          <TabsContent value="forms" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <StatCard
+                title="总表单数"
+                value={appForms.length}
+                icon="mdi:form-select"
+                description="所有表单"
+              />
+              <StatCard
+                title="已提交表单"
+                value={appForms.filter(f => f.status === "submitted").length}
+                icon="mdi:checkbox-marked-circle"
+                description="已完成提交的表单"
+              />
+              <StatCard
+                title="待处理表单"
+                value={appForms.filter(f => f.status === "draft").length}
+                icon="mdi:clock"
+                description="草稿状态的表单"
+              />
+            </div>
+
             <Card>
               <CardHeader>
-                <CardTitle>表单管理</CardTitle>
-                <CardDescription>所有已提交的表单列表</CardDescription>
+                <CardTitle>表单列表</CardTitle>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="搜索表单..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    startContent={<Icon icon="mdi:magnify" />}
+                  />
+                  <Select
+                    placeholder="状态筛选"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <SelectItem key="all" value="all">全部</SelectItem>
+                    <SelectItem key="submitted" value="submitted">已提交</SelectItem>
+                    <SelectItem key="draft" value="draft">草稿</SelectItem>
+                  </Select>
+                </div>
               </CardHeader>
               <CardContent>
-                <FormTypeTabs forms={appForms} isLoading={isLoading} />
+                <FormTypeTabs forms={filteredForms} isLoading={isLoading} />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* 报表 Tab */}
+          <TabsContent value="reports" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <StatCard
+                title="报表总数"
+                value={appReports.length}
+                icon="mdi:chart-box"
+                description="所有报表"
+              />
+              <StatCard
+                title="本月新增"
+                value={getNewReportsCount()}
+                icon="mdi:chart-timeline-variant"
+                description="本月新增的报表数量"
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {appReports.map((report) => (
+                <Card key={report.id}>
+                  <CardHeader>
+                    <CardTitle>{report.title}</CardTitle>
+                    <CardDescription>{report.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-32 bg-default-100 rounded-lg mb-4">
+                      {/* 报表预览或缩略图占位符 */}
+                      <div className="flex items-center justify-center h-full">
+                        <Icon icon="mdi:chart-box" className="w-12 h-12 text-default-300" />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button
+                        color="primary"
+                        variant="flat"
+                        onPress={() => window.open(`/report/${report.id}`, "_blank")}
+                        startContent={<Icon icon="mdi:eye" />}
+                      >
+                        查看报表
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {appReports.length === 0 && (
+                <div className="col-span-full text-center py-8 text-default-500">
+                  暂无可用的数据报表
+                </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
