@@ -9,7 +9,7 @@ import {
   Chip,
   Button,
   Tooltip,
-  Pagination
+  Pagination,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { MetadataDetail } from "@/hooks/metadata/types"
@@ -22,13 +22,7 @@ interface FormTypeTableProps {
   onPageChange: (page: number) => void
 }
 
-export const FormTypeTable: React.FC<FormTypeTableProps> = ({
-  forms,
-  isLoading,
-  page,
-  pageSize,
-  onPageChange
-}) => {
+export const FormTypeTable: React.FC<FormTypeTableProps> = ({ forms, isLoading, page, pageSize, onPageChange }) => {
   // 计算分页数据
   const start = (page - 1) * pageSize
   const end = start + pageSize
@@ -74,19 +68,18 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
 
   return (
     <Table
-      aria-label="表单列表"
+      aria-label='表单列表'
       classNames={{
         wrapper: "min-h-[400px]",
       }}
-      isLoading={isLoading}
       bottomContent={
         forms.length > 0 ? (
-          <div className="flex w-full justify-center">
+          <div className='flex w-full justify-center'>
             <Pagination
               isCompact
               showControls
               showShadow
-              color="primary"
+              color='primary'
               page={page}
               total={totalPages}
               onChange={onPageChange}
@@ -112,26 +105,22 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
             </TableCell>
             <TableCell>{form.indexFields?.orderNumber}</TableCell>
             <TableCell>
-              <Chip color={getStatusColor(form.status)} variant="flat" className="capitalize">
+              <Chip color={getStatusColor(form.status)} variant='flat' className='capitalize'>
                 {getStatusText(form.status)}
               </Chip>
             </TableCell>
             <TableCell>
-              <div className="flex flex-col">
-                <span className="text-tiny text-default-500">
-                  创建: {formatDate(form.indexFields?.createdAt)}
-                </span>
-                <span className="text-tiny text-default-400">
-                  更新: {formatDate(form.updatedAt)}
-                </span>
+              <div className='flex flex-col'>
+                <span className='text-tiny text-default-500'>创建: {formatDate(form.indexFields?.createdAt)}</span>
+                <span className='text-tiny text-default-400'>更新: {formatDate(form.updatedAt)}</span>
               </div>
             </TableCell>
             <TableCell>
               <Button
-                size="sm"
-                variant="flat"
-                color="primary"
-                startContent={<Icon icon="mdi:eye" className="w-4 h-4" />}
+                size='sm'
+                variant='flat'
+                color='primary'
+                startContent={<Icon icon='mdi:eye' className='w-4 h-4' />}
                 onPress={() => window.open(`/form/${form.id}`, "_blank")}
               >
                 查看
