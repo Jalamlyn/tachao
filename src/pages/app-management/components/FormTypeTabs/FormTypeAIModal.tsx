@@ -9,6 +9,7 @@ import {
   Textarea,
   ScrollShadow,
   Spinner,
+  Tooltip,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -162,26 +163,46 @@ export const FormTypeAIModal: React.FC<FormTypeAIModalProps> = ({
           </ScrollShadow>
         </ModalBody>
         <ModalFooter>
-          <div className="flex items-center space-x-2 w-full">
+          <div className="flex items-end gap-2 w-full">
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="输入您的问题..."
+              placeholder="输入分析指令，例如: '统计所有表单的状态分布'"
               className="flex-grow"
+              classNames={{
+                input: "py-2 text-medium",
+                inputWrapper: "bg-default-100",
+              }}
               minRows={2}
               maxRows={4}
-              disabled={isLoading}
+              endContent={
+                <div className="flex items-center gap-2 pr-2">
+                  <Tooltip content="发送指令" placement="top">
+                    <Button
+                      isIconOnly
+                      className={!input || isLoading ? "" : "bg-primary"}
+                      color={!input || isLoading ? "default" : "primary"}
+                      isDisabled={!input || isLoading}
+                      radius="full"
+                      variant={!input || isLoading ? "flat" : "solid"}
+                      onClick={handleSendMessage}
+                      isLoading={isLoading}
+                    >
+                      {isLoading ? (
+                        <Icon className="animate-spin" icon="eos-icons:loading" width={20} />
+                      ) : (
+                        <Icon
+                          className={!input ? "text-default-500" : "text-white"}
+                          icon="solar:arrow-up-linear"
+                          width={20}
+                        />
+                      )}
+                    </Button>
+                  </Tooltip>
+                </div>
+              }
             />
-            <Button
-              color="primary"
-              isLoading={isLoading}
-              onClick={handleSendMessage}
-              isDisabled={isLoading}
-              className="px-8 h-14"
-            >
-              {isLoading ? <Spinner size="sm" /> : "提问"}
-            </Button>
           </div>
         </ModalFooter>
       </ModalContent>
