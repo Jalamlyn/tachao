@@ -9,9 +9,10 @@ import {
   Checkbox,
   Spinner,
   ScrollShadow,
-  RadioGroup,
-  Radio,
+  Card,
+  CardBody,
 } from "@nextui-org/react"
+import { Icon } from "@iconify/react"
 import { useMetadata } from "@/hooks/useMetadata"
 import { AppIndex } from "../store/useAppStore"
 import message from "@/components/Message"
@@ -65,6 +66,23 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
     }
   }
 
+  const templateConfigs = [
+    {
+      type: "default",
+      icon: "mdi:view-grid-outline",
+      title: "默认模板",
+      description: "适用于表单和报表的常规展示",
+      color: "primary",
+    },
+    {
+      type: "dashboard",
+      icon: "mdi:view-dashboard-outline",
+      title: "仪表盘模板",
+      description: "适用于数据分析和可视化展示",
+      color: "secondary",
+    },
+  ]
+
   if (!app) return null
 
   return (
@@ -91,14 +109,29 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
             <ScrollShadow>
               <div className='space-y-6'>
                 <div className='space-y-2'>
-                  <h3 className='text-lg font-medium'>界面模板</h3>
-                  <RadioGroup
-                    value={selectedTemplate}
-                    onValueChange={(value) => setSelectedTemplate(value as "default" | "dashboard")}
-                  >
-                    <Radio value="default">默认模板</Radio>
-                    <Radio value="dashboard">仪表盘模板</Radio>
-                  </RadioGroup>
+                  <h3 className='text-lg font-medium'>选择模板类型</h3>
+                  <div className='grid grid-cols-2 gap-4'>
+                    {templateConfigs.map((config) => (
+                      <Card
+                        key={config.type}
+                        isPressable
+                        isSelected={selectedTemplate === config.type}
+                        onPress={() => setSelectedTemplate(config.type as "default" | "dashboard")}
+                        className={`border-2 ${
+                          selectedTemplate === config.type ? `border-${config.color}` : "border-transparent"
+                        }`}
+                      >
+                        <CardBody className='text-center p-4'>
+                          <Icon
+                            icon={config.icon}
+                            className={`w-12 h-12 mx-auto text-${config.color}`}
+                          />
+                          <div className='mt-2 font-medium'>{config.title}</div>
+                          <div className='text-small text-default-500'>{config.description}</div>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
 
                 <div className='space-y-2'>

@@ -18,18 +18,55 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
     setDeleteModalOpen(true)
   }
 
+  const getTemplateIcon = (template?: string) => {
+    switch (template) {
+      case "dashboard":
+        return "mdi:view-dashboard-outline"
+      default:
+        return "mdi:view-grid-outline"
+    }
+  }
+
+  const getTemplateColor = (template?: string) => {
+    switch (template) {
+      case "dashboard":
+        return "text-secondary"
+      default:
+        return "text-primary"
+    }
+  }
+
+  const getTemplateLabel = (template?: string) => {
+    switch (template) {
+      case "dashboard":
+        return "仪表盘模板"
+      default:
+        return "默认模板"
+    }
+  }
+
   return (
     <Card className='w-full hover:shadow-lg transition-shadow duration-300'>
       <CardBody className='p-4'>
         <div className='flex items-center gap-4'>
           <div className='p-3 rounded-lg bg-primary/10'>
-            <Icon icon='mdi:apps' className='w-6 h-6 text-primary' />
+            <Icon 
+              icon={getTemplateIcon(app.template)} 
+              className={`w-6 h-6 ${getTemplateColor(app.template)}`} 
+            />
           </div>
           <div className='flex-1'>
             <div className='flex items-center gap-2'>
               <h3 className='text-lg font-semibold'>{app.title}</h3>
               <Chip size='sm' variant='flat' color={app.status === "active" ? "success" : "default"}>
                 {app.status === "active" ? "运行中" : "已停用"}
+              </Chip>
+              <Chip 
+                size='sm' 
+                variant='flat' 
+                color={app.template === "dashboard" ? "secondary" : "primary"}
+              >
+                {getTemplateLabel(app.template)}
               </Chip>
             </div>
             <p className='text-small text-default-500'>创建于 {new Date(app.createdAt).toLocaleDateString()}</p>
