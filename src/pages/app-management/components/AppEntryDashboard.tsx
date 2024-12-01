@@ -1,18 +1,226 @@
 import React from "react"
 import { useParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
-import { AppIndex } from "../store/useAppStore"
 import EmptyState from "@/components/EmptyState"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/registry/new-york/ui/card"
-import { Overview } from "@/examples/dashboard/components/overview"
-import { RecentSales } from "@/examples/dashboard/components/recent-sales"
-import { CalendarDateRangePicker } from "@/examples/dashboard/components/date-range-picker"
-import { Button } from "@/registry/new-york/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/registry/new-york/ui/tabs"
-import { MainNav } from "@/examples/dashboard/components/main-nav"
-import { Search } from "@/examples/dashboard/components/search"
-import { UserNav } from "@/examples/dashboard/components/user-nav"
-import { Spinner } from "@nextui-org/react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Spinner, Avatar, Input } from "@nextui-org/react"
+import { Icon } from "@iconify/react"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
+import { format, addDays } from "date-fns"
+import { cn } from "@/lib/utils"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { CalendarIcon } from "@radix-ui/react-icons"
+import { DateRange } from "react-day-picker"
+
+// 自定义日期选择器组件
+function CalendarDateRangePicker({ className }: React.HTMLAttributes<HTMLDivElement>) {
+  const [date, setDate] = React.useState<DateRange | undefined>({
+    from: new Date(2023, 0, 20),
+    to: addDays(new Date(2023, 0, 20), 20),
+  })
+
+  return (
+    <div className={cn("grid gap-2", className)}>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            id="date"
+            variant={"outline"}
+            className={cn(
+              "w-[260px] justify-start text-left font-normal",
+              !date && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {date?.from ? (
+              date.to ? (
+                <>
+                  {format(date.from, "LLL dd, y")} -{" "}
+                  {format(date.to, "LLL dd, y")}
+                </>
+              ) : (
+                format(date.from, "LLL dd, y")
+              )
+            ) : (
+              <span>选择日期范围</span>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="end">
+          <Calendar
+            initialFocus
+            mode="range"
+            defaultMonth={date?.from}
+            selected={date}
+            onSelect={setDate}
+            numberOfMonths={2}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
+}
+
+// 自定义导航组件
+function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
+  return (
+    <nav className={cn("flex items-center space-x-4 lg:space-x-6", className)} {...props}>
+      <Button variant="link" className="text-sm font-medium">
+        概览
+      </Button>
+      <Button variant="link" className="text-sm font-medium text-muted-foreground">
+        表单
+      </Button>
+      <Button variant="link" className="text-sm font-medium text-muted-foreground">
+        报表
+      </Button>
+      <Button variant="link" className="text-sm font-medium text-muted-foreground">
+        设置
+      </Button>
+    </nav>
+  )
+}
+
+// 搜索组件
+function Search() {
+  return (
+    <div>
+      <Input
+        type="search"
+        placeholder="搜索..."
+        className="md:w-[100px] lg:w-[300px]"
+      />
+    </div>
+  )
+}
+
+// 用户导航组件
+function UserNav() {
+  return (
+    <Avatar
+      isBordered
+      as="button"
+      className="transition-transform"
+      color="secondary"
+      name="Jason Hughes"
+      size="sm"
+      src="https://i.pravatar.cc/150?u=a042581f4e29026704d"
+    />
+  )
+}
+
+// 数据概览组件
+function Overview() {
+  const data = [
+    { name: "1月", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "2月", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "3月", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "4月", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "5月", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "6月", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "7月", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "8月", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "9月", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "10月", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "11月", total: Math.floor(Math.random() * 5000) + 1000 },
+    { name: "12月", total: Math.floor(Math.random() * 5000) + 1000 },
+  ]
+
+  return (
+    <ResponsiveContainer width="100%" height={350}>
+      <BarChart data={data}>
+        <XAxis
+          dataKey="name"
+          stroke="#888888"
+          fontSize={12}
+          tickLine={false}
+          axisLine={false}
+        />
+        <YAxis
+          stroke="#888888"
+          fontSize={12}
+          tickLine={false}
+          axisLine={false}
+          tickFormatter={(value) => `${value}`}
+        />
+        <Bar
+          dataKey="total"
+          fill="currentColor"
+          radius={[4, 4, 0, 0]}
+          className="fill-primary"
+        />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+// 最近提交组件
+function RecentSubmissions() {
+  const recentData = [
+    {
+      id: 1,
+      name: "张三",
+      email: "zhangsan@example.com",
+      time: "10分钟前",
+      form: "员工入职表"
+    },
+    {
+      id: 2,
+      name: "李四",
+      email: "lisi@example.com",
+      time: "25分钟前",
+      form: "请假申请"
+    },
+    {
+      id: 3,
+      name: "王五",
+      email: "wangwu@example.com",
+      time: "1小时前",
+      form: "报销单"
+    },
+    {
+      id: 4,
+      name: "赵六",
+      email: "zhaoliu@example.com",
+      time: "2小时前",
+      form: "项目申请"
+    },
+    {
+      id: 5,
+      name: "钱七",
+      email: "qianqi@example.com",
+      time: "3小时前",
+      form: "设备维修"
+    }
+  ]
+
+  return (
+    <div className="space-y-8">
+      {recentData.map((item) => (
+        <div key={item.id} className="flex items-center">
+          <Avatar
+            isBordered
+            className="h-9 w-9"
+            src={`https://i.pravatar.cc/150?u=${item.id}`}
+          />
+          <div className="ml-4 space-y-1">
+            <p className="text-sm font-medium leading-none">{item.name}</p>
+            <p className="text-sm text-muted-foreground">
+              {item.email}
+            </p>
+          </div>
+          <div className="ml-auto text-sm">
+            <p className="font-medium">{item.form}</p>
+            <p className="text-muted-foreground">{item.time}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export const AppEntryDashboard: React.FC = () => {
   const { appId } = useParams<{ appId: string }>()
@@ -75,21 +283,8 @@ export const AppEntryDashboard: React.FC = () => {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    总表单数
-                  </CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
-                  >
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                  </svg>
+                  <CardTitle className="text-sm font-medium">总表单数</CardTitle>
+                  <Icon icon="mdi:form-select" className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{appForms.length}</div>
@@ -100,23 +295,8 @@ export const AppEntryDashboard: React.FC = () => {
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    模板数量
-                  </CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
-                  >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
+                  <CardTitle className="text-sm font-medium">模板数量</CardTitle>
+                  <Icon icon="mdi:file-document-multiple" className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{appTemplates.length}</div>
@@ -128,19 +308,7 @@ export const AppEntryDashboard: React.FC = () => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">报表数量</CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
-                  >
-                    <rect width="20" height="14" x="2" y="5" rx="2" />
-                    <path d="M2 10h20" />
-                  </svg>
+                  <Icon icon="mdi:chart-box" className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{appReports.length}</div>
@@ -151,21 +319,8 @@ export const AppEntryDashboard: React.FC = () => {
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    活跃用户
-                  </CardTitle>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    className="h-4 w-4 text-muted-foreground"
-                  >
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                  </svg>
+                  <CardTitle className="text-sm font-medium">活跃用户</CardTitle>
+                  <Icon icon="mdi:account-multiple" className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">+573</div>
@@ -192,7 +347,7 @@ export const AppEntryDashboard: React.FC = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RecentSales />
+                  <RecentSubmissions />
                 </CardContent>
               </Card>
             </div>
