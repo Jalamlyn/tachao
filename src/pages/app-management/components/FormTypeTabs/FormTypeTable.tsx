@@ -9,7 +9,6 @@ import {
   Chip,
   Button,
   Tooltip,
-  Selection,
   Modal,
   ModalContent,
   ModalHeader,
@@ -20,8 +19,6 @@ import {
 import { Icon } from "@iconify/react"
 import { MetadataDetail } from "@/hooks/useMetadata"
 import message from "@/components/Message"
-import { apiService } from "@/service/apis/api"
-import { getAppId } from "@/utils"
 
 interface FormTypeTableProps {
   forms: MetadataDetail[]
@@ -32,19 +29,11 @@ interface FormTypeTableProps {
   onDelete?: (ids: string[]) => Promise<void>
 }
 
-export const FormTypeTable: React.FC<FormTypeTableProps> = ({
-  forms,
-  page,
-  pageSize,
-  onPageChange,
-  onDelete,
-}) => {
-  // 选中的行
-  const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]))
+export const FormTypeTable: React.FC<FormTypeTableProps> = ({ forms, page, pageSize, onPageChange, onDelete }) => {
   // 删除确认弹窗
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
-  // 要删除的表单IDs
-  const [formsToDelete, setFormsToDelete] = useState<string[]>([])
+  // 要删除的表单ID
+  const [formToDelete, setFormToDelete] = useState<string>("")
   // 删除loading状态
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -85,121 +74,33 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
     }
   }
 
-  // 处理单个删除
-  const handleSingleDelete = (formId: string) => {
-    setFormsToDelete([formId])
-    setDeleteModalOpen(true)
-  }
-
-  // 处理批量删除
-  const handleBatchDelete = () => {
-    const selectedIds = selectedKeys === "all" 
-      ? forms.map(form => form.id)
-      : Array.from(selectedKeys as Set<string>)
-    
-    if (selectedIds.length === 0) {
-      message.warning("请先选择要删除的表单")
-      return
-    }
-    setFormsToDelete(selectedIds)
+  // 处理删除
+  const handleDelete = (formId: string) => {
+    setFormToDelete(formId)
     setDeleteModalOpen(true)
   }
 
   // 确认删除
   const confirmDelete = async () => {
+    if (!onDelete) return
+
     try {
       setIsDeleting(true)
-      
-      // 批量删除请求
-      const deleteUrl = `/internal/apps/${getAppId()}/metadata`
-      const deletePromises = formsToDelete.map(formId => {
-        return apiService.delete(deleteUrl, {
-          data: {
-            type: "FORM",
-            name: formId,
-          }
-        })
-      })
-      
-      await Promise.all(deletePromises)
-      
-      // 更新索引
-      const indexUrl = `/internal/apps/${getAppId()}/metadata/index/form`
-      await apiService.post(indexUrl, {
-        deleteIds: formsToDelete
-      })
-      
-      message.success("删除成功")
-      setSelectedKeys(new Set([]))
-      
-      // 如果提供了onDelete回调,则调用它
-      if (onDelete) {
-        await onDelete(formsToDelete)
-      }
+      await onDelete([formToDelete])
     } catch (error) {
       console.error("Delete error:", error)
       message.error("删除失败")
     } finally {
       setIsDeleting(false)
       setDeleteModalOpen(false)
-      setFormsToDelete([])
+      setFormToDelete("")
     }
-  }
-
-  // 获取选中项数量
-  const getSelectedCount = () => {
-    if (selectedKeys === "all") {
-      return forms.length
-    }
-    return (selectedKeys as Set<string>).size
-  }
-
-  // 渲染顶部工具栏
-  const renderTopContent = () => {
-    const selectedCount = getSelectedCount()
-
-    return (
-      <div className='flex justify-between items-center px-2 py-4'>
-        {selectedCount > 0 && (
-          <div className='flex items-center gap-2'>
-            <span className='text-default-400 text-small'>已选择 {selectedCount} 项</span>
-            <Button
-              color='danger'
-              variant='light'
-              startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
-              onPress={handleBatchDelete}
-            >
-              批量删除
-            </Button>
-          </div>
-        )}
-      </div>
-    )
   }
 
   return (
     <>
       <Table
         aria-label='表单列表'
-        selectionMode='multiple'
-        selectedKeys={selectedKeys}
-        onSelectionChange={setSelectedKeys}
-        topContent={renderTopContent()}
-        bottomContent={
-          forms.length > 0 ? (
-            <div className='flex w-full justify-center'>
-              <Pagination
-                isCompact
-                showControls
-                showShadow
-                color='primary'
-                page={page}
-                total={Math.ceil(forms.length / pageSize)}
-                onChange={onPageChange}
-              />
-            </div>
-          ) : null
-        }
       >
         <TableHeader>
           <TableColumn>标题</TableColumn>
@@ -244,7 +145,7 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
                     variant='light'
                     color='danger'
                     startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
-                    onPress={() => handleSingleDelete(form.id)}
+                    onPress={() => handleDelete(form.id)}
                   >
                     删除
                   </Button>
@@ -255,25 +156,39 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
         </TableBody>
       </Table>
 
+      {forms.length > 0 && (
+        <div className='flex w-full justify-center mt-4'>
+          <Pagination
+            isCompact
+            showControls
+            showShadow
+            color='primary'
+            page={page}
+            total={Math.ceil(forms.length / pageSize)}
+            onChange={onPageChange}
+          />
+        </div>
+      )}
+
       {/* 删除确认弹窗 */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => {
           setDeleteModalOpen(false)
-          setFormsToDelete([])
+          setFormToDelete("")
         }}
       >
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>确认删除</ModalHeader>
           <ModalBody>
-            <p>确定要删除选中的 {formsToDelete.length} 个表单吗？此操作不可恢复。</p>
+            <p>确定要删除这个表单吗？此操作不可恢复。</p>
           </ModalBody>
           <ModalFooter>
             <Button
               variant='light'
               onPress={() => {
                 setDeleteModalOpen(false)
-                setFormsToDelete([])
+                setFormToDelete("")
               }}
             >
               取消
