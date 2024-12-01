@@ -8,7 +8,6 @@ import { AppGallery } from "./components/AppGallery"
 import { CreateAppModal } from "./components/CreateAppModal"
 import { DevelopModal } from "./components/DevelopModal"
 import { useAppStore } from "./store/useAppStore"
-import wecomqr from "../../../public/wechat.jpg"
 
 const AppManagement: React.FC = () => {
   const navigate = useNavigate()

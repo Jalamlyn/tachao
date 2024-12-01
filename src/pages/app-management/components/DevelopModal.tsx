@@ -17,7 +17,7 @@ import { Icon } from "@iconify/react"
 import { useMetadata } from "@/hooks/useMetadata"
 import { AppIndex } from "../store/useAppStore"
 import message from "@/components/Message"
-import wecomqr from "../../../../../public/wechat.jpg"
+import wecomqr from "./wechat.jpg"
 
 interface DevelopModalProps {
   isOpen: boolean
@@ -93,10 +93,9 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        size='2xl'
+        size='3xl'
         scrollBehavior='inside'
         classNames={{
-          base: "max-w-2xl",
           header: "border-b",
           body: "py-6",
           footer: "border-t",
@@ -114,7 +113,7 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
                 <div className='space-y-6'>
                   <div className='space-y-2'>
                     <h3 className='text-lg font-medium'>选择模板类型</h3>
-                    <div className='grid grid-cols-3 gap-4'>
+                    <div className='grid grid-cols-3 gap-4 p-2'>
                       {templateConfigs.map((config) => (
                         <Card
                           key={config.type}
@@ -126,10 +125,7 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
                           }`}
                         >
                           <CardBody className='text-center p-4'>
-                            <Icon
-                              icon={config.icon}
-                              className={`w-12 h-12 mx-auto text-${config.color}`}
-                            />
+                            <Icon icon={config.icon} className={`w-12 h-12 mx-auto text-${config.color}`} />
                             <div className='mt-2 font-medium'>{config.title}</div>
                             <div className='text-small text-default-500'>{config.description}</div>
                           </CardBody>
@@ -139,18 +135,13 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
                       {/* 定制模板卡片 */}
                       <Card
                         isPressable
-                        className="border-2 border-dashed border-primary/50 hover:border-primary transition-colors duration-300"
+                        className='border-2 border-dashed border-primary/50 hover:border-primary transition-colors duration-300'
                         onPress={() => setIsCustomModalOpen(true)}
                       >
                         <CardBody className='text-center p-4'>
-                          <Icon
-                            icon="mdi:palette-outline"
-                            className="w-12 h-12 mx-auto text-primary"
-                          />
+                          <Icon icon='mdi:palette-outline' className='w-12 h-12 mx-auto text-primary' />
                           <div className='mt-2 font-medium'>定制模板</div>
-                          <div className='text-small text-default-500'>
-                            根据您的需求定制专属模板
-                          </div>
+                          <div className='text-small text-default-500'>根据您的需求定制专属模板</div>
                         </CardBody>
                       </Card>
                     </div>
@@ -213,41 +204,27 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
       </Modal>
 
       {/* 定制模板服务二维码弹窗 */}
-      <Modal 
-        isOpen={isCustomModalOpen} 
+      <Modal
+        isOpen={isCustomModalOpen}
         onClose={() => setIsCustomModalOpen(false)}
-        size="sm"
+        size='sm'
         classNames={{
           base: "max-w-md",
         }}
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1 text-center">
-            定制模板服务
-          </ModalHeader>
+          <ModalHeader className='flex flex-col gap-1 text-center'>定制模板服务</ModalHeader>
           <ModalBody>
-            <div className="text-center space-y-4">
-              <p className="text-default-600">
-                扫描下方二维码，联系我们的客服团队
-              </p>
-              <div className="flex justify-center">
-                <Image
-                  src={wecomqr}
-                  alt="客服二维码"
-                  className="w-48 h-48 object-contain"
-                />
+            <div className='text-center space-y-4'>
+              <p className='text-default-600'>扫描下方二维码，联系我们的技术支持团队</p>
+              <div className='flex justify-center'>
+                <Image src={wecomqr} alt='客服二维码' className='w-48 h-48 object-contain' />
               </div>
-              <p className="text-small text-default-500">
-                我们将为您提供专业的模板定制服务
-              </p>
+              <p className='text-small text-default-500'>我们将为您提供专业的模板定制服务</p>
             </div>
           </ModalBody>
-          <ModalFooter className="justify-center">
-            <Button 
-              color="primary" 
-              variant="light" 
-              onPress={() => setIsCustomModalOpen(false)}
-            >
+          <ModalFooter className='justify-center'>
+            <Button color='primary' variant='light' onPress={() => setIsCustomModalOpen(false)}>
               关闭
             </Button>
           </ModalFooter>
