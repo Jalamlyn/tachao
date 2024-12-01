@@ -9,6 +9,8 @@ import {
   Checkbox,
   Spinner,
   ScrollShadow,
+  RadioGroup,
+  Radio,
 } from "@nextui-org/react"
 import { useMetadata } from "@/hooks/useMetadata"
 import { AppIndex } from "../store/useAppStore"
@@ -18,13 +20,14 @@ interface DevelopModalProps {
   isOpen: boolean
   onClose: () => void
   app: AppIndex | null
-  onSubmit: (templateIds: string[], reportIds: string[]) => Promise<void>
+  onSubmit: (templateIds: string[], reportIds: string[], template: "default" | "dashboard") => Promise<void>
   isLoading?: boolean
 }
 
 export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app, onSubmit, isLoading = false }) => {
   const [selectedTemplateIds, setSelectedTemplateIds] = useState<string[]>([])
   const [selectedReportIds, setSelectedReportIds] = useState<string[]>([])
+  const [selectedTemplate, setSelectedTemplate] = useState<"default" | "dashboard">("default")
   const { items: templates = [], load: loadTemplates } = useMetadata("template")
   const { items: reports = [], load: loadReports } = useMetadata("report")
   const [isLoadingData, setIsLoadingData] = useState(false)
@@ -44,6 +47,7 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
       // 设置初始选中状态
       setSelectedTemplateIds(app?.indexFields?.templateIds || [])
       setSelectedReportIds(app?.indexFields?.reportIds || [])
+      setSelectedTemplate(app?.template || "default")
     }
   }, [isOpen, app])
 
@@ -54,7 +58,7 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
     }
 
     try {
-      await onSubmit(selectedTemplateIds, selectedReportIds)
+      await onSubmit(selectedTemplateIds, selectedReportIds, selectedTemplate)
     } catch (error) {
       console.error("Error submitting app config:", error)
       message.error(error instanceof Error ? error.message : "更新应用配置失败")
@@ -86,6 +90,17 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
           ) : (
             <ScrollShadow>
               <div className='space-y-6'>
+                <div className='space-y-2'>
+                  <h3 className='text-lg font-medium'>界面模板</h3>
+                  <RadioGroup
+                    value={selectedTemplate}
+                    onValueChange={(value) => setSelectedTemplate(value as "default" | "dashboard")}
+                  >
+                    <Radio value="default">默认模板</Radio>
+                    <Radio value="dashboard">仪表盘模板</Radio>
+                  </RadioGroup>
+                </div>
+
                 <div className='space-y-2'>
                   <h3 className='text-lg font-medium'>表单模板</h3>
                   <div className='space-y-2'>

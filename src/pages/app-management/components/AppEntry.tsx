@@ -6,11 +6,12 @@ import { useMetadata } from "@/hooks/useMetadata"
 import { AppIndex } from "../store/useAppStore"
 import EmptyState from "@/components/EmptyState"
 import { FormTypeTabs } from "./FormTypeTabs"
+import AppEntryDashboard from "./AppEntryDashboard"
 
 export const AppEntry: React.FC = () => {
   const { appId } = useParams<{ appId: string }>()
   const navigate = useNavigate()
-  const { items: apps = [], load: loadApps, isLoading } = useMetadata("app")
+  const { items: apps = [], load: loadApps,isLoading } = useMetadata("app")
   const { items: templates = [], load: loadTemplates } = useMetadata("template")
   const { items: reports = [], load: loadReports } = useMetadata("report")
   const { items: forms = [], load: loadForms } = useMetadata("form")
@@ -33,6 +34,11 @@ export const AppEntry: React.FC = () => {
   const app = apps.find((app) => app.id === appId)
   if (!app) {
     return <EmptyState type='error' title='未找到应用' description='该应用可能已被删除或您没有访问权限' />
+  }
+
+  // 根据应用的模板类型选择渲染不同的界面
+  if (app.template === "dashboard") {
+    return <AppEntryDashboard />
   }
 
   const appTemplates = templates.filter((template) => app.indexFields?.templateIds?.includes(template.id))

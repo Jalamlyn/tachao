@@ -15,6 +15,7 @@ export interface AppIndex {
   status: "active" | "inactive"
   createdAt: string
   updatedAt: string
+  template?: "default" | "dashboard" // 新增模板字段
   indexFields?: {
     templateIds: string[]
     reportIds: string[]
@@ -29,6 +30,7 @@ export interface CreateAppInput {
 export interface UpdateAppConfigInput {
   templateIds: string[]
   reportIds: string[]
+  template?: "default" | "dashboard" // 新增模板字段
 }
 
 // Store 类型定义
@@ -130,6 +132,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
           status: "active",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          template: "default", // 默认模板
           indexFields: {
             templateIds: [],
             reportIds: [],
@@ -203,6 +206,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
             if (app.id === appId) {
               return {
                 ...app,
+                template: input.template || app.template, // 更新模板
                 indexFields: {
                   ...app.indexFields,
                   templateIds: input.templateIds,
