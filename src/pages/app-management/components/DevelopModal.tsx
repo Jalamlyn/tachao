@@ -89,10 +89,9 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size='2xl'
+      size='4xl'
       scrollBehavior='inside'
       classNames={{
-        base: "max-w-2xl",
         header: "border-b",
         body: "py-6",
         footer: "border-t",
@@ -110,7 +109,7 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
               <div className='space-y-6'>
                 <div className='space-y-2'>
                   <h3 className='text-lg font-medium'>选择模板类型</h3>
-                  <div className='grid grid-cols-2 gap-4'>
+                  <div className='grid grid-cols-2 gap-4 p-2'>
                     {templateConfigs.map((config) => (
                       <Card
                         key={config.type}
@@ -122,10 +121,7 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
                         }`}
                       >
                         <CardBody className='text-center p-4'>
-                          <Icon
-                            icon={config.icon}
-                            className={`w-12 h-12 mx-auto text-${config.color}`}
-                          />
+                          <Icon icon={config.icon} className={`w-12 h-12 mx-auto text-${config.color}`} />
                           <div className='mt-2 font-medium'>{config.title}</div>
                           <div className='text-small text-default-500'>{config.description}</div>
                         </CardBody>

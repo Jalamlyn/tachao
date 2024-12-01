@@ -8,6 +8,7 @@ import { AppGallery } from "./components/AppGallery"
 import { CreateAppModal } from "./components/CreateAppModal"
 import { DevelopModal } from "./components/DevelopModal"
 import { useAppStore } from "./store/useAppStore"
+import wecomqr from "../../../public/wechat.jpg"
 
 const AppManagement: React.FC = () => {
   const navigate = useNavigate()
@@ -56,7 +57,7 @@ const AppManagement: React.FC = () => {
     if (!selectedApp) return
     await updateAppConfig({
       appId: selectedApp.id,
-      input: { templateIds, reportIds, template }
+      input: { templateIds, reportIds, template },
     })
   }
 
@@ -103,15 +104,13 @@ const AppManagement: React.FC = () => {
         }}
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">确认删除</ModalHeader>
+          <ModalHeader className='flex flex-col gap-1'>确认删除</ModalHeader>
           <ModalBody>
-            <p>
-              确定要删除应用 "{appToDelete?.title}" 吗？此操作不可恢复。
-            </p>
+            <p>确定要删除应用 "{appToDelete?.title}" 吗？此操作不可恢复。</p>
           </ModalBody>
           <ModalFooter>
             <Button
-              variant="light"
+              variant='light'
               onPress={() => {
                 setDeleteModalOpen(false)
                 setAppToDelete(null)
@@ -119,11 +118,7 @@ const AppManagement: React.FC = () => {
             >
               取消
             </Button>
-            <Button
-              color="danger"
-              onPress={handleDeleteConfirm}
-              isLoading={isDeleting}
-            >
+            <Button color='danger' onPress={handleDeleteConfirm} isLoading={isDeleting}>
               确认删除
             </Button>
           </ModalFooter>
