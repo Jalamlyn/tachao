@@ -3,7 +3,6 @@ import {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -17,20 +16,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuLabel,
   DropdownMenuGroup,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Icon } from "@iconify/react"
 import { Spinner } from "@nextui-org/react"
 import { Download, ChevronDown, Trash2 } from "lucide-react"
@@ -151,76 +144,6 @@ const generateColumns = (obj: any, parentKey: string = "", level: number = 0): C
   }, [])
 }
 
-// 辅助函数：递归获取所有列（包括嵌套列）
-const getAllNestedColumns = (columns: any[]): any[] => {
-  return columns.reduce((acc: any[], column) => {
-    if (column.columns) {
-      return [...acc, column, ...getAllNestedColumns(column.columns)]
-    }
-    return [...acc, column]
-  }, [])
-}
-
-// 辅助函数：处理父列可见性变化
-const handleParentColumnVisibility = (column: any, value: boolean) => {
-  // 获取所有子列
-  const childColumns = getAllNestedColumns(column.columns || [])
-  // 统一设置可见性
-  childColumns.forEach((childColumn) => {
-    if (childColumn.toggleVisibility) {
-      childColumn.toggleVisibility(value)
-    }
-  })
-}
-
-// 辅助函数：检查列是否有任何可见的子列
-const hasVisibleChildren = (column: any): boolean => {
-  if (!column.columns) return column.getIsVisible()
-  return column.columns.some((subColumn: any) => hasVisibleChildren(subColumn))
-}
-
-// 递归渲染列显示控制项
-const renderColumnVisibilityItems = (columns: any[], level = 0) => {
-  return columns.map((column) => {
-    const columnHeader = typeof column.header === 'function' ? column.id : column.header
-    
-    if (column.columns) {
-      const isParentVisible = hasVisibleChildren(column)
-      return (
-        <DropdownMenuSub key={column.id}>
-          <DropdownMenuSubTrigger className='capitalize'>
-            <span className='flex items-center gap-2'>
-              <Checkbox
-                checked={isParentVisible}
-                onCheckedChange={(checked) => handleParentColumnVisibility(column, !!checked)}
-              />
-              {columnHeader}
-            </span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuSubContent className='min-w-[8rem]'>
-              <div className='pl-2'>{renderColumnVisibilityItems(column.columns, level + 1)}</div>
-            </DropdownMenuSubContent>
-          </DropdownMenuPortal>
-        </DropdownMenuSub>
-      )
-    }
-
-    if (!column.getCanHide()) return null
-
-    return (
-      <DropdownMenuCheckboxItem
-        key={column.id}
-        className='capitalize'
-        checked={column.getIsVisible()}
-        onCheckedChange={(value) => column.toggleVisibility(!!value)}
-      >
-        {columnHeader}
-      </DropdownMenuCheckboxItem>
-    )
-  })
-}
-
 const FormDataTable: React.FC<FormDataTableProps> = ({
   data,
   isLoading = false,
@@ -236,18 +159,6 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
   const [showDeleteAlert, setShowDeleteAlert] = useState(false)
   const [showSingleDeleteAlert, setShowSingleDeleteAlert] = useState(false)
   const [deletingRow, setDeletingRow] = useState<any>(null)
-
-  // 初始化所有列为可见
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
-    const allVisible: VisibilityState = {}
-    if (data && data.length > 0) {
-      const flattenedObj = flattenObject(data[0])
-      Object.keys(flattenedObj).forEach(key => {
-        allVisible[key] = true
-      })
-    }
-    return allVisible
-  })
 
   const columns = React.useMemo(() => {
     if (!data || data.length === 0) return []
@@ -320,7 +231,6 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
     state: {
       sorting,
       columnFilters,
-      columnVisibility,
       rowSelection,
       globalFilter,
       columnPinning: {
@@ -332,7 +242,6 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
     onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -451,25 +360,6 @@ const FormDataTable: React.FC<FormDataTableProps> = ({
               >
                 导出选中数据
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant='outline'>
-                显示列
-                <ChevronDown className='ml-2 h-4 w-4' />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end' className='w-[200px]'>
-              <DropdownMenuLabel>选择要显示的列</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <ScrollArea className='h-[400px] px-1'>
-                {table.getAllColumns().length === 0 ? (
-                  <div className='p-2 text-sm text-gray-500'>暂无可用列</div>
-                ) : (
-                  renderColumnVisibilityItems(table.getAllColumns())
-                )}
-              </ScrollArea>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
