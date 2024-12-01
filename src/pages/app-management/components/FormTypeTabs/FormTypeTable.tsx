@@ -15,6 +15,7 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Pagination,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { MetadataDetail } from "@/hooks/useMetadata"
@@ -31,7 +32,6 @@ interface FormTypeTableProps {
 
 export const FormTypeTable: React.FC<FormTypeTableProps> = ({
   forms,
-  isLoading,
   page,
   pageSize,
   onPageChange,
@@ -91,7 +91,10 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
 
   // 处理批量删除
   const handleBatchDelete = () => {
-    const selectedIds = Array.from(selectedKeys).map(key => String(key))
+    const selectedIds = selectedKeys === "all" 
+      ? forms.map(form => form.id)
+      : Array.from(selectedKeys as Set<string>)
+    
     if (selectedIds.length === 0) {
       message.warning("请先选择要删除的表单")
       return
@@ -103,11 +106,10 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
   // 确认删除
   const confirmDelete = async () => {
     if (!onDelete) return
-    
+
     try {
       setIsDeleting(true)
       await onDelete(formsToDelete)
-      message.success("删除成功")
       setSelectedKeys(new Set([]))
     } catch (error) {
       console.error("Delete error:", error)
@@ -119,19 +121,27 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
     }
   }
 
+  // 获取选中项数量
+  const getSelectedCount = () => {
+    if (selectedKeys === "all") {
+      return forms.length
+    }
+    return (selectedKeys as Set<string>).size
+  }
+
   // 渲染顶部工具栏
   const renderTopContent = () => {
-    const selectedCount = Array.from(selectedKeys).length
-    
+    const selectedCount = getSelectedCount()
+
     return (
-      <div className="flex justify-between items-center px-2 py-4">
+      <div className='flex justify-between items-center px-2 py-4'>
         {selectedCount > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-default-400 text-small">已选择 {selectedCount} 项</span>
+          <div className='flex items-center gap-2'>
+            <span className='text-default-400 text-small'>已选择 {selectedCount} 项</span>
             <Button
-              color="danger"
-              variant="light"
-              startContent={<Icon icon="mdi:delete" className="w-4 h-4" />}
+              color='danger'
+              variant='light'
+              startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
               onPress={handleBatchDelete}
             >
               批量删除
@@ -145,19 +155,19 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
   return (
     <>
       <Table
-        aria-label="表单列表"
-        selectionMode="multiple"
+        aria-label='表单列表'
+        selectionMode='multiple'
         selectedKeys={selectedKeys}
         onSelectionChange={setSelectedKeys}
         topContent={renderTopContent()}
         bottomContent={
           forms.length > 0 ? (
-            <div className="flex w-full justify-center">
+            <div className='flex w-full justify-center'>
               <Pagination
                 isCompact
                 showControls
                 showShadow
-                color="primary"
+                color='primary'
                 page={page}
                 total={Math.ceil(forms.length / pageSize)}
                 onChange={onPageChange}
@@ -171,7 +181,7 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
           <TableColumn>订单号</TableColumn>
           <TableColumn>状态</TableColumn>
           <TableColumn>时间</TableColumn>
-          <TableColumn align="center">操作</TableColumn>
+          <TableColumn align='center'>操作</TableColumn>
         </TableHeader>
         <TableBody items={forms}>
           {(form) => (
@@ -183,36 +193,32 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
               </TableCell>
               <TableCell>{form.indexFields?.orderNumber}</TableCell>
               <TableCell>
-                <Chip color={getStatusColor(form.status)} variant="flat" className="capitalize">
+                <Chip color={getStatusColor(form.status)} variant='flat' className='capitalize'>
                   {getStatusText(form.status)}
                 </Chip>
               </TableCell>
               <TableCell>
-                <div className="flex flex-col">
-                  <span className="text-tiny text-default-500">
-                    创建: {formatDate(form.indexFields?.createdAt)}
-                  </span>
-                  <span className="text-tiny text-default-400">
-                    更新: {formatDate(form.updatedAt)}
-                  </span>
+                <div className='flex flex-col'>
+                  <span className='text-tiny text-default-500'>创建: {formatDate(form.indexFields?.createdAt)}</span>
+                  <span className='text-tiny text-default-400'>更新: {formatDate(form.updatedAt)}</span>
                 </div>
               </TableCell>
               <TableCell>
-                <div className="flex justify-center gap-2">
+                <div className='flex justify-center gap-2'>
                   <Button
-                    size="sm"
-                    variant="flat"
-                    color="primary"
-                    startContent={<Icon icon="mdi:eye" className="w-4 h-4" />}
+                    size='sm'
+                    variant='flat'
+                    color='primary'
+                    startContent={<Icon icon='mdi:eye' className='w-4 h-4' />}
                     onPress={() => window.open(`/form/${form.id}`, "_blank")}
                   >
                     查看
                   </Button>
                   <Button
-                    size="sm"
-                    variant="light"
-                    color="danger"
-                    startContent={<Icon icon="mdi:delete" className="w-4 h-4" />}
+                    size='sm'
+                    variant='light'
+                    color='danger'
+                    startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
                     onPress={() => handleSingleDelete(form.id)}
                   >
                     删除
@@ -233,15 +239,13 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
         }}
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">确认删除</ModalHeader>
+          <ModalHeader className='flex flex-col gap-1'>确认删除</ModalHeader>
           <ModalBody>
-            <p>
-              确定要删除选中的 {formsToDelete.length} 个表单吗？此操作不可恢复。
-            </p>
+            <p>确定要删除选中的 {formsToDelete.length} 个表单吗？此操作不可恢复。</p>
           </ModalBody>
           <ModalFooter>
             <Button
-              variant="light"
+              variant='light'
               onPress={() => {
                 setDeleteModalOpen(false)
                 setFormsToDelete([])
@@ -249,11 +253,7 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
             >
               取消
             </Button>
-            <Button
-              color="danger"
-              onPress={confirmDelete}
-              isLoading={isDeleting}
-            >
+            <Button color='danger' onPress={confirmDelete} isLoading={isDeleting}>
               确认删除
             </Button>
           </ModalFooter>
