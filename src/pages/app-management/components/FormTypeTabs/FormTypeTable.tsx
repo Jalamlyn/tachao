@@ -20,6 +20,8 @@ import {
 import { Icon } from "@iconify/react"
 import { MetadataDetail } from "@/hooks/useMetadata"
 import message from "@/components/Message"
+import { apiService } from "@/service/apis/api"
+import { getAppId } from "@/utils"
 
 interface FormTypeTableProps {
   forms: MetadataDetail[]
@@ -105,12 +107,35 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({
 
   // 确认删除
   const confirmDelete = async () => {
-    if (!onDelete) return
-
     try {
       setIsDeleting(true)
-      await onDelete(formsToDelete)
+      
+      // 批量删除请求
+      const deleteUrl = `/internal/apps/${getAppId()}/metadata`
+      const deletePromises = formsToDelete.map(formId => {
+        return apiService.delete(deleteUrl, {
+          data: {
+            type: "FORM",
+            name: formId,
+          }
+        })
+      })
+      
+      await Promise.all(deletePromises)
+      
+      // 更新索引
+      const indexUrl = `/internal/apps/${getAppId()}/metadata/index/form`
+      await apiService.post(indexUrl, {
+        deleteIds: formsToDelete
+      })
+      
+      message.success("删除成功")
       setSelectedKeys(new Set([]))
+      
+      // 如果提供了onDelete回调,则调用它
+      if (onDelete) {
+        await onDelete(formsToDelete)
+      }
     } catch (error) {
       console.error("Delete error:", error)
       message.error("删除失败")
