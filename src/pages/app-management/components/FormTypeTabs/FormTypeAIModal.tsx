@@ -40,10 +40,17 @@ export const FormTypeAIModal: React.FC<FormTypeAIModalProps> = ({
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [currentAssistantMessage, setCurrentAssistantMessage] = useState<ChatMessage | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
+
+  React.useEffect(() => {
+    if (isOpen) {
+      scrollToBottom()
+    }
+  }, [isOpen, chatHistory?.messages])
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return
@@ -63,6 +70,7 @@ export const FormTypeAIModal: React.FC<FormTypeAIModalProps> = ({
         content: "",
         id: (Date.now() + 1).toString(),
       }
+      setCurrentAssistantMessage(assistantMessage)
       onUpdateHistory(formType, assistantMessage)
 
       await chatMoV2(
@@ -75,9 +83,16 @@ export const FormTypeAIModal: React.FC<FormTypeAIModalProps> = ({
           userMessage,
         ],
         (chunk) => {
-          onUpdateHistory(formType, {
-            ...assistantMessage,
-            content: (assistantMessage.content || "") + chunk,
+          setCurrentAssistantMessage((prev) => {
+            if (prev) {
+              const updatedMessage = {
+                ...prev,
+                content: (prev.content || "") + chunk,
+              }
+              onUpdateHistory(formType, updatedMessage)
+              return updatedMessage
+            }
+            return prev
           })
         },
         () => {},
@@ -88,6 +103,7 @@ export const FormTypeAIModal: React.FC<FormTypeAIModalProps> = ({
       console.error("Error in chat:", error)
     } finally {
       setIsLoading(false)
+      setCurrentAssistantMessage(null)
     }
   }
 
@@ -125,7 +141,7 @@ export const FormTypeAIModal: React.FC<FormTypeAIModalProps> = ({
         </ModalHeader>
         <ModalBody>
           <ScrollShadow className="flex-grow mb-4 pr-2">
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
               {chatHistory?.messages.map((message) => (
                 <motion.div
                   key={message.id}
