@@ -1,7 +1,7 @@
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 
 // 响应类型定义
-export type ResponseType = "error" | "question" | "confirm" | "form"
+export type ResponseType = "form" | "question" | "confirm" | "error"
 
 // 命令结果类型
 export type CommandResult = {

@@ -229,38 +229,78 @@ const AIFormEditor: React.FC = () => {
   const handleCommandResult = useCallback(
     (result) => {
       accumulatedTextRef.current = ""
-      if (result?.type === "support") {
-        if (result.data?.config) {
-          versionControl.addVersion({
-            formConfig: result.data.config,
-            rawConfig: result.data.rawConfig,
-          })
+      
+      switch(result?.type) {
+        case "form":
+          if (result.data?.config) {
+            versionControl.addVersion({
+              formConfig: result.data.config,
+              rawConfig: result.data.rawConfig,
+            })
 
-          setFormConfig(result.data.config)
-          setRawConfig(result.data.rawConfig)
+            setFormConfig(result.data.config)
+            setRawConfig(result.data.rawConfig)
 
+            updateLastMessage({
+              content: (
+                <div className='flex items-center gap-2 text-success'>
+                  <Icon icon='line-md:check-all' className='w-5 h-5' />
+                  <span>表单生成完成</span>
+                </div>
+              ),
+              status: "success",
+            })
+
+            setSelectedTab("preview")
+          }
+          break;
+
+        case "question":
           updateLastMessage({
             content: (
-              <div className='flex items-center gap-2 text-success'>
-                <Icon icon='line-md:check-all' className='w-5 h-5' />
-                <span>表单生成完成</span>
+              <div className='flex items-center gap-2 text-primary'>
+                <Icon icon='mdi:help-circle' className='w-5 h-5' />
+                <span>{result.data}</span>
               </div>
             ),
-            status: "success",
+            status: "question"
           })
+          break;
 
-          setSelectedTab("preview")
-        }
-      } else {
-        updateLastMessage({
-          content: (
-            <div className='flex items-center gap-2 text-danger'>
-              <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-              <span>生成失败</span>
-            </div>
-          ),
-          status: "error",
-        })
+        case "confirm":
+          updateLastMessage({
+            content: (
+              <div className='flex items-center gap-2 text-warning'>
+                <Icon icon='mdi:alert' className='w-5 h-5' />
+                <span>{result.data}</span>
+              </div>
+            ),
+            status: "confirm"
+          })
+          break;
+
+        case "error":
+          updateLastMessage({
+            content: (
+              <div className='flex items-center gap-2 text-danger'>
+                <Icon icon='mdi:alert-circle' className='w-5 h-5' />
+                <span>{result.data}</span>
+              </div>
+            ),
+            status: "error"
+          })
+          break;
+
+        default:
+          updateLastMessage({
+            content: (
+              <div className='flex items-center gap-2 text-danger'>
+                <Icon icon='mdi:alert-circle' className='w-5 h-5' />
+                <span>未知的返回类型</span>
+              </div>
+            ),
+            status: "error"
+          })
       }
     },
     [setFormConfig, setRawConfig, versionControl, updateLastMessage, setSelectedTab]
