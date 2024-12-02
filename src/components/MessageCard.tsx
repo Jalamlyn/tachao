@@ -13,7 +13,7 @@ import rehypeRaw from "rehype-raw"
 type MessageCardProps = React.HTMLAttributes<HTMLDivElement> & {
   avatar?: string
   showFeedback?: boolean
-  message?: React.ReactNode | string // 修改这里，允许 ReactNode 类型
+  message?: React.ReactNode | string
   currentAttempt?: number
   status?: "success" | "failed" | "streaming" | "loading" | "cancelled"
   attempts?: number
@@ -31,25 +31,12 @@ type MessageCardProps = React.HTMLAttributes<HTMLDivElement> & {
   onDeleteGuidanceMessage?: () => void
 }
 
-// Mermaid 组件保持不变
-const Mermaid = ({ chart }) => {
-  const [svg, setSvg] = useState("")
-  const mermaidRef = useRef()
-
-  useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: "default",
-      securityLevel: "loose",
-    })
-
-    mermaid.render("mermaid", chart).then((result) => {
-      setSvg(result.svg)
-    })
-  }, [chart])
-
-  return <div ref={mermaidRef} dangerouslySetInnerHTML={{ __html: svg }} />
-}
+// 简化的 Mermaid 组件
+const Mermaid = ({ chart }) => (
+  <div className="mermaid bg-white p-4 rounded-lg shadow-sm my-2 border border-gray-200">
+    {chart}
+  </div>
+)
 
 const MessageCard = React.memo(
   React.forwardRef<HTMLDivElement, MessageCardProps>(
@@ -87,6 +74,22 @@ const MessageCard = React.memo(
       const messageRef = useRef<HTMLDivElement>(null)
 
       const { copied, copy } = useClipboard()
+
+      // 初始化 mermaid
+      useEffect(() => {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: "default",
+          themeVariables: {
+            primaryColor: "#4f46e5",
+            primaryTextColor: "#000000",
+            primaryBorderColor: "#4f46e5",
+            lineColor: "#4b5563",
+            secondaryColor: "#6366f1",
+            tertiaryColor: "#818cf8"
+          }
+        })
+      }, [])
 
       useEffect(() => {
         setDisplayedMessage(message)
@@ -187,11 +190,14 @@ const MessageCard = React.memo(
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeRaw]}
               components={{
-                code({ node, className, children, ...props }) {
+                code({ node, inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || "")
+                  if (!inline && match?.[1] === "mermaid") {
+                    return <Mermaid chart={String(children).trim()} />
+                  }
                   if (match && match[1] == "mo") {
-                    if (children && children.startsWith("<shata-ai-resource>")) {
-                      if (children.includes("</shata-ai-resource>")) {
+                    if (children && children.toString().startsWith("<shata-ai-resource>")) {
+                      if (children.toString().includes("</shata-ai-resource>")) {
                         return <div color='success'>工作流程创建完成 ✔️</div>
                       } else {
                         return <div>正在创建工作流程，请稍后...</div>
@@ -203,6 +209,11 @@ const MessageCard = React.memo(
                       </code>
                     )
                   }
+                  return (
+                    <code {...props} className={className}>
+                      {children}
+                    </code>
+                  )
                 },
               }}
             >
