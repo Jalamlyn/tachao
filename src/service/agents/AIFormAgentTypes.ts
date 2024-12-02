@@ -1,10 +1,14 @@
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 
+// 响应类型定义
+export type ResponseType = "error" | "question" | "confirm" | "form"
+
 // 命令结果类型
 export type CommandResult = {
-  type: "create"
+  type: ResponseType
   data: any
   generationProcess?: string
+  questionCount?: number
 }
 
 // AI表单代理配置类型
@@ -31,7 +35,21 @@ export type AIResponseHandler = (chunk: string) => void
 export type Message = {
   role: "system" | "user" | "assistant"
   content: string
-  images?: string[]  // 添加图片数组字段
+  metadata?: ResponseMetadata
+  images?: string[]
+}
+
+// 响应元数据类型
+export interface ResponseMetadata {
+  questionCount: number
+  maxQuestions: number
+}
+
+// AI响应类型
+export interface AIResponse {
+  type: ResponseType
+  data: any
+  metadata: ResponseMetadata
 }
 
 // AI表单代理接口
@@ -41,10 +59,9 @@ export interface IAIFormAgent {
   clearCachedImage(): void
   parseConfig(rawConfig: string): Promise<any>
   processCommand(
+    messages: Message[],
     command: string,
     onChunk?: AIResponseHandler,
-    config?: DynamicFormConfig,
     rawConfig?: string
   ): Promise<CommandResult>
-  analyzeIntent(input: string): Promise<IntentAnalysisResult>
 }

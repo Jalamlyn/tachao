@@ -10,6 +10,9 @@ import {
   AIResponseHandler,
   Message,
   IAIFormAgent,
+  ResponseType,
+  ResponseMetadata,
+  AIResponse,
 } from "./AIFormAgentTypes"
 
 export class AIFormAgent implements IAIFormAgent {
@@ -56,6 +59,13 @@ export class AIFormAgent implements IAIFormAgent {
     this._questionCount++
   }
 
+  private getResponseMetadata(): ResponseMetadata {
+    return {
+      questionCount: this._questionCount,
+      maxQuestions: this.MAX_QUESTIONS,
+    }
+  }
+
   public async parseConfig(rawConfig: string) {
     try {
       const parsedConfig = await parseFormConfig(rawConfig)
@@ -68,6 +78,14 @@ export class AIFormAgent implements IAIFormAgent {
     } catch (error) {
       console.error("Error parsing form config:", error)
       throw new Error("Failed to parse form config")
+    }
+  }
+
+  private handleError(error: Error): CommandResult {
+    return {
+      type: "error",
+      data: `<shata-ai-error>${error.message}</shata-ai-error>`,
+      questionCount: this._questionCount,
     }
   }
 
@@ -91,7 +109,6 @@ export class AIFormAgent implements IAIFormAgent {
     }
 
     try {
-      // 检查是否是新的对话
       if (messages.length <= 1) {
         this.resetQuestionCount()
       }
@@ -99,10 +116,10 @@ export class AIFormAgent implements IAIFormAgent {
       updateGenerationProcess("🤖 AI助手正在分析您的需求...")
       await new Promise((resolve) => setTimeout(resolve, 500))
 
-      // 添加问题计数到系统消息
       const systemMessage = {
-        role: "system",
-        content: generateFormAgentPrompt(this._rawConfig) + `\n当前提问次数：${this._questionCount}`,
+        role: "system" as const,
+        content: generateFormAgentPrompt(this._rawConfig),
+        metadata: this.getResponseMetadata(),
       }
 
       const allMessages = [systemMessage, ...messages]
@@ -110,17 +127,44 @@ export class AIFormAgent implements IAIFormAgent {
       updateGenerationProcess("📝 开始处理您的需求...")
       const response = await this.processAIResponse(allMessages, command, updateGenerationProcess)
 
-      // 处理不同类型的响应
+      if (response.includes("<shata-ai-error>")) {
+        const errorMatch = response.match(/<shata-ai-error>(.*?)<\/shata-ai-error>/s)
+        return {
+          type: "error",
+          data: errorMatch ? errorMatch[1].trim() : "未知错误",
+          questionCount: this._questionCount,
+          generationProcess,
+        }
+      }
+
       if (response.includes("<shata-ai-question>")) {
         this.incrementQuestionCount()
         if (this._questionCount >= this.MAX_QUESTIONS) {
           updateGenerationProcess("已达到最大提问次数，将基于现有信息生成表单...")
           const createResult = await this.createForm(messages, command, updateGenerationProcess)
           return {
-            type: "support",
+            type: "form",
             data: createResult,
+            questionCount: this._questionCount,
             generationProcess,
           }
+        }
+        const questionMatch = response.match(/<shata-ai-question>(.*?)<\/shata-ai-question>/s)
+        return {
+          type: "question",
+          data: questionMatch ? questionMatch[1].trim() : "需要更多信息",
+          questionCount: this._questionCount,
+          generationProcess,
+        }
+      }
+
+      if (response.includes("<shata-ai-confirm>")) {
+        const confirmMatch = response.match(/<shata-ai-confirm>(.*?)<\/shata-ai-confirm>/s)
+        return {
+          type: "confirm",
+          data: confirmMatch ? confirmMatch[1].trim() : "请确认",
+          questionCount: this._questionCount,
+          generationProcess,
         }
       }
 
@@ -130,24 +174,17 @@ export class AIFormAgent implements IAIFormAgent {
           this.setRawConfig(createResult.rawConfig)
         }
         return {
-          type: "support",
+          type: "form",
           data: createResult,
+          questionCount: this._questionCount,
           generationProcess,
         }
       }
 
-      return {
-        type: "question",
-        data: response,
-        generationProcess,
-      }
+      return this.handleError(new Error("无效的响应格式"))
     } catch (error) {
       console.error("Error in processCommand:", error)
-      return {
-        type: "error",
-        data: null,
-        generationProcess: error.message,
-      }
+      return this.handleError(error as Error)
     }
   }
 
@@ -155,7 +192,11 @@ export class AIFormAgent implements IAIFormAgent {
     console.log("[AIFormAgent] processAIResponse started with current rawConfig:", this._rawConfig?.substring(0, 100) + "...")
     
     const allMessages = [
-      { role: "system", content: generateFormAgentPrompt(this._rawConfig) },
+      { 
+        role: "system", 
+        content: generateFormAgentPrompt(this._rawConfig),
+        metadata: this.getResponseMetadata()
+      },
       ...messages
     ]
 
@@ -191,14 +232,9 @@ export class AIFormAgent implements IAIFormAgent {
       const response = await this.processAIResponse(messages, command, onChunk)
       console.log("[AIFormAgent] Received AI response, length:", response.length)
 
-      if (response.includes("<error>")) {
-        const errorMatch = response.match(/<error>(.*?)<\/error>/s)
+      if (response.includes("<shata-ai-error>")) {
+        const errorMatch = response.match(/<shata-ai-error>(.*?)<\/shata-ai-error>/s)
         throw new Error(errorMatch ? errorMatch[1].trim() : "无效的表单指令")
-      }
-
-      if (response.includes("<unclear>")) {
-        const unclearMatch = response.match(/<unclear>(.*?)<\/unclear>/s)
-        throw new Error(unclearMatch ? unclearMatch[1].trim() : "指令不明确")
       }
 
       const parsedConfig = await parseFormConfig(response)
