@@ -5,10 +5,12 @@ import { useClipboard } from "@nextui-org/use-clipboard"
 import { cn } from "@/theme/cn"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import remarkMermaid from "remark-mermaidjs"
 import { useTranslation } from "react-i18next"
 import { create } from "@wpm-js/core"
-import mermaid from "mermaid"
 import rehypeRaw from "rehype-raw"
+import mermaid from "mermaid"
+import MermaidModal from "./MermaidModal"
 
 type MessageCardProps = React.HTMLAttributes<HTMLDivElement> & {
   avatar?: string
@@ -30,13 +32,6 @@ type MessageCardProps = React.HTMLAttributes<HTMLDivElement> & {
   isGuidance?: boolean
   onDeleteGuidanceMessage?: () => void
 }
-
-// 简化的 Mermaid 组件
-const Mermaid = ({ chart }) => (
-  <div className="mermaid bg-white p-4 rounded-lg shadow-sm my-2 border border-gray-200">
-    {chart}
-  </div>
-)
 
 const MessageCard = React.memo(
   React.forwardRef<HTMLDivElement, MessageCardProps>(
@@ -70,26 +65,12 @@ const MessageCard = React.memo(
       const [displayedMessage, setDisplayedMessage] = useState(message)
       const [isLoading, setIsLoading] = useState(role === "user" ? false : true)
       const [isPending, startTransition] = useTransition()
+      const [mermaidModalOpen, setMermaidModalOpen] = useState(false)
+      const [currentMermaidCode, setCurrentMermaidCode] = useState("")
 
       const messageRef = useRef<HTMLDivElement>(null)
 
       const { copied, copy } = useClipboard()
-
-      // 初始化 mermaid
-      useEffect(() => {
-        mermaid.initialize({
-          startOnLoad: true,
-          theme: "default",
-          themeVariables: {
-            primaryColor: "#4f46e5",
-            primaryTextColor: "#000000",
-            primaryBorderColor: "#4f46e5",
-            lineColor: "#4b5563",
-            secondaryColor: "#6366f1",
-            tertiaryColor: "#818cf8"
-          }
-        })
-      }, [])
 
       useEffect(() => {
         setDisplayedMessage(message)
@@ -144,14 +125,6 @@ const MessageCard = React.memo(
         })
       }, [copy, displayedMessage, onMessageCopy])
 
-      const handleAttemptFeedback = useCallback(
-        (feedback: "like" | "dislike" | "same") => {
-          setAttemptFeedback(feedback)
-          onAttemptFeedback?.(feedback)
-        },
-        [onAttemptFeedback]
-      )
-
       const renderContent = () => {
         if (status === "cancelled") {
           return (
@@ -177,13 +150,10 @@ const MessageCard = React.memo(
           contentClassName += " text-black p-0 rounded-lg"
         }
 
-        // 检查 displayedMessage 的类型
         if (React.isValidElement(displayedMessage)) {
-          // 如果是 React 元素，直接返回
           return displayedMessage
         }
 
-        // 如果是字符串，使用 ReactMarkdown 渲染
         return (
           <div className={contentClassName}>
             <ReactMarkdown
@@ -192,10 +162,24 @@ const MessageCard = React.memo(
               components={{
                 code({ node, inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || "")
-                  if (!inline && match?.[1] === "mermaid") {
-                    return <Mermaid chart={String(children).trim()} />
+                  if (match && match[1] === "mermaid") {
+                    return (
+                      <div className="my-4">
+                        <Button
+                          color="primary"
+                          variant="flat"
+                          startContent={<Icon icon="mdi:chart-box" />}
+                          onPress={() => {
+                            setCurrentMermaidCode(children.toString())
+                            setMermaidModalOpen(true)
+                          }}
+                        >
+                          查看图表
+                        </Button>
+                      </div>
+                    )
                   }
-                  if (match && match[1] == "mo") {
+                  if (match && match[1] === "mo") {
                     if (children && children.toString().startsWith("<shata-ai-resource>")) {
                       if (children.toString().includes("</shata-ai-resource>")) {
                         return <div color='success'>工作流程创建完成 ✔️</div>
@@ -219,6 +203,11 @@ const MessageCard = React.memo(
             >
               {(displayedMessage as string) || ""}
             </ReactMarkdown>
+            <MermaidModal
+              isOpen={mermaidModalOpen}
+              onClose={() => setMermaidModalOpen(false)}
+              code={currentMermaidCode}
+            />
           </div>
         )
       }
