@@ -143,13 +143,29 @@ const AIFormEditor: React.FC = () => {
               </div>
             </div>
           ),
+          status: "loading",
         })
         setSelectedTab("code")
       }
 
+      // 更新预览内容
       if (previewContent || accumulatedTextRef.current.includes("<shata-ai-form>")) {
         const newContent = accumulatedTextRef.current
         setPreviewContent(newContent)
+        
+        // 更新消息内容
+        updateLastMessage({
+          content: (
+            <div className='flex items-center gap-3'>
+              <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10 text-primary' />
+              <div className='flex flex-col'>
+                <span className='font-medium text-sm'>正在生成...</span>
+                <pre className='text-xs text-gray-500 mt-2'>{newContent}</pre>
+              </div>
+            </div>
+          ),
+          status: "streaming",
+        })
       }
     },
     [previewContent, updateLastMessage, setSelectedTab, setPreviewContent]
@@ -167,9 +183,15 @@ const AIFormEditor: React.FC = () => {
 
       const assistantMessage = {
         role: "assistant",
-        content: "",
+        content: (
+          <div className='flex items-center gap-2'>
+            <Icon icon='eos-icons:three-dots-loading' className='w-5 h-5 animate-spin' />
+            <span>正在思考...</span>
+          </div>
+        ),
         id: (Date.now() + 1).toString(),
         timestamp: new Date().toLocaleTimeString(),
+        status: "thinking",
       }
       addMessage(assistantMessage)
 
@@ -189,6 +211,15 @@ const AIFormEditor: React.FC = () => {
         return result
       } catch (error) {
         console.error("Error in chat:", error)
+        updateLastMessage({
+          content: (
+            <div className='flex items-center gap-2 text-danger'>
+              <Icon icon='mdi:alert-circle' className='w-5 h-5' />
+              <span>{error.message || "生成过程中发生错误"}</span>
+            </div>
+          ),
+          status: "error",
+        })
         message.error("生成过程中发生错误")
         throw error
       }
@@ -220,6 +251,16 @@ const AIFormEditor: React.FC = () => {
 
           setSelectedTab("preview")
         }
+      } else {
+        updateLastMessage({
+          content: (
+            <div className='flex items-center gap-2 text-danger'>
+              <Icon icon='mdi:alert-circle' className='w-5 h-5' />
+              <span>生成失败</span>
+            </div>
+          ),
+          status: "error",
+        })
       }
     },
     [setFormConfig, setRawConfig, versionControl, updateLastMessage, setSelectedTab]
