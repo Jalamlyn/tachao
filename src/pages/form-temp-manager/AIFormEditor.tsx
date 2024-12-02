@@ -26,7 +26,6 @@ const AIFormEditor: React.FC = () => {
   const isEditMode = Boolean(templateId)
   const { updateBreadcrumbs } = useBreadcrumb()
 
-  // 使用zustand store
   const {
     messages,
     selectedTab,
@@ -111,6 +110,120 @@ const AIFormEditor: React.FC = () => {
       },
     ])
   }, [templateId, isEditMode])
+
+  const handleChunk = useCallback(
+    (chunk: string) => {
+      accumulatedTextRef.current += chunk
+
+      if (accumulatedTextRef.current.includes("<shata-ai-error>")) {
+        const errorMatch = accumulatedTextRef.current.match(/<shata-ai-error>([\s\S]*?)<\/shata-ai-error>/)
+        if (errorMatch) {
+          const errorMessage = errorMatch[1].trim()
+          updateLastMessage({
+            content: (
+              <div className='flex items-center gap-2 text-danger'>
+                <Icon icon='mdi:alert-circle' className='w-5 h-5' />
+                <span>{errorMessage}</span>
+              </div>
+            ),
+            status: "error",
+          })
+          accumulatedTextRef.current = ""
+          return
+        }
+      }
+
+      if (accumulatedTextRef.current.includes("<shata-ai-form>")) {
+        updateLastMessage({
+          content: (
+            <div className='flex items-center gap-3 text-primary'>
+              <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10' />
+              <div className='flex flex-col'>
+                <span className='font-medium text-sm'>AI 正在生成表单配置</span>
+              </div>
+            </div>
+          ),
+        })
+        setSelectedTab("code")
+      }
+
+      if (previewContent || accumulatedTextRef.current.includes("<shata-ai-form>")) {
+        const newContent = accumulatedTextRef.current
+        setPreviewContent(newContent)
+      }
+    },
+    [previewContent, updateLastMessage, setSelectedTab, setPreviewContent]
+  )
+
+  const formAgent = {
+    processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
+      const userMessage = {
+        role: "user",
+        content: command,
+        id: Date.now().toString(),
+        timestamp: new Date().toLocaleTimeString(),
+      }
+      addMessage(userMessage)
+
+      const assistantMessage = {
+        role: "assistant",
+        content: "",
+        id: (Date.now() + 1).toString(),
+        timestamp: new Date().toLocaleTimeString(),
+      }
+      addMessage(assistantMessage)
+
+      setPreviewContent("")
+
+      try {
+        const result = await AIFormAgent.processCommand(
+          messages,
+          command,
+          (chunk) => {
+            onChunk?.(chunk)
+            handleChunk(chunk)
+          },
+          formState.rawConfig
+        )
+
+        return result
+      } catch (error) {
+        console.error("Error in chat:", error)
+        message.error("生成过程中发生错误")
+        throw error
+      }
+    },
+  }
+
+  const handleCommandResult = useCallback(
+    (result) => {
+      accumulatedTextRef.current = ""
+      if (result?.type === "support") {
+        if (result.data?.config) {
+          versionControl.addVersion({
+            formConfig: result.data.config,
+            rawConfig: result.data.rawConfig,
+          })
+
+          setFormConfig(result.data.config)
+          setRawConfig(result.data.rawConfig)
+
+          updateLastMessage({
+            content: (
+              <div className='flex items-center gap-2 text-success'>
+                <Icon icon='line-md:check-all' className='w-5 h-5' />
+                <span>表单生成完成</span>
+              </div>
+            ),
+            status: "success",
+          })
+
+          setSelectedTab("preview")
+        }
+      }
+    },
+    [setFormConfig, setRawConfig, versionControl, updateLastMessage, setSelectedTab]
+  )
 
   const { isLoading: isSaving, handleClick: handleSaveTemplate } = useAsyncButton(
     async () => {
@@ -273,119 +386,6 @@ const AIFormEditor: React.FC = () => {
   const handleGoToTemplates = () => {
     navigate("/we-chat-app/admin/documents")
   }
-
-  const handleChunk = useCallback(
-    (chunk: string) => {
-      accumulatedTextRef.current += chunk
-
-      if (accumulatedTextRef.current.includes("<shata-ai-error>")) {
-        const errorMatch = accumulatedTextRef.current.match(/<shata-ai-error>([\s\S]*?)<\/shata-ai-error>/)
-        if (errorMatch) {
-          const errorMessage = errorMatch[1].trim()
-          updateLastMessage({
-            content: (
-              <div className='flex items-center gap-2 text-danger'>
-                <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-                <span>{errorMessage}</span>
-              </div>
-            ),
-            status: "error",
-          })
-          accumulatedTextRef.current = ""
-          return
-        }
-      }
-
-      if (accumulatedTextRef.current.includes("<shata-ai-form>")) {
-        updateLastMessage({
-          content: (
-            <div className='flex items-center gap-3 text-primary'>
-              <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10' />
-              <div className='flex flex-col'>
-                <span className='font-medium text-sm'>AI 正在生成表单配置</span>
-              </div>
-            </div>
-          ),
-        })
-        setSelectedTab("code")
-      }
-
-      if (previewContent || accumulatedTextRef.current.includes("<shata-ai-form>")) {
-        const newContent = accumulatedTextRef.current
-        setPreviewContent(newContent)
-      }
-    },
-    [previewContent, updateLastMessage, setSelectedTab, setPreviewContent]
-  )
-
-  const formAgent = {
-    processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
-      const userMessage = {
-        role: "user",
-        content: command,
-        id: Date.now().toString(),
-        timestamp: new Date().toLocaleTimeString(),
-      }
-      addMessage(userMessage)
-
-      const assistantMessage = {
-        role: "assistant",
-        content: "",
-        id: (Date.now() + 1).toString(),
-        timestamp: new Date().toLocaleTimeString(),
-      }
-      addMessage(assistantMessage)
-
-      setPreviewContent("")
-
-      try {
-        const result = await AIFormAgent.processCommand(
-          command,
-          (chunk) => {
-            onChunk?.(chunk)
-            handleChunk(chunk)
-          },
-          formState.rawConfig
-        )
-
-        return result
-      } catch (error) {
-        console.error("Error in chat:", error)
-        message.error("生成过程中发生错误")
-        throw error
-      }
-    },
-  }
-
-  const handleCommandResult = useCallback(
-    (result) => {
-      accumulatedTextRef.current = ""
-      if (result?.type === "support") {
-        if (result.data?.config) {
-          versionControl.addVersion({
-            formConfig: result.data.config,
-            rawConfig: result.data.rawConfig,
-          })
-
-          setFormConfig(result.data.config)
-          setRawConfig(result.data.rawConfig)
-
-          updateLastMessage({
-            content: (
-              <div className='flex items-center gap-2 text-success'>
-                <Icon icon='line-md:check-all' className='w-5 h-5' />
-                <span>表单生成完成</span>
-              </div>
-            ),
-            status: "success",
-          })
-
-          setSelectedTab("preview")
-        }
-      }
-    },
-    [setFormConfig, setRawConfig, versionControl, updateLastMessage, setSelectedTab]
-  )
 
   const pageActions = (
     <Button

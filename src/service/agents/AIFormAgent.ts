@@ -1,5 +1,4 @@
 import chatChunk from "../chat/chat-chunk-openai-office"
-// import chatChunk from "../chat/chat-siliconflow"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
@@ -63,6 +62,7 @@ export class AIFormAgent implements IAIFormAgent {
   }
 
   public async processCommand(
+    messages: Message[],
     command: string,
     onChunk?: AIResponseHandler,
     rawConfig?: string
@@ -85,7 +85,7 @@ export class AIFormAgent implements IAIFormAgent {
       await new Promise((resolve) => setTimeout(resolve, 500))
 
       updateGenerationProcess("📝 开始生成表单...")
-      const createResult = await this.createForm(command, updateGenerationProcess)
+      const createResult = await this.createForm(messages, command, updateGenerationProcess)
 
       if (createResult) {
         if (createResult.rawConfig) {
@@ -109,23 +109,17 @@ export class AIFormAgent implements IAIFormAgent {
     }
   }
 
-  private async processAIResponse(userInput: string, onChunk: AIResponseHandler): Promise<string> {
-    console.log(
-      "[AIFormAgent] processAIResponse started with current rawConfig:",
-      this._rawConfig?.substring(0, 100) + "..."
-    )
-    let response = ""
-    const messages: Message[] = [
+  private async processAIResponse(messages: Message[], command: string, onChunk: AIResponseHandler): Promise<string> {
+    console.log("[AIFormAgent] processAIResponse started with current rawConfig:", this._rawConfig?.substring(0, 100) + "...")
+    
+    const allMessages = [
       { role: "system", content: generateFormAgentPrompt(this._rawConfig) },
-      {
-        role: "user",
-        content: userInput,
-        images: this._cachedImage ? [this._cachedImage] : undefined,
-      },
+      ...messages
     ]
 
+    let response = ""
     await chatChunk(
-      messages,
+      allMessages,
       (chunk: string) => {
         response += chunk
         onChunk(chunk)
@@ -137,66 +131,24 @@ export class AIFormAgent implements IAIFormAgent {
       "claude::claude-3-5-sonnet-20241022"
     )
 
-    // 清理缓存的图片
     this.clearCachedImage()
-
     return response
   }
 
-  private async createForm(description: string, onChunk: AIResponseHandler): Promise<CreateFormResult> {
+  private async createForm(
+    messages: Message[],
+    command: string,
+    onChunk: AIResponseHandler
+  ): Promise<CreateFormResult> {
     console.log("[AIFormAgent] createForm started with current rawConfig:", this._rawConfig?.substring(0, 100) + "...")
     onChunk("🎨 正在设计表单结构...")
     await new Promise((resolve) => setTimeout(resolve, 300))
 
-    const prompt = `请根据以下描述生成一个完整的表单配置代码：
-    <description>
-${description}
-</description>
-如果<description>和表单无关，直接返回：
-"""
-<shata-ai-error>请使用表单创建或编辑相关的指令</shata-ai-error>
-"""
-
-如果<description>不够明确，直接返回：
-"""
-<shata-ai-error>
-</shata-ai-error>
-"""
-
-${
-  this._rawConfig
-    ? `当前表单配置:
-${this._rawConfig}
-
-请根据上述配置和用户的需求，生成一个新的完整配置。`
-    : ""
-}
-
-请生成包含两部分内容的 js 代码：
-1. 表单标题(title)：表单的名称,要有业务含义,不要随意变更
-2. 表单配置(config)：一个完整的符合 DynamicFormConfig 类型的配置 js 对象
-
-请使用如下格式返回：
-"""
-\`\`\`mo
-<shata-ai-form>
-export default {
-  title,
-  config:{
-    // 完整的表单配置对象
-  }
-}
-</shata-ai-form>
-\`\`\`
-"""
-`
-
     try {
       onChunk("⚡ 正在生成表单配置...\n")
-      const response = await this.processAIResponse(prompt, onChunk)
+      const response = await this.processAIResponse(messages, command, onChunk)
       console.log("[AIFormAgent] Received AI response, length:", response.length)
 
-      // 检查是否包含错误或不明确提示
       if (response.includes("<error>")) {
         const errorMatch = response.match(/<error>(.*?)<\/error>/s)
         throw new Error(errorMatch ? errorMatch[1].trim() : "无效的表单指令")
