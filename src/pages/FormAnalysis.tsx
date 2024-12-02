@@ -28,6 +28,8 @@ import generateSystemPrompt from "@/service/agents/prompts/form-analysis-prompt"
 // 导入头像
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
+import mermaid from "mermaid"
+import { localDB } from "@/utils/localDB"
 
 interface Template {
   id: string
@@ -94,7 +96,7 @@ const FormAnalysis: React.FC = () => {
 
           setTemplates(templatesWithCount)
         }
-        
+
         formsRef.current = forms
 
         // 从本地存储加载最近使用的模板
@@ -121,7 +123,33 @@ const FormAnalysis: React.FC = () => {
       setMessages([welcomeMessage])
     }
   }, [])
+  useEffect(() => {
+    // 监听 chat-chunk-over 标志
+    const unwatch = localDB.watchKey("chat-chunk-over", ({ value }) => {
+      if (value === "YES") {
+        // 消息流确实结束了，可以安全地渲染 mermaid
+        setTimeout(() => {
+          mermaid.initialize({
+            startOnLoad: true,
+            theme: "default",
+            securityLevel: "loose",
+          })
+          mermaid
+            .run({
+              querySelector: ".markdown-body .mermaid",
+            })
+            .catch((error) => {
+              console.error("Mermaid rendering error:", error)
+            })
+        }, 100)
+      }
+    })
 
+    // 清理监听
+    return () => {
+      unwatch()
+    }
+  }, [])
   useEffect(() => {
     scrollToBottom()
   }, [messages])
@@ -192,7 +220,7 @@ const FormAnalysis: React.FC = () => {
           [
             {
               role: "system",
-              content: generateSystemPrompt(selectedForms)
+              content: generateSystemPrompt(selectedForms),
             },
             ...messages,
             userMessage,
@@ -269,7 +297,7 @@ const FormAnalysis: React.FC = () => {
 
           <div className='flex flex-col gap-2'>
             {/* 数据源选择区域 */}
-            <div className='flex flex-wrap gap-2 min-h-8 p-2 bg-default-100 rounded-lg'>
+            <div className='flex flex-wrap gap-2 min-h-8 p-2 bg-default-100 rounded-lg  items-center'>
               {selectedTemplates.map((templateId) => {
                 const template = templates.find((t) => t.id === templateId)
                 return (
@@ -284,7 +312,7 @@ const FormAnalysis: React.FC = () => {
                   </Chip>
                 )
               })}
-              <Button size='sm' variant='flat' startContent={<Icon icon='mdi:plus' />} onPress={onTemplateModalOpen}>
+              <Button size='sm' variant='light' startContent={<Icon icon='mdi:plus' />} onPress={onTemplateModalOpen}>
                 {selectedTemplates.length === 0 ? "选择数据源" : "添加数据源"}
               </Button>
             </div>

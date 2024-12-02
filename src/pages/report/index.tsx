@@ -8,7 +8,7 @@ import { ReportError } from "@/pages/report/components/ReportError"
 import { ReportLoading } from "@/pages/report/components/ReportLoading"
 import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
 import AIReportAgent from "@/service/agents/AIReportAgent"
-import { processReportData } from "@/pages/report-management/utils/processReportData"
+import { processReportData } from "@/utils/processReportData"
 
 const Report: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>()
@@ -28,14 +28,14 @@ const Report: React.FC = () => {
       try {
         // 加载报表和表单数据
         const data = await loadReportData(reportId)
-        
+
         if (!data.rawConfig) {
           throw new Error("报表配置不存在")
         }
 
         // 配置 AIReportAgent
         AIReportAgent.configure({
-          templateInfoMap: data.templateInfoMap
+          templateInfoMap: data.templateInfoMap,
         })
 
         // 处理表单数据
@@ -46,7 +46,7 @@ const Report: React.FC = () => {
 
         reportActions.setSuccess({
           reportConfig: data.rawConfig,
-          reportData: analysis
+          reportData: analysis,
         })
       } catch (error) {
         reportActions.setError(error instanceof Error ? error.message : "加载报表数据失败")

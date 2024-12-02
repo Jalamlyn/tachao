@@ -1,19 +1,8 @@
 // 基础提示词模板
 const BASE_PROMPT = {
   role: "你是沙塔 AI 的智能数据分析助手，负责帮助用户分析和查询表单数据。",
-  capabilities: [
-    "分析表单数据和统计信息",
-    "生成数据可视化图表",
-    "提供数据洞察",
-    "查询特定表单信息",
-    "对比数据变化"
-  ],
-  constraints: [
-    "只能分析已选择的表单数据",
-    "不能修改或删除表单数据",
-    "不能预测未来数据",
-    "不能处理系统范围外的查询"
-  ]
+  capabilities: ["分析表单数据和统计信息", "生成数据可视化图表", "提供数据洞察", "查询特定表单信息", "对比数据变化"],
+  constraints: ["只能分析已选择的表单数据", "不能修改或删除表单数据", "不能预测未来数据", "不能处理系统范围外的查询"],
 }
 
 // 数据分析场景提示词
@@ -61,10 +50,13 @@ sequenceDiagram
 
 2. 饼图规范:
 \`\`\`mermaid
-pie title 状态分布
-    "待处理" : 30
-    "处理中" : 20
-    "已完成" : 50
+%%{init: {"pie": {"textPosition": 0.5}, "themeVariables": {"pieOuterStrokeWidth": "5px"}} }%%
+pie showData
+    title Key elements in Product X
+    "Calcium" : 42.96
+    "Potassium" : 50.05
+    "Magnesium" : 10.01
+    "Iron" :  5
 \`\`\`
 
 注意事项:
@@ -122,7 +114,7 @@ System->>Database: 数据流转 (2024-11-22 至 2024-12-01)
 2. 返回准确结果
 3. 说明查询范围
 4. 标注数据来源
-`
+`,
 }
 
 // 输出格式模板
@@ -148,30 +140,30 @@ const OUTPUT_TEMPLATES = {
 抱歉，无法完成分析：
 - 原因：{reason}
 - 建议：{suggestion}
-`
+`,
 }
 
 // 生成系统提示词
 const generateSystemPrompt = (selectedForms: any[]) => {
   const formCount = selectedForms.length
-  const templates = [...new Set(selectedForms.map(form => form.template?.title))].filter(Boolean)
+  const templates = [...new Set(selectedForms.map((form) => form.template?.title))].filter(Boolean)
   const dateRange = {
-    start: new Date(Math.min(...selectedForms.map(form => new Date(form.createdAt)))).toLocaleDateString(),
-    end: new Date(Math.max(...selectedForms.map(form => new Date(form.createdAt)))).toLocaleDateString()
+    start: new Date(Math.min(...selectedForms.map((form) => new Date(form.createdAt)))).toLocaleDateString(),
+    end: new Date(Math.max(...selectedForms.map((form) => new Date(form.createdAt)))).toLocaleDateString(),
   }
 
   return `${BASE_PROMPT.role}
 
 分析范围：
 - 表单数量：${formCount}
-- 模板类型：${templates.join(', ')}
+- 模板类型：${templates.join(", ")}
 - 时间范围：${dateRange.start} 至 ${dateRange.end}
 
 能力范围：
-${BASE_PROMPT.capabilities.map(cap => `✅ ${cap}`).join('\n')}
+${BASE_PROMPT.capabilities.map((cap) => `✅ ${cap}`).join("\n")}
 
 使用限制：
-${BASE_PROMPT.constraints.map(con => `❌ ${con}`).join('\n')}
+${BASE_PROMPT.constraints.map((con) => `❌ ${con}`).join("\n")}
 
 ${ANALYSIS_SCENARIOS.formAnalysis}
 
@@ -189,7 +181,7 @@ ${ANALYSIS_SCENARIOS.dataQuery}
 7. 不能因为文件太长而只生成修改部分的代码
 8. 所有路径必须使用绝对路径，不能使用相对路径
 
-当前的时间是: ${new Date().toLocaleTimeString()}
+当前的时间是: ${new Date()}
 
 这是你要分析的数据:
 ${JSON.stringify(selectedForms, null, 2)}

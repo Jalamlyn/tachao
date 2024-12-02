@@ -20,15 +20,13 @@ interface StatCardProps {
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon, description }) => {
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon icon={icon} className="h-4 w-4 text-muted-foreground" />
+      <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+        <CardTitle className='text-sm font-medium'>{title}</CardTitle>
+        <Icon icon={icon} className='h-4 w-4 text-muted-foreground' />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {description && (
-          <p className="text-xs text-muted-foreground">{description}</p>
-        )}
+        <div className='text-2xl font-bold'>{value}</div>
+        {description && <p className='text-xs text-muted-foreground'>{description}</p>}
       </CardContent>
     </Card>
   )
@@ -70,10 +68,10 @@ export const AppEntryDashboard: React.FC = () => {
   const appForms = forms.filter((form) => app.indexFields?.templateIds?.includes(form.template?.id))
 
   // 计算活跃用户数（基于表单提交者）
-  const activeUsers = new Set(appForms.map(form => form.submitter?.id)).size
+  const activeUsers = new Set(appForms.map((form) => form.submitter?.id)).size
 
   // 过滤表单
-  const filteredForms = appForms.filter(form => {
+  const filteredForms = appForms.filter((form) => {
     const matchesSearch = form.title.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = statusFilter === "all" || form.status === statusFilter
     return matchesSearch && matchesStatus
@@ -83,72 +81,67 @@ export const AppEntryDashboard: React.FC = () => {
   const getNewReportsCount = () => {
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    return appReports.filter(report => new Date(report.createdAt) >= startOfMonth).length
+    return appReports.filter((report) => new Date(report.createdAt) >= startOfMonth).length
   }
 
   return (
-    <div className="hidden flex-col md:flex">
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">{app.title}</h2>
+    <div className='hidden flex-col md:flex'>
+      <div className='flex-1 space-y-4 p-8 pt-6'>
+        <div className='flex items-center justify-between space-y-2'>
+          <h2 className='text-3xl font-bold tracking-tight'>{app.title}</h2>
         </div>
-        <Tabs defaultValue="overview" className="space-y-4">
+        <Tabs defaultValue='overview' className='space-y-4'>
           <TabsList>
-            <TabsTrigger value="overview">概览</TabsTrigger>
-            <TabsTrigger value="forms">表单</TabsTrigger>
-            <TabsTrigger value="reports">报表</TabsTrigger>
+            <TabsTrigger value='overview'>概览</TabsTrigger>
+            <TabsTrigger value='forms'>表单</TabsTrigger>
+            <TabsTrigger value='reports'>报表</TabsTrigger>
           </TabsList>
-          
+
           {/* 概览 Tab */}
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <TabsContent value='overview' className='space-y-4'>
+            <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
               <StatCard
-                title="表单总数"
+                title='表单总数'
                 value={appForms.length}
-                icon="mdi:form-select"
-                description="所有已提交的表单"
+                icon='mdi:form-select'
+                description='所有已提交的表单'
               />
               <StatCard
-                title="模板数量"
+                title='模板数量'
                 value={appTemplates.length}
-                icon="mdi:file-document-multiple"
-                description="可用的表单模板"
+                icon='mdi:file-document-multiple'
+                description='可用的表单模板'
               />
+              <StatCard title='报表数量' value={appReports.length} icon='mdi:chart-box' description='数据分析报表' />
               <StatCard
-                title="报表数量"
-                value={appReports.length}
-                icon="mdi:chart-box"
-                description="数据分析报表"
-              />
-              <StatCard
-                title="活跃用户"
+                title='活跃用户'
                 value={activeUsers}
-                icon="mdi:account-multiple"
-                description="提交过表单的用户"
+                icon='mdi:account-multiple'
+                description='提交过表单的用户'
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card className="col-span-1">
+            <div className='grid gap-4 md:grid-cols-2'>
+              <Card className='col-span-1'>
                 <CardHeader>
                   <CardTitle>表单模板</CardTitle>
                   <CardDescription>可用的表单模板列表</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className='space-y-4'>
                     {appTemplates.map((template) => (
                       <div
                         key={template.id}
-                        className="p-4 rounded-lg border border-default-200 hover:border-primary transition-colors"
+                        className='p-4 rounded-lg border border-default-200 hover:border-primary transition-colors'
                       >
-                        <div className="flex justify-between items-center">
+                        <div className='flex justify-between items-center'>
                           <div>
-                            <h3 className="font-medium">{template.title}</h3>
-                            <p className="text-small text-default-500">{template.description || "点击开始填写表单"}</p>
+                            <h3 className='font-medium'>{template.title}</h3>
+                            <p className='text-small text-default-500'>{template.description || "点击开始填写表单"}</p>
                           </div>
                           <Button
-                            color="primary"
-                            variant="flat"
+                            color='primary'
+                            variant='flat'
                             onPress={() => window.open(`/form-preview/${template.id}`, "_blank")}
                           >
                             开始填写
@@ -157,32 +150,32 @@ export const AppEntryDashboard: React.FC = () => {
                       </div>
                     ))}
                     {appTemplates.length === 0 && (
-                      <div className="text-center py-8 text-default-500">暂无可用的表单模板</div>
+                      <div className='text-center py-8 text-default-500'>暂无可用的表单模板</div>
                     )}
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="col-span-1">
+              <Card className='col-span-1'>
                 <CardHeader>
                   <CardTitle>数据报表</CardTitle>
                   <CardDescription>可用的数据报表列表</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className='space-y-4'>
                     {appReports.map((report) => (
                       <div
                         key={report.id}
-                        className="p-4 rounded-lg border border-default-200 hover:border-primary transition-colors"
+                        className='p-4 rounded-lg border border-default-200 hover:border-primary transition-colors'
                       >
-                        <div className="flex justify-between items-center">
+                        <div className='flex justify-between items-center'>
                           <div>
-                            <h3 className="font-medium">{report.title}</h3>
-                            <p className="text-small text-default-500">{report.description || "点击查看报表详情"}</p>
+                            <h3 className='font-medium'>{report.title}</h3>
+                            <p className='text-small text-default-500'>{report.description || "点击查看报表详情"}</p>
                           </div>
                           <Button
-                            color="primary"
-                            variant="flat"
+                            color='primary'
+                            variant='flat'
                             onPress={() => window.open(`/report/${report.id}`, "_blank")}
                           >
                             查看报表
@@ -191,7 +184,7 @@ export const AppEntryDashboard: React.FC = () => {
                       </div>
                     ))}
                     {appReports.length === 0 && (
-                      <div className="text-center py-8 text-default-500">暂无可用的数据报表</div>
+                      <div className='text-center py-8 text-default-500'>暂无可用的数据报表</div>
                     )}
                   </div>
                 </CardContent>
@@ -200,46 +193,43 @@ export const AppEntryDashboard: React.FC = () => {
           </TabsContent>
 
           {/* 表单 Tab */}
-          <TabsContent value="forms" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3">
+          <TabsContent value='forms' className='space-y-4'>
+            <div className='grid gap-4 md:grid-cols-3'>
+              <StatCard title='总表单数' value={appForms.length} icon='mdi:form-select' description='所有表单' />
               <StatCard
-                title="总表单数"
-                value={appForms.length}
-                icon="mdi:form-select"
-                description="所有表单"
+                title='已提交表单'
+                value={appForms.filter((f) => f.status === "submitted").length}
+                icon='mdi:checkbox-marked-circle'
+                description='已完成提交的表单'
               />
               <StatCard
-                title="已提交表单"
-                value={appForms.filter(f => f.status === "submitted").length}
-                icon="mdi:checkbox-marked-circle"
-                description="已完成提交的表单"
-              />
-              <StatCard
-                title="待处理表单"
-                value={appForms.filter(f => f.status === "draft").length}
-                icon="mdi:clock"
-                description="草稿状态的表单"
+                title='待处理表单'
+                value={appForms.filter((f) => f.status === "draft").length}
+                icon='mdi:clock'
+                description='草稿状态的表单'
               />
             </div>
 
             <Card>
               <CardHeader>
                 <CardTitle>表单列表</CardTitle>
-                <div className="flex gap-2">
+                <div className='flex gap-2'>
                   <Input
-                    placeholder="搜索表单..."
+                    placeholder='搜索表单...'
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    startContent={<Icon icon="mdi:magnify" />}
+                    startContent={<Icon icon='mdi:magnify' />}
                   />
-                  <Select
-                    placeholder="状态筛选"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                  >
-                    <SelectItem key="all" value="all">全部</SelectItem>
-                    <SelectItem key="submitted" value="submitted">已提交</SelectItem>
-                    <SelectItem key="draft" value="draft">草稿</SelectItem>
+                  <Select placeholder='状态筛选' value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                    <SelectItem key='all' value='all'>
+                      全部
+                    </SelectItem>
+                    <SelectItem key='submitted' value='submitted'>
+                      已提交
+                    </SelectItem>
+                    <SelectItem key='draft' value='draft'>
+                      草稿
+                    </SelectItem>
                   </Select>
                 </div>
               </CardHeader>
@@ -250,23 +240,18 @@ export const AppEntryDashboard: React.FC = () => {
           </TabsContent>
 
           {/* 报表 Tab */}
-          <TabsContent value="reports" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+          <TabsContent value='reports' className='space-y-4'>
+            <div className='grid gap-4 md:grid-cols-2'>
+              <StatCard title='报表总数' value={appReports.length} icon='mdi:chart-box' description='所有报表' />
               <StatCard
-                title="报表总数"
-                value={appReports.length}
-                icon="mdi:chart-box"
-                description="所有报表"
-              />
-              <StatCard
-                title="本月新增"
+                title='本月新增'
                 value={getNewReportsCount()}
-                icon="mdi:chart-timeline-variant"
-                description="本月新增的报表数量"
+                icon='mdi:chart-timeline-variant'
+                description='本月新增的报表数量'
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
               {appReports.map((report) => (
                 <Card key={report.id}>
                   <CardHeader>
@@ -274,18 +259,18 @@ export const AppEntryDashboard: React.FC = () => {
                     <CardDescription>{report.description}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-32 bg-default-100 rounded-lg mb-4">
+                    <div className='h-32 bg-default-100 rounded-lg mb-4'>
                       {/* 报表预览或缩略图占位符 */}
-                      <div className="flex items-center justify-center h-full">
-                        <Icon icon="mdi:chart-box" className="w-12 h-12 text-default-300" />
+                      <div className='flex items-center justify-center h-full'>
+                        <Icon icon='mdi:chart-box' className='w-12 h-12 text-default-300' />
                       </div>
                     </div>
-                    <div className="flex justify-end">
+                    <div className='flex justify-end'>
                       <Button
-                        color="primary"
-                        variant="flat"
+                        color='primary'
+                        variant='flat'
                         onPress={() => window.open(`/report/${report.id}`, "_blank")}
-                        startContent={<Icon icon="mdi:eye" />}
+                        startContent={<Icon icon='mdi:eye' />}
                       >
                         查看报表
                       </Button>
@@ -294,9 +279,7 @@ export const AppEntryDashboard: React.FC = () => {
                 </Card>
               ))}
               {appReports.length === 0 && (
-                <div className="col-span-full text-center py-8 text-default-500">
-                  暂无可用的数据报表
-                </div>
+                <div className='col-span-full text-center py-8 text-default-500'>暂无可用的数据报表</div>
               )}
             </div>
           </TabsContent>
@@ -307,7 +290,7 @@ export const AppEntryDashboard: React.FC = () => {
       <FormTypeAIModal
         isOpen={isAIModalOpen}
         onClose={() => setIsAIModalOpen(false)}
-        formType="all"
+        formType='all'
         context={JSON.stringify(appForms)}
         onUpdateHistory={() => {}}
         onClearHistory={() => {}}

@@ -16,7 +16,6 @@ import AIResourceEditor from "@/pages/resource-management/AIResourceEditor"
 import AIReportEditor from "@/pages/report-management/AIReportEditor"
 import Dashboard from "@/apps/we-chat-app-admin/src/Dashboard"
 import AppManagement from "@/pages/app-management"
-import AppEntry from "@/pages/app-management/components/AppEntry"
 import PendingTasks from "@/pages/pending-tasks"
 
 export default function renderWeChatApp() {

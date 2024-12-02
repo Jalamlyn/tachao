@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next"
 import { create } from "@wpm-js/core"
 import rehypeRaw from "rehype-raw"
 import mermaid from "mermaid"
-import MermaidModal from "./MermaidModal"
 
 type MessageCardProps = React.HTMLAttributes<HTMLDivElement> & {
   avatar?: string
@@ -65,8 +64,6 @@ const MessageCard = React.memo(
       const [displayedMessage, setDisplayedMessage] = useState(message)
       const [isLoading, setIsLoading] = useState(role === "user" ? false : true)
       const [isPending, startTransition] = useTransition()
-      const [mermaidModalOpen, setMermaidModalOpen] = useState(false)
-      const [currentMermaidCode, setCurrentMermaidCode] = useState("")
 
       const messageRef = useRef<HTMLDivElement>(null)
 
@@ -150,10 +147,13 @@ const MessageCard = React.memo(
           contentClassName += " text-black p-0 rounded-lg"
         }
 
+        // 检查 displayedMessage 的类型
         if (React.isValidElement(displayedMessage)) {
+          // 如果是 React 元素，直接返回
           return displayedMessage
         }
 
+        // 如果是字符串，使用 ReactMarkdown 渲染
         return (
           <div className={contentClassName}>
             <ReactMarkdown
@@ -162,24 +162,14 @@ const MessageCard = React.memo(
               components={{
                 code({ node, inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || "")
-                  if (match && match[1] === "mermaid") {
+                  if (match && match[1] == "mermaid") {
                     return (
-                      <div className="my-4">
-                        <Button
-                          color="primary"
-                          variant="flat"
-                          startContent={<Icon icon="mdi:chart-box" />}
-                          onPress={() => {
-                            setCurrentMermaidCode(children.toString())
-                            setMermaidModalOpen(true)
-                          }}
-                        >
-                          查看图表
-                        </Button>
-                      </div>
+                      <>
+                        <pre className='mermaid'>{children}</pre>
+                      </>
                     )
                   }
-                  if (match && match[1] === "mo") {
+                  if (match && match[1] == "mo") {
                     if (children && children.toString().startsWith("<shata-ai-resource>")) {
                       if (children.toString().includes("</shata-ai-resource>")) {
                         return <div color='success'>工作流程创建完成 ✔️</div>
@@ -203,11 +193,6 @@ const MessageCard = React.memo(
             >
               {(displayedMessage as string) || ""}
             </ReactMarkdown>
-            <MermaidModal
-              isOpen={mermaidModalOpen}
-              onClose={() => setMermaidModalOpen(false)}
-              code={currentMermaidCode}
-            />
           </div>
         )
       }
@@ -229,7 +214,7 @@ const MessageCard = React.memo(
           <div className='flex w-full flex-col gap-4'>
             <div
               className={cn(
-                "relative rounded-medium bg-content2 px-4 py-3 pr-3 text-default-600",
+                "relative rounded-medium bg-content2 p-4 text-default-600",
                 failedMessageClassName,
                 messageClassName,
                 "sm:max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl",

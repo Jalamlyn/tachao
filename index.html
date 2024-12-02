@@ -28,11 +28,11 @@
     <link href="/logo.ico" rel="icon" />
     <!-- 百度地图API初始化 -->
     <script type="text/javascript">
-      window.BMap_loadScriptTime = (new Date).getTime();
-      window.BMap = null;
-      window.initMap = function() {
-        console.log('BMap API loaded successfully');
-      };
+      window.BMap_loadScriptTime = new Date().getTime()
+      window.BMap = null
+      window.initMap = function () {
+        console.log("BMap API loaded successfully")
+      }
     </script>
   </head>
   <body>
@@ -51,6 +51,10 @@
         var s = document.getElementsByTagName("script")[0]
         s.parentNode.insertBefore(hm, s)
       })()
+    </script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs"
+      mermaid.initialize({ startOnLoad: true })
     </script>
     <!-- <script async src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
     <script>
