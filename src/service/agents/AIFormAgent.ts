@@ -116,13 +116,21 @@ export class AIFormAgent implements IAIFormAgent {
       updateGenerationProcess("🤖 AI助手正在分析您的需求...")
       await new Promise((resolve) => setTimeout(resolve, 500))
 
+      // 构建系统消息
       const systemMessage = {
         role: "system" as const,
         content: generateFormAgentPrompt(this._rawConfig),
         metadata: this.getResponseMetadata(),
       }
 
-      const allMessages = [systemMessage, ...messages]
+      // 构建当前用户消息
+      const currentUserMessage = {
+        role: "user" as const,
+        content: command,
+      }
+
+      // 组合所有消息：系统消息 + 历史消息 + 当前用户消息
+      const allMessages = [systemMessage, ...messages, currentUserMessage]
 
       updateGenerationProcess("📝 开始处理您的需求...")
       const response = await this.processAIResponse(allMessages, command, updateGenerationProcess)
@@ -141,7 +149,7 @@ export class AIFormAgent implements IAIFormAgent {
         this.incrementQuestionCount()
         if (this._questionCount >= this.MAX_QUESTIONS) {
           updateGenerationProcess("已达到最大提问次数，将基于现有信息生成表单...")
-          const createResult = await this.createForm(messages, command, updateGenerationProcess)
+          const createResult = await this.createForm(allMessages, command, updateGenerationProcess)
           return {
             type: "form",
             data: createResult,
@@ -169,7 +177,7 @@ export class AIFormAgent implements IAIFormAgent {
       }
 
       if (response.includes("<shata-ai-form>")) {
-        const createResult = await this.createForm(messages, command, updateGenerationProcess)
+        const createResult = await this.createForm(allMessages, command, updateGenerationProcess)
         if (createResult?.rawConfig) {
           this.setRawConfig(createResult.rawConfig)
         }
@@ -189,20 +197,11 @@ export class AIFormAgent implements IAIFormAgent {
   }
 
   private async processAIResponse(messages: Message[], command: string, onChunk: AIResponseHandler): Promise<string> {
-    console.log("[AIFormAgent] processAIResponse started with current rawConfig:", this._rawConfig?.substring(0, 100) + "...")
+    console.log("[AIFormAgent] processAIResponse started")
     
-    const allMessages = [
-      { 
-        role: "system", 
-        content: generateFormAgentPrompt(this._rawConfig),
-        metadata: this.getResponseMetadata()
-      },
-      ...messages
-    ]
-
     let response = ""
     await chatChunk(
-      allMessages,
+      messages,  // 直接使用传入的完整消息列表
       (chunk: string) => {
         response += chunk
         onChunk(chunk)
