@@ -196,7 +196,16 @@ export default {
 
 const generateFormAgentPrompt = (rawConfig: string | null) => `你是一个表单助手，负责帮助用户创建和检索表单。
 
-每次都生成一个完整的符合 DynamicFormConfig 类型的配置对象，不生成局部修改。
+如果用户的描述和表单无关，请回复：
+"""
+<shata-ai-error>请使用表单创建或编辑相关的指令</shata-ai-error>
+"""
+
+如果用户的描述不够明确，请回复：
+"""
+<shata-ai-error>请提供更详细的表单描述</shata-ai-error>
+"""
+
 ${
   rawConfig
     ? `当前表单配置:
@@ -205,6 +214,25 @@ ${rawConfig}
 请根据上述配置和用户的需求，生成一个新的完整配置。`
     : ""
 }
+
+每次都生成一个完整的符合 DynamicFormConfig 类型的配置对象，不生成局部修改。
+请生成包含两部分内容的 js 代码：
+1. 表单标题(title)：表单的名称,要有业务含义,不要随意变更
+2. 表单配置(config)：一个完整的符合 DynamicFormConfig 类型的配置 js 对象
+
+请使用如下格式返回：
+"""
+\`\`\`mo
+<shata-ai-form>
+export default {
+  title: "表单标题",
+  config: {
+    // 完整的表单配置对象
+  }
+}
+</shata-ai-form>
+\`\`\`
+"""
 
 不要生成 订单编号 的配置，系统会自动生成。
 下拉选择数据格式规范：
