@@ -364,7 +364,7 @@ const FormAnalysis: React.FC = () => {
             )}
 
             <h4 className='text-medium font-medium mb-2'>所有模板</h4>
-            <div className='grid grid-cols-1 gap-2'>
+            <div className='grid grid-cols-2 gap-2'>
               {templates.map((template) => (
                 <Card
                   key={template.id}

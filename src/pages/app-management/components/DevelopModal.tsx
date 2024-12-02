@@ -17,7 +17,7 @@ import { Icon } from "@iconify/react"
 import { useMetadata } from "@/hooks/useMetadata"
 import { AppIndex } from "../store/useAppStore"
 import message from "@/components/Message"
-import wecomqr from "./wechat.jpg"
+import wecomqr from "../../../../public/wechat.jpg"
 
 interface DevelopModalProps {
   isOpen: boolean
@@ -220,7 +220,7 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
               <div className='flex justify-center'>
                 <Image src={wecomqr} alt='客服二维码' className='w-48 h-48 object-contain' />
               </div>
-              <p className='text-small text-default-500'>我们将为您提供专业的模板定制服务</p>
+              <p className='text-small text-default-500'>我们将为您提供专业的应用模板定制服务,彰显企业品牌</p>
             </div>
           </ModalBody>
           <ModalFooter className='justify-center'>

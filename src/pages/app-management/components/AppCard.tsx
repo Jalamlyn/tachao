@@ -55,9 +55,9 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
               className={`w-6 h-6 ${getTemplateColor(app.template)}`} 
             />
           </div>
-          <div className='flex-1'>
+          <div className='flex-1 min-w-0'> {/* 添加 min-w-0 确保子元素可以正确收缩 */}
             <div className='flex items-center gap-2'>
-              <h3 className='text-lg font-semibold'>{app.title}</h3>
+              <h3 className='text-lg font-semibold whitespace-nowrap overflow-hidden text-ellipsis'>{app.title}</h3>
               <Chip size='sm' variant='flat' color={app.status === "active" ? "success" : "default"}>
                 {app.status === "active" ? "运行中" : "已停用"}
               </Chip>
