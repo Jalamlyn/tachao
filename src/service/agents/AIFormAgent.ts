@@ -16,6 +16,8 @@ export class AIFormAgent implements IAIFormAgent {
   private static instance: AIFormAgent
   private _rawConfig: string | null = null
   private _cachedImage: string | null = null
+  private _questionCount: number = 0
+  private readonly MAX_QUESTIONS: number = 2
 
   private constructor() {}
 
@@ -44,6 +46,14 @@ export class AIFormAgent implements IAIFormAgent {
   public clearCachedImage(): void {
     console.log("[AIFormAgent] clearCachedImage called")
     this._cachedImage = null
+  }
+
+  private resetQuestionCount(): void {
+    this._questionCount = 0
+  }
+
+  private incrementQuestionCount(): void {
+    this._questionCount++
   }
 
   public async parseConfig(rawConfig: string) {
@@ -81,22 +91,54 @@ export class AIFormAgent implements IAIFormAgent {
     }
 
     try {
+      // 检查是否是新的对话
+      if (messages.length <= 1) {
+        this.resetQuestionCount()
+      }
+
       updateGenerationProcess("🤖 AI助手正在分析您的需求...")
       await new Promise((resolve) => setTimeout(resolve, 500))
 
-      updateGenerationProcess("📝 开始生成表单...")
-      const createResult = await this.createForm(messages, command, updateGenerationProcess)
+      // 添加问题计数到系统消息
+      const systemMessage = {
+        role: "system",
+        content: generateFormAgentPrompt(this._rawConfig) + `\n当前提问次数：${this._questionCount}`,
+      }
 
-      if (createResult) {
-        if (createResult.rawConfig) {
-          console.log("[AIFormAgent] Setting new rawConfig from createResult")
+      const allMessages = [systemMessage, ...messages]
+
+      updateGenerationProcess("📝 开始处理您的需求...")
+      const response = await this.processAIResponse(allMessages, command, updateGenerationProcess)
+
+      // 处理不同类型的响应
+      if (response.includes("<shata-ai-question>")) {
+        this.incrementQuestionCount()
+        if (this._questionCount >= this.MAX_QUESTIONS) {
+          updateGenerationProcess("已达到最大提问次数，将基于现有信息生成表单...")
+          const createResult = await this.createForm(messages, command, updateGenerationProcess)
+          return {
+            type: "support",
+            data: createResult,
+            generationProcess,
+          }
+        }
+      }
+
+      if (response.includes("<shata-ai-form>")) {
+        const createResult = await this.createForm(messages, command, updateGenerationProcess)
+        if (createResult?.rawConfig) {
           this.setRawConfig(createResult.rawConfig)
+        }
+        return {
+          type: "support",
+          data: createResult,
+          generationProcess,
         }
       }
 
       return {
-        type: "support",
-        data: createResult,
+        type: "question",
+        data: response,
         generationProcess,
       }
     } catch (error) {
