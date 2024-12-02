@@ -35,6 +35,34 @@ interface Template {
   formCount?: number
 }
 
+const welcomeMessage = {
+  role: "assistant",
+  content: `欢迎使用 AI 智能助手！
+
+我可以帮您：
+✅ 分析表单数据和统计信息
+✅ 查询特定表单的详细信息
+✅ 生成数据报表和趋势分析
+✅ 对比不同时期的数据变化
+✅ 识别异常数据和潜在问题
+
+使用限制：
+❌ 只能分析已选择的表单数据
+❌ 不能修改或删除表单数据
+❌ 不能预测未来数据走势
+❌ 不能处理系统范围之外的查询
+
+使用示例：
+1. "统计所有表单的状态分布"
+2. "分析最近一周的表单提交趋势"
+3. "查找状态为待审批的表单"
+4. "统计各类型表单的数量"
+
+开始使用前，请先在上方选择需要分析的数据源。`,
+  id: "welcome",
+  timestamp: new Date().toLocaleTimeString(),
+}
+
 const FormAnalysis: React.FC = () => {
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState("")
@@ -84,6 +112,13 @@ const FormAnalysis: React.FC = () => {
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "AI 智能助手", href: "/we-chat-app/admin/ai-assistant" },
     ])
+  }, [])
+
+  // 添加欢迎消息
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([welcomeMessage])
+    }
   }, [])
 
   useEffect(() => {
