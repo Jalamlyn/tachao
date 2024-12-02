@@ -35,7 +35,7 @@ const welcomeMessage = {
 3. "查找状态为待审批的表单"
 4. "统计各类型表单的数量"
 
-开始使用前，请先在上方选择需要分析的数据源。`,
+开始使用前，请先选择需要分析的数据源。`,
   id: "welcome",
   timestamp: new Date().toLocaleTimeString(),
 }
@@ -46,8 +46,6 @@ const FormAnalysis: React.FC = () => {
     setCurrentSession,
     isTemplateModalOpen,
     setTemplateModalOpen,
-    isSidebarOpen,
-    setSidebarOpen,
     useSessions,
     useCreateSession,
     useUpdateSession,
@@ -99,6 +97,17 @@ const FormAnalysis: React.FC = () => {
     ])
   }, [])
 
+  // 确保组件加载时显示欢迎消息
+  useEffect(() => {
+    if (sessions.length === 0) {
+      createSession({
+        title: "新会话",
+        selectedTemplates: [],
+        messages: [welcomeMessage],
+      })
+    }
+  }, [sessions])
+
   const handleTemplateSelection = (templateId: string) => {
     setSelectedTemplates((prev) => {
       const newSelection = prev.includes(templateId) ? prev.filter((id) => id !== templateId) : [...prev, templateId]
@@ -121,6 +130,7 @@ const FormAnalysis: React.FC = () => {
         title: `新会话 ${sessions.length + 1}`,
         selectedTemplates,
       })
+      setSelectedTemplates([]) // 清空选择
     } catch (error) {
       console.error("Error creating session:", error)
       message.error("创建会话失败")
@@ -202,10 +212,21 @@ const FormAnalysis: React.FC = () => {
   )
 
   return (
-    <PageLayout title="AI 智能助手" titleIcon="hugeicons:ai-chat-02">
+    <PageLayout 
+      title="AI 智能助手" 
+      titleIcon="hugeicons:ai-chat-02"
+      actions={
+        <Button
+          color="primary"
+          startContent={<Icon icon="mdi:plus" />}
+          onPress={handleNewChat}
+        >
+          新建会话
+        </Button>
+      }
+    >
       <div className="flex h-[calc(100vh-200px)]">
         <Sidebar
-          isOpen={isSidebarOpen}
           sessions={sessions}
           currentSession={currentSession}
           onSessionSelect={setCurrentSession}
@@ -216,6 +237,7 @@ const FormAnalysis: React.FC = () => {
           <ChatArea
             session={currentSession}
             onSendMessage={handleSendMessage}
+            onNewChat={handleNewChat}
             isLoading={isSending}
           />
         </div>

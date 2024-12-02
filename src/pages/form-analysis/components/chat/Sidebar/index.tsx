@@ -5,7 +5,6 @@ import { ChatSession } from "../../../store/useChatStore"
 import { cn } from "@/theme/cn"
 
 interface SidebarProps {
-  isOpen: boolean
   sessions: ChatSession[]
   currentSession: ChatSession | null
   onSessionSelect: (session: ChatSession) => void
@@ -13,25 +12,21 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
-  isOpen,
   sessions,
   currentSession,
   onSessionSelect,
   onNewChat,
 }) => {
   return (
-    <div
-      className={cn(
-        "w-64 h-full bg-content2 flex flex-col border-r border-divider transition-all duration-300",
-        !isOpen && "w-0"
-      )}
-    >
+    <div className="w-64 h-full bg-content2 flex flex-col border-r border-divider">
       <div className="p-4">
         <Button
           fullWidth
           color="primary"
-          startContent={<Icon icon="mdi:plus" />}
+          size="lg"
+          startContent={<Icon icon="mdi:plus" className="text-xl" />}
           onPress={onNewChat}
+          className="h-12"
         >
           新建会话
         </Button>
@@ -45,11 +40,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               fullWidth
               variant={currentSession?.id === session.id ? "flat" : "light"}
               color={currentSession?.id === session.id ? "primary" : "default"}
-              className="justify-start"
+              className="justify-start h-12"
               onPress={() => onSessionSelect(session)}
             >
               <div className="flex items-center gap-2 truncate">
-                <Icon icon="mdi:chat-outline" />
+                <Icon icon="mdi:chat-outline" className="text-xl" />
                 <span className="truncate">{session.title}</span>
               </div>
             </Button>

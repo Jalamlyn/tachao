@@ -9,12 +9,14 @@ import user from "/assets/user.png"
 interface ChatAreaProps {
   session: ChatSession | null
   onSendMessage: (content: string) => Promise<void>
+  onNewChat: () => void
   isLoading?: boolean
 }
 
 export const ChatArea: React.FC<ChatAreaProps> = ({
   session,
   onSendMessage,
+  onNewChat,
   isLoading = false,
 }) => {
   const [input, setInput] = React.useState("")
@@ -46,8 +48,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Icon icon="mdi:chat-outline" className="w-12 h-12 mx-auto text-default-400" />
-          <p className="text-default-500">选择一个会话或创建新会话</p>
+          <Icon icon="mdi:chat-plus" className="w-16 h-16 mx-auto text-primary/50" />
+          <div className="space-y-2">
+            <h3 className="text-xl font-medium">开始新的对话</h3>
+            <p className="text-default-500">点击左侧"新建会话"或下方按钮开始</p>
+            <Button 
+              color="primary"
+              size="lg"
+              startContent={<Icon icon="mdi:plus" />}
+              onPress={onNewChat}
+            >
+              新建会话
+            </Button>
+          </div>
         </div>
       </div>
     )
