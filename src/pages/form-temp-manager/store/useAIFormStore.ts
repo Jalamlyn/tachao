@@ -1,7 +1,8 @@
 import { create } from "zustand"
-import { ReactNode } from "react"
+import { ReactNode, useRef } from "react"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
+import { debounce } from "lodash"
 
 interface Message {
   role: string
@@ -28,6 +29,7 @@ interface AIFormState {
   messages: Message[]
   selectedTab: string
   previewContent: string
+  messageRefs: { [key: string]: HTMLDivElement | null }
 
   // 模态框状态
   isTitleModalOpen: boolean
@@ -46,6 +48,7 @@ interface AIFormState {
   setSelectedTab: (tab: string) => void
   setPreviewContent: (content: string) => void
   updateLastMessage: (update: Partial<Message>) => void
+  setMessageRef: (id: string, ref: HTMLDivElement | null) => void
 
   // 模态框 actions
   setTitleModalOpen: (isOpen: boolean) => void
@@ -89,11 +92,17 @@ if (typeof window !== "undefined") {
   window.addEventListener("beforeunload", cleanup)
 }
 
+// 创建防抖的状态更新函数
+const debouncedStateUpdate = debounce((set, messages) => {
+  set({ messages })
+}, 200)
+
 export const useAIFormStore = create<AIFormState>((set, get) => ({
   // 初始状态
   messages: [],
   selectedTab: "preview",
   previewContent: "",
+  messageRefs: {},
 
   isTitleModalOpen: false,
   isVersionSelectModalOpen: false,
@@ -107,9 +116,21 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
   // 基础 actions
   setMessages: (messages) => set({ messages }),
 
+  setMessageRef: (id, ref) => 
+    set((state) => ({
+      messageRefs: {
+        ...state.messageRefs,
+        [id]: ref
+      }
+    })),
+
   addMessage: (message) =>
     set((state) => ({
       messages: [...state.messages, message],
+      messageRefs: {
+        ...state.messageRefs,
+        [message.id]: null
+      }
     })),
 
   setSelectedTab: (tab) => set({ selectedTab: tab }),
@@ -124,27 +145,45 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
 
     // 如果是文本内容更新
     if (typeof update.content === "string") {
-      // 如果没有当前消息ID,说明是新消息
+      // 如果没有当前消息ID，说明是新消息
       if (!currentMessageIdRef) {
         currentMessageIdRef = Date.now().toString()
-        streamBuffer = update.content // 初始化流式缓冲区
-        const messages = [...state.messages]
-        messages[lastIndex] = {
-          ...messages[lastIndex],
-          content: streamBuffer,
-          id: currentMessageIdRef,
-          status: "streaming"
+        streamBuffer = update.content
+        
+        // 直接更新DOM
+        const messageRef = state.messageRefs[state.messages[lastIndex].id]
+        if (messageRef) {
+          messageRef.textContent = streamBuffer
         }
-        set({ messages })
+
+        // 延迟更新状态
+        debouncedStateUpdate(set, [
+          ...state.messages.slice(0, -1),
+          {
+            ...state.messages[lastIndex],
+            content: streamBuffer,
+            id: currentMessageIdRef,
+            status: "streaming"
+          }
+        ])
       } else {
         // 更新现有消息
-        streamBuffer += update.content // 累积到流式缓冲区
-        const messages = [...state.messages]
-        messages[lastIndex] = {
-          ...messages[lastIndex],
-          content: streamBuffer, // 使用完整的流式缓冲区内容
+        streamBuffer += update.content
+        
+        // 直接更新DOM
+        const messageRef = state.messageRefs[state.messages[lastIndex].id]
+        if (messageRef) {
+          messageRef.textContent = streamBuffer
         }
-        set({ messages })
+
+        // 延迟更新状态
+        debouncedStateUpdate(set, [
+          ...state.messages.slice(0, -1),
+          {
+            ...state.messages[lastIndex],
+            content: streamBuffer
+          }
+        ])
       }
     } else {
       // 对于非文本内容或状态更新
@@ -155,10 +194,10 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
       }
       set({ messages })
       
-      // 如果状态更新为完成或错误,重置消息ID和缓冲区
+      // 如果状态更新为完成或错误，重置消息ID和缓冲区
       if (update.status === "success" || update.status === "error") {
         currentMessageIdRef = null
-        streamBuffer = "" // 清理流式缓冲区
+        streamBuffer = ""
       }
     }
   },
