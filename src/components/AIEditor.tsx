@@ -162,7 +162,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
   return (
     <div className='h-[calc(100vh-140px)] overflow-hidden'>
       <ResizablePanelGroup direction='horizontal' className='h-full p-2'>
-        <ResizablePanel defaultSize={30} className='resizable-panel'>
+        <ResizablePanel defaultSize={50} className='resizable-panel'>
           <div className='h-full flex flex-col'>
             <ScrollShadow className='flex-1 overflow-y-auto'>
               <div className='space-y-4'>
@@ -187,7 +187,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
           </div>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={70} className='resizable-panel bg-slate-50'>
+        <ResizablePanel defaultSize={50} className='resizable-panel bg-slate-50'>
           <div className='relative h-full flex flex-col'>
             <div className='version-control-wrapper absolute -top-2 right-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-2 transition-all duration-200 hover:bg-white'>
               <div className='flex items-center gap-3'>

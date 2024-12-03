@@ -1,7 +1,6 @@
 import chatChunk from "../chat/chat-chunk-openai-office"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
-import message from "@/components/Message"
 import generateFormAgentPrompt from "./prompts/form-agent-prompt"
 import { Message } from "./AIFormAgentTypes"
 
@@ -109,7 +108,7 @@ export class AIFormAgent {
         if (formMatch) {
           const formContent = formMatch[1].trim()
           const parsedConfig = await this.parseConfig(formContent)
-          
+
           if (parsedConfig) {
             this.setRawConfig(formContent)
             return {
@@ -127,7 +126,6 @@ export class AIFormAgent {
         config: undefined,
         rawConfig: undefined,
       }
-
     } catch (error) {
       console.error("Error in processCommand:", error)
       return {

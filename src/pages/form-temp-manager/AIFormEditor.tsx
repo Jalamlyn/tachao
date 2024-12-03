@@ -94,7 +94,12 @@ const AIFormEditor: React.FC = () => {
 
               // 更新消息状态
               updateLastMessage({
-                content: "表单生成完成",
+                content: (
+                  <div className='flex items-center gap-2'>
+                    <Icon icon='line-md:check-all' className='w-5 h-5 text-green-500'></Icon>
+                    表单生成完成
+                  </div>
+                ),
                 status: "success",
               })
             }
