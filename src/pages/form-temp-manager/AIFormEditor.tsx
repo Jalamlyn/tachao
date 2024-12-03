@@ -17,6 +17,7 @@ import VersionSelectModal from "@/components/VersionSelectModal"
 import { renderSaveModal } from "./renderSaveModal"
 import { renderTitleModal } from "./renderTitleModal"
 import { useAIFormStore } from "./store/useAIFormStore"
+import { localDB } from "@/utils/localDB"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -63,6 +64,60 @@ const AIFormEditor: React.FC = () => {
   const accumulatedTextRef = useRef("")
   const lastResponseRef = useRef("")
   const currentMessageIdRef = useRef<string | null>(null)
+
+  // 监听AI输出完成标志
+  useEffect(() => {
+    const unwatch = localDB.watchKey("chat-chunk-over", async ({ value }) => {
+      if (value === "YES" && lastResponseRef.current) {
+        try {
+          // 提取表单配置
+          const formMatch = lastResponseRef.current.match(/<shata-ai-form>([\s\S]*?)<\/shata-ai-form>/)
+          if (formMatch) {
+            const formContent = formMatch[1].trim()
+            const parsedConfig = await AIFormAgent.parseConfig(formContent)
+            
+            if (parsedConfig) {
+              // 更新表单配置
+              setFormConfig(parsedConfig.config)
+              setRawConfig(formContent)
+              setPreviewContent(formContent)
+              setSelectedTab("preview")
+
+              // 添加到版本控制
+              versionControl.addVersion({
+                formConfig: parsedConfig.config,
+                rawConfig: formContent,
+              })
+
+              // 更新消息状态
+              updateLastMessage({
+                content: (
+                  <div className='flex items-center gap-2 text-success'>
+                    <Icon icon='line-md:check-all' className='w-5 h-5' />
+                    <span>表单生成完成</span>
+                  </div>
+                ),
+                status: "success",
+              })
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing form config:", error)
+          updateLastMessage({
+            content: (
+              <div className='flex items-center gap-2 text-danger'>
+                <Icon icon='mdi:alert-circle' className='w-5 h-5' />
+                <span>表单解析失败</span>
+              </div>
+            ),
+            status: "error",
+          })
+        }
+      }
+    })
+
+    return () => unwatch()
+  }, [])
 
   useEffect(() => {
     setMessages([])
@@ -187,28 +242,6 @@ const AIFormEditor: React.FC = () => {
           },
           formState.rawConfig
         )
-
-        if (result.success && result.config) {
-          versionControl.addVersion({
-            formConfig: result.config,
-            rawConfig: result.rawConfig,
-          })
-
-          setFormConfig(result.config)
-          setRawConfig(result.rawConfig)
-          setSelectedTab("preview")
-
-          // 更新最后一条消息为成功状态
-          updateLastMessage({
-            content: (
-              <div className='flex items-center gap-2 text-success'>
-                <Icon icon='line-md:check-all' className='w-5 h-5' />
-                <span>表单生成完成</span>
-              </div>
-            ),
-            status: "success",
-          })
-        }
 
         currentMessageIdRef.current = null
         return result
