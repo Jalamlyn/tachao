@@ -135,14 +135,6 @@ const MessageCard = React.memo(
             </div>
           )
         }
-        if (isLoading && !displayedMessage) {
-          return (
-            <div className='flex items-center'>
-              <Spinner size='sm' className='mr-2' />
-              {t("thinking")}
-            </div>
-          )
-        }
 
         let contentClassName = "typo markdown-body markdown-body-guidance"
         if (messageType === "guidance") {
