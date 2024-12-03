@@ -58,7 +58,6 @@ export class AIFormAgent {
     rawConfig?: string
   ): Promise<{ success: boolean; config?: DynamicFormConfig; rawConfig?: string }> {
     console.log("[AIFormAgent] processCommand started")
-    let generationProcess = ""
 
     if (rawConfig) {
       this.setRawConfig(rawConfig)
@@ -71,12 +70,16 @@ export class AIFormAgent {
         content: generateFormAgentPrompt(this._rawConfig),
       }
 
+      // 增强用户命令，添加意图控制
+      const enhancedCommand = `${command}
+[意图控制: 你是表单设计助手，如果这个问题与表单设计、创建、修改、查询无关，请回复："抱歉，我是表单设计助手，只能回答与表单相关的问题。您可以询问我如何创建、修改或管理表单。"]`
+
       // 构建当前用户消息，检查是否有缓存图片
       const currentUserMessage = {
         role: "user" as const,
-        content: command,
+        content: enhancedCommand,
         // 如果有缓存图片，添加到 images 数组中
-        images: this._cachedImage ? [this._cachedImage] : undefined
+        images: this._cachedImage ? [this._cachedImage] : undefined,
       }
 
       // 组合所有消息
