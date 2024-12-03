@@ -37,6 +37,7 @@ const AIFormEditor: React.FC = () => {
     savedTemplateId,
     setMessages,
     addMessage,
+    updateLastMessage,
     setSelectedTab,
     setPreviewContent,
     setTitleModalOpen,
@@ -61,6 +62,7 @@ const AIFormEditor: React.FC = () => {
 
   const accumulatedTextRef = useRef("")
   const lastResponseRef = useRef("")
+  const currentMessageIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     setMessages([])
@@ -116,23 +118,42 @@ const AIFormEditor: React.FC = () => {
       accumulatedTextRef.current += chunk
       lastResponseRef.current = accumulatedTextRef.current
 
-      addMessage({
-        role: "assistant",
-        content: (
-          <div className='flex items-center gap-3'>
-            <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10 text-primary' />
-            <div className='flex flex-col'>
-              <span className='font-medium text-sm'>正在生成...</span>
-              <pre className='text-xs text-gray-500 mt-2'>{accumulatedTextRef.current}</pre>
+      if (!currentMessageIdRef.current) {
+        // 创建新的assistant消息
+        const messageId = Date.now().toString()
+        currentMessageIdRef.current = messageId
+        addMessage({
+          role: "assistant",
+          content: (
+            <div className='flex items-center gap-3'>
+              <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10 text-primary' />
+              <div className='flex flex-col'>
+                <span className='font-medium text-sm'>正在生成...</span>
+                <pre className='text-xs text-gray-500 mt-2'>{accumulatedTextRef.current}</pre>
+              </div>
             </div>
-          </div>
-        ),
-        id: Date.now().toString(),
-        timestamp: new Date().toLocaleTimeString(),
-        status: "streaming",
-      })
+          ),
+          id: messageId,
+          timestamp: new Date().toLocaleTimeString(),
+          status: "streaming",
+        })
+      } else {
+        // 更新现有消息
+        updateLastMessage({
+          content: (
+            <div className='flex items-center gap-3'>
+              <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10 text-primary' />
+              <div className='flex flex-col'>
+                <span className='font-medium text-sm'>正在生成...</span>
+                <pre className='text-xs text-gray-500 mt-2'>{accumulatedTextRef.current}</pre>
+              </div>
+            </div>
+          ),
+          status: "streaming",
+        })
+      }
     },
-    [addMessage]
+    [addMessage, updateLastMessage]
   )
 
   const formAgent = {
@@ -145,22 +166,9 @@ const AIFormEditor: React.FC = () => {
       }
       addMessage(userMessage)
 
-      const assistantMessage = {
-        role: "assistant",
-        content: (
-          <div className='flex items-center gap-2'>
-            <Icon icon='eos-icons:three-dots-loading' className='w-5 h-5 animate-spin' />
-            <span>正在思考...</span>
-          </div>
-        ),
-        id: (Date.now() + 1).toString(),
-        timestamp: new Date().toLocaleTimeString(),
-        status: "thinking",
-      }
-      addMessage(assistantMessage)
-
       setPreviewContent("")
       accumulatedTextRef.current = ""
+      currentMessageIdRef.current = null
 
       try {
         const processMessages = messages.map(msg => ({
@@ -190,36 +198,34 @@ const AIFormEditor: React.FC = () => {
           setRawConfig(result.rawConfig)
           setSelectedTab("preview")
 
-          addMessage({
-            role: "assistant",
+          // 更新最后一条消息为成功状态
+          updateLastMessage({
             content: (
               <div className='flex items-center gap-2 text-success'>
                 <Icon icon='line-md:check-all' className='w-5 h-5' />
                 <span>表单生成完成</span>
               </div>
             ),
-            id: Date.now().toString(),
-            timestamp: new Date().toLocaleTimeString(),
             status: "success",
           })
         }
 
+        currentMessageIdRef.current = null
         return result
       } catch (error) {
         console.error("Error in chat:", error)
-        addMessage({
-          role: "assistant",
+        // 更新最后一条消息为错误状态
+        updateLastMessage({
           content: (
             <div className='flex items-center gap-2 text-danger'>
               <Icon icon='mdi:alert-circle' className='w-5 h-5' />
               <span>{error.message || "生成过程中发生错误"}</span>
             </div>
           ),
-          id: Date.now().toString(),
-          timestamp: new Date().toLocaleTimeString(),
           status: "error",
         })
         message.error("生成过程中发生错误")
+        currentMessageIdRef.current = null
         throw error
       }
     },
