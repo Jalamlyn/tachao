@@ -61,10 +61,13 @@ const AIFormEditor: React.FC = () => {
   }>()
 
   const accumulatedTextRef = useRef("")
+  const lastResponseRef = useRef("")
+  const hasShownFormRef = useRef(false)
 
   useEffect(() => {
     setMessages([])
     setSuccessModalOpen(false)
+    hasShownFormRef.current = false
   }, [])
 
   useEffect(() => {
@@ -114,6 +117,7 @@ const AIFormEditor: React.FC = () => {
   const handleChunk = useCallback(
     (chunk: string) => {
       accumulatedTextRef.current += chunk
+      lastResponseRef.current = accumulatedTextRef.current
 
       if (accumulatedTextRef.current.includes("<shata-ai-error>")) {
         const errorMatch = accumulatedTextRef.current.match(/<shata-ai-error>([\s\S]*?)<\/shata-ai-error>/)
@@ -129,30 +133,49 @@ const AIFormEditor: React.FC = () => {
             status: "error",
           })
           accumulatedTextRef.current = ""
+          hasShownFormRef.current = false
           return
         }
       }
 
       if (accumulatedTextRef.current.includes("<shata-ai-form>")) {
-        updateLastMessage({
-          content: (
-            <div className='flex items-center gap-3 text-primary'>
-              <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10' />
-              <div className='flex flex-col'>
-                <span className='font-medium text-sm'>AI 正在生成表单配置</span>
+        if (!hasShownFormRef.current) {
+          updateLastMessage({
+            content: (
+              <div className='flex items-center gap-3 text-primary'>
+                <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10' />
+                <div className='flex flex-col'>
+                  <span className='font-medium text-sm'>AI 正在生成表单配置</span>
+                </div>
               </div>
-            </div>
-          ),
-          status: "loading",
-        })
-        setSelectedTab("code")
-      }
-
-      // 更新预览内容
-      if (previewContent || accumulatedTextRef.current.includes("<shata-ai-form>")) {
-        const newContent = accumulatedTextRef.current
-        setPreviewContent(newContent)
-        
+            ),
+            status: "loading",
+          })
+          setSelectedTab("code")
+          
+          // 提取完整的表单配置
+          const formMatch = accumulatedTextRef.current.match(/<shata-ai-form>([\s\S]*?)<\/shata-ai-form>/)
+          if (formMatch) {
+            const formContent = formMatch[1].trim()
+            setPreviewContent(formContent)
+            hasShownFormRef.current = true
+            
+            // 更新消息内容
+            updateLastMessage({
+              content: (
+                <div className='flex items-center gap-3'>
+                  <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10 text-primary' />
+                  <div className='flex flex-col'>
+                    <span className='font-medium text-sm'>正在生成...</span>
+                    <pre className='text-xs text-gray-500 mt-2'>{formContent}</pre>
+                  </div>
+                </div>
+              ),
+              status: "streaming",
+            })
+          }
+        }
+      } else if (!hasShownFormRef.current) {
         // 更新消息内容
         updateLastMessage({
           content: (
@@ -160,7 +183,7 @@ const AIFormEditor: React.FC = () => {
               <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10 text-primary' />
               <div className='flex flex-col'>
                 <span className='font-medium text-sm'>正在生成...</span>
-                <pre className='text-xs text-gray-500 mt-2'>{newContent}</pre>
+                <pre className='text-xs text-gray-500 mt-2'>{accumulatedTextRef.current}</pre>
               </div>
             </div>
           ),
@@ -196,10 +219,19 @@ const AIFormEditor: React.FC = () => {
       addMessage(assistantMessage)
 
       setPreviewContent("")
+      accumulatedTextRef.current = ""
+      hasShownFormRef.current = false
 
       try {
+        const processMessages = messages.map(msg => ({
+          role: msg.role,
+          content: typeof msg.content === 'string' ? msg.content : 
+                  React.isValidElement(msg.content) ? lastResponseRef.current || '正在处理...' : 
+                  String(msg.content)
+        }))
+
         const result = await AIFormAgent.processCommand(
-          messages,
+          processMessages,
           command,
           (chunk) => {
             onChunk?.(chunk)
@@ -207,6 +239,13 @@ const AIFormEditor: React.FC = () => {
           },
           formState.rawConfig
         )
+
+        if (lastResponseRef.current) {
+          updateLastMessage({
+            content: lastResponseRef.current,
+            status: "success",
+          })
+        }
 
         return result
       } catch (error) {
@@ -229,8 +268,9 @@ const AIFormEditor: React.FC = () => {
   const handleCommandResult = useCallback(
     (result) => {
       accumulatedTextRef.current = ""
-      
-      switch(result?.type) {
+      hasShownFormRef.current = false
+
+      switch (result?.type) {
         case "form":
           if (result.data?.config) {
             versionControl.addVersion({
@@ -253,7 +293,7 @@ const AIFormEditor: React.FC = () => {
 
             setSelectedTab("preview")
           }
-          break;
+          break
 
         case "question":
           updateLastMessage({
@@ -263,9 +303,9 @@ const AIFormEditor: React.FC = () => {
                 <span>{result.data}</span>
               </div>
             ),
-            status: "question"
+            status: "question",
           })
-          break;
+          break
 
         case "confirm":
           updateLastMessage({
@@ -275,9 +315,9 @@ const AIFormEditor: React.FC = () => {
                 <span>{result.data}</span>
               </div>
             ),
-            status: "confirm"
+            status: "confirm",
           })
-          break;
+          break
 
         case "error":
           updateLastMessage({
@@ -287,9 +327,9 @@ const AIFormEditor: React.FC = () => {
                 <span>{result.data}</span>
               </div>
             ),
-            status: "error"
+            status: "error",
           })
-          break;
+          break
 
         default:
           updateLastMessage({
@@ -299,7 +339,7 @@ const AIFormEditor: React.FC = () => {
                 <span>未知的返回类型</span>
               </div>
             ),
-            status: "error"
+            status: "error",
           })
       }
     },
