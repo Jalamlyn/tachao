@@ -2,11 +2,6 @@ import { create } from "zustand"
 import { ReactNode } from "react"
 import { debounce } from "lodash"
 
-// 创建全局 ref 对象
-export const messageRefsRef = {
-  current: {} as { [key: string]: HTMLDivElement | null }
-}
-
 interface Message {
   role: string
   content: string | ReactNode
@@ -69,30 +64,6 @@ interface AIFormState {
   handleVersionSelectCancel: () => void
 }
 
-// 创建一个全局的消息缓冲区和定时器
-let messageBuffer: string = ""
-let streamBuffer: string = ""
-let updateTimeout: NodeJS.Timeout | null = null
-let isUpdating: boolean = false
-let currentMessageIdRef: string | null = null
-
-// 清理函数
-const cleanup = () => {
-  if (updateTimeout) {
-    clearTimeout(updateTimeout)
-    updateTimeout = null
-  }
-  messageBuffer = ""
-  streamBuffer = ""
-  isUpdating = false
-  currentMessageIdRef = null
-}
-
-// 在组件卸载时清理
-if (typeof window !== "undefined") {
-  window.addEventListener("beforeunload", cleanup)
-}
-
 // 创建防抖的状态更新函数
 const debouncedStateUpdate = debounce((set, messages) => {
   set({ messages })
@@ -131,65 +102,21 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
 
     if (lastIndex < 0) return
 
-    // 如果是文本内容更新
-    if (typeof update.content === "string") {
-      // 如果没有当前消息ID，说明是新消息
-      if (!currentMessageIdRef) {
-        currentMessageIdRef = Date.now().toString()
-        streamBuffer = update.content
-
-        // 直接更新DOM
-        const messageId = state.messages[lastIndex].id
-        const messageElement = messageRefsRef.current[messageId]
-        if (messageElement) {
-          messageElement.textContent = streamBuffer
-        }
-
-        // 延迟更新状态
-        debouncedStateUpdate(set, [
-          ...state.messages.slice(0, -1),
-          {
-            ...state.messages[lastIndex],
-            content: streamBuffer,
-            id: currentMessageIdRef,
-            status: "streaming"
-          }
-        ])
-      } else {
-        // 更新现有消息
-        streamBuffer += update.content
-
-        // 直接更新DOM
-        const messageId = state.messages[lastIndex].id
-        const messageElement = messageRefsRef.current[messageId]
-        if (messageElement) {
-          messageElement.textContent = streamBuffer
-        }
-
-        // 延迟更新状态
-        debouncedStateUpdate(set, [
-          ...state.messages.slice(0, -1),
-          {
-            ...state.messages[lastIndex],
-            content: streamBuffer
-          }
-        ])
-      }
-    } else {
-      // 对于非文本内容或状态更新
-      const messages = [...state.messages]
-      messages[lastIndex] = {
-        ...messages[lastIndex],
-        ...update,
-      }
-      set({ messages })
-
-      // 如果状态更新为完成或错误，重置消息ID和缓冲区
-      if (update.status === "success" || update.status === "error") {
-        currentMessageIdRef = null
-        streamBuffer = ""
-      }
+    // 更新DOM和状态
+    const messages = [...state.messages]
+    const lastMessage = messages[lastIndex]
+    const messageElement = document.getElementById(lastMessage.id)
+    
+    if (typeof update.content === "string" && messageElement) {
+      messageElement.textContent = update.content
     }
+
+    messages[lastIndex] = {
+      ...messages[lastIndex],
+      ...update,
+    }
+
+    set({ messages })
   },
 
   // 模态框 actions
@@ -264,8 +191,3 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
     }
   },
 }))
-
-// 添加清理函数到 store
-useAIFormStore.subscribe(() => {
-  return () => cleanup()
-})

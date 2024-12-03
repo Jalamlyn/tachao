@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useTransition } from "react"
+import React, { useEffect, useState, useCallback, useTransition } from "react"
 import { Button, Badge, Avatar, Link, Image, Chip, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useClipboard } from "@nextui-org/use-clipboard"
@@ -8,14 +8,13 @@ import remarkGfm from "remark-gfm"
 import { useTranslation } from "react-i18next"
 import { create } from "@wpm-js/core"
 import rehypeRaw from "rehype-raw"
-import { messageRefsRef } from "@/pages/form-temp-manager/store/useAIFormStore"
 
 type MessageCardProps = React.HTMLAttributes<HTMLDivElement> & {
   avatar?: string
   showFeedback?: boolean
   message?: React.ReactNode | string
   currentAttempt?: number
-  status?: "success" | "failed" | "streaming" | "loading" | "cancelled"
+  status?: "success" | "failed" | "streaming" | "loading" | "cancelled" | "thinking"
   attempts?: number
   messageClassName?: string
   onAttemptChange?: (attempt: number) => void
@@ -64,37 +63,11 @@ const MessageCard = React.memo(
       const [isLoading, setIsLoading] = useState(role === "user" ? false : true)
       const [isPending, startTransition] = useTransition()
 
-      const messageRef = useRef<HTMLDivElement>(null)
-      const contentRef = useRef<HTMLDivElement>(null)
-
       const { copied, copy } = useClipboard()
 
       useEffect(() => {
         setDisplayedMessage(message)
       }, [message])
-
-      // 设置消息ref到全局ref对象
-      useEffect(() => {
-        if (contentRef.current && props.id) {
-          messageRefsRef.current[props.id] = contentRef.current
-          return () => {
-            delete messageRefsRef.current[props.id]
-          }
-        }
-      }, [props.id])
-
-      const failedMessageClassName =
-        status === "failed" ? "bg-danger-100/50 border border-danger-100 text-foreground" : ""
-      const failedMessage = (
-        <p>
-          {t("chat_error_message")}
-          <Link href='mailto:info@mobenai.com.cn' size='sm'>
-            info@mobenai.com.cn
-          </Link>
-        </p>
-      )
-
-      const hasFailed = status === "failed"
 
       useEffect(() => {
         const cancel = () => {
@@ -125,12 +98,23 @@ const MessageCard = React.memo(
 
       const handleCopy = useCallback(() => {
         startTransition(() => {
-          const valueToCopy =
-            typeof displayedMessage === "string" ? displayedMessage : contentRef.current?.textContent || ""
+          const valueToCopy = typeof displayedMessage === "string" ? displayedMessage : document.getElementById(props.id!)?.textContent || ""
           copy(valueToCopy)
           onMessageCopy?.(valueToCopy)
         })
-      }, [copy, displayedMessage, onMessageCopy])
+      }, [copy, displayedMessage, onMessageCopy, props.id])
+
+      const failedMessageClassName = status === "failed" ? "bg-danger-100/50 border border-danger-100 text-foreground" : ""
+      const failedMessage = (
+        <p>
+          {t("chat_error_message")}
+          <Link href='mailto:info@mobenai.com.cn' size='sm'>
+            info@mobenai.com.cn
+          </Link>
+        </p>
+      )
+
+      const hasFailed = status === "failed"
 
       const renderContent = () => {
         if (status === "cancelled") {
@@ -142,6 +126,14 @@ const MessageCard = React.memo(
         }
         if (hasFailed) {
           return failedMessage
+        }
+        if (status === "thinking") {
+          return (
+            <div className='flex items-center'>
+              <Spinner size='sm' className='mr-2' />
+              {t("thinking")}
+            </div>
+          )
         }
         if (isLoading && !displayedMessage) {
           return (
@@ -157,13 +149,10 @@ const MessageCard = React.memo(
           contentClassName += " text-black p-0 rounded-lg"
         }
 
-        // 检查 displayedMessage 的类型
         if (React.isValidElement(displayedMessage)) {
-          // 如果是 React 元素，直接返回
           return displayedMessage
         }
 
-        // 如果是字符串，使用 ReactMarkdown 渲染
         return (
           <div className={contentClassName}>
             <ReactMarkdown
@@ -239,8 +228,8 @@ const MessageCard = React.memo(
                   ))}
                 </div>
               )}
-              <div ref={messageRef} className={`text-small markdown-body ${messageType !== "guidance" && ""}`}>
-                <div ref={contentRef}>{renderContent()}</div>
+              <div className={`text-small markdown-body ${messageType !== "guidance" && ""}`}>
+                <div id={props.id}>{renderContent()}</div>
               </div>
               {!hasFailed && !isLoading && (
                 <div className='absolute right-2 bottom-2 flex rounded-full bg-content2 shadow-small'>
