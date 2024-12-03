@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback } from "react"
 
 export interface Version<T> {
   timestamp: number
@@ -9,16 +9,19 @@ export function useVersionControl<T>() {
   const [versions, setVersions] = useState<Version<T>[]>([])
   const [currentIndex, setCurrentIndex] = useState<number>(-1)
 
+  const canRollback = currentIndex > 0
+  const canForward = currentIndex < versions.length - 1
+
   const addVersion = useCallback((data: T) => {
     const newVersion: Version<T> = {
       timestamp: Date.now(),
       data,
     }
-    
+
     // 使用 push 添加新版本到数组末尾
-    setVersions(prev => [...prev, newVersion])
+    setVersions((prev) => [...prev, newVersion])
     // 设置当前索引为最新版本的索引
-    setCurrentIndex(prev => prev + 1)
+    setCurrentIndex((prev) => prev + 1)
   }, [])
 
   const getCurrentVersion = useCallback(() => {
@@ -28,16 +31,19 @@ export function useVersionControl<T>() {
     return null
   }, [versions, currentIndex])
 
-  const getVersion = useCallback((index: number) => {
-    if (index >= 0 && index < versions.length) {
-      return versions[index].data
-    }
-    return null
-  }, [versions])
+  const getVersion = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < versions.length) {
+        return versions[index].data
+      }
+      return null
+    },
+    [versions]
+  )
 
   const rollback = useCallback(() => {
     if (currentIndex > 0) {
-      setCurrentIndex(prev => prev - 1)
+      setCurrentIndex((prev) => prev - 1)
       return versions[currentIndex - 1].data
     }
     return null
@@ -45,30 +51,36 @@ export function useVersionControl<T>() {
 
   const forward = useCallback(() => {
     if (currentIndex < versions.length - 1) {
-      setCurrentIndex(prev => prev + 1)
+      setCurrentIndex((prev) => prev + 1)
       return versions[currentIndex + 1].data
     }
     return null
   }, [versions, currentIndex])
 
-  const switchVersion = useCallback((index: number) => {
-    if (index >= 0 && index < versions.length) {
-      setCurrentIndex(index)
-      return versions[index].data
-    }
-    return null
-  }, [versions])
-
-  const getVersionInfo = useCallback((index: number) => {
-    if (index >= 0 && index < versions.length) {
-      return {
-        timestamp: versions[index].timestamp,
-        isLatest: index === versions.length - 1,
-        isCurrent: index === currentIndex,
+  const switchVersion = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < versions.length) {
+        setCurrentIndex(index)
+        return versions[index].data
       }
-    }
-    return null
-  }, [versions, currentIndex])
+      return null
+    },
+    [versions]
+  )
+
+  const getVersionInfo = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < versions.length) {
+        return {
+          timestamp: versions[index].timestamp,
+          isLatest: index === versions.length - 1,
+          isCurrent: index === currentIndex,
+        }
+      }
+      return null
+    },
+    [versions, currentIndex]
+  )
 
   const clear = useCallback(() => {
     setVersions([])
@@ -86,5 +98,7 @@ export function useVersionControl<T>() {
     switchVersion,
     getVersionInfo,
     clear,
+    canRollback,
+    canForward,
   }
 }

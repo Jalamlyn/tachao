@@ -9,7 +9,6 @@ import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
-import { useAsyncButton } from "@/hooks/useAsyncButton"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import { useVersionControl } from "@/hooks/useVersionControl"
 import AIEditor from "@/components/AIEditor"
@@ -17,10 +16,12 @@ import VersionSelectModal from "@/components/VersionSelectModal"
 import { renderSaveModal } from "./renderSaveModal"
 import { renderTitleModal } from "./renderTitleModal"
 import { useAIFormStore } from "./store/useAIFormStore"
-import { localDB } from "@/utils/localDB"
 import MessageCard from "@/components/MessageCard"
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
+import { useWatch } from "./hooks/useWatch"
+import { getFormAgent } from "./getFormAgent"
+import { useSave } from "./hooks/useSave"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -69,53 +70,15 @@ const AIFormEditor: React.FC = () => {
   const currentMessageIdRef = useRef<string | null>(null)
 
   // 监听AI输出完成标志
-  useEffect(() => {
-    const unwatch = localDB.watchKey("chat-chunk-over", async ({ value }) => {
-      if (value === "YES" && lastResponseRef.current) {
-        try {
-          // 提取表单配置
-          const formMatch = lastResponseRef.current.match(/<shata-ai-form>([\s\S]*?)<\/shata-ai-form>/)
-          if (formMatch) {
-            const formContent = lastResponseRef.current
-            const parsedConfig = await AIFormAgent.parseConfig(formContent)
-
-            if (parsedConfig) {
-              // 更新表单配置
-              setFormConfig(parsedConfig.config)
-              setRawConfig(formContent)
-              setPreviewContent(formContent)
-              setSelectedTab("preview")
-
-              // 添加到版本控制
-              versionControl.addVersion({
-                formConfig: parsedConfig.config,
-                rawConfig: formContent,
-              })
-
-              // 更新消息状态
-              updateLastMessage({
-                content: (
-                  <div className='flex items-center gap-2'>
-                    <Icon icon='line-md:check-all' className='w-5 h-5 text-green-500'></Icon>
-                    表单生成完成
-                  </div>
-                ),
-                status: "success",
-              })
-            }
-          }
-        } catch (error) {
-          console.error("Error parsing form config:", error)
-          updateLastMessage({
-            content: "表单解析失败",
-            status: "error",
-          })
-        }
-      }
-    })
-
-    return () => unwatch()
-  }, [])
+  useWatch(
+    lastResponseRef,
+    setFormConfig,
+    setRawConfig,
+    setPreviewContent,
+    setSelectedTab,
+    versionControl,
+    updateLastMessage
+  )
 
   useEffect(() => {
     setMessages([])
@@ -193,202 +156,33 @@ const AIFormEditor: React.FC = () => {
     [addMessage, updateLastMessage]
   )
 
-  const formAgent = {
-    processCommand: async (command: string, onChunk?: (chunk: string) => void) => {
-      const userMessage = {
-        role: "user",
-        content: command,
-        id: Date.now().toString(),
-        timestamp: new Date().toLocaleTimeString(),
-      }
-      addMessage(userMessage)
+  const formAgent = getFormAgent(
+    addMessage,
+    setPreviewContent,
+    accumulatedTextRef,
+    currentMessageIdRef,
+    messages,
+    handleChunk,
+    formState,
+    updateLastMessage
+  )
 
-      setPreviewContent("")
-      accumulatedTextRef.current = ""
-      currentMessageIdRef.current = null
-
-      try {
-        const processMessages = messages.map((msg) => ({
-          role: msg.role,
-          content: typeof msg.content === "string" ? msg.content : String(msg.content),
-        }))
-
-        const result = await AIFormAgent.processCommand(
-          processMessages,
-          command,
-          (chunk) => {
-            onChunk?.(chunk)
-            handleChunk(chunk)
-          },
-          formState.rawConfig
-        )
-
-        currentMessageIdRef.current = null
-        return result
-      } catch (error) {
-        console.error("Error in chat:", error)
-        // 更新最后一条消息为错误状态
-        updateLastMessage({
-          content: error.message || "生成过程中发生错误",
-          status: "error",
-        })
-        message.error("生成过程中发生错误")
-        currentMessageIdRef.current = null
-        throw error
-      }
-    },
-  }
-
-  const { isLoading: isSaving, handleClick: handleSaveTemplate } = useAsyncButton(
-    async () => {
-      if (!formState.formConfig || !formState.rawConfig) {
-        message.error("请先生成表单")
-        return
-      }
-
-      if (versionControl.currentIndex < versionControl.versions.length - 1) {
-        return new Promise<void>((resolve, reject) => {
-          setPendingVersionSave({
-            resolve,
-            reject,
-            save: async (useCurrentVersion: boolean) => {
-              try {
-                const versionToSave = useCurrentVersion
-                  ? versionControl.getCurrentVersion()
-                  : versionControl.versions[versionControl.versions.length - 1].data
-
-                if (!versionToSave) {
-                  throw new Error("无效的版本数据")
-                }
-
-                if (!isEditMode) {
-                  setNewTitle(title || versionToSave.formConfig.metadata?.title || "")
-                  setTitleModalOpen(true)
-                  setPendingSave({
-                    resolve,
-                    reject,
-                    save: async (confirmedTitle: string) => {
-                      try {
-                        const templateData = {
-                          title: confirmedTitle,
-                          type: "custom",
-                          status: "active",
-                          data: {
-                            rawConfig: versionToSave.rawConfig,
-                            type: "custom",
-                            name: confirmedTitle,
-                          },
-                        }
-
-                        const result = await createTemplate(templateData)
-                        if (result) {
-                          setSavedTemplateId(result.id)
-                          setSuccessModalOpen(true)
-                          resolve()
-                        } else {
-                          throw new Error("保存模板失败")
-                        }
-                      } catch (error) {
-                        reject(error)
-                      }
-                    },
-                  })
-                } else {
-                  const templateData = {
-                    title: title || versionToSave.formConfig.metadata?.title || "新建模板",
-                    type: "custom",
-                    status: "active",
-                    data: {
-                      rawConfig: versionToSave.rawConfig,
-                      type: "custom",
-                      name: title || versionToSave.formConfig.metadata?.title || "新建模板",
-                    },
-                  }
-
-                  const result = await updateTemplate(templateId, templateData)
-                  if (result) {
-                    setSavedTemplateId(templateId)
-                    setSuccessModalOpen(true)
-                    resolve()
-                  } else {
-                    throw new Error("更新模板失败")
-                  }
-                }
-              } catch (error) {
-                reject(error)
-                throw error
-              }
-            },
-          })
-          setVersionSelectModalOpen(true)
-        })
-      }
-
-      if (!isEditMode) {
-        const initialTitle = title || formState.formConfig.metadata?.title || ""
-        setNewTitle(initialTitle)
-        setTitleModalOpen(true)
-
-        return new Promise<void>((resolve, reject) => {
-          setPendingSave({
-            resolve,
-            reject,
-            save: async (confirmedTitle: string) => {
-              try {
-                const templateData = {
-                  title: confirmedTitle,
-                  type: "custom",
-                  status: "active",
-                  data: {
-                    rawConfig: formState.rawConfig,
-                    type: "custom",
-                    name: confirmedTitle,
-                  },
-                }
-
-                const result = await createTemplate(templateData)
-                if (result) {
-                  setSavedTemplateId(result.id)
-                  setSuccessModalOpen(true)
-                  resolve()
-                } else {
-                  throw new Error("保存模板失败")
-                }
-              } catch (error) {
-                reject(error)
-              }
-            },
-          })
-        })
-      }
-
-      try {
-        const templateData = {
-          title: title || formState.formConfig.metadata?.title || "新建模板",
-          type: "custom",
-          status: "active",
-          data: {
-            rawConfig: formState.rawConfig,
-            type: "custom",
-            name: title || formState.formConfig.metadata?.title || "新建模板",
-          },
-        }
-
-        const result = await updateTemplate(templateId, templateData)
-        if (result) {
-          setSavedTemplateId(templateId)
-          setSuccessModalOpen(true)
-        } else {
-          throw new Error("更新模板失败")
-        }
-      } catch (error) {
-        handleError(error)
-        throw error
-      }
-    },
-    {
-      errorMessage: "保存模板失败",
-    }
+  const { isLoading: isSaving, handleClick: handleSaveTemplate } = useSave(
+    formState,
+    versionControl,
+    createTemplate,
+    updateTemplate,
+    templateId,
+    isEditMode,
+    title,
+    setPendingVersionSave,
+    setNewTitle,
+    setTitleModalOpen,
+    setPendingSave,
+    setSavedTemplateId,
+    setSuccessModalOpen,
+    setVersionSelectModalOpen,
+    handleError
   )
 
   const handleCreateDocument = () => {

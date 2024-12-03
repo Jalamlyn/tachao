@@ -6,7 +6,7 @@ export const renderDataTable = (table, columns) => {
   return (
     <>
       {/* 表格 */}
-      <div className='rounded-md border overflow-x-auto'>
+      <div className='rounded-md border overflow-x-auto max-h-[calc(100vh-400px)]'>
         <Table>
           <TableHeader className='sticky top-0 z-10 bg-gray-100 border-b border-gray-200'>
             {table.getHeaderGroups().map((headerGroup) => (

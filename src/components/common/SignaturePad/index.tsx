@@ -181,13 +181,13 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   }, [width, height])
 
   return (
-    <div className={cn("signature-pad relative", className)}>
+    <div className={cn("signature-pad relative w-full")}>
       <canvas
         ref={canvasRef}
         className={cn(
           "touch-none select-none",
           disabled ? "cursor-not-allowed" : "cursor-crosshair",
-          "border rounded-lg"
+          "border rounded-lg w-full"
         )}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -198,13 +198,13 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
         onTouchEnd={handleTouchEnd}
       />
       {!disabled && (
-        <div className="flex justify-end gap-2 mt-2">
+        <div className='flex justify-end gap-2 mt-2'>
           <Button
-            size="sm"
-            variant="light"
-            color="danger"
+            size='sm'
+            variant='light'
+            color='danger'
             onClick={clear}
-            startContent={<Icon icon="mdi:eraser" className="w-4 h-4" />}
+            startContent={<Icon icon='mdi:eraser' className='w-4 h-4' />}
           >
             清除
           </Button>

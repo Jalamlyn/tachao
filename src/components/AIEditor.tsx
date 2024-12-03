@@ -164,7 +164,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
       <ResizablePanelGroup direction='horizontal' className='h-full p-2'>
         <ResizablePanel defaultSize={50} className='resizable-panel'>
           <div className='h-full flex flex-col'>
-            <ScrollShadow className='flex-1 overflow-y-auto'>
+            <ScrollShadow className='flex-1 overflow-y-auto pb-9'>
               <div className='space-y-4'>
                 {messages.map((message) => (
                   <div key={message.id}>
@@ -173,7 +173,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
                       message={message.content}
                       role={message.role}
                       status={message.status || "success"}
-                      className='message-card'
+                      className='message-card max-w-[90%]'
                     />
                   </div>
                 ))}

@@ -5,11 +5,9 @@ import { useClipboard } from "@nextui-org/use-clipboard"
 import { cn } from "@/theme/cn"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import remarkMermaid from "remark-mermaidjs"
 import { useTranslation } from "react-i18next"
 import { create } from "@wpm-js/core"
 import rehypeRaw from "rehype-raw"
-import mermaid from "mermaid"
 
 type MessageCardProps = React.HTMLAttributes<HTMLDivElement> & {
   avatar?: string
@@ -142,7 +140,7 @@ const MessageCard = React.memo(
           )
         }
 
-        let contentClassName = "markdown-body markdown-body-guidance"
+        let contentClassName = "typo markdown-body markdown-body-guidance"
         if (messageType === "guidance") {
           contentClassName += " text-black p-0 rounded-lg"
         }
@@ -170,13 +168,12 @@ const MessageCard = React.memo(
                     )
                   }
                   if (match && match[1] == "mo") {
-                    if (children && children.toString().startsWith("<shata-ai-resource>")) {
-                      if (children.toString().includes("</shata-ai-resource>")) {
-                        return <div color='success'>工作流程创建完成 ✔️</div>
-                      } else {
-                        return <div>正在创建工作流程，请稍后...</div>
-                      }
-                    }
+                    // if (children && children.toString().startsWith("<shata-ai-form>")) {
+                    //   if (children.toString().includes("</shata-ai-form>")) {
+                    //   } else {
+                    //     return <div>正在生成表单，请稍后...</div>
+                    //   }
+                    // }
                     return (
                       <code {...props} className={className}>
                         {children}

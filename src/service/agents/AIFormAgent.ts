@@ -7,7 +7,6 @@ import { Message } from "./AIFormAgentTypes"
 export class AIFormAgent {
   private static instance: AIFormAgent
   private _rawConfig: string | null = null
-  private _cachedImage: string | null = null
 
   private constructor() {}
 
