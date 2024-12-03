@@ -98,11 +98,11 @@ const MessageCard = React.memo(
 
       const handleCopy = useCallback(() => {
         startTransition(() => {
-          const valueToCopy = typeof displayedMessage === "string" ? displayedMessage : document.getElementById(props.id!)?.textContent || ""
+          const valueToCopy = typeof displayedMessage === "string" ? displayedMessage : String(displayedMessage)
           copy(valueToCopy)
           onMessageCopy?.(valueToCopy)
         })
-      }, [copy, displayedMessage, onMessageCopy, props.id])
+      }, [copy, displayedMessage, onMessageCopy])
 
       const failedMessageClassName = status === "failed" ? "bg-danger-100/50 border border-danger-100 text-foreground" : ""
       const failedMessage = (
@@ -221,7 +221,7 @@ const MessageCard = React.memo(
                 </div>
               )}
               <div className={`text-small markdown-body ${messageType !== "guidance" && ""}`}>
-                <div id={props.id}>{renderContent()}</div>
+                {renderContent()}
               </div>
               {!hasFailed && !isLoading && (
                 <div className='absolute right-2 bottom-2 flex rounded-full bg-content2 shadow-small'>

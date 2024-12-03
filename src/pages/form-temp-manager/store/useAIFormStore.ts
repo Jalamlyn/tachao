@@ -64,6 +64,11 @@ interface AIFormState {
   handleVersionSelectCancel: () => void
 }
 
+// 创建防抖的状态更新函数
+const debouncedStateUpdate = debounce((set, messages) => {
+  set({ messages })
+}, 100)
+
 export const useAIFormStore = create<AIFormState>((set, get) => ({
   // 初始状态
   messages: [],
@@ -83,7 +88,6 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
   setMessages: (messages) => set({ messages }),
 
   addMessage: (message) => {
-    // 确保消息有唯一ID
     const messageId = message.id || `message-${Date.now()}`
     const newMessage = {
       ...message,
@@ -104,33 +108,18 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
 
   updateLastMessage: (update) => {
     const state = get()
-    const lastIndex = state.messages.length - 1
-
-    if (lastIndex < 0) return
-
     const messages = [...state.messages]
-    const lastMessage = messages[lastIndex]
-    const messageElement = document.getElementById(lastMessage.id)
+    const lastIndex = messages.length - 1
 
-    // 如果是内容更新，直接更新DOM内容
-    if (typeof update.content === "string" && messageElement) {
-      // 如果是流式更新，追加内容
-      if (update.status === "streaming") {
-        messageElement.textContent = (messageElement.textContent || "") + update.content
-      } else {
-        // 否则替换内容
-        messageElement.textContent = update.content
+    if (lastIndex >= 0) {
+      messages[lastIndex] = {
+        ...messages[lastIndex],
+        ...update,
       }
+      
+      // 使用防抖更新状态
+      debouncedStateUpdate(set, messages)
     }
-
-    // 更新状态
-    messages[lastIndex] = {
-      ...lastMessage,
-      ...update,
-      content: messageElement?.textContent || update.content || lastMessage.content,
-    }
-
-    set({ messages })
   },
 
   // 模态框 actions
