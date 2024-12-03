@@ -67,6 +67,7 @@ interface AIFormState {
 
 // 创建一个全局的消息缓冲区和定时器
 let messageBuffer: string = ""
+let streamBuffer: string = ""
 let updateTimeout: NodeJS.Timeout | null = null
 let isUpdating: boolean = false
 let currentMessageIdRef: string | null = null
@@ -78,6 +79,7 @@ const cleanup = () => {
     updateTimeout = null
   }
   messageBuffer = ""
+  streamBuffer = ""
   isUpdating = false
   currentMessageIdRef = null
 }
@@ -125,20 +127,22 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
       // 如果没有当前消息ID,说明是新消息
       if (!currentMessageIdRef) {
         currentMessageIdRef = Date.now().toString()
+        streamBuffer = update.content // 初始化流式缓冲区
         const messages = [...state.messages]
         messages[lastIndex] = {
           ...messages[lastIndex],
-          content: update.content,
+          content: streamBuffer,
           id: currentMessageIdRef,
           status: "streaming"
         }
         set({ messages })
       } else {
         // 更新现有消息
+        streamBuffer += update.content // 累积到流式缓冲区
         const messages = [...state.messages]
         messages[lastIndex] = {
           ...messages[lastIndex],
-          content: messages[lastIndex].content + update.content,
+          content: streamBuffer, // 使用完整的流式缓冲区内容
         }
         set({ messages })
       }
@@ -151,9 +155,10 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
       }
       set({ messages })
       
-      // 如果状态更新为完成或错误,重置消息ID
+      // 如果状态更新为完成或错误,重置消息ID和缓冲区
       if (update.status === "success" || update.status === "error") {
         currentMessageIdRef = null
+        streamBuffer = "" // 清理流式缓冲区
       }
     }
   },
