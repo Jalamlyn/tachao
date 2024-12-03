@@ -39,7 +39,6 @@ const AIFormEditor: React.FC = () => {
     addMessage,
     setSelectedTab,
     setPreviewContent,
-    updateLastMessage,
     setTitleModalOpen,
     setVersionSelectModalOpen,
     setSuccessModalOpen,
@@ -62,12 +61,10 @@ const AIFormEditor: React.FC = () => {
 
   const accumulatedTextRef = useRef("")
   const lastResponseRef = useRef("")
-  const hasShownFormRef = useRef(false)
 
   useEffect(() => {
     setMessages([])
     setSuccessModalOpen(false)
-    hasShownFormRef.current = false
   }, [])
 
   useEffect(() => {
@@ -119,79 +116,23 @@ const AIFormEditor: React.FC = () => {
       accumulatedTextRef.current += chunk
       lastResponseRef.current = accumulatedTextRef.current
 
-      if (accumulatedTextRef.current.includes("<shata-ai-error>")) {
-        const errorMatch = accumulatedTextRef.current.match(/<shata-ai-error>([\s\S]*?)<\/shata-ai-error>/)
-        if (errorMatch) {
-          const errorMessage = errorMatch[1].trim()
-          updateLastMessage({
-            content: (
-              <div className='flex items-center gap-2 text-danger'>
-                <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-                <span>{errorMessage}</span>
-              </div>
-            ),
-            status: "error",
-          })
-          accumulatedTextRef.current = ""
-          hasShownFormRef.current = false
-          return
-        }
-      }
-
-      if (accumulatedTextRef.current.includes("<shata-ai-form>")) {
-        if (!hasShownFormRef.current) {
-          updateLastMessage({
-            content: (
-              <div className='flex items-center gap-3 text-primary'>
-                <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10' />
-                <div className='flex flex-col'>
-                  <span className='font-medium text-sm'>AI 正在生成表单配置</span>
-                </div>
-              </div>
-            ),
-            status: "loading",
-          })
-          setSelectedTab("code")
-          
-          // 提取完整的表单配置
-          const formMatch = accumulatedTextRef.current.match(/<shata-ai-form>([\s\S]*?)<\/shata-ai-form>/)
-          if (formMatch) {
-            const formContent = formMatch[1].trim()
-            setPreviewContent(formContent)
-            hasShownFormRef.current = true
-            
-            // 更新消息内容
-            updateLastMessage({
-              content: (
-                <div className='flex items-center gap-3'>
-                  <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10 text-primary' />
-                  <div className='flex flex-col'>
-                    <span className='font-medium text-sm'>正在生成...</span>
-                    <pre className='text-xs text-gray-500 mt-2'>{formContent}</pre>
-                  </div>
-                </div>
-              ),
-              status: "streaming",
-            })
-          }
-        }
-      } else if (!hasShownFormRef.current) {
-        // 更新消息内容
-        updateLastMessage({
-          content: (
-            <div className='flex items-center gap-3'>
-              <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10 text-primary' />
-              <div className='flex flex-col'>
-                <span className='font-medium text-sm'>正在生成...</span>
-                <pre className='text-xs text-gray-500 mt-2'>{accumulatedTextRef.current}</pre>
-              </div>
+      addMessage({
+        role: "assistant",
+        content: (
+          <div className='flex items-center gap-3'>
+            <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10 text-primary' />
+            <div className='flex flex-col'>
+              <span className='font-medium text-sm'>正在生成...</span>
+              <pre className='text-xs text-gray-500 mt-2'>{accumulatedTextRef.current}</pre>
             </div>
-          ),
-          status: "streaming",
-        })
-      }
+          </div>
+        ),
+        id: Date.now().toString(),
+        timestamp: new Date().toLocaleTimeString(),
+        status: "streaming",
+      })
     },
-    [previewContent, updateLastMessage, setSelectedTab, setPreviewContent]
+    [addMessage]
   )
 
   const formAgent = {
@@ -220,7 +161,6 @@ const AIFormEditor: React.FC = () => {
 
       setPreviewContent("")
       accumulatedTextRef.current = ""
-      hasShownFormRef.current = false
 
       try {
         const processMessages = messages.map(msg => ({
@@ -240,9 +180,26 @@ const AIFormEditor: React.FC = () => {
           formState.rawConfig
         )
 
-        if (lastResponseRef.current) {
-          updateLastMessage({
-            content: lastResponseRef.current,
+        if (result.success && result.config) {
+          versionControl.addVersion({
+            formConfig: result.config,
+            rawConfig: result.rawConfig,
+          })
+
+          setFormConfig(result.config)
+          setRawConfig(result.rawConfig)
+          setSelectedTab("preview")
+
+          addMessage({
+            role: "assistant",
+            content: (
+              <div className='flex items-center gap-2 text-success'>
+                <Icon icon='line-md:check-all' className='w-5 h-5' />
+                <span>表单生成完成</span>
+              </div>
+            ),
+            id: Date.now().toString(),
+            timestamp: new Date().toLocaleTimeString(),
             status: "success",
           })
         }
@@ -250,13 +207,16 @@ const AIFormEditor: React.FC = () => {
         return result
       } catch (error) {
         console.error("Error in chat:", error)
-        updateLastMessage({
+        addMessage({
+          role: "assistant",
           content: (
             <div className='flex items-center gap-2 text-danger'>
               <Icon icon='mdi:alert-circle' className='w-5 h-5' />
               <span>{error.message || "生成过程中发生错误"}</span>
             </div>
           ),
+          id: Date.now().toString(),
+          timestamp: new Date().toLocaleTimeString(),
           status: "error",
         })
         message.error("生成过程中发生错误")
@@ -264,87 +224,6 @@ const AIFormEditor: React.FC = () => {
       }
     },
   }
-
-  const handleCommandResult = useCallback(
-    (result) => {
-      accumulatedTextRef.current = ""
-      hasShownFormRef.current = false
-
-      switch (result?.type) {
-        case "form":
-          if (result.data?.config) {
-            versionControl.addVersion({
-              formConfig: result.data.config,
-              rawConfig: result.data.rawConfig,
-            })
-
-            setFormConfig(result.data.config)
-            setRawConfig(result.data.rawConfig)
-
-            updateLastMessage({
-              content: (
-                <div className='flex items-center gap-2 text-success'>
-                  <Icon icon='line-md:check-all' className='w-5 h-5' />
-                  <span>表单生成完成</span>
-                </div>
-              ),
-              status: "success",
-            })
-
-            setSelectedTab("preview")
-          }
-          break
-
-        case "question":
-          updateLastMessage({
-            content: (
-              <div className='flex items-center gap-2 text-primary'>
-                <Icon icon='mdi:help-circle' className='w-5 h-5' />
-                <span>{result.data}</span>
-              </div>
-            ),
-            status: "question",
-          })
-          break
-
-        case "confirm":
-          updateLastMessage({
-            content: (
-              <div className='flex items-center gap-2 text-warning'>
-                <Icon icon='mdi:alert' className='w-5 h-5' />
-                <span>{result.data}</span>
-              </div>
-            ),
-            status: "confirm",
-          })
-          break
-
-        case "error":
-          updateLastMessage({
-            content: (
-              <div className='flex items-center gap-2 text-danger'>
-                <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-                <span>{result.data}</span>
-              </div>
-            ),
-            status: "error",
-          })
-          break
-
-        default:
-          updateLastMessage({
-            content: (
-              <div className='flex items-center gap-2 text-danger'>
-                <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-                <span>未知的返回类型</span>
-              </div>
-            ),
-            status: "error",
-          })
-      }
-    },
-    [setFormConfig, setRawConfig, versionControl, updateLastMessage, setSelectedTab]
-  )
 
   const { isLoading: isSaving, handleClick: handleSaveTemplate } = useAsyncButton(
     async () => {
@@ -526,7 +405,6 @@ const AIFormEditor: React.FC = () => {
         messages={messages}
         selectedTab={selectedTab}
         onTabChange={setSelectedTab}
-        onCommandResult={handleCommandResult}
         agent={formAgent}
         versionControl={versionControl}
         renderPreview={(version) => (

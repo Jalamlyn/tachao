@@ -3,24 +3,12 @@ import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import message from "@/components/Message"
 import generateFormAgentPrompt from "./prompts/form-agent-prompt"
-import {
-  CommandResult,
-  CreateFormResult,
-  IntentAnalysisResult,
-  AIResponseHandler,
-  Message,
-  IAIFormAgent,
-  ResponseType,
-  ResponseMetadata,
-  AIResponse,
-} from "./AIFormAgentTypes"
+import { Message } from "./AIFormAgentTypes"
 
-export class AIFormAgent implements IAIFormAgent {
+export class AIFormAgent {
   private static instance: AIFormAgent
   private _rawConfig: string | null = null
   private _cachedImage: string | null = null
-  private _questionCount: number = 0
-  private readonly MAX_QUESTIONS: number = 2
 
   private constructor() {}
 
@@ -32,38 +20,19 @@ export class AIFormAgent implements IAIFormAgent {
   }
 
   public getRawConfig(): string | null {
-    console.log("[AIFormAgent] getRawConfig called, returning:", this._rawConfig?.substring(0, 100) + "...")
     return this._rawConfig
   }
 
   private setRawConfig(rawConfig: string | null): void {
-    console.log("[AIFormAgent] setRawConfig called with:", rawConfig?.substring(0, 100) + "...")
     this._rawConfig = rawConfig
   }
 
   public cacheImage(imageData: string): void {
-    console.log("[AIFormAgent] cacheImage called")
     this._cachedImage = imageData
   }
 
   public clearCachedImage(): void {
-    console.log("[AIFormAgent] clearCachedImage called")
     this._cachedImage = null
-  }
-
-  private resetQuestionCount(): void {
-    this._questionCount = 0
-  }
-
-  private incrementQuestionCount(): void {
-    this._questionCount++
-  }
-
-  private getResponseMetadata(): ResponseMetadata {
-    return {
-      questionCount: this._questionCount,
-      maxQuestions: this.MAX_QUESTIONS,
-    }
   }
 
   public async parseConfig(rawConfig: string) {
@@ -81,46 +50,24 @@ export class AIFormAgent implements IAIFormAgent {
     }
   }
 
-  private handleError(error: Error): CommandResult {
-    return {
-      type: "error",
-      data: `<shata-ai-error>${error.message}</shata-ai-error>`,
-      questionCount: this._questionCount,
-    }
-  }
-
   public async processCommand(
     messages: Message[],
     command: string,
-    onChunk?: AIResponseHandler,
+    onChunk?: (chunk: string) => void,
     rawConfig?: string
-  ): Promise<CommandResult> {
-    console.log("[AIFormAgent] processCommand started with rawConfig:", rawConfig)
+  ): Promise<{ success: boolean; config?: DynamicFormConfig; rawConfig?: string }> {
+    console.log("[AIFormAgent] processCommand started")
     let generationProcess = ""
 
-    const updateGenerationProcess = (chunk: string) => {
-      generationProcess += chunk
-      onChunk?.(chunk)
-    }
-
     if (rawConfig) {
-      console.log("[AIFormAgent] Setting new rawConfig in processCommand")
       this.setRawConfig(rawConfig)
     }
 
     try {
-      if (messages.length <= 1) {
-        this.resetQuestionCount()
-      }
-
-      updateGenerationProcess("🤖 AI助手正在分析您的需求...")
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
       // 构建系统消息
       const systemMessage = {
         role: "system" as const,
         content: generateFormAgentPrompt(this._rawConfig),
-        metadata: this.getResponseMetadata(),
       }
 
       // 构建当前用户消息
@@ -129,135 +76,65 @@ export class AIFormAgent implements IAIFormAgent {
         content: command,
       }
 
-      // 组合所有消息：系统消息 + 历史消息 + 当前用户消息
+      // 组合所有消息
       const allMessages = [systemMessage, ...messages, currentUserMessage]
 
-      updateGenerationProcess("📝 开始处理您的需求...")
-      const response = await this.processAIResponse(allMessages, command, updateGenerationProcess)
+      // 获取AI响应
+      let response = ""
+      await chatChunk(
+        allMessages,
+        (chunk: string) => {
+          response += chunk
+          onChunk?.(chunk)
+        },
+        () => {},
+        true,
+        0,
+        "YES"
+      )
 
+      // 检查是否包含错误信息
       if (response.includes("<shata-ai-error>")) {
         const errorMatch = response.match(/<shata-ai-error>(.*?)<\/shata-ai-error>/s)
         return {
-          type: "error",
-          data: errorMatch ? errorMatch[1].trim() : "未知错误",
-          questionCount: this._questionCount,
-          generationProcess,
+          success: false,
+          config: undefined,
+          rawConfig: undefined,
         }
       }
 
-      if (response.includes("<shata-ai-question>")) {
-        this.incrementQuestionCount()
-        if (this._questionCount >= this.MAX_QUESTIONS) {
-          updateGenerationProcess("已达到最大提问次数，将基于现有信息生成表单...")
-          const createResult = await this.createForm(allMessages, command, updateGenerationProcess)
-          return {
-            type: "form",
-            data: createResult,
-            questionCount: this._questionCount,
-            generationProcess,
+      // 检查是否包含表单配置
+      if (response.includes("<shata-ai-form>")) {
+        const formMatch = response.match(/<shata-ai-form>([\s\S]*?)<\/shata-ai-form>/)
+        if (formMatch) {
+          const formContent = formMatch[1].trim()
+          const parsedConfig = await this.parseConfig(formContent)
+          
+          if (parsedConfig) {
+            this.setRawConfig(formContent)
+            return {
+              success: true,
+              config: parsedConfig.config,
+              rawConfig: formContent,
+            }
           }
         }
-        const questionMatch = response.match(/<shata-ai-question>(.*?)<\/shata-ai-question>/s)
-        return {
-          type: "question",
-          data: questionMatch ? questionMatch[1].trim() : "需要更多信息",
-          questionCount: this._questionCount,
-          generationProcess,
-        }
       }
 
-      if (response.includes("<shata-ai-confirm>")) {
-        const confirmMatch = response.match(/<shata-ai-confirm>(.*?)<\/shata-ai-confirm>/s)
-        return {
-          type: "confirm",
-          data: confirmMatch ? confirmMatch[1].trim() : "请确认",
-          questionCount: this._questionCount,
-          generationProcess,
-        }
+      // 如果没有找到表单配置，返回成功但没有配置
+      return {
+        success: true,
+        config: undefined,
+        rawConfig: undefined,
       }
 
-      if (response.includes("<shata-ai-form>")) {
-        const createResult = await this.createForm(allMessages, command, updateGenerationProcess)
-        if (createResult?.rawConfig) {
-          this.setRawConfig(createResult.rawConfig)
-        }
-        return {
-          type: "form",
-          data: createResult,
-          questionCount: this._questionCount,
-          generationProcess,
-        }
-      }
-
-      return this.handleError(new Error("无效的响应格式"))
     } catch (error) {
       console.error("Error in processCommand:", error)
-      return this.handleError(error as Error)
-    }
-  }
-
-  private async processAIResponse(messages: Message[], command: string, onChunk: AIResponseHandler): Promise<string> {
-    console.log("[AIFormAgent] processAIResponse started")
-    
-    let response = ""
-    await chatChunk(
-      messages,  // 直接使用传入的完整消息列表
-      (chunk: string) => {
-        response += chunk
-        onChunk(chunk)
-      },
-      () => {},
-      true,
-      0,
-      "YES",
-      "claude::claude-3-5-sonnet-20241022"
-    )
-
-    this.clearCachedImage()
-    return response
-  }
-
-  private async createForm(
-    messages: Message[],
-    command: string,
-    onChunk: AIResponseHandler
-  ): Promise<CreateFormResult> {
-    console.log("[AIFormAgent] createForm started with current rawConfig:", this._rawConfig?.substring(0, 100) + "...")
-    onChunk("🎨 正在设计表单结构...")
-    await new Promise((resolve) => setTimeout(resolve, 300))
-
-    try {
-      onChunk("⚡ 正在生成表单配置...\n")
-      const response = await this.processAIResponse(messages, command, onChunk)
-      console.log("[AIFormAgent] Received AI response, length:", response.length)
-
-      if (response.includes("<shata-ai-error>")) {
-        const errorMatch = response.match(/<shata-ai-error>(.*?)<\/shata-ai-error>/s)
-        throw new Error(errorMatch ? errorMatch[1].trim() : "无效的表单指令")
-      }
-
-      const parsedConfig = await parseFormConfig(response)
-
-      if (!parsedConfig) {
-        throw new Error("解析表单配置失败")
-      }
-
-      const { title, config } = parsedConfig
-
-      if (!title || !config) {
-        throw new Error("表单配置缺少必要的字段")
-      }
-
-      onChunk("✨ 表单生成完成！")
-      console.log("[AIFormAgent] Form generation completed, returning new rawConfig")
       return {
-        config: config as DynamicFormConfig,
-        rawConfig: response,
-        title: title as string,
+        success: false,
+        config: undefined,
+        rawConfig: undefined,
       }
-    } catch (error) {
-      console.error("Error creating form:", error)
-      throw new Error("创建表单失败：" + (error as Error).message)
     }
   }
 }
