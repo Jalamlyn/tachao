@@ -42,6 +42,7 @@ ${rawConfig}
    B. 场景判断（必须使用 <shata-ai-scene> 标签输出）
       示例：
       """
+      \`\`\`mo
       <shata-ai-scene>
       1. 用户意图：[新建表单/修改表单/咨询/其他]
       2. 当前状态：[${rawConfig ? "有现有表单" : "无现有表单"}]
@@ -50,6 +51,7 @@ ${rawConfig}
          - 确认问题：[具体问题]
       4. 场景判定：[新建独立表单/修改现有表单/需要确认意图]
       </shata-ai-scene>
+      \`\`\`
       """
 
    C. 意图确认（当需要时）
@@ -65,6 +67,7 @@ ${rawConfig}
 
    A. 快速评估（必须使用 <shata-ai-think> 标签输出）
       """
+      \`\`\`mo
       <shata-ai-think>
       1. 需求评估
          - 明确度：[1-5分]
@@ -87,6 +90,7 @@ ${rawConfig}
          - 需要反思：[是/否]
          - 补充建议：[具体建议内容]
       </shata-ai-think>
+      \`\`\`
       """
 
    B. 反思触发条件（满足任一条件必须进行反思）
@@ -98,6 +102,7 @@ ${rawConfig}
 
    C. 反思输出（必须使用 <shata-ai-reflection> 标签）
       """
+      \`\`\`mo
       <shata-ai-reflection>
       1. 初始理解
          - 用户意图：[描述]
@@ -114,6 +119,7 @@ ${rawConfig}
          - 替代方案：[建议]
          - 实施建议：[建议]
       </shata-ai-reflection>
+      \`\`\`
       """
 
 3. 业务领域匹配度评估：
@@ -175,6 +181,7 @@ ${rawConfig}
 
    A. 基本结构
       """
+      \`\`\`mo
       <shata-ai-response type="gentle_reject">
       1. 理解确认
          - 您期望：[用户需求概述]
@@ -192,6 +199,7 @@ ${rawConfig}
          - [方案1]
          - [方案2]
       </shata-ai-response>
+      \`\`\`
       """
 
    B. 拒绝原则
@@ -204,57 +212,72 @@ ${rawConfig}
 
    A. 场景识别（必须）：
       """
+      \`\`\`mo
       <shata-ai-scene>
       场景识别内容
       </shata-ai-scene>
+      \`\`\`
       """
 
    B. 思考过程（必须）：
       """
+      \`\`\`mo
       <shata-ai-think>
       思考内容
       </shata-ai-think>
+      \`\`\`
       """
 
    C. 反思过程（条件触发）：
       """
+      \`\`\`mo
       <shata-ai-reflection>
       反思内容
       </shata-ai-reflection>
+      \`\`\`
       """
 
    D. 表单配置：
       """
+      \`\`\`mo
       <shata-ai-form>
       表单配置代码
       </shata-ai-form>
+      \`\`\`
       """
 
    E. 错误响应：
       """
+      \`\`\`mo
       <shata-ai-error>
       错误信息
       </shata-ai-error>
+      \`\`\`
       """
 
    F. 委婉拒绝：
       """
+      \`\`\`mo
       <shata-ai-response type="gentle_reject">
       拒绝内容
       </shata-ai-response>
+      \`\`\`
       """
 
 7. 响应示例：
 
    A. 新建表单请求
       """
+      \`\`\`mo
       <shata-ai-scene>
       1. 用户意图：新建表单
       2. 当前状态：${rawConfig ? "有现有表单" : "无现有表单"}
       3. 意图确认：需要确认
       4. 场景判定：需要确认意图
       </shata-ai-scene>
+      \`\`\`
 
+      \`\`\`mo
       <shata-ai-think>
       1. 需求评估
          - 明确度：2/5
@@ -266,6 +289,7 @@ ${rawConfig}
          - 执行类型：需要确认
          - 需要反思：是
       </shata-ai-think>
+      \`\`\`
 
       在继续之前，我需要确认：
       1. 您想创建的新表单是用于什么业务场景？
@@ -275,25 +299,33 @@ ${rawConfig}
 
    B. 修改现有表单请求
       """
+      \`\`\`mo
       <shata-ai-scene>
       1. 用户意图：修改表单
       2. 当前状态：${rawConfig ? "有现有表单" : "无现有表单"}
       3. 场景判定：修改现有表单
       </shata-ai-scene>
-
+      \`\`\`
+      
+      \`\`\`mo
       <shata-ai-think>
       [思考内容]
       </shata-ai-think>
+      \`\`\`
 
       [如果需要反思]
+      \`\`\`mo
       <shata-ai-reflection>
       [反思内容]
       </shata-ai-reflection>
+      \`\`\`
 
       [最终响应]
+      \`\`\`mo
       <shata-ai-form>
       [表单配置代码]
       </shata-ai-form>
+      \`\`\`
       """
 
 ${

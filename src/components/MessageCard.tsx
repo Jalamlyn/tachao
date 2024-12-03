@@ -104,7 +104,8 @@ const MessageCard = React.memo(
         })
       }, [copy, displayedMessage, onMessageCopy])
 
-      const failedMessageClassName = status === "failed" ? "bg-danger-100/50 border border-danger-100 text-foreground" : ""
+      const failedMessageClassName =
+        status === "failed" ? "bg-danger-100/50 border border-danger-100 text-foreground" : ""
       const failedMessage = (
         <p>
           {t("chat_error_message")}
@@ -151,9 +152,6 @@ const MessageCard = React.memo(
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeRaw]}
               components={{
-                "shata-ai-scene": () => {
-                  return <div>我正在思考...</div>
-                },
                 code({ node, inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || "")
                   if (match && match[1] == "mermaid") {
@@ -164,6 +162,25 @@ const MessageCard = React.memo(
                     )
                   }
                   if (match && match[1] == "mo") {
+                    if (children && children.toString().includes("</shata-ai-reflection>")) {
+                      return "✔️ 深度思考完成"
+                    }
+                    if (children && children.toString().startsWith("<shata-ai-reflection>")) {
+                      return "我正在深度思考..."
+                    }
+                    if (children && children.toString().includes("</shata-ai-think>")) {
+                      return "✔️ 思考完成"
+                    }
+                    if (children && children.toString().startsWith("<shata-ai-think>")) {
+                      return "我正在思考..."
+                    }
+                    if (children && children.toString().includes("</shata-ai-scene>")) {
+                      return "✔️ 用户意图分析完成"
+                    }
+                    if (children && children.toString().startsWith("<shata-ai-scene>")) {
+                      return "分析用户意图..."
+                    }
+
                     return (
                       <code {...props} className={className}>
                         {children}
@@ -220,9 +237,7 @@ const MessageCard = React.memo(
                   ))}
                 </div>
               )}
-              <div className={`text-small markdown-body ${messageType !== "guidance" && ""}`}>
-                {renderContent()}
-              </div>
+              <div className={`text-small markdown-body ${messageType !== "guidance" && ""}`}>{renderContent()}</div>
               {!hasFailed && !isLoading && (
                 <div className='absolute right-2 bottom-2 flex rounded-full bg-content2 shadow-small'>
                   <Button isIconOnly radius='full' size='sm' variant='light' onPress={handleCopy}>
