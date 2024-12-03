@@ -18,6 +18,9 @@ import { renderSaveModal } from "./renderSaveModal"
 import { renderTitleModal } from "./renderTitleModal"
 import { useAIFormStore } from "./store/useAIFormStore"
 import { localDB } from "@/utils/localDB"
+import MessageCard from "@/components/MessageCard"
+import mo2 from "/assets/mo-2.png"
+import user from "/assets/user.png"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -73,9 +76,9 @@ const AIFormEditor: React.FC = () => {
           // 提取表单配置
           const formMatch = lastResponseRef.current.match(/<shata-ai-form>([\s\S]*?)<\/shata-ai-form>/)
           if (formMatch) {
-            const formContent = formMatch[1].trim()
+            const formContent = lastResponseRef.current
             const parsedConfig = await AIFormAgent.parseConfig(formContent)
-            
+
             if (parsedConfig) {
               // 更新表单配置
               setFormConfig(parsedConfig.config)
@@ -91,12 +94,7 @@ const AIFormEditor: React.FC = () => {
 
               // 更新消息状态
               updateLastMessage({
-                content: (
-                  <div className='flex items-center gap-2 text-success'>
-                    <Icon icon='line-md:check-all' className='w-5 h-5' />
-                    <span>表单生成完成</span>
-                  </div>
-                ),
+                content: "表单生成完成",
                 status: "success",
               })
             }
@@ -104,12 +102,7 @@ const AIFormEditor: React.FC = () => {
         } catch (error) {
           console.error("Error parsing form config:", error)
           updateLastMessage({
-            content: (
-              <div className='flex items-center gap-2 text-danger'>
-                <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-                <span>表单解析失败</span>
-              </div>
-            ),
+            content: "表单解析失败",
             status: "error",
           })
         }
@@ -179,15 +172,7 @@ const AIFormEditor: React.FC = () => {
         currentMessageIdRef.current = messageId
         addMessage({
           role: "assistant",
-          content: (
-            <div className='flex items-center gap-3'>
-              <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10 text-primary' />
-              <div className='flex flex-col'>
-                <span className='font-medium text-sm'>正在生成...</span>
-                <pre className='text-xs text-gray-500 mt-2'>{accumulatedTextRef.current}</pre>
-              </div>
-            </div>
-          ),
+          content: accumulatedTextRef.current,
           id: messageId,
           timestamp: new Date().toLocaleTimeString(),
           status: "streaming",
@@ -195,15 +180,7 @@ const AIFormEditor: React.FC = () => {
       } else {
         // 更新现有消息
         updateLastMessage({
-          content: (
-            <div className='flex items-center gap-3'>
-              <Icon icon='eos-icons:three-dots-loading' className='w-10 h-10 text-primary' />
-              <div className='flex flex-col'>
-                <span className='font-medium text-sm'>正在生成...</span>
-                <pre className='text-xs text-gray-500 mt-2'>{accumulatedTextRef.current}</pre>
-              </div>
-            </div>
-          ),
+          content: accumulatedTextRef.current,
           status: "streaming",
         })
       }
@@ -226,11 +203,9 @@ const AIFormEditor: React.FC = () => {
       currentMessageIdRef.current = null
 
       try {
-        const processMessages = messages.map(msg => ({
+        const processMessages = messages.map((msg) => ({
           role: msg.role,
-          content: typeof msg.content === 'string' ? msg.content : 
-                  React.isValidElement(msg.content) ? lastResponseRef.current || '正在处理...' : 
-                  String(msg.content)
+          content: typeof msg.content === "string" ? msg.content : String(msg.content),
         }))
 
         const result = await AIFormAgent.processCommand(
@@ -249,12 +224,7 @@ const AIFormEditor: React.FC = () => {
         console.error("Error in chat:", error)
         // 更新最后一条消息为错误状态
         updateLastMessage({
-          content: (
-            <div className='flex items-center gap-2 text-danger'>
-              <Icon icon='mdi:alert-circle' className='w-5 h-5' />
-              <span>{error.message || "生成过程中发生错误"}</span>
-            </div>
-          ),
+          content: error.message || "生成过程中发生错误",
           status: "error",
         })
         message.error("生成过程中发生错误")
@@ -438,6 +408,16 @@ const AIFormEditor: React.FC = () => {
     </Button>
   )
 
+  const renderMessage = (message) => (
+    <MessageCard
+      key={message.id}
+      avatar={message.role === "assistant" ? mo2 : user}
+      message={message.content}
+      status={message.status}
+      role={message.role}
+    />
+  )
+
   return (
     <PageLayout title='AI 表单助手' titleIcon='mdi:form-select' actions={pageActions}>
       <AIEditor
@@ -446,6 +426,7 @@ const AIFormEditor: React.FC = () => {
         onTabChange={setSelectedTab}
         agent={formAgent}
         versionControl={versionControl}
+        renderMessage={renderMessage}
         renderPreview={(version) => (
           <ErrorBoundary
             onReset={() => {
