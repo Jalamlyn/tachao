@@ -1,8 +1,11 @@
 import { create } from "zustand"
-import { ReactNode, useRef } from "react"
-import { useMetadata } from "@/hooks/useMetadata"
-import message from "@/components/Message"
+import { ReactNode } from "react"
 import { debounce } from "lodash"
+
+// 创建全局 ref 对象
+export const messageRefsRef = {
+  current: {} as { [key: string]: HTMLDivElement | null }
+}
 
 interface Message {
   role: string
@@ -29,7 +32,6 @@ interface AIFormState {
   messages: Message[]
   selectedTab: string
   previewContent: string
-  messageRefs: { [key: string]: HTMLDivElement | null }
 
   // 模态框状态
   isTitleModalOpen: boolean
@@ -48,7 +50,6 @@ interface AIFormState {
   setSelectedTab: (tab: string) => void
   setPreviewContent: (content: string) => void
   updateLastMessage: (update: Partial<Message>) => void
-  setMessageRef: (id: string, ref: HTMLDivElement | null) => void
 
   // 模态框 actions
   setTitleModalOpen: (isOpen: boolean) => void
@@ -102,7 +103,6 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
   messages: [],
   selectedTab: "preview",
   previewContent: "",
-  messageRefs: {},
 
   isTitleModalOpen: false,
   isVersionSelectModalOpen: false,
@@ -116,21 +116,9 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
   // 基础 actions
   setMessages: (messages) => set({ messages }),
 
-  setMessageRef: (id, ref) => 
-    set((state) => ({
-      messageRefs: {
-        ...state.messageRefs,
-        [id]: ref
-      }
-    })),
-
   addMessage: (message) =>
     set((state) => ({
       messages: [...state.messages, message],
-      messageRefs: {
-        ...state.messageRefs,
-        [message.id]: null
-      }
     })),
 
   setSelectedTab: (tab) => set({ selectedTab: tab }),
@@ -149,11 +137,12 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
       if (!currentMessageIdRef) {
         currentMessageIdRef = Date.now().toString()
         streamBuffer = update.content
-        
+
         // 直接更新DOM
-        const messageRef = state.messageRefs[state.messages[lastIndex].id]
-        if (messageRef) {
-          messageRef.textContent = streamBuffer
+        const messageId = state.messages[lastIndex].id
+        const messageElement = messageRefsRef.current[messageId]
+        if (messageElement) {
+          messageElement.textContent = streamBuffer
         }
 
         // 延迟更新状态
@@ -169,11 +158,12 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
       } else {
         // 更新现有消息
         streamBuffer += update.content
-        
+
         // 直接更新DOM
-        const messageRef = state.messageRefs[state.messages[lastIndex].id]
-        if (messageRef) {
-          messageRef.textContent = streamBuffer
+        const messageId = state.messages[lastIndex].id
+        const messageElement = messageRefsRef.current[messageId]
+        if (messageElement) {
+          messageElement.textContent = streamBuffer
         }
 
         // 延迟更新状态
@@ -193,7 +183,7 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
         ...update,
       }
       set({ messages })
-      
+
       // 如果状态更新为完成或错误，重置消息ID和缓冲区
       if (update.status === "success" || update.status === "error") {
         currentMessageIdRef = null

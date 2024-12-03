@@ -8,7 +8,7 @@ import remarkGfm from "remark-gfm"
 import { useTranslation } from "react-i18next"
 import { create } from "@wpm-js/core"
 import rehypeRaw from "rehype-raw"
-import { useAIFormStore } from "@/pages/form-temp-manager/store/useAIFormStore"
+import { messageRefsRef } from "@/pages/form-temp-manager/store/useAIFormStore"
 
 type MessageCardProps = React.HTMLAttributes<HTMLDivElement> & {
   avatar?: string
@@ -63,7 +63,6 @@ const MessageCard = React.memo(
       const [displayedMessage, setDisplayedMessage] = useState(message)
       const [isLoading, setIsLoading] = useState(role === "user" ? false : true)
       const [isPending, startTransition] = useTransition()
-      const { setMessageRef } = useAIFormStore()
 
       const messageRef = useRef<HTMLDivElement>(null)
       const contentRef = useRef<HTMLDivElement>(null)
@@ -74,12 +73,15 @@ const MessageCard = React.memo(
         setDisplayedMessage(message)
       }, [message])
 
-      // 设置消息ref到store
+      // 设置消息ref到全局ref对象
       useEffect(() => {
         if (contentRef.current && props.id) {
-          setMessageRef(props.id, contentRef.current)
+          messageRefsRef.current[props.id] = contentRef.current
+          return () => {
+            delete messageRefsRef.current[props.id]
+          }
         }
-      }, [props.id, setMessageRef])
+      }, [props.id])
 
       const failedMessageClassName =
         status === "failed" ? "bg-danger-100/50 border border-danger-100 text-foreground" : ""
