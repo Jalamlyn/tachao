@@ -2,222 +2,49 @@ import { markdown as dynamicFormAdvanced } from "@/components/common/DynamicForm
 import { markdown as dynamicForm } from "@/components/common/DynamicForm/docs/dynamic-form.md"
 import { markdown as fieldTypes } from "@/components/common/DynamicForm/docs/field-types.md"
 import { markdown as formulaService } from "@/services/formulaService.md"
-
-const processStepsGuide = `
-# 流程步骤配置指南
-
-## 1. 基本结构
-流程步骤必须配置在 processSteps 数组中:
-\`\`\`mo
-{
-  renderConfig: {
-    processSteps: [  // 注意: 必须是数组!
-      {
-        key: "step1",
-        title: "第一步",
-        fields: [...]
-      },
-      {
-        key: "step2",
-        title: "第二步",
-        fields: [...]
-      }
-    ]
-  }
-}
-\`\`\`
-
-## 2. 完整示例
-"""
-\`\`\`mo
-<shata-ai-form>
-export default {
-  title: "采购申请单",
-  config: {
-    renderConfig: {
-      basicFields: {
-        // 基本字段配置...
-      },
-      processSteps: [  // 流程步骤数组
-        {
-          key: "apply",
-          title: "申请",
-          description: "填写申请信息",
-          fields: [
-            {
-              name: "applyReason",
-              label: "申请原因",
-              type: "textarea",
-              required: true
-            }
-          ]
-        },
-        {
-          key: "approve",
-          title: "审批",
-          description: "主管审批",
-          fields: [
-            {
-              name: "approveResult",
-              label: "审批结果",
-              type: "select",
-              options: [
-                { value: "通过", label: "通过" },
-                { value: "拒绝", label: "拒绝" }
-              ],
-              required: true
-            },
-            {
-              name: "approveComment",
-              label: "审批意见",
-              type: "textarea"
-            }
-          ]
-        }
-      ]
-    }
-  }
-}
-</shata-ai-form>
-\`\`\`
-"""
-
-## 3. 注意事项
-1. processSteps 必须是数组,即使只有一个步骤
-2. 每个步骤必须有唯一的 key
-3. fields 是可选的,如果步骤不需要收集数据可以省略
-4. 步骤会按照数组顺序显示
-5. 可以通过 description 添加步骤说明
-
-## 4. 字段验证
-每个步骤的字段都支持验证:
-\`\`\`mo
-{
-  name: "comment",
-  label: "审批意见",
-  type: "textarea",
-  required: true,
-  validators: [
-    (value) => {
-      if (value && value.length < 10) {
-        return "审批意见至少需要10个字符"
-      }
-    }
-  ]
-}
-\`\`\`
-`
-
-const resourceFieldGuide = `
-# 资源选择字段配置指南
-
-## 1. 基本用法
-资源选择字段使用 ResourceFieldGroup 组件，用于从已有的资源数据中选择记录。
-
-### 1.1 基本配置
-\`\`\`mo
-{
-  name: "supplier",
-  label: "供应商",
-  type: "resource",
-  required: true,
-  resourceConfig: {
-    resourceTitle: "供应商主数据"  // 必须与资源管理中的标题完全匹配
-  }
-}
-\`\`\`
-
-### 1.2 完整示例
-\`\`\`mo
-export default {
-  title: "采购订单",
-  config: {
-    renderConfig: {
-      basicFields: {
-        groups: [
-          {
-            key: "supplierInfo",
-            title: "供应商信息",
-            fields: [
-              {
-                name: "supplier",
-                label: "供应商",
-                type: "resource",
-                required: true,
-                tooltip: {
-                  content: "从供应商主数据中选择供应商"
-                },
-                resourceConfig: {
-                  resourceTitle: "供应商主数据"
-                }
-              }
-            ]
-          }
-        ]
-      }
-    }
-  }
-}
-\`\`\`
-
-\`\`\`mo
-{
-  watch: (form) => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === "supplier") {
-        // 根据供应商更新其他字段
-        const supplierData = value.supplier;
-        if (supplierData) {
-          form.setValue("contact", supplierData.contact);
-          form.setValue("phone", supplierData.phone);
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }
-}
-\`\`\`
-
-### 3.2 联动验证
-\`\`\`mo
-<shata-ai-form>
-{
-  validate: async (values) => {
-    if (values.supplier && !values.contact) {
-      return {
-        valid: false,
-        errors: ["选择供应商后必须填写联系人"],
-        fields: {
-          contact: "请填写联系人"
-        }
-      };
-    }
-    return { valid: true };
-  }
-}
-</shata-ai-form>
-\`\`\`
-`
+import { processStepsGuide } from "./processStepsGuide"
+import { resourceFieldGuide } from "./resourceFieldGuide"
 
 const generateFormAgentPrompt = (
   rawConfig: string | null
-) => `你是一个专业的表单设计助手，负责帮助用户创建和优化表单。在处理用户请求时，请遵循以下思考框架：
+) => `你是一个专业的表单设计助手，负责帮助用户创建和优化表单。
+
+${
+  rawConfig
+    ? `
+### ⚠️ 重要提示：当前存在现有表单配置
+请注意：在处理用户请求时，必须首先考虑现有表单的修改场景。
+现有表单配置如下：
+\`\`\`
+${rawConfig}
+\`\`\`
+`
+    : ""
+}
+
+在处理用户请求时，请遵循以下思考框架：
 
 1. 场景识别（必须首先执行并输出）：
 
    A. 意图分类
-      - 新建表单
-      - 修改现有表单
+      ${
+        rawConfig
+          ? `- 修改现有表单（优先考虑）
+      - 新建独立表单
       - 咨询问题
-      - 其他请求
+      - 其他请求`
+          : `- 新建表单
+      - 修改表单
+      - 咨询问题
+      - 其他请求`
+      }
 
    B. 场景判断（必须使用 <shata-ai-scene> 标签输出）
       示例：
       """
       <shata-ai-scene>
       1. 用户意图：[新建表单/修改表单/咨询/其他]
-      2. 当前状态：[有现有表单/无现有表单]
+      2. 当前状态：[${rawConfig ? "有现有表单" : "无现有表单"}]
       3. 意图确认：
          - 是否需要确认：[是/否]
          - 确认问题：[具体问题]
@@ -423,7 +250,7 @@ const generateFormAgentPrompt = (
       """
       <shata-ai-scene>
       1. 用户意图：新建表单
-      2. 当前状态：有现有表单
+      2. 当前状态：${rawConfig ? "有现有表单" : "无现有表单"}
       3. 意图确认：需要确认
       4. 场景判定：需要确认意图
       </shata-ai-scene>
@@ -450,7 +277,7 @@ const generateFormAgentPrompt = (
       """
       <shata-ai-scene>
       1. 用户意图：修改表单
-      2. 当前状态：有现有表单
+      2. 当前状态：${rawConfig ? "有现有表单" : "无现有表单"}
       3. 场景判定：修改现有表单
       </shata-ai-scene>
 
@@ -504,6 +331,8 @@ ${
 ${dynamicForm}
 ${dynamicFormAdvanced}
 ${fieldTypes}
+${resourceFieldGuide}
+${processStepsGuide}
 
 # 动态表单计算公式文档
 ${formulaService}
