@@ -8,6 +8,7 @@ import remarkGfm from "remark-gfm"
 import { useTranslation } from "react-i18next"
 import { create } from "@wpm-js/core"
 import rehypeRaw from "rehype-raw"
+import { useAIFormStore } from "@/pages/form-temp-manager/store/useAIFormStore"
 
 type MessageCardProps = React.HTMLAttributes<HTMLDivElement> & {
   avatar?: string
@@ -62,14 +63,23 @@ const MessageCard = React.memo(
       const [displayedMessage, setDisplayedMessage] = useState(message)
       const [isLoading, setIsLoading] = useState(role === "user" ? false : true)
       const [isPending, startTransition] = useTransition()
+      const { setMessageRef } = useAIFormStore()
 
       const messageRef = useRef<HTMLDivElement>(null)
+      const contentRef = useRef<HTMLDivElement>(null)
 
       const { copied, copy } = useClipboard()
 
       useEffect(() => {
         setDisplayedMessage(message)
       }, [message])
+
+      // 设置消息ref到store
+      useEffect(() => {
+        if (contentRef.current && props.id) {
+          setMessageRef(props.id, contentRef.current)
+        }
+      }, [props.id, setMessageRef])
 
       const failedMessageClassName =
         status === "failed" ? "bg-danger-100/50 border border-danger-100 text-foreground" : ""
@@ -114,7 +124,7 @@ const MessageCard = React.memo(
       const handleCopy = useCallback(() => {
         startTransition(() => {
           const valueToCopy =
-            typeof displayedMessage === "string" ? displayedMessage : messageRef.current?.textContent || ""
+            typeof displayedMessage === "string" ? displayedMessage : contentRef.current?.textContent || ""
           copy(valueToCopy)
           onMessageCopy?.(valueToCopy)
         })
@@ -158,6 +168,9 @@ const MessageCard = React.memo(
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeRaw]}
               components={{
+                "shata-ai-scene": () => {
+                  return <div>我正在思考...</div>
+                },
                 code({ node, inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || "")
                   if (match && match[1] == "mermaid") {
@@ -168,12 +181,6 @@ const MessageCard = React.memo(
                     )
                   }
                   if (match && match[1] == "mo") {
-                    // if (children && children.toString().startsWith("<shata-ai-form>")) {
-                    //   if (children.toString().includes("</shata-ai-form>")) {
-                    //   } else {
-                    //     return <div>正在生成表单，请稍后...</div>
-                    //   }
-                    // }
                     return (
                       <code {...props} className={className}>
                         {children}
@@ -231,7 +238,7 @@ const MessageCard = React.memo(
                 </div>
               )}
               <div ref={messageRef} className={`text-small markdown-body ${messageType !== "guidance" && ""}`}>
-                {renderContent()}
+                <div ref={contentRef}>{renderContent()}</div>
               </div>
               {!hasFailed && !isLoading && (
                 <div className='absolute right-2 bottom-2 flex rounded-full bg-content2 shadow-small'>
