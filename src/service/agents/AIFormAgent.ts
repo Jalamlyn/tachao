@@ -7,6 +7,7 @@ import { Message } from "./AIFormAgentTypes"
 export class AIFormAgent {
   private static instance: AIFormAgent
   private _rawConfig: string | null = null
+  private _cachedImage: string | null = null
 
   private constructor() {}
 
@@ -26,10 +27,12 @@ export class AIFormAgent {
   }
 
   public cacheImage(imageData: string): void {
+    console.log("[AIFormAgent] Caching image data")
     this._cachedImage = imageData
   }
 
   public clearCachedImage(): void {
+    console.log("[AIFormAgent] Clearing cached image")
     this._cachedImage = null
   }
 
@@ -68,14 +71,18 @@ export class AIFormAgent {
         content: generateFormAgentPrompt(this._rawConfig),
       }
 
-      // 构建当前用户消息
+      // 构建当前用户消息，检查是否有缓存图片
       const currentUserMessage = {
         role: "user" as const,
         content: command,
+        // 如果有缓存图片，添加到 images 数组中
+        images: this._cachedImage ? [this._cachedImage] : undefined
       }
 
       // 组合所有消息
       const allMessages = [systemMessage, ...messages, currentUserMessage]
+
+      console.log("[AIFormAgent] Sending messages with image:", !!this._cachedImage)
 
       // 获取AI响应
       let response = ""
@@ -90,6 +97,9 @@ export class AIFormAgent {
         0,
         "YES"
       )
+
+      // 使用完图片后清除缓存
+      this.clearCachedImage()
 
       // 检查是否包含错误信息
       if (response.includes("<shata-ai-error>")) {
