@@ -15,7 +15,7 @@
     Liberation Mono,
     Courier New,
     monospace;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.5;
   word-wrap: break-word;
   scroll-behavior: auto;
@@ -356,7 +356,7 @@
     Consolas,
     Liberation Mono,
     monospace;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .markdown-body pre {
@@ -370,7 +370,7 @@
     Consolas,
     Liberation Mono,
     monospace;
-  font-size: 12px;
+  font-size: 14px;
   word-wrap: normal;
 }
 
@@ -785,7 +785,7 @@
 .markdown-body .csv-data th {
   padding: 5px;
   overflow: hidden;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1;
   text-align: left;
   white-space: nowrap;
@@ -817,7 +817,7 @@
 }
 
 .markdown-body .footnotes {
-  font-size: 12px;
+  font-size: 14px;
   color: #8d96a0;
   border-top: 1px solid #30363d;
 }

@@ -5,9 +5,7 @@ import { markdown as formulaService } from "@/services/formulaService.md"
 import { processStepsGuide } from "./processStepsGuide"
 import { resourceFieldGuide } from "./resourceFieldGuide"
 
-const generateFormAgentPrompt = (
-  rawConfig: string | null
-) => `你是一个专业的表单设计助手，负责帮助用户创建和优化表单。
+const generateFormAgentPrompt = (rawConfig: string | null) => `你是一个专业的表单设计助手，负责帮助用户创建和优化表单。
 
 # 角色定义与能力边界
 
