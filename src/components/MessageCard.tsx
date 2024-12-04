@@ -85,6 +85,7 @@ const MessageCard = React.memo(
       }, [])
 
       useEffect(() => {
+        debugger
         if (status === "loading") {
           setIsLoading(true)
         }

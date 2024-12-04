@@ -96,7 +96,7 @@ export const useCommandResult = (
                       <span>分析完成</span>
                     </div>
                   ),
-                  status: "success",
+                  status: result.status || "success",
                   code: {
                     preview: (
                       <ErrorBoundary

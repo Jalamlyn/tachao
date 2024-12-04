@@ -3,7 +3,7 @@ import { Message } from "@/service/agents/AIFormAgentTypes"
 import { formulaService } from "@/services/formulaService"
 import { markdown as doc } from "@/pages/report-management/components/AnalysisResult.md"
 import generateSystemPrompt from "@/service/agents/prompts/report-agent-prompt"
-import { ProcessedData } from "@/pages/report-management/utils/processReportData"
+import { ProcessedData } from "@/utils/processReportData"
 import { AnalysisDataGroup, AnalysisData, AnalysisResult } from "./types/report-agent.types"
 
 export type ReportColumn = {

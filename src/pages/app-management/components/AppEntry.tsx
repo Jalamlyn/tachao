@@ -1,17 +1,15 @@
 import React from "react"
 import { Card, CardBody, Button, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
-import { AppIndex } from "../store/useAppStore"
 import EmptyState from "@/components/EmptyState"
 import { FormTypeTabs } from "./FormTypeTabs"
 import AppEntryDashboard from "./AppEntryDashboard"
 
 export const AppEntry: React.FC = () => {
   const { appId } = useParams<{ appId: string }>()
-  const navigate = useNavigate()
-  const { items: apps = [], load: loadApps,isLoading } = useMetadata("app")
+  const { items: apps = [], load: loadApps, isLoading } = useMetadata("app")
   const { items: templates = [], load: loadTemplates } = useMetadata("template")
   const { items: reports = [], load: loadReports } = useMetadata("report")
   const { items: forms = [], load: loadForms } = useMetadata("form")

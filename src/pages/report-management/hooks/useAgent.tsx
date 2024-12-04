@@ -58,6 +58,7 @@ export const useAgent = (
           {
             ...lastMessage,
             content: lastMessage.content + chunk,
+            status: chunk ? "streaming" : lastMessage.status,
           },
         ]
       })
@@ -80,9 +81,10 @@ export const useAgent = (
 
         const assistantMessage: Message = {
           role: "assistant",
-          content: "正在分析您的数据...",
+          content: "",
           id: (Date.now() + 1).toString(),
           timestamp: new Date().toLocaleTimeString(),
+          status: "thinking",
         }
         setMessages((prev) => [...prev, assistantMessage])
 
