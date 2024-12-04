@@ -2,13 +2,18 @@ import { StateCreator } from "zustand"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
-import { AppDataSlice, AppIndex } from "../types"
+import { AppStore, AppDataSlice, AppIndex } from "../types"
 
 const QUERY_KEYS = {
   apps: ["apps"] as const,
 }
 
-export const createAppDataSlice: StateCreator<AppDataSlice> = () => ({
+export const createAppDataSlice: StateCreator<
+  AppStore,
+  [],
+  [],
+  AppDataSlice
+> = () => ({
   useApps: () => {
     const query = useQuery({
       queryKey: QUERY_KEYS.apps,

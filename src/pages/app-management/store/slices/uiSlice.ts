@@ -1,7 +1,12 @@
 import { StateCreator } from "zustand"
-import { AppUISlice } from "../types"
+import { AppStore, AppUISlice } from "../types"
 
-export const createAppUISlice: StateCreator<AppUISlice> = (set) => ({
+export const createAppUISlice: StateCreator<
+  AppStore,
+  [],
+  [],
+  AppUISlice
+> = (set) => ({
   // UI State
   isCreateModalOpen: false,
   isDevelopModalOpen: false,
