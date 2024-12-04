@@ -1,0 +1,203 @@
+import React from 'react';
+import { Card, CardBody, CardFooter, Button, Chip, Tabs, Tab } from "@nextui-org/react";
+import { Icon } from "@iconify/react";
+import { motion } from "framer-motion";
+
+export interface FormTemplate {
+  id: string;
+  title: string;
+  description: string;
+  type: 'functional' | 'industry';
+  category: string;
+  status: 'available' | 'comingSoon' | 'beta' | 'enterprise';
+  features: string[];
+  thumbnail?: string;
+}
+
+interface FormTemplateSelectProps {
+  onSelect: (template: FormTemplate) => void;
+  className?: string;
+}
+
+const functionalTemplates: FormTemplate[] = [
+  {
+    id: 'process-form',
+    title: '通用流程表单',
+    description: '适用于各类审批流程和数据收集场景',
+    type: 'functional',
+    category: 'process',
+    status: 'available',
+    features: ['流程审批', '数据收集', '状态管理'],
+  },
+  {
+    id: 'survey-form',
+    title: '问卷调查表单',
+    description: '用于市场调研、满意度调查等场景',
+    type: 'functional',
+    category: 'survey',
+    status: 'comingSoon',
+    features: ['多题型支持', '逻辑跳转', '数据分析'],
+  },
+  {
+    id: 'custom-form',
+    title: '专业定制表单',
+    description: '企业级定制化表单解决方案',
+    type: 'functional',
+    category: 'custom',
+    status: 'available',
+    features: ['需求分析', '专属定制', '技术支持'],
+  }
+];
+
+const industryTemplates: FormTemplate[] = [
+  {
+    id: 'education-form',
+    title: '教育培训表单',
+    description: '适用于教育机构的招生、考试等场景',
+    type: 'industry',
+    category: 'education',
+    status: 'comingSoon',
+    features: ['在线考试', '课程报名', '成绩管理'],
+  },
+  {
+    id: 'healthcare-form',
+    title: '医疗健康表单',
+    description: '适用于医疗机构的问诊、预约等场景',
+    type: 'industry',
+    category: 'healthcare',
+    status: 'comingSoon',
+    features: ['在线问诊', '预约挂号', '健康档案'],
+  }
+];
+
+const TemplateCard: React.FC<{
+  template: FormTemplate;
+  onSelect: (template: FormTemplate) => void;
+}> = ({ template, onSelect }) => {
+  const isCustom = template.id === 'custom-form';
+  const isAvailable = template.status === 'available';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card 
+        className={`w-full hover:shadow-lg transition-shadow duration-300 ${
+          isCustom ? 'border-2 border-primary' : ''
+        }`}
+        isPressable={isAvailable}
+        onPress={() => isAvailable && onSelect(template)}
+      >
+        <CardBody className="p-4">
+          <div className="flex items-center gap-4">
+            <div className={`p-3 rounded-lg ${
+              isCustom ? 'bg-primary text-white' : 'bg-default-100'
+            }`}>
+              <Icon 
+                icon={isCustom ? "mdi:crown" : "mdi:file-document-outline"} 
+                className="w-6 h-6"
+              />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold">{template.title}</h3>
+                {isCustom && (
+                  <Chip color="primary" variant="flat" size="sm">推荐</Chip>
+                )}
+                {!isAvailable && (
+                  <Chip variant="flat" size="sm">即将推出</Chip>
+                )}
+              </div>
+              <p className="text-small text-default-500">{template.description}</p>
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="flex flex-wrap gap-2">
+              {template.features.map((feature, index) => (
+                <Chip key={index} variant="flat" size="sm">
+                  {feature}
+                </Chip>
+              ))}
+            </div>
+          </div>
+        </CardBody>
+        <CardFooter className="gap-2">
+          {isCustom ? (
+            <Button
+              color="primary"
+              variant="flat"
+              startContent={<Icon icon="mdi:crown" className="w-4 h-4" />}
+              onPress={() => onSelect(template)}
+            >
+              咨询定制方案
+            </Button>
+          ) : (
+            <Button
+              color="default"
+              variant="flat"
+              startContent={<Icon icon="mdi:arrow-right" className="w-4 h-4" />}
+              isDisabled={!isAvailable}
+              onPress={() => isAvailable && onSelect(template)}
+            >
+              {isAvailable ? '使用此模板' : '即将推出'}
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
+    </motion.div>
+  );
+};
+
+export const FormTemplateSelect: React.FC<FormTemplateSelectProps> = ({
+  onSelect,
+  className
+}) => {
+  return (
+    <div className={className}>
+      <Tabs aria-label="表单模板分类">
+        <Tab 
+          key="functional" 
+          title={
+            <div className="flex items-center gap-2">
+              <Icon icon="mdi:function" className="w-4 h-4" />
+              <span>按功能分类</span>
+            </div>
+          }
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+            {functionalTemplates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                onSelect={onSelect}
+              />
+            ))}
+          </div>
+        </Tab>
+        <Tab 
+          key="industry" 
+          title={
+            <div className="flex items-center gap-2">
+              <Icon icon="mdi:domain" className="w-4 h-4" />
+              <span>按行业分类</span>
+            </div>
+          }
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+            {industryTemplates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                onSelect={onSelect}
+              />
+            ))}
+          </div>
+        </Tab>
+      </Tabs>
+    </div>
+  );
+};
+
+export default FormTemplateSelect;
