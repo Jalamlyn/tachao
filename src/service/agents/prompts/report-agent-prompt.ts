@@ -666,5 +666,6 @@ ${existingConfig}
 
 请确保完整执行以上流程，保证分析的质量和可靠性。
 `
+}
 
 export default generateSystemPrompt
