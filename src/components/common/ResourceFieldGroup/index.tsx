@@ -57,7 +57,7 @@ const ResourceFieldGroup: React.FC<ResourceFieldGroupProps> = ({
     }
 
     initializeFields()
-  }, [resourceTitle])
+  }, [])
 
   const handleSelect = (data: any) => {
     setSelectedData(data)

@@ -32,16 +32,6 @@ export const functionalTemplates: FormTemplate[] = [
     promptTemplate: "custom-template-prompt"
   },
   {
-    id: "hr-form",
-    title: "人力资源表单",
-    description: "适用于招聘、考勤、绩效评估等人事场景",
-    type: "functional",
-    category: "hr",
-    status: "comingSoon",
-    features: ["招聘管理", "考勤记录", "绩效评估"],
-    promptTemplate: "hr-template-prompt"
-  },
-  {
     id: "finance-form",
     title: "财务报销表单",
     description: "用于费用报销、预算申请等财务场景",

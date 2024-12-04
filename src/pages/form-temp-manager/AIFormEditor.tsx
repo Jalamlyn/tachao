@@ -28,7 +28,7 @@ const AIFormEditor: React.FC = () => {
   const location = useLocation()
   const { templateId } = useParams<{ templateId: string }>()
   const { templateType, templateTitle, templateDescription, promptTemplate } = location.state || {}
-  const isEditMode = !location.pathname.includes('/create/')
+  const isEditMode = !location.pathname.includes("/create/")
   const { updateBreadcrumbs } = useBreadcrumb()
 
   const {
@@ -83,10 +83,10 @@ const AIFormEditor: React.FC = () => {
     const loadTemplatePrompt = async () => {
       if (promptTemplate && !isEditMode) {
         try {
-          const templateModule = await import(`@/service/agents/prompts/templates/${promptTemplate}`)
+          const templateModule = await import(`./templates/${promptTemplate}`)
           addMessage({
             role: "assistant",
-            content: `我将帮您创建一个${templateTitle}。${templateModule.default.prompt}`,
+            content: `我将帮您创建一个${templateTitle}。${templateModule.default}`,
             id: Date.now().toString(),
             timestamp: new Date().toLocaleTimeString(),
           })
