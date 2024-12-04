@@ -2,6 +2,10 @@ import React from 'react';
 import { Card, CardBody, CardFooter, Button, Chip, Tabs, Tab } from "@nextui-org/react";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useDisclosure } from "@nextui-org/react";
+import ServiceConsultModal from "./ServiceConsultModal";
+import PageLayout from "@/components/PageLayout";
 
 export interface FormTemplate {
   id: string;
@@ -12,11 +16,6 @@ export interface FormTemplate {
   status: 'available' | 'comingSoon' | 'beta' | 'enterprise';
   features: string[];
   thumbnail?: string;
-}
-
-interface FormTemplateSelectProps {
-  onSelect: (template: FormTemplate) => void;
-  className?: string;
 }
 
 const functionalTemplates: FormTemplate[] = [
@@ -150,53 +149,72 @@ const TemplateCard: React.FC<{
   );
 };
 
-export const FormTemplateSelect: React.FC<FormTemplateSelectProps> = ({
-  onSelect,
-  className
-}) => {
+const FormTemplateSelect: React.FC = () => {
+  const navigate = useNavigate();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const handleTemplateSelect = (template: FormTemplate) => {
+    if (template.id === 'custom-form') {
+      onOpen();
+      return;
+    }
+
+    navigate(`/we-chat-app/admin/documents/create/${template.id}`, {
+      state: {
+        templateType: template.type,
+        templateTitle: template.title,
+        templateDescription: template.description
+      }
+    });
+  };
+
   return (
-    <div className={className}>
-      <Tabs aria-label="表单模板分类">
-        <Tab 
-          key="functional" 
-          title={
-            <div className="flex items-center gap-2">
-              <Icon icon="mdi:function" className="w-4 h-4" />
-              <span>按功能分类</span>
+    <PageLayout title='选择表单模板' titleIcon='mdi:form-select'>
+      <div>
+        <Tabs aria-label="表单模板分类">
+          <Tab 
+            key="functional" 
+            title={
+              <div className="flex items-center gap-2">
+                <Icon icon="mdi:function" className="w-4 h-4" />
+                <span>按功能分类</span>
+              </div>
+            }
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              {functionalTemplates.map((template) => (
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  onSelect={handleTemplateSelect}
+                />
+              ))}
             </div>
-          }
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-            {functionalTemplates.map((template) => (
-              <TemplateCard
-                key={template.id}
-                template={template}
-                onSelect={onSelect}
-              />
-            ))}
-          </div>
-        </Tab>
-        <Tab 
-          key="industry" 
-          title={
-            <div className="flex items-center gap-2">
-              <Icon icon="mdi:domain" className="w-4 h-4" />
-              <span>按行业分类</span>
+          </Tab>
+          <Tab 
+            key="industry" 
+            title={
+              <div className="flex items-center gap-2">
+                <Icon icon="mdi:domain" className="w-4 h-4" />
+                <span>按行业分类</span>
+              </div>
+            }
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              {industryTemplates.map((template) => (
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  onSelect={handleTemplateSelect}
+                />
+              ))}
             </div>
-          }
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-            {industryTemplates.map((template) => (
-              <TemplateCard
-                key={template.id}
-                template={template}
-                onSelect={onSelect}
-              />
-            ))}
-          </div>
-        </Tab>
-      </Tabs>
-    </div>
+          </Tab>
+        </Tabs>
+
+        <ServiceConsultModal isOpen={isOpen} onClose={onClose} />
+      </div>
+    </PageLayout>
   );
 };
 
