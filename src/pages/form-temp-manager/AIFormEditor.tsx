@@ -27,7 +27,7 @@ const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { templateId } = useParams<{ templateId: string }>()
-  const { templateType, templateTitle, templateDescription } = location.state || {}
+  const { templateType, templateTitle, templateDescription, promptTemplate } = location.state || {}
   const isEditMode = !location.pathname.includes('/create/')
   const { updateBreadcrumbs } = useBreadcrumb()
 
@@ -80,19 +80,39 @@ const AIFormEditor: React.FC = () => {
   )
 
   useEffect(() => {
+    const loadTemplatePrompt = async () => {
+      if (promptTemplate && !isEditMode) {
+        try {
+          const templateModule = await import(`@/service/agents/prompts/templates/${promptTemplate}`)
+          addMessage({
+            role: "assistant",
+            content: `我将帮您创建一个${templateTitle}。${templateModule.default.prompt}`,
+            id: Date.now().toString(),
+            timestamp: new Date().toLocaleTimeString(),
+          })
+        } catch (error) {
+          console.error("Error loading template prompt:", error)
+          addMessage({
+            role: "assistant",
+            content: `我将帮您创建一个${templateTitle}。这是一个${templateDescription}。请告诉我您的具体需求，我会为您量身定制。`,
+            id: Date.now().toString(),
+            timestamp: new Date().toLocaleTimeString(),
+          })
+        }
+      } else if (templateId && templateTitle && !isEditMode) {
+        addMessage({
+          role: "assistant",
+          content: `我将帮您创建一个${templateTitle}。这是一个${templateDescription}。请告诉我您的具体需求，我会为您量身定制。`,
+          id: Date.now().toString(),
+          timestamp: new Date().toLocaleTimeString(),
+        })
+      }
+    }
+
     setMessages([])
     setSuccessModalOpen(false)
-
-    // 如果是从模板创建，添加初始引导消息
-    if (templateId && templateTitle && !isEditMode) {
-      addMessage({
-        role: "assistant",
-        content: `我将帮您创建一个${templateTitle}。这是一个${templateDescription}。请告诉我您的具体需求，我会为您量身定制。`,
-        id: Date.now().toString(),
-        timestamp: new Date().toLocaleTimeString(),
-      })
-    }
-  }, [templateId, templateTitle, templateDescription, isEditMode])
+    loadTemplatePrompt()
+  }, [templateId, templateTitle, templateDescription, isEditMode, promptTemplate])
 
   useEffect(() => {
     const loadTemplateData = async () => {

@@ -9,15 +9,17 @@ export const functionalTemplates: FormTemplate[] = [
     category: "process",
     status: "available",
     features: ["流程审批", "数据收集", "状态管理"],
+    promptTemplate: "process-template-prompt"
   },
   {
-    id: "survey-form",
-    title: "问卷调查表单",
-    description: "用于市场调研、满意度调查等场景",
+    id: "hr-form",
+    title: "人力资源表单",
+    description: "用于招聘、考勤、绩效评估等人事场景",
     type: "functional",
-    category: "survey",
-    status: "comingSoon",
-    features: ["多题型支持", "逻辑跳转", "数据分析"],
+    category: "hr",
+    status: "available",
+    features: ["招聘管理", "人员入职", "绩效考核", "培训记录"],
+    promptTemplate: "hr-template-prompt"
   },
   {
     id: "custom-form",
@@ -25,8 +27,9 @@ export const functionalTemplates: FormTemplate[] = [
     description: "企业级定制化表单解决方案",
     type: "functional",
     category: "custom",
-    status: "comingSoon",
+    status: "available",
     features: ["需求分析", "专属定制", "技术支持"],
+    promptTemplate: "custom-template-prompt"
   },
   {
     id: "hr-form",
@@ -36,6 +39,7 @@ export const functionalTemplates: FormTemplate[] = [
     category: "hr",
     status: "comingSoon",
     features: ["招聘管理", "考勤记录", "绩效评估"],
+    promptTemplate: "hr-template-prompt"
   },
   {
     id: "finance-form",
@@ -45,6 +49,7 @@ export const functionalTemplates: FormTemplate[] = [
     category: "finance",
     status: "comingSoon",
     features: ["费用报销", "预算管理", "审批流程"],
+    promptTemplate: "finance-template-prompt"
   },
   {
     id: "project-form",
@@ -54,6 +59,7 @@ export const functionalTemplates: FormTemplate[] = [
     category: "project",
     status: "comingSoon",
     features: ["项目立项", "进度跟踪", "资源分配"],
+    promptTemplate: "project-template-prompt"
   },
   {
     id: "customer-service-form",
@@ -63,6 +69,7 @@ export const functionalTemplates: FormTemplate[] = [
     category: "customer-service",
     status: "comingSoon",
     features: ["客户反馈", "服务评价", "问题跟踪"],
+    promptTemplate: "customer-service-template-prompt"
   },
   {
     id: "asset-form",
@@ -72,8 +79,10 @@ export const functionalTemplates: FormTemplate[] = [
     category: "asset",
     status: "comingSoon",
     features: ["资产登记", "设备领用", "盘点管理"],
+    promptTemplate: "asset-template-prompt"
   },
 ];
+
 export const industryTemplates: FormTemplate[] = [
   {
     id: "education-form",
@@ -83,6 +92,7 @@ export const industryTemplates: FormTemplate[] = [
     category: "education",
     status: "comingSoon",
     features: ["在线考试", "课程报名", "成绩管理"],
+    promptTemplate: "education-template-prompt"
   },
   {
     id: "healthcare-form",
@@ -92,6 +102,7 @@ export const industryTemplates: FormTemplate[] = [
     category: "healthcare",
     status: "comingSoon",
     features: ["在线问诊", "预约挂号", "健康档案"],
+    promptTemplate: "healthcare-template-prompt"
   },
   {
     id: "retail-form",
@@ -101,6 +112,7 @@ export const industryTemplates: FormTemplate[] = [
     category: "retail",
     status: "comingSoon",
     features: ["会员登记", "商品反馈", "库存管理"],
+    promptTemplate: "retail-template-prompt"
   },
   {
     id: "manufacturing-form",
@@ -110,6 +122,7 @@ export const industryTemplates: FormTemplate[] = [
     category: "manufacturing",
     status: "comingSoon",
     features: ["生产计划", "质量检验", "物料管理"],
+    promptTemplate: "manufacturing-template-prompt"
   },
   {
     id: "finance-industry-form",
@@ -119,6 +132,7 @@ export const industryTemplates: FormTemplate[] = [
     category: "finance",
     status: "comingSoon",
     features: ["开户申请", "理财购买", "风险评估"],
+    promptTemplate: "finance-industry-template-prompt"
   },
   {
     id: "real-estate-form",
@@ -128,6 +142,7 @@ export const industryTemplates: FormTemplate[] = [
     category: "real-estate",
     status: "comingSoon",
     features: ["预约看房", "房屋验收", "租赁管理"],
+    promptTemplate: "real-estate-template-prompt"
   },
   {
     id: "restaurant-form",
@@ -137,5 +152,6 @@ export const industryTemplates: FormTemplate[] = [
     category: "restaurant",
     status: "comingSoon",
     features: ["预订登记", "配送管理", "会员服务"],
+    promptTemplate: "restaurant-template-prompt"
   },
 ];

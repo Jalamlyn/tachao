@@ -17,6 +17,7 @@ export interface FormTemplate {
   category: string
   status: "available" | "comingSoon" | "beta" | "enterprise"
   features: string[]
+  promptTemplate: string
   thumbnail?: string
 }
 
@@ -117,48 +118,46 @@ const FormTemplateSelect: React.FC = () => {
         templateType: template.type,
         templateTitle: template.title,
         templateDescription: template.description,
+        promptTemplate: template.promptTemplate
       },
     })
   }
 
   return (
     <PageLayout title='选择表单模板' titleIcon='mdi:form-select'>
-      <div className="h-[calc(100vh-200px)] overflow-auto">
-        <Tabs aria-label='表单模板分类'>
-          <Tab
-            key='functional'
-            title={
-              <div className='flex items-center gap-2'>
-                <Icon icon='mdi:function' className='w-4 h-4' />
-                <span>按功能分类</span>
-              </div>
-            }
-          >
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
-              {functionalTemplates.map((template) => (
-                <TemplateCard key={template.id} template={template} onSelect={handleTemplateSelect} />
-              ))}
+      <Tabs aria-label='表单模板分类'>
+        <Tab
+          key='functional'
+          title={
+            <div className='flex items-center gap-2'>
+              <Icon icon='mdi:function' className='w-4 h-4' />
+              <span>按功能分类</span>
             </div>
-          </Tab>
-          <Tab
-            key='industry'
-            title={
-              <div className='flex items-center gap-2'>
-                <Icon icon='mdi:domain' className='w-4 h-4' />
-                <span>按行业分类</span>
-              </div>
-            }
-          >
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
-              {industryTemplates.map((template) => (
-                <TemplateCard key={template.id} template={template} onSelect={handleTemplateSelect} />
-              ))}
+          }
+        >
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 h-[calc(100vh-200px)] overflow-auto'>
+            {functionalTemplates.map((template) => (
+              <TemplateCard key={template.id} template={template} onSelect={handleTemplateSelect} />
+            ))}
+          </div>
+        </Tab>
+        <Tab
+          key='industry'
+          title={
+            <div className='flex items-center gap-2'>
+              <Icon icon='mdi:domain' className='w-4 h-4' />
+              <span>按行业分类</span>
             </div>
-          </Tab>
-        </Tabs>
-
-        <ServiceConsultModal isOpen={isOpen} onClose={onClose} />
-      </div>
+          }
+        >
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 h-[calc(100vh-200px)] overflow-auto'>
+            {industryTemplates.map((template) => (
+              <TemplateCard key={template.id} template={template} onSelect={handleTemplateSelect} />
+            ))}
+          </div>
+        </Tab>
+      </Tabs>
+      <ServiceConsultModal isOpen={isOpen} onClose={onClose} />
     </PageLayout>
   )
 }
