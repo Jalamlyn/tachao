@@ -6,7 +6,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { AppGallery } from "./components/AppGallery"
 import { CreateAppModal } from "./components/CreateAppModal"
 import { DevelopModal } from "./components/DevelopModal"
-import { useAppStore } from "./store/useAppStore"
+import { AppIndex, useAppStore } from "./store/useAppStore"
 
 const AppManagement: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()

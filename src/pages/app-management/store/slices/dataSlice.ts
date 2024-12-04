@@ -13,12 +13,7 @@ interface UpdateAppConfigParams {
   input: UpdateAppConfigInput
 }
 
-export const createAppDataSlice: StateCreator<
-  AppStore,
-  [],
-  [],
-  AppDataSlice
-> = (set, get, store) => ({
+export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = (set, get, store) => ({
   useApps: () => {
     const query = useQuery({
       queryKey: QUERY_KEYS.apps,
