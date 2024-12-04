@@ -2,10 +2,15 @@ import { StateCreator } from "zustand"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
-import { AppStore, AppDataSlice, AppIndex } from "../types"
+import { AppStore, AppDataSlice, AppIndex, UpdateAppConfigInput } from "../types"
 
 const QUERY_KEYS = {
   apps: ["apps"] as const,
+}
+
+interface UpdateAppConfigParams {
+  appId: string
+  input: UpdateAppConfigInput
 }
 
 export const createAppDataSlice: StateCreator<
@@ -13,7 +18,7 @@ export const createAppDataSlice: StateCreator<
   [],
   [],
   AppDataSlice
-> = () => ({
+> = (set, get, store) => ({
   useApps: () => {
     const query = useQuery({
       queryKey: QUERY_KEYS.apps,
@@ -35,7 +40,7 @@ export const createAppDataSlice: StateCreator<
 
   useCreateApp: () => {
     const queryClient = useQueryClient()
-    const mutation = useMutation({
+    const mutation = useMutation<void, Error, { title: string }>({
       mutationFn: async (input) => {
         const newApp: AppIndex = {
           id: `app_${Date.now()}`,
@@ -79,7 +84,7 @@ export const createAppDataSlice: StateCreator<
 
   useUpdateAppConfig: () => {
     const queryClient = useQueryClient()
-    const mutation = useMutation({
+    const mutation = useMutation<void, Error, UpdateAppConfigParams>({
       mutationFn: async ({ appId, input }) => {
         if (!appId) {
           throw new Error("应用ID不能为空")
@@ -140,7 +145,7 @@ export const createAppDataSlice: StateCreator<
 
   useDeleteApp: () => {
     const queryClient = useQueryClient()
-    const mutation = useMutation({
+    const mutation = useMutation<void, Error, string>({
       mutationFn: async (appId: string) => {
         if (!appId) {
           throw new Error("应用ID不能为空")
