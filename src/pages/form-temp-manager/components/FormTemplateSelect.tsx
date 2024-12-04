@@ -7,6 +7,7 @@ import { useDisclosure } from "@nextui-org/react"
 import ServiceConsultModal from "./ServiceConsultModal"
 import PageLayout from "@/components/PageLayout"
 import { functionalTemplates, industryTemplates } from "./FormTemplatesCard"
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 
 export interface FormTemplate {
   id: string
@@ -95,6 +96,15 @@ const TemplateCard: React.FC<{
 const FormTemplateSelect: React.FC = () => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const { updateBreadcrumbs } = useBreadcrumb()
+
+  React.useEffect(() => {
+    updateBreadcrumbs([
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "表单模板管理", href: "/we-chat-app/admin/documents" },
+      { label: "选择表单模板", href: "/we-chat-app/admin/documents/create" },
+    ])
+  }, [updateBreadcrumbs])
 
   const handleTemplateSelect = (template: FormTemplate) => {
     if (template.id === "custom-form") {
@@ -113,7 +123,7 @@ const FormTemplateSelect: React.FC = () => {
 
   return (
     <PageLayout title='选择表单模板' titleIcon='mdi:form-select'>
-      <div>
+      <div className="h-[calc(100vh-200px)] overflow-auto">
         <Tabs aria-label='表单模板分类'>
           <Tab
             key='functional'
