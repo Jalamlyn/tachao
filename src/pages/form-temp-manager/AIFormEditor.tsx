@@ -17,6 +17,8 @@ import { renderSaveModal } from "./renderSaveModal"
 import { renderTitleModal } from "./renderTitleModal"
 import { useAIFormStore } from "./store/useAIFormStore"
 import MessageCard from "@/components/MessageCard"
+import FormTemplateSelect from "./components/FormTemplateSelect"
+import { FormTemplate } from "./components/FormTemplateSelect"
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
 import { useWatch } from "./hooks/useWatch"
@@ -30,6 +32,8 @@ const AIFormEditor: React.FC = () => {
   const { templateId } = useParams<{ templateId: string }>()
   const isEditMode = Boolean(templateId)
   const { updateBreadcrumbs } = useBreadcrumb()
+  const [selectedTemplate, setSelectedTemplate] = useState<FormTemplate | null>(null)
+  const [showTemplateSelect, setShowTemplateSelect] = useState(!isEditMode)
 
   const {
     messages,
@@ -69,7 +73,6 @@ const AIFormEditor: React.FC = () => {
   const lastResponseRef = useRef("")
   const currentMessageIdRef = useRef<string | null>(null)
 
-  // 监听AI输出完成标志
   useWatch(
     lastResponseRef,
     setFormConfig,
@@ -135,7 +138,6 @@ const AIFormEditor: React.FC = () => {
       lastResponseRef.current = accumulatedTextRef.current
 
       if (!currentMessageIdRef.current) {
-        // 创建新的assistant消息
         const messageId = Date.now().toString()
         currentMessageIdRef.current = messageId
         addMessage({
@@ -146,7 +148,6 @@ const AIFormEditor: React.FC = () => {
           status: "streaming",
         })
       } else {
-        // 更新现有消息
         updateLastMessage({
           content: accumulatedTextRef.current,
           status: "streaming",
@@ -195,6 +196,23 @@ const AIFormEditor: React.FC = () => {
     navigate("/we-chat-app/admin/documents")
   }
 
+  const handleTemplateSelect = (template: FormTemplate) => {
+    setSelectedTemplate(template)
+    if (template.id === 'custom-form') {
+      // 处理定制表单咨询
+      window.open('https://example.com/custom-form-consultation', '_blank')
+      return
+    }
+    setShowTemplateSelect(false)
+    // 这里可以根据选择的模板类型来初始化表单
+    addMessage({
+      role: "user",
+      content: `请帮我创建一个${template.title}，用途是${template.description}`,
+      id: Date.now().toString(),
+      timestamp: new Date().toLocaleTimeString(),
+    })
+  }
+
   const pageActions = (
     <Button
       color='primary'
@@ -216,6 +234,14 @@ const AIFormEditor: React.FC = () => {
       role={message.role}
     />
   )
+
+  if (showTemplateSelect) {
+    return (
+      <PageLayout title='选择表单模板' titleIcon='mdi:form-select'>
+        <FormTemplateSelect onSelect={handleTemplateSelect} className='transition-all duration-300' />
+      </PageLayout>
+    )
+  }
 
   return (
     <PageLayout title='AI 表单助手' titleIcon='mdi:form-select' actions={pageActions}>
