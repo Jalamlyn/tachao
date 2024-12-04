@@ -51,7 +51,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
             }
             setLoadedConfig(config)
           } else {
-            setError("未找到表单配置")
+            // setError("未找到表单配置")
           }
         } catch (err) {
           console.error("加载表单配置失败:", err)
@@ -111,7 +111,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
         <div className='flex flex-col items-center justify-center h-full bg-default-50'>
           <Icon icon='mdi:form' className='w-20 h-20 text-default-400 mb-6' />
           <p className='text-xl font-medium text-default-600 mb-2'>开始创建表单</p>
-          <p className='text-default-500'>请先生成或选择一个表单模板来预览</p>
+          <p className='text-default-500'>请先生成表单模板来预览</p>
         </div>
       )}
 
