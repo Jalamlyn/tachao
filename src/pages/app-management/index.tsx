@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
 import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import PageLayout from "@/components/PageLayout"
@@ -10,7 +9,6 @@ import { DevelopModal } from "./components/DevelopModal"
 import { useAppStore } from "./store/useAppStore"
 
 const AppManagement: React.FC = () => {
-  const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
 
   const {

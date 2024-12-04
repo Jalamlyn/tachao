@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"
 import {
   Card,
-  CardHeader,
   CardBody,
   ScrollShadow,
   Tooltip,
