@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { UseFormReturn } from "react-hook-form"
-import { ProcessStep } from "../../../types"
+import { ProcessStep, ProcessProgress } from "../../../types"
 import message from "@/components/Message"
 import { getCurrentAccountInfo } from "@/service/apis/user"
 
@@ -49,18 +49,67 @@ export const useProcessConfirm = ({
           confirmationDate: "",
           formData: {},
           hidden: false,
+          required: step.required || false,
         }
         needsUpdate = true
       }
     })
 
     if (needsUpdate) {
-      // 使用连续的 setValue 调用，React 会自动进行批处理
       Object.entries(updates).forEach(([field, value]) => {
         form.setValue(field, value)
       })
     }
   }, [steps, fieldName, form])
+
+  const calculateProgress = useCallback((): ProcessProgress => {
+    const values = form.getValues(fieldName) || {}
+    const totalWeight = steps.reduce((sum, step) => sum + (step.weight || 1), 0)
+    let completedWeight = 0
+    let currentStepIndex = 0
+    const status: ProcessProgress['status'] = {}
+
+    steps.forEach((step, index) => {
+      const stepData = values[step.key] || {}
+      const stepWeight = step.weight || 1
+
+      if (stepData.confirmed) {
+        completedWeight += stepWeight
+      } else if (currentStepIndex === 0) {
+        currentStepIndex = index
+      }
+
+      // 检查步骤是否被阻塞
+      const isBlocked = step.dependencies?.some(dep => {
+        const dependentStep = values[dep.step]
+        if (!dependentStep?.confirmed) return true
+        if (dep.condition) {
+          const { field, value, custom } = dep.condition
+          if (field && value !== undefined) {
+            return dependentStep.formData[field] !== value
+          }
+          if (custom) {
+            return !custom(dependentStep.formData)
+          }
+        }
+        return false
+      }) ?? false
+
+      status[step.key] = {
+        isCompleted: stepData.confirmed,
+        isBlocked,
+        blockReason: isBlocked ? "依赖步骤未完成" : undefined
+      }
+    })
+
+    return {
+      total: steps.length,
+      completed: Object.values(values).filter(step => step.confirmed).length,
+      current: currentStepIndex,
+      percentage: Math.round((completedWeight / totalWeight) * 100),
+      status
+    }
+  }, [steps, form, fieldName])
 
   const handleConfirm = async (step: ProcessStep) => {
     if (!currentUser) {
@@ -77,9 +126,43 @@ export const useProcessConfirm = ({
       }
     }
 
+    // 检查超时
+    if (step.timeout) {
+      const now = Date.now()
+      const stepData = form.getValues(`${fieldName}.${step.key}`)
+      const startTime = stepData.startTime || now
+
+      if (now - startTime > step.timeout.duration) {
+        switch (step.timeout.action) {
+          case 'block':
+            message.error(step.timeout.message || "步骤已超时，无法确认")
+            return
+          case 'warn':
+            message.warning(step.timeout.message || "步骤已超时，请注意")
+            break
+          case 'auto-approve':
+            // 自动通过逻辑
+            break
+          case 'auto-reject':
+            // 自动拒绝逻辑
+            break
+        }
+      }
+    }
+
+    // 检查审批人
+    if (step.approvers) {
+      const { type, roles, users, minApprovers } = step.approvers
+      // 这里需要根据实际情况实现审批人验证逻辑
+      const hasPermission = true // 临时写死，实际需要根据用户角色判断
+      if (!hasPermission) {
+        message.error("您没有权限确认此步骤")
+        return
+      }
+    }
+
     setIsConfirming(step.key)
     try {
-      // 使用连续的 setValue 调用，React 会自动进行批处理
       form.setValue(`${fieldName}.${step.key}.confirmed`, true)
       form.setValue(`${fieldName}.${step.key}.confirmer`, currentUser.name || currentUser.email)
       form.setValue(`${fieldName}.${step.key}.confirmationDate`, new Date().toISOString())
@@ -95,7 +178,6 @@ export const useProcessConfirm = ({
 
   const handleCancel = (step: ProcessStep) => {
     try {
-      // 使用连续的 setValue 调用，React 会自动进行批处理
       form.setValue(`${fieldName}.${step.key}.confirmed`, false)
       form.setValue(`${fieldName}.${step.key}.confirmer`, "")
       form.setValue(`${fieldName}.${step.key}.confirmationDate`, "")
@@ -112,6 +194,7 @@ export const useProcessConfirm = ({
     isConfirming,
     handleConfirm,
     handleCancel,
+    calculateProgress,
   }
 }
 
@@ -133,7 +216,6 @@ export const createProcessWatch = (form: UseFormReturn<any>, fieldName: string) 
       stepKey: string, 
       updates: Record<string, any> 
     }>) => {
-      // 使用连续的 setValue 调用，React 会自动进行批处理
       updates.forEach(({ stepKey, updates }) => {
         Object.entries(updates).forEach(([key, value]) => {
           form.setValue(`${fieldName}.${stepKey}.${key}`, value)

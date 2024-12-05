@@ -73,299 +73,155 @@ interface FormField {
 }
 ```
 
-### FormFieldGroup
-
-分组配置接口：
-
-```mo
-interface FormFieldGroup {
-  key: string // 分组唯一标识
-  title: string // 分组标题
-  description?: string // 分组描述
-  icon?: string // 分组图标
-  fields: FormField[] // 分组字段列表
-}
-```
-
-### TooltipConfig
-
-提示配置接口：
-
-```mo
-interface TooltipConfig {
-  content: ReactNode // 提示内容
-  placement?: "top" | "bottom" | "left" | "right" // 提示位置
-}
-```
-
-## 表单配置
-
-### DynamicFormConfig
-
-表单总体配置接口：
-
-```mo
-interface DynamicFormConfig {
-  metadata: FormMetadata // 元数据配置
-  renderConfig: FormRenderConfig // 渲染配置
-  orderNumberConfig?: {
-    // 单号配置
-    prefix?: string
-    fieldName?: string
-    label?: string
-  }
-  watch?: (form: UseFormReturn<any>) => () => void // 表单监听函数
-  validate?: (values: any, context?: ValidationContext) => Promise<ValidationResult> | ValidationResult // 表单验证函数
-}
-```
-
-### FormMetadata
-
-表单元数据配置：
-
-```mo
-interface FormMetadata {
-  title: string // 表单标题
-  description?: string // 表单描述
-  permissions?: {
-    // 权限配置
-    edit?: boolean
-    delete?: boolean
-    print?: boolean
-  }
-}
-```
-
-### FormRenderConfig
-
-表单渲染配置接口：
-
-```mo
-interface FormRenderConfig {
-  basicFields:
-    | FormField[]
-    | {
-        groups: FormFieldGroup[] // 分组配置
-        defaultGroup?: string // 默认选中的分组
-      }
-  table?: TableConfig // 旧版单表格配置（向后兼容）
-  tables?: TableGroup[] // 新版多表格配置
-  processSteps?: ProcessStep[] // 流程步骤配置
-}
-```
-
-### TableGroup
-
-表格分组配置：
-
-```mo
-interface TableGroup {
-  key: string // 表格唯一标识
-  title: string // 表格标题
-  description?: string // 表格描述
-  icon?: string // 表格图标
-  config: TableConfig // 表格配置
-}
-```
-
-### 多表格配置示例
-
-```typescript
-{
-  renderConfig: {
-    // ... 其他配置
-    tables: [
-      {
-        key: "products",
-        title: "产品清单",
-        description: "请填写产品详细信息",
-        icon: "mdi:package",
-        config: {
-          columns: [
-            {
-              key: "name",
-              title: "产品名称",
-              type: "text",
-              required: true
-            },
-            {
-              key: "quantity",
-              title: "数量",
-              type: "number",
-              required: true
-            }
-          ]
-        }
-      },
-      {
-        key: "services",
-        title: "服务项目",
-        description: "请填写服务项目详细信息",
-        icon: "mdi:cog",
-        config: {
-          columns: [
-            {
-              key: "serviceName",
-              title: "服务名称",
-              type: "text",
-              required: true
-            },
-            {
-              key: "price",
-              title: "价格",
-              type: "number",
-              required: true
-            }
-          ]
-        }
-      }
-    ]
-  }
-}
-```
-
-### ValidationContext
-
-验证上下文接口：
-
-```mo
-interface ValidationContext {
-  mode?: "create" | "edit" // 验证模式
-  user?: any // 用户信息
-}
-```
-
-### ValidationResult
-
-验证结果接口：
-
-```mo
-interface ValidationResult {
-  valid: boolean // 是否验证通过
-  errors?: string[] // 错误信息
-  warnings?: string[] // 警告信息
-  fields?: {
-    // 字段错误信息
-    [key: string]: string
-  }
-  categorizedErrors?: {
-    // 分类错误信息
-    required?: string[] // 必填错误
-    invalid?: string[] // 格式错误
-    other?: string[] // 其他错误
-  }
-}
-```
-
-## 表格配置
-
-### TableConfig
-
-表格配置接口：
-
-```mo
-interface TableConfig {
-  columns: TableColumn[] // 列配置
-  toolbar?: ReactNode // 工具栏
-  summary?: TableSummary // 汇总配置
-}
-```
-
-### TableColumn
-
-表格列配置：
-
-```mo
-interface TableColumn {
-  key: string // 列键名
-  title: string // 列标题
-  type: FormFieldType // 列类型
-  width?: string | number // 列宽度
-  editable?: boolean // 是否可编辑
-  required?: boolean // 是否必填
-  placeholder?: string // 占位文本
-  options?: Array<{
-    // 选项配置
-    label: string
-    value: string | number
-  }>
-  resourceConfig?: {
-    // 资源配置
-    resourceName: string
-    appId: string
-    selectionMode?: "single" | "multiple"
-  }
-  render?: (value: any, record: any, index: number) => ReactNode // 自定义渲染
-  summary?: {
-    // 汇总配置
-    calculate?: (records: any[]) => any
-    render?: (value: any) => ReactNode
-  }
-  calculate?: {
-    // 计算字段calculate?: {
-    // 计算字段配置
-    formula: string
-    dependencies?: string[]
-  }
-}
-```
-
-### TableSummary
-
-表格汇总配置接口：
-
-```mo
-interface TableSummary {
-  show?: boolean // 是否显示汇总行
-  label?: string // 汇总行标签
-  className?: string // 自定义类名
-  style?: React.CSSProperties // 自定义样式
-}
-```
-
-## 流程确认配置
-
 ### ProcessStep
 
 流程步骤配置：
 
 ```mo
+interface ProcessStepDependency {
+  step: string // 依赖的步骤key
+  condition?: {
+    field?: string // 依赖字段
+    value?: any // 期望值
+    custom?: (stepData: any) => boolean // 自定义验证函数
+  }
+  message?: string // 依赖未满足时的提示信息
+}
+
+interface ProcessStepTimeout {
+  duration: number // 超时时间（毫秒）
+  action: 'warn' | 'block' | 'auto-approve' | 'auto-reject'
+  message?: string
+}
+
+interface ProcessStepApprovers {
+  type: 'single' | 'multiple' | 'any' | 'all'
+  roles?: string[]
+  users?: string[]
+  minApprovers?: number
+}
+
 interface ProcessStep {
   key: string // 步骤键名
   title: string // 步骤标题
   description?: string // 步骤描述
   icon?: string // 步骤图标
   fields?: FormField[] // 步骤表单字段
+  dependencies?: ProcessStepDependency[] // 步骤依赖
+  weight?: number // 步骤权重
+  timeout?: ProcessStepTimeout // 超时配置
+  approvers?: ProcessStepApprovers // 审批人配置
 }
 ```
 
-## 资源选择字段
+### 流程确认功能
 
-资源选择字段用于从已有的资源数据中选择记录。
+新版本的流程确认功能支持以下特性：
 
-### 基本配置
+1. 标签页布局
+   - 使用标签页形式展示流程步骤
+   - 节省表单空间
+   - 清晰展示步骤状态
 
-```mo
-{
-  name: "supplier",
-  label: "供应商",
-  type: "resource",
-  resourceConfig: {
-    resourceTitle: "供应商主数据"  // 必须与资源管理中的标题完全匹配
+2. 步骤依赖关系
+   - 支持步骤间的依赖配置
+   - 可设置字段值条件
+   - 支持自定义验证函数
+   - 提供清晰的依赖提示
+
+3. 进度指示
+   - 显示整体完成进度
+   - 支持步骤权重
+   - 展示步骤状态（已完成/被阻塞）
+
+4. 超时处理
+   - 可配置步骤超时时间
+   - 支持多种超时动作
+   - 自定义超时提示
+
+5. 审批人配置
+   - 支持多种审批模式
+   - 角色和用户级别的权限控制
+   - 最小审批人数设置
+
+使用示例：
+
+```typescript
+const processSteps = [
+  {
+    key: 'basic_info',
+    title: '基础信息',
+    weight: 1,
+    timeout: {
+      duration: 24 * 60 * 60 * 1000, // 24小时
+      action: 'warn'
+    }
+  },
+  {
+    key: 'department_approval',
+    title: '部门审批',
+    weight: 2,
+    dependencies: [
+      {
+        step: 'basic_info',
+        condition: {
+          field: 'amount',
+          custom: (value) => value > 1000
+        }
+      }
+    ],
+    approvers: {
+      type: 'all',
+      roles: ['DEPARTMENT_MANAGER']
+    }
   }
-}
+]
 ```
 
-### 字段特性
+## 最佳实践
 
-- 自动加载资源数据
-- 显示已选记录的详细信息
-- 支持表单联动
-- 支持字段验证
-- 响应式布局
+1. 步骤依赖配置
+   - 避免循环依赖
+   - 保持依赖链条简单
+   - 提供清晰的依赖提示
+   - 考虑添加依赖自动解除机制
 
-### 注意事项
+2. 进度展示
+   - 合理设置步骤权重
+   - 提供多种进度展示方式
+   - 突出显示异常状态
+   - 添加预计完成时间
 
-1. resourceTitle 必须与资源管理中的标题完全匹配
-2. 资源字段会占用较大空间，建议单独占据一行
-3. 确保资源数据已在资源管理中创建
+3. 用户体验
+   - 清晰的视觉反馈
+   - 步骤说明和帮助信息
+   - 支持步骤间快速导航
+   - 保存未完成步骤数据
+
+4. 权限控制
+   - 严格的角色验证
+   - 灵活的审批人配置
+   - 完整的操作日志
+   - 超时自动处理
+
+## 注意事项
+
+1. 性能优化
+   - 避免不必要的重渲染
+   - 合理使用缓存
+   - 异步加载大数据
+
+2. 数据一致性
+   - 保存所有步骤状态
+   - 处理并发操作
+   - 验证数据完整性
+
+3. 错误处理
+   - 友好的错误提示
+   - 完整的错误日志
+   - 提供恢复机制
+
+4. 扩展性
+   - 支持自定义组件
+   - 预留扩展接口
+   - 保持向后兼容

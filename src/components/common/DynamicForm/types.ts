@@ -117,12 +117,55 @@ export interface TableGroup {
   config: TableConfig
 }
 
+export interface ProcessStepDependency {
+  step: string
+  condition?: {
+    field?: string
+    value?: any
+    custom?: (stepData: any) => boolean
+  }
+  message?: string
+}
+
+export interface ProcessStepTimeout {
+  duration: number
+  action: 'warn' | 'block' | 'auto-approve' | 'auto-reject'
+  message?: string
+}
+
+export interface ProcessStepApprovers {
+  type: 'single' | 'multiple' | 'any' | 'all'
+  roles?: string[]
+  users?: string[]
+  minApprovers?: number
+}
+
 export interface ProcessStep {
   key: string
   title: string
   description?: string
   icon?: string
   fields?: FormField[]
+  dependencies?: ProcessStepDependency[]
+  weight?: number
+  timeout?: ProcessStepTimeout
+  approvers?: ProcessStepApprovers
+}
+
+export interface ProcessStepStatus {
+  isCompleted: boolean
+  isBlocked: boolean
+  blockReason?: string
+}
+
+export interface ProcessProgress {
+  total: number
+  completed: number
+  current: number
+  percentage: number
+  status: {
+    [key: string]: ProcessStepStatus
+  }
 }
 
 export interface TooltipConfig {
@@ -147,8 +190,8 @@ export interface FormRenderConfig {
         groups: FormFieldGroup[]
         defaultGroup?: string
       }
-  table?: TableConfig // 保留向后兼容性
-  tables?: TableGroup[] // 新增多表格支持
+  table?: TableConfig
+  tables?: TableGroup[]
   processSteps?: ProcessStep[]
 }
 
