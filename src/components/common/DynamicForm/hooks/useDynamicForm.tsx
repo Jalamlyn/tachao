@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from "react"
 import { useForm } from "react-hook-form"
-import { DynamicFormConfig, ValidationResult, ValidationContext } from "../types"
+import { DynamicFormConfig, ValidationResult } from "../types"
 import { ValidationManager } from "../validation/ValidationManager"
 import { debounce } from "lodash"
 
@@ -80,7 +80,7 @@ export const useDynamicForm = (
     const subscription = form.watch((value, { name, type }) => {
       console.log("[useDynamicForm] Form value changed:", { field: name, type, value })
       console.log("[useDynamicForm] Current form values:", form.getValues())
-      
+
       // 触发表单重新渲染
       form.trigger(name)
     })
@@ -91,25 +91,14 @@ export const useDynamicForm = (
   // 统一的验证函数
   const validateForm = useCallback(async (): Promise<ValidationResult> => {
     try {
-      // 内置验证
-      const isValid = await form.trigger()
-      if (!isValid) {
-        const formErrors = form.formState.errors
-        return {
-          valid: false,
-          errors: formatValidationErrors(formErrors),
-          fields: formErrors,
-        }
-      }
-
-      // 自定义验证
       const values = form.getValues()
+      // 直接使用ValidationManager进行统一校验
       return await ValidationManager.validateForm(values, config)
     } catch (error) {
       console.error("[useDynamicForm] Validation error:", error)
       return {
         valid: false,
-        errors: ["表单验证出错"],
+        errors: ["表单校验出错"],
         fields: {},
       }
     }

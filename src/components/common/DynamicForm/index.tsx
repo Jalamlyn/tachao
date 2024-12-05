@@ -285,7 +285,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         >
           <div>
             <h1 className={cn(styles["form-title"])}>{metadata.title}</h1>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-2'>
+            <div className='mb-2 flex items-center'>
+              <span className='text-xs text-gray-600'>表单编号：</span>
               <OrderNumberField
                 form={form}
                 prefix={orderNumberConfig.prefix}
