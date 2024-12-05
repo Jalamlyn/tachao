@@ -46,7 +46,7 @@ export const parseAICode = async (content: string, tag: string): Promise<any> =>
 
     const regex = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`)
     const match = content.match(regex)
-
+    debugger
     if (!match) {
       aiLog.log(`No valid ${tag} found in content`)
       throw new Error(`No valid ${tag} found`)
@@ -107,7 +107,6 @@ const jsxToJs = async (jsxCode: string): Promise<string> => {
  */
 const parseConfigObject = (jsCode: string): any => {
   try {
-    aiLog.log("Starting to parse config object")
     const objectCode = jsCode.replace(/export\s+default\s+/, "return ")
     const createConfig = new Function("React", ...Object.keys(uiComponents), objectCode)
     const result = createConfig(React, ...Object.values(uiComponents))

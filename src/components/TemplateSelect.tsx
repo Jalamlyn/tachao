@@ -22,7 +22,7 @@ export const TemplateSelect: React.FC<TemplateSelectProps> = ({
   value,
   onChange,
   multiple = false,
-  placeholder = "选择模板",
+  placeholder = "选择数据来源",
   className,
 }) => {
   const handleSelectionChange = (selection: any) => {

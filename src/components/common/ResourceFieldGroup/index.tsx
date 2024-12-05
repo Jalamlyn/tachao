@@ -33,7 +33,7 @@ const ResourceFieldGroup: React.FC<ResourceFieldGroupProps> = ({
         const resources = await loadResources()
         const resource = resources.find((r) => r.title === resourceTitle)
         if (!resource) {
-          message.error(`未找到资料: ${resourceTitle}`)
+          // message.error(`未找到资料: ${resourceTitle}`)
           return
         }
 

@@ -17,7 +17,7 @@ DynamicForm 是一个灵活的动态表单组件，支持以下功能：
 
 表单字段类型枚举：
 
-```typescript
+```mo
 type FormFieldType =
   | "text" // 文本输入
   | "password" // 密码输入
@@ -39,7 +39,7 @@ type FormFieldType =
 
 表单字段配置接口：
 
-```typescript
+```mo
 interface FormField {
   name: string // 字段名称
   label: string // 字段标签
@@ -77,7 +77,7 @@ interface FormField {
 
 提示配置接口：
 
-```typescript
+```mo
 interface TooltipConfig {
   content: ReactNode // 提示内容
   placement?: "top" | "bottom" | "left" | "right" // 提示位置
@@ -90,7 +90,7 @@ interface TooltipConfig {
 
 表单总体配置接口：
 
-```typescript
+```mo
 interface DynamicFormConfig {
   metadata: FormMetadata // 元数据配置
   renderConfig: FormRenderConfig // 渲染配置
@@ -109,7 +109,7 @@ interface DynamicFormConfig {
 
 表单元数据配置：
 
-```typescript
+```mo
 interface FormMetadata {
   title: string // 表单标题
   description?: string // 表单描述
@@ -126,7 +126,7 @@ interface FormMetadata {
 
 验证上下文接口：
 
-```typescript
+```mo
 interface ValidationContext {
   mode?: "create" | "edit" // 验证模式
   user?: any // 用户信息
@@ -137,7 +137,7 @@ interface ValidationContext {
 
 验证结果接口：
 
-```typescript
+```mo
 interface ValidationResult {
   valid: boolean // 是否验证通过
   errors?: string[] // 错误信息
@@ -161,7 +161,7 @@ interface ValidationResult {
 
 表格配置接口：
 
-```typescript
+```mo
 interface TableConfig {
   columns: TableColumn[] // 列配置
   toolbar?: ReactNode // 工具栏
@@ -173,7 +173,7 @@ interface TableConfig {
 
 表格列配置：
 
-```typescript
+```mo
 interface TableColumn {
   key: string // 列键名
   title: string // 列标题
@@ -211,7 +211,7 @@ interface TableColumn {
 
 表格汇总配置接口：
 
-```typescript
+```mo
 interface TableSummary {
   show?: boolean // 是否显示汇总行
   label?: string // 汇总行标签
@@ -223,7 +223,8 @@ interface TableSummary {
 ### 完整的表格配置示例
 
 1. 基础表格配置：
-```typescript
+
+```mo
 {
   renderConfig: {
     table: {
@@ -274,7 +275,8 @@ interface TableSummary {
 ```
 
 2. 带计算字段的表格配置：
-```typescript
+
+```mo
 {
   renderConfig: {
     table: {
@@ -340,7 +342,8 @@ interface TableSummary {
 ```
 
 3. 带验证规则的表格配置：
-```typescript
+
+```mo
 {
   renderConfig: {
     table: {
@@ -394,7 +397,8 @@ interface TableSummary {
 ```
 
 4. 带资源选择的表格配置：
-```typescript
+
+```mo
 {
   renderConfig: {
     table: {
@@ -441,7 +445,7 @@ interface TableSummary {
 
 流程步骤配置：
 
-```typescript
+```mo
 interface ProcessStep {
   key: string // 步骤键名
   title: string // 步骤标题
@@ -455,7 +459,7 @@ interface ProcessStep {
 
 表单渲染配置接口：
 
-```typescript
+```mo
 interface FormRenderConfig {
   basicFields: FormField[] // 基础字段配置，用于渲染基本表单字段
   table?: TableConfig // 表格配置，用于渲染动态表格
@@ -469,7 +473,7 @@ interface FormRenderConfig {
 
 ### 基本配置
 
-```typescript
+```mo
 {
   name: "supplier",
   label: "供应商",

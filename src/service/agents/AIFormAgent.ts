@@ -46,7 +46,7 @@ export class AIFormAgent {
       }
       return parsedConfig
     } catch (error) {
-      console.error("Error parsing form config:", error)
+      console.error("Error parsing form config:", error, rawConfig)
       throw new Error("Failed to parse form config")
     }
   }
@@ -89,7 +89,7 @@ export class AIFormAgent {
         * 优先理解用户意图
         * 结合上下文分析
         * 提供建设性建议
-        * 引导用户明确需求]`
+        * 引导用户明确需求][格式要求:不要遗漏 \`\`\`mo 标记,不要遗漏 <shata-ai 的标记]`
 
       // 构建当前用户消息，检查是否有缓存图片
       const currentUserMessage = {
@@ -133,18 +133,13 @@ export class AIFormAgent {
 
       // 检查是否包含表单配置
       if (response.includes("<shata-ai-form>")) {
-        const formMatch = response.match(/<shata-ai-form>([\s\S]*?)<\/shata-ai-form>/)
-        if (formMatch) {
-          const formContent = formMatch[1].trim()
-          const parsedConfig = await this.parseConfig(formContent)
-
-          if (parsedConfig) {
-            this.setRawConfig(formContent)
-            return {
-              success: true,
-              config: parsedConfig.config,
-              rawConfig: formContent,
-            }
+        const parsedConfig = await this.parseConfig(response)
+        if (parsedConfig) {
+          this.setRawConfig(parsedConfig.rawConfig) // parseConfig 会返回原始配置
+          return {
+            success: true,
+            config: parsedConfig.config,
+            rawConfig: parsedConfig.rawConfig,
           }
         }
       }
