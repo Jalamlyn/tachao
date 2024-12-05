@@ -56,14 +56,11 @@ export interface FormField {
   lineWidth?: number
   lineColor?: string
   className?: string
-  // 新增：Switch 特有配置
   checkedLabel?: string
   uncheckedLabel?: string
-  // 新增：Slider 特有配置
   min?: number
   max?: number
   step?: number
-  // 新增：Radio/Checkbox 特有配置
   layout?: "horizontal" | "vertical"
 }
 
@@ -112,6 +109,14 @@ export interface TableConfig {
   summary?: TableSummary
 }
 
+export interface TableGroup {
+  key: string
+  title: string
+  description?: string
+  icon?: string
+  config: TableConfig
+}
+
 export interface ProcessStep {
   key: string
   title: string
@@ -142,7 +147,8 @@ export interface FormRenderConfig {
         groups: FormFieldGroup[]
         defaultGroup?: string
       }
-  table?: TableConfig
+  table?: TableConfig // 保留向后兼容性
+  tables?: TableGroup[] // 新增多表格支持
   processSteps?: ProcessStep[]
 }
 

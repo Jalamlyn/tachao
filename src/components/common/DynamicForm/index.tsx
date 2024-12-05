@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react"
 import { Form } from "@/components/ui/form"
 import { Button, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { DynamicFormProps } from "./types"
+import { DynamicFormProps, TableGroup } from "./types"
 import { useDynamicForm } from "./hooks/useDynamicForm"
 import DynamicFormFields from "./components/DynamicFormFields"
 import DynamicTable from "./components/DynamicTable"
@@ -16,6 +16,7 @@ import { cn } from "@/theme/cn"
 import { defaultFormConfig } from "./defaultConfig"
 import { merge } from "lodash"
 import styles from "./styles/DynamicForm.module.css"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
   config: userConfig,
@@ -26,10 +27,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   initialValues,
   previewMode = false,
 }) => {
-  // 合并默认配置和用户配置
   const config = merge({}, defaultFormConfig, userConfig)
-
-  // 添加状态管理
   const [isLoading, setIsLoading] = useState(false)
   const { getDetail, create: createMetadata, update: updateMetadata } = useMetadata("form")
   const { getDetail: getTemplateDetail } = useMetadata("template")
@@ -40,6 +38,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     invalid?: Array<{ field: string; message: string }>
     other?: Array<{ field: string; message: string }>
   }>({})
+  const [selectedTable, setSelectedTable] = useState<string>("")
 
   useEffect(() => {
     const loadFormData = async () => {
@@ -66,6 +65,13 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
     loadFormData()
   }, [id, getDetail, initialValues])
+
+  useEffect(() => {
+    // 设置默认选中的表格
+    if (config.renderConfig.tables && config.renderConfig.tables.length > 0) {
+      setSelectedTable(config.renderConfig.tables[0].key)
+    }
+  }, [config.renderConfig.tables])
 
   const { form, submitForm } = useDynamicForm(config, initialValues)
   const [isEditing, setIsEditing] = useState(false)
@@ -124,7 +130,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   const handleValidationErrors = (errors?: string[]) => {
     if (!errors?.length) return
 
-    // 设置表单字段错误
     const fieldErrors = form.formState.errors
     Object.entries(fieldErrors).forEach(([field, error]) => {
       form.setError(field, {
@@ -133,7 +138,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       })
     })
 
-    // 显示错误消息
     const errorContent = (
       <div className='space-y-2'>
         {errors.map((error, index) => (
@@ -198,7 +202,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
         if (!success) {
           if (validationResult) {
-            // 设置表单字段错误
             if (validationResult.fields) {
               Object.entries(validationResult.fields).forEach(([field, error]) => {
                 form.setError(field, {
@@ -208,7 +211,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               })
             }
 
-            // 设置分类错误
             if (validationResult.categorizedErrors) {
               setValidationErrors(validationResult.categorizedErrors)
             }
@@ -220,7 +222,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
         if (onSubmit) {
           await onSubmit(validationResult!, values)
-          // 提交成功后重置表单
           form.reset()
           return
         }
@@ -236,7 +237,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           const result = await updateMetadata(id, formData)
           if (result) {
             setIsEditing(false)
-            // 更新成功后重置表单
             form.reset()
           } else {
             throw new Error("更新失败")
@@ -245,7 +245,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           const result = await createMetadata(formData)
           if (result) {
             setIsEditing(false)
-            // 创建成功后重置表单
             form.reset()
           } else {
             throw new Error("创建失败")
@@ -274,6 +273,50 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         <Spinner label='加载中...' />
       </div>
     )
+  }
+
+  const renderTables = () => {
+    // 如果有旧版的单表格配置，使用旧版配置
+    if (renderConfig.table) {
+      return (
+        <div className={cn(styles["form-card"])}>
+          <h2 className={cn(styles["form-title"])}>明细信息</h2>
+          <DynamicTable config={renderConfig.table} form={form} isEditable={isEditing} fieldName='tableData' />
+        </div>
+      )
+    }
+
+    // 如果有新版的多表格配置，使用新版配置
+    if (renderConfig.tables && renderConfig.tables.length > 0) {
+      return (
+        <div className={cn(styles["form-card"])}>
+          <h2 className={cn(styles["form-title"])}>明细信息</h2>
+          <Tabs value={selectedTable} onValueChange={setSelectedTable}>
+            <TabsList>
+              {renderConfig.tables.map((table: TableGroup) => (
+                <TabsTrigger key={table.key} value={table.key}>
+                  {table.icon && <span className='text-xl'>{table.icon}</span>}
+                  <span>{table.title}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {renderConfig.tables.map((table: TableGroup) => (
+              <TabsContent key={table.key} value={table.key}>
+                {table.description && <p className='text-sm text-gray-500 mb-4'>{table.description}</p>}
+                <DynamicTable
+                  config={table.config}
+                  form={form}
+                  isEditable={isEditing}
+                  fieldName={`tableData.${table.key}`}
+                />
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+      )
+    }
+
+    return null
   }
 
   return (
@@ -330,12 +373,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         </div>
 
         {/* 表格 */}
-        {renderConfig.table && (
-          <div className={cn(styles["form-card"])}>
-            <h2 className={cn(styles["form-title"])}>明细信息</h2>
-            <DynamicTable config={renderConfig.table} form={form} isEditable={isEditing} fieldName='tableData' />
-          </div>
-        )}
+        {renderTables()}
 
         {/* 流程确认 */}
         {renderConfig.processSteps && (

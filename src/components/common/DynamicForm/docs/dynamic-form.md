@@ -5,7 +5,7 @@
 DynamicForm 是一个灵活的动态表单组件，支持以下功能：
 
 - 基础表单字段渲染
-- 动态表格
+- 动态表格（支持多表格）
 - 流程确认步骤
 - 打印预览
 - 自定义验证
@@ -148,115 +148,81 @@ interface FormRenderConfig {
         groups: FormFieldGroup[] // 分组配置
         defaultGroup?: string // 默认选中的分组
       }
-  table?: TableConfig // 表格配置
+  table?: TableConfig // 旧版单表格配置（向后兼容）
+  tables?: TableGroup[] // 新版多表格配置
   processSteps?: ProcessStep[] // 流程步骤配置
 }
 ```
 
-### 基本信息分组配置
+### TableGroup
 
-基本信息支持分组展示，可以通过 tabs 切换不同分组的内容。
+表格分组配置：
 
-#### 分组配置示例
+```mo
+interface TableGroup {
+  key: string // 表格唯一标识
+  title: string // 表格标题
+  description?: string // 表格描述
+  icon?: string // 表格图标
+  config: TableConfig // 表格配置
+}
+```
+
+### 多表格配置示例
 
 ```typescript
 {
   renderConfig: {
-    basicFields: {
-      groups: [
-        {
-          key: "basic",
-          title: "基本信息",
-          icon: "mdi:information",
-          description: "请填写基本资料信息",
-          fields: [
+    // ... 其他配置
+    tables: [
+      {
+        key: "products",
+        title: "产品清单",
+        description: "请填写产品详细信息",
+        icon: "mdi:package",
+        config: {
+          columns: [
             {
-              name: "name",
-              label: "姓名",
+              key: "name",
+              title: "产品名称",
               type: "text",
               required: true
             },
             {
-              name: "gender",
-              label: "性别",
-              type: "select",
-              options: [
-                { label: "男", value: "male" },
-                { label: "女", value: "female" }
-              ]
-            }
-          ]
-        },
-        {
-          key: "contact",
-          title: "联系方式",
-          icon: "mdi:phone",
-          description: "请填写联系方式信息",
-          fields: [
-            {
-              name: "phone",
-              label: "手机号",
-              type: "tel",
+              key: "quantity",
+              title: "数量",
+              type: "number",
               required: true
-            },
-            {
-              name: "email",
-              label: "邮箱",
-              type: "email"
-            }
-          ]
-        },
-        {
-          key: "address",
-          title: "地址信息",
-          icon: "mdi:map-marker",
-          fields: [
-            {
-              name: "province",
-              label: "省份",
-              type: "select",
-              options: []
-            },
-            {
-              name: "city",
-              label: "城市",
-              type: "select",
-              options: []
             }
           ]
         }
-      ],
-      defaultGroup: "basic" // 默认显示基本信息分组
-    }
+      },
+      {
+        key: "services",
+        title: "服务项目",
+        description: "请填写服务项目详细信息",
+        icon: "mdi:cog",
+        config: {
+          columns: [
+            {
+              key: "serviceName",
+              title: "服务名称",
+              type: "text",
+              required: true
+            },
+            {
+              key: "price",
+              title: "价格",
+              type: "number",
+              required: true
+            }
+          ]
+        }
+      }
+    ]
   }
 }
 ```
-
-#### 分组配置说明
-
-1. groups 数组
-   - 每个分组都需要一个唯一的 key
-   - title 为分组标题，显示在 tab 上
-   - icon 为可选的分组图标，使用 iconify 图标
-   - description 为可选的分组描述，显示在分组内容上方
-   - fields 数组包含该分组下的所有字段配置
-
-2. defaultGroup
-   - 可选配置，指定默认显示哪个分组
-   - 值为分组的 key
-   - 如果不指定，默认显示第一个分组
-
-3. 分组特性
-   - 支持动态切换分组
-   - 每个分组可以有独立的字段验证
-   - 分组之间的数据是独立的
-   - 支持响应式布局
-
-4. 使用建议
-   - 根据业务逻辑合理划分字段组
-   - 相关的字段放在同一组中
-   - 每组字段数量建议不要太多
-   - 分组描述要简洁明了
 
 ### ValidationContext
 
@@ -336,6 +302,7 @@ interface TableColumn {
     render?: (value: any) => ReactNode
   }
   calculate?: {
+    // 计算字段calculate?: {
     // 计算字段配置
     formula: string
     dependencies?: string[]
