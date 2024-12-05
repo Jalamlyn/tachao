@@ -73,6 +73,20 @@ interface FormField {
 }
 ```
 
+### FormFieldGroup
+
+分组配置接口：
+
+```mo
+interface FormFieldGroup {
+  key: string // 分组唯一标识
+  title: string // 分组标题
+  description?: string // 分组描述
+  icon?: string // 分组图标
+  fields: FormField[] // 分组字段列表
+}
+```
+
 ### TooltipConfig
 
 提示配置接口：
@@ -121,6 +135,128 @@ interface FormMetadata {
   }
 }
 ```
+
+### FormRenderConfig
+
+表单渲染配置接口：
+
+```mo
+interface FormRenderConfig {
+  basicFields:
+    | FormField[]
+    | {
+        groups: FormFieldGroup[] // 分组配置
+        defaultGroup?: string // 默认选中的分组
+      }
+  table?: TableConfig // 表格配置
+  processSteps?: ProcessStep[] // 流程步骤配置
+}
+```
+
+### 基本信息分组配置
+
+基本信息支持分组展示，可以通过 tabs 切换不同分组的内容。
+
+#### 分组配置示例
+
+```typescript
+{
+  renderConfig: {
+    basicFields: {
+      groups: [
+        {
+          key: "basic",
+          title: "基本信息",
+          icon: "mdi:information",
+          description: "请填写基本资料信息",
+          fields: [
+            {
+              name: "name",
+              label: "姓名",
+              type: "text",
+              required: true
+            },
+            {
+              name: "gender",
+              label: "性别",
+              type: "select",
+              options: [
+                { label: "男", value: "male" },
+                { label: "女", value: "female" }
+              ]
+            }
+          ]
+        },
+        {
+          key: "contact",
+          title: "联系方式",
+          icon: "mdi:phone",
+          description: "请填写联系方式信息",
+          fields: [
+            {
+              name: "phone",
+              label: "手机号",
+              type: "tel",
+              required: true
+            },
+            {
+              name: "email",
+              label: "邮箱",
+              type: "email"
+            }
+          ]
+        },
+        {
+          key: "address",
+          title: "地址信息",
+          icon: "mdi:map-marker",
+          fields: [
+            {
+              name: "province",
+              label: "省份",
+              type: "select",
+              options: []
+            },
+            {
+              name: "city",
+              label: "城市",
+              type: "select",
+              options: []
+            }
+          ]
+        }
+      ],
+      defaultGroup: "basic" // 默认显示基本信息分组
+    }
+  }
+}
+```
+
+#### 分组配置说明
+
+1. groups 数组
+   - 每个分组都需要一个唯一的 key
+   - title 为分组标题，显示在 tab 上
+   - icon 为可选的分组图标，使用 iconify 图标
+   - description 为可选的分组描述，显示在分组内容上方
+   - fields 数组包含该分组下的所有字段配置
+
+2. defaultGroup
+   - 可选配置，指定默认显示哪个分组
+   - 值为分组的 key
+   - 如果不指定，默认显示第一个分组
+
+3. 分组特性
+   - 支持动态切换分组
+   - 每个分组可以有独立的字段验证
+   - 分组之间的数据是独立的
+   - 支持响应式布局
+
+4. 使用建议
+   - 根据业务逻辑合理划分字段组
+   - 相关的字段放在同一组中
+   - 每组字段数量建议不要太多
+   - 分组描述要简洁明了
 
 ### ValidationContext
 
@@ -220,225 +356,6 @@ interface TableSummary {
 }
 ```
 
-### 完整的表格配置示例
-
-1. 基础表格配置：
-
-```mo
-{
-  renderConfig: {
-    table: {
-      columns: [
-        {
-          key: "assetName",
-          title: "资产名称",
-          type: "text",
-          width: "200px",
-          required: true,
-          editable: true
-        },
-        {
-          key: "specification",
-          title: "规格型号",
-          type: "text",
-          width: "150px"
-        },
-        {
-          key: "quantity",
-          title: "数量",
-          type: "number",
-          width: "100px",
-          editable: true
-        },
-        {
-          key: "status",
-          title: "状态",
-          type: "select",
-          width: "120px",
-          options: [
-            { label: "在库", value: "in_stock" },
-            { label: "在用", value: "in_use" },
-            { label: "维修", value: "maintenance" },
-            { label: "报废", value: "scrapped" }
-          ]
-        }
-      ],
-      summary: {
-        show: true,
-        label: "合计",
-        className: "font-bold",
-        style: { backgroundColor: "#f5f5f5" }
-      }
-    }
-  }
-}
-```
-
-2. 带计算字段的表格配置：
-
-```mo
-{
-  renderConfig: {
-    table: {
-      columns: [
-        {
-          key: "productName",
-          title: "产品名称",
-          type: "text",
-          width: "200px"
-        },
-        {
-          key: "price",
-          title: "单价",
-          type: "number",
-          width: "120px",
-          editable: true
-        },
-        {
-          key: "quantity",
-          title: "数量",
-          type: "number",
-          width: "100px",
-          editable: true
-        },
-        {
-          key: "amount",
-          title: "金额",
-          type: "number",
-          width: "150px",
-          calculate: {
-            formula: "price * quantity",
-            dependencies: ["price", "quantity"]
-          }
-        },
-        {
-          key: "tax",
-          title: "税额",
-          type: "number",
-          width: "150px",
-          calculate: {
-            formula: "amount * 0.13",
-            dependencies: ["amount"]
-          }
-        },
-        {
-          key: "totalAmount",
-          title: "价税合计",
-          type: "number",
-          width: "180px",
-          calculate: {
-            formula: "amount + tax",
-            dependencies: ["amount", "tax"]
-          }
-        }
-      ],
-      summary: {
-        show: true,
-        label: "合计"
-      }
-    }
-  }
-}
-```
-
-3. 带验证规则的表格配置：
-
-```mo
-{
-  renderConfig: {
-    table: {
-      columns: [
-        {
-          key: "startDate",
-          title: "开始日期",
-          type: "date",
-          width: "150px",
-          validators: [
-            (value, row) => {
-              if (row.endDate && value > row.endDate) {
-                return "开始日期不能晚于结束日期"
-              }
-            }
-          ]
-        },
-        {
-          key: "endDate",
-          title: "结束日期",
-          type: "date",
-          width: "150px",
-          validators: [
-            (value, row) => {
-              if (row.startDate && value < row.startDate) {
-                return "结束日期不能早于开始日期"
-              }
-            }
-          ]
-        },
-        {
-          key: "budget",
-          title: "预算金额",
-          type: "number",
-          width: "150px",
-          validators: [
-            (value) => {
-              if (value < 0) {
-                return "预算金额不能为负数"
-              }
-              if (value > 1000000) {
-                return "预算金额不能超过100万"
-              }
-            }
-          ]
-        }
-      ]
-    }
-  }
-}
-```
-
-4. 带资源选择的表格配置：
-
-```mo
-{
-  renderConfig: {
-    table: {
-      columns: [
-        {
-          key: "supplier",
-          title: "供应商",
-          type: "resource",
-          width: "200px",
-          resourceConfig: {
-            resourceName: "supplier",
-            appId: "your-app-id",
-            selectionMode: "single"
-          }
-        },
-        {
-          key: "contact",
-          title: "联系人",
-          type: "text",
-          width: "120px"
-        },
-        {
-          key: "phone",
-          title: "联系电话",
-          type: "tel",
-          width: "150px",
-          validators: [
-            (value) => {
-              if (!/^1[3-9]\d{9}$/.test(value)) {
-                return "请输入有效的手机号码"
-              }
-            }
-          ]
-        }
-      ]
-    }
-  }
-}
-```
-
 ## 流程确认配置
 
 ### ProcessStep
@@ -452,18 +369,6 @@ interface ProcessStep {
   description?: string // 步骤描述
   icon?: string // 步骤图标
   fields?: FormField[] // 步骤表单字段
-}
-```
-
-### FormRenderConfig
-
-表单渲染配置接口：
-
-```mo
-interface FormRenderConfig {
-  basicFields: FormField[] // 基础字段配置，用于渲染基本表单字段
-  table?: TableConfig // 表格配置，用于渲染动态表格
-  processSteps?: ProcessStep[] // 流程步骤配置，用于渲染流程确认步骤
 }
 ```
 
