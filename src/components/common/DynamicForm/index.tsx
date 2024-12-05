@@ -71,7 +71,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     if (config.renderConfig.tables && config.renderConfig.tables.length > 0) {
       setSelectedTable(config.renderConfig.tables[0].key)
     }
-  }, [config.renderConfig.tables])
+  }, [])
 
   const { form, submitForm } = useDynamicForm(config, initialValues)
   const [isEditing, setIsEditing] = useState(false)
