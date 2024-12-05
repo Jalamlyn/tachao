@@ -62,6 +62,8 @@ export interface FormField {
   max?: number
   step?: number
   layout?: "horizontal" | "vertical"
+  // 新增字段路径属性
+  path?: string
 }
 
 export interface FormFieldGroup {
@@ -208,9 +210,9 @@ export interface ValidationResult {
     [key: string]: string
   }
   categorizedErrors?: {
-    required?: string[]
-    invalid?: string[]
-    other?: string[]
+    required?: Array<{ field: string; message: string }>
+    invalid?: Array<{ field: string; message: string }>
+    other?: Array<{ field: string; message: string }>
   }
 }
 

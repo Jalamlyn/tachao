@@ -1,25 +1,37 @@
 import { DynamicFormConfig, FormField, TableColumn, ValidationResult, FormFieldGroup } from "../types"
+import { get, set } from "lodash"
 
 export class ValidationManager {
   // 统一处理表单级别校验
   static async validateForm(values: any, config: DynamicFormConfig): Promise<ValidationResult> {
     try {
-      // 1. 执行字段级别校验
-      const fieldErrors = await this.validateFields(values, config)
+      // 1. 收集所有需要校验的字段
+      const fields = this.collectFormFields(config)
 
-      if (Object.keys(fieldErrors).length > 0) {
+      // 2. 执行字段校验
+      const errors: Record<string, string> = {}
+      
+      for (const field of fields) {
+        const value = get(values, field.path)
+        const error = await this.validateField(field, value, values)
+        if (error) {
+          errors[field.path] = error
+        }
+      }
+
+      if (Object.keys(errors).length > 0) {
         // 对错误进行分类
-        const categorizedErrors = this.categorizeErrors(fieldErrors)
+        const categorizedErrors = this.categorizeErrors(errors)
 
         return {
           valid: false,
-          errors: Object.values(fieldErrors),
-          fields: fieldErrors,
+          errors: Object.values(errors),
+          fields: errors,
           categorizedErrors,
         }
       }
 
-      // 2. 执行表单级别校验
+      // 3. 执行表单级别校验
       if (config.validate) {
         const formValidation = await config.validate(values)
         return formValidation
@@ -35,116 +47,93 @@ export class ValidationManager {
     }
   }
 
-  private static getNestedValue(obj: any, path: string): any {
-    const parts = path.split(".")
-    let value = obj
-    for (const part of parts) {
-      if (value === undefined || value === null) return undefined
-      value = value[part]
-    }
-    return value
-  }
+  // 收集所有需要校验的字段
+  private static collectFormFields(config: DynamicFormConfig): Array<{
+    path: string
+    label: string
+    type: string
+    required?: boolean
+    validators?: Array<(value: any, allValues?: any) => string | undefined>
+  }> {
+    const fields: any[] = []
 
-  private static async validateGroupFields(
-    groups: FormFieldGroup[],
-    values: any,
-    parentPath: string = ""
-  ): Promise<Record<string, string>> {
-    const errors: Record<string, string> = {}
-
-    for (const group of groups) {
-      for (const field of group.fields) {
-        // 构建字段路径
-        const fieldPath = parentPath ? `${parentPath}.${field.name}` : field.name
-
-        // 获取字段值
-        const fieldValue = parentPath ? this.getNestedValue(values, fieldPath) : values[field.name]
-
-        const error = await this.validateField(field, fieldValue, values)
-
-        if (error) {
-          errors[fieldPath] = `[${group.title}] ${error}`
-        }
-      }
-    }
-
-    return errors
-  }
-
-  // 统一处理字段级别校验
-  static async validateFields(values: any, config: DynamicFormConfig): Promise<Record<string, string>> {
-    const errors: Record<string, string> = {}
-
-    try {
-      // 校验基本字段
-      const basicFields = config.renderConfig.basicFields
-
-      // 修改判断逻辑：先检查是否是分组配置
-      if (basicFields?.groups) {
+    // 处理基本字段
+    const basicFields = config.renderConfig.basicFields
+    if (basicFields) {
+      if ("groups" in basicFields) {
         // 处理分组字段
-        const groupErrors = await this.validateGroupFields(basicFields.groups, values)
-        Object.assign(errors, groupErrors)
+        basicFields.groups.forEach(group => {
+          group.fields.forEach(field => {
+            fields.push({
+              ...field,
+              path: field.name,
+            })
+          })
+        })
       } else if (Array.isArray(basicFields)) {
         // 处理字段数组
-        for (const field of basicFields) {
-          const error = await this.validateField(field, values[field.name], values)
-          if (error) {
-            errors[field.name] = error
-          }
-        }
-      } else {
-        throw new Error("Invalid basicFields configuration")
+        basicFields.forEach(field => {
+          fields.push({
+            ...field,
+            path: field.name,
+          })
+        })
       }
-
-      // 校验表格字段
-      if (config.renderConfig.table?.columns) {
-        const tableData = values.tableData || []
-        for (let index = 0; index < tableData.length; index++) {
-          const row = tableData[index]
-          for (const column of config.renderConfig.table.columns) {
-            const error = await this.validateTableCell(column, row[column.key], row)
-            if (error) {
-              errors[`tableData.${index}.${column.key}`] = error
-            }
-          }
-        }
-      }
-
-      // 校验流程确认字段
-      if (config.renderConfig.processSteps) {
-        const processConfirmations = values.processConfirmations || {}
-        for (const step of config.renderConfig.processSteps) {
-          if (step.fields) {
-            const stepData = processConfirmations[step.key]?.formData || {}
-            const stepErrors = await this.validateGroupFields(
-              [{ key: step.key, title: step.title, fields: step.fields }],
-              stepData,
-              `processConfirmations.${step.key}.formData`
-            )
-            Object.assign(errors, stepErrors)
-          }
-        }
-      }
-
-      return errors
-    } catch (error) {
-      throw error
     }
+
+    // 处理表格字段
+    if (config.renderConfig.table?.columns) {
+      config.renderConfig.table.columns.forEach(column => {
+        if (column.required) {
+          fields.push({
+            path: `tableData.${column.key}`,
+            label: column.title,
+            type: column.type,
+            required: true,
+          })
+        }
+      })
+    }
+
+    // 处理流程确认字段
+    if (config.renderConfig.processSteps) {
+      config.renderConfig.processSteps.forEach(step => {
+        if (step.fields) {
+          step.fields.forEach(field => {
+            fields.push({
+              ...field,
+              path: `processConfirmations.${step.key}.formData.${field.name}`,
+            })
+          })
+        }
+      })
+    }
+
+    return fields
   }
 
-  // 统一处理单个字段校验
-  static async validateField(field: FormField, value: any, allValues: any): Promise<string | undefined> {
+  // 校验单个字段
+  private static async validateField(
+    field: {
+      path: string
+      label: string
+      type: string
+      required?: boolean
+      validators?: Array<(value: any, allValues?: any) => string | undefined>
+    },
+    value: any,
+    allValues: any
+  ): Promise<string | undefined> {
     try {
       // 必填校验
       if (field.required) {
         if (field.type === "resource") {
-          // 对resource类型进行特殊处理
           if (!value || typeof value !== "object" || Object.keys(value).length === 0) {
             return `${field.label}不能为空`
           }
           // 检查资料对象的关键属性是否存在
-          const requiredProps = ["id", "title"] // 可以根据实际需求调整必需属性
-          const missingProps = requiredProps.filter((prop) => !value[prop])
+          const requiredProps = ["id", "title"]
+          const missingProps = requiredProps.filter(prop => !value[prop])
           if (missingProps.length > 0) {
             return `${field.label}数据不完整`
           }
@@ -179,135 +168,95 @@ export class ValidationManager {
     }
   }
 
-  // 统一处理表格单元格校验
-  static async validateTableCell(column: TableColumn, value: any, row: any): Promise<string | undefined> {
-    try {
-      if (column.required) {
-        if (column.type === "resource") {
-          // 对表格中的resource类型进行特殊处理
-          if (!value || typeof value !== "object" || Object.keys(value).length === 0) {
-            return `${column.title}不能为空`
+  // 校验字段类型
+  private static validateFieldType(type: string, value: any): string | undefined {
+    if (!value) return undefined
+
+    switch (type) {
+      case "resource":
+        if (value && typeof value === "object") {
+          if (!value.id || !value.title) {
+            return "资料数据格式无效"
           }
-          // 检查资料对象的关键属性是否存在
-          const requiredProps = ["id", "title"]
-          const missingProps = requiredProps.filter((prop) => !value[prop])
-          if (missingProps.length > 0) {
-            return `${column.title}数据不完整`
-          }
-        } else if (value === undefined || value === null || value === "") {
-          return `${column.title}不能为空`
         }
-      }
-
-      // 类型校验
-      const typeError = this.validateFieldType(column.type, value)
-      if (typeError) {
-        return typeError
-      }
-
-      return undefined
-    } catch (error) {
-      throw error
+        break
+      case "signature":
+        if (typeof value === "string" && /^data:image\/[a-z]+;base64,/.test(value)) {
+          return undefined
+        }
+        return "请输入有效的signature数据"
+      case "number":
+        if (isNaN(Number(value))) {
+          return "请输入有效的数字"
+        }
+        break
+      case "email":
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          return "请输入有效的邮箱地址"
+        }
+        break
+      case "tel":
+        if (!/^1[3-9]\d{9}$/.test(value)) {
+          return "请输入有效的手机号码"
+        }
+        break
+      case "url":
+        try {
+          new URL(value)
+        } catch {
+          return "请输入有效的URL地址"
+        }
+        break
+      case "date":
+      case "datetime":
+        if (isNaN(Date.parse(value))) {
+          return "请输入有效的日期"
+        }
+        break
     }
-  }
 
-  // 统一处理字段类型校验
-  static validateFieldType(type: string, value: any): string | undefined {
-    try {
-      if (!value) return undefined
-      switch (type) {
-        case "resource":
-          if (value && typeof value === "object") {
-            // 资料类型的基本格式验证
-            if (!value.id || !value.title) {
-              return "资料数据格式无效"
-            }
-          }
-          break
-        case "signature":
-          if (typeof value === "string" && /^data:image\/[a-z]+;base64,/.test(value)) {
-            return undefined
-          }
-          return "请输入有效的signature数据"
-        case "number":
-          if (isNaN(Number(value))) {
-            return "请输入有效的数字"
-          }
-          break
-        case "email":
-          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-            return "请输入有效的邮箱地址"
-          }
-          break
-        case "tel":
-          if (!/^1[3-9]\d{9}$/.test(value)) {
-            return "请输入有效的手机号码"
-          }
-          break
-        case "url":
-          try {
-            new URL(value)
-          } catch {
-            return "请输入有效的URL地址"
-          }
-          break
-        case "date":
-        case "datetime":
-          if (isNaN(Date.parse(value))) {
-            return "请输入有效的日期"
-          }
-          break
-      }
-
-      return undefined
-    } catch (error) {
-      throw error
-    }
+    return undefined
   }
 
   // 对错误进行分类
-  static categorizeErrors(errors: Record<string, string>): {
+  private static categorizeErrors(errors: Record<string, string>): {
     required?: Array<{ field: string; message: string }>
     invalid?: Array<{ field: string; message: string }>
     other?: Array<{ field: string; message: string }>
   } {
-    try {
-      const categorized: {
-        required?: Array<{ field: string; message: string }>
-        invalid?: Array<{ field: string; message: string }>
-        other?: Array<{ field: string; message: string }>
-      } = {}
+    const categorized: {
+      required?: Array<{ field: string; message: string }>
+      invalid?: Array<{ field: string; message: string }>
+      other?: Array<{ field: string; message: string }>
+    } = {}
 
-      Object.entries(errors).forEach(([field, error]) => {
-        // 提取分组信息（如果存在）
-        const groupMatch = error.match(/\[(.*?)\]/)
-        const groupInfo = groupMatch ? groupMatch[1] + " - " : ""
-        const cleanError = error.replace(/\[.*?\]\s*/, "")
+    Object.entries(errors).forEach(([field, error]) => {
+      // 提取分组信息（如果存在）
+      const groupMatch = error.match(/\[(.*?)\]/)
+      const groupInfo = groupMatch ? groupMatch[1] + " - " : ""
+      const cleanError = error.replace(/\[.*?\]\s*/, "")
 
-        if (cleanError.includes("不能为空") || cleanError.includes("数据不完整")) {
-          categorized.required = categorized.required || []
-          categorized.required.push({
-            field,
-            message: `${groupInfo}${cleanError}`,
-          })
-        } else if (cleanError.includes("有效") || cleanError.includes("格式") || cleanError.includes("类型")) {
-          categorized.invalid = categorized.invalid || []
-          categorized.invalid.push({
-            field,
-            message: `${groupInfo}${cleanError}`,
-          })
-        } else {
-          categorized.other = categorized.other || []
-          categorized.other.push({
-            field,
-            message: `${groupInfo}${cleanError}`,
-          })
-        }
-      })
+      if (cleanError.includes("不能为空") || cleanError.includes("数据不完整")) {
+        categorized.required = categorized.required || []
+        categorized.required.push({
+          field,
+          message: `${groupInfo}${cleanError}`,
+        })
+      } else if (cleanError.includes("有效") || cleanError.includes("格式") || cleanError.includes("类型")) {
+        categorized.invalid = categorized.invalid || []
+        categorized.invalid.push({
+          field,
+          message: `${groupInfo}${cleanError}`,
+        })
+      } else {
+        categorized.other = categorized.other || []
+        categorized.other.push({
+          field,
+          message: `${groupInfo}${cleanError}`,
+        })
+      }
+    })
 
-      return categorized
-    } catch (error) {
-      throw error
-    }
+    return categorized
   }
 }
