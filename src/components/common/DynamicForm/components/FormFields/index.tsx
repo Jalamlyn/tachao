@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { UseFormReturn } from "react-hook-form"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
@@ -27,6 +27,17 @@ interface DynamicFormFieldsProps {
 }
 
 const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isEditable, onChange }) => {
+  const [manualInputModes, setManualInputModes] = useState<Record<string, boolean>>({})
+
+  const toggleManualInput = (fieldName: string) => {
+    setManualInputModes(prev => ({
+      ...prev,
+      [fieldName]: !prev[fieldName]
+    }))
+    // 切换时清空字段值
+    form.setValue(fieldName, {})
+  }
+
   const renderField = (field: DynamicFormField) => {
     if (field.hidden) return null
 
@@ -339,19 +350,66 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             required={field.required}
           >
             {(formField) => (
-              <ResourceFieldGroup
-                resourceTitle={field.resourceConfig?.resourceTitle || ""}
-                value={formField.value}
-                onChange={(value) => {
-                  formField.onChange(value)
-                  onChange?.(field.name, value)
-                }}
-                disabled={!isEditable || field.disabled}
-                onDataSelect={(data) => {
-                  console.log("Selected data:", data)
-                }}
-                form={form}
-              />
+              <div className="space-y-2">
+                {field.resourceConfig?.allowManualInput && (
+                  <div className="flex justify-end">
+                    <Button
+                      size="sm"
+                      variant="light"
+                      color={manualInputModes[field.name] ? "primary" : "default"}
+                      onPress={() => toggleManualInput(field.name)}
+                      startContent={
+                        <Icon
+                          icon={manualInputModes[field.name] ? "mdi:keyboard" : "mdi:database-search"}
+                          className="w-4 h-4"
+                        />
+                      }
+                    >
+                      {manualInputModes[field.name] ? "切换到选择模式" : "切换到手动输入"}
+                    </Button>
+                  </div>
+                )}
+                {manualInputModes[field.name] && field.resourceConfig?.allowManualInput ? (
+                  <div className="space-y-3 p-3 border rounded-lg">
+                    {field.resourceConfig.manualInputFields?.map((inputField) => (
+                      <div key={inputField.key} className="space-y-1">
+                        <label className="text-sm font-medium text-gray-700">
+                          {inputField.label}
+                          {inputField.required && <span className="text-red-500 ml-1">*</span>}
+                        </label>
+                        <Input
+                          type={inputField.type || "text"}
+                          value={formField.value?.[inputField.key] || ""}
+                          onChange={(e) => {
+                            const newValue = {
+                              ...formField.value,
+                              [inputField.key]: e.target.value,
+                            }
+                            formField.onChange(newValue)
+                            onChange?.(field.name, newValue)
+                          }}
+                          className="w-full"
+                          required={inputField.required}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <ResourceFieldGroup
+                    resourceTitle={field.resourceConfig?.resourceTitle || ""}
+                    value={formField.value}
+                    onChange={(value) => {
+                      formField.onChange(value)
+                      onChange?.(field.name, value)
+                    }}
+                    disabled={!isEditable || field.disabled}
+                    onDataSelect={(data) => {
+                      console.log("Selected data:", data)
+                    }}
+                    form={form}
+                  />
+                )}
+              </div>
             )}
           </FormFieldWrapper>
         )
@@ -495,6 +553,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
         return null
     }
   }
+
   return (
     <div className={cn("grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6", "form-fields-container")}>
       {fields.map((field) => (
@@ -505,7 +564,6 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             "form-field-wrapper",
             "hover:bg-gray-50/50 rounded-lg p-2 -m-2",
             "transition-colors duration-200",
-            // 为 resource 类型字段添加跨列类名
             field.type === "resource" && "md:col-span-2"
           )}
         >

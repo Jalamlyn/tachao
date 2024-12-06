@@ -24,6 +24,13 @@ export type FormFieldType =
 
 export interface ResourceConfig {
   resourceTitle: string
+  allowManualInput?: boolean
+  manualInputFields?: Array<{
+    key: string
+    label: string
+    type?: "text" | "number" | "email" | "tel"
+    required?: boolean
+  }>
 }
 
 export interface FormField {
