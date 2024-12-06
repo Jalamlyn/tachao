@@ -180,6 +180,30 @@ const MessageCard = React.memo(
                     if (children && children.toString().startsWith("<shata-ai-scene>")) {
                       return "分析用户意图..."
                     }
+                    if (children && children.toString().includes("</shata-ai-form>")) {
+                      return "✔️ 表单配置生成完成"
+                    }
+                    if (children && children.toString().startsWith("<shata-ai-form>")) {
+                      return "正在生成表单配置..."
+                    }
+                    if (children && children.toString().includes("</shata-ai-error>")) {
+                      return "❌ 错误信息"
+                    }
+                    if (children && children.toString().startsWith("<shata-ai-error>")) {
+                      return "检测到错误..."
+                    }
+                    if (children && children.toString().includes("</shata-ai-response>")) {
+                      return "✔️ 响应完成"
+                    }
+                    if (children && children.toString().startsWith("<shata-ai-response>")) {
+                      return "正在生成响应..."
+                    }
+                    if (children && children.toString().includes("</shata-ai-code>")) {
+                      return "✔️ 代码生成完成"
+                    }
+                    if (children && children.toString().startsWith("<shata-ai-code>")) {
+                      return "正在生成代码..."
+                    }
 
                     return (
                       <code {...props} className={className}>
