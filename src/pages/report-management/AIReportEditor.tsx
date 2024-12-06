@@ -250,7 +250,7 @@ const AIReportEditor: React.FC = () => {
     setSavedReportId,
     setIsSuccessModalOpen,
     setPendingVersionSave,
-    setVersionSelectModalOpen,
+    setIsVersionSelectModalOpen,  // 修复：传入 setIsVersionSelectModalOpen
     updateReport,
     createReport
   )
