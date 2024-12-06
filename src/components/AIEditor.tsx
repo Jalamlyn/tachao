@@ -178,6 +178,13 @@ const AIEditor: React.FC<AIEditorProps> = ({
         rawConfig: editedCode
       })
 
+      // 通知父组件更新状态
+      onCommandResult({
+        success: true,
+        config: parsedConfig.config,
+        rawConfig: editedCode
+      })
+
       setIsEditing(false)
       message.success("保存成功")
     } catch (error) {
