@@ -1,8 +1,7 @@
 import { markdown as dynamicFormAdvanced } from "@/components/common/DynamicForm/docs/dynamic-form-advanced.md"
 import { markdown as dynamicForm } from "@/components/common/DynamicForm/docs/dynamic-form.md"
 import { markdown as fieldTypes } from "@/components/common/DynamicForm/docs/field-types.md"
-import { markdown as formulaService } from "@/services/formulaService.md"
-import { processStepsGuide } from "./processStepsGuide"
+import { markdown as exampleAssetManagement } from "@/components/common/DynamicForm/docs/example-asset-management.md"
 import { resourceFieldGuide } from "./resourceFieldGuide"
 
 const generateFormAgentPrompt = (rawConfig: string | null) => `你是一个专业的表单设计助手，负责帮助用户创建和优化表单。
@@ -204,10 +203,9 @@ ${dynamicForm}
 ${dynamicFormAdvanced}
 ${fieldTypes}
 ${resourceFieldGuide}
-${processStepsGuide}
 
-# 动态表单计算公式文档
-${formulaService}
+# 表单配置示例
+${exampleAssetManagement}
 </doc>
 - 仔细阅读 doc 来编写配置，不能编写超出 doc 范围的代码
 - 阅读完 doc 和用户需求之后要进行思考和反思`

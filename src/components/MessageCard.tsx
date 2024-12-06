@@ -181,10 +181,10 @@ const MessageCard = React.memo(
                       return "分析用户意图..."
                     }
                     if (children && children.toString().includes("</shata-ai-form>")) {
-                      return "✔️ 表单配置生成完成"
+                      return "✔️ 表单开发完成"
                     }
                     if (children && children.toString().startsWith("<shata-ai-form>")) {
-                      return "正在生成表单配置..."
+                      return "正在开发表单..."
                     }
                     if (children && children.toString().includes("</shata-ai-error>")) {
                       return "❌ 错误信息"
