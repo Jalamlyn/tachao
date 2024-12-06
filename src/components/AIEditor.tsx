@@ -30,6 +30,7 @@ interface AIEditorProps {
   selectedTab: string
   onTabChange: (key: string) => void
   onCommandResult: (result: any) => void
+  onClearMessages?: () => void // 新增清空消息的回调
   agent: {
     processCommand: (command: string) => Promise<any>
     cacheImage?: (imageData: string) => void
@@ -146,6 +147,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
   selectedTab,
   onTabChange,
   onCommandResult,
+  onClearMessages,
   agent,
   versionControl,
   renderPreview,
@@ -159,6 +161,8 @@ const AIEditor: React.FC<AIEditorProps> = ({
   // 添加编辑状态管理
   const [isEditing, setIsEditing] = useState(false)
   const [editedCode, setEditedCode] = useState("")
+  // 添加确认对话框状态
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   useEffect(() => {
     setCurrentVersion(versionControl.getCurrentVersion())
@@ -201,11 +205,31 @@ const AIEditor: React.FC<AIEditorProps> = ({
     setIsEditing(false)
   }
 
+  // 处理清空消息
+  const handleClearMessages = () => {
+    if (onClearMessages) {
+      onClearMessages()
+      message.success("对话已清空")
+    }
+  }
+
   return (
     <div className='h-[calc(100vh-140px)] overflow-hidden'>
       <ResizablePanelGroup direction='horizontal' className='h-full p-2'>
         <ResizablePanel defaultSize={50} className='resizable-panel'>
           <div className='h-full flex flex-col'>
+            <div className='flex justify-between items-center p-2 border-b'>
+              <h3 className='text-lg font-medium'>对话</h3>
+              <Button
+                size='sm'
+                variant='light'
+                color='primary'
+                onClick={handleClearMessages}
+                startContent={<Icon icon='mdi:refresh' className='w-4 h-4' />}
+              >
+                新对话
+              </Button>
+            </div>
             <ScrollShadow className='flex-1 overflow-y-auto pb-9'>
               <div className='space-y-4'>
                 {messages.map((message) => (
