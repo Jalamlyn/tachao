@@ -62,6 +62,7 @@ export class AIReportAgent {
   private _data: ProcessedData | null = null
   private _rawConfig: string | null = null
   private _templateInfoMap: Record<string, string> = {}
+  private lastResponseRef: string = ""
 
   private constructor() {
     console.log("[AIReportAgent] Instance created")
@@ -194,11 +195,11 @@ export class AIReportAgent {
         { role: "user", content: command },
       ]
 
-      let aiResponse = ""
+      this.lastResponseRef = ""
       await chatChunk(
         messages,
         (chunk: string) => {
-          aiResponse += chunk
+          this.lastResponseRef += chunk
           onChunk?.(chunk)
         },
         () => {},
@@ -209,14 +210,14 @@ export class AIReportAgent {
       console.log("[AIReportAgent] AI response received")
 
       const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
-      const match = aiResponse.match(regex)
+      const match = this.lastResponseRef.match(regex)
       if (!match) {
         console.error("[AIReportAgent] No valid analysis code found in AI response")
         throw new Error("No valid analysis code found in AI response")
       }
       const generatedCode = match[1].trim()
 
-      if (!this.validateConfig(aiResponse)) {
+      if (!this.validateConfig(this.lastResponseRef)) {
         throw new Error("Invalid generated configuration")
       }
 

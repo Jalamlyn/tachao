@@ -51,7 +51,7 @@ const AIReportEditor: React.FC = () => {
   const [templateInfoMap, setTemplateInfoMap] = useState<TemplateInfoMap>({})
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
   const templateInfoMapRef = useRef<TemplateInfoMap>({})
-  const accumulatedTextRef = useRef("")
+  const lastResponseRef = useRef("")
   const { getDetail: getReportDetail } = useMetadata("report")
   const { loadFilteredDetails: loadFormFilteredDetails } = useMetadata("form")
   const { loadFilteredDetails: loadTemplateFilteredDetails } = useMetadata("template")
@@ -70,16 +70,64 @@ const AIReportEditor: React.FC = () => {
     rawConfig: string | null
   }>()
 
-  const { reportAgent } = useAgent(
-    accumulatedTextRef,
-    setMessages,
-    previewContent,
-    setSelectedTab,
-    setPreviewContent,
-    versionControl,
-    processedData,
-    reportId
+  const handleChunk = useCallback(
+    (chunk: string) => {
+      lastResponseRef.current += chunk
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1]
+        return [
+          ...prev.slice(0, -1),
+          {
+            ...lastMessage,
+            content: lastMessage.content + chunk,
+            status: chunk ? "streaming" : lastMessage.status,
+          },
+        ]
+      })
+    },
+    [setMessages]
   )
+
+  const reportAgent = {
+    processCommand: async (command: string) => {
+      try {
+        lastResponseRef.current = ""
+        const userMessage: Message = {
+          role: "user",
+          content: command,
+          id: Date.now().toString(),
+          timestamp: new Date().toLocaleTimeString(),
+        }
+        setMessages((prev) => [...prev, userMessage])
+
+        const assistantMessage: Message = {
+          role: "assistant",
+          content: "",
+          id: (Date.now() + 1).toString(),
+          timestamp: new Date().toLocaleTimeString(),
+          status: "thinking",
+        }
+        setMessages((prev) => [...prev, assistantMessage])
+
+        // 获取当前版本的配置
+        const currentVersion = versionControl.getCurrentVersion()
+
+        const result = await AIReportAgent.processCommand({
+          data: processedData,
+          command: command,
+          onChunk: handleChunk,
+          // 如果是更新模式(有 reportId)且有现有配置,则传入 rawConfig
+          ...(reportId && currentVersion?.rawConfig ? { rawConfig: currentVersion.rawConfig } : {}),
+        })
+
+        return result
+      } catch (error) {
+        console.error("Error in chat:", error)
+        message.error("分析过程中发生错误")
+        throw error
+      }
+    },
+  }
 
   useLoadData(
     reportId,
@@ -135,15 +183,62 @@ const AIReportEditor: React.FC = () => {
     }
   }
 
-  const handleCommandResult = useCommandResult(
-    versionControl,
-    processedDataRef,
-    setPreviewComponent,
-    setPreviewContent,
-    AnalysisResult,
-    setMessages,
-    setSelectedTab,
-    processedData
+  const handleCommandResult = useCallback(
+    async (result) => {
+      if (result.success) {
+        if (result.rawConfig) {
+          // 保存新版本
+          versionControl.addVersion({
+            rawConfig: result.rawConfig,
+          })
+
+          // 使用 rawConfig 分析数据
+          const analysis = await AIReportAgent.analyzeData(processedDataRef.current, result.rawConfig)
+
+          // 设置预览组件
+          setPreviewComponent(
+            <ErrorBoundary
+              onReset={() => {
+                const prevVersion = versionControl.rollback()
+                if (prevVersion) {
+                  setPreviewContent(prevVersion.rawConfig || "")
+                  AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
+                    .then((analysis) => {
+                      setPreviewComponent(<AnalysisResult analysis={analysis} />)
+                    })
+                    .catch((error) => {
+                      message.error("分析数据失败")
+                      console.error(error)
+                    })
+                }
+              }}
+            >
+              <AnalysisResult analysis={analysis} />
+            </ErrorBoundary>
+          )
+
+          // 更新消息状态
+          setMessages((prev) => {
+            const lastMessage = prev[prev.length - 1]
+            if (lastMessage.role === "assistant") {
+              return [
+                ...prev.slice(0, -1),
+                {
+                  ...lastMessage,
+                  content: lastResponseRef.current,
+                  status: "success",
+                },
+              ]
+            }
+            return prev
+          })
+
+          // 切换到预览标签
+          setSelectedTab("preview")
+        }
+      }
+    },
+    [processedData, versionControl]
   )
 
   const { isLoading: isSaving, handleClick: handleSaveReport } = useSave(
@@ -155,7 +250,7 @@ const AIReportEditor: React.FC = () => {
     setSavedReportId,
     setIsSuccessModalOpen,
     setPendingVersionSave,
-    setIsVersionSelectModalOpen,
+    setVersionSelectModalOpen,
     updateReport,
     createReport
   )
@@ -208,7 +303,7 @@ const AIReportEditor: React.FC = () => {
   )
 
   return (
-    <PageLayout title='AI 报表助手' titleIcon='hugeicons:ai-chat-02' className='p-0' actions={pageActions}>
+    <PageLayout title='AI 报表助手' titleIcon='mdi:form-select' className='p-0' actions={pageActions}>
       <AIEditor
         parseConfig={async (code) => {
           // 使用报表的解析方法
