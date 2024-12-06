@@ -250,7 +250,7 @@ const AIReportEditor: React.FC = () => {
     setSavedReportId,
     setIsSuccessModalOpen,
     setPendingVersionSave,
-    setIsVersionSelectModalOpen,  // 修复：传入 setIsVersionSelectModalOpen
+    setIsVersionSelectModalOpen, // 修复：传入 setIsVersionSelectModalOpen
     updateReport,
     createReport
   )
@@ -313,7 +313,7 @@ const AIReportEditor: React.FC = () => {
         messages={messages}
         selectedTab={selectedTab}
         onTabChange={setSelectedTab}
-        onCommandResult={handleCodeEditResult}
+        onCommandResult={handleCommandResult}
         agent={reportAgent}
         versionControl={versionControl}
         renderPreview={(version) => {
