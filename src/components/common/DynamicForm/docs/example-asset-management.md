@@ -124,6 +124,15 @@ config:{
               required: true,
               resourceConfig: {
                 resourceTitle: "供应商主数据",
+                // 新增：允许手动输入配置
+                allowManualInput: true,
+                manualInputFields: [
+                  { key: "name", label: "供应商名称", required: true },
+                  { key: "code", label: "供应商编号" },
+                  { key: "contact", label: "联系人" },
+                  { key: "phone", label: "联系电话", type: "tel" },
+                  { key: "address", label: "地址", type: "text" }
+                ]
               },
             },
             {
@@ -172,6 +181,12 @@ config:{
               required: true,
               resourceConfig: {
                 resourceTitle: "员工主数据",
+                allowManualInput: true,
+                manualInputFields: [
+                  { key: "name", label: "姓名", required: true },
+                  { key: "employeeId", label: "工号" },
+                  { key: "department", label: "部门" }
+                ]
               },
             },
             {
@@ -181,6 +196,11 @@ config:{
               required: true,
               resourceConfig: {
                 resourceTitle: "部门主数据",
+                allowManualInput: true,
+                manualInputFields: [
+                  { key: "name", label: "部门名称", required: true },
+                  { key: "code", label: "部门编码" }
+                ]
               },
             },
             {
@@ -255,6 +275,13 @@ config:{
               type: "resource",
               resourceConfig: {
                 resourceTitle: "员工主数据",
+                allowManualInput: true,
+                manualInputFields: [
+                  { key: "name", label: "姓名", required: true },
+                  { key: "employeeId", label: "工号" },
+                  { key: "department", label: "部门" },
+                  { key: "phone", label: "联系电话", type: "tel" }
+                ]
               },
             },
             {
@@ -305,6 +332,12 @@ config:{
             type: "resource",
             resourceConfig: {
               resourceTitle: "员工主数据",
+              allowManualInput: true,
+              manualInputFields: [
+                { key: "name", label: "姓名", required: true },
+                { key: "employeeId", label: "工号" },
+                { key: "department", label: "部门" }
+              ]
             },
           },
           {
@@ -358,6 +391,13 @@ config:{
             type: "resource",
             resourceConfig: {
               resourceTitle: "员工主数据",
+              allowManualInput: true,
+              manualInputFields: [
+                { key: "name", label: "姓名", required: true },
+                { key: "employeeId", label: "工号" },
+                { key: "department", label: "部门" },
+                { key: "qualification", label: "评估资质" }
+              ]
             },
           },
           {
@@ -405,6 +445,13 @@ config:{
             type: "resource",
             resourceConfig: {
               resourceTitle: "员工主数据",
+              allowManualInput: true,
+              manualInputFields: [
+                { key: "name", label: "姓名", required: true },
+                { key: "employeeId", label: "工号" },
+                { key: "department", label: "部门" },
+                { key: "position", label: "职位" }
+              ]
             },
           },
           {

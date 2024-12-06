@@ -96,6 +96,43 @@ DynamicForm 支持丰富的字段类型，以满足各种表单场景需求。
 }
 ```
 
+### 资源选择字段
+```typescript
+{
+  name: "supplier",
+  label: "供应商",
+  type: "resource",
+  required: true,
+  resourceConfig: {
+    resourceTitle: "供应商主数据",
+    // 新增：允许手动输入配置
+    allowManualInput: true,
+    manualInputFields: [
+      { 
+        key: "name", 
+        label: "名称", 
+        type: "text",
+        required: true 
+      },
+      { 
+        key: "code", 
+        label: "编号", 
+        type: "text" 
+      },
+      { 
+        key: "contact", 
+        label: "联系人" 
+      },
+      { 
+        key: "phone", 
+        label: "电话", 
+        type: "tel" 
+      }
+    ]
+  }
+}
+```
+
 ## 通用字段属性
 
 所有字段类型都支持以下通用属性：
@@ -133,6 +170,21 @@ DynamicForm 支持丰富的字段类型，以满足各种表单场景需求。
 | max | number | 最大值 |
 | step | number | 步长 |
 
+### Resource
+| 属性名 | 类型 | 说明 |
+|--------|------|------|
+| resourceTitle | string | 资源标题（必填） |
+| allowManualInput | boolean | 是否允许手动输入 |
+| manualInputFields | Array | 手动输入字段配置 |
+
+#### ManualInputField 配置
+| 属性名 | 类型 | 说明 |
+|--------|------|------|
+| key | string | 字段键名（必填） |
+| label | string | 字段标签（必填） |
+| type | "text" \| "number" \| "email" \| "tel" | 输入类型 |
+| required | boolean | 是否必填 |
+
 ## 最佳实践
 
 1. 字段命名
@@ -150,8 +202,15 @@ DynamicForm 支持丰富的字段类型，以满足各种表单场景需求。
    - 使用 tooltip 提供帮助信息
    - 保持表单布局的一致性
 
-4. 新增控件使用建议
+4. 资源字段使用建议
+   - 优先使用资源选择模式
+   - 在无可选数据时启用手动输入
+   - 合理配置必填字段
+   - 提供清晰的字段说明
+
+5. 新增控件使用建议
    - Radio：适用于单选且选项较少的场景
    - Checkbox：适用于多选场景
    - Switch：适用于开关切换场景
    - Slider：适用于数值范围选择场景
+   - Resource：适用于主数据选择场景，支持手动输入作为备选方案

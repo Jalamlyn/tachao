@@ -24,6 +24,17 @@ type FormFieldType =
   | "switch"
   | "slider"
 
+interface ResourceConfig {
+  resourceTitle: string
+  allowManualInput?: boolean
+  manualInputFields?: Array<{
+    key: string
+    label: string
+    type?: "text" | "number" | "email" | "tel"
+    required?: boolean
+  }>
+}
+
 interface FormField {
   name: string
   label: string
@@ -81,10 +92,6 @@ interface TableColumn {
   summary?: {
     calculate?: (records: any[]) => any
     render?: (value: any) => ReactNode
-  }
-  calculate?: {
-    formula: string
-    dependencies?: string[]
   }
 }
 
@@ -309,6 +316,44 @@ interface DynamicFormConfig {
 }
 ```
 
+### 资源字段配置（新增手动输入支持）
+
+```typescript
+{
+  name: "supplier",
+  label: "供应商",
+  type: "resource",
+  required: true,
+  resourceConfig: {
+    resourceTitle: "供应商主数据",
+    allowManualInput: true,
+    manualInputFields: [
+      {
+        key: "name",
+        label: "供应商名称",
+        type: "text",
+        required: true
+      },
+      {
+        key: "code",
+        label: "供应商编号",
+        type: "text"
+      },
+      {
+        key: "contact",
+        label: "联系人",
+        type: "text"
+      },
+      {
+        key: "phone",
+        label: "联系电话",
+        type: "tel"
+      }
+    ]
+  }
+}
+```
+
 ### 流程确认配置
 
 ```typescript
@@ -391,7 +436,14 @@ interface DynamicFormConfig {
               type: "resource",
               required: true,
               resourceConfig: {
-                resourceTitle: "客户主数据"
+                resourceTitle: "客户主数据",
+                allowManualInput: true,
+                manualInputFields: [
+                  { key: "name", label: "客户名称", required: true },
+                  { key: "code", label: "客户编号" },
+                  { key: "contact", label: "联系人" },
+                  { key: "phone", label: "联系电话", type: "tel" }
+                ]
               }
             }
           ]
@@ -430,7 +482,13 @@ interface DynamicFormConfig {
               type: "resource",
               required: true,
               resourceConfig: {
-                resourceTitle: "产品主数据"
+                resourceTitle: "产品主数据",
+                allowManualInput: true,
+                manualInputFields: [
+                  { key: "name", label: "产品名称", required: true },
+                  { key: "code", label: "产品编号" },
+                  { key: "spec", label: "规格" }
+                ]
               }
             },
             {
