@@ -62,6 +62,7 @@ interface AIFormState {
   handleTitleCancel: () => void
   handleVersionSelectConfirm: (useCurrentVersion: boolean) => Promise<void>
   handleVersionSelectCancel: () => void
+  clearMessages: () => void // 新增清空消息的action
 }
 
 // 创建防抖的状态更新函数
@@ -132,6 +133,9 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
   setSavedTemplateId: (id) => set({ savedTemplateId: id }),
   setPendingSave: (state) => set({ pendingSave: state }),
   setPendingVersionSave: (state) => set({ pendingVersionSave: state }),
+
+  // 新增清空消息的action
+  clearMessages: () => set({ messages: [] }),
 
   // 复合 actions
   handleTitleConfirm: async () => {
