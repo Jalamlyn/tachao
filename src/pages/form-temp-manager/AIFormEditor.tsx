@@ -225,7 +225,7 @@ const AIFormEditor: React.FC = () => {
     <Button
       color='primary'
       onClick={handleSaveTemplate}
-      isDisabled={!formState.formConfig || isSaving}
+      isDisabled={!formState.formConfig || !formState.rawConfig || isSaving}
       isLoading={isSaving}
       startContent={<Icon icon='mdi:content-save' className='w-4 h-4 mr-2' />}
     >
