@@ -222,6 +222,14 @@ const AIFormEditor: React.FC = () => {
     navigate("/we-chat-app/admin/documents")
   }
 
+  const handleCommandResult = (result: any) => {
+    if (result.success) {
+      setFormConfig(result.config)
+      setRawConfig(result.rawConfig)
+      setPreviewContent(result.rawConfig)
+    }
+  }
+
   const pageActions = (
     <Button
       color='primary'
@@ -247,11 +255,13 @@ const AIFormEditor: React.FC = () => {
   return (
     <PageLayout title='AI 表单助手' titleIcon='mdi:form-select' actions={pageActions}>
       <AIEditor
+        parseConfig={AIFormAgent.parseConfig}
         messages={messages}
         selectedTab={selectedTab}
         onTabChange={setSelectedTab}
         agent={formAgent}
         versionControl={versionControl}
+        onCommandResult={handleCommandResult}
         renderMessage={renderMessage}
         renderPreview={(version) => (
           <ErrorBoundary

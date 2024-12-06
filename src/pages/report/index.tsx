@@ -9,6 +9,7 @@ import { ReportLoading } from "@/pages/report/components/ReportLoading"
 import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
 import AIReportAgent from "@/service/agents/AIReportAgent"
 import { processReportData } from "@/utils/processReportData"
+import { ScrollShadow } from "@nextui-org/react"
 
 const Report: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>()
@@ -76,7 +77,9 @@ const Report: React.FC = () => {
       className='container mx-auto py-8 px-4'
     >
       <div className='max-w-[1200px] mx-auto'>
-        <AnalysisResult analysis={reportState.reportData} />
+        <ScrollShadow className='h-screen pb-8'>
+          <AnalysisResult analysis={reportState.reportData} />
+        </ScrollShadow>
       </div>
     </motion.div>
   )

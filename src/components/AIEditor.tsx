@@ -25,6 +25,7 @@ interface Message {
 }
 
 interface AIEditorProps {
+  parseConfig: any
   messages: Message[]
   selectedTab: string
   onTabChange: (key: string) => void
@@ -140,6 +141,7 @@ const ImageUploader: React.FC<{ agent: AIEditorProps["agent"] }> = ({ agent }) =
 
 const AIEditor: React.FC<AIEditorProps> = ({
   imageUpload = true,
+  parseConfig,
   messages,
   selectedTab,
   onTabChange,
@@ -147,7 +149,6 @@ const AIEditor: React.FC<AIEditorProps> = ({
   agent,
   versionControl,
   renderPreview,
-  renderCodeView,
   renderDataView,
   showDataTab = false,
   showCodeTab = false,
@@ -169,20 +170,21 @@ const AIEditor: React.FC<AIEditorProps> = ({
   // 处理保存编辑
   const handleSaveEdit = async () => {
     try {
-      // 解析编辑后的配置
-      const parsedConfig = await AIFormAgent.parseConfig(editedCode)
-      
+      // 使用传入的解析器或默认的表单解析器
+      const parser = parseConfig || AIFormAgent.parseConfig
+      const parsedConfig = await parser(editedCode)
+
       // 添加新版本
       versionControl.addVersion({
         formConfig: parsedConfig.config,
-        rawConfig: editedCode
+        rawConfig: editedCode,
       })
 
       // 通知父组件更新状态
       onCommandResult({
         success: true,
         config: parsedConfig.config,
-        rawConfig: editedCode
+        rawConfig: editedCode,
       })
 
       setIsEditing(false)

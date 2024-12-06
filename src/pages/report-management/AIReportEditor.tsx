@@ -110,6 +110,31 @@ const AIReportEditor: React.FC = () => {
     ])
   }, [])
 
+  const handleCodeEditResult = async (result: any) => {
+    if (result.success && result.rawConfig) {
+      try {
+        // 分析数据
+        const analysis = await AIReportAgent.analyzeData(processedData, result.rawConfig)
+
+        // 更新预览
+        setPreviewComponent(
+          <ErrorBoundary>
+            <AnalysisResult analysis={analysis} />
+          </ErrorBoundary>
+        )
+
+        // 更新内容
+        setPreviewContent(result.rawConfig)
+
+        // 切换到预览标签
+        setSelectedTab("preview")
+      } catch (error) {
+        console.error("分析数据失败:", error)
+        message.error("分析数据失败")
+      }
+    }
+  }
+
   const handleCommandResult = useCommandResult(
     versionControl,
     processedDataRef,
@@ -185,11 +210,15 @@ const AIReportEditor: React.FC = () => {
   return (
     <PageLayout title='AI 报表助手' titleIcon='hugeicons:ai-chat-02' className='p-0' actions={pageActions}>
       <AIEditor
+        parseConfig={async (code) => {
+          // 使用报表的解析方法
+          return await AIReportAgent.analyzeData(processedData, code)
+        }}
         imageUpload={false}
         messages={messages}
         selectedTab={selectedTab}
         onTabChange={setSelectedTab}
-        onCommandResult={handleCommandResult}
+        onCommandResult={handleCodeEditResult}
         agent={reportAgent}
         versionControl={versionControl}
         renderPreview={(version) => {
