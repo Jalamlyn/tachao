@@ -163,24 +163,15 @@ const AIFormEditor: React.FC = () => {
       accumulatedTextRef.current += chunk
       lastResponseRef.current = accumulatedTextRef.current
 
-      if (!currentMessageIdRef.current) {
-        const messageId = Date.now().toString()
-        currentMessageIdRef.current = messageId
-        addMessage({
-          role: "assistant",
-          content: accumulatedTextRef.current,
-          id: messageId,
-          timestamp: new Date().toLocaleTimeString(),
-          status: "streaming",
-        })
-      } else {
+      // 直接更新最后一条消息，不需要判断 currentMessageIdRef
+      if (accumulatedTextRef.current !== "") {
         updateLastMessage({
           content: accumulatedTextRef.current,
           status: "streaming",
         })
       }
     },
-    [addMessage, updateLastMessage]
+    [updateLastMessage]
   )
 
   const formAgent = getFormAgent(

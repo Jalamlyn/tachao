@@ -23,10 +23,7 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
 
     try {
       setIsLoading(true)
-      const result = await agent.processCommand(input, (chunk: string) => {
-        // 处理流式响应
-        // console.log("Chunk received:", chunk)
-      })
+      const result = await agent.processCommand(input)
 
       onResult?.(result)
       setInput("")

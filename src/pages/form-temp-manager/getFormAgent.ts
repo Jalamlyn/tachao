@@ -19,7 +19,15 @@ export const getFormAgent = (
       timestamp: new Date().toLocaleTimeString(),
     }
     addMessage(userMessage)
-
+    // 立即添加一个"正在思考"的 assistant 消息
+    const assistantMessage = {
+      role: "assistant",
+      content: "",
+      id: (Date.now() + 1).toString(),
+      timestamp: new Date().toLocaleTimeString(),
+      status: "thinking",
+    }
+    addMessage(assistantMessage)
     setPreviewContent("")
     accumulatedTextRef.current = ""
     currentMessageIdRef.current = null
