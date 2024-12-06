@@ -62,7 +62,6 @@ export interface FormField {
   max?: number
   step?: number
   layout?: "horizontal" | "vertical"
-  // 新增字段路径属性
   path?: string
 }
 
@@ -91,10 +90,6 @@ export interface TableColumn {
   summary?: {
     calculate?: (records: any[]) => any
     render?: (value: any) => ReactNode
-  }
-  calculate?: {
-    formula: string
-    dependencies?: string[]
   }
 }
 
@@ -242,9 +237,4 @@ export interface WatchUtils {
   watchFields: (fieldNames: string[], callback: (values: any[]) => void) => () => void
   batchUpdate: (updates: Array<{ field: string; value: any }>) => void
   setFieldVisibility: (fieldName: string, visible: boolean) => void
-}
-
-export interface CalculateConfig {
-  formula: string
-  dependencies?: string[]
 }
