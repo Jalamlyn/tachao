@@ -30,9 +30,9 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
   const [manualInputModes, setManualInputModes] = useState<Record<string, boolean>>({})
 
   const toggleManualInput = (fieldName: string) => {
-    setManualInputModes(prev => ({
+    setManualInputModes((prev) => ({
       ...prev,
-      [fieldName]: !prev[fieldName]
+      [fieldName]: !prev[fieldName],
     }))
     // 切换时清空字段值
     form.setValue(fieldName, {})
@@ -293,7 +293,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             required={field.required}
           >
             {(formField) => (
-              <div className="flex items-center gap-2">
+              <div className='flex items-center gap-2'>
                 <Switch
                   isSelected={formField.value}
                   onValueChange={(checked) => {
@@ -320,7 +320,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             required={field.required}
           >
             {(formField) => (
-              <div className="w-full px-2">
+              <div className='w-full px-2'>
                 <Slider
                   value={formField.value}
                   onChange={(value) => {
@@ -331,7 +331,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
                   max={field.max}
                   step={field.step}
                   isDisabled={!isEditable || field.disabled}
-                  className="max-w-md"
+                  className='max-w-md'
                 />
               </div>
             )}
@@ -350,18 +350,19 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
             required={field.required}
           >
             {(formField) => (
-              <div className="space-y-2">
+              <div className='space-y-4'>
+                {/* 切换按钮 - 确保这部分代码始终可见 */}
                 {field.resourceConfig?.allowManualInput && (
-                  <div className="flex justify-end">
+                  <div className='flex justify-end'>
                     <Button
-                      size="sm"
-                      variant="light"
+                      size='sm'
+                      variant='light'
                       color={manualInputModes[field.name] ? "primary" : "default"}
-                      onPress={() => toggleManualInput(field.name)}
+                      onPress={() => toggleManualInput(field.name, field)}
                       startContent={
                         <Icon
-                          icon={manualInputModes[field.name] ? "mdi:keyboard" : "mdi:database-search"}
-                          className="w-4 h-4"
+                          icon={manualInputModes[field.name] ? "mdi:database-search" : "mdi:keyboard"}
+                          className='w-4 h-4'
                         />
                       }
                     >
@@ -369,13 +370,15 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
                     </Button>
                   </div>
                 )}
-                {manualInputModes[field.name] && field.resourceConfig?.allowManualInput ? (
-                  <div className="space-y-3 p-3 border rounded-lg">
-                    {field.resourceConfig.manualInputFields?.map((inputField) => (
-                      <div key={inputField.key} className="space-y-1">
-                        <label className="text-sm font-medium text-gray-700">
+
+                {/* 内容区域 */}
+                {manualInputModes[field.name] ? (
+                  <div className='space-y-3 p-4 border rounded-lg bg-gray-50/50'>
+                    {field.resourceConfig?.manualInputFields?.map((inputField) => (
+                      <div key={inputField.key} className='space-y-1'>
+                        <label className='text-sm font-medium text-gray-700'>
                           {inputField.label}
-                          {inputField.required && <span className="text-red-500 ml-1">*</span>}
+                          {inputField.required && <span className='text-red-500 ml-1'>*</span>}
                         </label>
                         <Input
                           type={inputField.type || "text"}
@@ -388,7 +391,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
                             formField.onChange(newValue)
                             onChange?.(field.name, newValue)
                           }}
-                          className="w-full"
+                          className='w-full'
                           required={inputField.required}
                         />
                       </div>
