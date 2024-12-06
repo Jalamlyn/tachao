@@ -42,6 +42,7 @@ interface AIEditorProps {
     canRollback: boolean
     canForward: boolean
     getCurrentVersion: () => any | null
+    addVersion: (version: any) => void
   }
   renderPreview: (version: any) => React.ReactNode
   renderCodeView?: (version: any) => React.ReactNode
@@ -154,10 +155,42 @@ const AIEditor: React.FC<AIEditorProps> = ({
 }) => {
   // 添加版本变化的监听
   const [currentVersion, setCurrentVersion] = useState(versionControl.getCurrentVersion())
+  // 添加编辑状态管理
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedCode, setEditedCode] = useState("")
 
   useEffect(() => {
     setCurrentVersion(versionControl.getCurrentVersion())
+    // 重置编辑状态
+    setIsEditing(false)
+    setEditedCode(versionControl.getCurrentVersion()?.rawConfig || "")
   }, [versionControl.currentIndex])
+
+  // 处理保存编辑
+  const handleSaveEdit = async () => {
+    try {
+      // 解析编辑后的配置
+      const parsedConfig = await AIFormAgent.parseConfig(editedCode)
+      
+      // 添加新版本
+      versionControl.addVersion({
+        formConfig: parsedConfig.config,
+        rawConfig: editedCode
+      })
+
+      setIsEditing(false)
+      message.success("保存成功")
+    } catch (error) {
+      console.error("Error saving edit:", error)
+      message.error("配置格式有误，请检查")
+    }
+  }
+
+  // 处理取消编辑
+  const handleCancelEdit = () => {
+    setEditedCode(currentVersion?.rawConfig || "")
+    setIsEditing(false)
+  }
 
   return (
     <div className='h-[calc(100vh-140px)] overflow-hidden'>
@@ -240,8 +273,35 @@ const AIEditor: React.FC<AIEditorProps> = ({
               <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderDataView?.()}</div>
             )}
             {selectedTab === "code" && showCodeTab && (
-              <div className='h-[calc(100vh-260px)] rounded-lg overflow-auto p-2 bg-slate-900 text-white text-wrap mt-2'>
-                {renderCodeView?.(currentVersion)}
+              <div className='relative h-[calc(100vh-260px)] rounded-lg overflow-auto mt-2'>
+                <textarea
+                  value={isEditing ? editedCode : currentVersion?.rawConfig || ""}
+                  onChange={(e) => {
+                    setEditedCode(e.target.value)
+                    setIsEditing(true)
+                  }}
+                  className='w-full h-full p-4 bg-slate-900 text-white font-mono resize-none focus:outline-none focus:ring-2 focus:ring-primary rounded-lg'
+                />
+                {isEditing && (
+                  <div className='absolute top-2 right-2 space-x-2'>
+                    <Button
+                      size='sm'
+                      color='primary'
+                      onClick={handleSaveEdit}
+                      startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
+                    >
+                      保存
+                    </Button>
+                    <Button
+                      size='sm'
+                      variant='flat'
+                      onClick={handleCancelEdit}
+                      startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
+                    >
+                      取消
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>
