@@ -64,6 +64,8 @@ export const useProcessConfirm = ({
 
   const calculateProgress = useCallback((): ProcessProgress => {
     const values = form.getValues(fieldName) || {}
+    console.log("Calculating progress with values:", values)
+    
     const totalWeight = steps.reduce((sum, step) => sum + (step.weight || 1), 0)
     let completedWeight = 0
     let currentStepIndex = 0
@@ -102,13 +104,16 @@ export const useProcessConfirm = ({
       }
     })
 
-    return {
+    const progress = {
       total: steps.length,
       completed: Object.values(values).filter(step => step.confirmed).length,
       current: currentStepIndex,
       percentage: Math.round((completedWeight / totalWeight) * 100),
       status
     }
+
+    console.log("Calculated progress:", progress)
+    return progress
   }, [steps, form, fieldName])
 
   const handleConfirm = async (step: ProcessStep) => {
@@ -126,48 +131,29 @@ export const useProcessConfirm = ({
       }
     }
 
-    // 检查超时
-    if (step.timeout) {
-      const now = Date.now()
-      const stepData = form.getValues(`${fieldName}.${step.key}`)
-      const startTime = stepData.startTime || now
-
-      if (now - startTime > step.timeout.duration) {
-        switch (step.timeout.action) {
-          case 'block':
-            message.error(step.timeout.message || "步骤已超时，无法确认")
-            return
-          case 'warn':
-            message.warning(step.timeout.message || "步骤已超时，请注意")
-            break
-          case 'auto-approve':
-            // 自动通过逻辑
-            break
-          case 'auto-reject':
-            // 自动拒绝逻辑
-            break
-        }
-      }
-    }
-
-    // 检查审批人
-    if (step.approvers) {
-      const { type, roles, users, minApprovers } = step.approvers
-      // 这里需要根据实际情况实现审批人验证逻辑
-      const hasPermission = true // 临时写死，实际需要根据用户角色判断
-      if (!hasPermission) {
-        message.error("您没有权限确认此步骤")
-        return
-      }
-    }
-
     setIsConfirming(step.key)
     try {
-      form.setValue(`${fieldName}.${step.key}.confirmed`, true)
-      form.setValue(`${fieldName}.${step.key}.confirmer`, currentUser.name || currentUser.email)
-      form.setValue(`${fieldName}.${step.key}.confirmationDate`, new Date().toISOString())
+      // 使用批量更新
+      const updates = {
+        [`${fieldName}.${step.key}.confirmed`]: true,
+        [`${fieldName}.${step.key}.confirmer`]: currentUser.name || currentUser.email,
+        [`${fieldName}.${step.key}.confirmationDate`]: new Date().toISOString(),
+      }
 
-      form.trigger(`${fieldName}.${step.key}`)
+      // 批量设置值
+      Object.entries(updates).forEach(([field, value]) => {
+        form.setValue(field, value, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        })
+      })
+
+      // 触发表单更新
+      await form.trigger(fieldName)
+      
+      // 手动触发重新计算进度
+      calculateProgress()
     } catch (error) {
       console.error("Error confirming step:", error)
       message.error("确认失败")
@@ -178,11 +164,26 @@ export const useProcessConfirm = ({
 
   const handleCancel = (step: ProcessStep) => {
     try {
-      form.setValue(`${fieldName}.${step.key}.confirmed`, false)
-      form.setValue(`${fieldName}.${step.key}.confirmer`, "")
-      form.setValue(`${fieldName}.${step.key}.confirmationDate`, "")
+      const updates = {
+        [`${fieldName}.${step.key}.confirmed`]: false,
+        [`${fieldName}.${step.key}.confirmer`]: "",
+        [`${fieldName}.${step.key}.confirmationDate`]: "",
+      }
 
-      form.trigger(`${fieldName}.${step.key}`)
+      // 批量设置值
+      Object.entries(updates).forEach(([field, value]) => {
+        form.setValue(field, value, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        })
+      })
+
+      // 触发表单更新
+      form.trigger(fieldName)
+      
+      // 手动触发重新计算进度
+      calculateProgress()
     } catch (error) {
       console.error("Error canceling confirmation:", error)
       message.error("取消确认失败")

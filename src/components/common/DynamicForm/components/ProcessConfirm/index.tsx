@@ -46,8 +46,23 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
 
   const [selectedStep, setSelectedStep] = React.useState<string>(steps[0]?.key || "")
 
+  // 监听表单值变化
+  const formValues = form.watch(fieldName)
+
   // 计算进度
-  const progress = useMemo(() => calculateProgress(), [form.watch(fieldName)])
+  const progress = useMemo(() => {
+    console.log("Calculating progress with values:", formValues)
+    return calculateProgress()
+  }, [calculateProgress, formValues])
+
+  // 添加表单值变化监听
+  React.useEffect(() => {
+    const subscription = form.watch(() => {
+      console.log("Form values changed:", form.getValues(fieldName))
+      form.trigger(fieldName)
+    })
+    return () => subscription.unsubscribe()
+  }, [form, fieldName])
 
   // 检查步骤是否被阻塞
   const isStepBlocked = (step: ProcessStepType): { blocked: boolean; reason?: string } => {
@@ -87,11 +102,12 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
 
   // 新增：监听表单变化并触发重新渲染
   React.useEffect(() => {
+    console.log("Current progress:", progress)
     const subscription = form.watch(() => {
       form.trigger(fieldName)
     })
     return () => subscription.unsubscribe()
-  }, [form, fieldName])
+  }, [form, fieldName, progress])
 
   return (
     <div className='space-y-6'>
