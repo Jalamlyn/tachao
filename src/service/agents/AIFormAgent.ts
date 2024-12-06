@@ -135,11 +135,11 @@ export class AIFormAgent {
       if (response.includes("<shata-ai-form>")) {
         const parsedConfig = await this.parseConfig(response)
         if (parsedConfig) {
-          this.setRawConfig(parsedConfig.rawConfig) // parseConfig 会返回原始配置
+          this.setRawConfig(response) // parseConfig 会返回原始配置
           return {
             success: true,
             config: parsedConfig.config,
-            rawConfig: parsedConfig.rawConfig,
+            rawConfig: response,
           }
         }
       }

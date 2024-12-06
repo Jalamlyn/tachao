@@ -43,7 +43,7 @@ export const useAgent = (
     if (previewContent || accumulatedTextRef.current.includes("<shata-ai-code>")) {
       const newContent = accumulatedTextRef.current
       setPreviewContent(newContent)
-
+      console.log(accumulatedTextRef.current)
       if (accumulatedTextRef.current.includes("</shata-ai-code>")) {
         const code = extractShataAICode(accumulatedTextRef.current)
         if (code) {
