@@ -64,217 +64,232 @@ const config = {
 }
 ```
 
-### 4. 完整示例: 省市区联动
+## 计算字段实现指南
+
+### 1. 计算字段基本规则
+
+- 所有计算字段必须通过 watch 函数实现
+- 计算字段应设置为只读（editable: false）
+- 计算字段的值会随依赖字段变化自动更新
+
+### 2. 表格计算字段
+
+#### 2.1 表格行内计算
+
+```mo
+{
+  renderConfig: {
+    tables: [
+      {
+        key: "orderDetails",
+        config: {
+          columns: [
+            { key: "quantity", title: "数量", type: "number" },
+            { key: "price", title: "单价", type: "number" },
+            { 
+              key: "amount", 
+              title: "金额", 
+              type: "number",
+              editable: false  // 计算字段设置为只读
+            }
+          ]
+        }
+      }
+    ]
+  },
+  watch: (form) => {
+    const subscription = form.watch((value, { name }) => {
+      // ✅ 正确的表格数据路径
+      if (name.startsWith('tableData.orderDetails')) {
+        const details = form.getValues('tableData.orderDetails') || []
+        
+        details.forEach((item, index) => {
+          const quantity = Number(item.quantity) || 0
+          const price = Number(item.price) || 0
+          // ✅ 正确的设值路径
+          form.setValue(`tableData.orderDetails.${index}.amount`, quantity * price)
+        })
+      }
+    })
+    return () => subscription.unsubscribe()
+  }
+}
+```
+
+#### 2.2 表格合计配置
+
+```mo
+{
+  renderConfig: {
+    tables: [
+      {
+        key: "orderDetails",
+        config: {
+          columns: [
+            { 
+              key: "quantity", 
+              title: "数量", 
+              type: "number",
+              // ✅ 列级别的合计配置
+              summary: {
+                render: (values) => {
+                  const details = values?.tableData?.orderDetails || []
+                  return details.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0)
+                }
+              }
+            },
+            { 
+              key: "amount", 
+              title: "金额", 
+              type: "number",
+              editable: false,
+              // ✅ 金额列的合计配置
+              summary: {
+                render: (values) => {
+                  const details = values?.tableData?.orderDetails || []
+                  const total = details.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
+                  return `¥${total.toFixed(2)}`
+                }
+              }
+            }
+          ],
+          // ✅ 表格级别的合计配置
+          summary: {
+            show: true,
+            label: "合计"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+### 3. 基础字段计算
+
+```mo
+{
+  renderConfig: {
+    basicFields: [
+      { name: "num1", label: "数值1", type: "number" },
+      { name: "num2", label: "数值2", type: "number" },
+      { 
+        name: "total", 
+        label: "合计", 
+        type: "number",
+        disabled: true  // 计算字段设置为禁用
+      }
+    ]
+  },
+  watch: (form) => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "num1" || name === "num2") {
+        const num1 = Number(form.getValues("num1")) || 0
+        const num2 = Number(form.getValues("num2")) || 0
+        form.setValue("total", num1 + num2)
+      }
+    })
+    return () => subscription.unsubscribe()
+  }
+}
+```
+
+### 4. 完整示例
 
 ```mo
 export default {
-  title: "地址选择",
+  title: "销售订单",
   config: {
     metadata: {
-      title: "地址选择",
-      description: "省市区联动示例",
+      title: "销售订单",
     },
     renderConfig: {
       basicFields: [
-        {
-          name: "province",
-          label: "省份",
-          type: "select",
-          required: true,
-          options: [
-            { label: "广东省", value: "guangdong" },
-            { label: "北京市", value: "beijing" },
-          ],
-        },
-        {
-          name: "city",
-          label: "城市",
-          type: "select",
-          required: true,
-          // ✅ 使用函数获取动态选项
-          options: (form) => form.getValues("cityOptions") || [],
-        },
-        {
-          name: "district",
-          label: "区县",
-          type: "select",
-          required: true,
-          // ✅ 使用函数获取动态选项
-          options: (form) => form.getValues("districtOptions") || [],
-        },
+        { name: "num1", label: "数值1", type: "number" },
+        { name: "num2", label: "数值2", type: "number" },
+        { name: "total", label: "合计", type: "number", disabled: true }
       ],
+      tables: [
+        {
+          key: "orderDetails",
+          title: "订单明细",
+          config: {
+            columns: [
+              { 
+                key: "quantity", 
+                title: "数量", 
+                type: "number",
+                summary: {
+                  render: (values) => {
+                    const details = values?.tableData?.orderDetails || []
+                    return details.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0)
+                  }
+                }
+              },
+              { 
+                key: "price", 
+                title: "单价", 
+                type: "number" 
+              },
+              { 
+                key: "amount", 
+                title: "金额", 
+                type: "number",
+                editable: false,
+                summary: {
+                  render: (values) => {
+                    const details = values?.tableData?.orderDetails || []
+                    return details.reduce((sum, item) => sum + (Number(item.amount) || 0), 0)
+                  }
+                }
+              }
+            ],
+            summary: {
+              show: true,
+              label: "合计"
+            }
+          }
+        }
+      ]
     },
     watch: (form) => {
       const subscription = form.watch((value, { name }) => {
-        if (name === "province") {
-          const province = value.province
-
-          // 获取城市选项
-          const cityOptions =
-            {
-              guangdong: [
-                { label: "广州市", value: "guangzhou" },
-                { label: "深圳市", value: "shenzhen" },
-              ],
-              beijing: [{ label: "北京市区", value: "beijing_city" }],
-            }[province] || []
-
-          // 清空下级选项
-          form.setValue("city", "")
-          form.setValue("district", "")
-
-          // 更新城市选项
-          form.setValue("cityOptions", cityOptions)
+        // 基础字段计算
+        if (name === "num1" || name === "num2") {
+          const num1 = Number(form.getValues("num1")) || 0
+          const num2 = Number(form.getValues("num2")) || 0
+          form.setValue("total", num1 + num2)
         }
 
-        if (name === "city") {
-          const city = value.city
-
-          // 获取区县选项
-          const districtOptions =
-            {
-              guangzhou: [
-                { label: "天河区", value: "tianhe" },
-                { label: "越秀区", value: "yuexiu" },
-              ],
-              shenzhen: [
-                { label: "南山区", value: "nanshan" },
-                { label: "福田区", value: "futian" },
-              ],
-            }[city] || []
-
-          // 清空已选值
-          form.setValue("district", "")
-
-          // 更新区县选项
-          form.setValue("districtOptions", districtOptions)
+        // 表格行计算
+        if (name.startsWith('tableData.orderDetails')) {
+          const details = form.getValues('tableData.orderDetails') || []
+          details.forEach((item, index) => {
+            const quantity = Number(item.quantity) || 0
+            const price = Number(item.price) || 0
+            form.setValue(`tableData.orderDetails.${index}.amount`, quantity * price)
+          })
         }
       })
-
       return () => subscription.unsubscribe()
-    },
-  },
-}
-```
-
-### 5. 常见错误和解决方案
-
-#### 5.1 选项不更新
-
-❌ 错误写法:
-
-```mo
-// 试图直接修改配置对象
-form.setValue("renderConfig.basicFields.city.options", cityOptions)
-```
-
-✅ 正确写法:
-
-```mo
-// 使用表单状态存储选项
-form.setValue("cityOptions", cityOptions)
-```
-
-#### 5.2 状态更新但UI不刷新
-
-❌ 错误写法:
-
-```mo
-options: cityOptions // 直接使用变量
-```
-
-✅ 正确写法:
-
-```mo
-options: (form) => form.getValues("cityOptions") || [] // 使用函数获取最新值
-```
-
-#### 5.3 忘记清空依赖字段
-
-❌ 错误写法:
-
-```mo
-if (name === "province") {
-  form.setValue("cityOptions", cityOptions)
-  // 没有清空 city 和 district
-}
-```
-
-✅ 正确写法:
-
-```mo
-if (name === "province") {
-  // 先清空依赖字段
-  form.setValue("city", "")
-  form.setValue("district", "")
-  // 再更新选项
-  form.setValue("cityOptions", cityOptions)
-}
-```
-
-### 6. 最佳实践总结
-
-1. 使用表单状态存储动态数据
-2. 使用函数获取动态选项
-3. 记得清空依赖字段
-4. 正确注销 watch 订阅
-5. 提供合理的默认值
-
-### 7. 调试技巧
-
-1. 使用 console.log 查看表单值变化
-
-```mo
-watch: (form) => {
-  const subscription = form.watch((value, { name }) => {
-    console.log("Field changed:", name, value)
-    console.log("Current form values:", form.getValues())
-  })
-  return () => subscription.unsubscribe()
-}
-```
-
-2. 检查选项是否正确更新
-
-```mo
-options: (form) => {
-  const opts = form.getValues("cityOptions") || []
-  console.log("Current options:", opts)
-  return opts
-}
-```
-
-### 8. 性能优化
-
-1. 避免不必要的状态更新
-
-```mo
-if (name === "province") {
-  const newOptions = getCityOptions(value.province)
-  // 只在选项真正变化时更新
-  if (JSON.stringify(newOptions) !== JSON.stringify(form.getValues("cityOptions"))) {
-    form.setValue("cityOptions", newOptions)
+    }
   }
 }
 ```
 
-2. 使用 debounce 处理频繁变化
+### 5. 注意事项
 
-```mo
-import { debounce } from "lodash"
+1. 路径使用规则：
+   - 表格数据必须使用 `tableData.表格key` 作为路径
+   - 表格行数据使用 `tableData.表格key.行索引.字段key`
+   - 基础字段直接使用字段名作为路径
 
-watch: (form) => {
-  const handleChange = debounce((value, name) => {
-    // 处理变化
-  }, 300)
+2. watch 使用规则：
+   - 使用 startsWith 判断表格字段变化
+   - 使用精确匹配判断基础字段变化
+   - 必须返回取消订阅函数
 
-  const subscription = form.watch((value, { name }) => {
-    handleChange(value, name)
-  })
-
-  return () => {
-    subscription.unsubscribe()
-    handleChange.cancel()
-  }
-}
-```
+3. 计算字段设置：
+   - 表格计算列设置 editable: false
+   - 基础计算字段设置 disabled: true
+   - 合计配置在列级别设置 summary.render
