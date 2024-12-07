@@ -67,7 +67,7 @@ export class AIFormAgent {
       // 构建系统消息
       const systemMessage = {
         role: "system" as const,
-        content: generateFormAgentPrompt(this._rawConfig),
+        content: generateFormAgentPrompt(this._rawConfig, this._cachedImage !== null),
       }
 
       // 增强用户命令，添加意图控制
