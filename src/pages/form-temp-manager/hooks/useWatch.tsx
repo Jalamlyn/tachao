@@ -45,10 +45,10 @@ export const useWatch = (
           }
         } catch (error) {
           console.error("Error parsing form config:", error)
-          updateLastMessage({
-            content: "表单解析失败",
-            status: "error",
-          })
+          // updateLastMessage({
+          //   content: "表单解析失败",
+          //   status: "error",
+          // })
         }
       }
     })

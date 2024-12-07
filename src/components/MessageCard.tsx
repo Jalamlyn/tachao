@@ -204,6 +204,12 @@ const MessageCard = React.memo(
                     if (children && children.toString().startsWith("<shata-ai-code>")) {
                       return "正在生成代码..."
                     }
+                    if (children && children.toString().includes("</shata-ai-intent>")) {
+                      return "✔️ 理解用户意图完成"
+                    }
+                    if (children && children.toString().startsWith("<shata-ai-intent>")) {
+                      return "正在理解用户意图..."
+                    }
 
                     return (
                       <code {...props} className={className}>
