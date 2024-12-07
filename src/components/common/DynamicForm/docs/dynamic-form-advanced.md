@@ -76,6 +76,13 @@ const config = {
 
 #### 2.1 表格行内计算
 
+⚠️ 重要：实现表格计算时必须遵循以下规则来避免无限递归：
+
+1. 使用标志位防止重复计算
+2. 只监听必要的字段变化
+3. 在设置值之前先比较是否发生变化
+4. 使用try-finally确保标志位正确重置
+
 ```mo
 {
   renderConfig: {
@@ -98,17 +105,31 @@ const config = {
     ]
   },
   watch: (form) => {
+    // ✅ 添加标志位防止递归
+    let isCalculating = false;
+
     const subscription = form.watch((value, { name }) => {
-      // ✅ 正确的表格数据路径
-      if (name.startsWith('tableData.orderDetails')) {
-        const details = form.getValues('tableData.orderDetails') || []
-        
-        details.forEach((item, index) => {
-          const quantity = Number(item.quantity) || 0
-          const price = Number(item.price) || 0
-          // ✅ 正确的设值路径
-          form.setValue(`tableData.orderDetails.${index}.amount`, quantity * price)
-        })
+      // ✅ 只监听数量和单价的变化
+      if (!isCalculating && (name.includes('.quantity') || name.includes('.price'))) {
+        isCalculating = true;
+        try {
+          const details = form.getValues('tableData.orderDetails') || []
+          
+          details.forEach((item, index) => {
+            const quantity = Number(item.quantity) || 0
+            const price = Number(item.price) || 0
+            const newAmount = quantity * price
+
+            // ✅ 比较值是否变化后再设置
+            const currentAmount = Number(item.amount) || 0
+            if (currentAmount !== newAmount) {
+              form.setValue(`tableData.orderDetails.${index}.amount`, newAmount)
+            }
+          })
+        } finally {
+          // ✅ 确保标志位被重置
+          isCalculating = false
+        }
       }
     })
     return () => subscription.unsubscribe()
@@ -182,11 +203,24 @@ const config = {
     ]
   },
   watch: (form) => {
+    let isCalculating = false; // ✅ 添加标志位
+
     const subscription = form.watch((value, { name }) => {
-      if (name === "num1" || name === "num2") {
-        const num1 = Number(form.getValues("num1")) || 0
-        const num2 = Number(form.getValues("num2")) || 0
-        form.setValue("total", num1 + num2)
+      if (!isCalculating && (name === "num1" || name === "num2")) {
+        isCalculating = true;
+        try {
+          const num1 = Number(form.getValues("num1")) || 0
+          const num2 = Number(form.getValues("num2")) || 0
+          const newTotal = num1 + num2
+
+          // ✅ 比较值是否变化后再设置
+          const currentTotal = Number(form.getValues("total")) || 0
+          if (currentTotal !== newTotal) {
+            form.setValue("total", newTotal)
+          }
+        } finally {
+          isCalculating = false
+        }
       }
     })
     return () => subscription.unsubscribe()
@@ -253,22 +287,45 @@ export default {
       ]
     },
     watch: (form) => {
+      let isCalculating = false;
+
       const subscription = form.watch((value, { name }) => {
         // 基础字段计算
-        if (name === "num1" || name === "num2") {
-          const num1 = Number(form.getValues("num1")) || 0
-          const num2 = Number(form.getValues("num2")) || 0
-          form.setValue("total", num1 + num2)
+        if (!isCalculating && (name === "num1" || name === "num2")) {
+          isCalculating = true;
+          try {
+            const num1 = Number(form.getValues("num1")) || 0
+            const num2 = Number(form.getValues("num2")) || 0
+            const newTotal = num1 + num2
+
+            const currentTotal = Number(form.getValues("total")) || 0
+            if (currentTotal !== newTotal) {
+              form.setValue("total", newTotal)
+            }
+          } finally {
+            isCalculating = false
+          }
         }
 
         // 表格行计算
-        if (name.startsWith('tableData.orderDetails')) {
-          const details = form.getValues('tableData.orderDetails') || []
-          details.forEach((item, index) => {
-            const quantity = Number(item.quantity) || 0
-            const price = Number(item.price) || 0
-            form.setValue(`tableData.orderDetails.${index}.amount`, quantity * price)
-          })
+        if (!isCalculating && name.startsWith('tableData.orderDetails') && 
+            (name.includes('.quantity') || name.includes('.price'))) {
+          isCalculating = true;
+          try {
+            const details = form.getValues('tableData.orderDetails') || []
+            details.forEach((item, index) => {
+              const quantity = Number(item.quantity) || 0
+              const price = Number(item.price) || 0
+              const newAmount = quantity * price
+
+              const currentAmount = Number(item.amount) || 0
+              if (currentAmount !== newAmount) {
+                form.setValue(`tableData.orderDetails.${index}.amount`, newAmount)
+              }
+            })
+          } finally {
+            isCalculating = false
+          }
         }
       })
       return () => subscription.unsubscribe()
@@ -288,8 +345,18 @@ export default {
    - 使用 startsWith 判断表格字段变化
    - 使用精确匹配判断基础字段变化
    - 必须返回取消订阅函数
+   - ⚠️ 必须使用标志位防止递归
+   - ⚠️ 只监听必要的字段变化
+   - ⚠️ 比较值是否变化后再设置
 
 3. 计算字段设置：
    - 表格计算列设置 editable: false
    - 基础计算字段设置 disabled: true
    - 合计配置在列级别设置 summary.render
+
+4. 防递归检查清单：
+   □ 是否添加了防递归标志位？
+   □ 是否只监听必要的字段？
+   □ 是否进行了值比较？
+   □ 是否正确处理了异常情况？
+   □ 是否正确清理了订阅？
