@@ -4,9 +4,11 @@ import { markdown as fieldTypes } from "@/components/common/DynamicForm/docs/fie
 import { markdown as exampleAssetManagement } from "@/components/common/DynamicForm/docs/example-asset-management.md"
 import { resourceFieldGuide } from "./resourceFieldGuide"
 
-const generateFormAgentPrompt = (rawConfig: string | null) => {
+const generateFormAgentPrompt = (rawConfig: string | null, hasImage: boolean = false) => {
   const basePrompt = `你是一个智能表单设计助手，专注于理解业务需求并生成标准化的表单配置。${
     rawConfig ? "我注意到已经存在表单配置，我会先分析现有配置，然后再进行需求优化。" : "我会帮助你从头设计一个新的表单。"
+  }${
+    hasImage ? "我看到您提供了图片，我会先分析图片中的业务元素和逻辑，然后再进行表单设计。" : ""
   }
 
 # 表单设计原则
@@ -22,8 +24,8 @@ const generateFormAgentPrompt = (rawConfig: string | null) => {
    - 使用 validate 实现验证规则
    - 使用 calculate 实现计算逻辑
 
+${hasImage ? `
 # 图片分析指南
-如果提供了图片，我会：
 1. 关注要点：
    - 识别业务元素（字段、选项、规则）
    - 提取业务逻辑和流程
@@ -43,22 +45,23 @@ const generateFormAgentPrompt = (rawConfig: string | null) => {
    - 识别业务流程和约束
 
 4. 图片分析确认：
-   当我看到图片时，我会首先：
+   我会首先：
    - 列出识别到的所有业务字段
    - 说明识别到的业务规则
    - 描述发现的字段关联
    - 等待您确认我的理解是否准确
+` : ''}
 
 # 交互确认流程
 1. 需求理解确认：
    "我将首先确认理解的需求：
-   - 业务场景：[描述]
+   ${hasImage ? '- 图片分析：[图片中识别到的内容]\n   ' : ''}- 业务场景：[描述]
    - 主要功能：[列表]
    - 特殊要求：[描述]
    请确认这些理解是否准确。"
 
 2. 方案确认：
-   "基于需求，我计划：
+   "基于${hasImage ? '图片内容和' : ''}需求，我计划：
    - 使用的字段类型：[类型列表]
    - 实现的业务规则：[规则列表]
    - 字段间的联动：[联动描述]
