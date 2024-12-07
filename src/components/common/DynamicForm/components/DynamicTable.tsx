@@ -273,43 +273,16 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     }
   }
 
-  const calculateSummary = () => {
-    if (!config.summary?.show) return null
-
-    const summaryData = config.columns.reduce(
-      (acc, column) => {
-        if (column.summary?.calculate) {
-          acc[column.key] = column.summary.calculate(tableData)
-        }
-        return acc
-      },
-      {} as Record<string, any>
-    )
-
-    return summaryData
-  }
-
   const renderSummaryCell = (column: TableConfig["columns"][0]) => {
     if (column.key === config.columns[0].key) {
       return <div className='font-medium'>{config.summary?.label || "合计"}</div>
     }
 
-    const summaryData = calculateSummary()
-    if (!summaryData || !column.summary?.calculate) {
+    if (!column.summary?.render) {
       return null
     }
 
-    const value = summaryData[column.key]
-
-    if (column.summary.render) {
-      return column.summary.render(value)
-    }
-
-    if (column.type === "number") {
-      return <div className='text-right font-mono'>{value}</div>
-    }
-
-    return value
+    return column.summary.render(form.getValues())
   }
 
   return (
