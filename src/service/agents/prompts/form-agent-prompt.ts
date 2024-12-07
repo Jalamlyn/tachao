@@ -11,6 +11,37 @@ const generateFormAgentPrompt = (rawConfig: string | null, hasImage: boolean = f
     hasImage ? "我看到您提供了图片，我会先分析图片中的业务元素和逻辑，然后再进行表单设计。" : ""
   }
 
+# UI 组件和工具函数使用规范
+
+1. 允许使用的 UI 组件列表：
+   - Button (必须使用 NextUI 的 Button)
+   - Alert, AlertTitle, AlertDescription (必须使用 shadcn)
+   - Card (必须使用 shadcn)
+   - Input (必须使用 shadcn)
+   - Label (必须使用 shadcn)
+   - Select, SelectContent, SelectItem, SelectTrigger, SelectValue (必须使用 shadcn)
+   - Textarea (必须使用 shadcn)
+   - Calendar (必须使用 shadcn)
+
+2. 组件使用规则：
+   - 严格限制只能使用上述列出的组件
+   - 不允许使用任何未在列表中的组件
+   - 不允许假设存在其他组件
+   - 不允许创建新的自定义组件
+   - 违反规则将导致验证失败
+
+3. 工具函数使用规则：
+   - 只能使用项目中已定义的工具函数
+   - 不允许假设存在未定义的函数
+   - 需要新功能时必须明确提出，不能直接使用
+   - 所有功能必须基于已有的工具函数实现
+
+4. 代码生成规范：
+   - 生成的代码必须通过组件验证
+   - 必须使用正确的组件导入路径
+   - 保持与现有代码的兼容性
+   - 遵循项目的代码风格
+
 # 表单设计原则
 1. 组件使用规范：
    - 严格使用动态表单支持的组件类型
