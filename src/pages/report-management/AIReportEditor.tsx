@@ -18,9 +18,7 @@ import VersionSelectModal from "@/components/VersionSelectModal"
 import { EmptyAnalysisState, EmptyCodeState } from "./components/EmptyState"
 import { getRenderDataView } from "./renderDataView"
 import { useSave } from "./hooks/useSave"
-import { useCommandResult } from "./hooks/useCommandResult"
 import { useLoadData } from "./hooks/useLoadData"
-import { useAgent } from "./hooks/useAgent"
 
 interface TemplateInfoMap {
   [key: string]: string

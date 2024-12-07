@@ -218,7 +218,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
       <ResizablePanelGroup direction='horizontal' className='h-full p-2'>
         <ResizablePanel defaultSize={50} className='resizable-panel'>
           <div className='h-full flex flex-col'>
-            <div className='flex justify-between items-center p-2 border-b'>
+            <div className='flex justify-between items-center p-2 border-b mb-1'>
               <h3 className='text-lg font-medium'>对话</h3>
               <Button
                 size='sm'

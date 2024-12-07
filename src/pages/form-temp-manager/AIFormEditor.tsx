@@ -56,6 +56,7 @@ const AIFormEditor: React.FC = () => {
     handleTitleCancel,
     handleVersionSelectConfirm,
     handleVersionSelectCancel,
+    clearMessages,
   } = useAIFormStore()
 
   const { state: formState, setFormConfig, setRawConfig, handleError } = useFormState()
@@ -248,6 +249,7 @@ const AIFormEditor: React.FC = () => {
       <AIEditor
         parseConfig={AIFormAgent.parseConfig}
         messages={messages}
+        onClearMessages={clearMessages}
         selectedTab={selectedTab}
         onTabChange={setSelectedTab}
         agent={formAgent}

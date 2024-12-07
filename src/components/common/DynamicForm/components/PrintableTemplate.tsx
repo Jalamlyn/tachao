@@ -2,6 +2,7 @@ import React, { forwardRef } from "react"
 import { format } from "date-fns"
 import { DynamicFormConfig } from "../types"
 import { cn } from "@/theme/cn"
+import { Icon } from "@iconify/react"
 
 interface PrintableTemplateProps {
   config: DynamicFormConfig
@@ -134,18 +135,18 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
         {groups.map((group) => (
           <div key={group.key} className='print:break-inside-avoid'>
             <div className='flex items-center gap-2 mb-3 pb-2 border-b-2 border-gray-300'>
-              {group.icon && <span className='text-gray-500'>{group.icon}</span>}
+              {group.icon && <Icon icon={group.icon} className='text-gray-500' />}
               <h3 className='text-base font-bold text-gray-800'>{group.title}</h3>
             </div>
-            {group.description && (
-              <p className='text-sm text-gray-500 mb-3 italic'>{group.description}</p>
-            )}
+            {group.description && <p className='text-sm text-gray-500 mb-3 italic'>{group.description}</p>}
             <table className='w-full border-collapse'>
               <tbody>
                 {group.fields.map((field, index) => (
                   <tr key={field.name} className={index % 2 === 0 ? "bg-gray-50" : ""}>
                     <td className='border border-gray-300 p-2 w-[200px] font-medium text-gray-700'>{field.label}</td>
-                    <td className='border border-gray-300 p-2'>{formatFieldValue(field.type, basicInfo[field.name])}</td>
+                    <td className='border border-gray-300 p-2'>
+                      {formatFieldValue(field.type, basicInfo[field.name])}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -220,9 +221,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
               <div className='flex justify-between items-center mb-3 pb-2 border-b border-gray-200'>
                 <div className='flex items-center gap-2'>
                   <span className='font-bold text-gray-800'>{step.title}</span>
-                  {step.description && (
-                    <span className='text-sm text-gray-500 italic'>({step.description})</span>
-                  )}
+                  {step.description && <span className='text-sm text-gray-500 italic'>({step.description})</span>}
                 </div>
                 <div className='text-sm font-medium'>
                   {stepData?.confirmed ? (
@@ -306,9 +305,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
       {/* 页眉 */}
       <div className='text-center mb-8 pb-4 border-b-2 border-gray-300'>
         <h1 className='text-2xl font-bold text-gray-900 mb-2'>{metadata.title}</h1>
-        {metadata.description && (
-          <p className='text-sm text-gray-500 italic'>{metadata.description}</p>
-        )}
+        {metadata.description && <p className='text-sm text-gray-500 italic'>{metadata.description}</p>}
         <div className='absolute top-8 right-8 text-sm text-gray-500'>
           <div>单号：{data?.orderNumber || "____________"}</div>
           <div>日期：{format(new Date(), "yyyy-MM-dd")}</div>

@@ -295,7 +295,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             <TabsList>
               {renderConfig.tables.map((table: TableGroup) => (
                 <TabsTrigger key={table.key} value={table.key}>
-                  {table.icon && <span className='text-xl'>{table.icon}</span>}
+                  {table.icon && <Icon icon={table.icon} className='text-xl' />}
                   <span>{table.title}</span>
                 </TabsTrigger>
               ))}

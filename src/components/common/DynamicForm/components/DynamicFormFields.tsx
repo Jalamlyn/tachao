@@ -4,6 +4,7 @@ import { FormField as DynamicFormField, FormFieldGroup } from "../types"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/theme/cn"
 import FormFields from "./FormFields"
+import { Icon } from "@iconify/react"
 
 interface FieldsWithGroups {
   groups: FormFieldGroup[]
@@ -39,7 +40,7 @@ const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, fo
         <TabsList>
           {groups.map((group) => (
             <TabsTrigger key={group.key} value={group.key}>
-              {group.icon && <span className='text-xl'>{group.icon}</span>}
+              {group.icon && <Icon icon={group.icon} className='text-xl' />}
               <span>{group.title}</span>
             </TabsTrigger>
           ))}
