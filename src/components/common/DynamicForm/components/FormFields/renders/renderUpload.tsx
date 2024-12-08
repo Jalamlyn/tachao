@@ -51,20 +51,18 @@ export const renderUpload = (
 
       // 默认上传逻辑
       try {
-        const { formUploadHost, fileKey, policy, accessKeyId, signature } = await getSignedUrl(file.name)
+        const { uploadUrl, fileKey } = await getSignedUrl(file.name)
         const formData = new FormData()
         formData.append("name", file.name)
-        formData.append("policy", policy)
-        formData.append("OSSAccessKeyId", accessKeyId)
         formData.append("success_action_status", "200")
-        formData.append("signature", signature)
         formData.append("key", fileKey)
         formData.append("file", file)
 
-        const response = await apiService.post(formUploadHost, formData, {
+        const response = await apiService.put(uploadUrl, {
           headers: {
             "Content-Type": file.type,
           },
+          data: formData,
           onUploadProgress: (progressEvent) => {
             const percent = Math.round((progressEvent.loaded * 100) / (progressEvent.total ?? 1))
             setProgress(percent)
@@ -89,7 +87,7 @@ export const renderUpload = (
 
   const getSignedUrl = async (fileName: string) => {
     try {
-      const res = await apiService.get(`/file/form/upload:singed?fileName=${fileName}`)
+      const res = await apiService.get(`/api/file/upload:singed?fileName=${fileName}`)
       return res.data
     } catch (error) {
       message.error("获取签名URL失败，请重试！")
@@ -180,8 +178,8 @@ export const renderUpload = (
                   {Array.isArray(formField.value)
                     ? `已选择 ${formField.value.length} 个文件`
                     : formField.value instanceof File
-                    ? formField.value.name
-                    : formField.value}
+                      ? formField.value.name
+                      : formField.value}
                 </span>
                 <Button
                   isIconOnly
