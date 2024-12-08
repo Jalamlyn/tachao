@@ -25,8 +25,8 @@ const sheetToCSV = (worksheet: XLSX.WorkSheet, isMultipleHeaders: boolean = fals
       const row: string[] = []
       for (let C = range.s.c; C <= range.e.c; ++C) {
         const cell = worksheet[XLSX.utils.encode_cell({ r: R, c: C })]
-        // 使用临时分隔符替换逗号
-        let value = cell ? String(cell.v).replace(/,/g, TEMP_SEPARATOR).replace(/\n/g, "\\n") : ""
+        // 使用XLSX.utils.format_cell处理单元格值，自动处理日期时间格式
+        let value = cell ? XLSX.utils.format_cell(cell).replace(/,/g, TEMP_SEPARATOR).replace(/\n/g, "\\n") : ""
 
         if (!value) {
           const mergeCell = merges.find(
@@ -39,7 +39,7 @@ const sheetToCSV = (worksheet: XLSX.WorkSheet, isMultipleHeaders: boolean = fals
                 c: mergeCell.s.c,
               })
             ]
-            value = mainCell ? String(mainCell.v).replace(/,/g, TEMP_SEPARATOR).replace(/\n/g, "\\n") : ""
+            value = mainCell ? XLSX.utils.format_cell(mainCell).replace(/,/g, TEMP_SEPARATOR).replace(/\n/g, "\\n") : ""
           }
         }
         row.push(value)
@@ -53,7 +53,7 @@ const sheetToCSV = (worksheet: XLSX.WorkSheet, isMultipleHeaders: boolean = fals
       const row: string[] = []
       for (let C = range.s.c; C <= range.e.c; ++C) {
         const cell = worksheet[XLSX.utils.encode_cell({ r: R, c: C })]
-        const value = cell ? String(cell.v).replace(/,/g, TEMP_SEPARATOR).replace(/\n/g, "\\n") : ""
+        const value = cell ? XLSX.utils.format_cell(cell).replace(/,/g, TEMP_SEPARATOR).replace(/\n/g, "\\n") : ""
         row.push(value)
       }
       rows.push(row.join(","))
