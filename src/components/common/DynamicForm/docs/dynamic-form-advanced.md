@@ -5,6 +5,7 @@
 ## 表单联动系统
 
 ### 1. 状态管理架构
+
 ```typescript
 interface FormState {
   isSubmitting: boolean
@@ -24,6 +25,7 @@ interface FormEventHandlers {
 ### 2. 联动实现方式
 
 #### 2.1 值联动
+
 ```typescript
 {
   watch: (form) => {
@@ -32,7 +34,7 @@ interface FormEventHandlers {
         // 清空依赖字段
         form.setValue("city", "")
         form.setValue("district", "")
-        
+
         // 更新选项
         const cityOptions = getCityOptions(value.province)
         form.setValue("cityOptions", cityOptions)
@@ -44,13 +46,14 @@ interface FormEventHandlers {
 ```
 
 #### 2.2 显示联动
+
 ```typescript
 {
   watch: (form) => {
     const subscription = form.watch((value, { name }) => {
       if (name === "needExtra") {
         const extraFields = form.getValues("extraFields") || []
-        extraFields.forEach(field => {
+        extraFields.forEach((field) => {
           form.setValue(`${field}.hidden`, !value.needExtra)
         })
       }
@@ -61,13 +64,14 @@ interface FormEventHandlers {
 ```
 
 #### 2.3 验证联动
+
 ```typescript
 {
   watch: (form) => {
     const subscription = form.watch((value, { name }) => {
       if (name === "type") {
         const fields = getTypeFields(value.type)
-        fields.forEach(field => {
+        fields.forEach((field) => {
           form.setValue(`${field}.required`, true)
         })
         form.trigger(fields)
@@ -81,6 +85,7 @@ interface FormEventHandlers {
 ## 计算字段系统
 
 ### 1. 基础字段计算
+
 ```typescript
 {
   watch: (form) => {
@@ -111,17 +116,21 @@ interface FormEventHandlers {
 ### 2. 表格计算
 
 #### 2.1 行内计算
+
 ```typescript
 {
   watch: (form) => {
     let isCalculating = false
 
-    const subscription = form.watch((value,{ name }) => {
-      if (!isCalculating && name.startsWith('tableData.orderDetails') && 
-          (name.includes('.quantity') || name.includes('.price'))) {
+    const subscription = form.watch((value, { name }) => {
+      if (
+        !isCalculating &&
+        name.startsWith("tableData.orderDetails") &&
+        (name.includes(".quantity") || name.includes(".price"))
+      ) {
         isCalculating = true
         try {
-          const details = form.getValues('tableData.orderDetails') || []
+          const details = form.getValues("tableData.orderDetails") || []
           details.forEach((item, index) => {
             const quantity = Number(item.quantity) || 0
             const price = Number(item.price) || 0
@@ -143,6 +152,7 @@ interface FormEventHandlers {
 ```
 
 #### 2.2 表格合计
+
 ```typescript
 {
   columns: [
@@ -179,9 +189,34 @@ interface FormEventHandlers {
 }
 ```
 
+#### 表格资料配置字段映射
+
+```typescript
+{
+  columns: [
+    {
+      key: "supplier",
+      type: "resource",
+      resourceConfig: {
+        fieldMapping: {
+          // 简单映射
+          supplierCode: "code",
+          // 复杂映射
+          fullAddress: {
+            fields: ["province", "city", "address"],
+            transform: (values) => values.filter(Boolean).join(" "),
+          },
+        },
+      },
+    },
+  ]
+}
+```
+
 ## 流程控制系统
 
 ### 1. 步骤依赖配置
+
 ```typescript
 {
   processSteps: [
@@ -192,9 +227,9 @@ interface FormEventHandlers {
         {
           name: "comment",
           type: "textarea",
-          required: true
-        }
-      ]
+          required: true,
+        },
+      ],
     },
     {
       key: "review",
@@ -204,24 +239,25 @@ interface FormEventHandlers {
           step: "submit",
           condition: {
             field: "comment",
-            value: true
+            value: true,
           },
-          message: "请先完成提交步骤"
-        }
+          message: "请先完成提交步骤",
+        },
       ],
       fields: [
         {
           name: "reviewComment",
           type: "textarea",
-          required: true
-        }
-      ]
-    }
+          required: true,
+        },
+      ],
+    },
   ]
 }
 ```
 
 ### 2. 超时处理
+
 ```typescript
 {
   processSteps: [
@@ -234,14 +270,15 @@ interface FormEventHandlers {
         message: "审批超时自动拒绝",
         callback: (step) => {
           console.log(`Step ${step} timeout`)
-        }
-      }
-    }
+        },
+      },
+    },
   ]
 }
 ```
 
 ### 3. 审批人配置
+
 ```typescript
 {
   processSteps: [
@@ -257,10 +294,10 @@ interface FormEventHandlers {
         notifyType: "email",
         escalation: {
           after: 24 * 60 * 60 * 1000,
-          to: ["vp"]
-        }
-      }
-    }
+          to: ["vp"],
+        },
+      },
+    },
   ]
 }
 ```
@@ -268,6 +305,7 @@ interface FormEventHandlers {
 ## 验证系统
 
 ### 1. 字段级验证
+
 ```typescript
 {
   fields: [
@@ -277,22 +315,21 @@ interface FormEventHandlers {
       validators: [
         (value) => {
           if (!value) return undefined
-          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) 
-            ? undefined 
-            : "请输入有效的邮箱地址"
-        }
-      ]
-    }
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? undefined : "请输入有效的邮箱地址"
+        },
+      ],
+    },
   ]
 }
 ```
 
 ### 2. 表单级验证
+
 ```typescript
 {
   validate: async (values, context) => {
     const errors: string[] = []
-    
+
     // 业务规则验证
     if (values.endDate && values.startDate) {
       if (new Date(values.endDate) < new Date(values.startDate)) {
@@ -312,17 +349,18 @@ interface FormEventHandlers {
       categorizedErrors: {
         required: [],
         invalid: [],
-        other: errors.map(error => ({
+        other: errors.map((error) => ({
           field: "form",
-          message: error
-        }))
-      }
+          message: error,
+        })),
+      },
     }
   }
 }
 ```
 
 ### 3. 异步验证
+
 ```typescript
 {
   fields: [
@@ -338,14 +376,15 @@ interface FormEventHandlers {
           } catch (error) {
             return "验证失败，请重试"
           }
-        }
-      ]
-    }
+        },
+      ],
+    },
   ]
 }
 ```
 
 ### 3. 条件渲染
+
 ```typescript
 {
   fields: [
@@ -354,7 +393,7 @@ interface FormEventHandlers {
       type: "custom",
       render: ({ field, form, isEditable }) => {
         if (!isEditable) return null
-        
+
         return useMemo(() => (
           <ComplexComponent {...field} />
         ), [field.value])

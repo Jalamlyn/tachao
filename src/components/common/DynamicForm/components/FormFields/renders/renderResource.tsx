@@ -26,30 +26,31 @@ export const renderResource = (
   // 监听值变化,如果是dataid则加载数据
   useEffect(() => {
     const value = form.watch(field.name)
-    
+
     // 如果配置了使用dataid且有loadDataById方法
     if (
-      field.resourceConfig?.useDataId && 
+      field.resourceConfig?.useDataId &&
       field.resourceConfig?.loadDataById &&
-      value?.dataid && 
-      !value?.id  // 只有dataid没有完整数据时才加载
+      value?.dataid &&
+      !value?.id // 只有dataid没有完整数据时才加载
     ) {
       setLoading(true)
-      
-      field.resourceConfig.loadDataById(value.dataid)
-        .then(data => {
+
+      field.resourceConfig
+        .loadDataById(value.dataid)
+        .then((data) => {
           // 更新表单显示值,保持完整对象格式
           form.setValue(field.name, data)
         })
-        .catch(err => {
-          console.error('Failed to load resource data:', err)
+        .catch((err) => {
+          console.error("Failed to load resource data:", err)
         })
         .finally(() => {
           setLoading(false)
         })
     }
   }, [form.watch(field.name)])
-
+  debugger
   return (
     <FormFieldWrapper
       name={field.name}
@@ -70,10 +71,7 @@ export const renderResource = (
                 color={manualInputMode ? "primary" : "default"}
                 onPress={toggleManualInput}
                 startContent={
-                  <Icon
-                    icon={manualInputMode ? "mdi:database-search" : "mdi:keyboard"}
-                    className='w-4 h-4'
-                  />
+                  <Icon icon={manualInputMode ? "mdi:database-search" : "mdi:keyboard"} className='w-4 h-4' />
                 }
               >
                 {manualInputMode ? "切换到选择模式" : "切换到手动输入"}
@@ -111,22 +109,19 @@ export const renderResource = (
               <Input
                 {...formField}
                 disabled={!isEditable || field.disabled}
-                className={cn(
-                  "min-w-[120px] border-0 focus:ring-0 bg-transparent",
-                  field.className
-                )}
+                className={cn("min-w-[120px] border-0 focus:ring-0 bg-transparent", field.className)}
               />
               {isEditable && field.resourceConfig && (
                 <ResourceSelectButton
                   resourceName={field.resourceConfig.resourceTitle}
-                  selectionMode="single"
+                  selectionMode='single'
                   onSelect={(selected) => {
                     if (selected.length > 0) {
                       // 如果使用dataid模式且没有完整数据,只保存dataid
                       if (field.resourceConfig?.useDataId && !selected[0].id) {
                         formField.onChange({
                           dataid: selected[0].dataid,
-                          name: selected[0].name || selected[0].title
+                          name: selected[0].name || selected[0].title,
                         })
                       } else {
                         // 有完整数据或非dataid模式,保存完整对象
@@ -142,7 +137,7 @@ export const renderResource = (
                   }}
                 />
               )}
-              {loading && <Spinner size="sm" />}
+              {loading && <Spinner size='sm' />}
             </div>
           )}
         </div>

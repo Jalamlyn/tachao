@@ -1,7 +1,7 @@
 import { markdown as dynamicFormAdvanced } from "@/components/common/DynamicForm/docs/dynamic-form-advanced.md"
 import { markdown as dynamicForm } from "@/components/common/DynamicForm/docs/dynamic-form.md"
 import { markdown as fieldTypes } from "@/components/common/DynamicForm/docs/field-types.md"
-import { markdown as exampleAssetManagement } from "@/components/common/DynamicForm/docs/example-asset-management.md"
+import { markdown as exampleAssetManagement } from "@/components/common/DynamicForm/docs/example.md"
 import { resourceFieldGuide } from "./resourceFieldGuide"
 
 const generateFormAgentPrompt = (rawConfig: string | null, hasImage: boolean = false) => {
