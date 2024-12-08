@@ -345,44 +345,6 @@ interface FormEventHandlers {
 }
 ```
 
-## 性能优化
-
-### 1. 防抖处理
-```typescript
-{
-  watch: (form) => {
-    const debouncedCalculate = debounce((values) => {
-      // 执行计算逻辑
-    }, 300)
-
-    const subscription = form.watch((value) => {
-      debouncedCalculate(value)
-    })
-
-    return () => {
-      subscription.unsubscribe()
-      debouncedCalculate.cancel()
-    }
-  }
-}
-```
-
-### 2. 缓存处理
-```typescript
-{
-  fields: [
-    {
-      name: "city",
-      type: "select",
-      options: (form) => {
-        const province = form.getValues("province")
-        return useMemo(() => getCityOptions(province), [province])
-      }
-    }
-  ]
-}
-```
-
 ### 3. 条件渲染
 ```typescript
 {
@@ -401,31 +363,3 @@ interface FormEventHandlers {
   ]
 }
 ```
-
-## 最佳实践
-
-1. 联动处理
-- 使用标志位防止递归
-- 只监听必要的字段
-- 合理使用防抖
-- 清理订阅
-
-2. 计算字段
-- 避免循环依赖
-- 使用缓存优化性能
-- 处理边界情况
-- 保持数据一致性
-
-3. 流程控制
-- 合理设置超时时间
-- 处理异常情况
-- 提供清晰的提示
-- 记录操作日志
-
-4. 验证规则
-- 分层验证策略
-- 异步验证处理
-- 友好的错误提示
-- 验证状态管理
-
-本文档针对AI模型优化，提供了结构化的高级特性说明和示例。每个特性都有完整的配置说明和使用示例，便于AI理解和生成正确的配置代码。
