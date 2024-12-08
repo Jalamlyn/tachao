@@ -39,8 +39,9 @@ type ExtendedInputType =
 ### 3. 特殊输入类型
 ```typescript
 type SpecialInputType =
-  | "file"      // 文件上传
-  | "image"     // 图片上传
+  | "file"      // 文件上传（已废弃，请使用 upload 类型）
+  | "image"     // 图片上传（已废弃，请使用 upload 类型）
+  | "upload"    // 统一的上传组件（支持文件、图片、视频等）
   | "signature" // 签名
   | "custom"    // 自定义组件
 ```
@@ -76,6 +77,276 @@ type ResourceType = "resource"  // 资源选择
 - 支持手动输入
 - 复杂数据结构
 - 自定义渲染
+
+## 统一上传字段（Upload）详细说明
+
+### 1. 配置接口
+```typescript
+interface UploadFieldConfig {
+  type: "upload"
+  uploadConfig: {
+    // 上传类型
+    uploadType: "file" | "image" | "video" | "audio"
+    
+    // 基础配置
+    multiple?: boolean       // 是否支持多文件
+    maxSize?: number        // 最大文件大小（字节）
+    maxCount?: number       // 最大文件数量
+    accept?: string         // 接受的文件类型
+    
+    // 图片专用配置
+    thumbnail?: boolean     // 是否显示缩略图
+    cropOptions?: {
+      aspect?: number       // 裁剪比例
+      quality?: number      // 压缩质量
+      width?: number        // 目标宽度
+      height?: number       // 目标高度
+    }
+    
+    // 高级配置
+    uploadConfig?: {
+      action?: string       // 自定义上传地址
+      headers?: Record<string, string>  // 自定义请求头
+      withCredentials?: boolean         // 是否携带凭证
+      customRequest?: (options: any) => Promise<any>  // 自定义上传实现
+    }
+  }
+}
+```
+
+### 2. 使用示例
+
+#### 2.1 基础文件上传
+```typescript
+{
+  name: "documents",
+  label: "文档上传",
+  type: "upload",
+  uploadConfig: {
+    uploadType: "file",
+    multiple: true,
+    maxSize: 10 * 1024 * 1024, // 10MB
+    maxCount: 5,
+    accept: ".pdf,.doc,.docx"
+  }
+}
+```
+
+#### 2.2 图片上传
+```typescript
+{
+  name: "avatar",
+  label: "头像上传",
+  type: "upload",
+  uploadConfig: {
+    uploadType: "image",
+    thumbnail: true,
+    cropOptions: {
+      aspect: 1,
+      quality: 0.8,
+      width: 200,
+      height: 200
+    },
+    accept: "image/*"
+  }
+}
+```
+
+#### 2.3 带自定义处理的上传
+```typescript
+{
+  name: "files",
+  label: "自定义上传",
+  type: "upload",
+  uploadConfig: {
+    uploadType: "file",
+    uploadConfig: {
+      customRequest: async (options) => {
+        const { file, onProgress, onSuccess, onError } = options
+        try {
+          // 自定义上传逻辑
+          onProgress({ percent: 50 })
+          const result = await customUploadFunction(file)
+          onSuccess(result)
+          return result
+        } catch (error) {
+          onError(error)
+        }
+      }
+    }
+  }
+}
+```
+
+### 3. 最佳实践
+
+#### 3.1 文件大小限制
+```typescript
+{
+  name: "attachment",
+  type: "upload",
+  uploadConfig: {
+    uploadType: "file",
+    maxSize: 5 * 1024 * 1024, // 5MB
+    accept: ".pdf,.doc,.docx",
+    // 添加验证器
+    validators: [
+      (value) => {
+        if (value && value.size > 5 * 1024 * 1024) {
+          return "文件大小不能超过5MB"
+        }
+        return undefined
+      }
+    ]
+  }
+}
+```
+
+#### 3.2 图片优化
+```typescript
+{
+  name: "productImage",
+  type: "upload",
+  uploadConfig: {
+    uploadType: "image",
+    thumbnail: true,
+    cropOptions: {
+      quality: 0.8,      // 适当压缩
+      width: 1200,       // 限制最大尺寸
+      height: 1200
+    },
+    // 添加图片验证
+    validators: [
+      async (value) => {
+        if (value) {
+          const img = new Image()
+          img.src = value
+          await img.decode()
+          if (img.width < 100 || img.height < 100) {
+            return "图片尺寸太小，最小尺寸为 100x100"
+          }
+        }
+        return undefined
+      }
+    ]
+  }
+}
+```
+
+### 4. 注意事项
+
+1. 文件大小限制
+- 设置合理的 maxSize 值
+- 考虑服务器上传限制
+- 添加适当的验证提示
+
+2. 文件类型限制
+- 使用 accept 属性限制文件类型
+- 服务端也需要验证文件类型
+- 考虑安全性问题
+
+3. 多文件上传
+- 合理设置 maxCount
+- 考虑总上传大小限制
+- 提供批量操作功能
+
+4. 图片处理
+- 合理设置压缩参数
+- 考虑移动端性能
+- 提供预览功能
+
+### 5. 错误处理
+
+```typescript
+{
+  name: "files",
+  type: "upload",
+  uploadConfig: {
+    uploadType: "file",
+    uploadConfig: {
+      customRequest: async (options) => {
+        try {
+          // 上传处理
+        } catch (error) {
+          // 错误处理
+          console.error("Upload error:", error)
+          throw new Error("上传失败，请重试")
+        }
+      }
+    },
+    // 全局错误处理
+    onError: (error) => {
+      console.error("Upload error:", error)
+      message.error("上传失败，请重试")
+    }
+  }
+}
+```
+
+### 6. 性能优化
+
+1. 图片优化
+- 使用适当的压缩比例
+- 限制图片最大尺寸
+- 使用现代图片格式
+
+2. 大文件处理
+- 分片上传
+- 断点续传
+- 进度显示
+
+3. 缓存处理
+- 本地缓存预览
+- 防重复上传
+- 智能重试机制
+
+## 向后兼容说明
+
+### 1. 旧版文件上传（已废弃）
+```typescript
+// 旧版文件上传（不推荐使用）
+{
+  name: "file",
+  type: "file",
+  accept: ".pdf,.doc,.docx"
+}
+
+// 新版文件上传（推荐使用）
+{
+  name: "file",
+  type: "upload",
+  uploadConfig: {
+    uploadType: "file",
+    accept: ".pdf,.doc,.docx"
+  }
+}
+```
+
+### 2. 旧版图片上传（已废弃）
+```typescript
+// 旧版图片上传（不推荐使用）
+{
+  name: "image",
+  type: "image",
+  accept: "image/*"
+}
+
+// 新版图片上传（推荐使用）
+{
+  name: "image",
+  type: "upload",
+  uploadConfig: {
+    uploadType: "image",
+    accept: "image/*",
+    thumbnail: true
+  }
+}
+```
+
+### 3. 迁移时间表
+- 当前版本：标记 file 和 image 类型为废弃
+- 下一主版本：显示废弃警告
+- 再下一主版本：完全移除旧类型
 
 ## 字段配置详解
 
@@ -140,195 +411,6 @@ interface ResourceFieldConfig {
       }>
     }>
   }
-}
-```
-
-## 字段类型使用示例
-
-### 1. 文本输入
-```typescript
-{
-  name: "username",
-  label: "用户名",
-  type: "text",
-  required: true,
-  validators: [
-    (value) => value?.length >= 3 ? undefined : "用户名至少3个字符"
-  ],
-  className: "w-full",
-  placeholder: "请输入用户名"
-}
-```
-
-### 2. 数字输入
-```typescript
-{
-  name: "age",
-  label: "年龄",
-  type: "number",
-  required: true,
-  min: 0,
-  max: 150,
-  className: "w-32 text-right",
-  validators: [
-    (value) => value >= 18 ? undefined : "年龄必须大于18岁"
-  ]
-}
-```
-
-### 3. 选择框
-```typescript
-{
-  name: "status",
-  label: "状态",
-  type: "select",
-  options: [
-    { label: "启用", value: "active" },
-    { label: "禁用", value: "inactive" },
-    { label: "待审核", value: "pending", disabled: true }
-  ],
-  className: "w-full",
-  required: true
-}
-```
-
-### 4. 日期选择
-```typescript
-{
-  name: "birthday",
-  label: "出生日期",
-  type: "date",
-  required: true,
-  className: "w-full",
-  validators: [
-    (value) => {
-      const date = new Date(value)
-      return date <= new Date() ? undefined : "出生日期不能大于今天"
-    }
-  ]
-}
-```
-
-### 5. 文件上传
-```typescript
-{
-  name: "avatar",
-  label: "头像",
-  type: "image",
-  accept: "image/*",
-  className: "w-full",
-  onUpload: async (file) => {
-    const url = await uploadFile(file)
-    return url
-  }
-}
-```
-
-### 6. 资源选择
-```typescript
-{
-  name: "department",
-  label: "部门",
-  type: "resource",
-  required: true,
-  resourceConfig: {
-    resourceTitle: "部门主数据",
-    allowManualInput: true,
-    manualInputFields: [
-      {
-        key: "name",
-        label: "部门名称",
-        type: "text",
-        required: true
-      },
-      {
-        key: "code",
-        label: "部门编码",
-        type: "text",
-        required: true
-      },
-      {
-        key: "type",
-        label: "部门类型",
-        type: "select",
-        options: [
-          { label: "业务部门", value: "business" },
-          { label: "职能部门", value: "function" }
-        ]
-      }
-    ]
-  }
-}
-```
-
-### 7. 签名字段
-```typescript
-{
-  name: "signature",
-  label: "签名",
-  type: "signature",
-  required: true,
-  width: 300,
-  height: 150,
-  lineWidth: 2,
-  lineColor: "#000000",
-  className: "border rounded-lg"
-}
-```
-
-### 8. 滑块
-```typescript
-{
-  name: "progress",
-  label: "进度",
-  type: "slider",
-  min: 0,
-  max: 100,
-  step: 1,
-  className: "w-full",
-  style: {
-    padding: "1rem 0"
-  }
-}
-```
-
-## 字段联动配置
-
-### 1. 值联动
-```typescript
-{
-  watch: (form) => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === "type") {
-        // 根据类型设置其他字段的值
-        form.setValue("subType", "")
-      }
-    })
-    return () => subscription.unsubscribe()
-  }
-}
-```
-
-### 2. 选项联动
-```typescript
-{
-  name: "city",
-  label: "城市",
-  type: "select",
-  options: (form) => {
-    const province = form.getValues("province")
-    return getCityOptions(province)
-  }
-}
-```
-
-### 3. 显示联动
-```typescript
-{
-  name: "otherReason",
-  label: "其他原因",
-  type: "textarea",
-  hidden: (form) => form.getValues("reason") !== "other"
 }
 ```
 
