@@ -12,7 +12,6 @@ import FormAnalysis from "@/pages/form-analysis/FormAnalysis"
 import ResourceManagement from "@/pages/resource-management"
 import ResourceDetail from "@/pages/resource-management/ResourceDetail"
 import ReportManagement from "@/pages/report-management"
-import AIResourceEditor from "@/pages/resource-management/AIResourceEditor"
 import AIReportEditor from "@/pages/report-management/AIReportEditor"
 import Dashboard from "@/apps/we-chat-app-admin/src/Dashboard"
 import AppManagement from "@/pages/app-management"
@@ -36,7 +35,6 @@ export default function renderWeChatApp() {
       <Route path='form-preview/:formId' element={<FormPreview />} />
       <Route path='resources' element={<ResourceManagement />} />
       <Route path='resources/:resourceId' element={<ResourceDetail />} />
-      <Route path='resources/ai/:resourceId' element={<AIResourceEditor />} />
       <Route path='reports' element={<ReportManagement />} />
       <Route path='reports/ai/create/:templateId' element={<AIReportEditor />} />
       <Route path='reports/ai/:reportId' element={<AIReportEditor />} />

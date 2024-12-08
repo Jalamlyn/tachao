@@ -111,10 +111,9 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ initialData, columns = [], 
     basic: fields.filter((field) => ["name", "description", "title"].includes(field.name)),
     details: fields.filter((field) => !["name", "description", "title"].includes(field.name)),
   }
-
   return (
     <div className='flex flex-col h-full'>
-      <div className='flex-1 overflow-y-auto px-6 py-4'>
+      <div className='flex-1 overflow-y-auto px-6 py-4 max-h-[70vh]'>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-6'>
             {groupedFields.basic.length > 0 && (
@@ -131,7 +130,11 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ initialData, columns = [], 
                             {field.label.replace(/([A-Z])/g, " $1").trim()}
                           </FormLabel>
                           <FormControl>
-                            <Input {...formField} className='w-full focus:ring-indigo-500 focus:border-indigo-500' />
+                            <Input
+                              {...formField}
+                              disabled={field.name === "dataid"}
+                              className='w-full focus:ring-indigo-500 focus:border-indigo-500'
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -156,7 +159,11 @@ const ResourceForm: React.FC<ResourceFormProps> = ({ initialData, columns = [], 
                             {field.label.replace(/([A-Z])/g, " $1").trim()}
                           </FormLabel>
                           <FormControl>
-                            <Input {...formField} className='w-full focus:ring-indigo-500 focus:border-indigo-500' />
+                            <Input
+                              {...formField}
+                              disabled={field.name === "dataid"}
+                              className='w-full focus:ring-indigo-500 focus:border-indigo-500'
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
