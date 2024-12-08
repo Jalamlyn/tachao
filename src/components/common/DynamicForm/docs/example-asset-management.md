@@ -161,6 +161,32 @@ config:{
               type: "file",
               accept: ".pdf,.doc,.docx",
             },
+            {
+      name: "warrantyFile",
+      label: "质保文件",
+      type: "upload",
+      uploadConfig: {
+        uploadType: "file",
+        accept: ".pdf,.doc,.docx",
+        multiple: true,
+        maxSize: 10 * 1024 * 1024,
+        maxCount: 5
+      }
+    },
+    {
+      name: "equipmentPhotos",
+      label: "设备照片",
+      type: "upload",
+      uploadConfig: {
+        uploadType: "image",
+        multiple: true,
+        thumbnail: true,
+        maxCount: 10,
+        cropOptions: {
+          quality: 0.8,
+          width: 800
+        }
+      }}
           ],
         },
       ],
