@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { UseFormReturn } from "react-hook-form"
 import { FormField } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
@@ -7,6 +7,7 @@ import ResourceSelectButton from "@/components/common/ResourceSelectButton"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { cn } from "@/theme/cn"
+import { Spinner } from "@nextui-org/react"
 
 export const renderResource = (
   field: FormField,
@@ -15,11 +16,39 @@ export const renderResource = (
   onChange?: (fieldName: string, value: any) => void
 ) => {
   const [manualInputMode, setManualInputMode] = React.useState(false)
+  const [loading, setLoading] = useState(false)
 
   const toggleManualInput = () => {
     setManualInputMode(!manualInputMode)
     form.setValue(field.name, {})
   }
+
+  // 监听值变化,如果是dataid则加载数据
+  useEffect(() => {
+    const value = form.watch(field.name)
+    
+    // 如果配置了使用dataid且有loadDataById方法
+    if (
+      field.resourceConfig?.useDataId && 
+      field.resourceConfig?.loadDataById &&
+      value?.dataid && 
+      !value?.id  // 只有dataid没有完整数据时才加载
+    ) {
+      setLoading(true)
+      
+      field.resourceConfig.loadDataById(value.dataid)
+        .then(data => {
+          // 更新表单显示值,保持完整对象格式
+          form.setValue(field.name, data)
+        })
+        .catch(err => {
+          console.error('Failed to load resource data:', err)
+        })
+        .finally(() => {
+          setLoading(false)
+        })
+    }
+  }, [form.watch(field.name)])
 
   return (
     <FormFieldWrapper
@@ -93,7 +122,16 @@ export const renderResource = (
                   selectionMode="single"
                   onSelect={(selected) => {
                     if (selected.length > 0) {
-                      formField.onChange(selected[0])
+                      // 如果使用dataid模式且没有完整数据,只保存dataid
+                      if (field.resourceConfig?.useDataId && !selected[0].id) {
+                        formField.onChange({
+                          dataid: selected[0].dataid,
+                          name: selected[0].name || selected[0].title
+                        })
+                      } else {
+                        // 有完整数据或非dataid模式,保存完整对象
+                        formField.onChange(selected[0])
+                      }
                       onChange?.(field.name, selected[0])
                     }
                   }}
@@ -104,6 +142,7 @@ export const renderResource = (
                   }}
                 />
               )}
+              {loading && <Spinner size="sm" />}
             </div>
           )}
         </div>

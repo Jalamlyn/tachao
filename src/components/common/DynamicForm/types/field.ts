@@ -15,6 +15,8 @@ export interface ResourceConfig {
       value: string | number
     }>
   }>
+  useDataId?: boolean  // 新增:是否使用dataid模式
+  loadDataById?: (dataid: string) => Promise<any>  // 新增:根据dataid加载数据
 }
 
 export interface FileInfo {
@@ -82,7 +84,6 @@ export interface FormField {
       withCredentials?: boolean
       customRequest?: (options: any) => Promise<any>
     }
-    // 新增配置
     onSuccess?: (fileInfo: FileInfo) => void
     onError?: (error: Error) => void
     onProgress?: (percent: number) => void
