@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react"
 import { UseFormReturn } from "react-hook-form"
-import { FormField } from "../../../types"
+import { FormField, ResourceValue } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
-import { Input } from "@/components/ui/input"
-import ResourceSelectButton from "@/components/common/ResourceSelectButton"
+import { Card, CardBody } from "@nextui-org/react"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { cn } from "@/theme/cn"
+import ResourceSelectButton from "@/components/common/ResourceSelectButton"
 import { Spinner } from "@nextui-org/react"
 
 export const renderResource = (
@@ -15,24 +15,16 @@ export const renderResource = (
   isEditable: boolean,
   onChange?: (fieldName: string, value: any) => void
 ) => {
-  const [manualInputMode, setManualInputMode] = React.useState(false)
   const [loading, setLoading] = useState(false)
-
-  const toggleManualInput = () => {
-    setManualInputMode(!manualInputMode)
-    form.setValue(field.name, {})
-  }
 
   // 监听值变化,如果是dataid则加载数据
   useEffect(() => {
-    const value = form.watch(field.name)
+    const value = form.watch(field.name) as ResourceValue
 
-    // 如果配置了使用dataid且有loadDataById方法
     if (
-      field.resourceConfig?.useDataId &&
       field.resourceConfig?.loadDataById &&
       value?.dataid &&
-      !value?.id // 只有dataid没有完整数据时才加载
+      !value?.displayData // 只有dataid没有完整数据时才加载
     ) {
       setLoading(true)
 
@@ -40,7 +32,10 @@ export const renderResource = (
         .loadDataById(value.dataid)
         .then((data) => {
           // 更新表单显示值,保持完整对象格式
-          form.setValue(field.name, data)
+          form.setValue(field.name, {
+            dataid: value.dataid,
+            displayData: data
+          })
         })
         .catch((err) => {
           console.error("Failed to load resource data:", err)
@@ -50,7 +45,7 @@ export const renderResource = (
         })
     }
   }, [form.watch(field.name)])
-  debugger
+
   return (
     <FormFieldWrapper
       name={field.name}
@@ -61,87 +56,104 @@ export const renderResource = (
       tooltip={field.tooltip}
       required={field.required}
     >
-      {(formField) => (
-        <div className='space-y-4'>
-          {field.resourceConfig?.allowManualInput && (
-            <div className='flex justify-end'>
-              <Button
-                size='sm'
-                variant='light'
-                color={manualInputMode ? "primary" : "default"}
-                onPress={toggleManualInput}
-                startContent={
-                  <Icon icon={manualInputMode ? "mdi:database-search" : "mdi:keyboard"} className='w-4 h-4' />
-                }
-              >
-                {manualInputMode ? "切换到选择模式" : "切换到手动输入"}
-              </Button>
-            </div>
-          )}
+      {(formField) => {
+        const value = formField.value as ResourceValue
+        const displayData = value?.displayData
+        const isMultiple = field.resourceConfig?.multiple
+        const displayMode = field.resourceConfig?.displayMode || 'card'
 
-          {manualInputMode ? (
-            <div className='space-y-3 p-4 border rounded-lg bg-gray-50/50'>
-              {field.resourceConfig?.manualInputFields?.map((inputField) => (
-                <div key={inputField.key} className='space-y-1'>
-                  <label className='text-sm font-medium text-gray-700'>
-                    {inputField.label}
-                    {inputField.required && <span className='text-red-500 ml-1'>*</span>}
-                  </label>
-                  <Input
-                    type={inputField.type || "text"}
-                    value={formField.value?.[inputField.key] || ""}
-                    onChange={(e) => {
-                      const newValue = {
-                        ...formField.value,
-                        [inputField.key]: e.target.value,
-                      }
-                      formField.onChange(newValue)
-                      onChange?.(field.name, newValue)
-                    }}
-                    className='w-full'
-                    required={inputField.required}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
+        return (
+          <div className='space-y-4'>
+            {/* 选择按钮 */}
             <div className='flex items-center gap-2'>
-              <Input
-                {...formField}
-                disabled={!isEditable || field.disabled}
-                className={cn("min-w-[120px] border-0 focus:ring-0 bg-transparent", field.className)}
+              <ResourceSelectButton
+                resourceName={field.resourceConfig?.resourceTitle || ''}
+                selectionMode={isMultiple ? 'multiple' : 'single'}
+                onSelect={(selected) => {
+                  if (selected.length > 0) {
+                    const dataids = selected.map(item => item.dataid)
+                    formField.onChange({
+                      dataid: isMultiple ? dataids : dataids[0],
+                      displayData: isMultiple ? selected : selected[0]
+                    })
+                    onChange?.(field.name, {
+                      dataid: isMultiple ? dataids : dataids[0],
+                      displayData: isMultiple ? selected : selected[0]
+                    })
+                  }
+                }}
+                buttonText='选择'
+                buttonProps={{
+                  size: "sm",
+                  className: "px-2 py-1 h-8",
+                }}
               />
-              {isEditable && field.resourceConfig && (
-                <ResourceSelectButton
-                  resourceName={field.resourceConfig.resourceTitle}
-                  selectionMode='single'
-                  onSelect={(selected) => {
-                    if (selected.length > 0) {
-                      // 如果使用dataid模式且没有完整数据,只保存dataid
-                      if (field.resourceConfig?.useDataId && !selected[0].id) {
-                        formField.onChange({
-                          dataid: selected[0].dataid,
-                          name: selected[0].name || selected[0].title,
-                        })
-                      } else {
-                        // 有完整数据或非dataid模式,保存完整对象
-                        formField.onChange(selected[0])
-                      }
-                      onChange?.(field.name, selected[0])
-                    }
-                  }}
-                  buttonText='选择'
-                  buttonProps={{
-                    size: "sm",
-                    className: "px-2 py-1 h-8",
-                  }}
-                />
-              )}
               {loading && <Spinner size='sm' />}
             </div>
-          )}
-        </div>
-      )}
+
+            {/* 显示数据 */}
+            {displayData && (
+              <div className='space-y-4'>
+                {displayMode === 'card' ? (
+                  // 卡片模式
+                  <div className='grid grid-cols-1 gap-4'>
+                    {(isMultiple ? displayData : [displayData]).map((item: any, index: number) => (
+                      <Card key={index} className='w-full'>
+                        <CardBody className='p-4'>
+                          <div className='grid grid-cols-2 gap-4'>
+                            {(field.resourceConfig?.displayFields || Object.keys(item).map(key => ({ key, label: key }))).map((displayField) => (
+                              <div key={displayField.key} className='space-y-1'>
+                                <span className='text-sm font-medium text-gray-500'>{displayField.label}</span>
+                                <div className='text-sm'>
+                                  {displayField.render ? 
+                                    displayField.render(item[displayField.key]) : 
+                                    String(item[displayField.key] || '-')}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  // 表格模式
+                  <div className='overflow-x-auto'>
+                    <table className='w-full min-w-[400px] border-collapse'>
+                      <thead>
+                        <tr className='bg-gray-50'>
+                          {(field.resourceConfig?.displayFields || Object.keys(isMultiple ? displayData[0] : displayData).map(key => ({ key, label: key }))).map((displayField) => (
+                            <th 
+                              key={displayField.key}
+                              className='p-2 text-left text-sm font-medium text-gray-500 border border-gray-200'
+                              style={{ width: displayField.width }}
+                            >
+                              {displayField.label}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(isMultiple ? displayData : [displayData]).map((item: any, index: number) => (
+                          <tr key={index} className='hover:bg-gray-50'>
+                            {(field.resourceConfig?.displayFields || Object.keys(item).map(key => ({ key, label: key }))).map((displayField) => (
+                              <td key={displayField.key} className='p-2 text-sm border border-gray-200'>
+                                {displayField.render ? 
+                                  displayField.render(item[displayField.key]) : 
+                                  String(item[displayField.key] || '-')}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      }}
     </FormFieldWrapper>
   )
 }
