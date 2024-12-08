@@ -62,7 +62,7 @@ const ResourceGallery = forwardRef<ResourceGalleryRef, ResourceGalleryProps>(
 
     // 暴露 loadResources 方法给父组件
     useImperativeHandle(ref, () => ({
-      loadResources
+      loadResources,
     }))
 
     React.useEffect(() => {
@@ -97,6 +97,17 @@ const ResourceGallery = forwardRef<ResourceGalleryRef, ResourceGalleryProps>(
       }
     }
 
+    const handleCopyId = async (resource: Resource, e: React.MouseEvent) => {
+      e.stopPropagation()
+      try {
+        await navigator.clipboard.writeText(resource.id)
+        message.success("资料ID已复制到剪贴板")
+      } catch (error) {
+        console.error("复制失败:", error)
+        message.error("复制失败")
+      }
+    }
+
     const renderCard = (resource: Resource) => (
       <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => handleCardClick(resource)}>
         <CardBody className='p-0 relative overflow-hidden'>
@@ -126,6 +137,15 @@ const ResourceGallery = forwardRef<ResourceGalleryRef, ResourceGalleryProps>(
               >
                 <Icon icon='mdi:delete' className='w-4 h-4' />
               </Button>
+              <Button
+                isIconOnly
+                size='sm'
+                variant='light'
+                className='text-default-400 hover:text-primary hover:bg-primary-50 transition-colors duration-300'
+                onClick={(e) => handleCopyId(resource, e)}
+              >
+                <Icon icon='mdi:content-copy' className='w-4 h-4' />
+              </Button>
             </div>
           </div>
         </CardFooter>
@@ -147,7 +167,11 @@ const ResourceGallery = forwardRef<ResourceGalleryRef, ResourceGalleryProps>(
           items={internalResources}
           renderCard={renderCard}
           emptyState={
-            <EmptyState type='no-data' title='还没有上传 Excel' description='上传你的第一个表格,开始使用 AI 进行数据分析' />
+            <EmptyState
+              type='no-data'
+              title='还没有上传 Excel'
+              description='上传你的第一个表格,开始使用 AI 进行数据分析'
+            />
           }
           loadingState={loadingState}
           isLoading={isLoading}
