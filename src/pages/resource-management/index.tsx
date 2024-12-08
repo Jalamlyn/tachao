@@ -29,7 +29,6 @@ const ResourceManagement: React.FC = () => {
   }, [])
 
   const handleSuccess = (data: any) => {
-    message.success("上传成功")
     // 调用ResourceGallery的刷新方法
     galleryRef.current?.loadResources()
   }
