@@ -39,7 +39,20 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     other?: Array<{ field: string; message: string }>
   }>({})
   const [selectedTable, setSelectedTable] = useState<string>("")
+  const [hasScroll, setHasScroll] = React.useState(false)
 
+  // 检查是否需要显示滚动阴影
+  React.useEffect(() => {
+    const tabsList = document.querySelector(`.${styles["tabs-list-scroll"]}`)
+    if (tabsList) {
+      const checkScroll = () => {
+        setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
+      }
+      checkScroll()
+      window.addEventListener("resize", checkScroll)
+      return () => window.removeEventListener("resize", checkScroll)
+    }
+  }, [])
   useEffect(() => {
     const loadFormData = async () => {
       if (initialValues) {
@@ -292,14 +305,22 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         <div className={cn(styles["form-card"])}>
           <h2 className={cn(styles["form-title"])}>明细信息</h2>
           <Tabs value={selectedTable} onValueChange={setSelectedTable}>
-            <TabsList className='w-full justify-start'>
-              {renderConfig.tables.map((table: TableGroup) => (
-                <TabsTrigger key={table.key} value={table.key}>
-                  {table.icon && <Icon icon={table.icon} className='mr-1' />}
-                  <span>{table.title}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <div className={styles["tabs-scroll-container"]}>
+              <TabsList
+                className={cn(
+                  styles["tabs-list-scroll"],
+                  "w-full flex justify-start",
+                  hasScroll && styles["tabs-scroll-shadow"]
+                )}
+              >
+                {renderConfig.tables.map((table: TableGroup) => (
+                  <TabsTrigger key={table.key} value={table.key}>
+                    {table.icon && <Icon icon={table.icon} className='mr-1' />}
+                    <span>{table.title}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
             {renderConfig.tables.map((table: TableGroup) => (
               <TabsContent key={table.key} value={table.key}>
                 {table.description && <p className='text-sm text-gray-500 mb-4'>{table.description}</p>}
