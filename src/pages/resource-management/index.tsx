@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
 import { Tabs, Tab } from "@nextui-org/react"
@@ -19,6 +19,7 @@ const ResourceManagement: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()
   const appId = import.meta.env.VITE_SHATA_AI_APP_ID
   const [selectedType, setSelectedType] = React.useState<string>("excel")
+  const galleryRef = useRef<{ loadResources: () => Promise<void> }>()
 
   useEffect(() => {
     updateBreadcrumbs([
@@ -29,6 +30,8 @@ const ResourceManagement: React.FC = () => {
 
   const handleSuccess = (data: any) => {
     message.success("上传成功")
+    // 调用ResourceGallery的刷新方法
+    galleryRef.current?.loadResources()
   }
 
   const handleError = (error: Error) => {
@@ -42,7 +45,7 @@ const ResourceManagement: React.FC = () => {
   const renderUploadButton = (type: string) => {
     switch (type) {
       case "excel":
-        return <CreateResourceButton appId={appId} isDisabled={false} />
+        return <CreateResourceButton appId={appId} isDisabled={false} onSuccess={handleSuccess} />
       case "word":
         return <WordUploadButton onSuccess={handleSuccess} onError={handleError} />
       case "pdf":
@@ -70,6 +73,7 @@ const ResourceManagement: React.FC = () => {
       className='flex flex-col gap-4'
     >
       <ResourceGallery
+        ref={galleryRef}
         onResourceSelect={handleResourceSelect}
         className='transition-all duration-300'
         renderHeader={renderHeader}

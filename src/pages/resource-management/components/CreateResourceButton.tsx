@@ -19,9 +19,10 @@ import message from "@/components/Message"
 interface CreateResourceButtonProps {
   appId: string | null
   isDisabled: boolean
+  onSuccess?: () => void // 添加onSuccess回调
 }
 
-const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDisabled }) => {
+const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDisabled, onSuccess }) => {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [resourceName, setResourceName] = useState("")
   const [file, setFile] = useState<File | null>(null)
@@ -117,6 +118,9 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
 
       if (excelResult) {
         onClose()
+        message.success("上传成功")
+        // 调用onSuccess回调
+        onSuccess?.()
       } else {
         throw new Error("创建失败")
       }
