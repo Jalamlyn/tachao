@@ -12,7 +12,7 @@ interface ResourceSelectButtonProps {
   buttonText?: string
   buttonProps?: React.ComponentProps<typeof Button>
   loading?: boolean
-  selectionMode?: 'single' | 'multiple'
+  selectionMode?: "single" | "multiple"
 }
 
 const ResourceSelectButton: React.FC<ResourceSelectButtonProps> = ({
@@ -21,7 +21,7 @@ const ResourceSelectButton: React.FC<ResourceSelectButtonProps> = ({
   buttonText = "选择资源",
   buttonProps,
   loading = false,
-  selectionMode = 'multiple'
+  selectionMode = "multiple",
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [resourceData, setResourceData] = useState<any[]>([])
@@ -36,7 +36,7 @@ const ResourceSelectButton: React.FC<ResourceSelectButtonProps> = ({
     try {
       const response = await getMetadata([resourceName])
       if (response.data && response.data.length > 0 && response.data[0].value) {
-        const data = JSON.parse(response.data[0].value)
+        const { data } = JSON.parse(response.data[0].value)
         setResourceData(data)
       }
     } catch (error) {
@@ -87,11 +87,11 @@ const ResourceSelectButton: React.FC<ResourceSelectButtonProps> = ({
 
   return (
     <>
-      <Button 
-        type='button' 
-        variant='light' 
-        onClick={handleOpenDialog} 
-        className='gap-2' 
+      <Button
+        type='button'
+        variant='light'
+        onClick={handleOpenDialog}
+        className='gap-2'
         isLoading={loading || isButtonLoading}
         {...buttonProps}
       >
