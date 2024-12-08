@@ -142,12 +142,6 @@
         label: "联系人"
       }
     ],
-    // 加载数据的方法
-    loadDataById: async (dataid) => {
-      // 实现加载数据的逻辑
-      const response = await fetch(`/api/supplier/${dataid}`)
-      return response.json()
-    }
   }
 }
 
@@ -192,10 +186,6 @@
         transform: (value) => Number(value).toFixed(2)
       }
     },
-    loadDataById: async (dataid) => {
-      const response = await fetch(`/api/product/${dataid}`)
-      return response.json()
-    }
   }
 }
 
@@ -223,14 +213,6 @@
         render: (value) => `${value}/件`
       }
     ],
-    loadDataById: async (dataids) => {
-      // 支持批量加载
-      const response = await fetch('/api/materials', {
-        method: 'POST',
-        body: JSON.stringify({ ids: dataids })
-      })
-      return response.json()
-    }
   }
 }
 ```
