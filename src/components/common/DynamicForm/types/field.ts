@@ -2,6 +2,16 @@ import { ReactNode } from "react"
 import { UseFormReturn } from "react-hook-form"
 import { FormFieldType, ManualInputFieldType, TooltipConfig } from "./basic"
 
+// 字段映射配置
+export interface FieldMapping {
+  [targetField: string]: string | {
+    field: string
+    transform?: (value: any) => any
+    condition?: (resource: any) => boolean
+    fields?: string[]
+  }
+}
+
 export interface ResourceConfig {
   resourceTitle: string
   allowManualInput?: boolean
@@ -15,8 +25,10 @@ export interface ResourceConfig {
       value: string | number
     }>
   }>
-  useDataId?: boolean  // 新增:是否使用dataid模式
-  loadDataById?: (dataid: string) => Promise<any>  // 新增:根据dataid加载数据
+  useDataId?: boolean
+  loadDataById?: (dataid: string) => Promise<any>
+  // 新增：字段映射配置
+  fieldMapping?: FieldMapping
 }
 
 export interface FileInfo {

@@ -21,6 +21,10 @@ export interface TableColumn {
   }
   className?: string
   style?: React.CSSProperties
+  // 新增：标识是否为映射字段
+  isMappedField?: boolean
+  // 新增：映射来源字段
+  mappedFrom?: string
 }
 
 export interface TableSummary {

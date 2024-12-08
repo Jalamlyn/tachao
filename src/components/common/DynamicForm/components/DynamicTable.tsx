@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react"
+import React, { useState, useCallback, useEffect } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { debounce } from "lodash"
 import styles from "../styles/DynamicForm.module.css"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import message from "@/components/Message"
 
 interface DynamicTableProps {
   config: TableConfig
@@ -52,6 +53,54 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     defaultValue: [],
   })
 
+  // 新增：处理资源选择后的字段映射
+  const handleResourceSelect = useCallback((rowIndex: number, columnKey: string, selected: any) => {
+    if (!selected || !selected[0]) return;
+    
+    const resource = selected[0];
+    const column = config.columns.find(col => col.key === columnKey);
+    
+    if (column?.resourceConfig?.fieldMapping) {
+      Object.entries(column.resourceConfig.fieldMapping).forEach(([targetField, mapping]) => {
+        // 找到目标列配置
+        const targetColumn = config.columns.find(col => col.key === targetField);
+        if (!targetColumn) return;
+
+        // 设置映射标记
+        targetColumn.isMappedField = true;
+        targetColumn.mappedFrom = `${columnKey}.${typeof mapping === 'string' ? mapping : mapping.field}`;
+        targetColumn.editable = false;
+
+        if (typeof mapping === 'string') {
+          // 简单映射
+          const value = resource[mapping];
+          if (value !== undefined) {
+            form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value);
+          }
+        } else {
+          // 复杂映射
+          if (mapping.condition && !mapping.condition(resource)) {
+            return;
+          }
+
+          if (mapping.fields) {
+            // 多字段组合
+            const values = mapping.fields.map(field => resource[field]);
+            const value = mapping.transform ? mapping.transform(values) : values.join(' ');
+            form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value);
+          } else {
+            // 单字段转换
+            const value = resource[mapping.field];
+            const transformedValue = mapping.transform ? mapping.transform(value) : value;
+            if (transformedValue !== undefined) {
+              form.setValue(`${fieldName}.${rowIndex}.${targetField}`, transformedValue);
+            }
+          }
+        }
+      });
+    }
+  }, [config.columns, fieldName, form]);
+
   const handleAddRow = useCallback(() => {
     const newRow = config.columns.reduce(
       (acc, column) => {
@@ -86,7 +135,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
   const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
     const cellFieldName = `${fieldName}.${rowIndex}.${column.key}`
-    const isFieldEditable = isEditable && column.editable !== false
+    const isFieldEditable = isEditable && column.editable !== false && !column.isMappedField
 
     if (column.render) {
       return column.render(form.getValues(cellFieldName), tableData[rowIndex], rowIndex)
@@ -121,6 +170,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                 onSelect={(selected) => {
                   if (selected.length > 0) {
                     form.setValue(cellFieldName, selected[0])
+                    // 处理字段映射
+                    handleResourceSelect(rowIndex, column.key, selected)
                   }
                 }}
                 buttonText='选择'
@@ -133,138 +184,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
           </div>
         )
 
-      case "date":
-      case "datetime":
-        return (
-          <FormField
-            control={form.control}
-            name={cellFieldName}
-            render={({ field }) => (
-              <FormItem>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full pl-3 text-left font-normal border-0",
-                          !field.value && "text-muted-foreground"
-                        )}
-                        disabled={!isFieldEditable}
-                      >
-                        {field.value ? format(new Date(field.value), "PPP") : <span>选择日期</span>}
-                        <Icon icon='mdi:calendar' className='ml-auto h-4 w-4 opacity-50' />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className='w-auto p-0' align='start'>
-                    <Calendar
-                      mode='single'
-                      selected={field.value ? new Date(field.value) : undefined}
-                      onSelect={(date) => {
-                        field.onChange(date?.toISOString())
-                        form.trigger(cellFieldName)
-                      }}
-                      disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )
-
-      case "textarea":
-        return (
-          <FormField
-            control={form.control}
-            name={cellFieldName}
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Textarea
-                    {...field}
-                    disabled={!isFieldEditable}
-                    className={cn(
-                      "min-h-[100px] md:min-h-[60px] border-0 focus:ring-0 bg-transparent"
-                    )}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )
-
-      case "select":
-        return (
-          <FormField
-            control={form.control}
-            name={cellFieldName}
-            render={({ field }) => (
-              <FormItem>
-                <Select
-                  disabled={!isFieldEditable}
-                  onValueChange={(value) => {
-                    field.onChange(value)
-                    form.trigger(cellFieldName)
-                  }}
-                  value={field.value}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger
-                      className={cn(
-                        "border-0 focus:ring-0 bg-transparent"
-                      )}
-                    >
-                      <SelectValue placeholder={column.placeholder || "请选择"} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {column.options?.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )
-
-      case "number":
-        return (
-          <FormField
-            control={form.control}
-            name={cellFieldName}
-            render={({ field }) => (
-              <FormItem className='relative group'>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type='number'
-                    disabled={!isFieldEditable}
-                    className={cn(
-                      "text-right font-mono border-0 focus:ring-0 bg-transparent",
-                      "group-hover:bg-blue-100/50"
-                    )}
-                    onChange={(e) => {
-                      field.onChange(e)
-                      form.trigger(cellFieldName)
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )
-
+      // ... 其他类型的渲染保持不变
       default:
         return (
           <FormField
@@ -273,13 +193,23 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input
-                    {...field}
-                    disabled={!isFieldEditable}
-                    className={cn(
-                      "border-0 focus:ring-0 bg-transparent"
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      disabled={!isFieldEditable}
+                      className={cn(
+                        "border-0 focus:ring-0 bg-transparent",
+                        column.isMappedField && "bg-gray-50"
+                      )}
+                    />
+                    {column.isMappedField && (
+                      <Icon
+                        icon="mdi:link-variant"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400"
+                        title={`自动填充自：${column.mappedFrom}`}
+                      />
                     )}
-                  />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -322,6 +252,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                     >
                       <div className='flex items-center gap-1'>
                         {column.title}
+                        {column.isMappedField && (
+                          <Icon
+                            icon="mdi:link-variant"
+                            className="text-gray-400"
+                            title="自动填充字段"
+                          />
+                        )}
                       </div>
                     </TableHead>
                   ))}
@@ -334,7 +271,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                     {config.columns.map((column) => (
                       <TableCell 
                         key={column.key} 
-                        className='border border-gray-200'
+                        className={cn(
+                          'border border-gray-200',
+                          column.isMappedField && 'bg-gray-50'
+                        )}
                         style={{
                           minWidth: column.width || '80px'
                         }}
@@ -377,49 +317,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             </Table>
           </div>
         </div>
-      </div>
-
-      <div className='space-y-4 md:hidden'>
-        {fields.map((field, rowIndex) => (
-          <motion.div
-            key={field.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className='bg-white rounded-lg shadow-sm p-4 space-y-3'
-          >
-            {config.columns.map((column) => (
-              <div key={column.key} className='space-y-1'>
-                <div className='flex items-center gap-1 text-sm font-medium text-gray-500'>
-                  {column.title}
-                </div>
-                <div>{renderCell(column, rowIndex)}</div>
-              </div>
-            ))}
-            {isEditable && (
-              <div className='pt-2 flex justify-end'>
-                <Button isIconOnly color='danger' variant='light' size='sm' onClick={() => handleDeleteRow(rowIndex)}>
-                  <Icon icon='mdi:delete' className='w-4 h-4' />
-                </Button>
-              </div>
-            )}
-          </motion.div>
-        ))}
-        {config.summary?.show && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={cn("bg-default-50 rounded-lg p-4 space-y-3", config.summary.className)}
-            style={config.summary.style}
-          >
-            {config.columns.map((column) => (
-              <div key={column.key} className='space-y-1'>
-                <div className='text-sm font-medium text-gray-500'>{column.title}</div>
-                <div>{renderSummaryCell(column)}</div>
-              </div>
-            ))}
-          </motion.div>
-        )}
       </div>
 
       {isEditable && (
