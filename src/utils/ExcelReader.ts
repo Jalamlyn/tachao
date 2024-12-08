@@ -1,6 +1,15 @@
 import * as XLSX from "xlsx"
 import { logger } from "./logger"
 
+// 生成唯一的数据ID
+const generateDataId = (fileName: string, rowIndex: number): string => {
+  const timestamp = Date.now()
+  const random = Math.random().toString(36).substr(2, 6)
+  // 清理文件名，只保留字母数字
+  const cleanFileName = fileName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8)
+  return `${cleanFileName}_${timestamp}_${random}_${rowIndex}`
+}
+
 // 将工作表转换为 CSV 格式
 const sheetToCSV = (worksheet: XLSX.WorkSheet, isMultipleHeaders: boolean = false): string => {
   try {
@@ -95,11 +104,13 @@ export const readExcel = async (file: File, isMultipleHeaders: boolean = false):
         // 将 CSV 转换为对象数组以保持兼容性
         const lines = csv.split("\n")
         const headers = lines[0].split(",")
-        const jsonData = lines.slice(1).map((line) => {
+        const jsonData = lines.slice(1).map((line, index) => {
           const values = line.split(",")
-          const obj: any = {}
-          headers.forEach((header, index) => {
-            obj[header] = values[index]?.replace(/\\,/g, ",").replace(/\\n/g, "\n") || ""
+          const obj: any = {
+            dataid: generateDataId(file.name, index + 1), // 为每行数据添加唯一ID
+          }
+          headers.forEach((header, headerIndex) => {
+            obj[header] = values[headerIndex]?.replace(/\\,/g, ",").replace(/\\n/g, "\n") || ""
           })
           return obj
         })
