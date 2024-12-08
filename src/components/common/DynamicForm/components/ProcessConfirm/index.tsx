@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/theme/cn"
 import { Icon } from "@iconify/react"
 import { Progress } from "@nextui-org/react"
+import styles from "../../styles/DynamicForm.module.css"
 
 interface DynamicProcessConfirmProps {
   steps: ProcessStepType[]
@@ -45,6 +46,20 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
   })
 
   const [selectedStep, setSelectedStep] = React.useState<string>(steps[0]?.key || "")
+  const [hasScroll, setHasScroll] = React.useState(false)
+
+  // 检查是否需要显示滚动阴影
+  React.useEffect(() => {
+    const tabsList = document.querySelector(`.${styles["tabs-list-scroll"]}`)
+    if (tabsList) {
+      const checkScroll = () => {
+        setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
+      }
+      checkScroll()
+      window.addEventListener('resize', checkScroll)
+      return () => window.removeEventListener('resize', checkScroll)
+    }
+  }, [steps])
 
   // 监听表单值变化
   const formValues = form.watch(fieldName)
@@ -114,37 +129,43 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
       <ProcessProgressIndicator progress={progress} />
 
       <Tabs value={selectedStep} onValueChange={setSelectedStep}>
-        <TabsList className='w-full justify-start'>
-          {steps.map((step) => {
-            const stepData = form.watch(`${fieldName}.${step.key}`) || {}
-            if (stepData.hidden) return null
+        <div className={styles["tabs-scroll-container"]}>
+          <TabsList className={cn(
+            styles["tabs-list-scroll"],
+            "w-full flex",
+            hasScroll && styles["tabs-scroll-shadow"]
+          )}>
+            {steps.map((step) => {
+              const stepData = form.watch(`${fieldName}.${step.key}`) || {}
+              if (stepData.hidden) return null
 
-            const { blocked, reason } = isStepBlocked(step)
-            const isCompleted = stepData.confirmed
-            const isCurrent = selectedStep === step.key
+              const { blocked, reason } = isStepBlocked(step)
+              const isCompleted = stepData.confirmed
+              const isCurrent = selectedStep === step.key
 
-            return (
-              <TabsTrigger
-                key={step.key}
-                value={step.key}
-                disabled={blocked}
-                className={cn(
-                  "flex items-center gap-2 relative rounded-md",
-                  isCompleted && "text-blue-600",
-                  blocked && "opacity-50 cursor-not-allowed"
-                )}
-                title={blocked ? reason : undefined}
-              >
-                <Icon
-                  icon={isCompleted ? "mdi:check-circle" : blocked ? "mdi:lock" : "mdi:circle-outline"}
-                  className={cn("w-5 h-5", isCompleted && "text-blue-600", blocked && "text-gray-400")}
-                />
-                <span>{step.title}</span>
-                {step.weight && <span className='text-xs text-gray-500'>({step.weight}分)</span>}
-              </TabsTrigger>
-            )
-          })}
-        </TabsList>
+              return (
+                <TabsTrigger
+                  key={step.key}
+                  value={step.key}
+                  disabled={blocked}
+                  className={cn(
+                    "flex items-center gap-2 relative rounded-md whitespace-nowrap",
+                    isCompleted && "text-blue-600",
+                    blocked && "opacity-50 cursor-not-allowed"
+                  )}
+                  title={blocked ? reason : undefined}
+                >
+                  <Icon
+                    icon={isCompleted ? "mdi:check-circle" : blocked ? "mdi:lock" : "mdi:circle-outline"}
+                    className={cn("w-5 h-5", isCompleted && "text-blue-600", blocked && "text-gray-400")}
+                  />
+                  <span>{step.title}</span>
+                  {step.weight && <span className='text-xs text-gray-500'>({step.weight}分)</span>}
+                </TabsTrigger>
+              )
+            })}
+          </TabsList>
+        </div>
 
         {steps.map((step) => {
           const stepData = form.watch(`${fieldName}.${step.key}`) || {}

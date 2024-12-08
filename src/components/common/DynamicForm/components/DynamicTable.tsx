@@ -1,4 +1,4 @@
-import React, { useCallback } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -16,6 +16,7 @@ import { motion } from "framer-motion"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { debounce } from "lodash"
 import styles from "../styles/DynamicForm.module.css"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface DynamicTableProps {
   config: TableConfig
@@ -29,6 +30,21 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     control: form.control,
     name: fieldName,
   })
+
+  const [hasScroll, setHasScroll] = useState(false)
+
+  // 检查是否需要显示滚动阴影
+  useEffect(() => {
+    const tabsList = document.querySelector(`.${styles["tabs-list-scroll"]}`)
+    if (tabsList) {
+      const checkScroll = () => {
+        setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
+      }
+      checkScroll()
+      window.addEventListener('resize', checkScroll)
+      return () => window.removeEventListener('resize', checkScroll)
+    }
+  }, [config.columns])
 
   const tableData = useWatch({
     control: form.control,

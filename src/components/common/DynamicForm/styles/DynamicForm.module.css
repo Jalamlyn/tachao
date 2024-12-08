@@ -36,7 +36,49 @@
   color: var(--df-gray-900);
 }
 
-/* 表单卡片样式 */
+/* 新增: Tabs滚动样式 */
+.tabs-scroll-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.tabs-list-scroll {
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  white-space: nowrap;
+  flex-wrap: nowrap;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch; /* 支持iOS滑动 */
+}
+
+.tabs-list-scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.tabs-scroll-shadow {
+  position: relative;
+}
+
+.tabs-scroll-shadow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 30px;
+  background: linear-gradient(to right, transparent, white);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.tabs-scroll-shadow.has-scroll::after {
+  opacity: 1;
+}
+
+/* 原有样式保持不变 */
 .form-card {
   background-color: white;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -49,7 +91,6 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
-/* 表单标题样式 */
 .form-title {
   color: var(--df-gray-900);
   font-size: 1.25rem;
@@ -59,7 +100,6 @@
   border-bottom: 2px solid var(--df-primary-100);
 }
 
-/* 表单字段样式 */
 .form-field {
   margin-bottom: 1.5rem;
 }
@@ -87,7 +127,6 @@
   outline: none;
 }
 
-/* 按钮样式 */
 .button {
   padding: 0.75rem 1.5rem;
   border-radius: 0.75rem;
@@ -106,7 +145,6 @@
   border: none;
 }
 
-/* 状态样式 */
 .status-tag {
   display: inline-flex;
   align-items: center;
@@ -132,7 +170,6 @@
   color: var(--df-error-700);
 }
 
-/* 表格样式 */
 .table {
   width: 100%;
   border-collapse: separate;
@@ -160,7 +197,6 @@
   background-color: var(--df-gray-50);
 }
 
-/* 计算字段样式 */
 .calculated-field {
   background-color: var(--df-primary-50) !important;
   border-color: var(--df-primary-200) !important;
@@ -181,7 +217,6 @@
   opacity: 1;
 }
 
-/* 表格图例样式 */
 .table-legend {
   display: flex;
   align-items: center;
@@ -214,7 +249,6 @@
   border-color: var(--df-gray-200);
 }
 
-/* 流程步骤样式 */
 .process-step {
   border: 1px solid var(--df-gray-200);
   border-radius: 0.75rem;
@@ -245,7 +279,6 @@
   color: var(--df-primary-600);
 }
 
-/* 信息提示样式 */
 .info-box {
   background-color: var(--df-primary-50);
   border: 1px solid var(--df-primary-200);
@@ -259,7 +292,6 @@
   color: var(--df-primary-700);
 }
 
-/* 输入框组样式 */
 .input-group {
   display: flex;
   align-items: center;
@@ -271,7 +303,6 @@
   flex: 1;
 }
 
-/* 选择器样式 */
 .select {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
@@ -281,7 +312,6 @@
   padding-right: 2.5rem;
 }
 
-/* 打印样式 */
 @media print {
   .dynamic-form {
     background-color: white;
@@ -306,7 +336,6 @@
   }
 }
 
-/* 纸质表单风格 */
 .paper-form {
   background: white;
   border: 1px solid #000;
@@ -319,7 +348,6 @@
   box-shadow: none !important;
 }
 
-/* 表格线框风格 */
 .paper-table {
   border-collapse: collapse !important;
   border-spacing: 0;
@@ -338,7 +366,6 @@
   background: transparent !important;
 }
 
-/* 输入框线框风格 */
 .paper-input {
   border: 1px solid #000 !important;
   background: transparent !important;
@@ -351,7 +378,6 @@
   box-shadow: none !important;
 }
 
-/* 表单区块线框风格 */
 .paper-section {
   border: 1px solid #000;
   padding: 1rem;
@@ -360,7 +386,6 @@
   background: transparent;
 }
 
-/* 纸质表单标题样式 */
 .paper-title {
   border-bottom: 2px solid #000;
   color: #000;
@@ -369,7 +394,6 @@
   padding-bottom: 0.5rem;
 }
 
-/* 纸质表单按钮样式 */
 .paper-button {
   border: 1px solid #000;
   background: transparent;
@@ -381,7 +405,6 @@
   background: rgba(0, 0, 0, 0.05);
 }
 
-/* 纸质表单流程步骤样式 */
 .paper-step {
   border: 1px solid #000;
   border-radius: 0;
@@ -392,7 +415,6 @@
   background: rgba(0, 0, 0, 0.05);
 }
 
-/* 打印优化 */
 @media print {
   .paper-form,
   .paper-table,
