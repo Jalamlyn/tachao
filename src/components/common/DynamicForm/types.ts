@@ -22,14 +22,28 @@ export type FormFieldType =
   | "switch"
   | "slider"
 
+export type ManualInputFieldType = 
+  | "text" 
+  | "number" 
+  | "email" 
+  | "tel" 
+  | "textarea" 
+  | "select" 
+  | "date" 
+  | "datetime"
+
 export interface ResourceConfig {
   resourceTitle: string
   allowManualInput?: boolean
   manualInputFields?: Array<{
     key: string
     label: string
-    type?: "text" | "number" | "email" | "tel"
+    type?: ManualInputFieldType
     required?: boolean
+    options?: Array<{
+      label: string
+      value: string | number
+    }>
   }>
 }
 
@@ -70,6 +84,7 @@ export interface FormField {
   step?: number
   layout?: "horizontal" | "vertical"
   path?: string
+  style?: React.CSSProperties
 }
 
 export interface FormFieldGroup {
@@ -78,6 +93,8 @@ export interface FormFieldGroup {
   fields: FormField[]
   description?: string
   icon?: string
+  className?: string
+  style?: React.CSSProperties
 }
 
 export interface TableColumn {
@@ -97,6 +114,8 @@ export interface TableColumn {
   summary?: {
     render?: (value: any) => ReactNode
   }
+  className?: string
+  style?: React.CSSProperties
 }
 
 export interface TableSummary {
@@ -118,6 +137,8 @@ export interface TableGroup {
   description?: string
   icon?: string
   config: TableConfig
+  className?: string
+  style?: React.CSSProperties
 }
 
 export interface ProcessStepDependency {
@@ -134,6 +155,7 @@ export interface ProcessStepTimeout {
   duration: number
   action: "warn" | "block" | "auto-approve" | "auto-reject"
   message?: string
+  callback?: (step: string) => void
 }
 
 export interface ProcessStepApprovers {
@@ -141,6 +163,13 @@ export interface ProcessStepApprovers {
   roles?: string[]
   users?: string[]
   minApprovers?: number
+  maxApprovers?: number
+  deadline?: number
+  notifyType?: "email" | "sms" | "both"
+  escalation?: {
+    after: number
+    to: string[]
+  }
 }
 
 export interface ProcessStep {
@@ -153,6 +182,8 @@ export interface ProcessStep {
   weight?: number
   timeout?: ProcessStepTimeout
   approvers?: ProcessStepApprovers
+  className?: string
+  style?: React.CSSProperties
 }
 
 export interface ProcessStepStatus {
@@ -217,6 +248,34 @@ export interface ValidationResult {
   }
 }
 
+// 新增：表单状态类型
+export interface FormState {
+  isSubmitting: boolean
+  isDirty: boolean
+  isValid: boolean
+  errors: Record<string, string>
+}
+
+// 新增：表单事件处理器类型
+export interface FormEventHandlers {
+  onSubmit?: (validationResult: ValidationResult, values: any) => Promise<void>
+  onChange?: (values: any) => void
+  onError?: (error: Error) => void
+  onCancel?: () => void
+}
+
+// 新增：表单校验规则类型
+export interface ValidationRule {
+  required?: boolean
+  pattern?: RegExp
+  min?: number
+  max?: number
+  minLength?: number
+  maxLength?: number
+  validate?: (value: any) => string | undefined
+  message?: string
+}
+
 export interface DynamicFormConfig {
   metadata: FormMetadata
   renderConfig: FormRenderConfig
@@ -227,6 +286,8 @@ export interface DynamicFormConfig {
   }
   watch?: (form: UseFormReturn<any>) => () => void
   validate?: (values: any, context?: ValidationContext) => Promise<ValidationResult> | ValidationResult
+  validationRules?: Record<string, ValidationRule>  // 新增：表单级别的验证规则
+  eventHandlers?: FormEventHandlers  // 新增：表单事件处理器
 }
 
 export interface DynamicFormProps {
@@ -236,11 +297,4 @@ export interface DynamicFormProps {
   onCancel?: () => void
   templateId?: string
   previewMode?: boolean
-}
-
-export interface WatchUtils {
-  watchField: (fieldName: string, callback: (value: any) => void) => () => void
-  watchFields: (fieldNames: string[], callback: (values: any[]) => void) => () => void
-  batchUpdate: (updates: Array<{ field: string; value: any }>) => void
-  setFieldVisibility: (fieldName: string, visible: boolean) => void
 }
