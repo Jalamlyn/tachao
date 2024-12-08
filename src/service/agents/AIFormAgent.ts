@@ -3,6 +3,7 @@ import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import generateFormAgentPrompt from "./prompts/form-agent-prompt"
 import { Message } from "./AIFormAgentTypes"
+import message from "@/components/Message"
 
 export class AIFormAgent {
   private static instance: AIFormAgent
@@ -47,6 +48,7 @@ export class AIFormAgent {
       return parsedConfig
     } catch (error) {
       console.error("Error parsing form config:", error, rawConfig)
+      // message.error("表单解析失败")
       throw new Error("Failed to parse form config")
     }
   }
@@ -74,12 +76,6 @@ export class AIFormAgent {
       const enhancedCommand = `${command}
       [意图控制: 
       - 主要职责: 我是表单设计助手，专注于帮助用户设计和优化表单系统。
-      - 业务范围: 
-        * 表单设计与开发
-        * 业务流程分析
-        * 数据收集需求
-        * 表单使用场景
-        * 业务规则讨论
       - 回答策略:
         * 对于表单直接相关问题：提供具体解决方案
         * 对于业务相关问题：进行分析并给出建议
@@ -89,7 +85,7 @@ export class AIFormAgent {
         * 优先理解用户意图
         * 结合上下文分析
         * 提供建设性建议
-        * 引导用户明确需求][格式要求:不要遗漏 \`\`\`mo 标记,不要遗漏 <shata-ai 的标记]`
+        * 引导用户明确需求,用户确认后再生成表单][格式要求:不要遗漏 \`\`\`mo 标记,不要遗漏 <shata-ai 的标记]`
 
       // 构建当前用户消息，检查是否有缓存图片
       const currentUserMessage = {

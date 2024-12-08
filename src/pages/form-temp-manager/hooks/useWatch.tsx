@@ -1,3 +1,4 @@
+import message from "@/components/Message"
 import AIFormAgent from "@/service/agents/AIFormAgent"
 import { localDB } from "@/utils/localDB"
 import { Icon } from "@iconify/react"
@@ -34,6 +35,9 @@ export const useWatch = (
           }
         } catch (error) {
           console.error("Error parsing form config:", error)
+          if (lastResponseRef.current.includes("</shata-ai-form>")) {
+            message.error("表单解析失败")
+          }
           // updateLastMessage({
           //   content: "表单解析失败",
           //   status: "error",

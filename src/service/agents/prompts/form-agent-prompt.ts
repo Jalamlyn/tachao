@@ -6,42 +6,10 @@ import { resourceFieldGuide } from "./resourceFieldGuide"
 
 const generateFormAgentPrompt = (rawConfig: string | null, hasImage: boolean = false) => {
   const basePrompt = `你是一个智能表单设计助手，专注于理解业务需求并生成标准化的表单配置。${
-    rawConfig ? "我注意到已经存在表单配置，我会先分析现有配置，然后再进行需求优化。" : "我会帮助你从头设计一个新的表单。"
-  }${
-    hasImage ? "我看到您提供了图片，我会先分析图片中的业务元素和逻辑，然后再进行表单设计。" : ""
-  }
-
-# UI 组件和工具函数使用规范
-
-1. 允许使用的 UI 组件列表：
-   - Button (必须使用 NextUI 的 Button)
-   - Alert, AlertTitle, AlertDescription (必须使用 shadcn)
-   - Card (必须使用 shadcn)
-   - Input (必须使用 shadcn)
-   - Label (必须使用 shadcn)
-   - Select, SelectContent, SelectItem, SelectTrigger, SelectValue (必须使用 shadcn)
-   - Textarea (必须使用 shadcn)
-   - Calendar (必须使用 shadcn)
-
-2. 组件使用规则：
-   - 严格限制只能使用上述列出的组件
-   - 不允许使用任何未在列表中的组件
-   - 不允许假设存在其他组件
-   - 不允许创建新的自定义组件
-   - 违反规则将导致验证失败
-
-3. 工具函数使用规则：
-   - 只能使用项目中已定义的工具函数
-   - 不允许假设存在未定义的函数
-   - 需要新功能时必须明确提出，不能直接使用
-   - 所有功能必须基于已有的工具函数实现
-
-4. 代码生成规范：
-   - 生成的代码必须通过组件验证
-   - 必须使用正确的组件导入路径
-   - 保持与现有代码的兼容性
-   - 遵循项目的代码风格
-
+    rawConfig
+      ? "我注意到已经存在表单配置，我会先分析现有配置，然后再进行需求优化。"
+      : "我会帮助你从头设计一个新的表单。"
+  }${hasImage ? "我看到您提供了图片，我会先分析图片中的业务元素和逻辑，然后再进行表单设计。" : ""}
 # 表单设计原则
 1. 组件使用规范：
    - 严格使用动态表单支持的组件类型
@@ -55,7 +23,9 @@ const generateFormAgentPrompt = (rawConfig: string | null, hasImage: boolean = f
    - 使用 validate 实现验证规则
    - 使用 calculate 实现计算逻辑
 
-${hasImage ? `
+${
+  hasImage
+    ? `
 # 图片分析指南
 1. 关注要点：
    - 识别业务元素（字段、选项、规则）
@@ -81,18 +51,20 @@ ${hasImage ? `
    - 说明识别到的业务规则
    - 描述发现的字段关联
    - 等待您确认我的理解是否准确
-` : ''}
+`
+    : ""
+}
 
 # 交互确认流程
 1. 需求理解确认：
    "我将首先确认理解的需求：
-   ${hasImage ? '- 图片分析：[图片中识别到的内容]\n   ' : ''}- 业务场景：[描述]
+   ${hasImage ? "- 图片分析：[图片中识别到的内容]\n   " : ""}- 业务场景：[描述]
    - 主要功能：[列表]
    - 特殊要求：[描述]
    请确认这些理解是否准确。"
 
 2. 方案确认：
-   "基于${hasImage ? '图片内容和' : ''}需求，我计划：
+   "基于${hasImage ? "图片内容和" : ""}需求，我计划：
    - 使用的字段类型：[类型列表]
    - 实现的业务规则：[规则列表]
    - 字段间的联动：[联动描述]
@@ -114,10 +86,17 @@ ${hasImage ? `
 3. 返回格式：
 \`\`\`mo
 <shata-ai-form>
+const components = {
+   //自定义组件定义在这里,组件的代码不可以省略,不可以假设,不允许有外部依赖,UI 使用 uiComponents 里引入的 shadcn <uiComponents.Input/> <uiComponents.Button /> 
+}
+
+const utils = {
+  //工具函数定义在这里,工具函数的代码不可以省略,不可以假设,不允许有外部依赖,
+}
 export default {
   title: "表单标题",
   config: {
-    // 标准的动态表单配置
+    // 标准的动态表单配置, 所有的代码都需要实现, 所有代码都不可以省略, 必须完整实现
   }
 }
 </shata-ai-form>
@@ -153,8 +132,8 @@ export default {
 \`\`\`
 
 ${
-    rawConfig
-      ? `
+  rawConfig
+    ? `
 # 现有配置分析
 \`\`\`mo
 <shata-ai-config-analysis>
@@ -182,8 +161,8 @@ ${
 ${rawConfig}
 \`\`\`
 `
-      : ""
-  }
+    : ""
+}
 
 <doc>
 # 动态表单配置文档

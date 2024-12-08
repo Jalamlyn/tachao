@@ -56,8 +56,8 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
         setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
       }
       checkScroll()
-      window.addEventListener('resize', checkScroll)
-      return () => window.removeEventListener('resize', checkScroll)
+      window.addEventListener("resize", checkScroll)
+      return () => window.removeEventListener("resize", checkScroll)
     }
   }, [steps])
 
@@ -130,11 +130,13 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
 
       <Tabs value={selectedStep} onValueChange={setSelectedStep}>
         <div className={styles["tabs-scroll-container"]}>
-          <TabsList className={cn(
-            styles["tabs-list-scroll"],
-            "w-full flex",
-            hasScroll && styles["tabs-scroll-shadow"]
-          )}>
+          <TabsList
+            className={cn(
+              styles["tabs-list-scroll"],
+              "w-full flex justify-start",
+              hasScroll && styles["tabs-scroll-shadow"]
+            )}
+          >
             {steps.map((step) => {
               const stepData = form.watch(`${fieldName}.${step.key}`) || {}
               if (stepData.hidden) return null

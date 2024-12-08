@@ -36,15 +36,17 @@ export default async function chatChunkOpenAIOffice(
   const modelSupplierData = localDB.getItem("model-supplier-data") || []
   const supplierInfo = modelSupplierData.find((supplier) => supplier.id === provider)
 
-  const apiKey = "5d5c1f3cc91b440b8391851b2eadfb1c"
+  // const apiKey = "5d5c1f3cc91b440b8391851b2eadfb1c"
+  const apiKey = "303b8dcd61004bc0a7ad0c7316f91fbe"
   const apiEndPoint =
-    "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview"
+    "https://aistudioaiservices036976507415.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview"
+  // "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview"
 
   const payload = {
     // model: model,
     messages: _messages,
     temperature,
-    max_tokens: 8192,
+    max_tokens: 4096,
     stream: true,
   }
 

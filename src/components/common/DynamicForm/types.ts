@@ -95,7 +95,6 @@ export interface TableColumn {
   resourceConfig?: ResourceConfig
   render?: (value: any, record: any, index: number) => ReactNode
   summary?: {
-    calculate?: (records: any[]) => any
     render?: (value: any) => ReactNode
   }
 }
@@ -133,12 +132,12 @@ export interface ProcessStepDependency {
 
 export interface ProcessStepTimeout {
   duration: number
-  action: 'warn' | 'block' | 'auto-approve' | 'auto-reject'
+  action: "warn" | "block" | "auto-approve" | "auto-reject"
   message?: string
 }
 
 export interface ProcessStepApprovers {
-  type: 'single' | 'multiple' | 'any' | 'all'
+  type: "single" | "multiple" | "any" | "all"
   roles?: string[]
   users?: string[]
   minApprovers?: number

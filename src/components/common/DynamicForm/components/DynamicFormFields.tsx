@@ -40,8 +40,8 @@ const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, fo
         setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
       }
       checkScroll()
-      window.addEventListener('resize', checkScroll)
-      return () => window.removeEventListener('resize', checkScroll)
+      window.addEventListener("resize", checkScroll)
+      return () => window.removeEventListener("resize", checkScroll)
     }
   }, [groups])
 
@@ -53,11 +53,13 @@ const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, fo
     <div className='space-y-6'>
       <Tabs value={selectedGroup} onValueChange={setSelectedGroup}>
         <div className={styles["tabs-scroll-container"]}>
-          <TabsList className={cn(
-            styles["tabs-list-scroll"],
-            "w-full flex",
-            hasScroll && styles["tabs-scroll-shadow"]
-          )}>
+          <TabsList
+            className={cn(
+              styles["tabs-list-scroll"],
+              "w-full flex justify-start",
+              hasScroll && styles["tabs-scroll-shadow"]
+            )}
+          >
             {groups.map((group) => (
               <TabsTrigger key={group.key} value={group.key}>
                 {group.icon && <Icon icon={group.icon} className='mr-1' />}

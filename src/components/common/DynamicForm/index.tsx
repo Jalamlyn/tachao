@@ -292,10 +292,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         <div className={cn(styles["form-card"])}>
           <h2 className={cn(styles["form-title"])}>明细信息</h2>
           <Tabs value={selectedTable} onValueChange={setSelectedTable}>
-            <TabsList>
+            <TabsList className='w-full justify-start'>
               {renderConfig.tables.map((table: TableGroup) => (
                 <TabsTrigger key={table.key} value={table.key}>
-                  {table.icon && <Icon icon={table.icon} className='text-xl' />}
+                  {table.icon && <Icon icon={table.icon} className='mr-1' />}
                   <span>{table.title}</span>
                 </TabsTrigger>
               ))}
