@@ -61,8 +61,19 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
       return renderSignature(field, form, isEditable, onChange)
     }
 
-    // 文件上传
-    if (field.type === "file" || field.type === "image" || field.type === "upload") {
+    // 统一的上传组件
+    if (field.type === "upload" || field.type === "file" || field.type === "image") {
+      // 兼容旧的file和image类型
+      if (field.type === "file" || field.type === "image") {
+        const uploadConfig = {
+          uploadType: field.type === "file" ? "file" : "image" as "file" | "image",
+          multiple: false,
+          maxSize: undefined,
+          maxCount: 1,
+          thumbnail: field.type === "image",
+        }
+        return renderUpload({ ...field, uploadConfig }, form, isEditable, onChange)
+      }
       return renderUpload(field, form, isEditable, onChange)
     }
 
