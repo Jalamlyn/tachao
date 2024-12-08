@@ -1,6 +1,9 @@
 import * as XLSX from "xlsx"
 import { logger } from "./logger"
 
+// 临时分隔符常量
+const TEMP_SEPARATOR = '___CSV_SEPARATOR___'
+
 // 生成唯一的数据ID
 const generateDataId = (fileName: string, rowIndex: number): string => {
   const timestamp = Date.now()
@@ -22,7 +25,8 @@ const sheetToCSV = (worksheet: XLSX.WorkSheet, isMultipleHeaders: boolean = fals
       const row: string[] = []
       for (let C = range.s.c; C <= range.e.c; ++C) {
         const cell = worksheet[XLSX.utils.encode_cell({ r: R, c: C })]
-        let value = cell ? String(cell.v).replace(/,/g, "\\,").replace(/\n/g, "\\n") : ""
+        // 使用临时分隔符替换逗号
+        let value = cell ? String(cell.v).replace(/,/g, TEMP_SEPARATOR).replace(/\n/g, "\\n") : ""
 
         if (!value) {
           const mergeCell = merges.find(
@@ -35,7 +39,7 @@ const sheetToCSV = (worksheet: XLSX.WorkSheet, isMultipleHeaders: boolean = fals
                 c: mergeCell.s.c,
               })
             ]
-            value = mainCell ? String(mainCell.v).replace(/,/g, "\\,").replace(/\n/g, "\\n") : ""
+            value = mainCell ? String(mainCell.v).replace(/,/g, TEMP_SEPARATOR).replace(/\n/g, "\\n") : ""
           }
         }
         row.push(value)
@@ -49,7 +53,7 @@ const sheetToCSV = (worksheet: XLSX.WorkSheet, isMultipleHeaders: boolean = fals
       const row: string[] = []
       for (let C = range.s.c; C <= range.e.c; ++C) {
         const cell = worksheet[XLSX.utils.encode_cell({ r: R, c: C })]
-        const value = cell ? String(cell.v).replace(/,/g, "\\,").replace(/\n/g, "\\n") : ""
+        const value = cell ? String(cell.v).replace(/,/g, TEMP_SEPARATOR).replace(/\n/g, "\\n") : ""
         row.push(value)
       }
       rows.push(row.join(","))
@@ -103,13 +107,13 @@ export const readExcel = async (file: File, isMultipleHeaders: boolean = false):
 
         // 将 CSV 转换为对象数组以保持兼容性
         const lines = csv.split("\n")
-        const headers = lines[0].split(",")
+        const headers = lines[0].split(",").map(header => header.replace(new RegExp(TEMP_SEPARATOR, 'g'), ','))
         const jsonData = lines.slice(1).map((line, index) => {
-          const values = line.split(",")
+          const values = line.split(",").map(value => value.replace(new RegExp(TEMP_SEPARATOR, 'g'), ','))
           const obj: any = {}
           // 先处理Excel的原始数据
           headers.forEach((header, headerIndex) => {
-            obj[header] = values[headerIndex]?.replace(/\\,/g, ",").replace(/\\n/g, "\n") || ""
+            obj[header] = values[headerIndex]?.replace(/\\n/g, "\n") || ""
           })
           // 最后添加dataid，避免数据错位
           obj.dataid = generateDataId(file.name, index + 1)
