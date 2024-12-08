@@ -109,13 +109,15 @@ const ResourceSelectButton: React.FC<ResourceSelectButtonProps> = ({
               <Icon icon='mdi:loading' className='w-8 h-8 animate-spin' />
             </div>
           ) : (
-            <SimpleDataTable
-              data={resourceData}
-              columns={generateColumns(resourceData)}
-              onSelectionChange={handleSelectionChange}
-              className='max-h-[600px]'
-              selectionMode={selectionMode}
-            />
+            <div className='max-w-4xl overflow-x-scroll'>
+              <SimpleDataTable
+                data={resourceData}
+                columns={generateColumns(resourceData)}
+                onSelectionChange={handleSelectionChange}
+                className='max-h-[600px]'
+                selectionMode={selectionMode}
+              />
+            </div>
           )}
 
           <DialogFooter className='gap-2'>
