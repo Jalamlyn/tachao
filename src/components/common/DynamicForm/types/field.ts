@@ -17,6 +17,15 @@ export interface ResourceConfig {
   }>
 }
 
+export interface FileInfo {
+  fileId: string
+  fileName: string
+  fileKey: string
+  downloadUrl?: string
+  type?: string
+  size?: number
+}
+
 export interface FormField {
   name: string
   label: string
@@ -72,6 +81,24 @@ export interface FormField {
       headers?: Record<string, string>
       withCredentials?: boolean
       customRequest?: (options: any) => Promise<any>
+    }
+    // 新增配置
+    onSuccess?: (fileInfo: FileInfo) => void
+    onError?: (error: Error) => void
+    onProgress?: (percent: number) => void
+    onPreview?: (file: FileInfo) => void
+    onDownload?: (file: FileInfo) => void
+    previewConfig?: {
+      width?: number | string
+      height?: number | string
+      modalTitle?: string
+      modalWidth?: number | string
+    }
+    downloadConfig?: {
+      method?: 'GET' | 'POST'
+      headers?: Record<string, string>
+      withCredentials?: boolean
+      timeout?: number
     }
   }
 }
