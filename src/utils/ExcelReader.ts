@@ -106,12 +106,13 @@ export const readExcel = async (file: File, isMultipleHeaders: boolean = false):
         const headers = lines[0].split(",")
         const jsonData = lines.slice(1).map((line, index) => {
           const values = line.split(",")
-          const obj: any = {
-            dataid: generateDataId(file.name, index + 1), // 为每行数据添加唯一ID
-          }
+          const obj: any = {}
+          // 先处理Excel的原始数据
           headers.forEach((header, headerIndex) => {
             obj[header] = values[headerIndex]?.replace(/\\,/g, ",").replace(/\\n/g, "\n") || ""
           })
+          // 最后添加dataid，避免数据错位
+          obj.dataid = generateDataId(file.name, index + 1)
           return obj
         })
 
