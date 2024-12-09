@@ -6,7 +6,7 @@
   "registry": "https://registry.npm.taobao.org",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "yarn config set registry 'https://registry.npm.taobao.org' && vite build",
     "lint": "eslint -c .eslintrc.json ./src/**/**/*.{ts,tsx} --fix",
     "preview": "vite preview",
     "push": "git push && git push github main",
