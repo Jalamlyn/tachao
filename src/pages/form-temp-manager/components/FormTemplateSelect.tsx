@@ -31,7 +31,7 @@ const TemplateCard: React.FC<{
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <Card
-        className={`w-full hover:shadow-lg transition-shadow duration-300 ${isCustom ? "border-2 border-primary" : ""}`}
+        className={`w-full hover:shadow-lg transition-shadow duration-300 ${isCustom ? "border-2 border-primary" : ""} ${template.id === "custom-form-self" && "text-primary"}`}
         isPressable={isAvailable}
         onPress={() => isAvailable && onSelect(template)}
       >
@@ -70,7 +70,7 @@ const TemplateCard: React.FC<{
         <CardFooter className='gap-2'>
           {template.id === "custom-form-self" ? (
             <Button
-              variant='light'
+              color='primary'
               startContent={<Icon icon='mdi:arrow-right' className='w-4 h-4' />}
               onPress={() => onSelect(template)}
             >

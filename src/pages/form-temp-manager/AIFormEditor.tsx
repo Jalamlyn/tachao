@@ -95,7 +95,7 @@ const AIFormEditor: React.FC = () => {
           console.error("Error loading template prompt:", error)
           addMessage({
             role: "assistant",
-            content: `我将帮您创建一个${templateTitle}。这是一个${templateDescription}。请告诉我您的具体需求，我会为您量身定制。`,
+            content: `请告诉我您的具体需求，我会为您量身定制。`,
             id: Date.now().toString(),
             timestamp: new Date().toLocaleTimeString(),
           })
@@ -103,7 +103,7 @@ const AIFormEditor: React.FC = () => {
       } else if (templateId && templateTitle && !isEditMode) {
         addMessage({
           role: "assistant",
-          content: `我将帮您创建一个${templateTitle}。这是一个${templateDescription}。请告诉我您的具体需求，我会为您量身定制。`,
+          content: `请告诉我您的具体需求，我会为您量身定制。`,
           id: Date.now().toString(),
           timestamp: new Date().toLocaleTimeString(),
         })
