@@ -2,6 +2,16 @@ import { FormTemplate } from "./FormTemplateSelect"
 
 export const functionalTemplates: FormTemplate[] = [
   {
+    id: "custom-form-self",
+    title: "定制自己的表单模板",
+    description: "根据您的需求定制专属表单模板",
+    type: "functional",
+    category: "custom",
+    status: "available",
+    features: ["需求分析", "专属定制", "技术支持"],
+    promptTemplate: "custom-template-prompt",
+  },
+  {
     id: "process-form",
     title: "通用流程表单",
     description: "适用于各类审批流程和数据收集场景",
@@ -23,12 +33,12 @@ export const functionalTemplates: FormTemplate[] = [
   },
   {
     id: "custom-form",
-    title: "专业定制表单",
-    description: "企业级定制化表单解决方案",
+    title: "定制企业级AI助手",
+    description: "企业级AI助手定制解决方案",
     type: "functional",
     category: "custom",
     status: "available",
-    features: ["需求分析", "专属定制", "技术支持"],
+    features: ["AI定制", "流程优化", "智能决策"],
     promptTemplate: "custom-template-prompt",
   },
   {

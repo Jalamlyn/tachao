@@ -68,9 +68,17 @@ const TemplateCard: React.FC<{
           </div>
         </CardBody>
         <CardFooter className='gap-2'>
-          {isCustom ? (
+          {template.id === "custom-form-self" ? (
             <Button
-              color='primary'
+              variant='light'
+              startContent={<Icon icon='mdi:arrow-right' className='w-4 h-4' />}
+              onPress={() => onSelect(template)}
+            >
+              立即去定制
+            </Button>
+          ) : template.id === "custom-form" ? (
+            <Button
+              color='secondary'
               variant='flat'
               startContent={<Icon icon='mdi:crown' className='w-4 h-4' />}
               onPress={() => onSelect(template)}
@@ -118,7 +126,7 @@ const FormTemplateSelect: React.FC = () => {
         templateType: template.type,
         templateTitle: template.title,
         templateDescription: template.description,
-        promptTemplate: template.promptTemplate
+        promptTemplate: template.promptTemplate,
       },
     })
   }
