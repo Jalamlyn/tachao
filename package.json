@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "registry": "https://registry.npm.taobao.org",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
