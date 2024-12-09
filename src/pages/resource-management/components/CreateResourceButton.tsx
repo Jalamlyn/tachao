@@ -103,16 +103,17 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
 
       const excelResult = await readExcel(file, headerType === "multiple")
 
-      // 修复数据结构:直接使用Excel读取返回的数据,不再额外包装data层
+      // 修改：添加firstRowData到indexFields
       const result = await createResource({
         title: resourceName,
-        data: excelResult.data, // 直接使用Excel读取的数据,不再包装
+        data: excelResult.data,
         status: "active",
         indexFields: {
           appId: appId,
           type: "excel",
           size: file.size,
           fileName: file.name,
+          rowData: excelResult.firstRowData // 添加示例行数据
         },
       })
 

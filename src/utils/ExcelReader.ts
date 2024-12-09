@@ -81,7 +81,7 @@ const sheetToCSV = (worksheet: XLSX.WorkSheet, isMultipleHeaders: boolean = fals
   }
 }
 
-export const readExcel = async (file: File, isMultipleHeaders: boolean = false): Promise<{ data: any[] }> => {
+export const readExcel = async (file: File, isMultipleHeaders: boolean = false): Promise<{ data: any[]; firstRowData?: any }> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
 
@@ -120,8 +120,12 @@ export const readExcel = async (file: File, isMultipleHeaders: boolean = false):
           return obj
         })
 
+        // 获取第一行数据作为示例
+        const firstRowData = jsonData.length > 0 ? { ...jsonData[0] } : null
+
         resolve({
           data: jsonData,
+          firstRowData
         })
       } catch (error) {
         logger.error("Error processing Excel file:", error as Error, {
