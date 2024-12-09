@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import { Icon } from "@iconify/react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
-import { Button } from "@nextui-org/react"
+import { Button, Spinner } from "@nextui-org/react"
 import FormPreview from "./components/FormPreview"
 import { useFormState } from "./hooks/useFormState"
 import AIFormAgent from "@/service/agents/AIFormAgent"
@@ -30,6 +30,7 @@ const AIFormEditor: React.FC = () => {
   const { templateType, templateTitle, templateDescription, promptTemplate } = location.state || {}
   const isEditMode = !location.pathname.includes("/create/")
   const { updateBreadcrumbs } = useBreadcrumb()
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false)
 
   const {
     messages,
@@ -119,6 +120,7 @@ const AIFormEditor: React.FC = () => {
     const loadTemplateData = async () => {
       if (isEditMode && templateId) {
         try {
+          setIsLoadingTemplate(true)
           const template = await getTemplateDetail(templateId)
           if (template && template.data.rawConfig) {
             const parsedConfig = await AIFormAgent.parseConfig(template.data.rawConfig)
@@ -142,6 +144,8 @@ const AIFormEditor: React.FC = () => {
         } catch (error) {
           handleError(error)
           navigate("/we-chat-app/admin/documents")
+        } finally {
+          setIsLoadingTemplate(false)
         }
       }
     }
@@ -243,6 +247,14 @@ const AIFormEditor: React.FC = () => {
       role={message.role}
     />
   )
+
+  if (isLoadingTemplate) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spinner label="加载模板中..." />
+      </div>
+    )
+  }
 
   return (
     <PageLayout title='AI 表单助手' titleIcon='mdi:form-select' actions={pageActions}>
