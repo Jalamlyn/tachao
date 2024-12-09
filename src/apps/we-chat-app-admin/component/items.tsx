@@ -38,6 +38,12 @@ export const items: SidebarItem[] = [
     title: "待办事项",
   },
   {
+    key: "file-manager",
+    href: "/we-chat-app/admin/file-manager",
+    icon: "solar:folder-with-files-bold-duotone",
+    title: "企业网盘",
+  },
+  {
     key: "ai-assistant",
     href: "/we-chat-app/admin/ai-assistant",
     icon: "hugeicons:ai-chat-02",

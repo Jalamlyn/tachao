@@ -17,6 +17,7 @@ import Dashboard from "@/apps/we-chat-app-admin/src/Dashboard"
 import AppManagement from "@/pages/app-management"
 import PendingTasks from "@/pages/pending-tasks"
 import FormTemplateSelect from "@/pages/form-temp-manager/components/FormTemplateSelect"
+import FileManager from "@/apps/we-chat-app-admin/src/FileManager"
 
 export default function renderWeChatApp() {
   return (
@@ -41,6 +42,7 @@ export default function renderWeChatApp() {
       <Route path='ai-assistant' element={<FormAnalysis />} />
       <Route path='apps' element={<AppManagement />} />
       <Route path='pending-tasks' element={<PendingTasks />} />
+      <Route path='file-manager' element={<FileManager />} />
     </Route>
   )
 }

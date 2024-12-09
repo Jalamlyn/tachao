@@ -37,7 +37,7 @@ export const renderUpload = (
   // 创建活动数据
   const createActivity = async (fileInfo: { fileName: string; fileKey: string }) => {
     try {
-      const response = await apiService.post('/public/data/crm/activities', {
+      const response = await apiService.post('/public/data/file/activities', {
         activityName: "测试",
         activityType: "test",
         files: [fileInfo]
@@ -52,7 +52,7 @@ export const renderUpload = (
   // 查询活动数据
   const queryActivity = async () => {
     try {
-      const response = await apiService.post('/public/data/crm/activities/find', {}, {
+      const response = await apiService.post('/public/data/file/activities/find', {}, {
         params: { display: 'paginate' }
       })
       return response.data
