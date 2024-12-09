@@ -115,46 +115,9 @@ export const renderResource = (
                 // 卡片模式
                 <div className='grid grid-cols-1 gap-4'>
                   {(isMultiple ? displayData : [displayData]).map((item: any, index: number) => (
-                    <Card key={index} className='w-full relative group'>
-                      {/* 操作按钮组 */}
-                      <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-2">
-                        <ResourceSelectButton
-                          resourceName={field.resourceConfig?.resourceId || ''}
-                          selectionMode={isMultiple ? 'multiple' : 'single'}
-                          onSelect={(selected) => {
-                            if (selected.length > 0) {
-                              const dataids = selected.map(item => item.dataid)
-                              formField.onChange({
-                                dataid: isMultiple ? dataids : dataids[0],
-                                displayData: isMultiple ? selected : selected[0]
-                              })
-                              onChange?.(field.name, {
-                                dataid: isMultiple ? dataids : dataids[0],
-                                displayData: isMultiple ? selected : selected[0]
-                              })
-                            }
-                          }}
-                          buttonText="编辑"
-                          buttonProps={{
-                            size: "sm",
-                            variant: "flat",
-                            className: "px-2 py-1 h-8",
-                            startContent: <Icon icon="material-symbols:edit-outline" className="text-lg" />
-                          }}
-                        />
-                        <Button
-                          size="sm"
-                          variant="flat"
-                          color="danger"
-                          className="px-2 py-1 h-8"
-                          onClick={handleClear}
-                          startContent={<Icon icon="material-symbols:delete-outline" className="text-lg" />}
-                        >
-                          删除
-                        </Button>
-                      </div>
+                    <Card key={index} className='w-full'>
                       <CardBody className='p-4'>
-                        <div className='grid grid-cols-2 gap-4'>
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                           {(field.resourceConfig?.displayFields || Object.keys(item).map(key => ({ key, label: key }))).map((displayField) => (
                             <div key={displayField.key} className='space-y-1'>
                               <span className='text-sm font-medium text-gray-500'>{displayField.label}</span>
@@ -166,78 +129,117 @@ export const renderResource = (
                             </div>
                           ))}
                         </div>
+                        {/* 操作按钮 - 固定在底部 */}
+                        <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end gap-2">
+                          <ResourceSelectButton
+                            resourceName={field.resourceConfig?.resourceId || ''}
+                            selectionMode={isMultiple ? 'multiple' : 'single'}
+                            onSelect={(selected) => {
+                              if (selected.length > 0) {
+                                const dataids = selected.map(item => item.dataid)
+                                formField.onChange({
+                                  dataid: isMultiple ? dataids : dataids[0],
+                                  displayData: isMultiple ? selected : selected[0]
+                                })
+                                onChange?.(field.name, {
+                                  dataid: isMultiple ? dataids : dataids[0],
+                                  displayData: isMultiple ? selected : selected[0]
+                                })
+                              }
+                            }}
+                            buttonText="更换"
+                            buttonProps={{
+                              size: "md",
+                              variant: "light",
+                              className: "min-w-[80px] md:min-w-[100px]",
+                              startContent: <Icon icon="material-symbols:sync" className="text-lg" />
+                            }}
+                          />
+                          <Button
+                            size="md"
+                            variant="light"
+                            color="danger"
+                            className="min-w-[80px] md:min-w-[100px]"
+                            onClick={handleClear}
+                            startContent={<Icon icon="material-symbols:remove" className="text-lg" />}
+                          >
+                            移除
+                          </Button>
+                        </div>
                       </CardBody>
                     </Card>
                   ))}
                 </div>
               ) : (
                 // 表格模式
-                <div className='overflow-x-auto relative'>
-                  {/* 操作按钮组 */}
-                  <div className="absolute right-2 top-2 opacity-0 hover:opacity-100 transition-opacity duration-200 flex gap-2 z-10">
-                    <ResourceSelectButton
-                      resourceName={field.resourceConfig?.resourceId || ''}
-                      selectionMode={isMultiple ? 'multiple' : 'single'}
-                      onSelect={(selected) => {
-                        if (selected.length > 0) {
-                          const dataids = selected.map(item => item.dataid)
-                          formField.onChange({
-                            dataid: isMultiple ? dataids : dataids[0],
-                            displayData: isMultiple ? selected : selected[0]
-                          })
-                          onChange?.(field.name, {
-                            dataid: isMultiple ? dataids : dataids[0],
-                            displayData: isMultiple ? selected : selected[0]
-                          })
-                        }
-                      }}
-                      buttonText="编辑"
-                      buttonProps={{
-                        size: "sm",
-                        variant: "flat",
-                        className: "px-2 py-1 h-8",
-                        startContent: <Icon icon="material-symbols:edit-outline" className="text-lg" />
-                      }}
-                    />
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      color="danger"
-                      className="px-2 py-1 h-8"
-                      onClick={handleClear}
-                      startContent={<Icon icon="material-symbols:delete-outline" className="text-lg" />}
-                    >
-                      删除
-                    </Button>
-                  </div>
-                  <table className='w-full min-w-[400px] border-collapse'>
-                    <thead>
-                      <tr className='bg-gray-50'>
-                        {(field.resourceConfig?.displayFields || Object.keys(isMultiple ? displayData[0] : displayData).map(key => ({ key, label: key }))).map((displayField) => (
-                          <th 
-                            key={displayField.key}
-                            className='p-2 text-left text-sm font-medium text-gray-500 border border-gray-200'
-                            style={{ width: displayField.width }}
-                          >
-                            {displayField.label}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(isMultiple ? displayData : [displayData]).map((item: any, index: number) => (
-                        <tr key={index} className='hover:bg-gray-50'>
-                          {(field.resourceConfig?.displayFields || Object.keys(item).map(key => ({ key, label: key }))).map((displayField) => (
-                            <td key={displayField.key} className='p-2 text-sm border border-gray-200'>
-                              {displayField.render ? 
-                                displayField.render(item[displayField.key]) : 
-                                String(item[displayField.key] || '-')}
-                            </td>
+                <div className='overflow-x-auto'>
+                  <div className='min-w-[400px]'>
+                    <table className='w-full border-collapse'>
+                      <thead>
+                        <tr className='bg-gray-50'>
+                          {(field.resourceConfig?.displayFields || Object.keys(isMultiple ? displayData[0] : displayData).map(key => ({ key, label: key }))).map((displayField) => (
+                            <th 
+                              key={displayField.key}
+                              className='p-2 text-left text-sm font-medium text-gray-500 border border-gray-200'
+                              style={{ width: displayField.width }}
+                            >
+                              {displayField.label}
+                            </th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {(isMultiple ? displayData : [displayData]).map((item: any, index: number) => (
+                          <tr key={index} className='hover:bg-gray-50'>
+                            {(field.resourceConfig?.displayFields || Object.keys(item).map(key => ({ key, label: key }))).map((displayField) => (
+                              <td key={displayField.key} className='p-2 text-sm border border-gray-200'>
+                                {displayField.render ? 
+                                  displayField.render(item[displayField.key]) : 
+                                  String(item[displayField.key] || '-')}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {/* 表格模式下的操作按钮 */}
+                    <div className="mt-4 flex justify-end gap-2">
+                      <ResourceSelectButton
+                        resourceName={field.resourceConfig?.resourceId || ''}
+                        selectionMode={isMultiple ? 'multiple' : 'single'}
+                        onSelect={(selected) => {
+                          if (selected.length > 0) {
+                            const dataids = selected.map(item => item.dataid)
+                            formField.onChange({
+                              dataid: isMultiple ? dataids : dataids[0],
+                              displayData: isMultiple ? selected : selected[0]
+                            })
+                            onChange?.(field.name, {
+                              dataid: isMultiple ? dataids : dataids[0],
+                              displayData: isMultiple ? selected : selected[0]
+                            })
+                          }
+                        }}
+                        buttonText="更换"
+                        buttonProps={{
+                          size: "md",
+                          variant: "light",
+                          className: "min-w-[80px] md:min-w-[100px]",
+                          startContent: <Icon icon="material-symbols:sync" className="text-lg" />
+                        }}
+                      />
+                      <Button
+                        size="md"
+                        variant="light"
+                        color="danger"
+                        className="min-w-[80px] md:min-w-[100px]"
+                        onClick={handleClear}
+                        startContent={<Icon icon="material-symbols:remove" className="text-lg" />}
+                      >
+                        移除
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
