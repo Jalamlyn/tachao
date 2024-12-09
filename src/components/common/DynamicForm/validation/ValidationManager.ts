@@ -10,7 +10,7 @@ export class ValidationManager {
 
       // 2. 执行字段校验
       const errors: Record<string, string> = {}
-      
+
       for (const field of fields) {
         const value = get(values, field.path)
         const error = await this.validateField(field, value, values)
@@ -62,8 +62,8 @@ export class ValidationManager {
     if (basicFields) {
       if ("groups" in basicFields) {
         // 处理分组字段
-        basicFields.groups.forEach(group => {
-          group.fields.forEach(field => {
+        basicFields.groups.forEach((group) => {
+          group.fields.forEach((field) => {
             fields.push({
               ...field,
               path: field.name,
@@ -72,7 +72,7 @@ export class ValidationManager {
         })
       } else if (Array.isArray(basicFields)) {
         // 处理字段数组
-        basicFields.forEach(field => {
+        basicFields.forEach((field) => {
           fields.push({
             ...field,
             path: field.name,
@@ -83,7 +83,7 @@ export class ValidationManager {
 
     // 处理表格字段
     if (config.renderConfig.table?.columns) {
-      config.renderConfig.table.columns.forEach(column => {
+      config.renderConfig.table.columns.forEach((column) => {
         if (column.required) {
           fields.push({
             path: `tableData.${column.key}`,
@@ -97,9 +97,9 @@ export class ValidationManager {
 
     // 处理流程确认字段
     if (config.renderConfig.processSteps) {
-      config.renderConfig.processSteps.forEach(step => {
+      config.renderConfig.processSteps.forEach((step) => {
         if (step.fields) {
-          step.fields.forEach(field => {
+          step.fields.forEach((field) => {
             fields.push({
               ...field,
               path: `processConfirmations.${step.key}.formData.${field.name}`,
@@ -130,12 +130,6 @@ export class ValidationManager {
         if (field.type === "resource") {
           if (!value || typeof value !== "object" || Object.keys(value).length === 0) {
             return `${field.label}不能为空`
-          }
-          // 检查资料对象的关键属性是否存在
-          const requiredProps = ["id", "title"]
-          const missingProps = requiredProps.filter(prop => !value[prop])
-          if (missingProps.length > 0) {
-            return `${field.label}数据不完整`
           }
         } else if (value === undefined || value === null || value === "") {
           return `${field.label}不能为空`
@@ -174,11 +168,6 @@ export class ValidationManager {
 
     switch (type) {
       case "resource":
-        if (value && typeof value === "object") {
-          if (!value.id || !value.title) {
-            return "资料数据格式无效"
-          }
-        }
         break
       case "signature":
         if (typeof value === "string" && /^data:image\/[a-z]+;base64,/.test(value)) {
