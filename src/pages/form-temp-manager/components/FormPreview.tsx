@@ -10,7 +10,7 @@ import {
   useDisclosure,
   Spinner,
 } from "@nextui-org/react"
-import { useParams } from "react-router-dom"
+import { useParams, useLocation } from "react-router-dom"
 import DynamicForm from "@/components/common/DynamicForm"
 import type { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import message from "@/components/Message"
@@ -29,6 +29,9 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
   const [error, setError] = useState<string | null>(null)
   const [loadedConfig, setLoadedConfig] = useState<DynamicFormConfig | null>(null)
   const { templateId } = useParams<any>()
+  const { search } = useLocation()
+  const params = new URLSearchParams(search)
+  const isCreateMode = params.get('mode') === 'create'
   const { getDetail } = useMetadata<{ config: DynamicFormConfig }>("template")
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
@@ -68,7 +71,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
   }, [templateId, propConfig, getDetail])
 
   const config = propConfig || loadedConfig
-  const shareLink = `${window.location.origin}/form-preview/${config?.id || ""}`
+  const shareLink = `${window.location.origin}/form/${config?.id || ""}`
 
   const handleCopyLink = async () => {
     try {
@@ -117,7 +120,11 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
             </Button>
           </div>
           <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
-            <DynamicForm previewMode={previewMode} config={config} templateId={templateId} />
+            <DynamicForm 
+              previewMode={!isCreateMode && previewMode} 
+              config={config} 
+              templateId={templateId} 
+            />
           </div>
         </div>
       ) : (

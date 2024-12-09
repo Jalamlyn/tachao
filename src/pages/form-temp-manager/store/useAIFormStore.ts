@@ -62,7 +62,7 @@ interface AIFormState {
   handleTitleCancel: () => void
   handleVersionSelectConfirm: (useCurrentVersion: boolean) => Promise<void>
   handleVersionSelectCancel: () => void
-  clearMessages: () => void // 新增清空消息的action
+  clearMessages: () => void
 }
 
 // 创建防抖的状态更新函数
