@@ -67,7 +67,7 @@ export const renderResource = (
             {/* 选择按钮 */}
             <div className='flex items-center gap-2'>
               <ResourceSelectButton
-                resourceName={field.resourceConfig?.resourceTitle || ''}
+                resourceName={field.resourceConfig?.resourceId || ''}
                 selectionMode={isMultiple ? 'multiple' : 'single'}
                 onSelect={(selected) => {
                   if (selected.length > 0) {

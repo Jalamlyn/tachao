@@ -165,7 +165,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             />
             {isFieldEditable && column.resourceConfig && (
               <ResourceSelectButton
-                resourceName={column.resourceConfig.resourceTitle}
+                resourceName={column.resourceConfig.resourceId}
                 selectionMode="single"
                 onSelect={(selected) => {
                   if (selected.length > 0) {

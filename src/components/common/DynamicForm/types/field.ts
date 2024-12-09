@@ -4,25 +4,26 @@ import { FormFieldType, ManualInputFieldType, TooltipConfig } from "./basic"
 
 // 资料字段显示配置
 interface ResourceDisplayField {
-  key: string          // 字段键名
-  label: string        // 显示标签
+  key: string // 字段键名
+  label: string // 显示标签
   width?: string | number // 表格模式下的列宽
   render?: (value: any) => React.ReactNode // 自定义渲染函数
 }
 
 // 资料配置
 export interface ResourceConfig {
-  resourceTitle: string          // 资料标题
-  multiple?: boolean             // 是否支持多选
-  displayMode?: 'card' | 'table' // 显示模式,默认 card
+  resourceTitle: string // 资料标题
+  resourceId: string // 资料id
+  multiple?: boolean // 是否支持多选
+  displayMode?: "card" | "table" // 显示模式,默认 card
   displayFields?: ResourceDisplayField[] // 显示字段配置,不配置则显示所有字段
   loadDataById: (dataid: string | string[]) => Promise<any> // 加载数据的方法
 }
 
 // 资料字段值类型
 export interface ResourceValue {
-  dataid: string | string[]      // 单个或多个dataid
-  displayData?: any | any[]      // 完整的资料数据对象
+  dataid: string | string[] // 单个或多个dataid
+  displayData?: any | any[] // 完整的资料数据对象
 }
 
 export interface FileInfo {
@@ -102,7 +103,7 @@ export interface FormField {
       modalWidth?: number | string
     }
     downloadConfig?: {
-      method?: 'GET' | 'POST'
+      method?: "GET" | "POST"
       headers?: Record<string, string>
       withCredentials?: boolean
       timeout?: number
