@@ -25,7 +25,7 @@ export const renderUpload = (
   // 获取签名URL
   const getSignedUrl = async (fileName: string) => {
     try {
-      const res = await apiService.get(`/api/file/upload:singed?fileName=${fileName}`)
+      const res = await apiService.get(`/api/file/form/upload:singed?fileName=${fileName}`)
       return res.data
     } catch (error) {
       message.error("获取签名URL失败，请重试！")
@@ -115,37 +115,55 @@ export const renderUpload = (
         }
       }
 
-      // 默认上传逻辑
+      // 新的表单上传逻辑
       try {
-        const { uploadUrl, fileKey } = await getSignedUrl(file.name)
+        const signedData = await getSignedUrl(file.name)
         const formData = new FormData()
-        formData.append("name", file.name)
-        formData.append("success_action_status", "200")
-        formData.append("key", fileKey)
+        formData.append("key", signedData.fileKey)
+        formData.append("OSSAccessKeyId", signedData.accessKeyId)
+        formData.append("policy", signedData.policy)
+        formData.append("Signature", signedData.signature)
         formData.append("file", file)
 
-        const response = await apiService.put(uploadUrl, {
-          headers: {
-            "Content-Type": file.type,
-          },
-          data: formData,
-          onUploadProgress: (progressEvent) => {
-            const percent = Math.round((progressEvent.loaded * 100) / (progressEvent.total ?? 1))
+        const xhr = new XMLHttpRequest()
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded * 100) / event.total)
             setProgress(percent)
             field.uploadConfig?.onProgress?.(percent)
-          },
-        })
-
-        const fileInfo: FileInfo = {
-          fileId: "", // 服务端返回后设置
-          fileName: file.name,
-          fileKey: fileKey,
-          type: file.type,
-          size: file.size,
+          }
         }
 
-        field.uploadConfig?.onSuccess?.(fileInfo)
-        return fileInfo
+        const uploadPromise = new Promise((resolve, reject) => {
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              const fileInfo: FileInfo = {
+                fileId: "", // 服务端返回后设置
+                fileName: file.name,
+                fileKey: signedData.fileKey,
+                type: file.type,
+                size: file.size,
+              }
+              field.uploadConfig?.onSuccess?.(fileInfo)
+              resolve(fileInfo)
+            } else {
+              const error = new Error(`Upload failed with status ${xhr.status}`)
+              field.uploadConfig?.onError?.(error)
+              reject(error)
+            }
+          }
+
+          xhr.onerror = () => {
+            const error = new Error("Upload failed")
+            field.uploadConfig?.onError?.(error)
+            reject(error)
+          }
+        })
+
+        xhr.open("POST", signedData.formUploadHost, true)
+        xhr.send(formData)
+
+        return await uploadPromise
       } catch (error) {
         console.error("Upload error:", error)
         field.uploadConfig?.onError?.(error as Error)
