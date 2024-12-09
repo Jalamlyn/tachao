@@ -8,25 +8,8 @@ import { Icon } from "@iconify/react"
 import { cn } from "@/theme/cn"
 import ResourceSelectButton from "@/components/common/ResourceSelectButton"
 import { Spinner } from "@nextui-org/react"
-import { apiService } from "@/service/apis/api"
+import { useMetadata } from "@/hooks/metadata"
 import message from "@/components/Message"
-
-// 统一的资源加载服务
-const ResourceService = {
-  async loadResourceData(resourceId: string, dataid: string | string[]) {
-    try {
-      const response = await apiService.post(`/public/data/${resourceId}/find`, {
-        filter: {
-          dataid: Array.isArray(dataid) ? { $in: dataid } : dataid
-        }
-      })
-      return Array.isArray(dataid) ? response.data : response.data[0]
-    } catch (error) {
-      console.error("Failed to load resource data:", error)
-      throw error
-    }
-  }
-}
 
 export const renderResource = (
   field: FormField,
@@ -35,6 +18,7 @@ export const renderResource = (
   onChange?: (fieldName: string, value: any) => void
 ) => {
   const [loading, setLoading] = useState(false)
+  const { getDetail } = useMetadata(field.resourceConfig?.resourceId || "")
 
   // 监听值变化,如果是dataid则加载数据
   useEffect(() => {
@@ -44,16 +28,14 @@ export const renderResource = (
       const loadData = async () => {
         setLoading(true)
         try {
-          // 优先使用配置的loadDataById（向后兼容）
-          const data = field.resourceConfig?.loadDataById
-            ? await field.resourceConfig.loadDataById(value.dataid)
-            : await ResourceService.loadResourceData(field.resourceConfig?.resourceId!, value.dataid)
-
-          // 更新表单显示值,保持完整对象格式
-          form.setValue(field.name, {
-            dataid: value.dataid,
-            displayData: data
-          })
+          const data = await getDetail(value.dataid)
+          if (data) {
+            // 更新表单显示值,保持完整对象格式
+            form.setValue(field.name, {
+              dataid: value.dataid,
+              displayData: data.data
+            })
+          }
         } catch (error) {
           console.error("Failed to load resource data:", error)
           message.error("加载资源数据失败")
@@ -62,7 +44,7 @@ export const renderResource = (
         }
       }
 
-      if (field.resourceConfig?.resourceId || field.resourceConfig?.loadDataById) {
+      if (field.resourceConfig?.resourceId) {
         loadData()
       }
     }

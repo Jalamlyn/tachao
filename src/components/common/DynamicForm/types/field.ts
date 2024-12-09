@@ -12,12 +12,12 @@ interface ResourceDisplayField {
 
 // 资料配置
 export interface ResourceConfig {
-  resourceTitle: string // 资料标题
+  resourceTitle?: string // 资料标题（可选）
   resourceId: string // 资料id
   multiple?: boolean // 是否支持多选
   displayMode?: "card" | "table" // 显示模式,默认 card
   displayFields?: ResourceDisplayField[] // 显示字段配置,不配置则显示所有字段
-  loadDataById?: (dataid: string | string[]) => Promise<any> // 加载数据的方法（已废弃，保留向后兼容）
+  loadDataById?: (dataid: string | string[]) => Promise<any> // 加载数据的方法（已废弃）
   fieldMapping?: {
     [targetField: string]:
       | string
