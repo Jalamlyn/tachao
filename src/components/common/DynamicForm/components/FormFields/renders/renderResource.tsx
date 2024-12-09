@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useCallback, useEffect } from "react"
 import { UseFormReturn } from "react-hook-form"
 import { FormField, ResourceValue } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
@@ -8,6 +8,25 @@ import { Icon } from "@iconify/react"
 import { cn } from "@/theme/cn"
 import ResourceSelectButton from "@/components/common/ResourceSelectButton"
 import { Spinner } from "@nextui-org/react"
+import { apiService } from "@/service/apis/api"
+import message from "@/components/Message"
+
+// 统一的资源加载服务
+const ResourceService = {
+  async loadResourceData(resourceId: string, dataid: string | string[]) {
+    try {
+      const response = await apiService.post(`/public/data/${resourceId}/find`, {
+        filter: {
+          dataid: Array.isArray(dataid) ? { $in: dataid } : dataid
+        }
+      })
+      return Array.isArray(dataid) ? response.data : response.data[0]
+    } catch (error) {
+      console.error("Failed to load resource data:", error)
+      throw error
+    }
+  }
+}
 
 export const renderResource = (
   field: FormField,
@@ -21,28 +40,31 @@ export const renderResource = (
   useEffect(() => {
     const value = form.watch(field.name) as ResourceValue
 
-    if (
-      field.resourceConfig?.loadDataById &&
-      value?.dataid &&
-      !value?.displayData // 只有dataid没有完整数据时才加载
-    ) {
-      setLoading(true)
+    if (value?.dataid && !value?.displayData) {
+      const loadData = async () => {
+        setLoading(true)
+        try {
+          // 优先使用配置的loadDataById（向后兼容）
+          const data = field.resourceConfig?.loadDataById
+            ? await field.resourceConfig.loadDataById(value.dataid)
+            : await ResourceService.loadResourceData(field.resourceConfig?.resourceId!, value.dataid)
 
-      field.resourceConfig
-        .loadDataById(value.dataid)
-        .then((data) => {
           // 更新表单显示值,保持完整对象格式
           form.setValue(field.name, {
             dataid: value.dataid,
-            displayData: data,
+            displayData: data
           })
-        })
-        .catch((err) => {
-          console.error("Failed to load resource data:", err)
-        })
-        .finally(() => {
+        } catch (error) {
+          console.error("Failed to load resource data:", error)
+          message.error("加载资源数据失败")
+        } finally {
           setLoading(false)
-        })
+        }
+      }
+
+      if (field.resourceConfig?.resourceId || field.resourceConfig?.loadDataById) {
+        loadData()
+      }
     }
   }, [form.watch(field.name)])
 
