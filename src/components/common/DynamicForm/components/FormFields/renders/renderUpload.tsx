@@ -21,6 +21,7 @@ export const renderUpload = (
   const [progress, setProgress] = useState(0)
   const [previewVisible, setPreviewVisible] = useState(false)
   const [previewFile, setPreviewFile] = useState<FileInfo | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   // 获取签名URL
   const getSignedUrl = async (fileName: string) => {
@@ -33,8 +34,39 @@ export const renderUpload = (
     }
   }
 
+  // 创建活动数据
+  const createActivity = async (fileInfo: { fileName: string; fileKey: string }) => {
+    try {
+      const response = await apiService.post('/public/data/crm/activities', {
+        activityName: "测试",
+        activityType: "test",
+        files: [fileInfo]
+      })
+      return response.data
+    } catch (error) {
+      console.error("Create activity error:", error)
+      throw error
+    }
+  }
+
+  // 查询活动数据
+  const queryActivity = async () => {
+    try {
+      const response = await apiService.post('/public/data/crm/activities/find', {}, {
+        params: { display: 'paginate' }
+      })
+      return response.data
+    } catch (error) {
+      console.error("Query activity error:", error)
+      throw error
+    }
+  }
+
   // 处理文件预览
   const handlePreview = async (file: FileInfo) => {
+    if (!file.type?.startsWith('image/')) {
+      return
+    }
     setPreviewFile(file)
     setPreviewVisible(true)
 
@@ -135,17 +167,30 @@ export const renderUpload = (
         }
 
         const uploadPromise = new Promise((resolve, reject) => {
-          xhr.onload = () => {
+          xhr.onload = async () => {
             if (xhr.status >= 200 && xhr.status < 300) {
-              const fileInfo: FileInfo = {
-                fileId: "", // 服务端返回后设置
-                fileName: file.name,
-                fileKey: signedData.fileKey,
-                type: file.type,
-                size: file.size,
+              try {
+                setIsProcessing(true)
+                // 创建活动数据
+                await createActivity({
+                  fileName: file.name,
+                  fileKey: signedData.fileKey
+                })
+
+                // 查询获取完整信息
+                const queryResult = await queryActivity()
+                const latestActivity = queryResult.data[0]
+                const fileInfo = latestActivity.files[0]
+
+                field.uploadConfig?.onSuccess?.(fileInfo)
+                resolve(fileInfo)
+              } catch (error) {
+                console.error("Process file error:", error)
+                field.uploadConfig?.onError?.(error as Error)
+                reject(error)
+              } finally {
+                setIsProcessing(false)
               }
-              field.uploadConfig?.onSuccess?.(fileInfo)
-              resolve(fileInfo)
             } else {
               const error = new Error(`Upload failed with status ${xhr.status}`)
               field.uploadConfig?.onError?.(error)
@@ -193,19 +238,6 @@ export const renderUpload = (
             maxWidth: "100%",
             maxHeight: "100%",
             objectFit: "contain",
-          }}
-        />
-      )
-    }
-
-    if (file.type === "application/pdf") {
-      return (
-        <iframe
-          src={file.downloadUrl}
-          style={{
-            width: "100%",
-            height: "100%",
-            border: "none",
           }}
         />
       )
@@ -289,9 +321,9 @@ export const renderUpload = (
               htmlFor={field.name}
               variant='bordered'
               size='sm'
-              isDisabled={!isEditable || field.disabled || uploading}
+              isDisabled={!isEditable || field.disabled || uploading || isProcessing}
               startContent={
-                uploading ? (
+                (uploading || isProcessing) ? (
                   <Icon icon='mdi:loading' className='w-4 h-4 animate-spin' />
                 ) : (
                   <Icon icon='mdi:upload' className='w-4 h-4' />
@@ -304,9 +336,9 @@ export const renderUpload = (
                 field.className
               )}
             >
-              {uploading ? "上传中..." : field.placeholder || "选择文件"}
+              {uploading ? "上传中..." : isProcessing ? "处理中..." : field.placeholder || "选择文件"}
             </Button>
-            {formField.value && !uploading && (
+            {formField.value && !uploading && !isProcessing && (
               <>
                 <span className='text-sm text-gray-500 truncate flex-1'>
                   {Array.isArray(formField.value)
@@ -315,16 +347,18 @@ export const renderUpload = (
                     ? formField.value.name
                     : formField.value.fileName}
                 </span>
-                <Button
-                  isIconOnly
-                  variant='light'
-                  size='sm'
-                  color='primary'
-                  onClick={() => handlePreview(formField.value)}
-                  isDisabled={!formField.value.downloadUrl}
-                >
-                  <Icon icon='mdi:eye' className='w-4 h-4' />
-                </Button>
+                {formField.value.type?.startsWith('image/') && (
+                  <Button
+                    isIconOnly
+                    variant='light'
+                    size='sm'
+                    color='primary'
+                    onClick={() => handlePreview(formField.value)}
+                    isDisabled={!formField.value.downloadUrl}
+                  >
+                    <Icon icon='mdi:eye' className='w-4 h-4' />
+                  </Button>
+                )}
                 <Button
                   isIconOnly
                   variant='light'
