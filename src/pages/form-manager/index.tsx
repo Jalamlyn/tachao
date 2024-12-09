@@ -19,17 +19,6 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import message from "@/components/Message"
 import { useQueryMetadata } from "@/hooks/react-query"
-import { ErrorBoundary } from "react-error-boundary"
-
-// 错误回退组件
-const ErrorFallback = ({ error, resetErrorBoundary }) => (
-  <div className='flex flex-col items-center justify-center p-4'>
-    <p className='text-danger mb-4'>加载失败: {error.message}</p>
-    <Button color='primary' onClick={resetErrorBoundary}>
-      重试
-    </Button>
-  </div>
-)
 
 // 模板选择模态框组件
 const TemplateSelectModal = ({
@@ -249,28 +238,20 @@ const FormManager: React.FC = () => {
         }}
         onError={(error) => message.error(error.message)}
       />
-      <ErrorBoundary
-        FallbackComponent={ErrorFallback}
-        onReset={() => {
-          // 重置错误状态
-          window.location.reload()
-        }}
+      <React.Suspense
+        fallback={
+          <div className='flex items-center justify-center h-screen'>
+            <Spinner size='lg' />
+          </div>
+        }
       >
-        <React.Suspense
-          fallback={
-            <div className='flex items-center justify-center h-screen'>
-              <Spinner size='lg' />
-            </div>
-          }
-        >
-          <TemplateSelectModal
-            isOpen={isCreateModalOpen}
-            onClose={() => setIsCreateModalOpen(false)}
-            templates={templates}
-            onSelect={handleTemplateSelect}
-          />
-        </React.Suspense>
-      </ErrorBoundary>
+        <TemplateSelectModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          templates={templates}
+          onSelect={handleTemplateSelect}
+        />
+      </React.Suspense>
     </PageLayout>
   )
 }
