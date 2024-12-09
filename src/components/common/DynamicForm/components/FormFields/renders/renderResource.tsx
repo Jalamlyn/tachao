@@ -19,23 +19,17 @@ export const renderResource = (
 ) => {
   const [loading, setLoading] = useState(false)
   const { getDetail } = useMetadata(field.resourceConfig?.resourceId || "")
-
   // 监听值变化,如果是dataid则加载数据
   useEffect(() => {
-    const value = form.watch(field.name) as ResourceValue
-
-    if (value?.dataid && !value?.displayData) {
-      const loadData = async () => {
+    const loadData = async () => {
+      const value = form.watch(field.name) as ResourceValue
+      console.log(value)
+      if (field.resourceConfig?.resourceId) {
         setLoading(true)
         try {
-          const data = await getDetail(value.dataid)
-          if (data) {
-            // 更新表单显示值,保持完整对象格式
-            form.setValue(field.name, {
-              dataid: value.dataid,
-              displayData: data.data
-            })
-          }
+          const { data } = await getDetail(field.resourceConfig.resourceId)
+          console.log(data)
+          console.log(form.getValues())
         } catch (error) {
           console.error("Failed to load resource data:", error)
           message.error("加载资源数据失败")
@@ -43,11 +37,8 @@ export const renderResource = (
           setLoading(false)
         }
       }
-
-      if (field.resourceConfig?.resourceId) {
-        loadData()
-      }
     }
+    loadData()
   }, [form.watch(field.name)])
 
   const handleClear = () => {
