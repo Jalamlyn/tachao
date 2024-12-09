@@ -1,7 +1,7 @@
 import { doc } from "@/components/common/DynamicForm/docs"
 
 const generateFormAgentPrompt = (
-  rawConfig: string | null, 
+  rawConfig: string | null,
   hasImage: boolean = false,
   resources: Array<{ id: string; title: string }> = []
 ) => {
@@ -12,15 +12,17 @@ const generateFormAgentPrompt = (
   }${hasImage ? "我看到您提供了图片，我会先分析图片中的业务元素和逻辑，然后再进行表单设计。" : ""}`
 
   // 资料映射提示词
-  const resourceMappingPrompt = resources.length > 0 ? `
+  const resourceMappingPrompt =
+    resources.length > 0
+      ? `
 # 资料映射指南
-可用的资料列表：
-${resources.map(r => `- ${r.title} (ID: ${r.id})`).join('\n')}
+可用的资料列表, 你可以阅读资料中的 rowData 来理解资料的字段和数据：
+${resources}
 
 资料映射规则：
 1. 分析用户提到的资料名称
 2. 在资料列表中找到匹配的资料
-3. 将对应的资料ID填入 resourceConfig.resourceTitle 字段
+3. 将对应的 resource 的 id 填入 resourceConfig.resourceTitle 字段
 4. 如果找不到匹配的资料，返回错误信息
 
 正确的资料字段配置示例：
@@ -52,7 +54,92 @@ ${resources.map(r => `- ${r.title} (ID: ${r.id})`).join('\n')}
 3. 需要配置 displayMode 和 displayFields
 4. 考虑是否需要 multiple 选项
 5. 如果找不到匹配的资料，使用 <shata-ai-error> 标签返回错误
-` : ''
+`
+      : ""
+
+  // 表单配置必要结构说明
+  const formStructureGuide = `
+# 表单配置必要结构说明
+
+1. 基础结构要求:
+\`\`\`javascript
+export default {
+  title: string,          // 必须: 表单标题
+  config: {               // 必须: 表单配置对象
+    metadata: {           // 必须: 元数据配置
+      title: string,      // 必须: 与外层title保持一致
+      permissions?: {     // 可选: 权限配置
+        edit: boolean
+      }
+    },
+    renderConfig: {       // 必须: 渲染配置
+      basicFields: {      // 必须: 基础字段配置
+        groups: [         // 必须: 字段分组数组
+          {
+            key: string,    // 必须: 分组唯一标识
+            title: string,  // 必须: 分组标题
+            icon?: string,  // 可选: 分组图标
+            fields: []      // 必须: 字段配置数组
+          }
+        ]
+      }
+    }
+  }
+}
+\`\`\`
+
+2. 错误示例:
+\`\`\`javascript
+❌ 错误 - 缺少必要结构:
+export default {
+  title: "表单",
+  config: {
+    basicFields: []  // 错误:缺少 metadata 和 renderConfig
+  }
+}
+
+❌ 错误 - 错误的字段位置:
+export default {
+  title: "表单",
+  config: {
+    metadata: { title: "表单" },
+    basicFields: []  // 错误:字段应该在 renderConfig 中
+  }
+}
+\`\`\`
+
+3. 正确示例:
+\`\`\`javascript
+✅ 正确:
+export default {
+  title: "表单标题",
+  config: {
+    metadata: {
+      title: "表单标题"
+    },
+    renderConfig: {
+      basicFields: {
+        groups: [
+          {
+            key: "basic",
+            title: "基本信息",
+            fields: []
+          }
+        ]
+      }
+    }
+  }
+}
+\`\`\`
+
+4. 注意事项:
+- metadata 和 renderConfig 是必须的
+- basicFields 必须包含 groups 数组
+- 每个 group 必须有 key、title 和 fields
+- title 必须在外层和 metadata 中都定义
+- 所有生成的代码必须包含在 <shata-ai-form> 标签中
+- 必须包含 components 和 utils 对象定义
+`
 
   // 表单设计原则
   const designPrinciples = `
@@ -71,7 +158,8 @@ ${resources.map(r => `- ${r.title} (ID: ${r.id})`).join('\n')}
 `
 
   // 图片分析指南
-  const imageAnalysisGuide = hasImage ? `
+  const imageAnalysisGuide = hasImage
+    ? `
 # 图片分析指南
 1. 关注要点：
    - 识别业务元素（字段、选项、规则）
@@ -97,7 +185,8 @@ ${resources.map(r => `- ${r.title} (ID: ${r.id})`).join('\n')}
    - 说明识别到的业务规则
    - 描述发现的字段关联
    - 等待您确认我的理解是否准确
-` : ""
+`
+    : ""
 
   // 交互确认流程
   const interactionProcess = `
@@ -145,7 +234,20 @@ const utils = {
 export default {
   title: "表单标题",
   config: {
-    // 标准的动态表单配置, 所有的代码都需要实现, 所有代码都不可以省略, 必须完整实现
+    metadata: {
+      title: "表单标题"
+    },
+    renderConfig: {
+      basicFields: {
+        groups: [
+          {
+            key: "basic",
+            title: "基本信息",
+            fields: []
+          }
+        ]
+      }
+    }
   }
 }
 </shata-ai-form>
@@ -185,7 +287,8 @@ export default {
 `
 
   // 现有配置分析
-  const existingConfigAnalysis = rawConfig ? `
+  const existingConfigAnalysis = rawConfig
+    ? `
 # 现有配置分析
 \`\`\`mo
 <shata-ai-config-analysis>
@@ -212,10 +315,12 @@ export default {
 \`\`\`
 ${rawConfig}
 \`\`\`
-` : ""
+`
+    : ""
 
   return `${basePrompt}
 ${resourceMappingPrompt}
+${formStructureGuide}
 ${designPrinciples}
 ${imageAnalysisGuide}
 ${interactionProcess}
@@ -226,7 +331,10 @@ ${existingConfigAnalysis}
 ${doc}
 </doc>
 - 仔细阅读 doc 来编写配置，不能编写超出 doc 范围的代码
-- 阅读完 doc 和用户需求之后要进行思考和反思`
+- 阅读完 doc 和用户需求之后要进行思考和反思
+- 生成的代码必须包含在 <shata-ai-form> 标签中
+- 必须包含 components 和 utils 对象定义
+- 必须遵循表单配置必要结构说明中的要求`
 }
 
 export default generateFormAgentPrompt
