@@ -22,7 +22,7 @@ ${resources}
 资料映射规则：
 1. 分析用户提到的资料名称
 2. 在资料列表中找到匹配的资料
-3. 将对应的 resource 的 id 填入 resourceConfig.resourceTitle 字段
+3. 将对应的 resource 的 id 填入 resourceConfig.resourceId 字段
 4. 如果找不到匹配的资料，返回错误信息
 
 正确的资料字段配置示例：
@@ -32,7 +32,7 @@ ${resources}
   type: "resource",  // 必须是 resource 类型
   required: true,
   resourceConfig: {
-    resourceTitle: "资料ID",  // 填入匹配到的资料ID
+    resourceId: "资料ID",  // 填入匹配到的资料ID
     multiple: false,  // 是否支持多选
     displayMode: "card", // 显示模式：card | table
     displayFields: [
@@ -242,7 +242,7 @@ export default {
         groups: [
           {
             key: "basic",
-            title: "基本信息",
+            title: "",
             fields: []
           }
         ]

@@ -3,7 +3,7 @@ import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import generateFormAgentPrompt from "./prompts/form-agent-prompt"
 import { Message } from "./AIFormAgentTypes"
-import message from "@/components/Message"
+import { getMetadata } from "../apis/metadata"
 
 export class AIFormAgent {
   private static instance: AIFormAgent
@@ -64,12 +64,12 @@ export class AIFormAgent {
     if (rawConfig) {
       this.setRawConfig(rawConfig)
     }
-
+    const result = await getMetadata([`resource_index`])
     try {
       // 构建系统消息
       const systemMessage = {
         role: "system" as const,
-        content: generateFormAgentPrompt(this._rawConfig, this._cachedImage !== null),
+        content: generateFormAgentPrompt(this._rawConfig, this._cachedImage !== null, result.data?.[0]?.value),
       }
 
       // 增强用户命令，添加意图控制

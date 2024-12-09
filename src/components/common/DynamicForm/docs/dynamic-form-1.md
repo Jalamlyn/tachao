@@ -123,7 +123,7 @@
   required: true,
   resourceConfig: {
     resourceTitle: "供应商主数据",
-    resourceId:"resource_1733724784858",
+    resourceId:"resource_xxxx",
     multiple: false,  // 是否支持多选
     displayMode: "card", // 显示模式：card | table
     // 自定义显示字段
@@ -153,7 +153,7 @@
   type: "resource",
   resourceConfig: {
     resourceTitle: "产品主数据",
-    resourceId:"resource_1733724784111",
+    resourceId:"resource_xxx",
     displayMode: "table",
     displayFields: [
       {
@@ -198,7 +198,7 @@
   type: "resource",
   resourceConfig: {
     resourceTitle: "原材料主数据",
-    resourceId:"resource_1733724784222",
+    resourceId:"resource_xxx",
     multiple: true, // 启用多选
     displayMode: "table",
     displayFields: [
