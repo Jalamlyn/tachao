@@ -23,9 +23,9 @@ const ServiceConsultModal: React.FC<ServiceConsultModalProps> = ({ isOpen, onClo
       <ModalContent>
         <ModalHeader className='flex flex-col gap-1'>
           <h3 className='text-xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent'>
-            表单定制服务
+            企业级AI助手定制服务
           </h3>
-          <p className='text-sm text-default-500'>专业的企业级表单解决方案</p>
+          <p className='text-sm text-default-500'>为您的企业打造专属智能化解决方案</p>
         </ModalHeader>
 
         <ModalBody>
@@ -38,16 +38,16 @@ const ServiceConsultModal: React.FC<ServiceConsultModalProps> = ({ isOpen, onClo
             <div className='p-4 rounded-lg bg-default-50'>
               <ul className='text-sm text-default-600 space-y-2'>
                 <li className='flex items-center gap-2'>
-                  <Icon icon='solar:user-check-rounded-linear' className='text-primary' />
-                  专属顾问一对一服务
+                  <Icon icon='solar:robot-linear' className='text-primary' />
+                  定制企业专属AI助手
                 </li>
                 <li className='flex items-center gap-2'>
-                  <Icon icon='solar:notebook-bookmark-linear' className='text-primary' />
-                  个性化需求分析
+                  <Icon icon='solar:chart-square-linear' className='text-primary' />
+                  智能化流程优化
                 </li>
                 <li className='flex items-center gap-2'>
-                  <Icon icon='solar:code-square-linear' className='text-primary' />
-                  专业技术支持
+                  <Icon icon='solar:shield-check-linear' className='text-primary' />
+                  企业级安全保障
                 </li>
                 <li className='flex items-center gap-2'>
                   <Icon icon='solar:refresh-circle-linear' className='text-primary' />
@@ -56,7 +56,7 @@ const ServiceConsultModal: React.FC<ServiceConsultModalProps> = ({ isOpen, onClo
               </ul>
             </div>
 
-            <p className='text-default-600 font-medium'>扫描下方二维码，获取专属定制方案</p>
+            <p className='text-default-600 font-medium'>扫描下方二维码，获取专属AI解决方案</p>
 
             <motion.div
               className='flex justify-center'
@@ -73,7 +73,7 @@ const ServiceConsultModal: React.FC<ServiceConsultModalProps> = ({ isOpen, onClo
             <p className='text-sm text-default-500'>
               我们的专业团队将为您提供一对一的咨询服务，
               <br />
-              为您的企业量身定制最适合的表单解决方案。
+              为您的企业量身定制最适合的AI助手解决方案。
             </p>
           </motion.div>
         </ModalBody>
