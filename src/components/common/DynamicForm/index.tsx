@@ -55,8 +55,24 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     }
   }, [])
 
+  // 加载表单数据的统一函数
+  const loadFormData = async (formId: string) => {
+    try {
+      const formData = await getDetail(formId)
+      if (formData) {
+        setFormValues(formData.data)
+        form.reset(formData.data)
+      }
+      return formData
+    } catch (error) {
+      console.error("Failed to load form data:", error)
+      message.error("加载表单数据失败")
+      throw error
+    }
+  }
+
   useEffect(() => {
-    const loadFormData = async () => {
+    const initializeForm = async () => {
       if (initialValues) {
         setFormValues(initialValues)
         return
@@ -65,20 +81,14 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       if (id) {
         setIsLoading(true)
         try {
-          const formData = await getDetail(id)
-          if (formData) {
-            setFormValues(formData.data)
-          }
-        } catch (error) {
-          console.error("Failed to load form data:", error)
-          message.error("加载表单数据失败")
+          await loadFormData(id)
         } finally {
           setIsLoading(false)
         }
       }
     }
 
-    loadFormData()
+    initializeForm()
   }, [id, getDetail, initialValues])
 
   useEffect(() => {
@@ -249,36 +259,45 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           return
         }
 
+        let savedFormId: string | undefined
+
         if (id) {
           const result = await updateMetadata(id, formData)
           if (result) {
-            setIsEditing(false)
-            form.reset()
+            savedFormId = id
           } else {
             throw new Error("更新失败")
           }
         } else {
           const result = await createMetadata(formData)
           if (result) {
-            setIsEditing(false)
-            form.reset()
-            // 创建成功后显示确认对话框
-            message.confirm({
-              title: "表单创建成功",
-              content: "是否前往查看创建好的表单?",
-              onOk: () => {
-                // 确认后跳转到新创建的表单页面
-                window.location.href = `/form/${result.id}`
-              },
-              onCancel: () => {
-                // 取消则继续停留在当前页面,可以继续创建新表单
-                setIsEditing(true)
-              },
-            })
+            savedFormId = result.id
           } else {
             throw new Error("创建失败")
           }
         }
+
+        // 保存成功后重新加载数据
+        if (savedFormId) {
+          await loadFormData(savedFormId)
+          setIsEditing(false)
+          message.success("保存成功")
+
+          // 如果是新创建的表单，显示确认对话框
+          if (!id) {
+            message.confirm({
+              title: "表单创建成功",
+              content: "是否前往查看创建好的表单?",
+              onOk: () => {
+                window.location.href = `/form/${savedFormId}`
+              },
+              onCancel: () => {
+                setIsEditing(true)
+              },
+            })
+          }
+        }
+
         setIsUpdating(new Date().getTime())
       } catch (error) {
         console.error("Form submission error:", error)
