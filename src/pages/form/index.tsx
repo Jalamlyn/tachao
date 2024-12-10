@@ -89,22 +89,20 @@ const NewForm: React.FC = () => {
     setAuthRetrying(false)
   }
 
-  const generateShareLink = (type: "customer" | "colleague") => {
-    const baseUrl = `${window.location.origin}/form/${formId}`
-    return `${baseUrl}?type=${type}`
+  const generateShareLink = () => {
+    return `${window.location.origin}/form/${formId}`
   }
 
-  const getShareContent = (type: "customer" | "colleague") => {
-    const link = generateShareLink(type)
+  const getShareContent = () => {
     return {
-      title: `${formState.formConfig?.metadata.title || "表单"} - ${type === "customer" ? "客户版本" : "同事版本"}`,
+      title: formState.formConfig?.metadata.title || "表单",
       text: "请查看这个表单",
-      url: link,
+      url: generateShareLink(),
     }
   }
 
-  const handleNativeShare = async (type: "customer" | "colleague") => {
-    const content = getShareContent(type)
+  const handleNativeShare = async () => {
+    const content = getShareContent()
     try {
       await navigator.share(content)
       message.success("分享成功")
@@ -116,11 +114,11 @@ const NewForm: React.FC = () => {
     }
   }
 
-  const handleQuickCopy = async (type: "customer" | "colleague") => {
-    const link = generateShareLink(type)
+  const handleQuickCopy = async () => {
+    const link = generateShareLink()
     try {
       await navigator.clipboard.writeText(link)
-      message.success(`已复制${type === 'customer' ? '客户' : '同事'}版本链接`)
+      message.success("已复制链接")
     } catch (err) {
       message.error("复制失败，请手动复制")
       console.error('复制错误:', err)
@@ -129,10 +127,10 @@ const NewForm: React.FC = () => {
 
   const handleWechatShare = () => {
     if (typeof wx !== 'undefined') {
-      const link = generateShareLink("customer")
+      const link = generateShareLink()
       wx.ready(() => {
         wx.updateAppMessageShareData({
-          title: `${formState.formConfig?.metadata.title || "表单"} - 客户版本`,
+          title: formState.formConfig?.metadata.title || "表单",
           desc: "请查看这个表单",
           link,
           success: () => {
@@ -190,40 +188,22 @@ const NewForm: React.FC = () => {
               </DropdownTrigger>
               <DropdownMenu aria-label="分享选项">
                 {webShareSupported && (
-                  <>
-                    <DropdownItem
-                      key="share-customer"
-                      startContent={<Icon icon="mdi:share" className="w-4 h-4" />}
-                      description="使用系统分享客户版本"
-                      onClick={() => handleNativeShare('customer')}
-                    >
-                      分享客户版本
-                    </DropdownItem>
-                    <DropdownItem
-                      key="share-colleague"
-                      startContent={<Icon icon="mdi:share" className="w-4 h-4" />}
-                      description="使用系统分享同事版本"
-                      onClick={() => handleNativeShare('colleague')}
-                    >
-                      分享同事版本
-                    </DropdownItem>
-                  </>
+                  <DropdownItem
+                    key="share"
+                    startContent={<Icon icon="mdi:share" className="w-4 h-4" />}
+                    description="使用系统分享"
+                    onClick={handleNativeShare}
+                  >
+                    分享表单
+                  </DropdownItem>
                 )}
                 <DropdownItem 
-                  key="copy-customer"
+                  key="copy"
                   startContent={<Icon icon="mdi:content-copy" className="w-4 h-4" />}
-                  description="复制客户版本链接"
-                  onClick={() => handleQuickCopy('customer')}
+                  description="复制表单链接"
+                  onClick={handleQuickCopy}
                 >
-                  复制客户链接
-                </DropdownItem>
-                <DropdownItem
-                  key="copy-colleague" 
-                  startContent={<Icon icon="mdi:content-copy" className="w-4 h-4" />}
-                  description="复制同事版本链接"
-                  onClick={() => handleQuickCopy('colleague')}
-                >
-                  复制同事链接
+                  复制链接
                 </DropdownItem>
                 {isWechat && (
                   <DropdownItem
@@ -236,10 +216,10 @@ const NewForm: React.FC = () => {
                 )}
                 <DropdownItem
                   key="more-options"
-                  startContent={<Icon icon="mdi:dots-horizontal" className="w-4 h-4" />}
+                  startContent={<Icon icon="mdi:qrcode" className="w-4 h-4" />}
                   onClick={() => setIsShareModalOpen(true)}
                 >
-                  更多分享选项
+                  生成二维码
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>
