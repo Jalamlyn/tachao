@@ -402,7 +402,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                 variant='flat'
                 color='primary'
                 onClick={handlePrint}
-                className={cn(styles["button"], styles["button-primary"], "w-full md:w-auto")}
+                className={cn(styles["button"], styles["button-primary"], "hidden md:flex w-full md:w-auto")}
               >
                 <Icon icon='mdi:printer' className='w-4 h-4' />
                 <span className='hidden md:inline ml-1'>打印</span>
