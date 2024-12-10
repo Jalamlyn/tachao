@@ -18,52 +18,73 @@ export const renderResource = (
   onChange?: (fieldName: string, value: any) => void
 ) => {
   const [loading, setLoading] = useState(false)
+  const [resourceData, setResourceData] = useState<any>(null)
   const { getDetail } = useMetadata("resource")
   const value = form.watch(field.name) as ResourceValue
   const isMultiple = field.resourceConfig?.multiple
 
-  // 监听dataid变化,加载具体数据
+  // 加载资源数据
   useEffect(() => {
-    const loadData = async () => {
-      if (!value?.dataid) return
+    const loadResourceData = async () => {
+      if (!field.resourceConfig?.resourceId) return
 
       setLoading(true)
       try {
-        if (isMultiple && Array.isArray(value.dataid)) {
-          // 处理多选情况
-          const dataPromises = value.dataid.map(id => getDetail(id))
-          const results = await Promise.all(dataPromises)
-          const displayData = results.map(result => result.data)
-          
-          form.setValue(field.name, {
-            ...value,
-            displayData
-          })
-          onChange?.(field.name, {
-            ...value,
-            displayData
-          })
-        } else {
-          // 处理单选情况
-          const { data } = await getDetail(value.dataid)
-          form.setValue(field.name, {
-            ...value,
-            displayData: data
-          })
-          onChange?.(field.name, {
-            ...value,
-            displayData: data
-          })
+        const data = await getDetail(field.resourceConfig.resourceId)
+        if (data) {
+          setResourceData(data)
         }
       } catch (error) {
-        console.error("Failed to load resource data:", error)
-        message.error("加载资源数据失败")
+        console.error("Failed to load resource:", error)
+        message.error("加载资源失败")
       } finally {
         setLoading(false)
       }
     }
-    loadData()
-  }, [value?.dataid])
+
+    loadResourceData()
+  }, [field.resourceConfig?.resourceId])
+
+  // 根据dataid找到对应的行数据
+  useEffect(() => {
+    if (!resourceData?.data || !value?.dataid) return
+
+    try {
+      if (isMultiple && Array.isArray(value.dataid)) {
+        // 处理多选情况
+        const selectedRows = value.dataid.map(id => 
+          resourceData.data.find((row: any) => row.dataid === id)
+        ).filter(Boolean)
+
+        if (selectedRows.length) {
+          form.setValue(field.name, {
+            ...value,
+            displayData: selectedRows
+          })
+          onChange?.(field.name, {
+            ...value,
+            displayData: selectedRows
+          })
+        }
+      } else {
+        // 处理单选情况
+        const selectedRow = resourceData.data.find((row: any) => row.dataid === value.dataid)
+        if (selectedRow) {
+          form.setValue(field.name, {
+            ...value,
+            displayData: selectedRow
+          })
+          onChange?.(field.name, {
+            ...value,
+            displayData: selectedRow
+          })
+        }
+      }
+    } catch (error) {
+      console.error("Failed to process resource data:", error)
+      message.error("处理资源数据失败")
+    }
+  }, [resourceData, value?.dataid])
 
   const handleClear = () => {
     form.setValue(field.name, undefined)
