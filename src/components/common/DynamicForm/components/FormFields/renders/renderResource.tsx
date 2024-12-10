@@ -1,14 +1,15 @@
 import React, { useState, useCallback, useEffect } from "react"
 import { UseFormReturn } from "react-hook-form"
-import { FormField } from "../../../types"
+import { FormField, ResourceValue } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
-import { Input } from "@/components/ui/input"
-import ResourceSelectButton from "@/components/common/ResourceSelectButton"
+import { Card, CardBody } from "@nextui-org/react"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { cn } from "@/theme/cn"
-import message from "@/components/Message"
+import ResourceSelectButton from "@/components/common/ResourceSelectButton"
+import { Spinner } from "@nextui-org/react"
 import { useMetadata } from "@/hooks/metadata"
+import message from "@/components/Message"
 
 export const renderResource = (
   field: FormField,
@@ -17,35 +18,54 @@ export const renderResource = (
   onChange?: (fieldName: string, value: any) => void
 ) => {
   const [loading, setLoading] = useState(false)
-  const { getDetail } = useMetadata(field.resourceConfig?.resourceId || "")
+  const { getDetail } = useMetadata("resource")
+  const value = form.watch(field.name) as ResourceValue
+  const isMultiple = field.resourceConfig?.multiple
 
-  // 监听值变化,如果是dataid则加载数据
+  // 监听dataid变化,加载具体数据
   useEffect(() => {
     const loadData = async () => {
-      const value = form.watch(field.name)
-      if (field.resourceConfig?.resourceId && value?.dataid) {
-        setLoading(true)
-        try {
+      if (!value?.dataid) return
+
+      setLoading(true)
+      try {
+        if (isMultiple && Array.isArray(value.dataid)) {
+          // 处理多选情况
+          const dataPromises = value.dataid.map(id => getDetail(id))
+          const results = await Promise.all(dataPromises)
+          const displayData = results.map(result => result.data)
+          
+          form.setValue(field.name, {
+            ...value,
+            displayData
+          })
+          onChange?.(field.name, {
+            ...value,
+            displayData
+          })
+        } else {
+          // 处理单选情况
           const { data } = await getDetail(value.dataid)
-          if (data) {
-            form.setValue(field.name, {
-              ...value,
-              displayData: data
-            })
-          }
-        } catch (error) {
-          console.error("Failed to load resource data:", error)
-          message.error("加载资源数据失败")
-        } finally {
-          setLoading(false)
+          form.setValue(field.name, {
+            ...value,
+            displayData: data
+          })
+          onChange?.(field.name, {
+            ...value,
+            displayData: data
+          })
         }
+      } catch (error) {
+        console.error("Failed to load resource data:", error)
+        message.error("加载资源数据失败")
+      } finally {
+        setLoading(false)
       }
     }
     loadData()
-  }, [form.watch(field.name)])
+  }, [value?.dataid])
 
   const handleClear = () => {
-    if (!isEditable) return
     form.setValue(field.name, undefined)
     onChange?.(field.name, undefined)
   }
@@ -61,25 +81,18 @@ export const renderResource = (
       required={field.required}
     >
       {(formField) => {
-        const value = formField.value
+        const value = formField.value as ResourceValue
         const displayData = value?.displayData
         const isMultiple = field.resourceConfig?.multiple
         const displayMode = field.resourceConfig?.displayMode || "card"
-        const isFieldEditable = isEditable && !field.disabled
 
         if (!displayData) {
           return (
-            <div className={cn(
-              'min-h-[120px] border-2 border-dashed border-gray-200 rounded-lg transition-colors duration-200',
-              isFieldEditable ? 'hover:border-gray-300 cursor-pointer' : 'opacity-50 cursor-not-allowed'
-            )}>
-              <div className='h-full flex flex-col items-center justify-center p-6'>
+            <div className='min-h-[120px] border-2 border-dashed border-gray-200 rounded-lg hover:border-gray-300 transition-colors duration-200'>
+              <div className='h-full flex flex-col items-center justify-center p-6 cursor-pointer'>
                 {loading ? (
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <Icon icon="mdi:loading" className="w-5 h-5 animate-spin" />
-                    <span>加载中...</span>
-                  </div>
-                ) : isFieldEditable ? (
+                  <Spinner size='sm' />
+                ) : (
                   <ResourceSelectButton
                     resourceName={field.resourceConfig?.resourceId || ""}
                     selectionMode={isMultiple ? "multiple" : "single"}
@@ -102,14 +115,8 @@ export const renderResource = (
                       variant: "light",
                       className: "w-full flex items-center justify-center gap-2",
                       startContent: <Icon icon='material-symbols:add-circle-outline' className='text-xl' />,
-                      isDisabled: !isFieldEditable
                     }}
                   />
-                ) : (
-                  <div className="text-gray-500 flex items-center gap-2">
-                    <Icon icon="mdi:lock" className="w-5 h-5" />
-                    <span>请点击"填写表单"按钮开始编辑</span>
-                  </div>
                 )}
               </div>
             </div>
@@ -118,33 +125,29 @@ export const renderResource = (
 
         return (
           <div className='space-y-4'>
+            {/* 显示数据 */}
             <div className='space-y-4'>
               {displayMode === "card" ? (
+                // 卡片模式
                 <div className='grid grid-cols-1 gap-4'>
                   {(isMultiple ? displayData : [displayData]).map((item: any, index: number) => (
-                    <div 
-                      key={index} 
-                      className={cn(
-                        'border rounded-lg p-4 bg-white',
-                        !isFieldEditable && 'opacity-50'
-                      )}
-                    >
-                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                        {(
-                          field.resourceConfig?.displayFields || 
-                          Object.keys(item).map((key) => ({ key, label: key }))
-                        ).map((displayField) => (
-                          <div key={displayField.key} className='space-y-1'>
-                            <span className='text-sm font-medium text-gray-500'>{displayField.label}</span>
-                            <div className='text-sm'>
-                              {displayField.render
-                                ? displayField.render(item[displayField.key])
-                                : String(item[displayField.key] || "-")}
+                    <Card key={index} className='w-full'>
+                      <CardBody className='p-4'>
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                          {(
+                            field.resourceConfig?.displayFields || Object.keys(item).map((key) => ({ key, label: key }))
+                          ).map((displayField) => (
+                            <div key={displayField.key} className='space-y-1'>
+                              <span className='text-sm font-medium text-gray-500'>{displayField.label}</span>
+                              <div className='text-sm'>
+                                {displayField.render
+                                  ? displayField.render(item[displayField.key])
+                                  : String(item[displayField.key] || "-")}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                      {isFieldEditable && (
+                          ))}
+                        </div>
+                        {/* 操作按钮 - 固定在底部 */}
                         <div className='mt-4 pt-4 border-t border-gray-100 flex justify-end gap-2'>
                           <ResourceSelectButton
                             resourceName={field.resourceConfig?.resourceId || ""}
@@ -164,36 +167,32 @@ export const renderResource = (
                             }}
                             buttonText='更换'
                             buttonProps={{
-                              size: "sm",
+                              size: "md",
                               variant: "light",
                               className: "min-w-[80px] md:min-w-[100px]",
                               startContent: <Icon icon='material-symbols:sync' className='text-lg' />,
-                              isDisabled: !isFieldEditable
                             }}
                           />
                           <Button
-                            size='sm'
+                            size='md'
                             variant='light'
                             color='danger'
                             className='min-w-[80px] md:min-w-[100px]'
                             onClick={handleClear}
-                            isDisabled={!isFieldEditable}
                             startContent={<Icon icon='material-symbols:remove' className='text-lg' />}
                           >
                             移除
                           </Button>
                         </div>
-                      )}
-                    </div>
+                      </CardBody>
+                    </Card>
                   ))}
                 </div>
               ) : (
+                // 表格模式
                 <div className='overflow-x-auto'>
                   <div className='min-w-[400px]'>
-                    <table className={cn(
-                      'w-full border-collapse',
-                      !isFieldEditable && 'opacity-50'
-                    )}>
+                    <table className='w-full border-collapse'>
                       <thead>
                         <tr className='bg-gray-50'>
                           {(
@@ -227,46 +226,43 @@ export const renderResource = (
                         ))}
                       </tbody>
                     </table>
-                    {isFieldEditable && (
-                      <div className='mt-4 flex justify-end gap-2'>
-                        <ResourceSelectButton
-                          resourceName={field.resourceConfig?.resourceId || ""}
-                          selectionMode={isMultiple ? "multiple" : "single"}
-                          onSelect={(selected) => {
-                            if (selected.length > 0) {
-                              const dataids = selected.map((item) => item.dataid)
-                              formField.onChange({
-                                dataid: isMultiple ? dataids : dataids[0],
-                                displayData: isMultiple ? selected : selected[0],
-                              })
-                              onChange?.(field.name, {
-                                dataid: isMultiple ? dataids : dataids[0],
-                                displayData: isMultiple ? selected : selected[0],
-                              })
-                            }
-                          }}
-                          buttonText='更换'
-                          buttonProps={{
-                            size: "sm",
-                            variant: "light",
-                            className: "min-w-[80px] md:min-w-[100px]",
-                            startContent: <Icon icon='material-symbols:sync' className='text-lg' />,
-                            isDisabled: !isFieldEditable
-                          }}
-                        />
-                        <Button
-                          size='sm'
-                          variant='light'
-                          color='danger'
-                          className='min-w-[80px] md:min-w-[100px]'
-                          onClick={handleClear}
-                          isDisabled={!isFieldEditable}
-                          startContent={<Icon icon='material-symbols:remove' className='text-lg' />}
-                        >
-                          移除
-                        </Button>
-                      </div>
-                    )}
+                    {/* 表格模式下的操作按钮 */}
+                    <div className='mt-4 flex justify-end gap-2'>
+                      <ResourceSelectButton
+                        resourceName={field.resourceConfig?.resourceId || ""}
+                        selectionMode={isMultiple ? "multiple" : "single"}
+                        onSelect={(selected) => {
+                          if (selected.length > 0) {
+                            const dataids = selected.map((item) => item.dataid)
+                            formField.onChange({
+                              dataid: isMultiple ? dataids : dataids[0],
+                              displayData: isMultiple ? selected : selected[0],
+                            })
+                            onChange?.(field.name, {
+                              dataid: isMultiple ? dataids : dataids[0],
+                              displayData: isMultiple ? selected : selected[0],
+                            })
+                          }
+                        }}
+                        buttonText='更换'
+                        buttonProps={{
+                          size: "md",
+                          variant: "light",
+                          className: "min-w-[80px] md:min-w-[100px]",
+                          startContent: <Icon icon='material-symbols:sync' className='text-lg' />,
+                        }}
+                      />
+                      <Button
+                        size='md'
+                        variant='light'
+                        color='danger'
+                        className='min-w-[80px] md:min-w-[100px]'
+                        onClick={handleClear}
+                        startContent={<Icon icon='material-symbols:remove' className='text-lg' />}
+                      >
+                        移除
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
