@@ -12,8 +12,9 @@ import { FormLoading } from "./components/FormLoading"
 import { UserInfo } from "./components/UserInfo"
 import { FormTabs } from "./components/FormTabs"
 import ShareModal from "./components/ShareModal"
-import { Button } from "@nextui-org/react"
+import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
+import message from "@/components/Message"
 
 // 配置微信appId
 const WX_APP_ID = import.meta.env.VITE_WX_APP_ID || "wxd792f04d6c8ca1be"
@@ -27,6 +28,12 @@ const NewForm: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState("form")
   const [authRetrying, setAuthRetrying] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const isWechat = checkEnvironment() === 'wechat'
+  const [webShareSupported, setWebShareSupported] = useState(false)
+
+  useEffect(() => {
+    setWebShareSupported(navigator.share !== undefined)
+  }, [])
 
   useEffect(() => {
     const initializeForm = async () => {
@@ -82,6 +89,66 @@ const NewForm: React.FC = () => {
     setAuthRetrying(false)
   }
 
+  const generateShareLink = (type: "customer" | "colleague") => {
+    const baseUrl = `${window.location.origin}/form/${formId}`
+    return `${baseUrl}?type=${type}`
+  }
+
+  const getShareContent = (type: "customer" | "colleague") => {
+    const link = generateShareLink(type)
+    return {
+      title: `${formState.formConfig?.metadata.title || "表单"} - ${type === "customer" ? "客户版本" : "同事版本"}`,
+      text: "请查看这个表单",
+      url: link,
+    }
+  }
+
+  const handleNativeShare = async (type: "customer" | "colleague") => {
+    const content = getShareContent(type)
+    try {
+      await navigator.share(content)
+      message.success("分享成功")
+    } catch (error) {
+      if ((error as Error).name !== "AbortError") {
+        message.error("分享失败")
+        console.error("分享错误:", error)
+      }
+    }
+  }
+
+  const handleQuickCopy = async (type: "customer" | "colleague") => {
+    const link = generateShareLink(type)
+    try {
+      await navigator.clipboard.writeText(link)
+      message.success(`已复制${type === 'customer' ? '客户' : '同事'}版本链接`)
+    } catch (err) {
+      message.error("复制失败，请手动复制")
+      console.error('复制错误:', err)
+    }
+  }
+
+  const handleWechatShare = () => {
+    if (typeof wx !== 'undefined') {
+      const link = generateShareLink("customer")
+      wx.ready(() => {
+        wx.updateAppMessageShareData({
+          title: `${formState.formConfig?.metadata.title || "表单"} - 客户版本`,
+          desc: "请查看这个表单",
+          link,
+          success: () => {
+            message.success('已准备好分享')
+          },
+          fail: (res: any) => {
+            message.error('微信分享设置失败')
+            console.error('微信分享设置失败:', res)
+          }
+        })
+      })
+    } else {
+      message.error('微信环境未就绪')
+    }
+  }
+
   if (formState.status === "loading") {
     return <FormLoading />
   }
@@ -109,16 +176,73 @@ const NewForm: React.FC = () => {
           {/* 右侧区域 - 操作按钮 */}
           <div className='flex items-center gap-2'>
             {loginInfo.type !== "none" && <UserInfo userInfo={loginInfo.userInfo!} type={loginInfo.type} />}
-            <Button
-              isIconOnly
-              variant='light'
-              size='sm'
-              onClick={() => setIsShareModalOpen(true)}
-              className='w-8 h-8 min-w-0 hover:bg-gray-100 transition-colors'
-              aria-label='分享表单'
-            >
-              <Icon icon='mdi:share' className='w-4 h-4' />
-            </Button>
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  isIconOnly
+                  variant='light'
+                  size='sm'
+                  className='w-8 h-8 min-w-0 hover:bg-gray-100 transition-colors'
+                  aria-label='分享表单'
+                >
+                  <Icon icon='mdi:share' className='w-4 h-4' />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="分享选项">
+                {webShareSupported && (
+                  <>
+                    <DropdownItem
+                      key="share-customer"
+                      startContent={<Icon icon="mdi:share" className="w-4 h-4" />}
+                      description="使用系统分享客户版本"
+                      onClick={() => handleNativeShare('customer')}
+                    >
+                      分享客户版本
+                    </DropdownItem>
+                    <DropdownItem
+                      key="share-colleague"
+                      startContent={<Icon icon="mdi:share" className="w-4 h-4" />}
+                      description="使用系统分享同事版本"
+                      onClick={() => handleNativeShare('colleague')}
+                    >
+                      分享同事版本
+                    </DropdownItem>
+                  </>
+                )}
+                <DropdownItem 
+                  key="copy-customer"
+                  startContent={<Icon icon="mdi:content-copy" className="w-4 h-4" />}
+                  description="复制客户版本链接"
+                  onClick={() => handleQuickCopy('customer')}
+                >
+                  复制客户链接
+                </DropdownItem>
+                <DropdownItem
+                  key="copy-colleague" 
+                  startContent={<Icon icon="mdi:content-copy" className="w-4 h-4" />}
+                  description="复制同事版本链接"
+                  onClick={() => handleQuickCopy('colleague')}
+                >
+                  复制同事链接
+                </DropdownItem>
+                {isWechat && (
+                  <DropdownItem
+                    key="wechat-share"
+                    startContent={<Icon icon="mdi:wechat" className="w-4 h-4" />}
+                    onClick={handleWechatShare}
+                  >
+                    分享给微信好友
+                  </DropdownItem>
+                )}
+                <DropdownItem
+                  key="more-options"
+                  startContent={<Icon icon="mdi:dots-horizontal" className="w-4 h-4" />}
+                  onClick={() => setIsShareModalOpen(true)}
+                >
+                  更多分享选项
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
           </div>
         </div>
       </header>
