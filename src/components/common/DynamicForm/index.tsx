@@ -54,6 +54,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       return () => window.removeEventListener("resize", checkScroll)
     }
   }, [])
+
   useEffect(() => {
     const loadFormData = async () => {
       if (initialValues) {
@@ -372,6 +373,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                 label={orderNumberConfig.label}
                 disabled={!isEditing}
                 isUpdating={isUpdating}
+                isCreateMode={isCreateMode}
               />
             </div>
           </div>

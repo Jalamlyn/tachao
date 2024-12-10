@@ -111,6 +111,7 @@ const NewForm: React.FC = () => {
           formData={formState.formData}
           formId={formId!}
           templateId={formState.templateId}
+          isCreateMode={false}
         />
       </div>
     </motion.div>

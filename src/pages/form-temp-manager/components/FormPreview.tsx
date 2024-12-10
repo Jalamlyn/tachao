@@ -120,7 +120,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
           </div>
           <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
             <DynamicForm
-              isCreateMode={isCreateMode}
+              isCreateMode={true}
               previewMode={!isCreateMode}
               config={config}
               templateId={templateId}
