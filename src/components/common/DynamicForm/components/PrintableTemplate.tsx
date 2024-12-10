@@ -60,9 +60,9 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
         if (resourceData) {
           const displayFields = field.resourceConfig?.displayFields || []
           return displayFields
-            .map((df: any) => resourceData[df.key])
+            .map((df: any) => `${df.label}: ${resourceData[df.key]}`)
             .filter(Boolean)
-            .join(" - ")
+            .join(" | ")
         }
       }
 
@@ -76,11 +76,11 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
             .map(data => {
               const displayFields = field.resourceConfig?.displayFields || []
               return displayFields
-                .map((df: any) => data[df.key])
+                .map((df: any) => `${df.label}: ${data[df.key]}`)
                 .filter(Boolean)
-                .join(" - ")
+                .join(" | ")
             })
-            .join("，")
+            .join("\n")
         }
       }
 
