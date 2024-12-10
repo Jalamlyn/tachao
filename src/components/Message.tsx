@@ -28,6 +28,15 @@ interface MessageWithCopyProps {
   type: MessageType
 }
 
+interface ConfirmOptions {
+  title: string
+  content: React.ReactNode
+  onOk?: () => void
+  onCancel?: () => void
+  okText?: string
+  cancelText?: string
+}
+
 // 错误信息格式化组件
 const ErrorMessageList: React.FC<{ messages: string[] }> = ({ messages }) => {
   return (
@@ -107,6 +116,43 @@ const message = {
       showMessage(status, content)
     }
   },
+  confirm: (options: ConfirmOptions) => {
+    const { 
+      title, 
+      content, 
+      onOk, 
+      onCancel,
+      okText = '确认',
+      cancelText = '取消'
+    } = options
+
+    toast.custom((t) => (
+      <div className="p-4 bg-white rounded-lg shadow-lg min-w-[300px]">
+        <h3 className="text-lg font-semibold mb-2">{title}</h3>
+        <div className="mb-4">{content}</div>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => {
+              toast.dismiss(t)
+              onCancel?.()
+            }}
+            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+          >
+            {cancelText}
+          </button>
+          <button
+            onClick={() => {
+              toast.dismiss(t)
+              onOk?.()
+            }}
+            className="px-4 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded"
+          >
+            {okText}
+          </button>
+        </div>
+      </div>
+    ))
+  }
 }
 
 export default message
