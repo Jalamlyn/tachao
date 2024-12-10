@@ -5,7 +5,6 @@ import FormFieldWrapper from "../FormFieldWrapper"
 import { Card, CardBody } from "@nextui-org/react"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { cn } from "@/theme/cn"
 import ResourceSelectButton from "@/components/common/ResourceSelectButton"
 import { Spinner } from "@nextui-org/react"
 import { useMetadata } from "@/hooks/metadata"
@@ -22,7 +21,6 @@ export const renderResource = (
   const { getDetail } = useMetadata("resource")
   const value = form.watch(field.name) as ResourceValue
   const isMultiple = field.resourceConfig?.multiple
-
   // 从缓存获取资源数据
   const getResourceFromCache = (resourceId: string, dataid: string) => {
     const key = `resource_${resourceId}_${dataid}`
@@ -78,12 +76,8 @@ export const renderResource = (
   }, [field.resourceConfig?.resourceId, value?.dataid])
 
   const handleClear = () => {
-    form.setValue(field.name, undefined, {
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true,
-    })
-    form.trigger(field.name)
+    form.setValue(field.name, undefined)
+    setResourceData(null) // 添加这行
     onChange?.(field.name, undefined)
   }
 
