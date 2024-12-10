@@ -33,7 +33,6 @@ export interface ResourceConfig {
 // 资料字段值类型
 export interface ResourceValue {
   dataid: string | string[] // 单个或多个dataid
-  displayData?: any | any[] // 完整的资料数据对象
 }
 
 export interface FileInfo {

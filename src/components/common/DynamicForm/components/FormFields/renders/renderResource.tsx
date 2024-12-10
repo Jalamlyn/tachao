@@ -23,17 +23,49 @@ export const renderResource = (
   const value = form.watch(field.name) as ResourceValue
   const isMultiple = field.resourceConfig?.multiple
 
+  // 从缓存获取资源数据
+  const getResourceFromCache = (resourceId: string, dataid: string) => {
+    const key = `resource_${resourceId}_${dataid}`
+    const cached = sessionStorage.getItem(key)
+    return cached ? JSON.parse(cached) : null
+  }
+
+  // 设置缓存
+  const setResourceCache = (resourceId: string, dataid: string, data: any) => {
+    const key = `resource_${resourceId}_${dataid}`
+    sessionStorage.setItem(key, JSON.stringify(data))
+  }
+
   // 加载资源数据
   useEffect(() => {
     const loadResourceData = async () => {
-      if (!field.resourceConfig?.resourceId) return
+      if (!field.resourceConfig?.resourceId || !value?.dataid) return
 
       setLoading(true)
       try {
-        const data = await getDetail(field.resourceConfig.resourceId)
-        if (data) {
-          setResourceData(data)
+        const dataids = Array.isArray(value.dataid) ? value.dataid : [value.dataid]
+        const loadedData = { data: [] }
+
+        for (const dataid of dataids) {
+          // 先查缓存
+          const cached = getResourceFromCache(field.resourceConfig.resourceId, dataid)
+          if (cached) {
+            loadedData.data.push(cached)
+            continue
+          }
+
+          // 缓存未命中则请求
+          const data = await getDetail(field.resourceConfig.resourceId)
+          if (data) {
+            const row = data.data.find((row: any) => row.dataid === dataid)
+            if (row) {
+              setResourceCache(field.resourceConfig.resourceId, dataid, row)
+              loadedData.data.push(row)
+            }
+          }
         }
+
+        setResourceData(loadedData)
       } catch (error) {
         console.error("Failed to load resource:", error)
         message.error("加载资源失败")
@@ -43,59 +75,15 @@ export const renderResource = (
     }
 
     loadResourceData()
-  }, [field.resourceConfig?.resourceId])
-
-  // 根据dataid找到对应的行数据
-  useEffect(() => {
-    if (!resourceData?.data || !value?.dataid) return
-
-    try {
-      if (isMultiple && Array.isArray(value.dataid)) {
-        // 处理多选情况
-        const selectedRows = value.dataid
-          .map((id) => resourceData.data.find((row: any) => row.dataid === id))
-          .filter(Boolean)
-
-        if (selectedRows.length) {
-          form.setValue(field.name, {
-            ...value,
-            displayData: selectedRows,
-          })
-          onChange?.(field.name, {
-            ...value,
-            displayData: selectedRows,
-          })
-        }
-      } else {
-        // 处理单选情况
-        const selectedRow = resourceData.data.find((row: any) => row.dataid === value.dataid)
-        if (selectedRow) {
-          form.setValue(field.name, {
-            ...value,
-            displayData: selectedRow,
-          })
-          onChange?.(field.name, {
-            ...value,
-            displayData: selectedRow,
-          })
-        }
-      }
-    } catch (error) {
-      console.error("Failed to process resource data:", error)
-      message.error("处理资源数据失败")
-    }
-  }, [resourceData, value?.dataid])
+  }, [field.resourceConfig?.resourceId, value?.dataid])
 
   const handleClear = () => {
     form.setValue(field.name, undefined, {
       shouldDirty: true,
       shouldTouch: true,
-      shouldValidate: true, // 添加这个选项
+      shouldValidate: true,
     })
-    console.log(form.getValues())
-    // 显式触发字段重新验证
     form.trigger(field.name)
-
     onChange?.(field.name, undefined)
   }
 
@@ -110,10 +98,9 @@ export const renderResource = (
       required={field.required}
     >
       {(formField) => {
-        const displayData = value?.displayData
-        const isMultiple = field.resourceConfig?.multiple
         const displayMode = field.resourceConfig?.displayMode || "card"
-        if (!displayData) {
+
+        if (!resourceData?.data?.length) {
           return (
             <div className='min-h-[120px] border-2 border-dashed border-gray-200 rounded-lg hover:border-gray-300 transition-colors duration-200'>
               <div className='h-full flex flex-col items-center justify-center p-6 cursor-pointer'>
@@ -128,11 +115,9 @@ export const renderResource = (
                         const dataids = selected.map((item) => item.dataid)
                         formField.onChange({
                           dataid: isMultiple ? dataids : dataids[0],
-                          displayData: isMultiple ? selected : selected[0],
                         })
                         onChange?.(field.name, {
                           dataid: isMultiple ? dataids : dataids[0],
-                          displayData: isMultiple ? selected : selected[0],
                         })
                       }
                     }}
@@ -140,7 +125,7 @@ export const renderResource = (
                     buttonProps={{
                       size: "lg",
                       variant: "light",
-                      isDisabled: !isEditable, // 添加这行
+                      isDisabled: !isEditable,
                       className: "w-full flex items-center justify-center gap-2",
                       startContent: <Icon icon='material-symbols:add-circle-outline' className='text-xl' />,
                     }}
@@ -153,12 +138,10 @@ export const renderResource = (
 
         return (
           <div className='space-y-4'>
-            {/* 显示数据 */}
             <div className='space-y-4'>
               {displayMode === "card" ? (
-                // 卡片模式
                 <div className='grid grid-cols-1 gap-4'>
-                  {(isMultiple ? displayData : [displayData]).map((item: any, index: number) => (
+                  {resourceData.data.map((item: any, index: number) => (
                     <Card key={index} className='w-full'>
                       <CardBody className='p-4'>
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -175,7 +158,6 @@ export const renderResource = (
                             </div>
                           ))}
                         </div>
-                        {/* 操作按钮 - 固定在底部 */}
                         {isEditable && (
                           <div className='mt-4 pt-4 border-t border-gray-100 flex justify-end gap-2'>
                             <ResourceSelectButton
@@ -186,11 +168,9 @@ export const renderResource = (
                                   const dataids = selected.map((item) => item.dataid)
                                   formField.onChange({
                                     dataid: isMultiple ? dataids : dataids[0],
-                                    displayData: isMultiple ? selected : selected[0],
                                   })
                                   onChange?.(field.name, {
                                     dataid: isMultiple ? dataids : dataids[0],
-                                    displayData: isMultiple ? selected : selected[0],
                                   })
                                 }
                               }}
@@ -198,7 +178,7 @@ export const renderResource = (
                               buttonProps={{
                                 size: "md",
                                 variant: "light",
-                                isDisabled: !isEditable, // 添加这行
+                                isDisabled: !isEditable,
                                 className: "min-w-[80px] md:min-w-[100px]",
                                 startContent: <Icon icon='material-symbols:sync' className='text-lg' />,
                               }}
@@ -220,7 +200,6 @@ export const renderResource = (
                   ))}
                 </div>
               ) : (
-                // 表格模式
                 <div className='overflow-x-auto'>
                   <div className='min-w-[400px]'>
                     <table className='w-full border-collapse'>
@@ -228,7 +207,7 @@ export const renderResource = (
                         <tr className='bg-gray-50'>
                           {(
                             field.resourceConfig?.displayFields ||
-                            Object.keys(isMultiple ? displayData[0] : displayData).map((key) => ({ key, label: key }))
+                            Object.keys(resourceData.data[0]).map((key) => ({ key, label: key }))
                           ).map((displayField) => (
                             <th
                               key={displayField.key}
@@ -241,7 +220,7 @@ export const renderResource = (
                         </tr>
                       </thead>
                       <tbody>
-                        {(isMultiple ? displayData : [displayData]).map((item: any, index: number) => (
+                        {resourceData.data.map((item: any, index: number) => (
                           <tr key={index} className='hover:bg-gray-50'>
                             {(
                               field.resourceConfig?.displayFields ||
@@ -257,7 +236,6 @@ export const renderResource = (
                         ))}
                       </tbody>
                     </table>
-                    {/* 表格模式下的操作按钮 */}
                     <div className='mt-4 flex justify-end gap-2'>
                       <ResourceSelectButton
                         resourceName={field.resourceConfig?.resourceId || ""}
@@ -267,11 +245,9 @@ export const renderResource = (
                             const dataids = selected.map((item) => item.dataid)
                             formField.onChange({
                               dataid: isMultiple ? dataids : dataids[0],
-                              displayData: isMultiple ? selected : selected[0],
                             })
                             onChange?.(field.name, {
                               dataid: isMultiple ? dataids : dataids[0],
-                              displayData: isMultiple ? selected : selected[0],
                             })
                           }
                         }}
