@@ -1,22 +1,9 @@
 import React, { useState, useEffect } from "react"
-import { Icon } from "@iconify/react"
-import {
-  Button,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  useDisclosure,
-  Spinner,
-} from "@nextui-org/react"
 import { useParams, useLocation } from "react-router-dom"
 import DynamicForm from "@/components/common/DynamicForm"
 import type { DynamicFormConfig } from "@/components/common/DynamicForm/types"
-import message from "@/components/Message"
 import { useMetadata } from "@/hooks/useMetadata"
 import { parseFormConfig } from "@/utils/codeParser"
-import ShareModal from "./ShareModal"
 
 interface FormPreviewProps {
   config: DynamicFormConfig | null
@@ -24,7 +11,6 @@ interface FormPreviewProps {
 }
 
 const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMode = false }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadedConfig, setLoadedConfig] = useState<DynamicFormConfig | null>(null)
@@ -33,7 +19,6 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
   const params = new URLSearchParams(search)
   const isCreateMode = params.get("mode") === "create"
   const { getDetail } = useMetadata<{ config: DynamicFormConfig }>("template")
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
   useEffect(() => {
     const loadFormConfig = async () => {
@@ -71,16 +56,6 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
   }, [templateId, propConfig, getDetail])
 
   const config = propConfig || loadedConfig
-  const shareLink = `${window.location.origin}/form/${config?.id || ""}`
-
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareLink)
-      message.success("链接已复制")
-    } catch (err) {
-      message.error("复制失败，请手动复制")
-    }
-  }
 
   if (isLoading) {
     return (
@@ -104,27 +79,13 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
       </div>
     )
   }
+
   return (
     <div className='relative h-full bg-background'>
       {config ? (
         <div className='h-full'>
-          <div className='absolute top-4 right-4 z-10'>
-            <Button
-              variant='flat'
-              size='sm'
-              onClick={() => setIsShareModalOpen(true)}
-              startContent={<Icon icon='mdi:share' className='w-4 h-4' />}
-            >
-              分享
-            </Button>
-          </div>
           <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
-            <DynamicForm
-              isCreateMode={true}
-              previewMode={!isCreateMode}
-              config={config}
-              templateId={templateId}
-            />
+            <DynamicForm isCreateMode={true} previewMode={!isCreateMode} config={config} templateId={templateId} />
           </div>
         </div>
       ) : (
@@ -134,46 +95,6 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
           <p className='text-default-500'>请先生成表单模板来预览</p>
         </div>
       )}
-
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        classNames={{
-          base: "max-w-md",
-          header: "border-b",
-          body: "py-6",
-          footer: "border-t",
-        }}
-      >
-        <ModalContent>
-          <ModalHeader className='flex flex-col gap-1'>分享表单</ModalHeader>
-          <ModalBody>
-            <div className='flex items-center gap-2 bg-default-50 p-3 rounded-lg'>
-              <input
-                type='text'
-                value={shareLink}
-                readOnly
-                className='flex-1 p-2 bg-transparent border-none focus:outline-none text-default-700'
-              />
-              <Button
-                color='primary'
-                variant='flat'
-                onClick={handleCopyLink}
-                startContent={<Icon icon='mdi:content-copy' className='w-4 h-4' />}
-              >
-                复制
-              </Button>
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button color='danger' variant='light' onPress={onClose}>
-              关闭
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} formId={config?.id || ""} />
     </div>
   )
 }

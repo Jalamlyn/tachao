@@ -95,40 +95,55 @@ const NewForm: React.FC = () => {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className='container mx-auto py-8 px-4'
-    >
-      <div className='max-w-[1200px] mx-auto relative'>
-        <div className='flex flex-col md:flex-row items-end gap-2 absolute top-1 right-0'>
-          {loginInfo.type !== "none" && <UserInfo userInfo={loginInfo.userInfo!} type={loginInfo.type} />}
-          <Button
-            variant='light'
-            size='sm'
-            onClick={() => setIsShareModalOpen(true)}
-            className='w-full md:w-auto flex items-center justify-center gap-2'
-            startContent={<Icon icon='mdi:share' className='w-4 h-4' />}
-          >
-            <span className='md:hidden'>分享表单</span>
-            <span className='hidden md:inline'>分享</span>
-          </Button>
+    <>
+      {/* 固定顶部的 Header */}
+      <header className='fixed top-0 left-0 right-0 h-12 bg-white/80 backdrop-blur-md border-b border-gray-100 z-50'>
+        <div className='max-w-[1200px] mx-auto px-4 h-full flex items-center justify-between'>
+          {/* 左侧区域 - 表单标题 */}
+          <div className='flex items-center gap-2'>
+            <h1 className='text-sm font-medium truncate max-w-[200px] md:max-w-[400px]'>
+              {formState.formConfig?.metadata.title || "表单详情"}
+            </h1>
+          </div>
+
+          {/* 右侧区域 - 操作按钮 */}
+          <div className='flex items-center gap-2'>
+            {loginInfo.type !== "none" && <UserInfo userInfo={loginInfo.userInfo!} type={loginInfo.type} />}
+            <Button
+              isIconOnly
+              variant='light'
+              size='sm'
+              onClick={() => setIsShareModalOpen(true)}
+              className='w-8 h-8 min-w-0 hover:bg-gray-100 transition-colors'
+              aria-label='分享表单'
+            >
+              <Icon icon='mdi:share' className='w-4 h-4' />
+            </Button>
+          </div>
         </div>
+      </header>
 
-        <FormTabs
-          selectedTab={selectedTab}
-          onTabChange={setSelectedTab}
-          formConfig={formState.formConfig}
-          formData={formState.formData}
-          formId={formId!}
-          templateId={formState.templateId}
-          isCreateMode={false}
-        />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className='container mx-auto py-8 px-4'
+      >
+        <div className='max-w-[1200px] mx-auto relative mt-6'>
+          <FormTabs
+            selectedTab={selectedTab}
+            onTabChange={setSelectedTab}
+            formConfig={formState.formConfig}
+            formData={formState.formData}
+            formId={formId!}
+            templateId={formState.templateId}
+            isCreateMode={false}
+          />
 
-        <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} formId={formId!} />
-      </div>
-    </motion.div>
+          <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} formId={formId!} />
+        </div>
+      </motion.div>
+    </>
   )
 }
 
