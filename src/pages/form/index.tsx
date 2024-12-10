@@ -11,6 +11,9 @@ import { FormError } from "./components/FormError"
 import { FormLoading } from "./components/FormLoading"
 import { UserInfo } from "./components/UserInfo"
 import { FormTabs } from "./components/FormTabs"
+import ShareModal from "./components/ShareModal"
+import { Button } from "@nextui-org/react"
+import { Icon } from "@iconify/react"
 
 // 配置微信appId
 const WX_APP_ID = import.meta.env.VITE_WX_APP_ID || "wxd792f04d6c8ca1be"
@@ -23,6 +26,7 @@ const NewForm: React.FC = () => {
   const { loginInfo } = useLoginInfo()
   const [selectedTab, setSelectedTab] = useState("form")
   const [authRetrying, setAuthRetrying] = useState(false)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
   useEffect(() => {
     const initializeForm = async () => {
@@ -98,11 +102,19 @@ const NewForm: React.FC = () => {
       className='container mx-auto py-8 px-4'
     >
       <div className='max-w-[1200px] mx-auto relative'>
-        {loginInfo.type !== "none" && (
-          <div className='absolute top-1 right-0'>
-            <UserInfo userInfo={loginInfo.userInfo!} type={loginInfo.type} />
-          </div>
-        )}
+        <div className='flex flex-col md:flex-row items-end gap-2 absolute top-1 right-0'>
+          {loginInfo.type !== "none" && <UserInfo userInfo={loginInfo.userInfo!} type={loginInfo.type} />}
+          <Button
+            variant='light'
+            size='sm'
+            onClick={() => setIsShareModalOpen(true)}
+            className='w-full md:w-auto flex items-center justify-center gap-2'
+            startContent={<Icon icon='mdi:share' className='w-4 h-4' />}
+          >
+            <span className='md:hidden'>分享表单</span>
+            <span className='hidden md:inline'>分享</span>
+          </Button>
+        </div>
 
         <FormTabs
           selectedTab={selectedTab}
@@ -113,6 +125,8 @@ const NewForm: React.FC = () => {
           templateId={formState.templateId}
           isCreateMode={false}
         />
+
+        <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} formId={formId!} />
       </div>
     </motion.div>
   )
