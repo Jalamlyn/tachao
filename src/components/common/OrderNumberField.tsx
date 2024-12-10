@@ -10,6 +10,7 @@ interface OrderNumberFieldProps {
   label?: string
   disabled?: boolean
   isUpdating?: number
+  isCreateMode?: boolean
 }
 
 const OrderNumberField: React.FC<OrderNumberFieldProps> = ({
@@ -19,6 +20,7 @@ const OrderNumberField: React.FC<OrderNumberFieldProps> = ({
   label = "订单编号",
   disabled = true,
   isUpdating = 0,
+  isCreateMode = false
 }) => {
   // 生成包含随机性的订单编号
   const generateOrderNumber = useCallback(() => {
@@ -41,8 +43,19 @@ const OrderNumberField: React.FC<OrderNumberFieldProps> = ({
     }
   }, [form, fieldName, generateOrderNumber])
 
+  // 首次渲染时的处理
   useEffect(() => {
-    resetOrderNumber()
+    const currentNumber = form.getValues(fieldName)
+    if (!currentNumber && isCreateMode) {
+      resetOrderNumber()
+    }
+  }, [])
+
+  // 只在创建模式下响应isUpdating
+  useEffect(() => {
+    if (isCreateMode) {
+      resetOrderNumber()
+    }
   }, [isUpdating])
 
   return (
