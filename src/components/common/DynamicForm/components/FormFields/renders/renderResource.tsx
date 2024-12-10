@@ -87,7 +87,15 @@ export const renderResource = (
   }, [resourceData, value?.dataid])
 
   const handleClear = () => {
-    form.setValue(field.name, undefined)
+    form.setValue(field.name, undefined, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true, // 添加这个选项
+    })
+    console.log(form.getValues())
+    // 显式触发字段重新验证
+    form.trigger(field.name)
+
     onChange?.(field.name, undefined)
   }
 
@@ -102,11 +110,9 @@ export const renderResource = (
       required={field.required}
     >
       {(formField) => {
-        const value = formField.value as ResourceValue
         const displayData = value?.displayData
         const isMultiple = field.resourceConfig?.multiple
         const displayMode = field.resourceConfig?.displayMode || "card"
-
         if (!displayData) {
           return (
             <div className='min-h-[120px] border-2 border-dashed border-gray-200 rounded-lg hover:border-gray-300 transition-colors duration-200'>
