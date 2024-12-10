@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { Spinner } from "@nextui-org/react"
+import { Spinner, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useMetadata } from "@/hooks/useMetadata"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
@@ -90,6 +90,17 @@ const ResourceDetail: React.FC = () => {
       subtitle={`大小：${(resource.indexFields?.size / 1024 / 1024).toFixed(2)}MB · 类型：${
         resource.indexFields?.type || "未知"
       } · 文件名：${resource.indexFields?.fileName || "未知"}`}
+      headerContent={
+        <Button
+          color="primary"
+          variant="light"
+          startContent={<Icon icon="mdi:arrow-left" className="text-xl" />}
+          onClick={() => navigate("/we-chat-app/admin/resources")}
+          className="ml-auto"
+        >
+          返回资料列表
+        </Button>
+      }
     >
       <div className='bg-white rounded-lg shadow'>{renderContent()}</div>
     </PageLayout>

@@ -52,7 +52,6 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
 }
 
 const ResourceDataTable: React.FC = ({ id, appId }) => {
-  // 使用 useMetadata hook
   const { getDetail, update, remove } = useMetadata("resource")
   const [resource, setResource] = useState<any>(null)
   const [columns, setColumns] = useState<ColumnDef<any>[]>([])
@@ -84,15 +83,28 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
 
     setIsLoading(true)
     try {
+      // 修改: 更新单条记录而不是整个数据
+      let newData
+      if (editingRow) {
+        // 编辑现有记录
+        newData = resource.data.map((item: any) => 
+          item.dataid === editingRow.dataid ? { ...item, ...formData } : item
+        )
+      } else {
+        // 添加新记录
+        newData = [...resource.data, { ...formData, dataid: `${Date.now()}` }]
+      }
+
       const updatedResource = await update(resource.id, {
         ...resource,
-        data: formData,
+        data: newData,
       })
 
       if (updatedResource) {
         setResource(updatedResource)
         setIsModalOpen(false)
         setEditingRow(null)
+        message.success(editingRow ? "更新成功" : "添加成功")
       }
     } catch (error) {
       console.error("Error saving data:", error)
@@ -120,6 +132,7 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
 
       if (updatedResource) {
         setResource(updatedResource)
+        message.success("删除成功")
       }
     } catch (error) {
       console.error("Error deleting data:", error)
@@ -151,6 +164,7 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
       if (updatedResource) {
         setResource(updatedResource)
         setRowSelection({})
+        message.success("批量删除成功")
       }
     } catch (error) {
       console.error("Error batch deleting data:", error)
@@ -184,6 +198,7 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
       const ws = XLSX.utils.json_to_sheet(exportData)
       XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
       XLSX.writeFile(wb, `${resource.name || "export"}.xlsx`)
+      message.success("导出成功")
     } catch (error) {
       console.error("Error exporting data:", error)
       message.error("导出失败")
@@ -255,7 +270,6 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
 
   return (
     <div className='w-full p-6'>
-      {/* 添加标题 */}
       <div className='mb-6'>
         <h1 className='text-2xl font-bold text-gray-800'>{resource.name}</h1>
       </div>
@@ -264,7 +278,10 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
         table={table}
         globalFilter={globalFilter}
         setGlobalFilter={setGlobalFilter}
-        onAddNew={() => setIsModalOpen(true)}
+        onAddNew={() => {
+          setEditingRow(null)
+          setIsModalOpen(true)
+        }}
         onExport={handleExportExcel}
         onBatchDelete={handleBatchDelete}
         hasSelection={Object.keys(rowSelection).length > 0}
