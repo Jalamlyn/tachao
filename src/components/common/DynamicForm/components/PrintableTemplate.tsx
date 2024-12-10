@@ -37,8 +37,71 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
   const normalizedConfig = normalizeConfig(config)
   const { metadata, renderConfig } = normalizedConfig
 
+  // 从缓存中获取资源数据
+  const getResourceFromCache = (resourceId: string, dataid: string) => {
+    try {
+      const key = `resource_${resourceId}_${dataid}`
+      const cached = sessionStorage.getItem(key)
+      return cached ? JSON.parse(cached) : null
+    } catch (error) {
+      console.error("Error getting resource from cache:", error)
+      return null
+    }
+  }
+
+  // 格式化资源字段值
+  const formatResourceValue = (field: any, value: any) => {
+    if (!value) return "____________"
+
+    try {
+      // 处理单个资源
+      if (value.dataid && !Array.isArray(value.dataid)) {
+        const resourceData = getResourceFromCache(field.resourceConfig?.resourceId, value.dataid)
+        if (resourceData) {
+          const displayFields = field.resourceConfig?.displayFields || []
+          return displayFields
+            .map((df: any) => resourceData[df.key])
+            .filter(Boolean)
+            .join(" - ")
+        }
+      }
+
+      // 处理多个资源
+      if (Array.isArray(value.dataid)) {
+        const resourcesData = value.dataid
+          .map(id => getResourceFromCache(field.resourceConfig?.resourceId, id))
+          .filter(Boolean)
+        if (resourcesData.length > 0) {
+          return resourcesData
+            .map(data => {
+              const displayFields = field.resourceConfig?.displayFields || []
+              return displayFields
+                .map((df: any) => data[df.key])
+                .filter(Boolean)
+                .join(" - ")
+            })
+            .join("，")
+        }
+      }
+
+      // 如果是对象，尝试直接使用对象的值
+      if (typeof value === "object" && value !== null) {
+        const fields = Object.entries(value)
+          .filter(([_, v]) => v != null && v !== "")
+          .map(([_, v]) => `${v}`)
+          .join("，")
+        return fields || "____________"
+      }
+
+      return value.dataid || "____________"
+    } catch (error) {
+      console.error("Error formatting resource value:", error)
+      return "____________"
+    }
+  }
+
   // 格式化字段值
-  const formatFieldValue = (type: string, value: any) => {
+  const formatFieldValue = (type: string, value: any, field?: any) => {
     if (value === undefined || value === null || value === "") return "____________"
 
     switch (type) {
@@ -69,20 +132,13 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
       case "number":
         return typeof value === "number" ? value.toFixed(2) : "____________"
       case "resource":
-        if (typeof value === "object" && value !== null) {
-          const fields = Object.entries(value)
-            .filter(([_, v]) => v != null && v !== "")
-            .map(([k, v]) => `${v}`)
-            .join("，")
-          return fields || "____________"
-        }
-        return value || "____________"
+        return formatResourceValue(field, value)
       default:
         if (typeof value === "object" && value !== null) {
           try {
             const fields = Object.entries(value)
               .filter(([_, v]) => v != null && v !== "")
-              .map(([k, v]) => `${v}`)
+              .map(([_, v]) => `${v}`)
               .join("，")
             return fields || "____________"
           } catch (error) {
@@ -121,7 +177,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
             {fieldArray.map((field, index) => (
               <tr key={field.name} className={index % 2 === 0 ? "bg-gray-50" : ""}>
                 <td className='border border-gray-300 p-2 w-[200px] font-medium text-gray-700'>{field.label}</td>
-                <td className='border border-gray-300 p-2'>{formatFieldValue(field.type, basicInfo[field.name])}</td>
+                <td className='border border-gray-300 p-2'>{formatFieldValue(field.type, basicInfo[field.name], field)}</td>
               </tr>
             ))}
           </tbody>
@@ -145,7 +201,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
                   <tr key={field.name} className={index % 2 === 0 ? "bg-gray-50" : ""}>
                     <td className='border border-gray-300 p-2 w-[200px] font-medium text-gray-700'>{field.label}</td>
                     <td className='border border-gray-300 p-2'>
-                      {formatFieldValue(field.type, basicInfo[field.name])}
+                      {formatFieldValue(field.type, basicInfo[field.name], field)}
                     </td>
                   </tr>
                 ))}
@@ -194,7 +250,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
                       column.type === "number" && "text-right font-mono"
                     )}
                   >
-                    {formatFieldValue(column.type, row[column.key])}
+                    {formatFieldValue(column.type, row[column.key], column)}
                   </td>
                 ))}
               </tr>
@@ -256,7 +312,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
                           {field.label}
                         </td>
                         <td className='border border-gray-300 p-2 text-sm'>
-                          {formatFieldValue(field.type, stepData?.formData?.[field.name])}
+                          {formatFieldValue(field.type, stepData?.formData?.[field.name], field)}
                         </td>
                       </tr>
                     ))}
