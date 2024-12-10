@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useTransition } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   Button,
@@ -86,7 +86,7 @@ const FormManager: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false)
-
+  const [isPending, startTransition] = useTransition()
   // 使用 React Query hooks
   const { items: templates } = useQueryMetadata("template", {
     staleTime: 5 * 1000,
@@ -200,12 +200,14 @@ const FormManager: React.FC = () => {
   ]
 
   const handleCreateDocument = () => {
-    setIsCreateModalOpen(true)
+    startTransition(() => {
+      setIsCreateModalOpen(true)
+    })
   }
 
   const handleTemplateSelect = async (templateId: string) => {
     try {
-      window.open(`/form-preview/${templateId}`, "_blank")
+      window.open(`/form-preview/${templateId}?mode=create`, "_blank")
       setIsCreateModalOpen(false)
     } catch (error) {
       console.error("Failed to load template:", error)

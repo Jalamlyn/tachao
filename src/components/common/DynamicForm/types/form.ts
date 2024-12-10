@@ -37,5 +37,6 @@ export interface DynamicFormProps {
   onSubmit?: (validationResult: ValidationResult, values: any) => Promise<void>
   onCancel?: () => void
   templateId?: string
+  isCreateMode?: boolean
   previewMode?: boolean
 }

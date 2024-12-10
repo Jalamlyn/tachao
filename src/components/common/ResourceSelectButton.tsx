@@ -18,7 +18,7 @@ interface ResourceSelectButtonProps {
 const ResourceSelectButton: React.FC<ResourceSelectButtonProps> = ({
   resourceName,
   onSelect,
-  buttonText = "选择资源",
+  buttonText = "选择资料",
   buttonProps,
   loading = false,
   selectionMode = "multiple",

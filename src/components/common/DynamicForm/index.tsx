@@ -25,6 +25,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   onCancel,
   templateId,
   initialValues,
+  isCreateMode,
   previewMode = false,
 }) => {
   const config = merge({}, defaultFormConfig, userConfig)
@@ -243,6 +244,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         const formData = prepareFormData(values, templateInfo)
 
         if (previewMode) {
+          message.warning("预览模式下无法保存数据")
           return
         }
 
@@ -259,6 +261,19 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           if (result) {
             setIsEditing(false)
             form.reset()
+            // 创建成功后显示确认对话框
+            message.confirm({
+              title: "表单创建成功",
+              content: "是否前往查看创建好的表单?",
+              onOk: () => {
+                // 确认后跳转到新创建的表单页面
+                window.location.href = `/form/${result.id}`
+              },
+              onCancel: () => {
+                // 取消则继续停留在当前页面,可以继续创建新表单
+                setIsEditing(true)
+              },
+            })
           } else {
             throw new Error("创建失败")
           }
@@ -339,7 +354,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
     return null
   }
-
   return (
     <Form {...form}>
       <form onSubmit={handleFormSubmit} className={cn(styles["dynamic-form"], "space-y-6 md:space-y-8 pb-2")}>
@@ -424,7 +438,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               className={cn(styles["button"], styles["button-primary"], "w-full md:w-auto order-1 md:order-2")}
             >
               <Icon icon='mdi:content-save' className='w-4 h-4' />
-              <span className='hidden md:inline ml-1'>保存</span>
+              <span className='hidden md:inline ml-1'>{isCreateMode ? "创建表单" : "保存"}</span>
             </Button>
           </div>
         )}

@@ -210,7 +210,7 @@ const AIFormEditor: React.FC = () => {
 
   const handleCreateDocument = () => {
     if (savedTemplateId) {
-      window.open(`/form/${savedTemplateId}?mode=create`, "_blank")
+      window.open(`/form-preview/${savedTemplateId}?mode=create`, "_blank")
     }
   }
 
@@ -250,8 +250,8 @@ const AIFormEditor: React.FC = () => {
 
   if (isLoadingTemplate) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Spinner label="加载模板中..." />
+      <div className='flex items-center justify-center h-screen'>
+        <Spinner label='加载模板中...' />
       </div>
     )
   }

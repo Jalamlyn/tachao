@@ -31,7 +31,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
   const { templateId } = useParams<any>()
   const { search } = useLocation()
   const params = new URLSearchParams(search)
-  const isCreateMode = params.get('mode') === 'create'
+  const isCreateMode = params.get("mode") === "create"
   const { getDetail } = useMetadata<{ config: DynamicFormConfig }>("template")
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
@@ -104,7 +104,6 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
       </div>
     )
   }
-
   return (
     <div className='relative h-full bg-background'>
       {config ? (
@@ -120,10 +119,11 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
             </Button>
           </div>
           <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
-            <DynamicForm 
-              previewMode={!isCreateMode && previewMode} 
-              config={config} 
-              templateId={templateId} 
+            <DynamicForm
+              isCreateMode={isCreateMode}
+              previewMode={!isCreateMode}
+              config={config}
+              templateId={templateId}
             />
           </div>
         </div>

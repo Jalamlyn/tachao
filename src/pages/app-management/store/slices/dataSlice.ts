@@ -18,7 +18,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
     const query = useQuery({
       queryKey: QUERY_KEYS.apps,
       queryFn: async () => {
-        const result = await getMetadata(["app_index"])
+        const result = await getMetadata(["app"])
         return result.data?.[0]?.value ? (JSON.parse(result.data[0].value) as AppIndex[]) : []
       },
     })
@@ -50,14 +50,14 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
           },
         }
 
-        const result = await getMetadata(["app_index"])
+        const result = await getMetadata(["app"])
         const currentData = result.data?.[0]?.value ? (JSON.parse(result.data[0].value) as AppIndex[]) : []
 
         queryClient.setQueryData(QUERY_KEYS.apps, [...currentData, newApp])
 
         try {
           const updatedData = [...currentData, newApp]
-          await setMetadata("app_index", JSON.stringify(updatedData))
+          await setMetadata("app", JSON.stringify(updatedData))
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.apps })
         } catch (error) {
           queryClient.setQueryData(QUERY_KEYS.apps, currentData)
@@ -85,7 +85,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
           throw new Error("应用ID不能为空")
         }
 
-        const result = await getMetadata(["app_index"])
+        const result = await getMetadata(["app"])
         if (!result.data?.[0]?.value) {
           throw new Error("无法获取应用数据")
         }
@@ -118,7 +118,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
         queryClient.setQueryData(QUERY_KEYS.apps, updatedData)
 
         try {
-          await setMetadata("app_index", JSON.stringify(updatedData))
+          await setMetadata("app", JSON.stringify(updatedData))
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.apps })
         } catch (error) {
           queryClient.setQueryData(QUERY_KEYS.apps, currentData)
@@ -146,7 +146,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
           throw new Error("应用ID不能为空")
         }
 
-        const result = await getMetadata(["app_index"])
+        const result = await getMetadata(["app"])
         if (!result.data?.[0]?.value) {
           throw new Error("无法获取应用数据")
         }
@@ -160,7 +160,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
         queryClient.setQueryData(QUERY_KEYS.apps, updatedData)
 
         try {
-          await setMetadata("app_index", JSON.stringify(updatedData))
+          await setMetadata("app", JSON.stringify(updatedData))
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.apps })
         } catch (error) {
           queryClient.setQueryData(QUERY_KEYS.apps, currentData)

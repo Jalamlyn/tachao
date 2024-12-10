@@ -13,7 +13,7 @@ const Dashboard: React.FC = () => {
   const { items: forms, load: loadForms } = useMetadata("form")
   const { items: reports, load: loadReports } = useMetadata("report")
   const { items: resources, load: loadResources } = useMetadata("resource")
-  const { items: apps, load: loadApps } = useMetadata("app_index")
+  const { items: apps, load: loadApps } = useMetadata("app")
   const { tasks, loadTasks } = usePendingTasksStore()
 
   useEffect(() => {

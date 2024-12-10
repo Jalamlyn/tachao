@@ -52,18 +52,18 @@ export const renderResource = (
     try {
       if (isMultiple && Array.isArray(value.dataid)) {
         // 处理多选情况
-        const selectedRows = value.dataid.map(id => 
-          resourceData.data.find((row: any) => row.dataid === id)
-        ).filter(Boolean)
+        const selectedRows = value.dataid
+          .map((id) => resourceData.data.find((row: any) => row.dataid === id))
+          .filter(Boolean)
 
         if (selectedRows.length) {
           form.setValue(field.name, {
             ...value,
-            displayData: selectedRows
+            displayData: selectedRows,
           })
           onChange?.(field.name, {
             ...value,
-            displayData: selectedRows
+            displayData: selectedRows,
           })
         }
       } else {
@@ -72,11 +72,11 @@ export const renderResource = (
         if (selectedRow) {
           form.setValue(field.name, {
             ...value,
-            displayData: selectedRow
+            displayData: selectedRow,
           })
           onChange?.(field.name, {
             ...value,
-            displayData: selectedRow
+            displayData: selectedRow,
           })
         }
       }
@@ -134,6 +134,7 @@ export const renderResource = (
                     buttonProps={{
                       size: "lg",
                       variant: "light",
+                      isDisabled: !isEditable, // 添加这行
                       className: "w-full flex items-center justify-center gap-2",
                       startContent: <Icon icon='material-symbols:add-circle-outline' className='text-xl' />,
                     }}
@@ -169,42 +170,45 @@ export const renderResource = (
                           ))}
                         </div>
                         {/* 操作按钮 - 固定在底部 */}
-                        <div className='mt-4 pt-4 border-t border-gray-100 flex justify-end gap-2'>
-                          <ResourceSelectButton
-                            resourceName={field.resourceConfig?.resourceId || ""}
-                            selectionMode={isMultiple ? "multiple" : "single"}
-                            onSelect={(selected) => {
-                              if (selected.length > 0) {
-                                const dataids = selected.map((item) => item.dataid)
-                                formField.onChange({
-                                  dataid: isMultiple ? dataids : dataids[0],
-                                  displayData: isMultiple ? selected : selected[0],
-                                })
-                                onChange?.(field.name, {
-                                  dataid: isMultiple ? dataids : dataids[0],
-                                  displayData: isMultiple ? selected : selected[0],
-                                })
-                              }
-                            }}
-                            buttonText='更换'
-                            buttonProps={{
-                              size: "md",
-                              variant: "light",
-                              className: "min-w-[80px] md:min-w-[100px]",
-                              startContent: <Icon icon='material-symbols:sync' className='text-lg' />,
-                            }}
-                          />
-                          <Button
-                            size='md'
-                            variant='light'
-                            color='danger'
-                            className='min-w-[80px] md:min-w-[100px]'
-                            onClick={handleClear}
-                            startContent={<Icon icon='material-symbols:remove' className='text-lg' />}
-                          >
-                            移除
-                          </Button>
-                        </div>
+                        {isEditable && (
+                          <div className='mt-4 pt-4 border-t border-gray-100 flex justify-end gap-2'>
+                            <ResourceSelectButton
+                              resourceName={field.resourceConfig?.resourceId || ""}
+                              selectionMode={isMultiple ? "multiple" : "single"}
+                              onSelect={(selected) => {
+                                if (selected.length > 0) {
+                                  const dataids = selected.map((item) => item.dataid)
+                                  formField.onChange({
+                                    dataid: isMultiple ? dataids : dataids[0],
+                                    displayData: isMultiple ? selected : selected[0],
+                                  })
+                                  onChange?.(field.name, {
+                                    dataid: isMultiple ? dataids : dataids[0],
+                                    displayData: isMultiple ? selected : selected[0],
+                                  })
+                                }
+                              }}
+                              buttonText='更换'
+                              buttonProps={{
+                                size: "md",
+                                variant: "light",
+                                isDisabled: !isEditable, // 添加这行
+                                className: "min-w-[80px] md:min-w-[100px]",
+                                startContent: <Icon icon='material-symbols:sync' className='text-lg' />,
+                              }}
+                            />
+                            <Button
+                              size='md'
+                              variant='light'
+                              color='danger'
+                              className='min-w-[80px] md:min-w-[100px]'
+                              onClick={handleClear}
+                              startContent={<Icon icon='material-symbols:remove' className='text-lg' />}
+                            >
+                              移除
+                            </Button>
+                          </div>
+                        )}
                       </CardBody>
                     </Card>
                   ))}
