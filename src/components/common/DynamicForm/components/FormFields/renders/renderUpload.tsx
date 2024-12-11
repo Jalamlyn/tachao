@@ -179,8 +179,25 @@ export const renderUpload = (
 
                 // 查询获取完整信息
                 const queryResult = await queryActivity()
-                const latestActivity = queryResult.data[0]
+                
+                // 修改这里的数据处理逻辑
+                if (!queryResult?.data || !Array.isArray(queryResult.data) || queryResult.data.length === 0) {
+                  throw new Error("未找到上传的文件信息")
+                }
+
+                // 获取最新的活动记录（按创建时间排序，取最新的）
+                const latestActivity = queryResult.data.sort((a, b) => 
+                  Number(b.createdAt) - Number(a.createdAt)
+                )[0]
+
+                if (!latestActivity.files || !Array.isArray(latestActivity.files) || latestActivity.files.length === 0) {
+                  throw new Error("文件信息不完整")
+                }
+
                 const fileInfo = latestActivity.files[0]
+                if (!fileInfo || !fileInfo.downloadUrl) {
+                  throw new Error("文件下载链接不可用")
+                }
 
                 field.uploadConfig?.onSuccess?.(fileInfo)
                 resolve(fileInfo)

@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { createModel } from "@/service/apis/model"
+import { createModel, createModelProperty } from "@/service/apis/model"
 import message from "@/components/Message"
 
 interface InitializeViewProps {
@@ -14,12 +14,26 @@ const InitializeView: React.FC<InitializeViewProps> = ({ onInitializeSuccess }) 
   const handleInitialize = async () => {
     try {
       setIsInitializing(true)
-      await createModel({
-        namespace: "file",
-        name: "activities",
-        description: "企业网盘文件管理",
+
+      // 1. 创建模型
+      // const modelResponse = await createModel({
+      //   namespace: "file",
+      //   name: "activities",
+      //   description: "企业网盘文件管理",
+      // })
+
+      // 2. 创建files属性
+      await createModelProperty({
+        modelId: "1866059191187591170",
+        name: "files",
+        type: "file",
+        description: "文件列表",
+        isRequired: true,
+        allowMultipleFiles: true,
       })
+
       onInitializeSuccess()
+      message.success("初始化成功")
     } catch (error) {
       console.error("Initialize error:", error)
       message.error("初始化失败，请重试")
