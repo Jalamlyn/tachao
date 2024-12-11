@@ -13,6 +13,8 @@
   name: "fieldName",
   label: "字段标签",
   type: "text",
+  // 布局配置应该在顶层，而不是在style中
+  layout: "full-width", // 'default' | 'full-width' | 'inline'
   style: {
     // 尺寸
     width: "300px",  // 或 "100%"
@@ -47,7 +49,7 @@
   name: "fieldName",
   label: "字段标签",
   type: "text",
-  // 方式1: 使用 layout 属性
+  // 方式1: 使用顶层 layout 属性
   layout: "full-width", // 'default' | 'full-width' | 'inline'
   
   // 方式2: 使用 style.colSpan
@@ -107,6 +109,7 @@ const formConfig = {
         name: "title",
         label: "标题",
         type: "text",
+        layout: "full-width", // 布局配置应该在顶层
         style: {
           width: "100%",
           padding: "12px",
@@ -162,8 +165,8 @@ const formConfig = {
         name: "address",
         label: "地址",
         type: "textarea",
+        layout: "full-width", // 使用顶层layout属性
         style: {
-          colSpan: 2,
           height: "80px"
         }
       }
@@ -246,7 +249,7 @@ const formConfig = {
 // 创建样式预设
 const stylePresets = {
   fullWidth: {
-    layout: "full-width"
+    layout: "full-width" // 布局配置应该在顶层
   },
   halfWidth: {
     style: {
@@ -293,7 +296,7 @@ const field = {
 ## 注意事项
 
 1. 样式优先级
-- layout 属性优先级高于 style.colSpan
+- layout 属性必须在字段配置的顶层，不要放在 style 对象中
 - custom 样式会覆盖基础样式配置
 - 响应式样式会根据屏幕尺寸动态应用
 
@@ -315,4 +318,4 @@ const field = {
 - 更统一的样式管理
 - 更好的用户体验
 
-建议根据实际需求选择合适的配置方式，并注意遵循最佳实践，以确保表单的可用性和可维护性。
+建议根据实际需求选择合适的配置方式，并注意遵循最佳实践，以确保表单的可用性和可维护性。特别注意布局相关的配置（如 layout）应该放在字段配置的顶层，而不是放在 style 对象中。
