@@ -22,7 +22,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
 import { useMetadata } from "@/hooks/useMetadata"
-import generateSystemPrompt from "@/service/agents/prompts/form-analysis-prompt"
+import generateSystemPrompt from "@/service/agents/prompts/report/form-analysis-prompt"
 
 // 导入头像
 import mo2 from "/assets/mo-2.png"

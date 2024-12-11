@@ -1,7 +1,7 @@
 import chatChunk from "../chat/chat-chunk-openai-office"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
-import generateFormAgentPrompt from "./prompts/form-agent-prompt"
+import generateFormAgentPrompt from "./prompts/form/form-agent-prompt"
 import { Message } from "./AIFormAgentTypes"
 import { getMetadata } from "../apis/metadata"
 

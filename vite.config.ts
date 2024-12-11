@@ -55,8 +55,8 @@ export default defineConfig({
     hmr: false,
     proxy: {
       "/dev/": {
-        target: "https://www.mobenai.com.cn/api/",
-        // target: "http://106.14.47.161/api/",
+        // target: "https://www.mobenai.com.cn/api/",
+        target: "http://106.14.47.161/api/",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/dev/, ""),
         autoRewrite: true,

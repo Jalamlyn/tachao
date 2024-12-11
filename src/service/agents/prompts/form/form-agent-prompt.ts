@@ -1,4 +1,5 @@
-import { doc } from "@/components/common/DynamicForm/docs"
+import { guide, example, code } from "@/components/common/DynamicForm/docs"
+import financeTemplatePrompt from "./finance-template-prompt"
 
 const generateFormAgentPrompt = (
   rawConfig: string | null,
@@ -70,106 +71,6 @@ ${resources}
 `
       : ""
 
-  // 表单配置必要结构说明
-  const formStructureGuide = `
-# 表单配置必要结构说明
-
-1. 基础结构要求:
-\`\`\`javascript
-export default {
-  title: string,          // 必须: 表单标题
-  config: {               // 必须: 表单配置对象
-    metadata: {           // 必须: 元数据配置
-      title: string,      // 必须: 与外层title保持一致
-      permissions?: {     // 可选: 权限配置
-        edit: boolean
-      }
-    },
-    renderConfig: {       // 必须: 渲染配置
-      basicFields: {      // 必须: 基础字段配置
-        groups: [         // 必须: 字段分组数组
-          {
-            key: string,    // 必须: 分组唯一标识
-            title: string,  // 必须: 分组标题
-            icon?: string,  // 可选: 分组图标
-            fields: []      // 必须: 字段配置数组
-          }
-        ]
-      }
-    }
-  }
-}
-\`\`\`
-
-2. 错误示例:
-\`\`\`javascript
-❌ 错误 - 缺少必要结构:
-export default {
-  title: "表单",
-  config: {
-    basicFields: []  // 错误:缺少 metadata 和 renderConfig
-  }
-}
-
-❌ 错误 - 错误的字段位置:
-export default {
-  title: "表单",
-  config: {
-    metadata: { title: "表单" },
-    basicFields: []  // 错误:字段应该在 renderConfig 中
-  }
-}
-\`\`\`
-
-3. 正确示例:
-\`\`\`javascript
-✅ 正确:
-export default {
-  title: "表单标题",
-  config: {
-    metadata: {
-      title: "表单标题"
-    },
-    renderConfig: {
-      basicFields: {
-        groups: [
-          {
-            key: "basic",
-            title: "基本信息",
-            fields: []
-          }
-        ]
-      }
-    }
-  }
-}
-\`\`\`
-
-4. 注意事项:
-- metadata 和 renderConfig 是必须的
-- basicFields 必须包含 groups 数组
-- 每个 group 必须有 key、title 和 fields
-- title 必须在外层和 metadata 中都定义
-- 所有生成的代码必须包含在 <shata-ai-form> 标签中
-- 必须包含 components 和 utils 对象定义
-`
-
-  // 表单设计原则
-  const designPrinciples = `
-# 表单设计原则
-1. 组件使用规范：
-   - 严格使用动态表单支持的组件类型
-   - 遵循组件的标准配置格式
-   - 不添加不支持的自定义样式
-   - 使用标准的验证和联动机制
-
-2. 业务逻辑映射：
-   - 将业务需求转换为标准字段
-   - 使用 watch 实现字段联动
-   - 使用 validate 实现验证规则
-   - 使用 calculate 实现计算逻辑
-`
-
   // 图片分析指南
   const imageAnalysisGuide = hasImage
     ? `
@@ -234,7 +135,7 @@ export default {
    - 使用 calculate 处理计算
    - 确保规则的可维护性
 
-3. 返回格式：
+3. 返回格式,参考<config-example>包裹的例子：
 \`\`\`mo
 <shata-ai-form>
 const components = {
@@ -245,22 +146,12 @@ const utils = {
   //工具函数定义在这里,工具函数的代码不可以省略,不可以假设,不允许有外部依赖,
 }
 export default {
-  title: "表单标题",
+  title: "",//表单标题
   config: {
     metadata: {
-      title: "表单标题"
+      title: "",//表单标题
     },
-    renderConfig: {
-      basicFields: {
-        groups: [
-          {
-            key: "basic",
-            title: "",
-            fields: []
-          }
-        ]
-      }
-    }
+    renderConfig: {} //仔细阅读 <project> 包裹的动态表单的源代码, 生成配置代码
   }
 }
 </shata-ai-form>
@@ -291,10 +182,12 @@ export default {
    - 流程规则：[规则列表]
 
 4. 实现方案：
-   - 组件选择：[组件列表]
-   - 规则实现：[实现方式]
-   - 优化建议：[建议列表]
-   - 注意事项：[注意点]
+   - 表单基本信息设计
+   - 表单明细信息设计
+   - 表单流程设计
+   - 业务规则说明
+   - 计算逻辑
+\`\`\`
 </shata-ai-analysis>
 \`\`\`
 `
@@ -302,29 +195,7 @@ export default {
   // 现有配置分析
   const existingConfigAnalysis = rawConfig
     ? `
-# 现有配置分析
-\`\`\`mo
-<shata-ai-config-analysis>
-1. 配置评估
-   - 业务目的：[分析现有配置的业务用途]
-   - 核心功能：[识别主要功能点]
-   - 字段结构：[分析现有字段设计]
-   - 业务规则：[提取现有规则]
-
-2. 使用分析
-   - 应用场景：[当前配置的使用场景]
-   - 功能完整度：[功能覆盖情况]
-   - 优化空间：[可以改进的地方]
-   - 潜在问题：[可能存在的问题]
-
-3. 改进建议
-   - 保留功能：[需要保持的部分]
-   - 优化点：[需要改进的部分]
-   - 新增需求：[建议添加的功能]
-   - 兼容策略：[如何保证兼容性]
-</shata-ai-config-analysis>
-
-现有配置：
+现有配置,结合现有配置进行思考：
 \`\`\`
 ${rawConfig}
 \`\`\`
@@ -333,21 +204,22 @@ ${rawConfig}
 
   return `${basePrompt}
 ${resourceMappingPrompt}
-${formStructureGuide}
-${designPrinciples}
 ${imageAnalysisGuide}
 ${interactionProcess}
 ${configGenerationSpec}
 ${businessAnalysisTemplate}
 ${existingConfigAnalysis}
-<doc>
-${doc}
-</doc>
-- 仔细阅读 doc 来编写配置，不能编写超出 doc 范围的代码
-- 阅读完 doc 和用户需求之后要进行思考和反思
-- 生成的代码必须包含在 <shata-ai-form> 标签中
-- 必须包含 components 和 utils 对象定义
-- 必须遵循表单配置必要结构说明中的要求`
+<project>
+${code}
+</project>
+<config-example>
+${example}
+</config-example>
+
+#需求分析示例
+在生成表单配置之前按照示例,生成相同结构的需求分析,和用户确认之后再生成表单配置代码
+${financeTemplatePrompt}
+`
 }
 
 export default generateFormAgentPrompt
