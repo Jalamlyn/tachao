@@ -2,14 +2,14 @@ import React, { useState, useCallback, useEffect } from "react"
 import { UseFormReturn } from "react-hook-form"
 import { FormField, ResourceValue } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
-import { Card, CardBody } from "@nextui-org/react"
+import { Card, CardBody, Input } from "@nextui-org/react"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import ResourceSelectButton from "@/components/common/ResourceSelectButton"
 import { Spinner } from "@nextui-org/react"
 import { useMetadata } from "@/hooks/metadata"
 import message from "@/components/Message"
-import { Input } from "@/components/ui/input"
+// import { Input } from "@/components/ui/input"
 import { cn } from "@/theme/cn"
 
 export const renderResource = (
@@ -171,7 +171,7 @@ export const renderResource = (
                           displayValue: e.target.value,
                         })
                       }}
-                      disabled={!isEditable || field.disabled}
+                      readOnly
                       placeholder={field.placeholder || "请选择"}
                       className='flex-1'
                     />

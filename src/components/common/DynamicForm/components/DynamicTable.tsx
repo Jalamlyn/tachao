@@ -42,8 +42,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
         setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
       }
       checkScroll()
-      window.addEventListener('resize', checkScroll)
-      return () => window.removeEventListener('resize', checkScroll)
+      window.addEventListener("resize", checkScroll)
+      return () => window.removeEventListener("resize", checkScroll)
     }
   }, [config.columns])
 
@@ -54,52 +54,55 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
   })
 
   // 新增：处理资源选择后的字段映射
-  const handleResourceSelect = useCallback((rowIndex: number, columnKey: string, selected: any) => {
-    if (!selected || !selected[0]) return;
-    
-    const resource = selected[0];
-    const column = config.columns.find(col => col.key === columnKey);
-    
-    if (column?.resourceConfig?.fieldMapping) {
-      Object.entries(column.resourceConfig.fieldMapping).forEach(([targetField, mapping]) => {
-        // 找到目标列配置
-        const targetColumn = config.columns.find(col => col.key === targetField);
-        if (!targetColumn) return;
+  const handleResourceSelect = useCallback(
+    (rowIndex: number, columnKey: string, selected: any) => {
+      if (!selected || !selected[0]) return
 
-        // 设置映射标记
-        targetColumn.isMappedField = true;
-        targetColumn.mappedFrom = `${columnKey}.${typeof mapping === 'string' ? mapping : mapping.field}`;
-        targetColumn.editable = false;
+      const resource = selected[0]
+      const column = config.columns.find((col) => col.key === columnKey)
 
-        if (typeof mapping === 'string') {
-          // 简单映射
-          const value = resource[mapping];
-          if (value !== undefined) {
-            form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value);
-          }
-        } else {
-          // 复杂映射
-          if (mapping.condition && !mapping.condition(resource)) {
-            return;
-          }
+      if (column?.resourceConfig?.fieldMapping) {
+        Object.entries(column.resourceConfig.fieldMapping).forEach(([targetField, mapping]) => {
+          // 找到目标列配置
+          const targetColumn = config.columns.find((col) => col.key === targetField)
+          if (!targetColumn) return
 
-          if (mapping.fields) {
-            // 多字段组合
-            const values = mapping.fields.map(field => resource[field]);
-            const value = mapping.transform ? mapping.transform(values) : values.join(' ');
-            form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value);
+          // 设置映射标记
+          targetColumn.isMappedField = true
+          targetColumn.mappedFrom = `${columnKey}.${typeof mapping === "string" ? mapping : mapping.field}`
+          targetColumn.editable = false
+
+          if (typeof mapping === "string") {
+            // 简单映射
+            const value = resource[mapping]
+            if (value !== undefined) {
+              form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value)
+            }
           } else {
-            // 单字段转换
-            const value = resource[mapping.field];
-            const transformedValue = mapping.transform ? mapping.transform(value) : value;
-            if (transformedValue !== undefined) {
-              form.setValue(`${fieldName}.${rowIndex}.${targetField}`, transformedValue);
+            // 复杂映射
+            if (mapping.condition && !mapping.condition(resource)) {
+              return
+            }
+
+            if (mapping.fields) {
+              // 多字段组合
+              const values = mapping.fields.map((field) => resource[field])
+              const value = mapping.transform ? mapping.transform(values) : values.join(" ")
+              form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value)
+            } else {
+              // 单字段转换
+              const value = resource[mapping.field]
+              const transformedValue = mapping.transform ? mapping.transform(value) : value
+              if (transformedValue !== undefined) {
+                form.setValue(`${fieldName}.${rowIndex}.${targetField}`, transformedValue)
+              }
             }
           }
-        }
-      });
-    }
-  }, [config.columns, fieldName, form]);
+        })
+      }
+    },
+    [config.columns, fieldName, form]
+  )
 
   // 修改: 添加默认值初始化逻辑
   const handleAddRow = useCallback(() => {
@@ -158,13 +161,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
               render={({ field }) => (
                 <FormItem className='flex-1'>
                   <FormControl>
-                    <Input
-                      {...field}
-                      disabled={!isFieldEditable}
-                      className={cn(
-                        "min-w-[120px] border-0 focus:ring-0 bg-transparent"
-                      )}
-                    />
+                    <Input {...field} readOnly className={cn("min-w-[120px] border-0 focus:ring-0 bg-transparent")} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -173,7 +170,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             {isFieldEditable && column.resourceConfig && (
               <ResourceSelectButton
                 resourceName={column.resourceConfig.resourceId}
-                selectionMode="single"
+                selectionMode='single'
                 onSelect={(selected) => {
                   if (selected.length > 0) {
                     form.setValue(cellFieldName, selected[0])
@@ -199,19 +196,16 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <div className="relative">
+                  <div className='relative'>
                     <Input
                       {...field}
                       disabled={!isFieldEditable}
-                      className={cn(
-                        "border-0 focus:ring-0 bg-transparent",
-                        column.isMappedField && "bg-gray-50"
-                      )}
+                      className={cn("border-0 focus:ring-0 bg-transparent", column.isMappedField && "bg-gray-50")}
                     />
                     {column.isMappedField && (
                       <Icon
-                        icon="mdi:link-variant"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400"
+                        icon='mdi:link-variant'
+                        className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400'
                         title={`自动填充自：${column.mappedFrom}`}
                       />
                     )}
@@ -249,22 +243,18 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
               <TableHeader className='bg-gray-100'>
                 <TableRow>
                   {config.columns.map((column) => (
-                    <TableHead 
-                      key={column.key} 
-                      style={{ 
+                    <TableHead
+                      key={column.key}
+                      style={{
                         width: column.width,
-                        minWidth: column.width || '80px'
-                      }} 
+                        minWidth: column.width || "80px",
+                      }}
                       className='border border-gray-200 whitespace-nowrap'
                     >
                       <div className='flex items-center gap-1'>
                         {column.title}
                         {column.isMappedField && (
-                          <Icon
-                            icon="mdi:link-variant"
-                            className="text-gray-400"
-                            title="自动填充字段"
-                          />
+                          <Icon icon='mdi:link-variant' className='text-gray-400' title='自动填充字段' />
                         )}
                       </div>
                     </TableHead>
@@ -276,14 +266,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                 {fields.map((field, rowIndex) => (
                   <TableRow key={field.id}>
                     {config.columns.map((column) => (
-                      <TableCell 
-                        key={column.key} 
-                        className={cn(
-                          'border border-gray-200',
-                          column.isMappedField && 'bg-gray-50'
-                        )}
+                      <TableCell
+                        key={column.key}
+                        className={cn("border border-gray-200", column.isMappedField && "bg-gray-50")}
                         style={{
-                          minWidth: column.width || '80px'
+                          minWidth: column.width || "80px",
                         }}
                       >
                         {renderCell(column, rowIndex)}
@@ -307,11 +294,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                 {config.summary?.show && (
                   <TableRow className={cn("bg-default-50", config.summary.className)} style={config.summary.style}>
                     {config.columns.map((column) => (
-                      <TableCell 
-                        key={column.key} 
+                      <TableCell
+                        key={column.key}
                         className='border border-gray-200'
                         style={{
-                          minWidth: column.width || '80px'
+                          minWidth: column.width || "80px",
                         }}
                       >
                         {renderSummaryCell(column)}

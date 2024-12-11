@@ -1,8 +1,8 @@
+
       <Project>
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/DynamicFormFields.tsx">
                     <FileContent>
                       import React, { useState } from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField as DynamicFormField, FormFieldGroup } from "../types"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -12,75 +12,75 @@ import { Icon } from "@iconify/react"
 import styles from "../styles/DynamicForm.module.css"
 
 interface FieldsWithGroups {
-groups: FormFieldGroup[]
-defaultGroup?: string
+  groups: FormFieldGroup[]
+  defaultGroup?: string
 }
 
 interface DynamicFormFieldsProps {
-fields: DynamicFormField[] | FieldsWithGroups
-form: UseFormReturn<any>
-isEditable?: boolean
-onChange?: (fieldName: string, value: any) => void
+  fields: DynamicFormField[] | FieldsWithGroups
+  form: UseFormReturn<any>
+  isEditable?: boolean
+  onChange?: (fieldName: string, value: any) => void
 }
 
 const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, form, isEditable, onChange }) => {
-// 检查是否使用分组配置
-if (!fields || typeof fields !== "object" || !("groups" in fields)) {
-// 处理普通字段数组
-const fieldArray = Array.isArray(fields) ? fields : [fields]
-return <FormFields fields={fieldArray} form={form} isEditable={isEditable} onChange={onChange} />
-}
+  // 检查是否使用分组配置
+  if (!fields || typeof fields !== "object" || !("groups" in fields)) {
+    // 处理普通字段数组
+    const fieldArray = Array.isArray(fields) ? fields : [fields]
+    return <FormFields fields={fieldArray} form={form} isEditable={isEditable} onChange={onChange} />
+  }
 
-// 处理分组配置
-const { groups, defaultGroup } = fields as FieldsWithGroups
-const [selectedGroup, setSelectedGroup] = React.useState(defaultGroup || groups[0]?.key)
-const [hasScroll, setHasScroll] = React.useState(false)
+  // 处理分组配置
+  const { groups, defaultGroup } = fields as FieldsWithGroups
+  const [selectedGroup, setSelectedGroup] = React.useState(defaultGroup || groups[0]?.key)
+  const [hasScroll, setHasScroll] = React.useState(false)
 
-// 检查是否需要显示滚动阴影
-React.useEffect(() => {
-const tabsList = document.querySelector(`.${styles["tabs-list-scroll"]}`)
-if (tabsList) {
-const checkScroll = () => {
-setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
-}
-checkScroll()
-window.addEventListener("resize", checkScroll)
-return () => window.removeEventListener("resize", checkScroll)
-}
-}, [groups])
+  // 检查是否需要显示滚动阴影
+  React.useEffect(() => {
+    const tabsList = document.querySelector(`.${styles["tabs-list-scroll"]}`)
+    if (tabsList) {
+      const checkScroll = () => {
+        setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
+      }
+      checkScroll()
+      window.addEventListener("resize", checkScroll)
+      return () => window.removeEventListener("resize", checkScroll)
+    }
+  }, [groups])
 
-if (!groups?.length) {
-return null
-}
+  if (!groups?.length) {
+    return null
+  }
 
-return (
-
-<div className='space-y-6'>
-<Tabs value={selectedGroup} onValueChange={setSelectedGroup}>
-<div className={styles["tabs-scroll-container"]}>
-<TabsList
-className={cn(
-styles["tabs-list-scroll"],
-"w-full flex justify-start",
-hasScroll && styles["tabs-scroll-shadow"]
-)} >
-{groups.map((group) => (
-<TabsTrigger key={group.key} value={group.key}>
-{group.icon && <Icon icon={group.icon} className='mr-1' />}
-<span>{group.title}</span>
-</TabsTrigger>
-))}
-</TabsList>
-</div>
-{groups.map((group) => (
-<TabsContent key={group.key} value={group.key} className={cn("py-4", "transition-all duration-200")}>
-{group.description && <p className='text-sm text-gray-500 mb-4'>{group.description}</p>}
-<FormFields fields={group.fields} form={form} isEditable={isEditable} onChange={onChange} />
-</TabsContent>
-))}
-</Tabs>
-</div>
-)
+  return (
+    <div className='space-y-6'>
+      <Tabs value={selectedGroup} onValueChange={setSelectedGroup}>
+        <div className={styles["tabs-scroll-container"]}>
+          <TabsList
+            className={cn(
+              styles["tabs-list-scroll"],
+              "w-full flex justify-start",
+              hasScroll && styles["tabs-scroll-shadow"]
+            )}
+          >
+            {groups.map((group) => (
+              <TabsTrigger key={group.key} value={group.key}>
+                {group.icon && <Icon icon={group.icon} className='mr-1' />}
+                <span>{group.title}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+        {groups.map((group) => (
+          <TabsContent key={group.key} value={group.key} className={cn("py-4", "transition-all duration-200")}>
+            {group.description && <p className='text-sm text-gray-500 mb-4'>{group.description}</p>}
+            <FormFields fields={group.fields} form={form} isEditable={isEditable} onChange={onChange} />
+          </TabsContent>
+        ))}
+      </Tabs>
+    </div>
+  )
 }
 
 export default DynamicFormFieldsWrapper
@@ -91,7 +91,6 @@ export default DynamicFormFieldsWrapper
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/DynamicProcessConfirm.tsx">
                     <FileContent>
                       import React, { useEffect, useState } from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@nextui-org/react"
@@ -104,42 +103,41 @@ import DynamicFormFields from "./DynamicFormFields"
 import { cn } from "@/theme/cn"
 
 interface DynamicProcessConfirmProps {
-steps: ProcessStep[]
-form: UseFormReturn<any>
-isEditable?: boolean
-fieldName?: string
+  steps: ProcessStep[]
+  form: UseFormReturn<any>
+  isEditable?: boolean
+  fieldName?: string
 }
 
 const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
-steps,
-form,
-isEditable = true,
-fieldName = "processConfirmations",
+  steps,
+  form,
+  isEditable = true,
+  fieldName = "processConfirmations",
 }) => {
-const [currentUser, setCurrentUser] = useState<any>(null)
-const [isConfirming, setIsConfirming] = useState<string>("")
+  const [currentUser, setCurrentUser] = useState<any>(null)
+  const [isConfirming, setIsConfirming] = useState<string>("")
 
-useEffect(() => {
-const fetchUser = async () => {
-try {
-const user = await getCurrentAccountInfo()
-setCurrentUser(user)
-} catch (error) {
-console.error("Failed to fetch user info:", error)
-message.error("获取用户信息失败")
-}
-}
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await getCurrentAccountInfo()
+        setCurrentUser(user)
+      } catch (error) {
+        console.error("Failed to fetch user info:", error)
+        message.error("获取用户信息失败")
+      }
+    }
 
     if (!currentUser) {
       fetchUser()
     }
+  }, [])
 
-}, [])
-
-useEffect(() => {
-const currentValues = form.getValues(fieldName) || {}
-const updates: Record<string, any> = {}
-let needsUpdate = false
+  useEffect(() => {
+    const currentValues = form.getValues(fieldName) || {}
+    const updates: Record<string, any> = {}
+    let needsUpdate = false
 
     steps.forEach((step) => {
       if (!currentValues[step.key]) {
@@ -158,14 +156,13 @@ let needsUpdate = false
         form.setValue(field, value)
       })
     }
+  }, [steps, fieldName, form])
 
-}, [steps, fieldName, form])
-
-const handleConfirm = async (step: ProcessStep) => {
-if (!currentUser) {
-message.error("未能获取用户信息")
-return
-}
+  const handleConfirm = async (step: ProcessStep) => {
+    if (!currentUser) {
+      message.error("未能获取用户信息")
+      return
+    }
 
     if (step.fields) {
       const formDataPath = `${fieldName}.${step.key}.formData`
@@ -196,16 +193,15 @@ return
     } finally {
       setIsConfirming("")
     }
+  }
 
-}
-
-const handleCancel = (step: ProcessStep) => {
-try {
-const updates = {
-[`${fieldName}.${step.key}.confirmed`]: false,
-[`${fieldName}.${step.key}.confirmer`]: "",
-[`${fieldName}.${step.key}.confirmationDate`]: "",
-}
+  const handleCancel = (step: ProcessStep) => {
+    try {
+      const updates = {
+        [`${fieldName}.${step.key}.confirmed`]: false,
+        [`${fieldName}.${step.key}.confirmer`]: "",
+        [`${fieldName}.${step.key}.confirmationDate`]: "",
+      }
 
       Object.entries(updates).forEach(([field, value]) => {
         form.setValue(field, value)
@@ -216,16 +212,14 @@ const updates = {
       console.error("Error canceling confirmation:", error)
       message.error("取消确认失败")
     }
+  }
 
-}
-
-return (
-
-<div className="space-y-6">
-{steps.map((step) => {
-const stepData = form.watch(`${fieldName}.${step.key}`) || {}
-const isConfirmed = stepData.confirmed
-const isLoading = isConfirming === step.key
+  return (
+    <div className="space-y-6">
+      {steps.map((step) => {
+        const stepData = form.watch(`${fieldName}.${step.key}`) || {}
+        const isConfirmed = stepData.confirmed
+        const isLoading = isConfirming === step.key
 
         return (
           <Card key={step.key} className={cn(
@@ -237,8 +231,8 @@ const isLoading = isConfirming === step.key
                 <div className="flex items-start gap-4">
                   <div className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                    isConfirmed
-                      ? "bg-blue-50 text-blue-600 ring-2 ring-blue-100"
+                    isConfirmed 
+                      ? "bg-blue-50 text-blue-600 ring-2 ring-blue-100" 
                       : "bg-gray-50 text-gray-400"
                   )}>
                     <Icon
@@ -327,18 +321,16 @@ const isLoading = isConfirming === step.key
         )
       })}
     </div>
-
-)
+  )
 }
 
 export default DynamicProcessConfirm
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/DynamicTable.tsx">
                     <FileContent>
                       import React, { useState, useCallback, useEffect } from "react"
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -360,130 +352,131 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import message from "@/components/Message"
 
 interface DynamicTableProps {
-config: TableConfig
-form: UseFormReturn<any>
-isEditable?: boolean
-fieldName: string
+  config: TableConfig
+  form: UseFormReturn<any>
+  isEditable?: boolean
+  fieldName: string
 }
 
 const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = true, fieldName }) => {
-const { fields, append, remove } = useFieldArray({
-control: form.control,
-name: fieldName,
-})
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: fieldName,
+  })
 
-const [hasScroll, setHasScroll] = useState(false)
+  const [hasScroll, setHasScroll] = useState(false)
 
-// 检查是否需要显示滚动阴影
-useEffect(() => {
-const tabsList = document.querySelector(`.${styles["tabs-list-scroll"]}`)
-if (tabsList) {
-const checkScroll = () => {
-setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
-}
-checkScroll()
-window.addEventListener('resize', checkScroll)
-return () => window.removeEventListener('resize', checkScroll)
-}
-}, [config.columns])
+  // 检查是否需要显示滚动阴影
+  useEffect(() => {
+    const tabsList = document.querySelector(`.${styles["tabs-list-scroll"]}`)
+    if (tabsList) {
+      const checkScroll = () => {
+        setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
+      }
+      checkScroll()
+      window.addEventListener("resize", checkScroll)
+      return () => window.removeEventListener("resize", checkScroll)
+    }
+  }, [config.columns])
 
-const tableData = useWatch({
-control: form.control,
-name: fieldName,
-defaultValue: [],
-})
+  const tableData = useWatch({
+    control: form.control,
+    name: fieldName,
+    defaultValue: [],
+  })
 
-// 新增：处理资源选择后的字段映射
-const handleResourceSelect = useCallback((rowIndex: number, columnKey: string, selected: any) => {
-if (!selected || !selected[0]) return;
+  // 新增：处理资源选择后的字段映射
+  const handleResourceSelect = useCallback(
+    (rowIndex: number, columnKey: string, selected: any) => {
+      if (!selected || !selected[0]) return
 
-    const resource = selected[0];
-    const column = config.columns.find(col => col.key === columnKey);
+      const resource = selected[0]
+      const column = config.columns.find((col) => col.key === columnKey)
 
-    if (column?.resourceConfig?.fieldMapping) {
-      Object.entries(column.resourceConfig.fieldMapping).forEach(([targetField, mapping]) => {
-        // 找到目标列配置
-        const targetColumn = config.columns.find(col => col.key === targetField);
-        if (!targetColumn) return;
+      if (column?.resourceConfig?.fieldMapping) {
+        Object.entries(column.resourceConfig.fieldMapping).forEach(([targetField, mapping]) => {
+          // 找到目标列配置
+          const targetColumn = config.columns.find((col) => col.key === targetField)
+          if (!targetColumn) return
 
-        // 设置映射标记
-        targetColumn.isMappedField = true;
-        targetColumn.mappedFrom = `${columnKey}.${typeof mapping === 'string' ? mapping : mapping.field}`;
-        targetColumn.editable = false;
+          // 设置映射标记
+          targetColumn.isMappedField = true
+          targetColumn.mappedFrom = `${columnKey}.${typeof mapping === "string" ? mapping : mapping.field}`
+          targetColumn.editable = false
 
-        if (typeof mapping === 'string') {
-          // 简单映射
-          const value = resource[mapping];
-          if (value !== undefined) {
-            form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value);
-          }
-        } else {
-          // 复杂映射
-          if (mapping.condition && !mapping.condition(resource)) {
-            return;
-          }
-
-          if (mapping.fields) {
-            // 多字段组合
-            const values = mapping.fields.map(field => resource[field]);
-            const value = mapping.transform ? mapping.transform(values) : values.join(' ');
-            form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value);
+          if (typeof mapping === "string") {
+            // 简单映射
+            const value = resource[mapping]
+            if (value !== undefined) {
+              form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value)
+            }
           } else {
-            // 单字段转换
-            const value = resource[mapping.field];
-            const transformedValue = mapping.transform ? mapping.transform(value) : value;
-            if (transformedValue !== undefined) {
-              form.setValue(`${fieldName}.${rowIndex}.${targetField}`, transformedValue);
+            // 复杂映射
+            if (mapping.condition && !mapping.condition(resource)) {
+              return
+            }
+
+            if (mapping.fields) {
+              // 多字段组合
+              const values = mapping.fields.map((field) => resource[field])
+              const value = mapping.transform ? mapping.transform(values) : values.join(" ")
+              form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value)
+            } else {
+              // 单字段转换
+              const value = resource[mapping.field]
+              const transformedValue = mapping.transform ? mapping.transform(value) : value
+              if (transformedValue !== undefined) {
+                form.setValue(`${fieldName}.${rowIndex}.${targetField}`, transformedValue)
+              }
             }
           }
+        })
+      }
+    },
+    [config.columns, fieldName, form]
+  )
+
+  // 修改: 添加默认值初始化逻辑
+  const handleAddRow = useCallback(() => {
+    const newRow = config.columns.reduce(
+      (acc, column) => {
+        switch (column.type) {
+          case "number":
+            acc[column.key] = 0
+            break
+          case "select":
+            acc[column.key] = column.options?.[0]?.value || ""
+            break
+          case "date":
+          case "datetime":
+            acc[column.key] = ""
+            break
+          case "resource":
+            acc[column.key] = null
+            break
+          default:
+            acc[column.key] = ""
         }
-      });
-    }
-
-}, [config.columns, fieldName, form]);
-
-// 修改: 添加默认值初始化逻辑
-const handleAddRow = useCallback(() => {
-const newRow = config.columns.reduce(
-(acc, column) => {
-switch (column.type) {
-case "number":
-acc[column.key] = 0
-break
-case "select":
-acc[column.key] = column.options?.[0]?.value || ""
-break
-case "date":
-case "datetime":
-acc[column.key] = ""
-break
-case "resource":
-acc[column.key] = null
-break
-default:
-acc[column.key] = ""
-}
-return acc
-},
-{} as Record<string, any>
-)
+        return acc
+      },
+      {} as Record<string, any>
+    )
 
     append(newRow)
+  }, [config.columns, append])
 
-}, [config.columns, append])
+  const handleDeleteRow = useCallback(
+    (index: number) => {
+      remove(index)
+    },
+    [remove]
+  )
 
-const handleDeleteRow = useCallback(
-(index: number) => {
-remove(index)
-},
-[remove]
-)
-
-// 修改: 增加renderCell的空值处理
-const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
-const cellFieldName = `${fieldName}.${rowIndex}.${column.key}`
-const isFieldEditable = isEditable && column.editable !== false && !column.isMappedField
-const cellValue = form.getValues(cellFieldName)
+  // 修改: 增加renderCell的空值处理
+  const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
+    const cellFieldName = `${fieldName}.${rowIndex}.${column.key}`
+    const isFieldEditable = isEditable && column.editable !== false && !column.isMappedField
+    const cellValue = form.getValues(cellFieldName)
 
     if (column.render) {
       const record = tableData[rowIndex] || {}
@@ -500,13 +493,7 @@ const cellValue = form.getValues(cellFieldName)
               render={({ field }) => (
                 <FormItem className='flex-1'>
                   <FormControl>
-                    <Input
-                      {...field}
-                      disabled={!isFieldEditable}
-                      className={cn(
-                        "min-w-[120px] border-0 focus:ring-0 bg-transparent"
-                      )}
-                    />
+                    <Input {...field} readOnly className={cn("min-w-[120px] border-0 focus:ring-0 bg-transparent")} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -515,7 +502,7 @@ const cellValue = form.getValues(cellFieldName)
             {isFieldEditable && column.resourceConfig && (
               <ResourceSelectButton
                 resourceName={column.resourceConfig.resourceId}
-                selectionMode="single"
+                selectionMode='single'
                 onSelect={(selected) => {
                   if (selected.length > 0) {
                     form.setValue(cellFieldName, selected[0])
@@ -541,19 +528,16 @@ const cellValue = form.getValues(cellFieldName)
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <div className="relative">
+                  <div className='relative'>
                     <Input
                       {...field}
                       disabled={!isFieldEditable}
-                      className={cn(
-                        "border-0 focus:ring-0 bg-transparent",
-                        column.isMappedField && "bg-gray-50"
-                      )}
+                      className={cn("border-0 focus:ring-0 bg-transparent", column.isMappedField && "bg-gray-50")}
                     />
                     {column.isMappedField && (
                       <Icon
-                        icon="mdi:link-variant"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400"
+                        icon='mdi:link-variant'
+                        className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400'
                         title={`自动填充自：${column.mappedFrom}`}
                       />
                     )}
@@ -565,28 +549,24 @@ const cellValue = form.getValues(cellFieldName)
           />
         )
     }
+  }
 
-}
-
-const renderSummaryCell = (column: TableConfig["columns"][0]) => {
-if (column.key === config.columns[0].key) {
-return <div className='font-medium'>{config.summary?.label || "合计"}</div>
-}
+  const renderSummaryCell = (column: TableConfig["columns"][0]) => {
+    if (column.key === config.columns[0].key) {
+      return <div className='font-medium'>{config.summary?.label || "合计"}</div>
+    }
 
     if (!column.summary?.render) {
       return null
     }
 
-    // 修改: 增加summary的空值处理
-    const values = form.getValues() || {}
-    return column.summary.render(values)
+    // 修改: 直接使用tableData作为summary.render的参数
+    return column.summary.render(tableData || [])
+  }
 
-}
-
-return (
-
-<div>
-{config.toolbar}
+  return (
+    <div>
+      {config.toolbar}
 
       <div className='hidden md:block overflow-x-auto'>
         <div className='min-w-full inline-block align-middle'>
@@ -599,18 +579,14 @@ return (
                       key={column.key}
                       style={{
                         width: column.width,
-                        minWidth: column.width || '80px'
+                        minWidth: column.width || "80px",
                       }}
                       className='border border-gray-200 whitespace-nowrap'
                     >
                       <div className='flex items-center gap-1'>
                         {column.title}
                         {column.isMappedField && (
-                          <Icon
-                            icon="mdi:link-variant"
-                            className="text-gray-400"
-                            title="自动填充字段"
-                          />
+                          <Icon icon='mdi:link-variant' className='text-gray-400' title='自动填充字段' />
                         )}
                       </div>
                     </TableHead>
@@ -624,12 +600,9 @@ return (
                     {config.columns.map((column) => (
                       <TableCell
                         key={column.key}
-                        className={cn(
-                          'border border-gray-200',
-                          column.isMappedField && 'bg-gray-50'
-                        )}
+                        className={cn("border border-gray-200", column.isMappedField && "bg-gray-50")}
                         style={{
-                          minWidth: column.width || '80px'
+                          minWidth: column.width || "80px",
                         }}
                       >
                         {renderCell(column, rowIndex)}
@@ -657,7 +630,7 @@ return (
                         key={column.key}
                         className='border border-gray-200'
                         style={{
-                          minWidth: column.width || '80px'
+                          minWidth: column.width || "80px",
                         }}
                       >
                         {renderSummaryCell(column)}
@@ -687,57 +660,55 @@ return (
         </motion.div>
       )}
     </div>
-
-)
+  )
 }
 
 export default DynamicTable
-</FileContent>
-</File>
+
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/BasicInput.tsx">
                     <FileContent>
                       import React from "react"
-
 import { Input } from "@/components/ui/input"
 import { cn } from "@/theme/cn"
 
 interface BasicInputProps {
-type: string
-field: any
-className?: string
-placeholder?: string
+  type: string
+  field: any
+  className?: string
+  placeholder?: string
 }
 
-const BasicInput: React.FC<BasicInputProps> = ({
-type,
-field,
-className,
-placeholder
+const BasicInput: React.FC<BasicInputProps> = ({ 
+  type, 
+  field, 
+  className,
+  placeholder 
 }) => (
-<Input
-{...field}
-type={type}
-placeholder={placeholder}
-className={cn(
-type === "number" ? "text-right font-mono" : "",
-"w-full rounded-md",
-"border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
-"transition-colors duration-200",
-"placeholder:text-gray-400",
-className
-)}
-/>
+  <Input 
+    {...field} 
+    type={type} 
+    placeholder={placeholder}
+    className={cn(
+      type === "number" ? "text-right font-mono" : "",
+      "w-full rounded-md",
+      "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+      "transition-colors duration-200",
+      "placeholder:text-gray-400",
+      className
+    )} 
+  />
 )
 
 export default BasicInput
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/DateInput.tsx">
                     <FileContent>
                       import React from "react"
-
 import { Button } from "@nextui-org/react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -746,52 +717,52 @@ import { cn } from "@/theme/cn"
 import { Icon } from "@iconify/react"
 
 interface DateInputProps {
-field: any
-className?: string
-placeholder?: string
+  field: any
+  className?: string
+  placeholder?: string
 }
 
-const DateInput: React.FC<DateInputProps> = ({
-field,
-className,
-placeholder = "选择日期"
+const DateInput: React.FC<DateInputProps> = ({ 
+  field,
+  className,
+  placeholder = "选择日期"
 }) => (
-<Popover>
-<PopoverTrigger asChild>
-<Button
-variant="bordered"
-className={cn(
-"w-full pl-3 text-left font-normal",
-!field.value && "text-muted-foreground",
-"border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
-"transition-colors duration-200",
-className
-)}
-disabled={field.disabled} >
-{field.value ? format(new Date(field.value), "PPP") : <span>{placeholder}</span>}
-<Icon icon="mdi:calendar" className="ml-auto h-4 w-4 opacity-50" />
-</Button>
-</PopoverTrigger>
-<PopoverContent className="w-auto p-0" align="start">
-<Calendar
-mode="single"
-selected={field.value ? new Date(field.value) : undefined}
-onSelect={(date) => field.onChange(date?.toISOString())}
-disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
-initialFocus
-/>
-</PopoverContent>
-</Popover>
+  <Popover>
+    <PopoverTrigger asChild>
+      <Button
+        variant="bordered"
+        className={cn(
+          "w-full pl-3 text-left font-normal", 
+          !field.value && "text-muted-foreground",
+          "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+          "transition-colors duration-200",
+          className
+        )}
+        disabled={field.disabled}
+      >
+        {field.value ? format(new Date(field.value), "PPP") : <span>{placeholder}</span>}
+        <Icon icon="mdi:calendar" className="ml-auto h-4 w-4 opacity-50" />
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent className="w-auto p-0" align="start">
+      <Calendar
+        mode="single"
+        selected={field.value ? new Date(field.value) : undefined}
+        onSelect={(date) => field.onChange(date?.toISOString())}
+        disabled={(date) => date > new Date() || date < new Date("2000-01-01")}
+        initialFocus
+      />
+    </PopoverContent>
+  </Popover>
 )
 
 export default DateInput
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/FormFieldWrapper.tsx">
                     <FileContent>
                       import React from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField, FormControl, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -802,106 +773,106 @@ import { TooltipConfig } from "../../types"
 
 // 动画配置
 const tooltipAnimation = {
-initial: { opacity: 0, scale: 0.95, y: -4 },
-animate: { opacity: 1, scale: 1, y: 0 },
-exit: { opacity: 0, scale: 0.95, y: -4 },
-transition: { duration: 0.15, ease: "easeOut" },
+  initial: { opacity: 0, scale: 0.95, y: -4 },
+  animate: { opacity: 1, scale: 1, y: 0 },
+  exit: { opacity: 0, scale: 0.95, y: -4 },
+  transition: { duration: 0.15, ease: "easeOut" },
 }
 
 interface FormFieldWrapperProps {
-name: string
-label: string
-tooltip?: TooltipConfig
-children: (field: any) => React.ReactNode
-form: UseFormReturn<any>
-isEditable?: boolean
-disabled?: boolean
-required?: boolean
-showWhen?: {
-field: string
-value: any
-operator?: "eq" | "neq" | "gt" | "lt" | "contains"
-}
+  name: string
+  label: string
+  tooltip?: TooltipConfig
+  children: (field: any) => React.ReactNode
+  form: UseFormReturn<any>
+  isEditable?: boolean
+  disabled?: boolean
+  required?: boolean
+  showWhen?: {
+    field: string
+    value: any
+    operator?: "eq" | "neq" | "gt" | "lt" | "contains"
+  }
 }
 
 const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
-name,
-label,
-tooltip,
-children,
-form,
-isEditable = true,
-disabled,
-required,
+  name,
+  label,
+  tooltip,
+  children,
+  form,
+  isEditable = true,
+  disabled,
+  required,
 }) => {
-return (
-<motion.div variants={tooltipAnimation} initial='hidden' animate='visible'>
-<FormField
-control={form.control}
-name={name}
-render={({ field }) => (
-<FormItem className='w-full'>
-
-<div className='flex items-center gap-1'>
-<FormLabel className='text-sm font-medium text-primary-500'>
-{label}
-{required && (
-<span className="text-red-500 ml-1">\*</span>
-)}
-</FormLabel>
-{tooltip && (
-<Popover>
-<PopoverTrigger asChild>
-<button
-type='button'
-className={cn(
-"inline-flex items-center justify-center rounded-full",
-"w-4 h-4 text-gray-400 hover:text-gray-500",
-"focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
-"transition-colors duration-200"
-)} >
-<Icon icon='mdi:help-circle-outline' className='w-4 h-4' />
-</button>
-</PopoverTrigger>
-<AnimatePresence>
-<PopoverContent
-side={tooltip.placement || "top"}
-className={cn(
-"z-50 max-w-sm px-4 py-3",
-"bg-white rounded-lg shadow-lg",
-"border border-gray-200",
-"text-sm text-gray-600 leading-relaxed"
-)}
-asChild >
-<motion.div {...tooltipAnimation}>
-{typeof tooltip.content === "string" ? (
-<div className='whitespace-pre-wrap'>{tooltip.content}</div>
-) : (
-tooltip.content
-)}
-</motion.div>
-</PopoverContent>
-</AnimatePresence>
-</Popover>
-)}
-</div>
-<FormControl>{children({ ...field, disabled: !isEditable || disabled })}</FormControl>
-<FormMessage className='text-xs' />
-</FormItem>
-)}
-/>
-</motion.div>
-)
+  return (
+    <motion.div variants={tooltipAnimation} initial='hidden' animate='visible'>
+      <FormField
+        control={form.control}
+        name={name}
+        render={({ field }) => (
+          <FormItem className='w-full'>
+            <div className='flex items-center gap-1'>
+              <FormLabel className='text-sm font-medium text-primary-500'>
+                {label}
+                {required && (
+                  <span className="text-red-500 ml-1">*</span>
+                )}
+              </FormLabel>
+              {tooltip && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type='button'
+                      className={cn(
+                        "inline-flex items-center justify-center rounded-full",
+                        "w-4 h-4 text-gray-400 hover:text-gray-500",
+                        "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
+                        "transition-colors duration-200"
+                      )}
+                    >
+                      <Icon icon='mdi:help-circle-outline' className='w-4 h-4' />
+                    </button>
+                  </PopoverTrigger>
+                  <AnimatePresence>
+                    <PopoverContent
+                      side={tooltip.placement || "top"}
+                      className={cn(
+                        "z-50 max-w-sm px-4 py-3",
+                        "bg-white rounded-lg shadow-lg",
+                        "border border-gray-200",
+                        "text-sm text-gray-600 leading-relaxed"
+                      )}
+                      asChild
+                    >
+                      <motion.div {...tooltipAnimation}>
+                        {typeof tooltip.content === "string" ? (
+                          <div className='whitespace-pre-wrap'>{tooltip.content}</div>
+                        ) : (
+                          tooltip.content
+                        )}
+                      </motion.div>
+                    </PopoverContent>
+                  </AnimatePresence>
+                </Popover>
+              )}
+            </div>
+            <FormControl>{children({ ...field, disabled: !isEditable || disabled })}</FormControl>
+            <FormMessage className='text-xs' />
+          </FormItem>
+        )}
+      />
+    </motion.div>
+  )
 }
 
 export default FormFieldWrapper
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/index.tsx">
                     <FileContent>
                       import React from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField as DynamicFormField } from "../../types"
 import { cn } from "@/theme/cn"
@@ -919,15 +890,15 @@ import { renderSlider } from "./renders/renderSlider"
 import { renderCustom } from "./renders/renderCustom"
 
 interface DynamicFormFieldsProps {
-fields: DynamicFormField[]
-form: UseFormReturn<any>
-isEditable?: boolean
-onChange?: (fieldName: string, value: any) => void
+  fields: DynamicFormField[]
+  form: UseFormReturn<any>
+  isEditable?: boolean
+  onChange?: (fieldName: string, value: any) => void
 }
 
 const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isEditable, onChange }) => {
-const renderField = (field: DynamicFormField) => {
-if (field.hidden) return null
+  const renderField = (field: DynamicFormField) => {
+    if (field.hidden) return null
 
     // 基础输入类型
     if (["text", "password", "email", "tel", "url"].includes(field.type)) {
@@ -1006,37 +977,35 @@ if (field.hidden) return null
     }
 
     return null
+  }
 
-}
-
-return (
-
-<div className={cn("grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6", "form-fields-container")}>
-{fields.map((field) => (
-<div
-key={field.name}
-className={cn(
-"w-full",
-"form-field-wrapper",
-"hover:bg-gray-50/50 rounded-lg p-2 -m-2",
-"transition-colors duration-200",
-field.type === "resource" && "md:col-span-2"
-)} >
-{renderField(field)}
-</div>
-))}
-</div>
-)
+  return (
+    <div className={cn("grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6", "form-fields-container")}>
+      {fields.map((field) => (
+        <div
+          key={field.name}
+          className={cn(
+            "w-full",
+            "form-field-wrapper",
+            "hover:bg-gray-50/50 rounded-lg p-2 -m-2",
+            "transition-colors duration-200",
+            field.type === "resource" && "md:col-span-2"
+          )}
+        >
+          {renderField(field)}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export default DynamicFormFields
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/renders/renderBasicInput.tsx">
                     <FileContent>
                       import React from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
@@ -1044,13 +1013,13 @@ import BasicInput from "../BasicInput"
 import { cn } from "@/theme/cn"
 
 export const renderBasicInput = (
-field: FormField,
-form: UseFormReturn<any>,
-isEditable: boolean,
-onChange?: (fieldName: string, value: any) => void
+  field: FormField,
+  form: UseFormReturn<any>,
+  isEditable: boolean,
+  onChange?: (fieldName: string, value: any) => void
 ) => {
-return (
-<FormFieldWrapper
+  return (
+    <FormFieldWrapper
       name={field.name}
       label={field.label}
       form={form}
@@ -1059,50 +1028,49 @@ return (
       tooltip={field.tooltip}
       required={field.required}
     >
-{(formField) => (
-<BasicInput
-type={field.type}
-field={{
+      {(formField) => (
+        <BasicInput
+          type={field.type}
+          field={{
             ...formField,
             onChange: (e: any) => {
               formField.onChange(e)
               onChange?.(field.name, e.target.value)
             },
           }}
-className={cn(
-field.type === "number" ? "text-right font-mono" : "",
-"w-full rounded-md",
-"border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
-"transition-colors duration-200",
-"placeholder:text-gray-400",
-field.className
-)}
-placeholder={field.placeholder}
-/>
-)}
-</FormFieldWrapper>
-)
+          className={cn(
+            field.type === "number" ? "text-right font-mono" : "",
+            "w-full rounded-md",
+            "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+            "transition-colors duration-200",
+            "placeholder:text-gray-400",
+            field.className
+          )}
+          placeholder={field.placeholder}
+        />
+      )}
+    </FormFieldWrapper>
+  )
 }
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/renders/renderCheckbox.tsx">
                     <FileContent>
                       import React from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
 import { CheckboxGroup, Checkbox } from "@nextui-org/react"
 
 export const renderCheckbox = (
-field: FormField,
-form: UseFormReturn<any>,
-isEditable: boolean,
-onChange?: (fieldName: string, value: any) => void
+  field: FormField,
+  form: UseFormReturn<any>,
+  isEditable: boolean,
+  onChange?: (fieldName: string, value: any) => void
 ) => {
-return (
-<FormFieldWrapper
+  return (
+    <FormFieldWrapper
       name={field.name}
       label={field.label}
       form={form}
@@ -1111,44 +1079,44 @@ return (
       tooltip={field.tooltip}
       required={field.required}
     >
-{(formField) => (
-<CheckboxGroup
-orientation={field.layout || "horizontal"}
-value={formField.value || []}
-onValueChange={(value) => {
-formField.onChange(value)
-onChange?.(field.name, value)
-}}
-isDisabled={!isEditable || field.disabled} >
-{(typeof field.options === "function" ? field.options(form) : field.options || []).map((option) => (
-<Checkbox key={option.value} value={option.value} isDisabled={option.disabled}>
-{option.label}
-</Checkbox>
-))}
-</CheckboxGroup>
-)}
-</FormFieldWrapper>
-)
+      {(formField) => (
+        <CheckboxGroup
+          orientation={field.layout || "horizontal"}
+          value={formField.value || []}
+          onValueChange={(value) => {
+            formField.onChange(value)
+            onChange?.(field.name, value)
+          }}
+          isDisabled={!isEditable || field.disabled}
+        >
+          {(typeof field.options === "function" ? field.options(form) : field.options || []).map((option) => (
+            <Checkbox key={option.value} value={option.value} isDisabled={option.disabled}>
+              {option.label}
+            </Checkbox>
+          ))}
+        </CheckboxGroup>
+      )}
+    </FormFieldWrapper>
+  )
 }
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/renders/renderCustom.tsx">
                     <FileContent>
                       import React from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
 
 export const renderCustom = (
-field: FormField,
-form: UseFormReturn<any>,
-isEditable: boolean,
-onChange?: (fieldName: string, value: any) => void
+  field: FormField,
+  form: UseFormReturn<any>,
+  isEditable: boolean,
+  onChange?: (fieldName: string, value: any) => void
 ) => {
-return (
-<FormFieldWrapper
+  return (
+    <FormFieldWrapper
       name={field.name}
       label={field.label}
       form={form}
@@ -1157,42 +1125,41 @@ return (
       tooltip={field.tooltip}
       required={field.required}
     >
-{(formField) =>
-field?.render?.({
-field: {
-...formField,
-onChange: (value: any) => {
-formField.onChange(value)
-onChange?.(field.name, value)
-},
-},
-form,
-isEditable,
-})
+      {(formField) =>
+        field?.render?.({
+          field: {
+            ...formField,
+            onChange: (value: any) => {
+              formField.onChange(value)
+              onChange?.(field.name, value)
+            },
+          },
+          form,
+          isEditable,
+        })
+      }
+    </FormFieldWrapper>
+  )
 }
-</FormFieldWrapper>
-)
-}
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/renders/renderDateInput.tsx">
                     <FileContent>
                       import React from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
 import DateInput from "../DateInput"
 
 export const renderDateInput = (
-field: FormField,
-form: UseFormReturn<any>,
-isEditable: boolean,
-onChange?: (fieldName: string, value: any) => void
+  field: FormField,
+  form: UseFormReturn<any>,
+  isEditable: boolean,
+  onChange?: (fieldName: string, value: any) => void
 ) => {
-return (
-<FormFieldWrapper
+  return (
+    <FormFieldWrapper
       name={field.name}
       label={field.label}
       form={form}
@@ -1201,42 +1168,41 @@ return (
       tooltip={field.tooltip}
       required={field.required}
     >
-{(formField) => (
-<DateInput
-field={{
+      {(formField) => (
+        <DateInput
+          field={{
             ...formField,
             onChange: (value: any) => {
               formField.onChange(value)
               onChange?.(field.name, value)
             },
           }}
-className={field.className}
-placeholder={field.placeholder}
-/>
-)}
-</FormFieldWrapper>
-)
+          className={field.className}
+          placeholder={field.placeholder}
+        />
+      )}
+    </FormFieldWrapper>
+  )
 }
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/renders/renderRadio.tsx">
                     <FileContent>
                       import React from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
 import { RadioGroup, Radio } from "@nextui-org/react"
 
 export const renderRadio = (
-field: FormField,
-form: UseFormReturn<any>,
-isEditable: boolean,
-onChange?: (fieldName: string, value: any) => void
+  field: FormField,
+  form: UseFormReturn<any>,
+  isEditable: boolean,
+  onChange?: (fieldName: string, value: any) => void
 ) => {
-return (
-<FormFieldWrapper
+  return (
+    <FormFieldWrapper
       name={field.name}
       label={field.label}
       form={form}
@@ -1245,53 +1211,53 @@ return (
       tooltip={field.tooltip}
       required={field.required}
     >
-{(formField) => (
-<RadioGroup
-orientation={field.layout || "horizontal"}
-value={formField.value}
-onValueChange={(value) => {
-formField.onChange(value)
-onChange?.(field.name, value)
-}}
-isDisabled={!isEditable || field.disabled} >
-{(typeof field.options === "function" ? field.options(form) : field.options || []).map((option) => (
-<Radio key={option.value} value={option.value} isDisabled={option.disabled}>
-{option.label}
-</Radio>
-))}
-</RadioGroup>
-)}
-</FormFieldWrapper>
-)
+      {(formField) => (
+        <RadioGroup
+          orientation={field.layout || "horizontal"}
+          value={formField.value}
+          onValueChange={(value) => {
+            formField.onChange(value)
+            onChange?.(field.name, value)
+          }}
+          isDisabled={!isEditable || field.disabled}
+        >
+          {(typeof field.options === "function" ? field.options(form) : field.options || []).map((option) => (
+            <Radio key={option.value} value={option.value} isDisabled={option.disabled}>
+              {option.label}
+            </Radio>
+          ))}
+        </RadioGroup>
+      )}
+    </FormFieldWrapper>
+  )
 }
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/renders/renderResource.tsx">
                     <FileContent>
                       import React, { useState, useCallback, useEffect } from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField, ResourceValue } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
-import { Card, CardBody } from "@nextui-org/react"
+import { Card, CardBody, Input } from "@nextui-org/react"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import ResourceSelectButton from "@/components/common/ResourceSelectButton"
 import { Spinner } from "@nextui-org/react"
 import { useMetadata } from "@/hooks/metadata"
 import message from "@/components/Message"
-import { Input } from "@/components/ui/input"
+// import { Input } from "@/components/ui/input"
 import { cn } from "@/theme/cn"
 
 export const renderResource = (
-field: FormField,
-form: UseFormReturn<any>,
-isEditable: boolean,
-onChange?: (fieldName: string, value: any) => void
+  field: FormField,
+  form: UseFormReturn<any>,
+  isEditable: boolean,
+  onChange?: (fieldName: string, value: any) => void
 ) => {
-return (
-<FormFieldWrapper
+  return (
+    <FormFieldWrapper
       name={field.name}
       label={field.label}
       form={form}
@@ -1300,12 +1266,12 @@ return (
       tooltip={field.tooltip}
       required={field.required}
     >
-{(formField) => {
-const [loading, setLoading] = useState(false)
-const [resourceData, setResourceData] = useState<any>(null)
-const { getDetail } = useMetadata("resource")
-const value = formField.value as ResourceValue
-const isMultiple = field.resourceConfig?.multiple
+      {(formField) => {
+        const [loading, setLoading] = useState(false)
+        const [resourceData, setResourceData] = useState<any>(null)
+        const { getDetail } = useMetadata("resource")
+        const value = formField.value as ResourceValue
+        const isMultiple = field.resourceConfig?.multiple
 
         // 从缓存获取资源数据
         const getResourceFromCache = (resourceId: string, dataid: string) => {
@@ -1443,7 +1409,7 @@ const isMultiple = field.resourceConfig?.multiple
                           displayValue: e.target.value,
                         })
                       }}
-                      disabled={!isEditable || field.disabled}
+                      readOnly
                       placeholder={field.placeholder || "请选择"}
                       className='flex-1'
                     />
@@ -1546,8 +1512,7 @@ const isMultiple = field.resourceConfig?.multiple
         )
       }}
     </FormFieldWrapper>
-
-)
+  )
 }
 
                     </FileContent>
@@ -1556,7 +1521,6 @@ const isMultiple = field.resourceConfig?.multiple
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/renders/renderSelect.tsx">
                     <FileContent>
                       import React from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
@@ -1565,13 +1529,13 @@ import { cn } from "@/theme/cn"
 import { motion } from "framer-motion"
 
 export const renderSelect = (
-field: FormField,
-form: UseFormReturn<any>,
-isEditable: boolean,
-onChange?: (fieldName: string, value: any) => void
+  field: FormField,
+  form: UseFormReturn<any>,
+  isEditable: boolean,
+  onChange?: (fieldName: string, value: any) => void
 ) => {
-return (
-<FormFieldWrapper
+  return (
+    <FormFieldWrapper
       name={field.name}
       label={field.label}
       form={form}
@@ -1580,73 +1544,76 @@ return (
       tooltip={field.tooltip}
       required={field.required}
     >
-{(formField) => (
-<Select
-disabled={!isEditable || field.disabled}
-onValueChange={(value) => {
-formField.onChange(value)
-onChange?.(field.name, value)
-form.trigger(field.name)
-}}
-value={formField.value}
-defaultValue={formField.value} >
-<SelectTrigger
-className={cn(
-"w-full",
-"border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
-"transition-colors",
-"placeholder:text-gray-400",
-field.className
-)} >
-<SelectValue placeholder={field.placeholder || "请选择"} />
-</SelectTrigger>
-<SelectContent>
-<motion.div
-initial={{ opacity: 0, y: -10 }}
-animate={{ opacity: 1, y: 0 }}
-exit={{ opacity: 0, y: 10 }}
-transition={{ duration: 0.2 }} >
-{(typeof field.options === "function" ? field.options(form) : field.options || []).map((option) => (
-<SelectItem
-key={option.value}
-value={option.value}
-disabled={option.disabled}
-className={cn(
-"cursor-pointer transition-colors",
-"hover:bg-blue-50 hover:text-blue-600",
-"focus:bg-blue-50 focus:text-blue-600",
-option.disabled && "opacity-50 cursor-not-allowed"
-)} >
-{option.label}
-</SelectItem>
-))}
-</motion.div>
-</SelectContent>
-</Select>
-)}
-</FormFieldWrapper>
-)
+      {(formField) => (
+        <Select
+          disabled={!isEditable || field.disabled}
+          onValueChange={(value) => {
+            formField.onChange(value)
+            onChange?.(field.name, value)
+            form.trigger(field.name)
+          }}
+          value={formField.value}
+          defaultValue={formField.value}
+        >
+          <SelectTrigger
+            className={cn(
+              "w-full",
+              "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+              "transition-colors",
+              "placeholder:text-gray-400",
+              field.className
+            )}
+          >
+            <SelectValue placeholder={field.placeholder || "请选择"} />
+          </SelectTrigger>
+          <SelectContent>
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {(typeof field.options === "function" ? field.options(form) : field.options || []).map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  disabled={option.disabled}
+                  className={cn(
+                    "cursor-pointer transition-colors",
+                    "hover:bg-blue-50 hover:text-blue-600",
+                    "focus:bg-blue-50 focus:text-blue-600",
+                    option.disabled && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </motion.div>
+          </SelectContent>
+        </Select>
+      )}
+    </FormFieldWrapper>
+  )
 }
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/renders/renderSignature.tsx">
                     <FileContent>
                       import React from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
 import SignaturePad from "@/components/common/SignaturePad"
 
 export const renderSignature = (
-field: FormField,
-form: UseFormReturn<any>,
-isEditable: boolean,
-onChange?: (fieldName: string, value: any) => void
+  field: FormField,
+  form: UseFormReturn<any>,
+  isEditable: boolean,
+  onChange?: (fieldName: string, value: any) => void
 ) => {
-return (
-<FormFieldWrapper
+  return (
+    <FormFieldWrapper
       name={field.name}
       label={field.label}
       form={form}
@@ -1655,44 +1622,43 @@ return (
       tooltip={field.tooltip}
       required={field.required}
     >
-{(formField) => (
-<SignaturePad
-width={field.width}
-height={field.height}
-lineWidth={field.lineWidth}
-lineColor={field.lineColor}
-disabled={!isEditable || field.disabled}
-className={field.className}
-value={formField.value}
-onChange={(value) => {
-formField.onChange(value)
-onChange?.(field.name, value)
-}}
-/>
-)}
-</FormFieldWrapper>
-)
+      {(formField) => (
+        <SignaturePad
+          width={field.width}
+          height={field.height}
+          lineWidth={field.lineWidth}
+          lineColor={field.lineColor}
+          disabled={!isEditable || field.disabled}
+          className={field.className}
+          value={formField.value}
+          onChange={(value) => {
+            formField.onChange(value)
+            onChange?.(field.name, value)
+          }}
+        />
+      )}
+    </FormFieldWrapper>
+  )
 }
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/renders/renderSlider.tsx">
                     <FileContent>
                       import React from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
 import { Slider } from "@nextui-org/react"
 
 export const renderSlider = (
-field: FormField,
-form: UseFormReturn<any>,
-isEditable: boolean,
-onChange?: (fieldName: string, value: any) => void
+  field: FormField,
+  form: UseFormReturn<any>,
+  isEditable: boolean,
+  onChange?: (fieldName: string, value: any) => void
 ) => {
-return (
-<FormFieldWrapper
+  return (
+    <FormFieldWrapper
       name={field.name}
       label={field.label}
       form={form}
@@ -1701,46 +1667,44 @@ return (
       tooltip={field.tooltip}
       required={field.required}
     >
-{(formField) => (
-
-<div className='w-full px-2'>
-<Slider
-value={formField.value}
-onChange={(value) => {
-formField.onChange(value)
-onChange?.(field.name, value)
-}}
-min={field.min}
-max={field.max}
-step={field.step}
-isDisabled={!isEditable || field.disabled}
-className='max-w-md'
-/>
-</div>
-)}
-</FormFieldWrapper>
-)
+      {(formField) => (
+        <div className='w-full px-2'>
+          <Slider
+            value={formField.value}
+            onChange={(value) => {
+              formField.onChange(value)
+              onChange?.(field.name, value)
+            }}
+            min={field.min}
+            max={field.max}
+            step={field.step}
+            isDisabled={!isEditable || field.disabled}
+            className='max-w-md'
+          />
+        </div>
+      )}
+    </FormFieldWrapper>
+  )
 }
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/renders/renderSwitch.tsx">
                     <FileContent>
                       import React from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
 import { Switch } from "@nextui-org/react"
 
 export const renderSwitch = (
-field: FormField,
-form: UseFormReturn<any>,
-isEditable: boolean,
-onChange?: (fieldName: string, value: any) => void
+  field: FormField,
+  form: UseFormReturn<any>,
+  isEditable: boolean,
+  onChange?: (fieldName: string, value: any) => void
 ) => {
-return (
-<FormFieldWrapper
+  return (
+    <FormFieldWrapper
       name={field.name}
       label={field.label}
       form={form}
@@ -1749,30 +1713,28 @@ return (
       tooltip={field.tooltip}
       required={field.required}
     >
-{(formField) => (
-
-<div className='flex items-center gap-2'>
-<Switch
-isSelected={formField.value}
-onValueChange={(checked) => {
-formField.onChange(checked)
-onChange?.(field.name, checked)
-}}
-isDisabled={!isEditable || field.disabled}
-/>
-{formField.value ? field.checkedLabel : field.uncheckedLabel}
-</div>
-)}
-</FormFieldWrapper>
-)
+      {(formField) => (
+        <div className='flex items-center gap-2'>
+          <Switch
+            isSelected={formField.value}
+            onValueChange={(checked) => {
+              formField.onChange(checked)
+              onChange?.(field.name, checked)
+            }}
+            isDisabled={!isEditable || field.disabled}
+          />
+          {formField.value ? field.checkedLabel : field.uncheckedLabel}
+        </div>
+      )}
+    </FormFieldWrapper>
+  )
 }
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/renders/renderTextarea.tsx">
                     <FileContent>
                       import React from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
@@ -1780,13 +1742,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/theme/cn"
 
 export const renderTextarea = (
-field: FormField,
-form: UseFormReturn<any>,
-isEditable: boolean,
-onChange?: (fieldName: string, value: any) => void
+  field: FormField,
+  form: UseFormReturn<any>,
+  isEditable: boolean,
+  onChange?: (fieldName: string, value: any) => void
 ) => {
-return (
-<FormFieldWrapper
+  return (
+    <FormFieldWrapper
       name={field.name}
       label={field.label}
       form={form}
@@ -1795,33 +1757,32 @@ return (
       tooltip={field.tooltip}
       required={field.required}
     >
-{(formField) => (
-<Textarea
-{...formField}
-onChange={(e) => {
-formField.onChange(e)
-onChange?.(field.name, e.target.value)
-}}
-placeholder={field.placeholder}
-className={cn(
-"min-h-[100px] md:min-h-[80px]",
-"w-full rounded-md border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
-"resize-none transition-colors",
-"placeholder:text-gray-400",
-field.className
-)}
-/>
-)}
-</FormFieldWrapper>
-)
+      {(formField) => (
+        <Textarea
+          {...formField}
+          onChange={(e) => {
+            formField.onChange(e)
+            onChange?.(field.name, e.target.value)
+          }}
+          placeholder={field.placeholder}
+          className={cn(
+            "min-h-[100px] md:min-h-[80px]",
+            "w-full rounded-md border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+            "resize-none transition-colors",
+            "placeholder:text-gray-400",
+            field.className
+          )}
+        />
+      )}
+    </FormFieldWrapper>
+  )
 }
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/FormFields/renders/renderUpload.tsx">
                     <FileContent>
                       import React, { useState } from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormField, FileInfo } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
@@ -1835,77 +1796,76 @@ import { apiService } from "@/service/apis/api"
 import { Modal } from "@nextui-org/react"
 
 export const renderUpload = (
-field: FormField,
-form: UseFormReturn<any>,
-isEditable: boolean,
-onChange?: (fieldName: string, value: any) => void
+  field: FormField,
+  form: UseFormReturn<any>,
+  isEditable: boolean,
+  onChange?: (fieldName: string, value: any) => void
 ) => {
-const [uploading, setUploading] = useState(false)
-const [progress, setProgress] = useState(0)
-const [previewVisible, setPreviewVisible] = useState(false)
-const [previewFile, setPreviewFile] = useState<FileInfo | null>(null)
-const [isProcessing, setIsProcessing] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [previewVisible, setPreviewVisible] = useState(false)
+  const [previewFile, setPreviewFile] = useState<FileInfo | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
-// 获取签名URL
-const getSignedUrl = async (fileName: string) => {
-try {
-const res = await apiService.get(`/api/file/form/upload:singed?fileName=${fileName}`)
-return res.data
-} catch (error) {
-message.error("获取签名URL失败，请重试！")
-throw error
-}
-}
+  // 获取签名URL
+  const getSignedUrl = async (fileName: string) => {
+    try {
+      const res = await apiService.get(`/api/file/form/upload:singed?fileName=${fileName}`)
+      return res.data
+    } catch (error) {
+      message.error("获取签名URL失败，请重试！")
+      throw error
+    }
+  }
 
-// 创建活动数据
-const createActivity = async (fileInfo: { fileName: string; fileKey: string }) => {
-try {
-const response = await apiService.post('/public/data/file/activitiess', {
-activityName: "测试",
-activityType: "test",
-files: [fileInfo]
-})
-return response.data
-} catch (error) {
-console.error("Create activity error:", error)
-throw error
-}
-}
+  // 创建活动数据
+  const createActivity = async (fileInfo: { fileName: string; fileKey: string }) => {
+    try {
+      const response = await apiService.post('/public/data/file/activitiess', {
+        activityName: "测试",
+        activityType: "test",
+        files: [fileInfo]
+      })
+      return response.data
+    } catch (error) {
+      console.error("Create activity error:", error)
+      throw error
+    }
+  }
 
-// 查询活动数据
-const queryActivity = async () => {
-try {
-const response = await apiService.post('/public/data/file/activitiess/find', {}, {
-params: { display: 'paginate' }
-})
-return response.data
-} catch (error) {
-console.error("Query activity error:", error)
-throw error
-}
-}
+  // 查询活动数据
+  const queryActivity = async () => {
+    try {
+      const response = await apiService.post('/public/data/file/activitiess/find', {}, {
+        params: { display: 'paginate' }
+      })
+      return response.data
+    } catch (error) {
+      console.error("Query activity error:", error)
+      throw error
+    }
+  }
 
-// 处理文件预览
-const handlePreview = async (file: FileInfo) => {
-if (!file.type?.startsWith('image/')) {
-return
-}
-setPreviewFile(file)
-setPreviewVisible(true)
+  // 处理文件预览
+  const handlePreview = async (file: FileInfo) => {
+    if (!file.type?.startsWith('image/')) {
+      return
+    }
+    setPreviewFile(file)
+    setPreviewVisible(true)
 
     if (field.uploadConfig?.onPreview) {
       field.uploadConfig.onPreview(file)
     }
+  }
 
-}
-
-// 处理文件下载
-const handleDownload = async (file: FileInfo) => {
-try {
-if (!file.downloadUrl) {
-message.error("下载链接不可用")
-return
-}
+  // 处理文件下载
+  const handleDownload = async (file: FileInfo) => {
+    try {
+      if (!file.downloadUrl) {
+        message.error("下载链接不可用")
+        return
+      }
 
       if (field.uploadConfig?.onDownload) {
         field.uploadConfig.onDownload(file)
@@ -1936,17 +1896,16 @@ return
       console.error("Download error:", error)
       message.error("下载失败，请重试")
     }
+  }
 
-}
-
-// 处理新的upload类型
-const handleUploadType = async (file: File) => {
-if (field.uploadConfig) {
-// 检查文件大小
-if (field.uploadConfig.maxSize && file.size > field.uploadConfig.maxSize) {
-message.error(`文件大小不能超过 ${field.uploadConfig.maxSize / 1024 / 1024}MB`)
-return null
-}
+  // 处理新的upload类型
+  const handleUploadType = async (file: File) => {
+    if (field.uploadConfig) {
+      // 检查文件大小
+      if (field.uploadConfig.maxSize && file.size > field.uploadConfig.maxSize) {
+        message.error(`文件大小不能超过 ${field.uploadConfig.maxSize / 1024 / 1024}MB`)
+        return null
+      }
 
       // 如果是图片且需要处理
       if (field.uploadConfig.uploadType === "image" && field.uploadConfig.cropOptions) {
@@ -2004,14 +1963,14 @@ return null
 
                 // 查询获取完整信息
                 const queryResult = await queryActivity()
-
+                
                 // 修改这里的数据处理逻辑
                 if (!queryResult?.data || !Array.isArray(queryResult.data) || queryResult.data.length === 0) {
                   throw new Error("未找到上传的文件信息")
                 }
 
                 // 获取最新的活动记录（按创建时间排序，取最新的）
-                const latestActivity = queryResult.data.sort((a, b) =>
+                const latestActivity = queryResult.data.sort((a, b) => 
                   Number(b.createdAt) - Number(a.createdAt)
                 )[0]
 
@@ -2065,12 +2024,11 @@ return null
     }
 
     return file
+  }
 
-}
-
-// 渲染预览内容
-const renderPreviewContent = (file: FileInfo) => {
-if (!file) return null
+  // 渲染预览内容
+  const renderPreviewContent = (file: FileInfo) => {
+    if (!file) return null
 
     if (file.type?.startsWith("image/")) {
       return (
@@ -2102,11 +2060,10 @@ if (!file) return null
         </Button>
       </div>
     )
+  }
 
-}
-
-return (
-<FormFieldWrapper
+  return (
+    <FormFieldWrapper
       name={field.name}
       label={field.label}
       form={form}
@@ -2115,17 +2072,16 @@ return (
       tooltip={field.tooltip}
       required={field.required}
     >
-{(formField) => (
-
-<div className='space-y-4'>
-<div className='flex items-center gap-2'>
-<Input
-type='file'
-accept={field.accept}
-multiple={field.uploadConfig?.multiple}
-onChange={async (e) => {
-const files = e.target.files
-if (!files?.length) return
+      {(formField) => (
+        <div className='space-y-4'>
+          <div className='flex items-center gap-2'>
+            <Input
+              type='file'
+              accept={field.accept}
+              multiple={field.uploadConfig?.multiple}
+              onChange={async (e) => {
+                const files = e.target.files
+                if (!files?.length) return
 
                 // 检查文件数量
                 if (field.uploadConfig?.maxCount && files.length > field.uploadConfig.maxCount) {
@@ -2331,56 +2287,53 @@ if (!files?.length) return
         </div>
       )}
     </FormFieldWrapper>
-
-)
+  )
 }
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/PrintableContent.tsx">
                     <FileContent>
                       import React, { forwardRef } from "react"
-
 import { format } from "date-fns"
 
 interface PrintableContentProps {
-formData: any
+  formData: any
 }
 
 const PrintableContent = forwardRef<HTMLDivElement, PrintableContentProps>(({ formData }, ref) => {
-// 生成空行数据
-const generateEmptyRows = (count: number) => {
-return Array(count).fill(null).map((\_, index) => ({
-id: `empty-${index}`,
-...Object.keys(formData?.formFields || {}).reduce((acc, key) => {
-acc[key] = ""
-return acc
-}, {})
-}))
-}
+  // 生成空行数据
+  const generateEmptyRows = (count: number) => {
+    return Array(count).fill(null).map((_, index) => ({
+      id: `empty-${index}`,
+      ...Object.keys(formData?.formFields || {}).reduce((acc, key) => {
+        acc[key] = ""
+        return acc
+      }, {})
+    }))
+  }
 
-// 处理表格数据
-const tableData = formData?.data?.tableData || []
-const finalTableData = tableData.length > 0 ? tableData : generateEmptyRows(5)
+  // 处理表格数据
+  const tableData = formData?.data?.tableData || []
+  const finalTableData = tableData.length > 0 ? tableData : generateEmptyRows(5)
 
-// 确保基本信息字段存在
-const ensureBasicInfo = (info: any) => {
-if (!info) return {}
-return Object.keys(formData?.formFields || {}).reduce((acc, key) => {
-acc[key] = info[key] || ""
-return acc
-}, {})
-}
+  // 确保基本信息字段存在
+  const ensureBasicInfo = (info: any) => {
+    if (!info) return {}
+    return Object.keys(formData?.formFields || {}).reduce((acc, key) => {
+      acc[key] = info[key] || ""
+      return acc
+    }, {})
+  }
 
-const basicInfo = ensureBasicInfo(formData?.data?.basicInfo)
+  const basicInfo = ensureBasicInfo(formData?.data?.basicInfo)
 
-return (
-
-<div ref={ref} className='p-8 print:p-4 bg-white'>
-{/_ 标题 _/}
-<div className='text-center mb-8'>
-<h1 className='text-2xl font-bold'>{formData?.title || "表单详情"}</h1>
-</div>
+  return (
+    <div ref={ref} className='p-8 print:p-4 bg-white'>
+      {/* 标题 */}
+      <div className='text-center mb-8'>
+        <h1 className='text-2xl font-bold'>{formData?.title || "表单详情"}</h1>
+      </div>
 
       {/* 基本信息 */}
       {Object.entries(formData?.formFields || {}).map(([section, fields]: [string, any]) => (
@@ -2469,34 +2422,32 @@ return (
         }
       `}</style>
     </div>
-
-)
+  )
 })
 
 PrintableContent.displayName = "PrintableContent"
 
 export default PrintableContent
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/PrintableTemplate.tsx">
                     <FileContent>
                       import React, { forwardRef } from "react"
-
 import { format } from "date-fns"
 import { DynamicFormConfig } from "../types"
 import { cn } from "@/theme/cn"
 import { Icon } from "@iconify/react"
 
 interface PrintableTemplateProps {
-config: DynamicFormConfig
-data: any
+  config: DynamicFormConfig
+  data: any
 }
 
 const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ config, data }, ref) => {
-// 标准化配置
-const normalizeConfig = (rawConfig: any): DynamicFormConfig => {
-if (!rawConfig) return rawConfig
+  // 标准化配置
+  const normalizeConfig = (rawConfig: any): DynamicFormConfig => {
+    if (!rawConfig) return rawConfig
 
     // 如果配置来自模板
     if (rawConfig.config?.renderConfig) {
@@ -2516,27 +2467,26 @@ if (!rawConfig) return rawConfig
     }
 
     return rawConfig
+  }
 
-}
+  const normalizedConfig = normalizeConfig(config)
+  const { metadata, renderConfig } = normalizedConfig
 
-const normalizedConfig = normalizeConfig(config)
-const { metadata, renderConfig } = normalizedConfig
+  // 从缓存中获取资源数据
+  const getResourceFromCache = (resourceId: string, dataid: string) => {
+    try {
+      const key = `resource_${resourceId}_${dataid}`
+      const cached = sessionStorage.getItem(key)
+      return cached ? JSON.parse(cached) : null
+    } catch (error) {
+      console.error("Error getting resource from cache:", error)
+      return null
+    }
+  }
 
-// 从缓存中获取资源数据
-const getResourceFromCache = (resourceId: string, dataid: string) => {
-try {
-const key = `resource_${resourceId}_${dataid}`
-const cached = sessionStorage.getItem(key)
-return cached ? JSON.parse(cached) : null
-} catch (error) {
-console.error("Error getting resource from cache:", error)
-return null
-}
-}
-
-// 格式化资源字段值
-const formatResourceValue = (field: any, value: any) => {
-if (!value) return "\***\*\_\_\_\_\*\***"
+  // 格式化资源字段值
+  const formatResourceValue = (field: any, value: any) => {
+    if (!value) return "____________"
 
     try {
       // 处理单个资源
@@ -2583,12 +2533,11 @@ if (!value) return "\***\*\_\_\_\_\*\***"
       console.error("Error formatting resource value:", error)
       return "____________"
     }
+  }
 
-}
-
-// 格式化字段值
-const formatFieldValue = (type: string, value: any, field?: any) => {
-if (value === undefined || value === null || value === "") return "\***\*\_\_\_\_\*\***"
+  // 格式化字段值
+  const formatFieldValue = (type: string, value: any, field?: any) => {
+    if (value === undefined || value === null || value === "") return "____________"
 
     switch (type) {
       case "signature":
@@ -2634,24 +2583,22 @@ if (value === undefined || value === null || value === "") return "\***\*\_\_\_\
         }
         return value || "____________"
     }
+  }
 
-}
-
-// 确保基本信息数据的完整性
-const ensureBasicInfo = () => {
-const basicData = {
-...data,
-...(data?.basicInfo || {}),
-}
+  // 确保基本信息数据的完整性
+  const ensureBasicInfo = () => {
+    const basicData = {
+      ...data,
+      ...(data?.basicInfo || {}),
+    }
 
     const systemFields = ["tableData", "processConfirmations"]
     return Object.fromEntries(Object.entries(basicData).filter(([key]) => !systemFields.includes(key)))
+  }
 
-}
-
-// 渲染基本信息字段
-const renderBasicFields = () => {
-const basicInfo = ensureBasicInfo()
+  // 渲染基本信息字段
+  const renderBasicFields = () => {
+    const basicInfo = ensureBasicInfo()
 
     if (
       !renderConfig.basicFields ||
@@ -2699,12 +2646,11 @@ const basicInfo = ensureBasicInfo()
         ))}
       </div>
     )
+  }
 
-}
-
-// 渲染表格数据
-const renderTable = () => {
-if (!renderConfig.table) return null
+  // 渲染表格数据
+  const renderTable = () => {
+    if (!renderConfig.table) return null
 
     const tableData = data?.tableData || []
     const displayData = tableData.length > 0 ? tableData : [{}]
@@ -2748,12 +2694,11 @@ if (!renderConfig.table) return null
         </table>
       </div>
     )
+  }
 
-}
-
-// 渲染流程确认信息
-const renderProcessSteps = () => {
-if (!renderConfig.processSteps) return null
+  // 渲染流程确认信息
+  const renderProcessSteps = () => {
+    if (!renderConfig.processSteps) return null
 
     const processConfirmations = data?.processConfirmations || {}
 
@@ -2814,52 +2759,49 @@ if (!renderConfig.processSteps) return null
         })}
       </div>
     )
+  }
 
-}
+  // 渲染页脚
+  const renderFooter = () => {
+    return (
+      <div className='mt-8 pt-4 border-t-2 border-gray-300'>
+        <div className='grid grid-cols-2 gap-8'>
+          <div className='space-y-4'>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm text-gray-500'>制单人：</span>
+              <span className='flex-1 border-b border-gray-300'>____________</span>
+            </div>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm text-gray-500'>日期：</span>
+              <span className='flex-1 border-b border-gray-300'>____________</span>
+            </div>
+          </div>
+          <div className='space-y-4'>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm text-gray-500'>审核人：</span>
+              <span className='flex-1 border-b border-gray-300'>____________</span>
+            </div>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm text-gray-500'>日期：</span>
+              <span className='flex-1 border-b border-gray-300'>____________</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
-// 渲染页脚
-const renderFooter = () => {
-return (
-
-<div className='mt-8 pt-4 border-t-2 border-gray-300'>
-<div className='grid grid-cols-2 gap-8'>
-<div className='space-y-4'>
-<div className='flex items-center gap-2'>
-<span className='text-sm text-gray-500'>制单人：</span>
-<span className='flex-1 border-b border-gray-300'>****\_\_\_\_****</span>
-</div>
-<div className='flex items-center gap-2'>
-<span className='text-sm text-gray-500'>日期：</span>
-<span className='flex-1 border-b border-gray-300'>****\_\_\_\_****</span>
-</div>
-</div>
-<div className='space-y-4'>
-<div className='flex items-center gap-2'>
-<span className='text-sm text-gray-500'>审核人：</span>
-<span className='flex-1 border-b border-gray-300'>****\_\_\_\_****</span>
-</div>
-<div className='flex items-center gap-2'>
-<span className='text-sm text-gray-500'>日期：</span>
-<span className='flex-1 border-b border-gray-300'>****\_\_\_\_****</span>
-</div>
-</div>
-</div>
-</div>
-)
-}
-
-return (
-
-<div ref={ref} className='p-8 bg-white max-w-[210mm] mx-auto'>
-{/_ 页眉 _/}
-<div className='text-center mb-8 pb-4 border-b-2 border-gray-300'>
-<h1 className='text-2xl font-bold text-gray-900 mb-2'>{metadata.title}</h1>
-{metadata.description && <p className='text-sm text-gray-500 italic'>{metadata.description}</p>}
-<div className='absolute top-8 right-8 text-sm text-gray-500'>
-<div>单号：{data?.orderNumber || "****\_\_\_\_****"}</div>
-<div>日期：{format(new Date(), "yyyy-MM-dd")}</div>
-</div>
-</div>
+  return (
+    <div ref={ref} className='p-8 bg-white max-w-[210mm] mx-auto'>
+      {/* 页眉 */}
+      <div className='text-center mb-8 pb-4 border-b-2 border-gray-300'>
+        <h1 className='text-2xl font-bold text-gray-900 mb-2'>{metadata.title}</h1>
+        {metadata.description && <p className='text-sm text-gray-500 italic'>{metadata.description}</p>}
+        <div className='absolute top-8 right-8 text-sm text-gray-500'>
+          <div>单号：{data?.orderNumber || "____________"}</div>
+          <div>日期：{format(new Date(), "yyyy-MM-dd")}</div>
+        </div>
+      </div>
 
       {/* 基本信息 */}
       <div className='mb-6'>
@@ -2913,7 +2855,7 @@ return (
           .process-step {
             break-inside: avoid;
           }
-          table {
+          table { 
             border-collapse: collapse;
             width: 100%;
           }
@@ -2974,20 +2916,18 @@ return (
         }
       `}</style>
     </div>
-
-)
+  )
 })
 
 PrintableTemplate.displayName = "PrintableTemplate"
 
 export default PrintableTemplate
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/ProcessConfirm/ProcessStep.tsx">
                     <FileContent>
                       import React from "react"
-
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
@@ -2999,76 +2939,81 @@ import ProcessStepConfirmation from "./ProcessStepConfirmation"
 import { motion, AnimatePresence } from "framer-motion"
 
 interface ProcessStepProps {
-step: ProcessStepType
-form: UseFormReturn<any>
-isEditable?: boolean
-fieldName?: string
-isConfirming: boolean
-onConfirm: (step: ProcessStepType) => void
-onCancel: (step: ProcessStepType) => void
+  step: ProcessStepType
+  form: UseFormReturn<any>
+  isEditable?: boolean
+  fieldName?: string
+  isConfirming: boolean
+  onConfirm: (step: ProcessStepType) => void
+  onCancel: (step: ProcessStepType) => void
 }
 
 const ProcessStep: React.FC<ProcessStepProps> = ({
-step,
-form,
-isEditable = true,
-fieldName = "processConfirmations",
-isConfirming,
-onConfirm,
-onCancel,
+  step,
+  form,
+  isEditable = true,
+  fieldName = "processConfirmations",
+  isConfirming,
+  onConfirm,
+  onCancel,
 }) => {
-const stepData = form.watch(`${fieldName}.${step.key}`) || {}
-const isConfirmed = stepData.confirmed
-const isLoading = isConfirming
-const isRequired = stepData.required
+  const stepData = form.watch(`${fieldName}.${step.key}`) || {}
+  const isConfirmed = stepData.confirmed
+  const isLoading = isConfirming
+  const isRequired = stepData.required
 
-return (
-<motion.div
-initial={{ opacity: 0, y: 20 }}
-animate={{ opacity: 1, y: 0 }}
-exit={{ opacity: 0, y: -20 }}
-transition={{ duration: 0.3, ease: "easeOut" }} >
-<Card
-className={cn(
-"border-l-4 transition-all duration-300 ease-in-out transform hover:shadow-lg",
-isConfirmed ? "border-l-blue-500 bg-blue-50/30" : "border-l-gray-200"
-)} >
-<CardContent className='p-4 md:p-6'>
-
-<div className='flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 mb-4 md:mb-6'>
-<div className='flex items-start gap-4'>
-<motion.div
-initial={false}
-transition={{ duration: 0.3 }}
-className={cn(
-"w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300",
-isConfirmed ? "bg-blue-100 text-blue-600 ring-2 ring-blue-200 shadow-md" : "bg-gray-50 text-gray-400"
-)} >
-<Icon
-icon={isConfirmed ? "line-md:check-all" : "line-md:uploading"}
-className={cn("w-5 h-5 transition-transform duration-300", isConfirmed ? "scale-110" : "")}
-/>
-</motion.div>
-<div className='flex-1 min-w-0'>
-<h3
-className={cn(
-"text-lg font-semibold break-all transition-colors duration-300",
-isConfirmed ? "text-blue-600" : "text-gray-900"
-)} >
-{step.title}
-{isRequired && (
-<motion.span
-initial={{ opacity: 0, scale: 0 }}
-animate={{ opacity: 1, scale: 1 }}
-className='text-red-500 ml-1' > \*
-</motion.span>
-)}
-</h3>
-{step.description && (
-<p className='text-gray-500 mt-1 text-sm leading-relaxed break-all'>{step.description}</p>
-)}
-</div>
-</div>
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
+      <Card
+        className={cn(
+          "border-l-4 transition-all duration-300 ease-in-out transform hover:shadow-lg",
+          isConfirmed ? "border-l-blue-500 bg-blue-50/30" : "border-l-gray-200"
+        )}
+      >
+        <CardContent className='p-4 md:p-6'>
+          <div className='flex flex-col md:flex-row md:items-start justify-between gap-4 md:gap-6 mb-4 md:mb-6'>
+            <div className='flex items-start gap-4'>
+              <motion.div
+                initial={false}
+                transition={{ duration: 0.3 }}
+                className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300",
+                  isConfirmed ? "bg-blue-100 text-blue-600 ring-2 ring-blue-200 shadow-md" : "bg-gray-50 text-gray-400"
+                )}
+              >
+                <Icon
+                  icon={isConfirmed ? "line-md:check-all" : "line-md:uploading"}
+                  className={cn("w-5 h-5 transition-transform duration-300", isConfirmed ? "scale-110" : "")}
+                />
+              </motion.div>
+              <div className='flex-1 min-w-0'>
+                <h3
+                  className={cn(
+                    "text-lg font-semibold break-all transition-colors duration-300",
+                    isConfirmed ? "text-blue-600" : "text-gray-900"
+                  )}
+                >
+                  {step.title}
+                  {isRequired && (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className='text-red-500 ml-1'
+                    >
+                      *
+                    </motion.span>
+                  )}
+                </h3>
+                {step.description && (
+                  <p className='text-gray-500 mt-1 text-sm leading-relaxed break-all'>{step.description}</p>
+                )}
+              </div>
+            </div>
 
             {isEditable && (
               <div className='flex w-full md:w-auto'>
@@ -3154,8 +3099,7 @@ className='text-red-500 ml-1' > \*
         </CardContent>
       </Card>
     </motion.div>
-
-)
+  )
 }
 
 export default ProcessStep
@@ -3166,43 +3110,42 @@ export default ProcessStep
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/ProcessConfirm/ProcessStepConfirmation.tsx">
                     <FileContent>
                       import React from "react"
-
 import { format } from "date-fns"
 import { Icon } from "@iconify/react"
 import { cn } from "@/theme/cn"
 import { motion } from "framer-motion"
 
 interface ProcessStepConfirmationProps {
-confirmer: string
-confirmationDate: string
+  confirmer: string
+  confirmationDate: string
 }
 
 const ProcessStepConfirmation: React.FC<ProcessStepConfirmationProps> = ({
-confirmer,
-confirmationDate,
+  confirmer,
+  confirmationDate,
 }) => {
-return (
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4 pt-4 border-t border-blue-100">
+      <motion.div 
+        className="space-y-2"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <label className="text-gray-500 flex items-center gap-2 text-sm">
+          <Icon icon="mdi:account" className="w-4 h-4" />
+          确认人
+        </label>
+        <p className={cn(
+          "font-medium text-gray-900 pl-6",
+          "transition-all duration-300",
+          "hover:text-blue-600"
+        )}>
+          {confirmer}
+        </p>
+      </motion.div>
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4 pt-4 border-t border-blue-100">
-<motion.div
-className="space-y-2"
-initial={{ opacity: 0, x: -20 }}
-animate={{ opacity: 1, x: 0 }}
-transition={{ duration: 0.3 }} >
-<label className="text-gray-500 flex items-center gap-2 text-sm">
-<Icon icon="mdi:account" className="w-4 h-4" />
-确认人
-</label>
-<p className={cn(
-"font-medium text-gray-900 pl-6",
-"transition-all duration-300",
-"hover:text-blue-600"
-)}>
-{confirmer}
-</p>
-</motion.div>
-
-      <motion.div
+      <motion.div 
         className="space-y-2"
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -3222,18 +3165,16 @@ transition={{ duration: 0.3 }} >
         </p>
       </motion.div>
     </div>
-
-)
+  )
 }
 
 export default ProcessStepConfirmation
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/ProcessConfirm/ProcessStepForm.tsx">
                     <FileContent>
                       import React from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { cn } from "@/theme/cn"
 import DynamicFormFields from "../DynamicFormFields"
@@ -3241,54 +3182,55 @@ import { ProcessStep } from "../../types"
 import { motion } from "framer-motion"
 
 interface ProcessStepFormProps {
-step: ProcessStep
-form: UseFormReturn<any>
-isEditable?: boolean
-isConfirmed?: boolean
-fieldName?: string
+  step: ProcessStep
+  form: UseFormReturn<any>
+  isEditable?: boolean
+  isConfirmed?: boolean
+  fieldName?: string
 }
 
 const ProcessStepForm: React.FC<ProcessStepFormProps> = ({
-step,
-form,
-isEditable = true,
-isConfirmed = false,
-fieldName = "processConfirmations",
+  step,
+  form,
+  isEditable = true,
+  isConfirmed = false,
+  fieldName = "processConfirmations",
 }) => {
-if (!step.fields) return null
+  if (!step.fields) return null
 
-// 添加字段值变化处理函数
-const handleFieldChange = (field: string, value: any) => {
-// 使用正确的路径格式设置表单值
-const formDataPath = `${fieldName}.${step.key}.formData.${field}`
-console.log('Setting form value:', {
-path: formDataPath,
-value,
-currentFormData: form.getValues(`${fieldName}.${step.key}.formData`),
-allValues: form.getValues()
-})
-form.setValue(formDataPath, value)
-}
+  // 添加字段值变化处理函数
+  const handleFieldChange = (field: string, value: any) => {
+    // 使用正确的路径格式设置表单值
+    const formDataPath = `${fieldName}.${step.key}.formData.${field}`
+    console.log('Setting form value:', {
+      path: formDataPath,
+      value,
+      currentFormData: form.getValues(`${fieldName}.${step.key}.formData`),
+      allValues: form.getValues()
+    })
+    form.setValue(formDataPath, value)
+  }
 
-return (
-<motion.div
-className={cn(
-"mt-4 pt-4 border-t border-gray-100",
-"transition-all duration-300",
-isConfirmed ? "opacity-70 hover:opacity-100" : "",
-"rounded-lg"
-)}
-initial={{ opacity: 0, y: 20 }}
-animate={{ opacity: 1, y: 0 }}
-exit={{ opacity: 0, y: -20 }}
-transition={{
+  return (
+    <motion.div
+      className={cn(
+        "mt-4 pt-4 border-t border-gray-100",
+        "transition-all duration-300",
+        isConfirmed ? "opacity-70 hover:opacity-100" : "",
+        "rounded-lg"
+      )}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{
         duration: 0.3,
         ease: "easeOut"
-      }} >
-<motion.div
-initial="hidden"
-animate="visible"
-variants={{
+      }}
+    >
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={{
           hidden: { opacity: 0 },
           visible: {
             opacity: 1,
@@ -3296,68 +3238,67 @@ variants={{
               staggerChildren: 0.1
             }
           }
-        }} >
-<DynamicFormFields
-fields={step.fields}
-form={form}
-isEditable={isEditable && !isConfirmed}
-onChange={handleFieldChange}
-/>
-</motion.div>
-</motion.div>
-)
+        }}
+      >
+        <DynamicFormFields
+          fields={step.fields}
+          form={form}
+          isEditable={isEditable && !isConfirmed}
+          onChange={handleFieldChange}
+        />
+      </motion.div>
+    </motion.div>
+  )
 }
 
 export default ProcessStepForm
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/ProcessConfirm/hooks/useProcessConfirm.ts">
                     <FileContent>
                       import { useState, useEffect, useCallback } from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { ProcessStep, ProcessProgress } from "../../../types"
 import message from "@/components/Message"
 import { getCurrentAccountInfo } from "@/service/apis/user"
 
 interface UseProcessConfirmProps {
-steps: ProcessStep[]
-form: UseFormReturn<any>
-fieldName?: string
-isEditable?: boolean
+  steps: ProcessStep[]
+  form: UseFormReturn<any>
+  fieldName?: string
+  isEditable?: boolean
 }
 
 export const useProcessConfirm = ({
-steps,
-form,
-fieldName = "processConfirmations",
-isEditable = true,
+  steps,
+  form,
+  fieldName = "processConfirmations",
+  isEditable = true,
 }: UseProcessConfirmProps) => {
-const [currentUser, setCurrentUser] = useState<any>(null)
-const [isConfirming, setIsConfirming] = useState<string>("")
+  const [currentUser, setCurrentUser] = useState<any>(null)
+  const [isConfirming, setIsConfirming] = useState<string>("")
 
-useEffect(() => {
-const fetchUser = async () => {
-try {
-const user = await getCurrentAccountInfo()
-setCurrentUser(user)
-} catch (error) {
-console.error("Failed to fetch user info:", error)
-message.error("获取用户信息失败")
-}
-}
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await getCurrentAccountInfo()
+        setCurrentUser(user)
+      } catch (error) {
+        console.error("Failed to fetch user info:", error)
+        message.error("获取用户信息失败")
+      }
+    }
 
     if (!currentUser && isEditable) {
       fetchUser()
     }
+  }, [currentUser, isEditable])
 
-}, [currentUser, isEditable])
-
-useEffect(() => {
-const currentValues = form.getValues(fieldName) || {}
-const updates: Record<string, any> = {}
-let needsUpdate = false
+  useEffect(() => {
+    const currentValues = form.getValues(fieldName) || {}
+    const updates: Record<string, any> = {}
+    let needsUpdate = false
 
     steps.forEach((step) => {
       if (!currentValues[step.key]) {
@@ -3378,13 +3319,12 @@ let needsUpdate = false
         form.setValue(field, value)
       })
     }
+  }, [steps, fieldName, form])
 
-}, [steps, fieldName, form])
-
-const calculateProgress = useCallback((): ProcessProgress => {
-const values = form.getValues(fieldName) || {}
-console.log("Calculating progress with values:", values)
-
+  const calculateProgress = useCallback((): ProcessProgress => {
+    const values = form.getValues(fieldName) || {}
+    console.log("Calculating progress with values:", values)
+    
     const totalWeight = steps.reduce((sum, step) => sum + (step.weight || 1), 0)
     let completedWeight = 0
     let currentStepIndex = 0
@@ -3433,14 +3373,13 @@ console.log("Calculating progress with values:", values)
 
     console.log("Calculated progress:", progress)
     return progress
+  }, [steps, form, fieldName])
 
-}, [steps, form, fieldName])
-
-const handleConfirm = async (step: ProcessStep) => {
-if (!currentUser) {
-message.error("未能获取用户信息")
-return
-}
+  const handleConfirm = async (step: ProcessStep) => {
+    if (!currentUser) {
+      message.error("未能获取用户信息")
+      return
+    }
 
     if (step.fields) {
       const formDataPath = `${fieldName}.${step.key}.formData`
@@ -3471,7 +3410,7 @@ return
 
       // 触发表单更新
       await form.trigger(fieldName)
-
+      
       // 手动触发重新计算进度
       calculateProgress()
     } catch (error) {
@@ -3480,16 +3419,15 @@ return
     } finally {
       setIsConfirming("")
     }
+  }
 
-}
-
-const handleCancel = (step: ProcessStep) => {
-try {
-const updates = {
-[`${fieldName}.${step.key}.confirmed`]: false,
-[`${fieldName}.${step.key}.confirmer`]: "",
-[`${fieldName}.${step.key}.confirmationDate`]: "",
-}
+  const handleCancel = (step: ProcessStep) => {
+    try {
+      const updates = {
+        [`${fieldName}.${step.key}.confirmed`]: false,
+        [`${fieldName}.${step.key}.confirmer`]: "",
+        [`${fieldName}.${step.key}.confirmationDate`]: "",
+      }
 
       // 批量设置值
       Object.entries(updates).forEach(([field, value]) => {
@@ -3502,30 +3440,29 @@ const updates = {
 
       // 触发表单更新
       form.trigger(fieldName)
-
+      
       // 手动触发重新计算进度
       calculateProgress()
     } catch (error) {
       console.error("Error canceling confirmation:", error)
       message.error("取消确认失败")
     }
+  }
 
-}
-
-return {
-currentUser,
-isConfirming,
-handleConfirm,
-handleCancel,
-calculateProgress,
-}
+  return {
+    currentUser,
+    isConfirming,
+    handleConfirm,
+    handleCancel,
+    calculateProgress,
+  }
 }
 
 export const createProcessWatch = (form: UseFormReturn<any>, fieldName: string) => {
-return {
-setStepVisibility: (stepKey: string, visible: boolean) => {
-form.setValue(`${fieldName}.${stepKey}.hidden`, !visible)
-},
+  return {
+    setStepVisibility: (stepKey: string, visible: boolean) => {
+      form.setValue(`${fieldName}.${stepKey}.hidden`, !visible)
+    },
 
     setStepRequired: (stepKey: string, required: boolean) => {
       form.setValue(`${fieldName}.${stepKey}.required`, required)
@@ -3535,9 +3472,9 @@ form.setValue(`${fieldName}.${stepKey}.hidden`, !visible)
       return form.watch(`${fieldName}.${stepKey}.status`, callback)
     },
 
-    batchUpdateSteps: (updates: Array<{
-      stepKey: string,
-      updates: Record<string, any>
+    batchUpdateSteps: (updates: Array<{ 
+      stepKey: string, 
+      updates: Record<string, any> 
     }>) => {
       updates.forEach(({ stepKey, updates }) => {
         Object.entries(updates).forEach(([key, value]) => {
@@ -3545,16 +3482,14 @@ form.setValue(`${fieldName}.${stepKey}.hidden`, !visible)
         })
       })
     }
-
+  }
 }
-}
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/components/ProcessConfirm/index.tsx">
                     <FileContent>
                       import React, { useMemo } from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { ProcessStep as ProcessStepType, ProcessProgress } from "../../types"
 import { useProcessConfirm } from "./hooks/useProcessConfirm"
@@ -3566,79 +3501,78 @@ import { Progress } from "@nextui-org/react"
 import styles from "../../styles/DynamicForm.module.css"
 
 interface DynamicProcessConfirmProps {
-steps: ProcessStepType[]
-form: UseFormReturn<any>
-isEditable?: boolean
-fieldName?: string
+  steps: ProcessStepType[]
+  form: UseFormReturn<any>
+  isEditable?: boolean
+  fieldName?: string
 }
 
 const ProcessProgressIndicator: React.FC<{
-progress: ProcessProgress
+  progress: ProcessProgress
 }> = ({ progress }) => {
-return (
-
-<div className='space-y-2 mb-4'>
-<Progress aria-label='Progress' value={progress.percentage} className='max-w-md' color='primary' />
-<div className='flex justify-between text-sm text-gray-500'>
-<span>
-已完成 {progress.completed}/{progress.total} 步
-</span>
-<span>{progress.percentage}%</span>
-</div>
-</div>
-)
+  return (
+    <div className='space-y-2 mb-4'>
+      <Progress aria-label='Progress' value={progress.percentage} className='max-w-md' color='primary' />
+      <div className='flex justify-between text-sm text-gray-500'>
+        <span>
+          已完成 {progress.completed}/{progress.total} 步
+        </span>
+        <span>{progress.percentage}%</span>
+      </div>
+    </div>
+  )
 }
 
 const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
-steps,
-form,
-isEditable = true,
-fieldName = "processConfirmations",
+  steps,
+  form,
+  isEditable = true,
+  fieldName = "processConfirmations",
 }) => {
-const { isConfirming, handleConfirm, handleCancel, calculateProgress } = useProcessConfirm({
-steps,
-form,
-fieldName,
-isEditable,
-})
+  const { isConfirming, handleConfirm, handleCancel, calculateProgress } = useProcessConfirm({
+    steps,
+    form,
+    fieldName,
+    isEditable,
+  })
 
-const [selectedStep, setSelectedStep] = React.useState<string>(steps[0]?.key || "")
-const [hasScroll, setHasScroll] = React.useState(false)
+  const [selectedStep, setSelectedStep] = React.useState<string>(steps[0]?.key || "")
+  const [hasScroll, setHasScroll] = React.useState(false)
 
-// 检查是否需要显示滚动阴影
-React.useEffect(() => {
-const tabsList = document.querySelector(`.${styles["tabs-list-scroll"]}`)
-if (tabsList) {
-const checkScroll = () => {
-setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
-}
-checkScroll()
-window.addEventListener("resize", checkScroll)
-return () => window.removeEventListener("resize", checkScroll)
-}
-}, [steps])
+  // 检查是否需要显示滚动阴影
+  React.useEffect(() => {
+    const tabsList = document.querySelector(`.${styles["tabs-list-scroll"]}`)
+    if (tabsList) {
+      const checkScroll = () => {
+        setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
+      }
+      checkScroll()
+      window.addEventListener("resize", checkScroll)
+      return () => window.removeEventListener("resize", checkScroll)
+    }
+  }, [steps])
 
-// 监听表单值变化
-const formValues = form.watch(fieldName)
+  // 监听表单值变化
+  const formValues = form.watch(fieldName)
 
-// 计算进度
-const progress = useMemo(() => {
-console.log("Calculating progress with values:", formValues)
-return calculateProgress()
-}, [calculateProgress, formValues])
+  // 计算进度
+  const progress = useMemo(() => {
+    console.log("Calculating progress with values:", formValues)
+    return calculateProgress()
+  }, [calculateProgress, formValues])
 
-// 添加表单值变化监听
-React.useEffect(() => {
-const subscription = form.watch(() => {
-console.log("Form values changed:", form.getValues(fieldName))
-form.trigger(fieldName)
-})
-return () => subscription.unsubscribe()
-}, [form, fieldName])
+  // 添加表单值变化监听
+  React.useEffect(() => {
+    const subscription = form.watch(() => {
+      console.log("Form values changed:", form.getValues(fieldName))
+      form.trigger(fieldName)
+    })
+    return () => subscription.unsubscribe()
+  }, [form, fieldName])
 
-// 检查步骤是否被阻塞
-const isStepBlocked = (step: ProcessStepType): { blocked: boolean; reason?: string } => {
-if (!step.dependencies?.length) return { blocked: false }
+  // 检查步骤是否被阻塞
+  const isStepBlocked = (step: ProcessStepType): { blocked: boolean; reason?: string } => {
+    if (!step.dependencies?.length) return { blocked: false }
 
     for (const dep of step.dependencies) {
       const dependentStepData = form.watch(`${fieldName}.${dep.step}`)
@@ -3670,22 +3604,20 @@ if (!step.dependencies?.length) return { blocked: false }
     }
 
     return { blocked: false }
+  }
 
-}
+  // 新增：监听表单变化并触发重新渲染
+  React.useEffect(() => {
+    console.log("Current progress:", progress)
+    const subscription = form.watch(() => {
+      form.trigger(fieldName)
+    })
+    return () => subscription.unsubscribe()
+  }, [form, fieldName, progress])
 
-// 新增：监听表单变化并触发重新渲染
-React.useEffect(() => {
-console.log("Current progress:", progress)
-const subscription = form.watch(() => {
-form.trigger(fieldName)
-})
-return () => subscription.unsubscribe()
-}, [form, fieldName, progress])
-
-return (
-
-<div className='space-y-6'>
-<ProcessProgressIndicator progress={progress} />
+  return (
+    <div className='space-y-6'>
+      <ProcessProgressIndicator progress={progress} />
 
       <Tabs value={selectedStep} onValueChange={setSelectedStep}>
         <div className={styles["tabs-scroll-container"]}>
@@ -3748,8 +3680,7 @@ return (
         })}
       </Tabs>
     </div>
-
-)
+  )
 }
 
 export default DynamicProcessConfirm
@@ -3763,74 +3694,75 @@ export default DynamicProcessConfirm
 
 // 默认工具栏按钮配置
 export const defaultToolbarButtons: ToolbarButton[] = [
-{
-key: "save",
-label: "保存",
-icon: "mdi:content-save",
-color: "primary",
-variant: "flat",
-onClick: () => {
-console.log("Default save action")
-},
-},
-{
-key: "edit",
-label: "编辑",
-icon: "mdi:pencil",
-color: "primary",
-variant: "flat",
-onClick: () => {
-console.log("Default edit action")
-},
-},
-{
-key: "print",
-label: "打印",
-icon: "mdi:printer",
-color: "primary",
-variant: "flat",
-onClick: () => {
-console.log("Default print action")
-},
-},
-{
-key: "cancel",
-label: "取消",
-icon: "mdi:close",
-color: "default",
-variant: "flat",
-onClick: () => {
-console.log("Default cancel action")
-},
-},
+  {
+    key: "save",
+    label: "保存",
+    icon: "mdi:content-save",
+    color: "primary",
+    variant: "flat",
+    onClick: () => {
+      console.log("Default save action")
+    },
+  },
+  {
+    key: "edit",
+    label: "编辑",
+    icon: "mdi:pencil",
+    color: "primary",
+    variant: "flat",
+    onClick: () => {
+      console.log("Default edit action")
+    },
+  },
+  {
+    key: "print",
+    label: "打印",
+    icon: "mdi:printer",
+    color: "primary",
+    variant: "flat",
+    onClick: () => {
+      console.log("Default print action")
+    },
+  },
+  {
+    key: "cancel",
+    label: "取消",
+    icon: "mdi:close",
+    color: "default",
+    variant: "flat",
+    onClick: () => {
+      console.log("Default cancel action")
+    },
+  },
 ]
 
 // 默认表单配置
 export const defaultFormConfig: DynamicFormConfig = {
-metadata: {
-title: "默认表单",
-description: "",
-permissions: {
-edit: true,
-delete: true,
-print: true,
-},
-},
-renderConfig: {
-basicFields: [],
-},
-orderNumberConfig: {
-prefix: "DG",
-fieldName: "orderNumber",
-label: "表单编号",
-},
-toolbar: {
-buttons: defaultToolbarButtons,
-},
+  metadata: {
+    title: "默认表单",
+    description: "",
+    permissions: {
+      edit: true,
+      delete: true,
+      print: true,
+    },
+  },
+  renderConfig: {
+    basicFields: [],
+  },
+  orderNumberConfig: {
+    prefix: "DG",
+    fieldName: "orderNumber",
+    label: "表单编号",
+  },
+  toolbar: {
+    buttons: defaultToolbarButtons,
+  },
 }
 
 // 默认页面样式
-export const defaultPageStyle = `  @page {
+export const defaultPageStyle = `
+  @page {
     size: A4;
     margin: 20mm;
   }
@@ -3847,1146 +3779,30 @@ export const defaultPageStyle = `  @page {
     .no-print {
       display: none !important;
     }
-  }`
+  }
+`
 
 // 默认动画配置
 export const defaultAnimationConfig = {
-initial: { opacity: 0, y: 20 },
-animate: { opacity: 1, y: 0 },
-exit: { opacity: 0, y: -20 },
-transition: {
-type: "spring",
-stiffness: 100,
-damping: 15,
-},
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+  transition: {
+    type: "spring",
+    stiffness: 100,
+    damping: 15,
+  },
 }
 
 // 默认验证消息
 export const defaultValidationMessages = {
-required: "此字段为必填项",
-email: "请输入有效的邮箱地址",
-url: "请输入有效的URL地址",
-tel: "请输入有效的电话号码",
-number: "请输入有效的数字",
-date: "请输入有效的日期",
+  required: "此字段为必填项",
+  email: "请输入有效的邮箱地址",
+  url: "请输入有效的URL地址",
+  tel: "请输入有效的电话号码",
+  number: "请输入有效的数字",
+  date: "请输入有效的日期",
 }
-
-                    </FileContent>
-                  </File>
-
-                  <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/docs/example.md">
-                    <FileContent>
-                      ```typescript
-
-// 完整的动态表单配置示例
-const complexFormConfig = {
-metadata: {
-title: "采购申请单",
-description: "用于提交和审批采购申请",
-permissions: {
-edit: true,
-delete: true,
-print: true
-}
-},
-renderConfig: {
-// 基础字段配置 - 使用分组
-basicFields: {
-groups: [
-{
-key: "basic",
-title: "基本信息",
-icon: "mdi:information",
-description: "申请的基本信息",
-fields: [
-{
-name: "applicant",
-label: "申请人",
-type: "resource",
-required: true,
-resourceConfig: {
-resourceId: "employees",
-displayFields: [
-{ key: "name", label: "姓名" },
-{ key: "employeeId", label: "工号" },
-{ key: "department", label: "部门" }
-],
-triggerConfig: {
-type: "button",
-text: "选择申请人",
-icon: "mdi:account-search",
-className: "custom-trigger"
-},
-fieldMapping: {
-"department": "department",
-"position": {
-field: "position",
-transform: (value) => value.toUpperCase()
-},
-"contactInfo": {
-fields: ["email", "phone"],
-transform: (values) => values.join(" / ")
-}
-}
-}
-},
-{
-name: "department",
-label: "部门",
-type: "text",
-disabled: true
-},
-{
-name: "position",
-label: "职位",
-type: "text",
-disabled: true
-},
-{
-name: "contactInfo",
-label: "联系方式",
-type: "text",
-disabled: true
-}
-]
-},
-{
-key: "request",
-title: "申请信息",
-icon: "mdi:file-document-edit",
-description: "采购申请详细信息",
-fields: [
-{
-name: "requestType",
-label: "申请类型",
-type: "select",
-required: true,
-options: [
-{ label: "办公用品", value: "office" },
-{ label: "IT设备", value: "it" },
-{ label: "其他", value: "other" }
-]
-},
-{
-name: "urgencyLevel",
-label: "紧急程度",
-type: "radio",
-required: true,
-options: [
-{ label: "普通", value: "normal" },
-{ label: "紧急", value: "urgent" },
-{ label: "特急", value: "critical" }
-]
-},
-{
-name: "expectedDate",
-label: "期望到货日期",
-type: "date",
-required: true
-},
-{
-name: "budget",
-label: "预算金额",
-type: "number",
-required: true,
-validators: [
-(value) => {
-if (value <= 0) return "预算金额必须大于0"
-if (value > 1000000) return "单次申请预算不能超过100万"
-}
-]
-}
-]
-},
-{
-key: "attachments",
-title: "附件信息",
-icon: "mdi:attachment",
-description: "上传相关附件",
-fields: [
-{
-name: "quotation",
-label: "报价单",
-type: "upload",
-required: true,
-uploadConfig: {
-uploadType: "file",
-multiple: true,
-maxSize: 10 * 1024 * 1024,
-maxCount: 3,
-uploadConfig: {
-customRequest: async (options) => {
-// 自定义上传逻辑
-}
-},
-previewConfig: {
-modalTitle: "报价单预览",
-modalWidth: "80%"
-}
-}
-},
-{
-name: "specifications",
-label: "规格说明书",
-type: "upload",
-uploadConfig: {
-uploadType: "file",
-multiple: false,
-maxSize: 5 * 1024 * 1024
-}
-}
-]
-}
-]
-},
-
-    // 表格配置
-    tables: [
-      {
-        key: "items",
-        title: "采购明细",
-        icon: "mdi:table",
-        description: "请填写需要采购的物品明细",
-        config: {
-          columns: [
-            {
-              key: "product",
-              title: "物品",
-              type: "resource",
-              width: "300px",
-              required: true,
-              resourceConfig: {
-                resourceId: "products",
-                displayFields: [
-                  { key: "name", label: "名称" },
-                  { key: "code", label: "编码" },
-                  { key: "specification", label: "规格" }
-                ],
-                showTrigger: true,
-                triggerPosition: "right",
-                inlineDisplay: true,
-                fieldMapping: {
-                  "unitPrice": "price",
-                  "unit": "unit",
-                  "specification": "specification"
-                }
-              }
-            },
-            {
-              key: "specification",
-              title: "规格",
-              type: "text",
-              width: "200px",
-              editable: false
-            },
-            {
-              key: "quantity",
-              title: "数量",
-              type: "number",
-              width: "120px",
-              required: true,
-              validators: [
-                (value) => value <= 0 ? "数量必须大于0" : undefined
-              ]
-            },
-            {
-              key: "unitPrice",
-              title: "单价",
-              type: "number",
-              width: "120px",
-              editable: false
-            },
-            {
-              key: "unit",
-              title: "单位",
-              type: "text",
-              width: "80px",
-              editable: false
-            },
-            {
-              key: "amount",
-              title: "金额",
-              type: "number",
-              width: "120px",
-              editable: false,
-              render: (value, record) => {
-                const amount = (record.quantity || 0) * (record.unitPrice || 0)
-                return amount.toFixed(2)
-              }
-            }
-          ],
-          summary: {
-            show: true,
-            label: "合计",
-            className: "font-bold",
-            style: { backgroundColor: "#f9fafb" }
-          }
-        }
-      }
-    ],
-
-    // 流程步骤配置
-    processSteps: [
-      {
-        key: "department",
-        title: "部门审批",
-        icon: "mdi:account-check",
-        description: "部门主管审批",
-        weight: 1,
-        fields: [
-          {
-            name: "approved",
-            label: "审批结果",
-            type: "radio",
-            required: true,
-            options: [
-              { label: "同意", value: "approved" },
-              { label: "拒绝", value: "rejected" }
-            ]
-          },
-          {
-            name: "comments",
-            label: "审批意见",
-            type: "textarea",
-            required: true
-          },
-          {
-            name: "signature",
-            label: "签名",
-            type: "signature",
-            required: true,
-            width: 300,
-            height: 100
-          }
-        ]
-      },
-      {
-        key: "finance",
-        title: "财务审批",
-        icon: "mdi:currency-usd",
-        description: "财务部门审批",
-        weight: 2,
-        dependencies: [
-          {
-            step: "department",
-            condition: {
-              field: "approved",
-              value: "approved"
-            },
-            message: "需要先通过部门审批"
-          }
-        ],
-        fields: [
-          {
-            name: "budgetAccount",
-            label: "预算科目",
-            type: "select",
-            required: true,
-            options: [
-              { label: "办公费用", value: "office" },
-              { label: "设备采购", value: "equipment" },
-              { label: "其他支出", value: "other" }
-            ]
-          },
-          {
-            name: "approved",
-            label: "审批结果",
-            type: "radio",
-            required: true,
-            options: [
-              { label: "同意", value: "approved" },
-              { label: "拒绝", value: "rejected" }
-            ]
-          },
-          {
-            name: "comments",
-            label: "审批意见",
-            type: "textarea",
-            required: true
-          }
-        ]
-      },
-      {
-        key: "procurement",
-        title: "采购确认",
-        icon: "mdi:shopping",
-        description: "采购部门确认",
-        weight: 3,
-        dependencies: [
-          {
-            step: "finance",
-            condition: {
-              field: "approved",
-              value: "approved"
-            },
-            message: "需要先通过财务审批"
-          }
-        ],
-        fields: [
-          {
-            name: "supplier",
-            label: "供应商",
-            type: "resource",
-            required: true,
-            resourceConfig: {
-              resourceId: "suppliers",
-              displayFields: [
-                { key: "name", label: "供应商名称" },
-                { key: "code", label: "供应商代码" },
-                { key: "contact", label: "联系人" }
-              ]
-            }
-          },
-          {
-            name: "estimatedDeliveryDate",
-            label: "预计到货日期",
-            type: "date",
-            required: true
-          },
-          {
-            name: "comments",
-            label: "处理意见",
-            type: "textarea"
-          }
-        ]
-      }
-    ]
-
-},
-
-// 单号配置
-orderNumberConfig: {
-prefix: "PO",
-fieldName: "orderNumber",
-label: "采购单号"
-},
-
-// 表单验证
-validate: async (values, context) => {
-const errors = []
-
-    // 检查预算
-    const totalAmount = values.tableData?.items?.reduce((sum, item) =>
-      sum + (item.quantity || 0) * (item.unitPrice || 0), 0) || 0
-
-    if (totalAmount > values.budget) {
-      errors.push("采购总金额不能超过预算金额")
-    }
-
-    // 检查期望到货日期
-    const expectedDate = new Date(values.expectedDate)
-    if (expectedDate < new Date()) {
-      errors.push("期望到货日期不能早于今天")
-    }
-
-    return {
-      valid: errors.length === 0,
-      errors,
-      fields: {}
-    }
-
-},
-
-// 字段联动
-watch: (form) => {
-const subscription = form.watch((value, { name }) => {
-// 监听申请类型变化
-if (name === "requestType") {
-const budgetField = form.getValues("budget")
-if (value === "it" && budgetField > 50000) {
-form.setError("budget", {
-type: "custom",
-message: "IT设备单次采购金额不能超过5万"
-})
-}
-}
-})
-
-    return () => subscription.unsubscribe()
-
-}
-}
-
-````
-                    </FileContent>
-                  </File>
-
-                  <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/docs/guide.md">
-                    <FileContent>
-                      # 动态表单配置指南
-
-## 类型定义
-
-### 基础类型
-```typescript
-// 表单字段类型
-type FieldType =
-  | "text"      // 文本输入
-  | "password"  // 密码输入
-  | "number"    // 数字输入
-  | "email"     // 邮箱输入
-  | "tel"       // 电话输入
-  | "url"       // URL输入
-  | "textarea"  // 多行文本
-  | "select"    // 下拉选择
-  | "date"      // 日期选择
-  | "datetime"  // 日期时间
-  | "radio"     // 单选框
-  | "checkbox"  // 复选框
-  | "switch"    // 开关
-  | "slider"    // 滑块
-  | "upload"    // 文件上传
-  | "resource"  // 资源选择
-  | "signature" // 签名
-  | "custom"    // 自定义组件
-
-// 表单配置
-interface FormConfig {
-  // 元数据
-  metadata: {
-    title: string
-    description?: string
-    permissions?: {
-      edit?: boolean
-      delete?: boolean
-      print?: boolean
-    }
-  }
-  // 渲染配置
-  renderConfig: {
-    // 基础字段
-    basicFields: FormField[] | {
-      groups: FormFieldGroup[]
-      defaultGroup?: string
-    }
-    // 表格配置
-    table?: TableConfig
-    // 多表格配置
-    tables?: TableGroup[]
-    // 流程步骤
-    processSteps?: ProcessStep[]
-  }
-  // 单号配置
-  orderNumberConfig?: {
-    prefix?: string
-    fieldName?: string
-    label?: string
-  }
-}
-````
-
-## 配置示例
-
-### 1. 基础表单
-
-```typescript
-const basicFormConfig = {
-  metadata: {
-    title: "用户信息表单",
-    description: "用于收集用户基本信息",
-  },
-  renderConfig: {
-    basicFields: [
-      {
-        name: "name",
-        label: "姓名",
-        type: "text",
-        required: true,
-        placeholder: "请输入姓名",
-      },
-      {
-        name: "age",
-        label: "年龄",
-        type: "number",
-        min: 0,
-        max: 150,
-      },
-      {
-        name: "gender",
-        label: "性别",
-        type: "select",
-        options: [
-          { label: "男", value: "male" },
-          { label: "女", value: "female" },
-        ],
-      },
-      {
-        name: "birthday",
-        label: "出生日期",
-        type: "date",
-      },
-      {
-        name: "email",
-        label: "邮箱",
-        type: "email",
-        validators: [
-          (value) => {
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-              return "请输入有效的邮箱地址"
-            }
-          },
-        ],
-      },
-    ],
-  },
-}
-```
-
-### 2. 分组表单
-
-```typescript
-const groupFormConfig = {
-  metadata: {
-    title: "员工信息表",
-  },
-  renderConfig: {
-    basicFields: {
-      groups: [
-        {
-          key: "basic",
-          title: "基本信息",
-          icon: "mdi:account",
-          fields: [
-            {
-              name: "name",
-              label: "姓名",
-              type: "text",
-              required: true,
-            },
-            {
-              name: "employeeId",
-              label: "工号",
-              type: "text",
-              required: true,
-            },
-          ],
-        },
-        {
-          key: "contact",
-          title: "联系方式",
-          icon: "mdi:phone",
-          fields: [
-            {
-              name: "phone",
-              label: "电话",
-              type: "tel",
-              required: true,
-            },
-            {
-              name: "email",
-              label: "邮箱",
-              type: "email",
-            },
-            {
-              name: "address",
-              label: "地址",
-              type: "textarea",
-            },
-          ],
-        },
-      ],
-    },
-  },
-}
-```
-
-### 3. 表格表单
-
-```typescript
-const tableFormConfig = {
-  metadata: {
-    title: "订单表单",
-  },
-  renderConfig: {
-    basicFields: [
-      {
-        name: "orderNo",
-        label: "订单编号",
-        type: "text",
-        required: true,
-      },
-      {
-        name: "customerName",
-        label: "客户名称",
-        type: "text",
-        required: true,
-      },
-    ],
-    table: {
-      columns: [
-        {
-          key: "product",
-          title: "商品",
-          type: "resource",
-          width: "300px",
-          resourceConfig: {
-            resourceId: "products",
-            displayField: "name",
-            fieldMapping: {
-              price: "price",
-              unit: "unit",
-            },
-          },
-        },
-        {
-          key: "quantity",
-          title: "数量",
-          type: "number",
-          width: "120px",
-        },
-        {
-          key: "price",
-          title: "单价",
-          type: "number",
-          width: "120px",
-        },
-        {
-          key: "amount",
-          title: "金额",
-          type: "number",
-          width: "120px",
-          editable: false,
-        },
-      ],
-      summary: {
-        show: true,
-        label: "合计",
-      },
-    },
-  },
-}
-```
-
-### 4. 流程表单
-
-```typescript
-const processFormConfig = {
-  metadata: {
-    title: "请假申请",
-  },
-  renderConfig: {
-    basicFields: [
-      {
-        name: "employeeName",
-        label: "申请人",
-        type: "text",
-        required: true,
-      },
-      {
-        name: "department",
-        label: "部门",
-        type: "text",
-        required: true,
-      },
-    ],
-    processSteps: [
-      {
-        key: "apply",
-        title: "申请信息",
-        icon: "mdi:file-document-edit",
-        fields: [
-          {
-            name: "leaveType",
-            label: "请假类型",
-            type: "select",
-            required: true,
-            options: [
-              { label: "事假", value: "personal" },
-              { label: "病假", value: "sick" },
-              { label: "年假", value: "annual" },
-            ],
-          },
-          {
-            name: "startDate",
-            label: "开始日期",
-            type: "date",
-            required: true,
-          },
-          {
-            name: "endDate",
-            label: "结束日期",
-            type: "date",
-            required: true,
-          },
-          {
-            name: "reason",
-            label: "请假原因",
-            type: "textarea",
-            required: true,
-          },
-        ],
-      },
-      {
-        key: "supervisor",
-        title: "主管审批",
-        icon: "mdi:account-check",
-        description: "需要主管审批通过",
-        fields: [
-          {
-            name: "approved",
-            label: "审批结果",
-            type: "radio",
-            options: [
-              { label: "同意", value: "approved" },
-              { label: "拒绝", value: "rejected" },
-            ],
-          },
-          {
-            name: "comment",
-            label: "审批意见",
-            type: "textarea",
-          },
-        ],
-      },
-      {
-        key: "hr",
-        title: "人事确认",
-        icon: "mdi:account-check",
-        description: "人事部门最终确认",
-        fields: [
-          {
-            name: "confirmed",
-            label: "确认结果",
-            type: "radio",
-            options: [
-              { label: "确认", value: "confirmed" },
-              { label: "退回", value: "returned" },
-            ],
-          },
-          {
-            name: "hrComment",
-            label: "确认意见",
-            type: "textarea",
-          },
-        ],
-      },
-    ],
-  },
-}
-```
-
-## 特殊功能配置
-
-### 1. 字段联动
-
-```typescript
-{
-  watch: (form) => {
-    // 监听字段变化
-    const subscription = form.watch((value, { name }) => {
-      if (name === "productId") {
-        // 更新其他字段
-        form.setValue("price", value.price)
-      }
-    })
-
-    // 返回清理函数
-    return () => subscription.unsubscribe()
-  }
-}
-```
-
-### 2. 自定义验证
-
-```typescript
-{
-  validators: [
-    async (value) => {
-      // 异步验证
-      const exists = await checkExists(value)
-      if (exists) {
-        return "该值已存在"
-      }
-    },
-    (value, allValues) => {
-      // 关联字段验证
-      if (value < allValues.minValue) {
-        return "不能小于最小值"
-      }
-    },
-  ]
-}
-```
-
-                    </FileContent>
-                  </File>
-
-                  <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/docs/index.ts">
-                    <FileContent>
-                      import { markdown as guidemd } from "./guide.md"
-
-import { markdown as examplemd } from "./example.md"
-import { markdown as resourceMappingmd } from "./resource-mapping.md"
-
-export const guide = `${guidemd}
-${resourceMappingmd}`
-export const example = `${examplemd}`
-
-                    </FileContent>
-                  </File>
-
-                  <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/docs/resource-mapping.md">
-                    <FileContent>
-                      # 资源字段自动填充指南
-
-## 概述
-
-资源字段是动态表单中的一个重要特性，它允许用户从预定义的资源中选择数据，并可以通过配置自动填充其他相关字段。本指南将详细介绍资源字段的自动填充功能及其配置方法。
-
-## 配置说明
-
-### fieldMapping 配置
-
-fieldMapping 是实现自动填充的核心配置，它定义了如何将选中资源的字段映射到表单的其他字段。
-
-```typescript
-interface ResourceConfig {
-  resourceId: string
-  // ... 其他配置
-  fieldMapping?: {
-    [targetField: string]:
-      | string // 简单映射
-      | {
-          // 复杂映射
-          field: string
-          fields?: string[]
-          condition?: (resource: any) => boolean
-          transform?: (value: any) => any
-        }
-  }
-}
-```
-
-### 映射类型
-
-#### 1. 简单映射
-
-直接指定源字段到目标字段的映射关系。
-
-```typescript
-{
-  resourceConfig: {
-    resourceId: "products",
-    fieldMapping: {
-      "price": "productPrice",     // price 字段将被映射到 productPrice
-      "stock": "inventoryCount"    // stock 字段将被映射到 inventoryCount
-    }
-  }
-}
-```
-
-#### 2. 带转换的映射
-
-在映射过程中对数据进行转换。
-
-```typescript
-{
-  resourceConfig: {
-    resourceId: "products",
-    fieldMapping: {
-      "price": {
-        field: "productPrice",
-        transform: (value) => Number(value).toFixed(2)  // 转换为两位小数
-      }
-    }
-  }
-}
-```
-
-#### 3. 条件映射
-
-根据条件决定是否进行映射。
-
-```typescript
-{
-  resourceConfig: {
-    resourceId: "products",
-    fieldMapping: {
-      "discount": {
-        field: "price",
-        condition: (resource) => resource.canDiscount,  // 只有满足条件才映射
-        transform: (value) => value * 0.9              // 计算折扣价
-      }
-    }
-  }
-}
-```
-
-#### 4. 多字段组合映射
-
-将多个字段组合成一个值。
-
-```typescript
-{
-  resourceConfig: {
-    resourceId: "products",
-    fieldMapping: {
-      "displayName": {
-        fields: ["code", "name"],
-        transform: (values) => values.join(' - ')  // 组合多个字段
-      }
-    }
-  }
-}
-```
-
-## 工作原理
-
-### 自动填充流程
-
-1. 用户选择资源后，系统会：
-
-   - 根据 fieldMapping 配置自动填充相关字段
-   - 被映射的字段会自动变为只读状态
-   - 在字段右侧显示链接图标，表示该字段是自动填充的
-
-2. 映射过程：
-   - 系统获取选中的资源数据
-   - 遍历 fieldMapping 配置
-   - 执行字段映射和数据转换
-   - 更新表单数据
-
-## 使用示例
-
-### 销售订单示例
-
-```typescript
-{
-  columns: [
-    {
-      key: "product",
-      title: "产品",
-      type: "resource",
-      resourceConfig: {
-        resourceId: "products",
-        displayFields: [
-          { key: "name", label: "产品名称" },
-          { key: "code", label: "产品编码" },
-        ],
-        fieldMapping: {
-          // 简单映射
-          unitPrice: "price",
-
-          // 带转换的映射
-          specification: {
-            field: "specs",
-            transform: (value) => value.toUpperCase(),
-          },
-
-          // 多字段组合
-          description: {
-            fields: ["name", "specs"],
-            transform: (values) => values.join(" - "),
-          },
-        },
-      },
-    },
-    {
-      key: "unitPrice",
-      title: "单价",
-      type: "number",
-      width: "120px",
-    },
-  ]
-}
-```
-
-### 采购订单示例
-
-```typescript
-{
-  columns: [
-    {
-      key: "material",
-      title: "原材料",
-      type: "resource",
-      resourceConfig: {
-        resourceId: "materials",
-        displayFields: [
-          { key: "name", label: "材料名称" },
-          { key: "specification", label: "规格" },
-        ],
-        fieldMapping: {
-          unitPrice: {
-            field: "price",
-            transform: (value) => Number(value).toFixed(2),
-          },
-          unit: "measureUnit",
-          specification: {
-            fields: ["specification", "standard"],
-            transform: (values) => values.filter(Boolean).join(" / "),
-          },
-        },
-      },
-    },
-  ]
-}
-```
-
-## 最佳实践
-
-### 1. 字段命名
-
-- 使用清晰、语义化的字段名称
-- 保持源字段和目标字段的命名一致性
-- 避免使用特殊字符和空格
-
-### 2. 数据转换
-
-- 在 transform 函数中处理数据类型转换
-- 添加适当的数据验证和错误处理
-- 处理空值和异常情况
-
-### 3. 性能优化
-
-- 避免过于复杂的转换逻辑
-- 合理使用条件映射
-- 缓存频繁使用的计算结果
-
-### 4. 用户体验
-
-- 为自动填充的字段添加清晰的提示
-- 确保字段值的可读性
-- 提供适当的错误反馈
-
-## 注意事项
-
-1. 被映射的字段会自动变为只读状态
-2. 源字段值为空时，目标字段也会被清空
-3. 条件映射失败时不会更新目标字段
-4. transform 函数应该是纯函数，避免副作用
-5. 避免循环映射，可能导致死循环
-
-## 常见问题解答
-
-### Q1: 如何处理字段值为 null 或 undefined 的情况？
-
-建议在 transform 函数中添加适当的默认值处理：
-
-```typescript
-{
-  transform: (value) => value ?? "-" // 使用空值合并运算符
-}
-```
-
-### Q2: 如何在映射时进行数据验证？
-
-可以在 condition 中添加验证逻辑：
-
-```typescript
-{
-  condition: (resource) => {
-    if (!resource.price || resource.price < 0) {
-      return false // 验证失败，不进行映射
-    }
-    return true
-  }
-}
-```
-
-### Q3: 如何处理异步转换？
-
-目前不支持异步转换，建议在选择资源前预处理数据。
 
                     </FileContent>
                   </File>
@@ -4994,7 +3810,6 @@ interface ResourceConfig {
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/hooks/useDynamicForm.tsx">
                     <FileContent>
                       import { useEffect, useCallback } from "react"
-
 import { useForm } from "react-hook-form"
 import { DynamicFormConfig, ValidationResult } from "../types"
 import { ValidationManager } from "../validation/ValidationManager"
@@ -5002,8 +3817,8 @@ import { debounce } from "lodash"
 
 // 创建带防抖的 watch
 export const createDebouncedWatch = (form: UseFormReturn<any>, delay = 300) => {
-return (fields: string | string[], callback: (values: any) => void) => {
-const debouncedCallback = debounce(callback, delay)
+  return (fields: string | string[], callback: (values: any) => void) => {
+    const debouncedCallback = debounce(callback, delay)
 
     const subscription = form.watch((value, { name }) => {
       if (Array.isArray(fields)) {
@@ -5016,33 +3831,32 @@ const debouncedCallback = debounce(callback, delay)
     })
 
     return subscription
-
-}
+  }
 }
 
 // 格式化验证错误信息
 const formatValidationErrors = (errors: Record<string, any>): string[] => {
-return Object.entries(errors).map(([field, error]) => {
-const errorMessage = error.message || error
-return `${field}：${errorMessage}`
-})
+  return Object.entries(errors).map(([field, error]) => {
+    const errorMessage = error.message || error
+    return `${field}：${errorMessage}`
+  })
 }
 
 export const useDynamicForm = (
-config: DynamicFormConfig,
-initialValues?: any,
-onValuesChange?: (changedValues: any, allValues: any) => void
+  config: DynamicFormConfig,
+  initialValues?: any,
+  onValuesChange?: (changedValues: any, allValues: any) => void
 ) => {
-const form = useForm({
-defaultValues: initialValues || {},
-})
+  const form = useForm({
+    defaultValues: initialValues || {},
+  })
 
-// 设置 watch 函数
-useEffect(() => {
-if (!config.watch) {
-console.log("[useDynamicForm] No watch function provided")
-return
-}
+  // 设置 watch 函数
+  useEffect(() => {
+    if (!config.watch) {
+      console.log("[useDynamicForm] No watch function provided")
+      return
+    }
 
     console.log("[useDynamicForm] Setting up watch function")
     let unsubscribe: (() => void) | undefined
@@ -5069,61 +3883,59 @@ return
         }
       }
     }
+  }, [config.watch, form])
 
-}, [config.watch, form])
-
-// 监听表单值变化
-useEffect(() => {
-console.log("[useDynamicForm] Setting up form value change listener")
-const subscription = form.watch((value, { name, type }) => {
-console.log("[useDynamicForm] Form value changed:", { field: name, type, value })
-console.log("[useDynamicForm] Current form values:", form.getValues())
+  // 监听表单值变化
+  useEffect(() => {
+    console.log("[useDynamicForm] Setting up form value change listener")
+    const subscription = form.watch((value, { name, type }) => {
+      console.log("[useDynamicForm] Form value changed:", { field: name, type, value })
+      console.log("[useDynamicForm] Current form values:", form.getValues())
 
       // 触发表单重新渲染
       form.trigger(name)
     })
 
     return () => subscription.unsubscribe()
+  }, [form])
 
-}, [form])
+  // 统一的验证函数
+  const validateForm = useCallback(async (): Promise<ValidationResult> => {
+    try {
+      const values = form.getValues()
+      // 直接使用ValidationManager进行统一校验
+      return await ValidationManager.validateForm(values, config)
+    } catch (error) {
+      console.error("[useDynamicForm] Validation error:", error)
+      return {
+        valid: false,
+        errors: ["表单校验出错"],
+        fields: {},
+      }
+    }
+  }, [config, form])
 
-// 统一的验证函数
-const validateForm = useCallback(async (): Promise<ValidationResult> => {
-try {
-const values = form.getValues()
-// 直接使用ValidationManager进行统一校验
-return await ValidationManager.validateForm(values, config)
-} catch (error) {
-console.error("[useDynamicForm] Validation error:", error)
-return {
-valid: false,
-errors: ["表单校验出错"],
-fields: {},
-}
-}
-}, [config, form])
-
-// 统一的提交处理函数
-const submitForm = useCallback(
-async (
-values: any,
-options?: {
-onSuccess?: () => void
-onError?: (error: Error) => void
-}
-) => {
-try {
-// 验证
-const validationResult = await validateForm()
-if (!validationResult.valid) {
-// 设置字段错误
-if (validationResult.fields) {
-Object.entries(validationResult.fields).forEach(([field, error]) => {
-form.setError(field, { type: "custom", message: error })
-})
-}
-return { success: false, validationResult }
-}
+  // 统一的提交处理函数
+  const submitForm = useCallback(
+    async (
+      values: any,
+      options?: {
+        onSuccess?: () => void
+        onError?: (error: Error) => void
+      }
+    ) => {
+      try {
+        // 验证
+        const validationResult = await validateForm()
+        if (!validationResult.valid) {
+          // 设置字段错误
+          if (validationResult.fields) {
+            Object.entries(validationResult.fields).forEach(([field, error]) => {
+              form.setError(field, { type: "custom", message: error })
+            })
+          }
+          return { success: false, validationResult }
+        }
 
         return { success: true, validationResult, values }
       } catch (error) {
@@ -5133,14 +3945,13 @@ return { success: false, validationResult }
       }
     },
     [form, validateForm]
+  )
 
-)
-
-return {
-form,
-validateForm,
-submitForm,
-}
+  return {
+    form,
+    validateForm,
+    submitForm,
+  }
 }
 
                     </FileContent>
@@ -5149,7 +3960,6 @@ submitForm,
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/index.tsx">
                     <FileContent>
                       import React, { useState, useRef, useCallback, useEffect } from "react"
-
 import { Form } from "@/components/ui/form"
 import { Button, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
@@ -5170,64 +3980,64 @@ import styles from "./styles/DynamicForm.module.css"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
-config: userConfig,
-id,
-onSubmit,
-onCancel,
-templateId,
-initialValues,
-isCreateMode,
-previewMode = false,
+  config: userConfig,
+  id,
+  onSubmit,
+  onCancel,
+  templateId,
+  initialValues,
+  isCreateMode,
+  previewMode = false,
 }) => {
-const config = merge({}, defaultFormConfig, userConfig)
-const [isLoading, setIsLoading] = useState(false)
-const { getDetail, create: createMetadata, update: updateMetadata } = useMetadata("form")
-const { getDetail: getTemplateDetail } = useMetadata("template")
-const [isUpdating, setIsUpdating] = useState(0)
-const [formValues, setFormValues] = useState<any>(null)
-const [validationErrors, setValidationErrors] = useState<{
-required?: Array<{ field: string; message: string }>
-invalid?: Array<{ field: string; message: string }>
-other?: Array<{ field: string; message: string }>
-}>({})
-const [selectedTable, setSelectedTable] = useState<string>("")
-const [hasScroll, setHasScroll] = React.useState(false)
+  const config = merge({}, defaultFormConfig, userConfig)
+  const [isLoading, setIsLoading] = useState(false)
+  const { getDetail, create: createMetadata, update: updateMetadata } = useMetadata("form")
+  const { getDetail: getTemplateDetail } = useMetadata("template")
+  const [isUpdating, setIsUpdating] = useState(0)
+  const [formValues, setFormValues] = useState<any>(null)
+  const [validationErrors, setValidationErrors] = useState<{
+    required?: Array<{ field: string; message: string }>
+    invalid?: Array<{ field: string; message: string }>
+    other?: Array<{ field: string; message: string }>
+  }>({})
+  const [selectedTable, setSelectedTable] = useState<string>("")
+  const [hasScroll, setHasScroll] = React.useState(false)
 
-// 检查是否需要显示滚动阴影
-React.useEffect(() => {
-const tabsList = document.querySelector(`.${styles["tabs-list-scroll"]}`)
-if (tabsList) {
-const checkScroll = () => {
-setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
-}
-checkScroll()
-window.addEventListener("resize", checkScroll)
-return () => window.removeEventListener("resize", checkScroll)
-}
-}, [])
+  // 检查是否需要显示滚动阴影
+  React.useEffect(() => {
+    const tabsList = document.querySelector(`.${styles["tabs-list-scroll"]}`)
+    if (tabsList) {
+      const checkScroll = () => {
+        setHasScroll(tabsList.scrollWidth > tabsList.clientWidth)
+      }
+      checkScroll()
+      window.addEventListener("resize", checkScroll)
+      return () => window.removeEventListener("resize", checkScroll)
+    }
+  }, [])
 
-// 加载表单数据的统一函数
-const loadFormData = async (formId: string) => {
-try {
-const formData = await getDetail(formId)
-if (formData) {
-setFormValues(formData.data)
-form.reset(formData.data)
-}
-return formData
-} catch (error) {
-console.error("Failed to load form data:", error)
-message.error("加载表单数据失败")
-throw error
-}
-}
+  // 加载表单数据的统一函数
+  const loadFormData = async (formId: string) => {
+    try {
+      const formData = await getDetail(formId)
+      if (formData) {
+        setFormValues(formData.data)
+        form.reset(formData.data)
+      }
+      return formData
+    } catch (error) {
+      console.error("Failed to load form data:", error)
+      message.error("加载表单数据失败")
+      throw error
+    }
+  }
 
-useEffect(() => {
-const initializeForm = async () => {
-if (initialValues) {
-setFormValues(initialValues)
-return
-}
+  useEffect(() => {
+    const initializeForm = async () => {
+      if (initialValues) {
+        setFormValues(initialValues)
+        return
+      }
 
       if (id) {
         setIsLoading(true)
@@ -5240,34 +4050,33 @@ return
     }
 
     initializeForm()
+  }, [id, getDetail, initialValues])
 
-}, [id, getDetail, initialValues])
+  useEffect(() => {
+    // 设置默认选中的表格
+    if (config.renderConfig.tables && config.renderConfig.tables.length > 0) {
+      setSelectedTable(config.renderConfig.tables[0].key)
+    }
+  }, [])
 
-useEffect(() => {
-// 设置默认选中的表格
-if (config.renderConfig.tables && config.renderConfig.tables.length > 0) {
-setSelectedTable(config.renderConfig.tables[0].key)
-}
-}, [])
+  const { form, submitForm } = useDynamicForm(config, initialValues)
+  const [isEditing, setIsEditing] = useState(false)
+  const printRef = useRef<HTMLDivElement>(null)
+  const printId = useRef<string>()
 
-const { form, submitForm } = useDynamicForm(config, initialValues)
-const [isEditing, setIsEditing] = useState(false)
-const printRef = useRef<HTMLDivElement>(null)
-const printId = useRef<string>()
+  useEffect(() => {
+    if (config.watch) {
+      const unsubscribe = config.watch(form)
+      return () => {
+        if (typeof unsubscribe === "function") {
+          unsubscribe()
+        }
+      }
+    }
+  }, [config.watch, form])
 
-useEffect(() => {
-if (config.watch) {
-const unsubscribe = config.watch(form)
-return () => {
-if (typeof unsubscribe === "function") {
-unsubscribe()
-}
-}
-}
-}, [config.watch, form])
-
-const getTemplateInfo = async (templateId: string | undefined) => {
-if (!templateId) return null
+  const getTemplateInfo = async (templateId: string | undefined) => {
+    if (!templateId) return null
 
     try {
       const template = await getTemplateDetail(templateId)
@@ -5282,12 +4091,11 @@ if (!templateId) return null
       console.error("Failed to get template info:", error)
       return null
     }
+  }
 
-}
-
-const prepareFormData = (formValues: any, templateInfo: any) => {
-const orderNumberFieldName = config.orderNumberConfig?.fieldName || "orderNumber"
-const orderNumber = formValues[orderNumberFieldName]
+  const prepareFormData = (formValues: any, templateInfo: any) => {
+    const orderNumberFieldName = config.orderNumberConfig?.fieldName || "orderNumber"
+    const orderNumber = formValues[orderNumberFieldName]
 
     return {
       title: orderNumber || config.metadata.title,
@@ -5303,11 +4111,10 @@ const orderNumber = formValues[orderNumberFieldName]
         createdAt: new Date().toISOString(),
       },
     }
+  }
 
-}
-
-const handleValidationErrors = (errors?: string[]) => {
-if (!errors?.length) return
+  const handleValidationErrors = (errors?: string[]) => {
+    if (!errors?.length) return
 
     const fieldErrors = form.formState.errors
     Object.entries(fieldErrors).forEach(([field, error]) => {
@@ -5329,33 +4136,33 @@ if (!errors?.length) return
     )
 
     message.error(errorContent)
+  }
 
-}
-
-const handlePrint = useReactToPrint({
-contentRef: printRef,
-documentTitle: config.metadata.title || "表单打印",
-onBeforePrint: () => {
-return new Promise((resolve) => {
-const values = form.getValues()
-if (!values) {
-message.error("没有可打印的内容")
-resolve(false)
-return
-}
-printId.current = message.loading("正在准备打印...")
-setTimeout(resolve, 500)
-})
-},
-onAfterPrint: () => {
-message.closeLoading(printId.current)
-},
-onPrintError: (error) => {
-message.closeLoading(printId.current)
-console.error("Print error:", error)
-message.error("打印失败，请重试")
-},
-pageStyle: `       @page {
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: config.metadata.title || "表单打印",
+    onBeforePrint: () => {
+      return new Promise((resolve) => {
+        const values = form.getValues()
+        if (!values) {
+          message.error("没有可打印的内容")
+          resolve(false)
+          return
+        }
+        printId.current = message.loading("正在准备打印...")
+        setTimeout(resolve, 500)
+      })
+    },
+    onAfterPrint: () => {
+      message.closeLoading(printId.current)
+    },
+    onPrintError: (error) => {
+      message.closeLoading(printId.current)
+      console.error("Print error:", error)
+      message.error("打印失败，请重试")
+    },
+    pageStyle: `
+      @page {
         size: A4;
         margin: 20mm;
       }
@@ -5371,13 +4178,13 @@ pageStyle: `       @page {
         }
       }
     `,
-})
+  })
 
-const handleFormSubmit = useCallback(
-async (e: React.FormEvent) => {
-e.preventDefault()
-try {
-const { success, validationResult, values, error } = await submitForm(form.getValues())
+  const handleFormSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      try {
+        const { success, validationResult, values, error } = await submitForm(form.getValues())
 
         if (!success) {
           if (validationResult) {
@@ -5459,37 +4266,34 @@ const { success, validationResult, values, error } = await submitForm(form.getVa
       }
     },
     [form, id, onSubmit, templateId, updateMetadata, createMetadata]
+  )
 
-)
+  const { metadata, renderConfig } = config
 
-const { metadata, renderConfig } = config
+  const orderNumberConfig = {
+    prefix: config.orderNumberConfig?.prefix || "ORDER",
+    fieldName: config.orderNumberConfig?.fieldName || "orderNumber",
+    label: config.orderNumberConfig?.label || "订单编号",
+  }
 
-const orderNumberConfig = {
-prefix: config.orderNumberConfig?.prefix || "ORDER",
-fieldName: config.orderNumberConfig?.fieldName || "orderNumber",
-label: config.orderNumberConfig?.label || "订单编号",
-}
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center min-h-[200px]'>
+        <Spinner label='加载中...' />
+      </div>
+    )
+  }
 
-if (isLoading) {
-return (
-
-<div className='flex items-center justify-center min-h-[200px]'>
-<Spinner label='加载中...' />
-</div>
-)
-}
-
-const renderTables = () => {
-// 如果有旧版的单表格配置，使用旧版配置
-if (renderConfig.table) {
-return (
-
-<div className={cn(styles["form-card"])}>
-<h2 className={cn(styles["form-title"])}>明细信息</h2>
-<DynamicTable config={renderConfig.table} form={form} isEditable={isEditing} fieldName='tableData' />
-</div>
-)
-}
+  const renderTables = () => {
+    // 如果有旧版的单表格配置，使用旧版配置
+    if (renderConfig.table) {
+      return (
+        <div className={cn(styles["form-card"])}>
+          <h2 className={cn(styles["form-title"])}>明细信息</h2>
+          <DynamicTable config={renderConfig.table} form={form} isEditable={isEditing} fieldName='tableData' />
+        </div>
+      )
+    }
 
     // 如果有新版的多表格配置，使用新版配置
     if (renderConfig.tables && renderConfig.tables.length > 0) {
@@ -5530,20 +4334,19 @@ return (
     }
 
     return null
-
-}
-return (
-
-<Form {...form}>
-<form onSubmit={handleFormSubmit} className={cn(styles["dynamic-form"], "space-y-6 md:space-y-8 pb-2")}>
-{/_ 表单标题 _/}
-<div
-className={cn(styles["form-card"], "flex flex-col md:flex-row md:justify-between md:items-center pb-4 gap-4")} >
-<div>
-<h1 className={cn(styles["form-title"])}>{metadata.title}</h1>
-<div className='mb-2 flex items-center'>
-<span className='text-xs text-gray-600'>表单编号：</span>
-<OrderNumberField
+  }
+  return (
+    <Form {...form}>
+      <form onSubmit={handleFormSubmit} className={cn(styles["dynamic-form"], "space-y-6 md:space-y-8 pb-2")}>
+        {/* 表单标题 */}
+        <div
+          className={cn(styles["form-card"], "flex flex-col md:flex-row md:justify-between md:items-center pb-4 gap-4")}
+        >
+          <div>
+            <h1 className={cn(styles["form-title"])}>{metadata.title}</h1>
+            <div className='mb-2 flex items-center'>
+              <span className='text-xs text-gray-600'>表单编号：</span>
+              <OrderNumberField
                 form={form}
                 prefix={orderNumberConfig.prefix}
                 fieldName={orderNumberConfig.fieldName}
@@ -5552,31 +4355,32 @@ className={cn(styles["form-card"], "flex flex-col md:flex-row md:justify-between
                 isUpdating={isUpdating}
                 isCreateMode={isCreateMode}
               />
-</div>
-</div>
-<div className='flex gap-2 flex-wrap'>
-{metadata.permissions?.print && (
-<Button
-variant='flat'
-color='primary'
-onClick={handlePrint}
-className={cn(styles["button"], styles["button-primary"], "hidden md:flex w-full md:w-auto")} >
-<Icon icon='mdi:printer' className='w-4 h-4' />
-<span className='hidden md:inline ml-1'>打印</span>
-</Button>
-)}
-{metadata.permissions?.edit && (
-<Button
-variant='bordered'
-color={isEditing ? "warning" : "primary"}
-className={cn(styles["button"], "w-full md:w-auto")}
-onClick={() => setIsEditing(!isEditing)} >
-<Icon icon={isEditing ? "mdi:pencil-off" : "mdi:pencil"} className='w-4 h-4' />
-<span className='hidden md:inline ml-1'>{isEditing ? "取消填写" : "填写表单"}</span>
-</Button>
-)}
-</div>
-</div>
+            </div>
+          </div>
+          <div className='flex gap-2 flex-wrap'>
+            {metadata.permissions?.print && (
+              <Button
+                variant='flat'
+                onClick={handlePrint}
+                className={cn(styles["button"], styles["button-primary"], "hidden md:flex w-full md:w-auto")}
+              >
+                <Icon icon='mdi:printer' className='w-4 h-4' />
+                <span className='hidden md:inline ml-1'>打印</span>
+              </Button>
+            )}
+            {metadata.permissions?.edit && (
+              <Button
+                variant='bordered'
+                color={isEditing ? "warning" : "primary"}
+                className={cn(styles["button"], "w-full md:w-auto")}
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                <Icon icon={isEditing ? "mdi:pencil-off" : "mdi:pencil"} className='w-4 h-4' />
+                <span className='hidden md:inline ml-1'>{isEditing ? "取消填写" : "填写表单"}</span>
+              </Button>
+            )}
+          </div>
+        </div>
 
         {/* 基本信息 */}
         <div className={cn(styles["form-card"])}>
@@ -5626,8 +4430,7 @@ onClick={() => setIsEditing(!isEditing)} >
         </div>
       </form>
     </Form>
-
-)
+  )
 }
 
 export default DynamicForm
@@ -5638,680 +4441,676 @@ export default DynamicForm
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/styles/DynamicForm.module.css">
                     <FileContent>
                       /* DynamicForm 专用样式 */
-
 .dynamic-form {
-/_ 主题色系 - 采用蓝色主题 _/
---df-primary-50: #ebf5ff;
---df-primary-100: #e1effe;
---df-primary-200: #c3ddfd;
---df-primary-300: #a4cafe;
---df-primary-400: #76a9fa;
---df-primary-500: #3f83f8;
---df-primary-600: #1c64f2;
---df-primary-700: #1a56db;
+  /* 主题色系 - 采用蓝色主题 */
+  --df-primary-50: #ebf5ff;
+  --df-primary-100: #e1effe;
+  --df-primary-200: #c3ddfd;
+  --df-primary-300: #a4cafe;
+  --df-primary-400: #76a9fa;
+  --df-primary-500: #3f83f8;
+  --df-primary-600: #1c64f2;
+  --df-primary-700: #1a56db;
 
-/_ 功能色系 _/
---df-success-50: #f0fdf4;
---df-success-500: #22c55e;
---df-success-700: #15803d;
+  /* 功能色系 */
+  --df-success-50: #f0fdf4;
+  --df-success-500: #22c55e;
+  --df-success-700: #15803d;
 
---df-warning-50: #fefce8;
---df-warning-500: #eab308;
---df-warning-700: #a16207;
+  --df-warning-50: #fefce8;
+  --df-warning-500: #eab308;
+  --df-warning-700: #a16207;
 
---df-error-50: #fef2f2;
---df-error-500: #ef4444;
---df-error-700: #b91c1c;
+  --df-error-50: #fef2f2;
+  --df-error-500: #ef4444;
+  --df-error-700: #b91c1c;
 
-/_ 中性色系 - 更柔和的灰度 _/
---df-gray-50: #f9fafb;
---df-gray-100: #f3f4f6;
---df-gray-200: #e5e7eb;
---df-gray-300: #d1d5db;
---df-gray-400: #9ca3af;
---df-gray-500: #6b7280;
---df-gray-600: #4b5563;
---df-gray-700: #374151;
---df-gray-900: #111827;
-color: var(--df-gray-900);
+  /* 中性色系 - 更柔和的灰度 */
+  --df-gray-50: #f9fafb;
+  --df-gray-100: #f3f4f6;
+  --df-gray-200: #e5e7eb;
+  --df-gray-300: #d1d5db;
+  --df-gray-400: #9ca3af;
+  --df-gray-500: #6b7280;
+  --df-gray-600: #4b5563;
+  --df-gray-700: #374151;
+  --df-gray-900: #111827;
+  color: var(--df-gray-900);
 }
 
-/_ 新增: Tabs滚动样式 _/
+/* 新增: Tabs滚动样式 */
 .tabs-scroll-container {
-position: relative;
-width: 100%;
-overflow: hidden;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
 }
 
 .tabs-list-scroll {
-overflow-x: auto;
-scrollbar-width: none; /_ Firefox _/
--ms-overflow-style: none; /_ IE and Edge _/
-white-space: nowrap;
-flex-wrap: nowrap;
-padding-bottom: 2px;
--webkit-overflow-scrolling: touch; /_ 支持iOS滑动 _/
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  white-space: nowrap;
+  flex-wrap: nowrap;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch; /* 支持iOS滑动 */
 }
 
 .tabs-list-scroll::-webkit-scrollbar {
-display: none; /_ Chrome, Safari, Opera _/
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .tabs-scroll-shadow {
-position: relative;
+  position: relative;
 }
 
 .tabs-scroll-shadow::after {
-content: '';
-position: absolute;
-top: 0;
-right: 0;
-bottom: 0;
-width: 30px;
-background: linear-gradient(to right, transparent, white);
-pointer-events: none;
-opacity: 0;
-transition: opacity 0.2s;
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 30px;
+  background: linear-gradient(to right, transparent, white);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
 .tabs-scroll-shadow.has-scroll::after {
-opacity: 1;
+  opacity: 1;
 }
 
-/_ 原有样式保持不变 _/
+/* 原有样式保持不变 */
 .form-card {
-background-color: white;
-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-padding: 1rem;
-margin-bottom: 1.5rem;
-transition: all 0.2s ease-in-out;
+  background-color: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease-in-out;
 }
 
 .form-card:hover {
-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .form-title {
-color: var(--df-gray-900);
-font-size: 1.25rem;
-font-weight: 600;
-margin-bottom: 1rem;
-padding-bottom: 0.5rem;
-border-bottom: 2px solid var(--df-primary-100);
+  color: var(--df-gray-900);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--df-primary-100);
 }
 
 .form-field {
-margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .field-label {
-color: var(--df-gray-700);
-font-weight: 500;
-margin-bottom: 0.5rem;
-font-size: 0.875rem;
+  color: var(--df-gray-700);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
 }
 
 .field-input {
-width: 100%;
-padding: 0.75rem 1rem;
-border: 1px solid var(--df-gray-200);
-border-radius: 0.75rem;
-transition: all 0.2s ease-in-out;
-font-size: 0.875rem;
-background-color: white;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--df-gray-200);
+  border-radius: 0.75rem;
+  transition: all 0.2s ease-in-out;
+  font-size: 0.875rem;
+  background-color: white;
 }
 
 .field-input:focus {
-border-color: var(--df-primary-400);
-box-shadow: 0 0 0 3px var(--df-primary-100);
-outline: none;
+  border-color: var(--df-primary-400);
+  box-shadow: 0 0 0 3px var(--df-primary-100);
+  outline: none;
 }
 
 .button {
-padding: 0.75rem 1.5rem;
-border-radius: 0.75rem;
-font-weight: 500;
-font-size: 0.875rem;
-transition: all 0.2s ease-in-out;
-display: inline-flex;
-align-items: center;
-justify-content: center;
-gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .button-primary {
-background-color: var(--df-primary-600);
-color: white;
-border: none;
+  background-color: var(--df-primary-600);
+  color: white;
+  border: none;
 }
 
 .status-tag {
-display: inline-flex;
-align-items: center;
-padding: 0.375rem 0.75rem;
-border-radius: 0.75rem;
-font-size: 0.75rem;
-font-weight: 500;
-gap: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  gap: 0.25rem;
 }
 
 .status-success {
-background-color: var(--df-success-50);
-color: var(--df-success-700);
+  background-color: var(--df-success-50);
+  color: var(--df-success-700);
 }
 
 .status-warning {
-background-color: var(--df-warning-50);
-color: var(--df-warning-700);
+  background-color: var(--df-warning-50);
+  color: var(--df-warning-700);
 }
 
 .status-error {
-background-color: var(--df-error-50);
-color: var(--df-error-700);
+  background-color: var(--df-error-50);
+  color: var(--df-error-700);
 }
 
 .table {
-width: 100%;
-border-collapse: separate;
-border-spacing: 0;
-margin: 1rem 0;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1rem 0;
 }
 
 .table th {
-background-color: var(--df-gray-50);
-color: var(--df-gray-600);
-font-weight: 500;
-text-align: left;
-padding: 0.75rem 1rem;
-font-size: 0.875rem;
-border-bottom: 1px solid var(--df-gray-200);
+  background-color: var(--df-gray-50);
+  color: var(--df-gray-600);
+  font-weight: 500;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--df-gray-200);
 }
 
 .table td {
-padding: 1rem;
-border-bottom: 1px solid var(--df-gray-100);
-font-size: 0.875rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--df-gray-100);
+  font-size: 0.875rem;
 }
 
 .table tr:hover {
-background-color: var(--df-gray-50);
+  background-color: var(--df-gray-50);
 }
 
 .calculated-field {
-background-color: var(--df-primary-50) !important;
-border-color: var(--df-primary-200) !important;
-cursor: not-allowed !important;
+  background-color: var(--df-primary-50) !important;
+  border-color: var(--df-primary-200) !important;
+  cursor: not-allowed !important;
 }
 
 .calculated-field:hover {
-background-color: var(--df-primary-100) !important;
+  background-color: var(--df-primary-100) !important;
 }
 
 .calculated-field-icon {
-color: var(--df-primary-500);
-opacity: 0.5;
-transition: opacity 0.2s;
+  color: var(--df-primary-500);
+  opacity: 0.5;
+  transition: opacity 0.2s;
 }
 
 .calculated-field-icon:hover {
-opacity: 1;
+  opacity: 1;
 }
 
 .table-legend {
-display: flex;
-align-items: center;
-gap: 1rem;
-margin-bottom: 1rem;
-font-size: 0.875rem;
-color: var(--df-gray-500);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: var(--df-gray-500);
 }
 
 .legend-item {
-display: flex;
-align-items: center;
-gap: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .legend-color {
-width: 1rem;
-height: 1rem;
-border-radius: 0.25rem;
-border: 1px solid;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.25rem;
+  border: 1px solid;
 }
 
 .legend-color-calculated {
-background-color: var(--df-primary-50);
-border-color: var(--df-primary-200);
+  background-color: var(--df-primary-50);
+  border-color: var(--df-primary-200);
 }
 
 .legend-color-disabled {
-background-color: var(--df-gray-50);
-border-color: var(--df-gray-200);
+  background-color: var(--df-gray-50);
+  border-color: var(--df-gray-200);
 }
 
 .process-step {
-border: 1px solid var(--df-gray-200);
-border-radius: 0.75rem;
-padding: 1rem;
-margin-bottom: 1rem;
-transition: all 0.2s ease-in-out;
-background-color: white;
+  border: 1px solid var(--df-gray-200);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease-in-out;
+  background-color: white;
 }
 
 .process-step.active {
-border-color: var(--df-primary-400);
-background-color: var(--df-primary-50);
+  border-color: var(--df-primary-400);
+  background-color: var(--df-primary-50);
 }
 
 .step-icon {
-width: 2rem;
-height: 2rem;
-border-radius: 0.5rem;
-display: flex;
-align-items: center;
-justify-content: center;
-background-color: var(--df-gray-100);
-color: var(--df-gray-400);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--df-gray-100);
+  color: var(--df-gray-400);
 }
 
 .step-icon.completed {
-background-color: var(--df-primary-50);
-color: var(--df-primary-600);
+  background-color: var(--df-primary-50);
+  color: var(--df-primary-600);
 }
 
 .info-box {
-background-color: var(--df-primary-50);
-border: 1px solid var(--df-primary-200);
-border-radius: 0.75rem;
-padding: 1rem;
-margin: 1rem 0;
-display: flex;
-align-items: flex-start;
-gap: 0.75rem;
-font-size: 0.875rem;
-color: var(--df-primary-700);
+  background-color: var(--df-primary-50);
+  border: 1px solid var(--df-primary-200);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--df-primary-700);
 }
 
 .input-group {
-display: flex;
-align-items: center;
-gap: 0.5rem;
-margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .input-group .field-input {
-flex: 1;
+  flex: 1;
 }
 
 .select {
-appearance: none;
-background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-background-position: right 0.75rem center;
-background-repeat: no-repeat;
-background-size: 1rem;
-padding-right: 2.5rem;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+  padding-right: 2.5rem;
 }
 
 @media print {
-.dynamic-form {
-background-color: white;
-}
+  .dynamic-form {
+    background-color: white;
+  }
 
-.form-card {
-box-shadow: none;
-border: 1px solid var(--df-gray-300);
-break-inside: avoid;
-}
+  .form-card {
+    box-shadow: none;
+    border: 1px solid var(--df-gray-300);
+    break-inside: avoid;
+  }
 
-.process-step {
-break-inside: avoid;
-}
+  .process-step {
+    break-inside: avoid;
+  }
 
-.table {
-break-inside: auto;
-}
+  .table {
+    break-inside: auto;
+  }
 
-.table tr {
-break-inside: avoid;
-}
+  .table tr {
+    break-inside: avoid;
+  }
 }
 
 .paper-form {
-background: white;
-border: 1px solid #000;
-padding: 2rem;
-box-shadow: none !important;
-border-radius: 0;
+  background: white;
+  border: 1px solid #000;
+  padding: 2rem;
+  box-shadow: none !important;
+  border-radius: 0;
 }
 
 .paper-form:hover {
-box-shadow: none !important;
+  box-shadow: none !important;
 }
 
 .paper-table {
-border-collapse: collapse !important;
-border-spacing: 0;
-width: 100%;
-border: 1px solid #000;
+  border-collapse: collapse !important;
+  border-spacing: 0;
+  width: 100%;
+  border: 1px solid #000;
 }
 
 .paper-table th,
 .paper-table td {
-border: 1px solid #000 !important;
-padding: 0.75rem;
-background: transparent !important;
+  border: 1px solid #000 !important;
+  padding: 0.75rem;
+  background: transparent !important;
 }
 
 .paper-table tr:hover {
-background: transparent !important;
+  background: transparent !important;
 }
 
 .paper-input {
-border: 1px solid #000 !important;
-background: transparent !important;
-border-radius: 0 !important;
-box-shadow: none !important;
+  border: 1px solid #000 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 .paper-input:focus {
-border-color: #000 !important;
-box-shadow: none !important;
+  border-color: #000 !important;
+  box-shadow: none !important;
 }
 
 .paper-section {
-border: 1px solid #000;
-padding: 1rem;
-margin-bottom: 1rem;
-border-radius: 0;
-background: transparent;
+  border: 1px solid #000;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0;
+  background: transparent;
 }
 
 .paper-title {
-border-bottom: 2px solid #000;
-color: #000;
-font-weight: bold;
-text-align: center;
-padding-bottom: 0.5rem;
+  border-bottom: 2px solid #000;
+  color: #000;
+  font-weight: bold;
+  text-align: center;
+  padding-bottom: 0.5rem;
 }
 
 .paper-button {
-border: 1px solid #000;
-background: transparent;
-color: #000;
-border-radius: 0;
+  border: 1px solid #000;
+  background: transparent;
+  color: #000;
+  border-radius: 0;
 }
 
 .paper-button:hover {
-background: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .paper-step {
-border: 1px solid #000;
-border-radius: 0;
-background: transparent;
+  border: 1px solid #000;
+  border-radius: 0;
+  background: transparent;
 }
 
 .paper-step.active {
-background: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 @media print {
-.paper-form,
-.paper-table,
-.paper-section,
-.paper-step {
-border-color: #000 !important;
--webkit-print-color-adjust: exact;
-print-color-adjust: exact;
+  .paper-form,
+  .paper-table,
+  .paper-section,
+  .paper-step {
+    border-color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
-}
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/types/basic.ts">
                     <FileContent>
                       import { ReactNode } from "react"
 
-/\*\*
+/**
+ * 表单字段类型定义
+ * @description 定义了DynamicForm支持的所有字段类型
+ * 
+ * 基础输入类型:
+ * - text: 单行文本输入
+ * - password: 密码输入,自动隐藏内容 
+ * - number: 数字输入,支持整数和小数
+ * - email: 邮箱输入,自带邮箱格式验证
+ * - tel: 电话号码输入
+ * - url: URL地址输入
+ * 
+ * 扩展输入类型:
+ * - textarea: 多行文本输入,适用于长文本
+ * - select: 下拉选择框
+ * - date: 日期选择
+ * - datetime: 日期时间选择
+ * 
+ * 特殊输入类型:
+ * - file: (已废弃)文件上传,请使用upload类型
+ * - image: (已废弃)图片上传,请使用upload类型
+ * - upload: 统一的上传组件,支持文件、图片等
+ * - signature: 手写签名
+ * - custom: 自定义组件
+ * 
+ * 选择类型:
+ * - radio: 单选框组
+ * - checkbox: 复选框组
+ * - switch: 开关
+ * - slider: 滑块
+ * 
+ * 资源类型:
+ * - resource: 资源选择器,用于选择主数据
+ * 
+ * 使用建议:
+ * 1. 文本输入优先使用text类型
+ * 2. 数值输入使用number类型,并配置min/max限制
+ * 3. 日期选择使用date/datetime类型
+ * 4. 文件上传统一使用upload类型,配置uploadType
+ * 5. 选项选择使用select/radio/checkbox
+ * 6. 开关量使用switch类型
+ * 7. 资源选择使用resource类型
+ * 8. 需要自定义渲染时使用custom类型
+ */
+export type FormFieldType =
+  | "text"
+  | "password" 
+  | "number"
+  | "email"
+  | "tel"
+  | "url"
+  | "textarea"
+  | "select"
+  | "date"
+  | "datetime"
+  | "file"
+  | "image"
+  | "custom"
+  | "resource"
+  | "signature"
+  | "radio"
+  | "checkbox"
+  | "switch"
+  | "slider"
+  | "upload"
 
-- 表单字段类型定义
-- @description 定义了DynamicForm支持的所有字段类型
--
-- 基础输入类型:
-- - text: 单行文本输入
-- - password: 密码输入,自动隐藏内容
-- - number: 数字输入,支持整数和小数
-- - email: 邮箱输入,自带邮箱格式验证
-- - tel: 电话号码输入
-- - url: URL地址输入
--
-- 扩展输入类型:
-- - textarea: 多行文本输入,适用于长文本
-- - select: 下拉选择框
-- - date: 日期选择
-- - datetime: 日期时间选择
--
-- 特殊输入类型:
-- - file: (已废弃)文件上传,请使用upload类型
-- - image: (已废弃)图片上传,请使用upload类型
-- - upload: 统一的上传组件,支持文件、图片等
-- - signature: 手写签名
-- - custom: 自定义组件
--
-- 选择类型:
-- - radio: 单选框组
-- - checkbox: 复选框组
-- - switch: 开关
-- - slider: 滑块
--
-- 资源类型:
-- - resource: 资源选择器,用于选择主数据
--
-- 使用建议:
-- 1.  文本输入优先使用text类型
-- 2.  数值输入使用number类型,并配置min/max限制
-- 3.  日期选择使用date/datetime类型
-- 4.  文件上传统一使用upload类型,配置uploadType
-- 5.  选项选择使用select/radio/checkbox
-- 6.  开关量使用switch类型
-- 7.  资源选择使用resource类型
-- 8.  需要自定义渲染时使用custom类型
-      \*/
-      export type FormFieldType =
-      | "text"
-      | "password"
-      | "number"
-      | "email"
-      | "tel"
-      | "url"
-      | "textarea"
-      | "select"
-      | "date"
-      | "datetime"
-      | "file"
-      | "image"
-      | "custom"
-      | "resource"
-      | "signature"
-      | "radio"
-      | "checkbox"
-      | "switch"
-      | "slider"
-      | "upload"
-
-/\*\*
-
-- 手动输入字段类型
-- @description 需要用户手动输入的字段类型
-  \*/
-  export type ManualInputFieldType = "text" | "number" | "email" | "tel" | "textarea" | "select" | "date" | "datetime"
+/**
+ * 手动输入字段类型
+ * @description 需要用户手动输入的字段类型
+ */
+export type ManualInputFieldType = "text" | "number" | "email" | "tel" | "textarea" | "select" | "date" | "datetime"
 
 export interface TooltipConfig {
-content: ReactNode
-placement?: "top" | "bottom" | "left" | "right"
+  content: ReactNode
+  placement?: "top" | "bottom" | "left" | "right"
 }
 
 export interface FormMetadata {
-title: string
-description?: string
-permissions?: {
-edit?: boolean
-delete?: boolean
-print?: boolean
+  title: string
+  description?: string
+  permissions?: {
+    edit?: boolean
+    delete?: boolean
+    print?: boolean
+  }
 }
-}
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/types/field.ts">
                     <FileContent>
                       import { ReactNode } from "react"
-
 import { UseFormReturn } from "react-hook-form"
 import { FormFieldType, ManualInputFieldType, TooltipConfig } from "./basic"
 
 // 资料字段显示配置
 interface ResourceDisplayField {
-key: string // 字段键名
-label: string // 显示标签
-width?: string | number // 表格模式下的列宽
-render?: (value: any) => React.ReactNode // 自定义渲染函数
+  key: string // 字段键名
+  label: string // 显示标签
+  width?: string | number // 表格模式下的列宽
+  render?: (value: any) => React.ReactNode // 自定义渲染函数
 }
 
 // 触发器配置
 interface ResourceTriggerConfig {
-type: "button" | "icon"
-text?: string
-icon?: string
-className?: string
-style?: React.CSSProperties
+  type: "button" | "icon"
+  text?: string
+  icon?: string
+  className?: string
+  style?: React.CSSProperties
 }
 
 // 资料配置
 export interface ResourceConfig {
-resourceTitle?: string // 资料标题（可选）
-resourceId: string // 资料id
-multiple?: boolean // 是否支持多选
-displayMode?: "card" // 显示模式,默认 card
-displayFields?: ResourceDisplayField[] // 显示字段配置,不配置则显示所有字段
-// 新增：主显示字段
-displayField?: string
-// 新增：显示格式化函数
-displayFormat?: (resource: any) => string
-// 新增：触发器配置
-triggerConfig?: ResourceTriggerConfig
-loadDataById?: (dataid: string | string[]) => Promise<any> // 加载数据的方法（已废弃）
-fieldMapping?: {
-[targetField: string]:
-| string
-| {
-field: string
-fields?: string[]
-condition?: (resource: any) => boolean
-transform?: (value: any) => any
-}
-}
+  resourceTitle?: string // 资料标题（可选）
+  resourceId: string // 资料id
+  multiple?: boolean // 是否支持多选
+  displayMode?: "card" // 显示模式,默认 card
+  displayFields?: ResourceDisplayField[] // 显示字段配置,不配置则显示所有字段
+  // 新增：主显示字段
+  displayField?: string
+  // 新增：显示格式化函数
+  displayFormat?: (resource: any) => string
+  // 新增：触发器配置
+  triggerConfig?: ResourceTriggerConfig
+  loadDataById?: (dataid: string | string[]) => Promise<any> // 加载数据的方法（已废弃）
+  fieldMapping?: {
+    [targetField: string]:
+      | string
+      | {
+          field: string
+          fields?: string[]
+          condition?: (resource: any) => boolean
+          transform?: (value: any) => any
+        }
+  }
 }
 
 // 资料字段值类型
 export interface ResourceValue {
-dataid: string | string[] // 单个或多个dataid
-displayValue?: string // 新增：显示值
+  dataid: string | string[] // 单个或多个dataid
+  displayValue?: string // 新增：显示值
 }
 
 export interface FileInfo {
-fileId: string
-fileName: string
-fileKey: string
-downloadUrl?: string
-type?: string
-size?: number
+  fileId: string
+  fileName: string
+  fileKey: string
+  downloadUrl?: string
+  type?: string
+  size?: number
 }
 
 export interface FormField {
-name: string
-label: string
-type: FormFieldType
-placeholder?: string
-disabled?: boolean
-hidden?: boolean
-required?: boolean
-tooltip?: TooltipConfig
-validators?: Array<(value: any, allValues?: any) => string | undefined>
-options?:
-| Array<{
-label: string
-value: string | number
-disabled?: boolean
-}>
-| ((form: UseFormReturn<any>) => Array<{
-label: string
-value: string | number
-disabled?: boolean
-}>)
-accept?: string
-resourceConfig?: ResourceConfig
-onUpload?: (file: File) => Promise<void>
-render?: (props: { field: any; form: UseFormReturn<any>; isEditable: boolean }) => ReactNode
-width?: number | string
-height?: number
-lineWidth?: number
-lineColor?: string
-className?: string
-checkedLabel?: string
-uncheckedLabel?: string
-min?: number
-max?: number
-step?: number
-layout?: "horizontal" | "vertical"
-path?: string
-style?: React.CSSProperties
-uploadConfig?: {
-uploadType: "file" | "image" | "video" | "audio"
-multiple?: boolean
-maxSize?: number
-maxCount?: number
-thumbnail?: boolean
-cropOptions?: {
-aspect?: number
-quality?: number
-width?: number
-height?: number
-}
-uploadConfig?: {
-action?: string
-headers?: Record<string, string>
-withCredentials?: boolean
-customRequest?: (options: any) => Promise<any>
-}
-onSuccess?: (fileInfo: FileInfo) => void
-onError?: (error: Error) => void
-onProgress?: (percent: number) => void
-onPreview?: (file: FileInfo) => void
-onDownload?: (file: FileInfo) => void
-previewConfig?: {
-width?: number | string
-height?: number | string
-modalTitle?: string
-modalWidth?: number | string
-}
-downloadConfig?: {
-method?: "GET" | "POST"
-headers?: Record<string, string>
-withCredentials?: boolean
-timeout?: number
-}
-}
+  name: string
+  label: string
+  type: FormFieldType
+  placeholder?: string
+  disabled?: boolean
+  hidden?: boolean
+  required?: boolean
+  tooltip?: TooltipConfig
+  validators?: Array<(value: any, allValues?: any) => string | undefined>
+  options?:
+    | Array<{
+        label: string
+        value: string | number
+        disabled?: boolean
+      }>
+    | ((form: UseFormReturn<any>) => Array<{
+        label: string
+        value: string | number
+        disabled?: boolean
+      }>)
+  accept?: string
+  resourceConfig?: ResourceConfig
+  onUpload?: (file: File) => Promise<void>
+  render?: (props: { field: any; form: UseFormReturn<any>; isEditable: boolean }) => ReactNode
+  width?: number | string
+  height?: number
+  lineWidth?: number
+  lineColor?: string
+  className?: string
+  checkedLabel?: string
+  uncheckedLabel?: string
+  min?: number
+  max?: number
+  step?: number
+  layout?: "horizontal" | "vertical"
+  path?: string
+  style?: React.CSSProperties
+  uploadConfig?: {
+    uploadType: "file" | "image" | "video" | "audio"
+    multiple?: boolean
+    maxSize?: number
+    maxCount?: number
+    thumbnail?: boolean
+    cropOptions?: {
+      aspect?: number
+      quality?: number
+      width?: number
+      height?: number
+    }
+    uploadConfig?: {
+      action?: string
+      headers?: Record<string, string>
+      withCredentials?: boolean
+      customRequest?: (options: any) => Promise<any>
+    }
+    onSuccess?: (fileInfo: FileInfo) => void
+    onError?: (error: Error) => void
+    onProgress?: (percent: number) => void
+    onPreview?: (file: FileInfo) => void
+    onDownload?: (file: FileInfo) => void
+    previewConfig?: {
+      width?: number | string
+      height?: number | string
+      modalTitle?: string
+      modalWidth?: number | string
+    }
+    downloadConfig?: {
+      method?: "GET" | "POST"
+      headers?: Record<string, string>
+      withCredentials?: boolean
+      timeout?: number
+    }
+  }
 }
 
 export interface FormFieldGroup {
-key: string
-title: string
-fields: FormField[]
-description?: string
-icon?: string
-className?: string
-style?: React.CSSProperties
+  key: string
+  title: string
+  fields: FormField[]
+  description?: string
+  icon?: string
+  className?: string
+  style?: React.CSSProperties
 }
 
                     </FileContent>
@@ -6320,7 +5119,6 @@ style?: React.CSSProperties
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/types/form.ts">
                     <FileContent>
                       import { UseFormReturn } from "react-hook-form"
-
 import { FormField, FormFieldGroup } from "./field"
 import { TableConfig, TableGroup } from "./table"
 import { ProcessStep } from "./process"
@@ -6328,39 +5126,39 @@ import { FormMetadata } from "./basic"
 import { ValidationContext, ValidationResult, ValidationRule, FormEventHandlers } from "./validation"
 
 export interface FormRenderConfig {
-basicFields:
-| FormField[]
-| {
-groups: FormFieldGroup[]
-defaultGroup?: string
-}
-table?: TableConfig
-tables?: TableGroup[]
-processSteps?: ProcessStep[]
+  basicFields:
+    | FormField[]
+    | {
+        groups: FormFieldGroup[]
+        defaultGroup?: string
+      }
+  table?: TableConfig
+  tables?: TableGroup[]
+  processSteps?: ProcessStep[]
 }
 
 export interface DynamicFormConfig {
-metadata: FormMetadata
-renderConfig: FormRenderConfig
-orderNumberConfig?: {
-prefix?: string
-fieldName?: string
-label?: string
-}
-watch?: (form: UseFormReturn<any>) => () => void
-validate?: (values: any, context?: ValidationContext) => Promise<ValidationResult> | ValidationResult
-validationRules?: Record<string, ValidationRule>
-eventHandlers?: FormEventHandlers
+  metadata: FormMetadata
+  renderConfig: FormRenderConfig
+  orderNumberConfig?: {
+    prefix?: string
+    fieldName?: string
+    label?: string
+  }
+  watch?: (form: UseFormReturn<any>) => () => void
+  validate?: (values: any, context?: ValidationContext) => Promise<ValidationResult> | ValidationResult
+  validationRules?: Record<string, ValidationRule>
+  eventHandlers?: FormEventHandlers
 }
 
 export interface DynamicFormProps {
-config: DynamicFormConfig
-id?: string
-onSubmit?: (validationResult: ValidationResult, values: any) => Promise<void>
-onCancel?: () => void
-templateId?: string
-isCreateMode?: boolean
-previewMode?: boolean
+  config: DynamicFormConfig
+  id?: string
+  onSubmit?: (validationResult: ValidationResult, values: any) => Promise<void>
+  onCancel?: () => void
+  templateId?: string
+  isCreateMode?: boolean
+  previewMode?: boolean
 }
 
                     </FileContent>
@@ -6369,12 +5167,11 @@ previewMode?: boolean
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/types/index.ts">
                     <FileContent>
                       export * from "./basic"
-
-export _ from "./field"
-export _ from "./table"
-export _ from "./process"
-export _ from "./validation"
-export \* from "./form"
+export * from "./field"
+export * from "./table"
+export * from "./process"
+export * from "./validation"
+export * from "./form"
 
                     </FileContent>
                   </File>
@@ -6384,124 +5181,123 @@ export \* from "./form"
                       import { FormField } from "./field"
 
 export interface ProcessStepDependency {
-step: string
-condition?: {
-field?: string
-value?: any
-custom?: (stepData: any) => boolean
-}
-message?: string
+  step: string
+  condition?: {
+    field?: string
+    value?: any
+    custom?: (stepData: any) => boolean
+  }
+  message?: string
 }
 
 export interface ProcessStepTimeout {
-duration: number
-action: "warn" | "block" | "auto-approve" | "auto-reject"
-message?: string
-callback?: (step: string) => void
+  duration: number
+  action: "warn" | "block" | "auto-approve" | "auto-reject"
+  message?: string
+  callback?: (step: string) => void
 }
 
 export interface ProcessStepApprovers {
-type: "single" | "multiple" | "any" | "all"
-roles?: string[]
-users?: string[]
-minApprovers?: number
-maxApprovers?: number
-deadline?: number
-notifyType?: "email" | "sms" | "both"
-escalation?: {
-after: number
-to: string[]
-}
+  type: "single" | "multiple" | "any" | "all"
+  roles?: string[]
+  users?: string[]
+  minApprovers?: number
+  maxApprovers?: number
+  deadline?: number
+  notifyType?: "email" | "sms" | "both"
+  escalation?: {
+    after: number
+    to: string[]
+  }
 }
 
 export interface ProcessStep {
-key: string
-title: string
-description?: string
-icon?: string
-fields?: FormField[]
-dependencies?: ProcessStepDependency[]
-weight?: number
-timeout?: ProcessStepTimeout
-approvers?: ProcessStepApprovers
-className?: string
-style?: React.CSSProperties
+  key: string
+  title: string
+  description?: string
+  icon?: string
+  fields?: FormField[]
+  dependencies?: ProcessStepDependency[]
+  weight?: number
+  timeout?: ProcessStepTimeout
+  approvers?: ProcessStepApprovers
+  className?: string
+  style?: React.CSSProperties
 }
 
 export interface ProcessStepStatus {
-isCompleted: boolean
-isBlocked: boolean
-blockReason?: string
+  isCompleted: boolean
+  isBlocked: boolean
+  blockReason?: string
 }
 
 export interface ProcessProgress {
-total: number
-completed: number
-current: number
-percentage: number
-status: {
-[key: string]: ProcessStepStatus
+  total: number
+  completed: number
+  current: number
+  percentage: number
+  status: {
+    [key: string]: ProcessStepStatus
+  }
 }
-}
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/types/table.ts">
                     <FileContent>
                       import { ReactNode } from "react"
-
 import { FormFieldType } from "./basic"
 import { ResourceConfig } from "./field"
 
 export interface TableColumn {
-key: string
-title: string
-type: FormFieldType
-width?: string | number
-editable?: boolean
-required?: boolean
-placeholder?: string
-options?: Array<{
-label: string
-value: string | number
-}>
-resourceConfig?: ResourceConfig & {
-// 新增：表格特定的资源配置
-showTrigger?: boolean // 是否显示触发按钮
-triggerPosition?: "right" | "cell" // 触发按钮位置
-inlineDisplay?: boolean // 是否内联显示选择界面
-}
-render?: (value: any, record: any, index: number) => ReactNode
-summary?: {
-render?: (value: any) => ReactNode
-}
-className?: string
-style?: React.CSSProperties
-isMappedField?: boolean
-mappedFrom?: string
+  key: string
+  title: string
+  type: FormFieldType
+  width?: string | number
+  editable?: boolean
+  required?: boolean
+  placeholder?: string
+  options?: Array<{
+    label: string
+    value: string | number
+  }>
+  resourceConfig?: ResourceConfig & {
+    // 新增：表格特定的资源配置
+    showTrigger?: boolean // 是否显示触发按钮
+    triggerPosition?: "right" | "cell" // 触发按钮位置
+    inlineDisplay?: boolean // 是否内联显示选择界面
+  }
+  render?: (value: any, record: any, index: number) => ReactNode
+  summary?: {
+    render?: (value: any) => ReactNode
+  }
+  className?: string
+  style?: React.CSSProperties
+  isMappedField?: boolean
+  mappedFrom?: string
 }
 
 export interface TableSummary {
-show?: boolean
-label?: string
-className?: string
-style?: React.CSSProperties
+  show?: boolean
+  label?: string
+  className?: string
+  style?: React.CSSProperties
 }
 
 export interface TableConfig {
-columns: TableColumn[]
-toolbar?: ReactNode
-summary?: TableSummary
+  columns: TableColumn[]
+  toolbar?: ReactNode
+  summary?: TableSummary
 }
 
 export interface TableGroup {
-key: string
-title: string
-description?: string
-icon?: string
-config: TableConfig
-className?: string
-style?: React.CSSProperties
+  key: string
+  title: string
+  description?: string
+  icon?: string
+  config: TableConfig
+  className?: string
+  style?: React.CSSProperties
 }
 
                     </FileContent>
@@ -6510,64 +5306,62 @@ style?: React.CSSProperties
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/types/validation.ts">
                     <FileContent>
                       export interface ValidationContext {
-
-mode?: "create" | "edit"
-user?: any
+  mode?: "create" | "edit"
+  user?: any
 }
 
 export interface ValidationResult {
-valid: boolean
-errors?: string[]
-warnings?: string[]
-fields?: {
-[key: string]: string
-}
-categorizedErrors?: {
-required?: Array<{ field: string; message: string }>
-invalid?: Array<{ field: string; message: string }>
-other?: Array<{ field: string; message: string }>
-}
+  valid: boolean
+  errors?: string[]
+  warnings?: string[]
+  fields?: {
+    [key: string]: string
+  }
+  categorizedErrors?: {
+    required?: Array<{ field: string; message: string }>
+    invalid?: Array<{ field: string; message: string }>
+    other?: Array<{ field: string; message: string }>
+  }
 }
 
 export interface ValidationRule {
-required?: boolean
-pattern?: RegExp
-min?: number
-max?: number
-minLength?: number
-maxLength?: number
-validate?: (value: any) => string | undefined
-message?: string
+  required?: boolean
+  pattern?: RegExp
+  min?: number
+  max?: number
+  minLength?: number
+  maxLength?: number
+  validate?: (value: any) => string | undefined
+  message?: string
 }
 
 export interface FormState {
-isSubmitting: boolean
-isDirty: boolean
-isValid: boolean
-errors: Record<string, string>
+  isSubmitting: boolean
+  isDirty: boolean
+  isValid: boolean
+  errors: Record<string, string>
 }
 
 export interface FormEventHandlers {
-onSubmit?: (validationResult: ValidationResult, values: any) => Promise<void>
-onChange?: (values: any) => void
-onError?: (error: Error) => void
-onCancel?: () => void
+  onSubmit?: (validationResult: ValidationResult, values: any) => Promise<void>
+  onChange?: (values: any) => void
+  onError?: (error: Error) => void
+  onCancel?: () => void
 }
-</FileContent>
-</File>
+                    </FileContent>
+                  </File>
 
                   <File path="/Users/jalam/Works/mo-repo/shata-ai-front/src/components/common/DynamicForm/validation/ValidationManager.ts">
                     <FileContent>
                       import { DynamicFormConfig, FormField, TableColumn, ValidationResult, FormFieldGroup } from "../types"
-
 import { get, set } from "lodash"
 
 export class ValidationManager {
-// 统一处理表单级别校验
-static async validateForm(values: any, config: DynamicFormConfig): Promise<ValidationResult> {
-try {
-// 1. 收集所有需要校验的字段
-const fields = this.collectFormFields(config)
+  // 统一处理表单级别校验
+  static async validateForm(values: any, config: DynamicFormConfig): Promise<ValidationResult> {
+    try {
+      // 1. 收集所有需要校验的字段
+      const fields = this.collectFormFields(config)
 
       // 2. 执行字段校验
       const errors: Record<string, string> = {}
@@ -6606,18 +5400,17 @@ const fields = this.collectFormFields(config)
         fields: {},
       }
     }
+  }
 
-}
-
-// 收集所有需要校验的字段
-private static collectFormFields(config: DynamicFormConfig): Array<{
-path: string
-label: string
-type: string
-required?: boolean
-validators?: Array<(value: any, allValues?: any) => string | undefined>
-}> {
-const fields: any[] = []
+  // 收集所有需要校验的字段
+  private static collectFormFields(config: DynamicFormConfig): Array<{
+    path: string
+    label: string
+    type: string
+    required?: boolean
+    validators?: Array<(value: any, allValues?: any) => string | undefined>
+  }> {
+    const fields: any[] = []
 
     // 处理基本字段
     const basicFields = config.renderConfig.basicFields
@@ -6672,32 +5465,31 @@ const fields: any[] = []
     }
 
     return fields
+  }
 
-}
-
-// 校验单个字段
-private static async validateField(
-field: {
-path: string
-label: string
-type: string
-required?: boolean
-validators?: Array<(value: any, allValues?: any) => string | undefined>
-},
-value: any,
-allValues: any
-): Promise<string | undefined> {
-try {
-// 必填校验
-if (field.required) {
-if (field.type === "resource") {
-if (!value || typeof value !== "object" || Object.keys(value).length === 0) {
-return `${field.label}不能为空`
-}
-} else if (value === undefined || value === null || value === "") {
-return `${field.label}不能为空`
-}
-}
+  // 校验单个字段
+  private static async validateField(
+    field: {
+      path: string
+      label: string
+      type: string
+      required?: boolean
+      validators?: Array<(value: any, allValues?: any) => string | undefined>
+    },
+    value: any,
+    allValues: any
+  ): Promise<string | undefined> {
+    try {
+      // 必填校验
+      if (field.required) {
+        if (field.type === "resource") {
+          if (!value || typeof value !== "object" || Object.keys(value).length === 0) {
+            return `${field.label}不能为空`
+          }
+        } else if (value === undefined || value === null || value === "") {
+          return `${field.label}不能为空`
+        }
+      }
 
       // 类型校验
       const typeError = this.validateFieldType(field.type, value)
@@ -6723,12 +5515,11 @@ return `${field.label}不能为空`
     } catch (error) {
       throw error
     }
+  }
 
-}
-
-// 校验字段类型
-private static validateFieldType(type: string, value: any): string | undefined {
-if (!value) return undefined
+  // 校验字段类型
+  private static validateFieldType(type: string, value: any): string | undefined {
+    if (!value) return undefined
 
     switch (type) {
       case "resource":
@@ -6769,20 +5560,19 @@ if (!value) return undefined
     }
 
     return undefined
+  }
 
-}
-
-// 对错误进行分类
-private static categorizeErrors(errors: Record<string, string>): {
-required?: Array<{ field: string; message: string }>
-invalid?: Array<{ field: string; message: string }>
-other?: Array<{ field: string; message: string }>
-} {
-const categorized: {
-required?: Array<{ field: string; message: string }>
-invalid?: Array<{ field: string; message: string }>
-other?: Array<{ field: string; message: string }>
-} = {}
+  // 对错误进行分类
+  private static categorizeErrors(errors: Record<string, string>): {
+    required?: Array<{ field: string; message: string }>
+    invalid?: Array<{ field: string; message: string }>
+    other?: Array<{ field: string; message: string }>
+  } {
+    const categorized: {
+      required?: Array<{ field: string; message: string }>
+      invalid?: Array<{ field: string; message: string }>
+      other?: Array<{ field: string; message: string }>
+    } = {}
 
     Object.entries(errors).forEach(([field, error]) => {
       // 提取分组信息（如果存在）
@@ -6812,9 +5602,9 @@ other?: Array<{ field: string; message: string }>
     })
 
     return categorized
-
-}
+  }
 }
 
                     </FileContent>
                   </File></Project>
+      

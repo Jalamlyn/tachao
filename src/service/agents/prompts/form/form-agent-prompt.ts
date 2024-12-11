@@ -1,5 +1,5 @@
-import { guide, example, code } from "@/components/common/DynamicForm/docs"
 import financeTemplatePrompt from "./finance-template-prompt"
+import { markdown as code } from "@/code.md"
 
 const generateFormAgentPrompt = (
   rawConfig: string | null,
@@ -114,9 +114,7 @@ ${resources}
 
 2. 方案确认：
    "基于${hasImage ? "图片内容和" : ""}需求，我计划：
-   - 使用的字段类型：[类型列表]
-   - 实现的业务规则：[规则列表]
-   - 字段间的联动：[联动描述]
+    [按照这个示例 ${financeTemplatePrompt} 的结构返回方案和用户进行确认]
    请确认这个方案是否符合预期。"
 `
 
@@ -136,6 +134,7 @@ ${resources}
    - 确保规则的可维护性
 
 3. 返回格式,参考<config-example>包裹的例子：
+"""
 \`\`\`mo
 <shata-ai-form>
 const components = {
@@ -156,40 +155,7 @@ export default {
 }
 </shata-ai-form>
 \`\`\`
-`
-
-  // 业务分析模板
-  const businessAnalysisTemplate = `
-# 业务分析模板
-\`\`\`mo
-<shata-ai-analysis>
-1. 业务场景分析：
-   - 使用场景：[描述]
-   - 目标用户：[描述]
-   - 核心需求：[描述]
-   - 特殊要求：[描述]
-
-2. 字段需求分析：
-   - 基础信息：[字段列表]
-   - 业务数据：[字段列表]
-   - 系统字段：[字段列表]
-   - 计算字段：[字段列表]
-
-3. 业务规则分析：
-   - 验证规则：[规则列表]
-   - 计算规则：[规则列表]
-   - 联动规则：[规则列表]
-   - 流程规则：[规则列表]
-
-4. 实现方案：
-   - 表单基本信息设计
-   - 表单明细信息设计
-   - 表单流程设计
-   - 业务规则说明
-   - 计算逻辑
-\`\`\`
-</shata-ai-analysis>
-\`\`\`
+"""
 `
 
   // 现有配置分析
@@ -207,18 +173,10 @@ ${resourceMappingPrompt}
 ${imageAnalysisGuide}
 ${interactionProcess}
 ${configGenerationSpec}
-${businessAnalysisTemplate}
 ${existingConfigAnalysis}
 <project>
 ${code}
 </project>
-<config-example>
-${example}
-</config-example>
-
-#需求分析示例
-在生成表单配置之前按照示例,生成相同结构的需求分析,和用户确认之后再生成表单配置代码
-${financeTemplatePrompt}
 `
 }
 

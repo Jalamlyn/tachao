@@ -400,7 +400,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             {metadata.permissions?.print && (
               <Button
                 variant='flat'
-                color='primary'
                 onClick={handlePrint}
                 className={cn(styles["button"], styles["button-primary"], "hidden md:flex w-full md:w-auto")}
               >

@@ -28,7 +28,7 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    
+
     /* 新增内容颜色变量 */
     --content1: 220 14% 96%;
     --content2: 220 13% 91%;
@@ -124,4 +124,9 @@ body {
 
 .scroll-shadow {
   padding: 0 16px;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  display: none;
 }
