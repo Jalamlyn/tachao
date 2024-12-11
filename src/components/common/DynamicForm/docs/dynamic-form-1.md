@@ -126,6 +126,17 @@
     resourceId:"resource_xxxx",
     multiple: false,  // 是否支持多选
     displayMode: "card", // 显示模式：card | table
+    // 主显示字段
+    displayField: "name",
+    // 或使用显示格式化
+    displayFormat: (resource) => `${resource.code} - ${resource.name}`,
+    // 触发器配置
+    triggerConfig: {
+      type: "button",
+      text: "选择供应商",
+      icon: "mdi:search",
+      className: "custom-trigger"
+    },
     // 自定义显示字段
     displayFields: [
       {
@@ -155,6 +166,15 @@
     resourceTitle: "产品主数据",
     resourceId:"resource_xxx",
     displayMode: "table",
+    // 显示配置
+    displayField: "name",
+    displayFormat: (resource) => `${resource.code} - ${resource.name}`,
+    // 触发器配置
+    triggerConfig: {
+      type: "button",
+      text: "选择产品",
+      icon: "mdi:package-search"
+    },
     displayFields: [
       {
         key: "code",
@@ -201,6 +221,14 @@
     resourceId:"resource_xxx",
     multiple: true, // 启用多选
     displayMode: "table",
+    // 显示配置
+    displayFormat: (resources) => resources.map(r => r.name).join(", "),
+    // 触发器配置
+    triggerConfig: {
+      type: "button",
+      text: "选择材料",
+      icon: "mdi:plus"
+    },
     displayFields: [
       {
         key: "code",
