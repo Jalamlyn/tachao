@@ -49,7 +49,7 @@ const FileList: React.FC = () => {
     try {
       setIsLoading(true)
       const response = await apiService.post(
-        "/public/data/file/activities/find",
+        "/public/data/file/activitiess/find",
         {},
         {
           params: { display: "paginate" },
