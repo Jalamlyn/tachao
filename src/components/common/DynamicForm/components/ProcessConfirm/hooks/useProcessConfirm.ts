@@ -63,6 +63,17 @@ export const useProcessConfirm = ({
   }, [steps, fieldName, form])
 
   const calculateProgress = useCallback((): ProcessProgress => {
+    // 添加空数组保护
+    if (!steps || steps.length === 0) {
+      return {
+        total: 0,
+        completed: 0,
+        current: 0,
+        percentage: 0,
+        status: {}
+      }
+    }
+
     const values = form.getValues(fieldName) || {}
     console.log("Calculating progress with values:", values)
     
@@ -108,7 +119,7 @@ export const useProcessConfirm = ({
       total: steps.length,
       completed: Object.values(values).filter(step => step.confirmed).length,
       current: currentStepIndex,
-      percentage: Math.round((completedWeight / totalWeight) * 100),
+      percentage: totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0,
       status
     }
 

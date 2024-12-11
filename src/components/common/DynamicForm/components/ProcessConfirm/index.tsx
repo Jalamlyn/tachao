@@ -19,6 +19,14 @@ interface DynamicProcessConfirmProps {
 const ProcessProgressIndicator: React.FC<{
   progress: ProcessProgress
 }> = ({ progress }) => {
+  if (!progress.total) {
+    return (
+      <div className='text-center text-gray-500 py-4'>
+        暂无进度信息
+      </div>
+    )
+  }
+
   return (
     <div className='space-y-2 mb-4'>
       <Progress aria-label='Progress' value={progress.percentage} className='max-w-md' color='primary' />
@@ -31,6 +39,14 @@ const ProcessProgressIndicator: React.FC<{
     </div>
   )
 }
+
+const EmptyState: React.FC = () => (
+  <div className='text-center py-8'>
+    <Icon icon='mdi:clipboard-text-outline' className='w-12 h-12 mx-auto text-gray-400 mb-4' />
+    <h3 className='text-lg font-medium text-gray-900 mb-2'>暂无流程步骤</h3>
+    <p className='text-sm text-gray-500'>当前没有可用的流程步骤</p>
+  </div>
+)
 
 const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
   steps,
@@ -123,6 +139,11 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
     })
     return () => subscription.unsubscribe()
   }, [form, fieldName, progress])
+
+  // 如果没有步骤，显示空状态
+  if (!steps || steps.length === 0) {
+    return <EmptyState />
+  }
 
   return (
     <div className='space-y-6'>
