@@ -92,36 +92,36 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   }
 
   const handleDeleteClick = (template: Template, e: React.MouseEvent) => {
-    e.stopPropagation()
+    
     setSelectedTemplate(template)
     onOpen()
   }
 
   const handleShareClick = (template: Template, e: React.MouseEvent) => {
-    e.stopPropagation()
+    
     setSelectedTemplate(template)
     onShareOpen()
   }
 
   const handleAIEditClick = async (template: Template, e: React.MouseEvent) => {
-    e.stopPropagation()
+    
     navigate(`/we-chat-app/admin/documents/edit/${template.id}`, { state: { title: template.title } })
   }
 
   const handleRenameClick = (template: Template, e: React.MouseEvent) => {
-    e.stopPropagation()
+    
     setSelectedTemplate(template)
     setIsRenameModalOpen(true)
   }
 
   const handleEditTagsClick = (template: Template, e: React.MouseEvent) => {
-    e.stopPropagation()
+    
     setSelectedTemplate(template)
     setIsEditTagsModalOpen(true)
   }
 
   const handleDataManageClick = (template: Template, e: React.MouseEvent) => {
-    e.stopPropagation()
+    
     navigate(`/we-chat-app/admin/documents/data/${template.id}`, { state: { title: template.title } })
   }
 

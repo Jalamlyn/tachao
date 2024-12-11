@@ -138,7 +138,6 @@ const TagManageModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type }
                     const selectedItem = items[0]
                     return (
                       <div className='flex gap-2 items-center'>
-                        <div className={`w-3 h-3 rounded-full bg-${selectedItem?.data?.value}-500`}></div>
                         <span>{selectedItem?.data?.label}</span>
                       </div>
                     )
