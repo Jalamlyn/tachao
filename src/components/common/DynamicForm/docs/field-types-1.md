@@ -88,6 +88,100 @@ type ResourceType = "resource" // 资源选择
 - 复杂数据结构
 - 自定义渲染
 
+## 资源字段（Resource）最佳实践
+
+### 1. 基本配置示例
+
+```typescript
+// 1. 单选资源字段（用于基本信息）
+{
+  name: "supplier",
+  label: "供应商",
+  type: "resource",
+  required: true,
+  resourceConfig: {
+    resourceId: "resource_xxxx",
+    multiple: false,  // 单选模式
+    displayFields: [
+      {
+        key: "code",
+        label: "供应商编号"
+      },
+      {
+        key: "name",
+        label: "供应商名称",
+        render: (value) => `${value}` // 自定义渲染函数
+      }
+    ]
+  }
+}
+
+// 2. 多选资源（用于明细表格）
+{
+  renderConfig: {
+    table: {
+      columns: [
+        {
+          key: "products",
+          title: "产品",
+          type: "resource",
+          resourceConfig: {
+            resourceId: "resource_xxx",
+            displayFields: [
+              { key: "code", label: "产品编码" },
+              { key: "name", label: "产品名称" }
+            ],
+            // 字段映射配置
+            fieldMapping: {
+              "productCode": "code",
+              "productName": "name",
+              "fullSpec": {
+                fields: ["spec", "model"],
+                transform: (values) => values.join(" - ")
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+### 2. 使用场景区分
+
+1. 基本信息区域：
+   - 使用单选资源字段
+   - 使用卡片模式展示
+   - 适合展示单条详细信息
+
+2. 明细信息区域：
+   - 使用动态表格
+   - 配置资源选择列
+   - 适合多选和批量操作
+
+### 3. 最佳实践建议
+
+1. 单选场景：
+   - 使用资源字段的卡片模式
+   - 展示完整的资源信息
+   - 提供更换和清除操作
+
+2. 多选场景：
+   - 使用动态表格
+   - 利用字段映射功能
+   - 支持批量选择和操作
+
+3. 性能优化：
+   - 使用缓存机制
+   - 按需加载数据
+   - 优化渲染性能
+
+4. 用户体验：
+   - 提供清晰的操作提示
+   - 支持快速选择和更换
+   - 保持界面简洁直观
+
 ## 统一上传字段（Upload）详细说明
 
 ### 1. 配置接口
@@ -216,4 +310,3 @@ interface UploadFieldConfig {
   }
 }
 ```
-

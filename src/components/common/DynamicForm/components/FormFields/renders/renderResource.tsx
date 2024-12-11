@@ -21,11 +21,17 @@ export const renderResource = (
   const { getDetail } = useMetadata("resource")
   const value = form.watch(field.name) as ResourceValue
   const isMultiple = field.resourceConfig?.multiple
+
   // 从缓存获取资源数据
   const getResourceFromCache = (resourceId: string, dataid: string) => {
-    const key = `resource_${resourceId}_${dataid}`
-    const cached = sessionStorage.getItem(key)
-    return cached ? JSON.parse(cached) : null
+    try {
+      const key = `resource_${resourceId}_${dataid}`
+      const cached = sessionStorage.getItem(key)
+      return cached ? JSON.parse(cached) : null
+    } catch (error) {
+      console.error("Error getting resource from cache:", error)
+      return null
+    }
   }
 
   // 设置缓存
@@ -77,7 +83,7 @@ export const renderResource = (
 
   const handleClear = () => {
     form.setValue(field.name, undefined)
-    setResourceData(null) // 添加这行
+    setResourceData(null)
     onChange?.(field.name, undefined)
   }
 
@@ -92,8 +98,6 @@ export const renderResource = (
       required={field.required}
     >
       {(formField) => {
-        const displayMode = field.resourceConfig?.displayMode || "card"
-
         if (!resourceData?.data?.length) {
           return (
             <div className='min-h-[120px] border-2 border-dashed border-gray-200 rounded-lg hover:border-gray-300 transition-colors duration-200'>
@@ -133,140 +137,65 @@ export const renderResource = (
         return (
           <div className='space-y-4'>
             <div className='space-y-4'>
-              {displayMode === "card" ? (
-                <div className='grid grid-cols-1 gap-4'>
-                  {resourceData.data.map((item: any, index: number) => (
-                    <Card key={index} className='w-full'>
-                      <CardBody className='p-4'>
-                        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                          {(
-                            field.resourceConfig?.displayFields || Object.keys(item).map((key) => ({ key, label: key }))
-                          ).map((displayField) => (
-                            <div key={displayField.key} className='space-y-1'>
-                              <span className='text-sm font-medium text-gray-500'>{displayField.label}</span>
-                              <div className='text-sm'>
-                                {displayField.render
-                                  ? displayField.render(item[displayField.key])
-                                  : String(item[displayField.key] || "-")}
-                              </div>
+              <div className='grid grid-cols-1 gap-4'>
+                {resourceData.data.map((item: any, index: number) => (
+                  <Card key={index} className='w-full'>
+                    <CardBody className='p-4'>
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                        {(
+                          field.resourceConfig?.displayFields || Object.keys(item).map((key) => ({ key, label: key }))
+                        ).map((displayField) => (
+                          <div key={displayField.key} className='space-y-1'>
+                            <span className='text-sm font-medium text-gray-500'>{displayField.label}</span>
+                            <div className='text-sm'>
+                              {displayField.render
+                                ? displayField.render(item[displayField.key])
+                                : String(item[displayField.key] || "-")}
                             </div>
-                          ))}
-                        </div>
-                        {isEditable && (
-                          <div className='mt-4 pt-4 border-t border-gray-100 flex justify-end gap-2'>
-                            <ResourceSelectButton
-                              resourceName={field.resourceConfig?.resourceId || ""}
-                              selectionMode={isMultiple ? "multiple" : "single"}
-                              onSelect={(selected) => {
-                                if (selected.length > 0) {
-                                  const dataids = selected.map((item) => item.dataid)
-                                  formField.onChange({
-                                    dataid: isMultiple ? dataids : dataids[0],
-                                  })
-                                  onChange?.(field.name, {
-                                    dataid: isMultiple ? dataids : dataids[0],
-                                  })
-                                }
-                              }}
-                              buttonText='更换'
-                              buttonProps={{
-                                size: "md",
-                                variant: "light",
-                                isDisabled: !isEditable,
-                                className: "min-w-[80px] md:min-w-[100px]",
-                                startContent: <Icon icon='material-symbols:sync' className='text-lg' />,
-                              }}
-                            />
-                            <Button
-                              size='md'
-                              variant='light'
-                              color='danger'
-                              className='min-w-[80px] md:min-w-[100px]'
-                              onClick={handleClear}
-                              startContent={<Icon icon='material-symbols:remove' className='text-lg' />}
-                            >
-                              移除
-                            </Button>
                           </div>
-                        )}
-                      </CardBody>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className='overflow-x-auto'>
-                  <div className='min-w-[400px]'>
-                    <table className='w-full border-collapse'>
-                      <thead>
-                        <tr className='bg-gray-50'>
-                          {(
-                            field.resourceConfig?.displayFields ||
-                            Object.keys(resourceData.data[0]).map((key) => ({ key, label: key }))
-                          ).map((displayField) => (
-                            <th
-                              key={displayField.key}
-                              className='p-2 text-left text-sm font-medium text-gray-500 border border-gray-200'
-                              style={{ width: displayField.width }}
-                            >
-                              {displayField.label}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {resourceData.data.map((item: any, index: number) => (
-                          <tr key={index} className='hover:bg-gray-50'>
-                            {(
-                              field.resourceConfig?.displayFields ||
-                              Object.keys(item).map((key) => ({ key, label: key }))
-                            ).map((displayField) => (
-                              <td key={displayField.key} className='p-2 text-sm border border-gray-200'>
-                                {displayField.render
-                                  ? displayField.render(item[displayField.key])
-                                  : String(item[displayField.key] || "-")}
-                              </td>
-                            ))}
-                          </tr>
                         ))}
-                      </tbody>
-                    </table>
-                    <div className='mt-4 flex justify-end gap-2'>
-                      <ResourceSelectButton
-                        resourceName={field.resourceConfig?.resourceId || ""}
-                        selectionMode={isMultiple ? "multiple" : "single"}
-                        onSelect={(selected) => {
-                          if (selected.length > 0) {
-                            const dataids = selected.map((item) => item.dataid)
-                            formField.onChange({
-                              dataid: isMultiple ? dataids : dataids[0],
-                            })
-                            onChange?.(field.name, {
-                              dataid: isMultiple ? dataids : dataids[0],
-                            })
-                          }
-                        }}
-                        buttonText='更换'
-                        buttonProps={{
-                          size: "md",
-                          variant: "light",
-                          className: "min-w-[80px] md:min-w-[100px]",
-                          startContent: <Icon icon='material-symbols:sync' className='text-lg' />,
-                        }}
-                      />
-                      <Button
-                        size='md'
-                        variant='light'
-                        color='danger'
-                        className='min-w-[80px] md:min-w-[100px]'
-                        onClick={handleClear}
-                        startContent={<Icon icon='material-symbols:remove' className='text-lg' />}
-                      >
-                        移除
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
+                      </div>
+                      {isEditable && (
+                        <div className='mt-4 pt-4 border-t border-gray-100 flex justify-end gap-2'>
+                          <ResourceSelectButton
+                            resourceName={field.resourceConfig?.resourceId || ""}
+                            selectionMode={isMultiple ? "multiple" : "single"}
+                            onSelect={(selected) => {
+                              if (selected.length > 0) {
+                                const dataids = selected.map((item) => item.dataid)
+                                formField.onChange({
+                                  dataid: isMultiple ? dataids : dataids[0],
+                                })
+                                onChange?.(field.name, {
+                                  dataid: isMultiple ? dataids : dataids[0],
+                                })
+                              }
+                            }}
+                            buttonText='更换'
+                            buttonProps={{
+                              size: "md",
+                              variant: "light",
+                              isDisabled: !isEditable,
+                              className: "min-w-[80px] md:min-w-[100px]",
+                              startContent: <Icon icon='material-symbols:sync' className='text-lg' />,
+                            }}
+                          />
+                          <Button
+                            size='md'
+                            variant='light'
+                            color='danger'
+                            className='min-w-[80px] md:min-w-[100px]'
+                            onClick={handleClear}
+                            startContent={<Icon icon='material-symbols:remove' className='text-lg' />}
+                          >
+                            移除
+                          </Button>
+                        </div>
+                      )}
+                    </CardBody>
+                  </Card>
+                ))}
+              </div>
             </div>
           </div>
         )

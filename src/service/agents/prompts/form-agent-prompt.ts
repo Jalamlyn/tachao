@@ -15,45 +15,76 @@ const generateFormAgentPrompt = (
   const resourceMappingPrompt =
     resources.length > 0
       ? `
-# 资料映射指南
-可用的资料列表, 你可以阅读资料中的 rowData 来理解资料的字段和数据：
-${resources}
+# 资料字段使用指南
 
-资料映射规则：
-1. 分析用户提到的资料名称
-2. 在资料列表中找到匹配的资料
-3. 将对应的 resource 的 id 填入 resourceConfig.resourceId 字段
-4. 如果找不到匹配的资料，返回错误信息
+## 1. 场景区分
+1. 基本信息区域（单选资料）：
+   - 使用 resource 字段
+   - 单条资料展示
+   - 使用卡片模式
 
-正确的资料字段配置示例：
+2. 明细信息区域（多选资料）：
+   - 使用动态表格
+   - 配置资源选择列
+   - 支持批量操作
+
+## 2. 配置示例
+
+### 2.1 单选资料（基本信息）
+\`\`\`typescript
 {
-  name: "resourceField",
-  label: "资料字段",
-  type: "resource",  // 必须是 resource 类型
+  name: "supplier",
+  label: "供应商",
+  type: "resource",
   required: true,
   resourceConfig: {
-    resourceId: "资料ID",  // 填入匹配到的资料ID
-    multiple: false,  // 是否支持多选
-    displayMode: "card", // 显示模式：card | table
+    resourceId: "suppliers",  // 从可用资料列表中选择
+    multiple: false,
     displayFields: [
-      {
-        key: "field1",
-        label: "字段1"
-      },
-      {
-        key: "field2",
-        label: "字段2"
-      }
+      { key: "code", label: "编号" },
+      { key: "name", label: "名称" }
     ]
   }
 }
+\`\`\`
+
+### 2.2 多选资料（明细表格）
+\`\`\`typescript
+{
+  renderConfig: {
+    table: {
+      columns: [
+        {
+          key: "products",
+          title: "产品",
+          type: "resource",
+          resourceConfig: {
+            resourceId: "products",  // 从可用资料列表中选择
+            displayFields: [
+              { key: "code", label: "编号" },
+              { key: "name", label: "名称" }
+            ],
+            fieldMapping: {
+              "productCode": "code",
+              "productName": "name"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+\`\`\`
+
+可用的资料列表：
+${resources.map((r) => `- ${r.title} (ID: ${r.id})`).join("\n")}
 
 注意事项：
-1. 字段类型必须是 "resource"
-2. resourceTitle 必须放在 resourceConfig 对象中
-3. 需要配置 displayMode 和 displayFields
-4. 考虑是否需要 multiple 选项
-5. 如果找不到匹配的资料，使用 <shata-ai-error> 标签返回错误
+1. 基本信息使用单选资料字段
+2. 明细信息使用动态表格
+3. 正确选择资料ID
+4. 配置合适的显示字段
+5. 使用字段映射功能
 `
       : ""
 
@@ -199,7 +230,7 @@ export default {
    请确认这些理解是否准确。"
 
 2. 方案确认：
-   "基于${hasImage ? "图片内容和" : ""}需求，我计划：
+   "基于${hasImage ?"图片内容和" : ""}需求，我计划：
    - 使用的字段类型：[类型列表]
    - 实现的业务规则：[规则列表]
    - 字段间的联动：[联动描述]
