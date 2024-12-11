@@ -1,0 +1,1 @@
+export { createTableRenderer } from './tableRenderAdapter'

@@ -7,17 +7,13 @@ import { TableConfig } from "../types"
 import { UseFormReturn, useFieldArray, useWatch } from "react-hook-form"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from "date-fns"
 import { cn } from "@/theme/cn"
-import { Textarea } from "@/components/ui/textarea"
 import { motion } from "framer-motion"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { debounce } from "lodash"
 import styles from "../styles/DynamicForm.module.css"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import message from "@/components/Message"
+import { createTableRenderer } from "./TableFields/renders"
 
 interface DynamicTableProps {
   config: TableConfig
@@ -53,7 +49,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     defaultValue: [],
   })
 
-  // 新增：处理资源选择后的字段映射
+  // 处理资源选择后的字段映射
   const handleResourceSelect = useCallback(
     (rowIndex: number, columnKey: string, selected: any) => {
       if (!selected || !selected[0]) return
@@ -104,7 +100,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     [config.columns, fieldName, form]
   )
 
-  // 修改: 添加默认值初始化逻辑
+  // 添加默认值初始化逻辑
   const handleAddRow = useCallback(() => {
     const newRow = config.columns.reduce(
       (acc, column) => {
@@ -140,83 +136,67 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     [remove]
   )
 
-  // 修改: 增加renderCell的空值处理
+  // 渲染单元格
   const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
     const cellFieldName = `${fieldName}.${rowIndex}.${column.key}`
     const isFieldEditable = isEditable && column.editable !== false && !column.isMappedField
-    const cellValue = form.getValues(cellFieldName)
 
     if (column.render) {
       const record = tableData[rowIndex] || {}
-      return column.render(cellValue, record, rowIndex)
+      return column.render(form.getValues(cellFieldName), record, rowIndex)
     }
 
-    switch (column.type) {
-      case "resource":
-        return (
-          <div className='flex items-center gap-2'>
-            <FormField
-              control={form.control}
-              name={cellFieldName}
-              render={({ field }) => (
-                <FormItem className='flex-1'>
-                  <FormControl>
-                    <Input {...field} readOnly className={cn("min-w-[120px] border-0 focus:ring-0 bg-transparent")} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {isFieldEditable && column.resourceConfig && (
-              <ResourceSelectButton
-                resourceName={column.resourceConfig.resourceId}
-                selectionMode='single'
-                onSelect={(selected) => {
-                  if (selected.length > 0) {
-                    form.setValue(cellFieldName, selected[0])
-                    // 处理字段映射
-                    handleResourceSelect(rowIndex, column.key, selected)
-                  }
-                }}
-                buttonText='选择'
-                buttonProps={{
-                  size: "sm",
-                  className: "px-2 py-1 h-8",
-                }}
-              />
-            )}
-          </div>
-        )
-
-      default:
-        return (
+    if (column.type === "resource") {
+      return (
+        <div className='flex items-center gap-2'>
           <FormField
             control={form.control}
             name={cellFieldName}
             render={({ field }) => (
-              <FormItem>
+              <FormItem className='flex-1'>
                 <FormControl>
-                  <div className='relative'>
-                    <Input
-                      {...field}
-                      disabled={!isFieldEditable}
-                      className={cn("border-0 focus:ring-0 bg-transparent", column.isMappedField && "bg-gray-50")}
-                    />
-                    {column.isMappedField && (
-                      <Icon
-                        icon='mdi:link-variant'
-                        className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-400'
-                        title={`自动填充自：${column.mappedFrom}`}
-                      />
-                    )}
-                  </div>
+                  <Input {...field} readOnly className={cn("min-w-[120px] border-0 focus:ring-0 bg-transparent")} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        )
+          {isFieldEditable && column.resourceConfig && (
+            <ResourceSelectButton
+              resourceName={column.resourceConfig.resourceId}
+              selectionMode='single'
+              onSelect={(selected) => {
+                if (selected.length > 0) {
+                  form.setValue(cellFieldName, selected[0])
+                  // 处理字段映射
+                  handleResourceSelect(rowIndex, column.key, selected)
+                }
+              }}
+              buttonText='选择'
+              buttonProps={{
+                size: "sm",
+                className: "px-2 py-1 h-8",
+              }}
+            />
+          )}
+        </div>
+      )
     }
+
+    // 使用新的表格渲染器
+    const renderer = createTableRenderer(column.type)
+    return renderer({
+      column,
+      rowIndex,
+      tableProps: {
+        form,
+        isEditable,
+        onChange: (field, value) => {
+          // 处理onChange回调
+        },
+        fieldName,
+      },
+    })
   }
 
   const renderSummaryCell = (column: TableConfig["columns"][0]) => {
@@ -228,7 +208,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       return null
     }
 
-    // 修改: 直接使用tableData作为summary.render的参数
     return column.summary.render(tableData || [])
   }
 
