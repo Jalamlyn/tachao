@@ -5,6 +5,15 @@ import { ProcessStep } from "./process"
 import { FormMetadata } from "./basic"
 import { ValidationContext, ValidationResult, ValidationRule, FormEventHandlers } from "./validation"
 
+export interface OrderNumberFieldConfig {
+  prefix?: string
+  fieldName?: string
+  label?: string
+  disabled?: boolean
+  isUpdating?: number
+  isCreateMode?: boolean
+}
+
 export interface FormRenderConfig {
   basicFields:
     | FormField[]
@@ -20,11 +29,7 @@ export interface FormRenderConfig {
 export interface DynamicFormConfig {
   metadata: FormMetadata
   renderConfig: FormRenderConfig
-  orderNumberConfig?: {
-    prefix?: string
-    fieldName?: string
-    label?: string
-  }
+  orderNumberConfig?: OrderNumberFieldConfig
   watch?: (form: UseFormReturn<any>) => () => void
   validate?: (values: any, context?: ValidationContext) => Promise<ValidationResult> | ValidationResult
   validationRules?: Record<string, ValidationRule>
@@ -39,4 +44,5 @@ export interface DynamicFormProps {
   templateId?: string
   isCreateMode?: boolean
   previewMode?: boolean
+  initialValues?: any
 }

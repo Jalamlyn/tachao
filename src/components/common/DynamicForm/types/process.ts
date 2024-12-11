@@ -43,6 +43,7 @@ export interface ProcessStep {
   approvers?: ProcessStepApprovers
   className?: string
   style?: React.CSSProperties
+  required?: boolean
 }
 
 export interface ProcessStepStatus {

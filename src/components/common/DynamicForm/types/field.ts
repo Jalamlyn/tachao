@@ -2,6 +2,14 @@ import { ReactNode } from "react"
 import { UseFormReturn } from "react-hook-form"
 import { FormFieldType, ManualInputFieldType, TooltipConfig } from "./basic"
 
+// 渲染Props类型定义
+export interface FormFieldRenderProps {
+  field: any
+  form: UseFormReturn<any>
+  isEditable: boolean
+  onChange?: (fieldName: string, value: any) => void
+}
+
 // 资料字段显示配置
 interface ResourceDisplayField {
   key: string // 字段键名
@@ -26,13 +34,9 @@ export interface ResourceConfig {
   multiple?: boolean // 是否支持多选
   displayMode?: "card" // 显示模式,默认 card
   displayFields?: ResourceDisplayField[] // 显示字段配置,不配置则显示所有字段
-  // 新增：主显示字段
   displayField?: string
-  // 新增：显示格式化函数
   displayFormat?: (resource: any) => string
-  // 新增：触发器配置
   triggerConfig?: ResourceTriggerConfig
-  loadDataById?: (dataid: string | string[]) => Promise<any> // 加载数据的方法（已废弃）
   fieldMapping?: {
     [targetField: string]:
       | string
@@ -48,7 +52,7 @@ export interface ResourceConfig {
 // 资料字段值类型
 export interface ResourceValue {
   dataid: string | string[] // 单个或多个dataid
-  displayValue?: string // 新增：显示值
+  displayValue?: string // 显示值
 }
 
 export interface FileInfo {
@@ -83,8 +87,7 @@ export interface FormField {
       }>)
   accept?: string
   resourceConfig?: ResourceConfig
-  onUpload?: (file: File) => Promise<void>
-  render?: (props: { field: any; form: UseFormReturn<any>; isEditable: boolean }) => ReactNode
+  render?: (props: FormFieldRenderProps) => ReactNode
   width?: number | string
   height?: number
   lineWidth?: number
