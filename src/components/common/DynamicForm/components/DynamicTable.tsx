@@ -101,6 +101,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     }
   }, [config.columns, fieldName, form]);
 
+  // 修改: 添加默认值初始化逻辑
   const handleAddRow = useCallback(() => {
     const newRow = config.columns.reduce(
       (acc, column) => {
@@ -114,6 +115,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
           case "date":
           case "datetime":
             acc[column.key] = ""
+            break
+          case "resource":
+            acc[column.key] = null
             break
           default:
             acc[column.key] = ""
@@ -133,12 +137,15 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     [remove]
   )
 
+  // 修改: 增加renderCell的空值处理
   const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
     const cellFieldName = `${fieldName}.${rowIndex}.${column.key}`
     const isFieldEditable = isEditable && column.editable !== false && !column.isMappedField
+    const cellValue = form.getValues(cellFieldName)
 
     if (column.render) {
-      return column.render(form.getValues(cellFieldName), tableData[rowIndex], rowIndex)
+      const record = tableData[rowIndex] || {}
+      return column.render(cellValue, record, rowIndex)
     }
 
     switch (column.type) {
@@ -184,7 +191,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
           </div>
         )
 
-      // ... 其他类型的渲染保持不变
       default:
         return (
           <FormField
@@ -228,7 +234,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       return null
     }
 
-    return column.summary.render(form.getValues())
+    // 修改: 增加summary的空值处理
+    const values = form.getValues() || {}
+    return column.summary.render(values)
   }
 
   return (
