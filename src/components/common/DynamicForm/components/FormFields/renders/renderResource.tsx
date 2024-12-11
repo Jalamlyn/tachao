@@ -9,6 +9,8 @@ import ResourceSelectButton from "@/components/common/ResourceSelectButton"
 import { Spinner } from "@nextui-org/react"
 import { useMetadata } from "@/hooks/metadata"
 import message from "@/components/Message"
+import { Input } from "@/components/ui/input"
+import { cn } from "@/theme/cn"
 
 export const renderResource = (
   field: FormField,
@@ -16,77 +18,6 @@ export const renderResource = (
   isEditable: boolean,
   onChange?: (fieldName: string, value: any) => void
 ) => {
-  const [loading, setLoading] = useState(false)
-  const [resourceData, setResourceData] = useState<any>(null)
-  const { getDetail } = useMetadata("resource")
-  const value = form.watch(field.name) as ResourceValue
-  const isMultiple = field.resourceConfig?.multiple
-
-  // 从缓存获取资源数据
-  const getResourceFromCache = (resourceId: string, dataid: string) => {
-    try {
-      const key = `resource_${resourceId}_${dataid}`
-      const cached = sessionStorage.getItem(key)
-      return cached ? JSON.parse(cached) : null
-    } catch (error) {
-      console.error("Error getting resource from cache:", error)
-      return null
-    }
-  }
-
-  // 设置缓存
-  const setResourceCache = (resourceId: string, dataid: string, data: any) => {
-    const key = `resource_${resourceId}_${dataid}`
-    sessionStorage.setItem(key, JSON.stringify(data))
-  }
-
-  // 加载资源数据
-  useEffect(() => {
-    const loadResourceData = async () => {
-      if (!field.resourceConfig?.resourceId || !value?.dataid) return
-
-      setLoading(true)
-      try {
-        const dataids = Array.isArray(value.dataid) ? value.dataid : [value.dataid]
-        const loadedData = { data: [] }
-
-        for (const dataid of dataids) {
-          // 先查缓存
-          const cached = getResourceFromCache(field.resourceConfig.resourceId, dataid)
-          if (cached) {
-            loadedData.data.push(cached)
-            continue
-          }
-
-          // 缓存未命中则请求
-          const data = await getDetail(field.resourceConfig.resourceId)
-          if (data) {
-            const row = data.data.find((row: any) => row.dataid === dataid)
-            if (row) {
-              setResourceCache(field.resourceConfig.resourceId, dataid, row)
-              loadedData.data.push(row)
-            }
-          }
-        }
-
-        setResourceData(loadedData)
-      } catch (error) {
-        console.error("Failed to load resource:", error)
-        message.error("加载资源失败")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadResourceData()
-  }, [field.resourceConfig?.resourceId, value?.dataid])
-
-  const handleClear = () => {
-    form.setValue(field.name, undefined)
-    setResourceData(null)
-    onChange?.(field.name, undefined)
-  }
-
   return (
     <FormFieldWrapper
       name={field.name}
@@ -98,36 +29,184 @@ export const renderResource = (
       required={field.required}
     >
       {(formField) => {
+        const [loading, setLoading] = useState(false)
+        const [resourceData, setResourceData] = useState<any>(null)
+        const { getDetail } = useMetadata("resource")
+        const value = formField.value as ResourceValue
+        const isMultiple = field.resourceConfig?.multiple
+
+        // 从缓存获取资源数据
+        const getResourceFromCache = (resourceId: string, dataid: string) => {
+          try {
+            const key = `resource_${resourceId}_${dataid}`
+            const cached = sessionStorage.getItem(key)
+            return cached ? JSON.parse(cached) : null
+          } catch (error) {
+            console.error("Error getting resource from cache:", error)
+            return null
+          }
+        }
+
+        // 设置缓存
+        const setResourceCache = (resourceId: string, dataid: string, data: any) => {
+          const key = `resource_${resourceId}_${dataid}`
+          sessionStorage.setItem(key, JSON.stringify(data))
+        }
+
+        // 格式化显示值
+        const formatDisplayValue = (resource: any) => {
+          if (!resource) return ""
+          
+          const { displayField, displayFormat, displayFields } = field.resourceConfig || {}
+          
+          if (displayFormat) {
+            return displayFormat(resource)
+          }
+          
+          if (displayField) {
+            return resource[displayField]
+          }
+          
+          if (displayFields?.length) {
+            return displayFields
+              .map(df => `${df.label}: ${resource[df.key]}`)
+              .join(" | ")
+          }
+          
+          return resource.name || resource.title || resource.code || ""
+        }
+
+        // 加载资源数据
+        useEffect(() => {
+          const loadResourceData = async () => {
+            if (!field.resourceConfig?.resourceId || !value?.dataid) return
+
+            setLoading(true)
+            try {
+              const dataids = Array.isArray(value.dataid) ? value.dataid : [value.dataid]
+              const loadedData = { data: [] }
+
+              for (const dataid of dataids) {
+                // 先查缓存
+                const cached = getResourceFromCache(field.resourceConfig.resourceId, dataid)
+                if (cached) {
+                  loadedData.data.push(cached)
+                  continue
+                }
+
+                // 缓存未命中则请求
+                const data = await getDetail(field.resourceConfig.resourceId)
+                if (data) {
+                  const row = data.data.find((row: any) => row.dataid === dataid)
+                  if (row) {
+                    setResourceCache(field.resourceConfig.resourceId, dataid, row)
+                    loadedData.data.push(row)
+                  }
+                }
+              }
+
+              setResourceData(loadedData)
+            } catch (error) {
+              console.error("Failed to load resource:", error)
+              message.error("加载资源失败")
+            } finally {
+              setLoading(false)
+            }
+          }
+
+          loadResourceData()
+        }, [field.resourceConfig?.resourceId, value?.dataid])
+
+        const handleClear = () => {
+          formField.onChange(undefined)
+          setResourceData(null)
+          onChange?.(field.name, undefined)
+        }
+
+        // 渲染触发器
+        const renderTrigger = () => {
+          const { triggerConfig } = field.resourceConfig || {}
+          if (!triggerConfig) return null
+
+          const commonProps = {
+            size: "sm",
+            isDisabled: !isEditable || field.disabled,
+            onClick: () => {/* 触发选择 */},
+            className: cn(
+              "min-w-[80px]",
+              triggerConfig.className
+            ),
+            style: triggerConfig.style
+          }
+
+          if (triggerConfig.type === "icon") {
+            return (
+              <Button
+                isIconOnly
+                variant="light"
+                {...commonProps}
+              >
+                <Icon icon={triggerConfig.icon || "mdi:magnify"} className="w-4 h-4" />
+              </Button>
+            )
+          }
+
+          return (
+            <Button
+              variant="light"
+              {...commonProps}
+              startContent={triggerConfig.icon && <Icon icon={triggerConfig.icon} className="w-4 h-4" />}
+            >
+              {triggerConfig.text || "选择"}
+            </Button>
+          )
+        }
+
         if (!resourceData?.data?.length) {
           return (
             <div className='min-h-[48px] border-2 border-dashed border-gray-200 rounded-lg hover:border-gray-300 transition-colors duration-200'>
-              <div className='h-full flex flex-col items-center justify-center p-1 cursor-pointer'>
+              <div className='h-full flex items-center gap-2 p-2 cursor-pointer'>
                 {loading ? (
                   <Spinner size='sm' />
                 ) : (
-                  <ResourceSelectButton
-                    resourceName={field.resourceConfig?.resourceId || ""}
-                    selectionMode={isMultiple ? "multiple" : "single"}
-                    onSelect={(selected) => {
-                      if (selected.length > 0) {
-                        const dataids = selected.map((item) => item.dataid)
+                  <>
+                    <Input
+                      value={value?.displayValue || ""}
+                      onChange={(e) => {
                         formField.onChange({
-                          dataid: isMultiple ? dataids : dataids[0],
+                          ...value,
+                          displayValue: e.target.value
                         })
-                        onChange?.(field.name, {
-                          dataid: isMultiple ? dataids : dataids[0],
-                        })
-                      }
-                    }}
-                    buttonText='选择'
-                    buttonProps={{
-                      size: "lg",
-                      variant: "light",
-                      isDisabled: !isEditable,
-                      className: "w-full flex items-center justify-center gap-2",
-                      startContent: <Icon icon='material-symbols:add-circle-outline' className='text-xl' />,
-                    }}
-                  />
+                      }}
+                      disabled={!isEditable || field.disabled}
+                      placeholder={field.placeholder || "请选择"}
+                      className="flex-1"
+                    />
+                    <ResourceSelectButton
+                      resourceName={field.resourceConfig?.resourceId || ""}
+                      selectionMode={isMultiple ? "multiple" : "single"}
+                      onSelect={(selected) => {
+                        if (selected.length > 0) {
+                          const dataids = selected.map((item) => item.dataid)
+                          const displayValue = selected.map(item => formatDisplayValue(item)).join(", ")
+                          const newValue = {
+                            dataid: isMultiple ? dataids : dataids[0],
+                            displayValue
+                          }
+                          formField.onChange(newValue)
+                          onChange?.(field.name, newValue)
+                        }
+                      }}
+                      buttonProps={{
+                        size: "sm",
+                        variant: "light",
+                        isDisabled: !isEditable,
+                        className: "min-w-[80px]",
+                      }}
+                    >
+                      {renderTrigger()}
+                    </ResourceSelectButton>
+                  </>
                 )}
               </div>
             </div>
@@ -163,12 +242,13 @@ export const renderResource = (
                             onSelect={(selected) => {
                               if (selected.length > 0) {
                                 const dataids = selected.map((item) => item.dataid)
-                                formField.onChange({
+                                const displayValue = selected.map(item => formatDisplayValue(item)).join(", ")
+                                const newValue = {
                                   dataid: isMultiple ? dataids : dataids[0],
-                                })
-                                onChange?.(field.name, {
-                                  dataid: isMultiple ? dataids : dataids[0],
-                                })
+                                  displayValue
+                                }
+                                formField.onChange(newValue)
+                                onChange?.(field.name, newValue)
                               }
                             }}
                             buttonText='更换'
@@ -176,7 +256,7 @@ export const renderResource = (
                               size: "md",
                               variant: "light",
                               isDisabled: !isEditable,
-                              className: "min-w-[80px] md:min-w-[100px]",
+                              className: "min-w-[80px]",
                               startContent: <Icon icon='material-symbols:sync' className='text-lg' />,
                             }}
                           />
@@ -184,7 +264,7 @@ export const renderResource = (
                             size='md'
                             variant='light'
                             color='danger'
-                            className='min-w-[80px] md:min-w-[100px]'
+                            className='min-w-[80px]'
                             onClick={handleClear}
                             startContent={<Icon icon='material-symbols:remove' className='text-lg' />}
                           >

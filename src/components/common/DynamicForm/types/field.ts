@@ -10,6 +10,15 @@ interface ResourceDisplayField {
   render?: (value: any) => React.ReactNode // 自定义渲染函数
 }
 
+// 触发器配置
+interface ResourceTriggerConfig {
+  type: "button" | "icon"
+  text?: string
+  icon?: string
+  className?: string
+  style?: React.CSSProperties
+}
+
 // 资料配置
 export interface ResourceConfig {
   resourceTitle?: string // 资料标题（可选）
@@ -17,6 +26,12 @@ export interface ResourceConfig {
   multiple?: boolean // 是否支持多选
   displayMode?: "card" // 显示模式,默认 card
   displayFields?: ResourceDisplayField[] // 显示字段配置,不配置则显示所有字段
+  // 新增：主显示字段
+  displayField?: string
+  // 新增：显示格式化函数
+  displayFormat?: (resource: any) => string
+  // 新增：触发器配置
+  triggerConfig?: ResourceTriggerConfig
   loadDataById?: (dataid: string | string[]) => Promise<any> // 加载数据的方法（已废弃）
   fieldMapping?: {
     [targetField: string]:
@@ -33,6 +48,7 @@ export interface ResourceConfig {
 // 资料字段值类型
 export interface ResourceValue {
   dataid: string | string[] // 单个或多个dataid
+  displayValue?: string // 新增：显示值
 }
 
 export interface FileInfo {

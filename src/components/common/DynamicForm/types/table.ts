@@ -14,16 +14,19 @@ export interface TableColumn {
     label: string
     value: string | number
   }>
-  resourceConfig?: ResourceConfig
+  resourceConfig?: ResourceConfig & {
+    // 新增：表格特定的资源配置
+    showTrigger?: boolean // 是否显示触发按钮
+    triggerPosition?: "right" | "cell" // 触发按钮位置
+    inlineDisplay?: boolean // 是否内联显示选择界面
+  }
   render?: (value: any, record: any, index: number) => ReactNode
   summary?: {
     render?: (value: any) => ReactNode
   }
   className?: string
   style?: React.CSSProperties
-  // 新增：标识是否为映射字段
   isMappedField?: boolean
-  // 新增：映射来源字段
   mappedFrom?: string
 }
 

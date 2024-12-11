@@ -93,7 +93,7 @@ type ResourceType = "resource" // 资源选择
 ### 1. 基本配置示例
 
 ```typescript
-// 1. 单选资源字段（用于基本信息）
+// 1. 基础资源字段配置
 {
   name: "supplier",
   label: "供应商",
@@ -102,6 +102,17 @@ type ResourceType = "resource" // 资源选择
   resourceConfig: {
     resourceId: "resource_xxxx",
     multiple: false,  // 单选模式
+    // 显示字段配置
+    displayField: "name", // 主显示字段
+    // 或使用显示格式化
+    displayFormat: (resource) => `${resource.code} - ${resource.name}`,
+    // 触发器配置
+    triggerConfig: {
+      type: "button", // 或 "icon"
+      text: "选择供应商",
+      icon: "mdi:search",
+      className: "custom-trigger"
+    },
     displayFields: [
       {
         key: "code",
@@ -116,33 +127,44 @@ type ResourceType = "resource" // 资源选择
   }
 }
 
-// 2. 多选资源（用于明细表格）
+// 2. 表格中的资源字段配置
 {
-  renderConfig: {
-    table: {
-      columns: [
-        {
-          key: "products",
-          title: "产品",
-          type: "resource",
-          resourceConfig: {
-            resourceId: "resource_xxx",
-            displayFields: [
-              { key: "code", label: "产品编码" },
-              { key: "name", label: "产品名称" }
-            ],
-            // 字段映射配置
-            fieldMapping: {
-              "productCode": "code",
-              "productName": "name",
-              "fullSpec": {
-                fields: ["spec", "model"],
-                transform: (values) => values.join(" - ")
-              }
-            }
-          }
-        }
-      ]
+  key: "product",
+  title: "产品",
+  type: "resource",
+  resourceConfig: {
+    resourceId: "resource_xxx",
+    displayField: "name",
+    showTrigger: true, // 显示触发按钮
+    triggerPosition: "right", // 触发按钮位置
+    inlineDisplay: true, // 内联显示选择界面
+    // 字段映射配置
+    fieldMapping: {
+      "productCode": "code",
+      "productName": "name",
+      // 复杂映射
+      "fullSpec": {
+        fields: ["spec", "model"],
+        transform: (values) => values.join(" - ")
+      }
+    }
+  }
+}
+
+// 3. 多选模式配置
+{
+  name: "materials",
+  label: "原材料",
+  type: "resource",
+  resourceConfig: {
+    resourceId: "resource_xxx",
+    multiple: true,
+    displayFormat: (resources) => 
+      resources.map(r => r.name).join(", "),
+    triggerConfig: {
+      type: "button",
+      text: "选择材料",
+      icon: "mdi:plus"
     }
   }
 }
@@ -152,161 +174,32 @@ type ResourceType = "resource" // 资源选择
 
 1. 基本信息区域：
    - 使用单选资源字段
-   - 使用卡片模式展示
-   - 适合展示单条详细信息
+   - 配置displayField或displayFormat
+   - 使用triggerConfig自定义触发器
 
-2. 明细信息区域：
-   - 使用动态表格
-   - 配置资源选择列
-   - 适合多选和批量操作
+2. 表格中使用：
+   - 配置showTrigger和triggerPosition
+   - 使用inlineDisplay优化交互
+   - 配置fieldMapping实现数据映射
 
 ### 3. 最佳实践建议
 
-1. 单选场景：
-   - 使用资源字段的卡片模式
-   - 展示完整的资源信息
-   - 提供更换和清除操作
+1. 显示优化：
+   - 使用displayField指定主显示字段
+   - 使用displayFormat自定义显示格式
+   - 配置合适的触发器样式
 
-2. 多选场景：
-   - 使用动态表格
-   - 利用字段映射功能
-   - 支持批量选择和操作
+2. 交互优化：
+   - 合理使用triggerConfig
+   - 表格中使用showTrigger
+   - 考虑inlineDisplay提升体验
 
-3. 性能优化：
+3. 数据处理：
+   - 使用fieldMapping映射数据
+   - 处理多选数据格式化
+   - 缓存已选择的数据
+
+4. 性能优化：
    - 使用缓存机制
    - 按需加载数据
    - 优化渲染性能
-
-4. 用户体验：
-   - 提供清晰的操作提示
-   - 支持快速选择和更换
-   - 保持界面简洁直观
-
-## 统一上传字段（Upload）详细说明
-
-### 1. 配置接口
-
-```typescript
-interface UploadFieldConfig {
-  type: "upload"
-  uploadConfig: {
-    // 上传类型
-    uploadType: "file" | "image" | "video" | "audio"
-
-    // 基础配置
-    multiple?: boolean // 是否支持多文件
-    maxSize?: number // 最大文件大小（字节）
-    maxCount?: number // 最大文件数量
-    accept?: string // 接受的文件类型
-
-    // 图片专用配置
-    thumbnail?: boolean // 是否显示缩略图
-    cropOptions?: {
-      aspect?: number // 裁剪比例
-      quality?: number // 压缩质量
-      width?: number // 目标宽度
-      height?: number // 目标高度
-    }
-
-    // 高级配置
-    uploadConfig?: {
-      action?: string // 自定义上传地址
-      headers?: Record<string, string> // 自定义请求头
-      withCredentials?: boolean // 是否携带凭证
-      customRequest?: (options: any) => Promise<any> // 自定义上传实现
-    }
-  }
-}
-```
-
-### 2. 使用示例
-
-#### 2.1 基础文件上传
-
-```typescript
-{
-  name: "documents",
-  label: "文档上传",
-  type: "upload",
-  uploadConfig: {
-    uploadType: "file",
-    multiple: true,
-    maxSize: 10 * 1024 * 1024, // 10MB
-    maxCount: 5,
-    accept: ".pdf,.doc,.docx"
-  }
-}
-```
-
-#### 2.2 图片上传
-
-```typescript
-{
-  name: "avatar",
-  label: "头像上传",
-  type: "upload",
-  uploadConfig: {
-    uploadType: "image",
-    thumbnail: true,
-    cropOptions: {
-      aspect: 1,
-      quality: 0.8,
-      width: 200,
-      height: 200
-    },
-    accept: "image/*"
-  }
-}
-```
-
-#### 2.3 带自定义处理的上传
-
-```typescript
-{
-  name: "files",
-  label: "自定义上传",
-  type: "upload",
-  uploadConfig: {
-    uploadType: "file",
-    uploadConfig: {
-      customRequest: async (options) => {
-        const { file, onProgress, onSuccess, onError } = options
-        try {
-          // 自定义上传逻辑
-          onProgress({ percent: 50 })
-          const result = await customUploadFunction(file)
-          onSuccess(result)
-          return result
-        } catch (error) {
-          onError(error)
-        }
-      }
-    }
-  }
-}
-```
-
-### 3. 最佳实践
-
-#### 3.1 文件大小限制
-
-```typescript
-{
-  name: "attachment",
-  type: "upload",
-  uploadConfig: {
-    uploadType: "file",
-    maxSize: 5 * 1024 * 1024, // 5MB
-    accept: ".pdf,.doc,.docx",
-    // 添加验证器
-    validators: [
-      (value) => {
-        if (value && value.size > 5 * 1024 * 1024) {
-          return "文件大小不能超过5MB"
-        }
-        return undefined
-      }
-    ]
-  }
-}
-```
