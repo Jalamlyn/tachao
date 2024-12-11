@@ -366,7 +366,13 @@ const FormAnalysis: React.FC = () => {
       </Card>
 
       {/* 模板选择模态框 */}
-      <Modal isOpen={isTemplateModalOpen} onClose={onTemplateModalClose} size='2xl' scrollBehavior='inside'>
+      <Modal
+        isOpen={isTemplateModalOpen}
+        onClose={onTemplateModalClose}
+        size='4xl'
+        scrollBehavior='inside'
+        className='max-h-[70vh]'
+      >
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>选择数据源</ModalHeader>
           <ModalBody className='py-4'>
