@@ -16,15 +16,15 @@ const InitializeView: React.FC<InitializeViewProps> = ({ onInitializeSuccess }) 
       setIsInitializing(true)
 
       // 1. 创建模型
-      // const modelResponse = await createModel({
-      //   namespace: "file",
-      //   name: "activities",
-      //   description: "企业网盘文件管理",
-      // })
+      const modelResponse = await createModel({
+        namespace: "file",
+        name: "activities",
+        description: "企业网盘文件管理",
+      })
 
       // 2. 创建files属性
       await createModelProperty({
-        modelId: "1866059191187591170",
+        modelId: modelResponse.id,
         name: "files",
         type: "file",
         description: "文件列表",

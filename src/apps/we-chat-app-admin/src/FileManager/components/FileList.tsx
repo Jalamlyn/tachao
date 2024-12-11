@@ -100,7 +100,6 @@ const FileList: React.FC = () => {
 
   const columns = [
     { name: "文件名", uid: "fileName" },
-    { name: "上传时间", uid: "createdAt" },
     { name: "操作", uid: "actions" },
   ]
 

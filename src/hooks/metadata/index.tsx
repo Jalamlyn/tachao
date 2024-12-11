@@ -224,6 +224,7 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
               <div className='flex flex-col gap-2'>
                 <p>无法删除此模板，因为还有 {usage.count} 个表单正在使用它。</p>
                 <p>请先删除这些表单后再尝试删除模板。</p>
+                <p>表单模板 D: {id}</p>
                 <Button
                   color='primary'
                   size='sm'

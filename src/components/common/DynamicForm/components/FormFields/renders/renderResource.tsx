@@ -56,23 +56,21 @@ export const renderResource = (
         // 格式化显示值
         const formatDisplayValue = (resource: any) => {
           if (!resource) return ""
-          
+
           const { displayField, displayFormat, displayFields } = field.resourceConfig || {}
-          
+
           if (displayFormat) {
             return displayFormat(resource)
           }
-          
+
           if (displayField) {
             return resource[displayField]
           }
-          
+
           if (displayFields?.length) {
-            return displayFields
-              .map(df => `${df.label}: ${resource[df.key]}`)
-              .join(" | ")
+            return displayFields.map((df) => `${df.label}: ${resource[df.key]}`).join(" | ")
           }
-          
+
           return resource.name || resource.title || resource.code || ""
         }
 
@@ -131,31 +129,26 @@ export const renderResource = (
           const commonProps = {
             size: "sm",
             isDisabled: !isEditable || field.disabled,
-            onClick: () => {/* 触发选择 */},
-            className: cn(
-              "min-w-[80px]",
-              triggerConfig.className
-            ),
-            style: triggerConfig.style
+            onClick: () => {
+              /* 触发选择 */
+            },
+            className: cn("min-w-[80px]", triggerConfig.className),
+            style: triggerConfig.style,
           }
 
           if (triggerConfig.type === "icon") {
             return (
-              <Button
-                isIconOnly
-                variant="light"
-                {...commonProps}
-              >
-                <Icon icon={triggerConfig.icon || "mdi:magnify"} className="w-4 h-4" />
+              <Button isIconOnly variant='light' {...commonProps}>
+                <Icon icon={triggerConfig.icon || "mdi:magnify"} className='w-4 h-4' />
               </Button>
             )
           }
 
           return (
             <Button
-              variant="light"
+              variant='light'
               {...commonProps}
-              startContent={triggerConfig.icon && <Icon icon={triggerConfig.icon} className="w-4 h-4" />}
+              startContent={triggerConfig.icon && <Icon icon={triggerConfig.icon} className='w-4 h-4' />}
             >
               {triggerConfig.text || "选择"}
             </Button>
@@ -175,12 +168,12 @@ export const renderResource = (
                       onChange={(e) => {
                         formField.onChange({
                           ...value,
-                          displayValue: e.target.value
+                          displayValue: e.target.value,
                         })
                       }}
                       disabled={!isEditable || field.disabled}
                       placeholder={field.placeholder || "请选择"}
-                      className="flex-1"
+                      className='flex-1'
                     />
                     <ResourceSelectButton
                       resourceName={field.resourceConfig?.resourceId || ""}
@@ -188,10 +181,10 @@ export const renderResource = (
                       onSelect={(selected) => {
                         if (selected.length > 0) {
                           const dataids = selected.map((item) => item.dataid)
-                          const displayValue = selected.map(item => formatDisplayValue(item)).join(", ")
+                          const displayValue = selected.map((item) => formatDisplayValue(item)).join(", ")
                           const newValue = {
                             dataid: isMultiple ? dataids : dataids[0],
-                            displayValue
+                            displayValue,
                           }
                           formField.onChange(newValue)
                           onChange?.(field.name, newValue)
@@ -242,10 +235,10 @@ export const renderResource = (
                             onSelect={(selected) => {
                               if (selected.length > 0) {
                                 const dataids = selected.map((item) => item.dataid)
-                                const displayValue = selected.map(item => formatDisplayValue(item)).join(", ")
+                                const displayValue = selected.map((item) => formatDisplayValue(item)).join(", ")
                                 const newValue = {
                                   dataid: isMultiple ? dataids : dataids[0],
-                                  displayValue
+                                  displayValue,
                                 }
                                 formField.onChange(newValue)
                                 onChange?.(field.name, newValue)

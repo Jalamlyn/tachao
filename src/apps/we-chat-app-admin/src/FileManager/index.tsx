@@ -41,10 +41,8 @@ const FileManager: React.FC = () => {
       // 2. 检查files属性是否存在
       const modelId = modelResponse.data[0].id
       const propertiesResponse = await queryModelProperties(modelId)
-      
-      const hasFilesProperty = propertiesResponse.data.some(
-        (prop) => prop.name === "files" && prop.type === "array"
-      )
+
+      const hasFilesProperty = propertiesResponse.data.some((prop) => prop.name === "files")
 
       setIsInitialized(hasFilesProperty)
 
