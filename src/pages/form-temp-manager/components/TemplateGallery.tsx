@@ -13,13 +13,7 @@ import EditTagsModal from "@/components/EditTagsModal"
 import { useMetadata } from "@/hooks/useMetadata"
 import { useTagManagement } from "@/hooks/useTagManagement"
 import { useTagStore } from "@/stores/useTagStore"
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-  DropdownSection,
-} from "@nextui-org/react"
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, DropdownSection } from "@nextui-org/react"
 
 export interface Template {
   id: string
@@ -160,6 +154,27 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
     }
   }
 
+  // 使用 useMemo 优化过滤后的模板列表
+  const filteredTemplates = React.useMemo(() => {
+    if (!internalTemplates) return []
+    
+    let templates = [...internalTemplates]
+    
+    // 应用标签筛选
+    if (selectedTags.length > 0 && tagsIndex) {
+      templates = filterItemsByTags(templates, selectedTags)
+    }
+    
+    // 应用搜索筛选
+    if (searchValue) {
+      templates = templates.filter(template => 
+        template.title.toLowerCase().includes(searchValue.toLowerCase())
+      )
+    }
+    
+    return templates
+  }, [internalTemplates, selectedTags, searchValue, filterItemsByTags, tagsIndex])
+
   const renderCard = (template: Template) => (
     <Card isPressable isHoverable className='w-full h-[240px] group' onPress={() => onTemplateSelect(template.id)}>
       <CardBody className='p-0 relative overflow-hidden'>
@@ -256,7 +271,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
                     className='text-danger'
                     color='danger'
                     startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
-                    onClick={(e) => handleDeleteClick(template, e)}
+                    onPress={(e) => handleDeleteClick(template, e)}
                   >
                     删除
                   </DropdownItem>
@@ -374,7 +389,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   return (
     <>
       <CardGallery
-        items={internalTemplates}
+        items={filteredTemplates}
         renderCard={renderCard}
         emptyState={renderEmptyState()}
         loadingState={
