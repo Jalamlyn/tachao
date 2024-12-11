@@ -215,7 +215,6 @@ export function MetadataTable<T extends MetadataDetail>({
               value: "text-small",
               listbox: "text-small",
             }}
-            startContent={<Icon icon='mdi:format-list-numbered' className='text-default-500 w-4 h-4' />}
             aria-label='选择每页显示条数'
           >
             {pagination.pageSizeOptions?.map((size) => (
