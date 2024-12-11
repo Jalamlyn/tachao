@@ -12,8 +12,8 @@ interface PrintableTemplateProps {
 const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ config, data }, ref) => {
   // 添加日志：监控传入的数据
   useEffect(() => {
-    console.log('[PrintableTemplate] Received config:', config)
-    console.log('[PrintableTemplate] Received data:', data)
+    console.log("[PrintableTemplate] Received config:", config)
+    console.log("[PrintableTemplate] Received data:", data)
   }, [config, data])
 
   // 标准化配置
@@ -75,11 +75,11 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
       // 处理多个资源
       if (Array.isArray(value.dataid)) {
         const resourcesData = value.dataid
-          .map(id => getResourceFromCache(field.resourceConfig?.resourceId, id))
+          .map((id) => getResourceFromCache(field.resourceConfig?.resourceId, id))
           .filter(Boolean)
         if (resourcesData.length > 0) {
           return resourcesData
-            .map(data => {
+            .map((data) => {
               const displayFields = field.resourceConfig?.displayFields || []
               return displayFields
                 .map((df: any) => `${df.label}: ${data[df.key]}`)
@@ -170,7 +170,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
   // 渲染基本信息字段
   const renderBasicFields = () => {
     const basicInfo = ensureBasicInfo()
-    console.log('[PrintableTemplate] Basic info data:', basicInfo)
+    console.log("[PrintableTemplate] Basic info data:", basicInfo)
 
     if (
       !renderConfig.basicFields ||
@@ -184,7 +184,9 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
             {fieldArray.map((field, index) => (
               <tr key={field.name} className={index % 2 === 0 ? "bg-gray-50" : ""}>
                 <td className='border border-gray-300 p-2 w-[200px] font-medium text-gray-700'>{field.label}</td>
-                <td className='border border-gray-300 p-2'>{formatFieldValue(field.type, basicInfo[field.name], field)}</td>
+                <td className='border border-gray-300 p-2'>
+                  {formatFieldValue(field.type, basicInfo[field.name], field)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -225,8 +227,8 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     if (!renderConfig.table) return null
 
     const tableData = data?.tableData || []
-    console.log('[PrintableTemplate] Table data:', tableData)
-    
+    console.log("[PrintableTemplate] Table data:", tableData)
+
     const displayData = tableData.length > 0 ? tableData : [{}]
 
     return (
@@ -275,7 +277,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     if (!renderConfig.processSteps) return null
 
     const processConfirmations = data?.processConfirmations || {}
-    console.log('[PrintableTemplate] Process confirmations:', processConfirmations)
+    console.log("[PrintableTemplate] Process confirmations:", processConfirmations)
 
     return (
       <div className='mt-6 space-y-6'>
@@ -441,7 +443,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
           h1 {
             font-size: 24px !important;
             margin-bottom: 12px !important;
-          }```
+          }
           h2 {
             font-size: 18px !important;
             margin-bottom: 8px !important;

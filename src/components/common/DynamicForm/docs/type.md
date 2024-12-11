@@ -492,20 +492,6 @@ config: {
     amount: '0.00'
   }
 }
-表格列计算字段的处理
-// 使用watch监听依赖字段变化
-watch: (form) => {
-  const subscriptions = [
-    form.watch(['quantity', 'price'], ([quantity, price]) => {
-      const amount = ((quantity || 0) * (price || 0)).toFixed(2)
-      form.setValue('amount', amount)
-    })
-  ]
-
-  return () => {
-    subscriptions.forEach(sub => sub?.unsubscribe?.())
-  }
-}
 资源选择后的数据联动
 // 在resourceConfig中配置fieldMapping
 resourceConfig: {
