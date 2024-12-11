@@ -234,9 +234,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       return null
     }
 
-    // 修改: 增加summary的空值处理
-    const values = form.getValues() || {}
-    return column.summary.render(values)
+    // 修改: 直接使用tableData作为summary.render的参数
+    return column.summary.render(tableData || [])
   }
 
   return (
