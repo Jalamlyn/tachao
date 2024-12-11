@@ -1,4 +1,4 @@
-import React, { forwardRef } from "react"
+import React, { forwardRef, useEffect } from "react"
 import { format } from "date-fns"
 import { DynamicFormConfig } from "../types"
 import { cn } from "@/theme/cn"
@@ -10,6 +10,12 @@ interface PrintableTemplateProps {
 }
 
 const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ config, data }, ref) => {
+  // 添加日志：监控传入的数据
+  useEffect(() => {
+    console.log('[PrintableTemplate] Received config:', config)
+    console.log('[PrintableTemplate] Received data:', data)
+  }, [config, data])
+
   // 标准化配置
   const normalizeConfig = (rawConfig: any): DynamicFormConfig => {
     if (!rawConfig) return rawConfig
@@ -164,6 +170,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
   // 渲染基本信息字段
   const renderBasicFields = () => {
     const basicInfo = ensureBasicInfo()
+    console.log('[PrintableTemplate] Basic info data:', basicInfo)
 
     if (
       !renderConfig.basicFields ||
@@ -218,6 +225,8 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     if (!renderConfig.table) return null
 
     const tableData = data?.tableData || []
+    console.log('[PrintableTemplate] Table data:', tableData)
+    
     const displayData = tableData.length > 0 ? tableData : [{}]
 
     return (
@@ -266,6 +275,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     if (!renderConfig.processSteps) return null
 
     const processConfirmations = data?.processConfirmations || {}
+    console.log('[PrintableTemplate] Process confirmations:', processConfirmations)
 
     return (
       <div className='mt-6 space-y-6'>
@@ -431,7 +441,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
           h1 {
             font-size: 24px !important;
             margin-bottom: 12px !important;
-          }
+          }```
           h2 {
             font-size: 18px !important;
             margin-bottom: 8px !important;
