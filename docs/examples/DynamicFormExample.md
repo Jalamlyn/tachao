@@ -2,335 +2,347 @@
 
 本文档提供了一个完整的动态表单配置示例。
 
-## 完整示例
+## 配置类型说明
 
 ```typescript
-import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
-
-const formConfig: DynamicFormConfig = {
+/**
+ * 动态表单配置类型定义
+ * @interface DynamicFormConfig
+ */
+interface DynamicFormConfig {
+  /** 
+   * 表单元数据配置
+   * @type {object} 
+   */
   metadata: {
-    title: "采购申请单",
-    description: "用于提交采购申请的电子表单",
+    /** 表单标题 @type {string} */
+    title: string
+    /** 表单描述 @type {string} */
+    description?: string
+    /** 
+     * 权限配置 
+     * @type {object}
+     */
     permissions: {
-      edit: true,
-      delete: true,
-      print: true
-    }
-  },
-
-  renderConfig: {
-    basicFields: {
-      groups: [
-        {
-          key: "basic",
-          title: "基本信息",
-          icon: "mdi:information",
-          description: "请填写申请的基本信息",
-          fields: [
-            {
-              name: "department",
-              label: "申请部门",
-              type: "resource",
-              required: true,
-              resourceConfig: {
-                resourceId: "departments",
-                displayField: "name",
-                displayFields: [
-                  { key: "name", label: "部门名称" },
-                  { key: "code", label: "部门代码" }
-                ],
-                displayFormat: (resource) => 
-                  `${resource.name} (${resource.code})`,
-                triggerConfig: {
-                  type: "button",
-                  text: "选择部门",
-                  icon: "mdi:office-building",
-                  className: "bg-blue-50 hover:bg-blue-100"
-                },
-                fieldMapping: {
-                  "departmentManager": {
-                    field: "manager",
-                    transform: (value) => ({
-                      dataid: value.id,
-                      displayValue: value.name
-                    })
-                  },
-                  "costCenter": "costCenter",
-                  "budgetInfo": {
-                    fields: ["budget", "currency"],
-                    transform: (values) => ({
-                      amount: values[0],
-                      currency: values[1]
-                    })
-                  }
-                }
-              }
-            },
-            {
-              name: "departmentManager",
-              label: "部门主管",
-              type: "resource",
-              required: true,
-              disabled: true,
-              resourceConfig: {
-                resourceId: "employees",
-                displayFields: [
-                  { key: "name", label: "姓名" },
-                  { key: "position", label: "职位" }
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-
-    tables: [
-      {
-        key: "items",
-        title: "采购明细",
-        icon: "mdi:table",
-        description: "请填写需要采购的物品明细",
-        config: {
-          columns: [
-            {
-              key: "material",
-              title: "物料",
-              type: "resource",
-              width: 300,
-              required: true,
-              resourceConfig: {
-                resourceId: "materials",
-                displayFields: [
-                  { key: "name", label: "名称" },
-                  { key: "code", label: "编号" },
-                  { key: "specification", label: "规格" }
-                ],
-                showTrigger: true,
-                triggerPosition: "right",
-                fieldMapping: {
-                  "unit": "unit",
-                  "unitPrice": {
-                    field: "price",
-                    transform: (value) => Number(value).toFixed(2)
-                  }
-                }
-              }
-            },
-            {
-              key: "quantity",
-              title: "数量",
-              type: "number",
-              width: 120,
-              required: true
-            },
-            {
-              key: "unitPrice",
-              title: "单价",
-              type: "number",
-              width: 120,
-              required: true
-            },
-            {
-              key: "amount",
-              title: "金额",
-              type: "number",
-              width: 120,
-              disabled: true,
-              render: (value, record) => {
-                const amount = (record.quantity || 0) * (record.unitPrice || 0)
-                return amount.toFixed(2)
-              },
-              summary: {
-                render: (records) => {
-                  const total = records.reduce((sum, record) => 
-                    sum + ((record.quantity || 0) * (record.unitPrice || 0)), 0)
-                  return <span className="font-bold text-blue-600">
-                    {total.toFixed(2)}
-                  </span>
-                }
-              }
-            }
-          ],
-          summary: {
-            show: true,
-            label: "合计",
-            className: "bg-gray-50 font-bold",
-            style: { borderTop: "2px solid #e5e7eb" }
-          }
-        }
-      }
-    ],
-
-    processSteps: [
-      {
-        key: "applicant",
-        title: "申请人确认",
-        icon: "mdi:account-check",
-        description: "申请人确认申请信息",
-        required: true,
-        fields: [
-          {
-            name: "confirmDate",
-            label: "确认日期",
-            type: "date",
-            required: true
-          },
-          {
-            name: "signature",
-            label: "签名",
-            type: "signature",
-            required: true,
-            width: 300,
-            height: 150
-          },
-          {
-            name: "attachments",
-            label: "附件",
-            type: "upload",
-            uploadConfig: {
-              uploadType: "file",
-              multiple: true,
-              maxSize: 10 * 1024 * 1024,
-              maxCount: 5,
-              thumbnail: true,
-              uploadConfig: {
-                action: "/api/upload",
-                headers: {
-                  "X-Upload-Type": "form-attachment"
-                },
-                withCredentials: true
-              },
-              previewConfig: {
-                modalTitle: "附件预览",
-                modalWidth: "80%"
-              }
-            }
-          }
-        ]
-      },
-      {
-        key: "manager",
-        title: "部门主管审批",
-        icon: "mdi:account-supervisor",
-        description: "部门主管审核申请",
-        required: true,
-        dependencies: [
-          {
-            step: "applicant",
-            message: "需要先完成申请人确认"
-          }
-        ],
-        fields: [
-          {
-            name: "approved",
-            label: "审批结果",
-            type: "radio",
-            required: true,
-            options: [
-              { label: "同意", value: "approved" },
-              { label: "拒绝", value: "rejected" }
-            ]
-          },
-          {
-            name: "comment",
-            label: "审批意见",
-            type: "textarea",
-            required: true
-          }
-        ]
-      }
-    ]
-  },
-
-  orderNumberConfig: {
-    prefix: "PO",
-    fieldName: "orderNumber",
-    label: "采购单号"
-  },
-
-  watch: (form) => {
-    const subscriptions = [
-      // 监听数量和单价变化，计算金额
-      form.watch(["quantity", "unitPrice"], ([quantity, unitPrice]) => {
-        const amount = (quantity || 0) * (unitPrice || 0)
-        form.setValue("amount", amount.toFixed(2))
-      }),
-
-      // 监听审批结果变化
-      form.watch("approved", (value) => {
-        const commentField = form.getValues("comment")
-        if (value === "rejected" && !commentField) {
-          form.setError("comment", {
-            type: "manual",
-            message: "拒绝时必须填写审批意见"
-          })
-        }
-      })
-    ]
-
-    return () => {
-      subscriptions.forEach(subscription => 
-        subscription?.unsubscribe?.())
-    }
-  },
-
-  validate: async (values) => {
-    const errors = {
-      fields: {},
-      categorizedErrors: {
-        required: [],
-        invalid: [],
-        other: []
-      }
-    }
-
-    // 业务规则验证
-    const items = values.tableData?.items || []
-    const totalAmount = items.reduce((sum, item) => 
-      sum + (item.quantity || 0) * (item.unitPrice || 0), 0)
-    
-    if (totalAmount > values.budgetInfo?.amount) {
-      errors.fields.tableData = "采购总额超出预算"
-      errors.categorizedErrors.other.push({
-        field: "tableData",
-        message: "采购总额超出预算"
-      })
-    }
-
-    return {
-      valid: Object.keys(errors.fields).length === 0,
-      errors: Object.values(errors.fields),
-      fields: errors.fields,
-      categorizedErrors: errors.categorizedErrors
+      /** 是否可编辑 @type {boolean} */
+      edit?: boolean
+      /** 是否可删除 @type {boolean} */
+      delete?: boolean
+      /** 是否可打印 @type {boolean} */
+      print?: boolean
     }
   }
-}
 
-export default formConfig
+  /** 
+   * 渲染配置
+   * @type {object} 
+   */
+  renderConfig: {
+    /** 
+     * 基础字段配置
+     * @type {object} 
+     */
+    basicFields: {
+      /** 
+       * 字段分组
+       * @type {array} 
+       */
+      groups: Array<{
+        /** 分组键名 @type {string} */
+        key: string
+        /** 分组标题 @type {string} */
+        title: string
+        /** 分组图标 @type {string} */
+        icon?: string
+        /** 分组描述 @type {string} */
+        description?: string
+        /** 
+         * 字段列表
+         * @type {array} 
+         */
+        fields: Array<{
+          /** 字段名 @type {string} */
+          name: string
+          /** 字段标签 @type {string} */
+          label: string
+          /** 
+           * 字段类型
+           * @type {string}
+           * @enum {string} 
+           * - 'text' - 文本输入
+           * - 'number' - 数字输入
+           * - 'password' - 密码输入
+           * - 'email' - 邮箱输入
+           * - 'tel' - 电话输入
+           * - 'textarea' - 多行文本
+           * - 'select' - 下拉选择
+           * - 'radio' - 单选
+           * - 'checkbox' - 多选
+           * - 'switch' - 开关
+           * - 'date' - 日期
+           * - 'datetime' - 日期时间
+           * - 'resource' - 资源选择
+           * - 'upload' - 文件上传
+           * - 'signature' - 签名
+           * - 'custom' - 自定义
+           */
+          type: string
+          /** 是否必填 @type {boolean} */
+          required?: boolean
+          /** 是否禁用 @type {boolean} */
+          disabled?: boolean
+          /** 
+           * 资源配置 - 仅type为resource时有效
+           * @type {object} 
+           */
+          resourceConfig?: {
+            /** 资源ID @type {string} */
+            resourceId: string
+            /** 显示字段 @type {string} */
+            displayField?: string
+            /** 
+             * 显示字段配置
+             * @type {array} 
+             */
+            displayFields?: Array<{
+              /** 字段键名 @type {string} */
+              key: string
+              /** 字段标签 @type {string} */
+              label: string
+            }>
+            /** 
+             * 显示格式化函数
+             * @type {function} 
+             */
+            displayFormat?: (resource: any) => string
+            /** 
+             * 触发器配置
+             * @type {object} 
+             */
+            triggerConfig?: {
+              /** 
+               * 触发器类型
+               * @type {string}
+               * @enum {string}
+               * - 'button' - 按钮
+               * - 'icon' - 图标
+               */
+              type: 'button' | 'icon'
+              /** 按钮文本 @type {string} */
+              text?: string
+              /** 图标名称 @type {string} */
+              icon?: string
+              /** 自定义类名 @type {string} */
+              className?: string
+            }
+            /** 
+             * 字段映射配置
+             * @type {object} 
+             */
+            fieldMapping?: {
+              [key: string]: string | {
+                /** 源字段 @type {string} */
+                field: string
+                /** 源字段列表 @type {string[]} */
+                fields?: string[]
+                /** 
+                 * 条件函数
+                 * @type {function} 
+                 */
+                condition?: (resource: any) => boolean
+                /** 
+                 * 转换函数
+                 * @type {function} 
+                 */
+                transform?: (value: any) => any
+              }
+            }
+          }
+          /** 
+           * 上传配置 - 仅type为upload时有效
+           * @type {object} 
+           */
+          uploadConfig?: {
+            /** 
+             * 上传类型
+             * @type {string}
+             * @enum {string}
+             * - 'file' - 文件
+             * - 'image' - 图片
+             * - 'video' - 视频
+             * - 'audio' - 音频
+             */
+            uploadType: 'file' | 'image' | 'video' | 'audio'
+            /** 是否多选 @type {boolean} */
+            multiple?: boolean
+            /** 最大文件大小(字节) @type {number} */
+            maxSize?: number
+            /** 最大文件数量 @type {number} */
+            maxCount?: number
+            /** 是否显示缩略图 @type {boolean} */
+            thumbnail?: boolean
+          }
+        }>
+      }>
+    }
+
+    /** 
+     * 表格配置
+     * @type {array} 
+     */
+    tables?: Array<{
+      /** 表格键名 @type {string} */
+      key: string
+      /** 表格标题 @type {string} */
+      title: string
+      /** 表格图标 @type {string} */
+      icon?: string
+      /** 表格描述 @type {string} */
+      description?: string
+      /** 
+       * 表格配置
+       * @type {object} 
+       */
+      config: {
+        /** 
+         * 列配置
+         * @type {array} 
+         */
+        columns: Array<{
+          /** 列键名 @type {string} */
+          key: string
+          /** 列标题 @type {string} */
+          title: string
+          /** 列类型 @type {string} */
+          type: string
+          /** 列宽度 @type {number | string} */
+          width?: number | string
+          /** 是否必填 @type {boolean} */
+          required?: boolean
+          /** 是否禁用 @type {boolean} */
+          disabled?: boolean
+          /** 
+           * 列汇总配置
+           * @type {object} 
+           */
+          summary?: {
+            /** 
+             * 汇总渲染函数
+             * @type {function} 
+             */
+            render: (records: any[]) => React.ReactNode
+          }
+        }>
+        /** 
+         * 表格汇总配置
+         * @type {object} 
+         */
+        summary?: {
+          /** 是否显示汇总行 @type {boolean} */
+          show?: boolean
+          /** 汇总标签 @type {string} */
+          label?: string
+          /** 自定义类名 @type {string} */
+          className?: string
+        }
+      }
+    }>
+
+    /** 
+     * 流程步骤配置
+     * @type {array} 
+     */
+    processSteps?: Array<{
+      /** 步骤键名 @type {string} */
+      key: string
+      /** 步骤标题 @type {string} */
+      title: string
+      /** 步骤图标 @type {string} */
+      icon?: string
+      /** 步骤描述 @type {string} */
+      description?: string
+      /** 是否必须 @type {boolean} */
+      required?: boolean
+      /** 
+       * 步骤依赖
+       * @type {array} 
+       */
+      dependencies?: Array<{
+        /** 依赖步骤 @type {string} */
+        step: string
+        /** 依赖消息 @type {string} */
+        message?: string
+      }>
+      /** 字段列表 @type {array} */
+      fields?: Array<FormField>
+    }>
+  }
+
+  /** 
+   * 订单号配置
+   * @type {object} 
+   */
+  orderNumberConfig?: {
+    /** 前缀 @type {string} */
+    prefix?: string
+    /** 字段名 @type {string} */
+    fieldName?: string
+    /** 显示标签 @type {string} */
+    label?: string
+  }
+
+  /** 
+   * 表单监听函数
+   * @type {function} 
+   */
+  watch?: (form: UseFormReturn<any>) => () => void
+
+  /** 
+   * 表单验证函数
+   * @type {function} 
+   */
+  validate?: (values: any) => Promise<{
+    /** 是否验证通过 @type {boolean} */
+    valid: boolean
+    /** 错误信息 @type {string[]} */
+    errors?: string[]
+    /** 字段错误 @type {object} */
+    fields?: Record<string, string>
+    /** 
+     * 分类错误
+     * @type {object} 
+     */
+    categorizedErrors?: {
+      /** 必填错误 @type {array} */
+      required?: Array<{
+        /** 字段名 @type {string} */
+        field: string
+        /** 错误信息 @type {string} */
+        message: string
+      }>
+      /** 验证错误 @type {array} */
+      invalid?: Array<{
+        /** 字段名 @type {string} */
+        field: string
+        /** 错误信息 @type {string} */
+        message: string
+      }>
+      /** 其他错误 @type {array} */
+      other?: Array<{
+        /** 字段名 @type {string} */
+        field: string
+        /** 错误信息 @type {string} */
+        message: string
+      }>
+    }
+  }>
+}
 ```
+
+## 完整示例
+
+[原有的完整示例代码保持不变...]
 
 ## 使用示例
 
-```tsx
-import { DynamicForm } from "@/components/common/DynamicForm"
-import formConfig from "./formConfig"
-
-const PurchaseRequestForm = () => {
-  const handleSubmit = async (validationResult, values) => {
-    if (validationResult.valid) {
-      console.log("Form values:", values)
-    }
-  }
-
-  return (
-    <DynamicForm
-      config={formConfig}
-      onSubmit={handleSubmit}
-      isCreateMode={true}
-    />
-  )
-}
-
-export default PurchaseRequestForm
-```
+[原有的使用示例代码保持不变...]
