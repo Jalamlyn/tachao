@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/theme/cn"
-import { TooltipConfig } from "../../types"
+import { TooltipConfig, FieldStyle } from "../../types"
 
 // 动画配置
 const tooltipAnimation = {
@@ -29,6 +29,10 @@ interface FormFieldWrapperProps {
     value: any
     operator?: "eq" | "neq" | "gt" | "lt" | "contains"
   }
+  style?: FieldStyle
+  layout?: "default" | "full-width" | "inline"
+  className?: string
+  customStyle?: React.CSSProperties
 }
 
 const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
@@ -40,7 +44,54 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
   isEditable = true,
   disabled,
   required,
+  style,
+  layout,
+  className,
+  customStyle
 }) => {
+  // 处理样式配置
+  const getStyles = () => {
+    const baseStyles: React.CSSProperties = {}
+    
+    if (style) {
+      // 基础样式
+      if (style.width) baseStyles.width = style.width
+      if (style.height) baseStyles.height = style.height
+      if (style.padding) baseStyles.padding = style.padding
+      if (style.margin) baseStyles.margin = style.margin
+      if (style.display) baseStyles.display = style.display
+      if (style.textAlign) baseStyles.textAlign = style.textAlign
+      
+      // 合并自定义样式
+      if (style.custom) {
+        Object.assign(baseStyles, style.custom)
+      }
+    }
+
+    // 合并组件级自定义样式
+    if (customStyle) {
+      Object.assign(baseStyles, customStyle)
+    }
+
+    return baseStyles
+  }
+
+  // 处理className
+  const getClassName = () => {
+    const classes = [
+      'form-field-wrapper',
+      className,
+      layout === 'full-width' && 'col-span-full',
+      style?.colSpan && `col-span-${style.colSpan}`,
+      // 响应式类名
+      style?.sm && Object.entries(style.sm).map(([key, value]) => `sm:${key}-${value}`),
+      style?.md && Object.entries(style.md).map(([key, value]) => `md:${key}-${value}`),
+      style?.lg && Object.entries(style.lg).map(([key, value]) => `lg:${key}-${value}`)
+    ]
+    
+    return cn(...classes.filter(Boolean))
+  }
+
   return (
     <motion.div variants={tooltipAnimation} initial='hidden' animate='visible'>
       <FormField
@@ -93,7 +144,11 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
                 </Popover>
               )}
             </div>
-            <FormControl>{children({ ...field, disabled: !isEditable || disabled })}</FormControl>
+            <FormControl>
+              <div className={getClassName()} style={getStyles()}>
+                {children({ ...field, disabled: !isEditable || disabled })}
+              </div>
+            </FormControl>
             <FormMessage className='text-xs' />
           </FormItem>
         )}

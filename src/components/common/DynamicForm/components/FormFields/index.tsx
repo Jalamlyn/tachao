@@ -107,20 +107,35 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
 
   return (
     <div className={cn("grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6", "form-fields-container")}>
-      {fields.map((field) => (
-        <div
-          key={field.name}
-          className={cn(
-            "w-full",
-            "form-field-wrapper",
-            "hover:bg-gray-50/50 rounded-lg p-2 -m-2",
-            "transition-colors duration-200",
-            field.type === "resource" && "md:col-span-2"
-          )}
-        >
-          {renderField(field)}
-        </div>
-      ))}
+      {fields.map((field) => {
+        // 获取字段容器的类名
+        const containerClassName = cn(
+          "w-full",
+          "form-field-wrapper",
+          "hover:bg-gray-50/50 rounded-lg p-2 -m-2",
+          "transition-colors duration-200",
+          field.type === "resource" && "md:col-span-2",
+          field.layout === "full-width" && "col-span-full md:col-span-2",
+          field.style?.colSpan && `col-span-${field.style.colSpan}`,
+          field.className
+        )
+
+        // 获取字段容器的样式
+        const containerStyle: React.CSSProperties = {
+          ...(field.style?.custom || {}),
+          ...(field.customStyle || {})
+        }
+
+        return (
+          <div
+            key={field.name}
+            className={containerClassName}
+            style={containerStyle}
+          >
+            {renderField(field)}
+          </div>
+        )
+      })}
     </div>
   )
 }

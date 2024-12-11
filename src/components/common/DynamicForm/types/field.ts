@@ -52,20 +52,37 @@ export interface ResourceTriggerConfig {
 }
 
 /**
+ * 字段样式配置
+ * @description 配置表单字段的样式
+ */
+export interface FieldStyle {
+  /** 宽度 */
+  width?: string | number
+  /** 高度 */
+  height?: string | number
+  /** 内边距 */
+  padding?: string | number
+  /** 外边距 */
+  margin?: string | number
+  /** 显示方式 */
+  display?: 'block' | 'inline-block' | 'flex'
+  /** 跨列数 */
+  colSpan?: number
+  /** 文本对齐 */
+  textAlign?: 'left' | 'center' | 'right'
+  /** 小屏样式 */
+  sm?: Partial<FieldStyle>
+  /** 中屏样式 */
+  md?: Partial<FieldStyle>
+  /** 大屏样式 */
+  lg?: Partial<FieldStyle>
+  /** 自定义样式 */
+  custom?: React.CSSProperties
+}
+
+/**
  * 资源配置
  * @description 资源选择器的完整配置
- * 
- * @example
- * ```typescript
- * const resourceConfig: ResourceConfig = {
- *   resourceId: 'users',
- *   multiple: true,
- *   displayFields: [
- *     { key: 'name', label: '姓名' },
- *     { key: 'email', label: '邮箱' }
- *   ]
- * }
- * ```
  */
 export interface ResourceConfig {
   /** 资料标题 */
@@ -130,20 +147,6 @@ export interface FileInfo {
 /**
  * 表单字段
  * @description 表单字段的完整配置
- * 
- * @example
- * ```typescript
- * const field: FormField = {
- *   name: 'username',
- *   label: '用户名',
- *   type: 'text',
- *   required: true,
- *   placeholder: '请输入用户名',
- *   validators: [
- *     value => value.length < 3 ? '用户名至少3个字符' : undefined
- *   ]
- * }
- * ```
  */
 export interface FormField {
   /** 字段名 */
@@ -203,11 +206,13 @@ export interface FormField {
   /** 步长 */
   step?: number
   /** 布局方式 */
-  layout?: "horizontal" | "vertical"
+  layout?: "default" | "full-width" | "inline"
   /** 路径 */
   path?: string
+  /** 样式配置 */
+  style?: FieldStyle
   /** 自定义样式 */
-  style?: React.CSSProperties
+  customStyle?: React.CSSProperties
   /** 上传配置 */
   uploadConfig?: {
     /** 上传类型 */
@@ -280,17 +285,6 @@ export interface FormField {
 /**
  * 表单字段分组
  * @description 表单字段的分组配置
- * 
- * @example
- * ```typescript
- * const group: FormFieldGroup = {
- *   key: 'basicInfo',
- *   title: '基本信息',
- *   fields: [
- *     { name: 'username', label: '用户名', type: 'text' }
- *   ]
- * }
- * ```
  */
 export interface FormFieldGroup {
   /** 分组键名 */
