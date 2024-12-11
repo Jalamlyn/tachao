@@ -95,6 +95,7 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
         onClose={onClose}
         size='3xl'
         scrollBehavior='inside'
+        className='max-h-[90vh]'
         classNames={{
           header: "border-b",
           body: "py-6",
@@ -154,14 +155,13 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
                         <Checkbox
                           key={template.id}
                           isSelected={selectedTemplateIds.includes(template.id)}
-                          className='mr-2'
                           onValueChange={(isSelected) => {
                             setSelectedTemplateIds((prev) =>
                               isSelected ? [...prev, template.id] : prev.filter((id) => id !== template.id)
                             )
                           }}
                         >
-                          {template.title}
+                          <span className='mx-2'>{template.title}</span>
                         </Checkbox>
                       ))}
                       {templates.length === 0 && <p className='text-default-500'>暂无可用的表单模板</p>}
@@ -182,7 +182,7 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
                             )
                           }}
                         >
-                          {report.title}
+                          <span className='mx-2'>{report.title}</span>
                         </Checkbox>
                       ))}
                       {reports.length === 0 && <p className='text-default-500'>暂无可用的数据报表</p>}

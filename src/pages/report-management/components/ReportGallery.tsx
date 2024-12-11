@@ -1,12 +1,5 @@
 import React, { useState } from "react"
-import {
-  Card,
-  CardBody,
-  CardFooter,
-  Button,
-  useDisclosure,
-  Chip,
-} from "@nextui-org/react"
+import { Card, CardBody, CardFooter, Button, useDisclosure, Chip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import message from "@/components/Message"
@@ -101,19 +94,19 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
   }
 
   const handleDeleteClick = (report: Report, e: React.MouseEvent) => {
-    e.stopPropagation()
+    
     setSelectedReport(report)
     onOpen()
   }
 
   const handleShareClick = (report: Report, e: React.MouseEvent) => {
-    e.stopPropagation()
+    
     setSelectedReport(report)
     onShareOpen()
   }
 
   const handleAIAnalysisClick = async (report: Report, e: React.MouseEvent) => {
-    e.stopPropagation()
+    
     navigate(`/we-chat-app/admin/reports/ai/${report.id}`, {
       state: {
         title: report.title,
@@ -122,13 +115,13 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
   }
 
   const handleRenameClick = (report: Report, e: React.MouseEvent) => {
-    e.stopPropagation()
+    
     setSelectedReport(report)
     setIsRenameModalOpen(true)
   }
 
   const handleEditTagsClick = (report: Report, e: React.MouseEvent) => {
-    e.stopPropagation()
+    
     setSelectedReport(report)
     setIsEditTagsModalOpen(true)
   }
@@ -239,7 +232,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
               size='sm'
               variant='light'
               className='text-default-400 hover:text-danger hover:bg-danger-50 transition-colors duration-300'
-              onClick={(e) => handleDeleteClick(report, e)}
+              onPress={(e) => handleDeleteClick(report, e)}
             >
               <Icon icon='mdi:delete' className='w-4 h-4' />
             </Button>
@@ -303,7 +296,9 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
               .map((tag) => (
                 <Chip
                   key={`${tag.id}-${tagsVersion}`}
-                  startContent={selectedTags.includes(tag.id) && <Icon className='ml-2 w-5 h-5' icon='line-md:check-all' />}
+                  startContent={
+                    selectedTags.includes(tag.id) && <Icon className='ml-2 w-5 h-5' icon='line-md:check-all' />
+                  }
                   onClick={() => {
                     setSelectedTags((prev) =>
                       prev.includes(tag.id) ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
@@ -330,16 +325,14 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
         renderCard={renderCard}
         emptyState={
           <EmptyState
-            type="no-data"
+            type='no-data'
             title={hasTemplates ? "还没有报表" : "还没有可用的数据源"}
             description={
-              hasTemplates 
-                ? "选择一个表单模板开始创建你的第一个报表"
-                : "创建报表前需要先创建表单模板作为数据源"
+              hasTemplates ? "选择一个表单模板开始创建你的第一个报表" : "创建报表前需要先创建表单模板作为数据源"
             }
             action={{
               text: hasTemplates ? "去创建" : "去创建模板",
-              onClick: hasTemplates ? onCreateReport : () => navigate("/we-chat-app/admin/documents")
+              onClick: hasTemplates ? onCreateReport : () => navigate("/we-chat-app/admin/documents"),
             }}
           />
         }
@@ -356,7 +349,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
       />
 
       <ConfirmModal
-        type="delete"
+        type='delete'
         isOpen={isOpen}
         onClose={onClose}
         content={`确定要删除报表 "${selectedReport?.title}" 吗？此操作不可撤销。`}
@@ -377,16 +370,12 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
         }}
         initialName={selectedReport?.title || ""}
         onRename={handleRename}
-        title="重命名报表"
-        inputLabel="报表名称" 
-        inputPlaceholder="请输入新的报表名称"
+        title='重命名报表'
+        inputLabel='报表名称'
+        inputPlaceholder='请输入新的报表名称'
       />
 
-      <TagManageModal
-        isOpen={isTagManageModalOpen}
-        onClose={() => setIsTagManageModalOpen(false)}
-        type="report"
-      />
+      <TagManageModal isOpen={isTagManageModalOpen} onClose={() => setIsTagManageModalOpen(false)} type='report' />
 
       <EditTagsModal
         isOpen={isEditTagsModalOpen}
@@ -395,7 +384,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
           setSelectedReport(null)
         }}
         item={selectedReport}
-        type="report"
+        type='report'
         tagsIndex={tagsIndex}
         onUpdateTags={handleUpdateTags}
       />

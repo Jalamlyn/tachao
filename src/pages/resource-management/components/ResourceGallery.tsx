@@ -83,7 +83,6 @@ const ResourceGallery = forwardRef<ResourceGalleryRef, ResourceGalleryProps>(
     }
 
     const handleDeleteClick = (resource: Resource, e: React.MouseEvent) => {
-      e.stopPropagation()
       setSelectedResource(resource)
       onOpen()
     }
@@ -98,7 +97,6 @@ const ResourceGallery = forwardRef<ResourceGalleryRef, ResourceGalleryProps>(
     }
 
     const handleCopyId = async (resource: Resource, e: React.MouseEvent) => {
-      e.stopPropagation()
       try {
         await navigator.clipboard.writeText(resource.id)
         message.success("资料ID已复制到剪贴板")
