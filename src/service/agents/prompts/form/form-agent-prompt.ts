@@ -1,5 +1,5 @@
 import financeTemplatePrompt from "./finance-template-prompt"
-import { markdown as code } from "@/code.md"
+import { doc } from "@/components/common/DynamicForm/docs"
 
 const generateFormAgentPrompt = (
   rawConfig: string | null,
@@ -18,59 +18,8 @@ const generateFormAgentPrompt = (
       ? `
 # 资料映射指南
 可用的资料列表, 你可以阅读资料中的 rowData 来理解资料的字段和数据：
-${resources}
-
-# 资料字段使用指南
-
-## 1. 场景区分
-1. 基本信息区域（单选资料）：
-   - 使用 resource 字段
-   - 单条资料展示
-   - 使用卡片模式
-
-2. 明细信息区域（多选资料）：
-   - 使用动态表格
-   - 配置资源选择列
-   - 支持批量操作
-
-资料映射规则：
-1. 分析用户提到的资料名称
-2. 在资料列表中找到匹配的资料
-3. 将对应的 resource 的 id 填入 resourceConfig.resourceId 字段
-4. 如果找不到匹配的资料，返回错误信息
-
-正确的资料字段配置示例：
-{
-  name: "resourceField",
-  label: "资料字段",
-  type: "resource",  // 必须是 resource 类型
-  required: true,
-  resourceConfig: {
-    resourceId: "资料ID",  // 填入匹配到的资料ID
-    multiple: false,  // 是否支持多选
-    displayMode: "card", // 显示模式：card | table
-    displayFields: [
-      {
-        key: "field1",
-        label: "字段1"
-      },
-      {
-        key: "field2",
-        label: "字段2"
-      }
-    ]
-  }
-}
-
-注意事项：
-1. 字段类型必须是 "resource"
-2. resourceTitle 必须放在 resourceConfig 对象中
-3. 需要配置 displayMode 和 displayFields
-4. 考虑是否需要 multiple 选项
-5. 如果找不到匹配的资料，使用 <shata-ai-error> 标签返回错误
-`
+${resources}`
       : ""
-
   // 图片分析指南
   const imageAnalysisGuide = hasImage
     ? `
@@ -150,7 +99,7 @@ export default {
     metadata: {
       title: "",//表单标题
     },
-    renderConfig: {} //仔细阅读 <project> 包裹的动态表单的源代码, 生成配置代码
+    renderConfig: {} //仔细阅读 <doc>, 生成配置代码
   }
 }
 </shata-ai-form>
@@ -174,9 +123,11 @@ ${imageAnalysisGuide}
 ${interactionProcess}
 ${configGenerationSpec}
 ${existingConfigAnalysis}
-<project>
-${code}
-</project>
+
+# 动态表单使用文档
+<doc>
+${doc}
+</doc>
 `
 }
 

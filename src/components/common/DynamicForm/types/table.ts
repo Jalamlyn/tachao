@@ -11,7 +11,7 @@ import { ResourceConfig } from "./field"
 /**
  * 表格列配置
  * @description 定义表格列的属性和行为
- * 
+ *
  * @example
  * ```typescript
  * const column: TableColumn = {
@@ -46,7 +46,7 @@ export interface TableColumn {
   /** 资源配置 */
   resourceConfig?: ResourceConfig & {
     /** 是否显示触发按钮 */
-    showTrigger?: boolean
+    showTrigger: boolean
     /** 触发按钮位置 */
     triggerPosition?: "right" | "cell"
     /** 是否内联显示选择界面 */
@@ -99,7 +99,7 @@ export interface TableConfig {
 /**
  * 表格分组
  * @description 多表格的分组配置
- * 
+ *
  * @example
  * ```typescript
  * const tableGroup: TableGroup = {

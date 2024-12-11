@@ -23,14 +23,6 @@ export const createDebouncedWatch = (form: UseFormReturn<any>, delay = 300) => {
   }
 }
 
-// 格式化验证错误信息
-const formatValidationErrors = (errors: Record<string, any>): string[] => {
-  return Object.entries(errors).map(([field, error]) => {
-    const errorMessage = error.message || error
-    return `${field}：${errorMessage}`
-  })
-}
-
 export const useDynamicForm = (
   config: DynamicFormConfig,
   initialValues?: any,
