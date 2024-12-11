@@ -1,3 +1,9 @@
+/**
+ * @fileoverview 基础类型定义
+ * @description 定义了DynamicForm支持的所有基础类型
+ * @since 1.0.0
+ */
+
 import { ReactNode } from "react"
 
 /**
@@ -19,8 +25,6 @@ import { ReactNode } from "react"
  * - datetime: 日期时间选择
  * 
  * 特殊输入类型:
- * - file: (已废弃)文件上传,请使用upload类型
- * - image: (已废弃)图片上传,请使用upload类型
  * - upload: 统一的上传组件,支持文件、图片等
  * - signature: 手写签名
  * - custom: 自定义组件
@@ -34,15 +38,10 @@ import { ReactNode } from "react"
  * 资源类型:
  * - resource: 资源选择器,用于选择主数据
  * 
- * 使用建议:
- * 1. 文本输入优先使用text类型
- * 2. 数值输入使用number类型,并配置min/max限制
- * 3. 日期选择使用date/datetime类型
- * 4. 文件上传统一使用upload类型,配置uploadType
- * 5. 选项选择使用select/radio/checkbox
- * 6. 开关量使用switch类型
- * 7. 资源选择使用resource类型
- * 8. 需要自定义渲染时使用custom类型
+ * @example
+ * ```typescript
+ * const fieldType: FormFieldType = 'text';
+ * ```
  */
 export type FormFieldType =
   | "text"
@@ -55,8 +54,6 @@ export type FormFieldType =
   | "select"
   | "date"
   | "datetime"
-  | "file"
-  | "image"
   | "custom"
   | "resource"
   | "signature"
@@ -72,17 +69,46 @@ export type FormFieldType =
  */
 export type ManualInputFieldType = "text" | "number" | "email" | "tel" | "textarea" | "select" | "date" | "datetime"
 
+/**
+ * 提示配置
+ * @description 字段提示信息的配置
+ */
 export interface TooltipConfig {
+  /** 提示内容 */
   content: ReactNode
+  /** 提示位置 */
   placement?: "top" | "bottom" | "left" | "right"
 }
 
+/**
+ * 表单元数据
+ * @description 表单的基本信息配置
+ * 
+ * @example
+ * ```typescript
+ * const metadata: FormMetadata = {
+ *   title: '用户信息表单',
+ *   description: '请填写用户基本信息',
+ *   permissions: {
+ *     edit: true,
+ *     delete: true,
+ *     print: true
+ *   }
+ * }
+ * ```
+ */
 export interface FormMetadata {
+  /** 表单标题 */
   title: string
+  /** 表单描述 */
   description?: string
+  /** 权限配置 */
   permissions?: {
+    /** 是否可编辑 */
     edit?: boolean
+    /** 是否可删除 */
     delete?: boolean
+    /** 是否可打印 */
     print?: boolean
   }
 }
