@@ -100,8 +100,8 @@ export const renderResource = (
       {(formField) => {
         if (!resourceData?.data?.length) {
           return (
-            <div className='min-h-[120px] border-2 border-dashed border-gray-200 rounded-lg hover:border-gray-300 transition-colors duration-200'>
-              <div className='h-full flex flex-col items-center justify-center p-6 cursor-pointer'>
+            <div className='min-h-[48px] border-2 border-dashed border-gray-200 rounded-lg hover:border-gray-300 transition-colors duration-200'>
+              <div className='h-full flex flex-col items-center justify-center p-1 cursor-pointer'>
                 {loading ? (
                   <Spinner size='sm' />
                 ) : (
