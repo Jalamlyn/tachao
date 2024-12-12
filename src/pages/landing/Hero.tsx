@@ -131,9 +131,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         </motion.div>
 
         <motion.div variants={itemVariants} className='space-y-4'>
-          <h1 className='text-3xl md:text-5xl lg:text-6xl font-bold text-white leading-tight'>
-            让天下没有难管的企业
-          </h1>
+          <h1 className='text-3xl md:text-5xl lg:text-6xl font-bold text-white leading-tight'>让天下没有难管的企业</h1>
           <p className='text-lg md:text-2xl text-white/80'>AI 赋能企业管理 · 智能化一站式解决方案</p>
         </motion.div>
 
@@ -159,7 +157,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             size='lg'
             className='bg-white text-primary-dark hover:bg-white/90 font-medium px-8 w-full md:w-auto
               transform hover:scale-105 active:scale-95 transition-all duration-300'
-            onClick={() => setIsQRCodeOpen(true)}
+            onClick={onGetStarted}
           >
             免费体验
           </Button>

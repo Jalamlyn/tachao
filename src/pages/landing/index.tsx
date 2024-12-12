@@ -1,19 +1,11 @@
 import React, { useEffect, Suspense } from "react"
 import { motion, useAnimation } from "framer-motion"
-import { Button } from "@nextui-org/react"
 import { useNavigate } from "react-router-dom"
 import { Helmet } from "react-helmet"
 import Hero from "@/pages/landing/Hero"
-import Stats from "@/pages/landing/Stats"
-import Contact from "@/pages/landing/Contact"
 import Footer from "@/pages/landing/Footer"
 import AnimatedBackground from "@/pages/landing/AnimatedBackground"
 import ScrollProgress from "@/pages/landing/ScrollProgress"
-import ScrollNav from "@/pages/landing/ScrollNav"
-
-// 懒加载组件
-const Features = React.lazy(() => import("@/pages/landing/Features"))
-const Benefits = React.lazy(() => import("@/pages/landing/Benefits"))
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate()
@@ -45,34 +37,9 @@ const LandingPage: React.FC = () => {
 
       <AnimatedBackground />
       <ScrollProgress />
-      <ScrollNav />
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={controls} className='relative'>
-        <section id='hero'>
-          <Hero onGetStarted={handleGetStarted} />
-        </section>
-        <section id='stats'>
-          <Stats />
-        </section>
-
-        <Suspense
-          fallback={
-            <div className='w-full h-96 flex items-center justify-center'>
-              <div className='animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-white'></div>
-            </div>
-          }
-        >
-          <section id='features'>
-            <Features />
-          </section>
-          <section id='benefits'>
-            <Benefits />
-          </section>
-        </Suspense>
-
-        <section id='contact'>
-          <Contact />
-        </section>
+        <Hero onGetStarted={handleGetStarted} />
         <Footer />
       </motion.div>
     </div>
