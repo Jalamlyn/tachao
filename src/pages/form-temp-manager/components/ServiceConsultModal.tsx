@@ -2,7 +2,7 @@ import React from "react"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Image } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion } from "framer-motion"
-import wecomqr from "../../../../public/assets/wechat.jpg" // 假设这是您的二维码图片路径
+import wecomqr from "../../../../public/assets/wechat.jpg"
 
 interface ServiceConsultModalProps {
   isOpen: boolean
