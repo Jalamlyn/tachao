@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from "react"
-import { Button, Input, Select, SelectItem, ScrollShadow } from "@nextui-org/react"
+import { Input, Select, SelectItem, ScrollShadow } from "@nextui-org/react"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/modal"
 import { Chip } from "@nextui-org/chip"
+import { Button } from "@nextui-org/button"
 import { Icon } from "@iconify/react"
 import { useTagManagement } from "@/hooks/useTagManagement"
 import { TagType } from "@/types/tag"
@@ -163,7 +164,7 @@ const TagManageModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type }
                         key={`${tag.id}-${lastUpdate}`}
                         variant='flat'
                         color='default'
-                        onClose={usageCount === 0 ? () => handleDeleteTag(tag.id) : undefined}
+                        onClose={() => handleDeleteTag(tag.id)}
                         className={`h-8 bg-${tag.color}-500 text-white`}
                       >
                         {tag.name}

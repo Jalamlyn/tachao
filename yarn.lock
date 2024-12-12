@@ -1620,7 +1620,7 @@
     "@react-types/button" "3.9.4"
     "@react-types/shared" "3.23.1"
 
-"@nextui-org/button@2.2.7":
+"@nextui-org/button@2.2.7", "@nextui-org/button@^2.2.7":
   version "2.2.7"
   resolved "https://registry.npmmirror.com/@nextui-org/button/-/button-2.2.7.tgz#032cd556870a3361be8acdddfe0e995ab4719ac5"
   integrity sha512-3o7uAD7nFAUKJkg2PZ5ktJR8qqMrjQgzewXBWfz62RWya/uTFXzqwljy0JYGwq3tfvbmBzA1GGsAZdj5wUEymw==
@@ -1679,7 +1679,7 @@
     "@react-aria/utils" "3.26.0"
     "@react-types/shared" "3.26.0"
 
-"@nextui-org/checkbox@2.3.6":
+"@nextui-org/checkbox@2.3.6", "@nextui-org/checkbox@^2.3.6":
   version "2.3.6"
   resolved "https://registry.npmmirror.com/@nextui-org/checkbox/-/checkbox-2.3.6.tgz#b284382992547d5f1d4a6423f99105463a90baa0"
   integrity sha512-QiJuRNllmRACf2rDrA6/hT8o46PjC3P6ttzJxz1OeUH6ME8MUY+EyH0S+C4C+cWoBv4UC2JS5S5QXalQ0WSViw==
@@ -2483,25 +2483,7 @@
     "@react-types/tabs" "3.3.11"
     scroll-into-view-if-needed "3.0.10"
 
-"@nextui-org/theme@2.2.5":
-  version "2.2.5"
-  resolved "https://registry.npmmirror.com/@nextui-org/theme/-/theme-2.2.5.tgz#f985001ae34719bfb9fd7634fcb4951b89f5fa9e"
-  integrity sha512-xvlMUK/rTv95s9hvr/XWtyVTm3IHRR7gCHpGOhG9DsxkQFbSQDiznsBC7LPBFJ21o+idiv28Il6aroV3ua/BOA==
-  dependencies:
-    clsx "^1.2.1"
-    color "^4.2.3"
-    color2k "^2.0.2"
-    deepmerge "4.3.1"
-    flat "^5.0.2"
-    lodash.foreach "^4.5.0"
-    lodash.get "^4.4.2"
-    lodash.kebabcase "^4.1.1"
-    lodash.mapkeys "^4.6.0"
-    lodash.omit "^4.5.0"
-    tailwind-merge "^1.14.0"
-    tailwind-variants "^0.1.20"
-
-"@nextui-org/theme@2.4.3":
+"@nextui-org/theme@2.4.3", "@nextui-org/theme@^2.4.3":
   version "2.4.3"
   resolved "https://registry.npmmirror.com/@nextui-org/theme/-/theme-2.4.3.tgz#fabd04a95e2dfc07f82dd39795b1493835a99c9c"
   integrity sha512-QH9ps5NpenWU966INdGbdvZOWWUEGqxrLM2vyqkSRq+A65YON4Jhg/x1xWcSX0SJECNhoNZLh5mt6jp3jH5k8Q==
@@ -10175,16 +10157,6 @@ lodash.debounce@^4.0.8:
   resolved "https://registry.npmmirror.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz#82d79bff30a67c4005ffd5e2515300ad9ca4d7af"
   integrity sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==
 
-lodash.foreach@^4.5.0:
-  version "4.5.0"
-  resolved "https://registry.npmmirror.com/lodash.foreach/-/lodash.foreach-4.5.0.tgz#1a6a35eace401280c7f06dddec35165ab27e3e53"
-  integrity sha512-aEXTF4d+m05rVOAUG3z4vZZ4xVexLKZGF0lIxuHZ1Hplpk/3B6Z1+/ICICYRLm7c41Z2xiejbkCkJoTlypoXhQ==
-
-lodash.get@^4.4.2:
-  version "4.4.2"
-  resolved "https://registry.npmmirror.com/lodash.get/-/lodash.get-4.4.2.tgz#2d177f652fa31e939b4438d5341499dfa3825e99"
-  integrity sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==
-
 lodash.isequal@^4.5.0:
   version "4.5.0"
   resolved "https://registry.npmmirror.com/lodash.isequal/-/lodash.isequal-4.5.0.tgz#415c4478f2bcc30120c22ce10ed3226f7d3e18e0"
@@ -10195,16 +10167,6 @@ lodash.isplainobject@^4.0.6:
   resolved "https://registry.npmmirror.com/lodash.isplainobject/-/lodash.isplainobject-4.0.6.tgz#7c526a52d89b45c45cc690b88163be0497f550cb"
   integrity sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA==
 
-lodash.kebabcase@^4.1.1:
-  version "4.1.1"
-  resolved "https://registry.npmmirror.com/lodash.kebabcase/-/lodash.kebabcase-4.1.1.tgz#8489b1cb0d29ff88195cceca448ff6d6cc295c36"
-  integrity sha512-N8XRTIMMqqDgSy4VLKPnJ/+hpGZN+PHQiJnSenYqPaVV/NCqEogTnAdZLQiGKhxX+JCs8waWq2t1XHWKOmlY8g==
-
-lodash.mapkeys@^4.6.0:
-  version "4.6.0"
-  resolved "https://registry.npmmirror.com/lodash.mapkeys/-/lodash.mapkeys-4.6.0.tgz#df2cfa231d7c57c7a8ad003abdad5d73d3ea5195"
-  integrity sha512-0Al+hxpYvONWtg+ZqHpa/GaVzxuN3V7Xeo2p+bY06EaK/n+Y9R7nBePPN2o1LxmL0TWQSwP8LYZ008/hc9JzhA==
-
 lodash.merge@^4.6.2:
   version "4.6.2"
   resolved "https://registry.npmmirror.com/lodash.merge/-/lodash.merge-4.6.2.tgz#558aa53b43b661e1925a0afdfa36a9a1085fe57a"
@@ -10214,11 +10176,6 @@ lodash.mergewith@^4.6.2:
   version "4.6.2"
   resolved "https://registry.npmmirror.com/lodash.mergewith/-/lodash.mergewith-4.6.2.tgz#617121f89ac55f59047c7aec1ccd6654c6590f55"
   integrity sha512-GK3g5RPZWTRSeLSpgP8Xhra+pnjBC56q9FZYe1d5RN3TJ35dbkGy3YqBSMbyCrlbi+CM9Z3Jk5yTL7RCsqboyQ==
-
-lodash.omit@^4.5.0:
-  version "4.5.0"
-  resolved "https://registry.npmmirror.com/lodash.omit/-/lodash.omit-4.5.0.tgz#6eb19ae5a1ee1dd9df0b969e66ce0b7fa30b5e60"
-  integrity sha512-XeqSp49hNGmlkj2EJlfrQFIzQ6lXdNro9sddtQzcJY8QaoC2GO0DT7xaIokHeyM+mIT0mPMlPvkYzg2xCuHdZg==
 
 lodash.sortby@^4.7.0:
   version "4.7.0"

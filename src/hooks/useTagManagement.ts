@@ -112,13 +112,6 @@ export const useTagManagement = (type: TagType) => {
     if (!tagsIndex) return false
 
     try {
-      // 检查标签是否在使用中
-      const usageCount = tagsIndex.relations[type]?.byTag[tagId]?.length || 0
-      if (usageCount > 0) {
-        message.error(`无法删除标签，当前有 ${usageCount} 个项目正在使用此标签`)
-        return false
-      }
-
       // 1. 创建乐观更新的新状态
       const optimisticIndex = {
         ...tagsIndex,

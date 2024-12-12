@@ -2,7 +2,7 @@ import React from "react"
 import { UseFormReturn } from "react-hook-form"
 import { FormField } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
-import { CheckboxGroup, Checkbox } from "@nextui-org/react"
+import { CheckboxGroup, Checkbox } from "@nextui-org/checkbox"
 
 export const renderCheckbox = (
   field: FormField,

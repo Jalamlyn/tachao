@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react"
-import { Button, Input, Checkbox, Card, CardBody } from "@nextui-org/react"
+import { Button, Input, Card, CardBody, hiddenInputClasses } from "@nextui-org/react"
+import { Checkbox } from "@nextui-org/checkbox"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { login } from "@/service/apis/api"
@@ -195,11 +196,10 @@ export default function WeChatLoginPage() {
                 >
                   <Checkbox
                     name='remember'
-                    size='sm'
                     isSelected={rememberMe}
                     onValueChange={handleRememberMeChange}
                     classNames={{
-                      label: "  transition-colors",
+                      hiddenInput: "w-4 h-4",
                     }}
                   >
                     {t("remember_me")}
