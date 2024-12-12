@@ -77,29 +77,49 @@ export default async function chatChunkGeminiOffice(
       const { done, value } = await reader.read()
       if (done) break
 
-      buffer += decoder.decode(value, { stream: true })
+      const chunk = decoder.decode(value, { stream: true })
+      console.log("Received chunk:", chunk)
+      
+      buffer += chunk
       const lines = buffer.split("\n")
       buffer = lines.pop()
 
       for (const line of lines) {
         if (line.trim() === "") continue
-        if (!line.startsWith("data:")) continue
-
-        const data = line.slice(5).trim()
-
+        
+        // 记录原始行数据
+        console.log("Processing line:", line)
+        
+        let jsonData = line
+        if (line.startsWith("data:")) {
+          jsonData = line.slice(5).trim()
+        }
+        
+        // 记录处理后的JSON数据
+        console.log("Processed JSON data:", jsonData)
+        
         try {
-          const parsed = jsonParse(data)
-          if (parsed.candidates && parsed.candidates[0].content.parts[0].text) {
-            const content = parsed.candidates[0].content.parts[0].text
-            fullContent += content
-            onChunk(content)
+          const parsed = jsonParse(jsonData)
+          console.log("Parsed data structure:", JSON.stringify(parsed, null, 2))
+          
+          if (parsed.candidates && Array.isArray(parsed.candidates)) {
+            for (const candidate of parsed.candidates) {
+              if (candidate.content?.parts?.[0]?.text) {
+                const content = candidate.content.parts[0].text
+                console.log("Extracted content:", content)
+                fullContent += content
+                onChunk(content)
+              }
+            }
           }
         } catch (error) {
           console.error("Error parsing JSON:", error)
+          console.log("Problematic data:", jsonData)
         }
       }
     }
 
+    console.log("Final accumulated content:", fullContent)
     localDB.setItem("chat-chunk-over", overFlag)
   } catch (error) {
     if (error.name === "AbortError") {
