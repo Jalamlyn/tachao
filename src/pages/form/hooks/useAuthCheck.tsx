@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { modelBaseUserToken } from "@/service/apis/api"
 import { checkEnvironment } from "@/utils/environment"
-import { checkWxAuth, handleWxAuth } from "@/service/apis/wx"
+import { checkWxAuth, generateWxAuthUrl } from "@/service/apis/wx"
 import { submitWaitList } from "@/service/apis/api"
 import message from "@/components/Message"
 
@@ -41,8 +41,10 @@ export const useAuthCheck = ({ formId, onSuccess, onError }: UseAuthCheckOptions
       // 检查是否已有微信授权
       const wxUserInfo = checkWxAuth()
       if (!wxUserInfo) {
-        // 没有授权，开始微信授权流程
-        await handleWxAuth(WX_APP_ID, formId)
+        // 没有授权，生成授权URL并跳转
+        const currentUrl = `${window.location.origin}/form/${formId}`
+        const authUrl = generateWxAuthUrl(WX_APP_ID, currentUrl, "snsapi_userinfo", formId)
+        window.location.href = authUrl
         return false // 会跳转到微信授权页面
       }
 

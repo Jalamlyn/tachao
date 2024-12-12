@@ -7,7 +7,7 @@ import { useMetadata } from "@/hooks/useMetadata"
 import { parseFormConfig } from "@/utils/codeParser"
 import { Icon } from "@iconify/react"
 import { Spinner } from "@nextui-org/react"
-import { useAuthCheck } from "@/hooks/useAuthCheck"
+import { useAuthCheck } from "@/pages/form/hooks/useAuthCheck"
 
 const FormCreate: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)

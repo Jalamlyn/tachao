@@ -3,9 +3,7 @@ import { useParams } from "react-router-dom"
 import { motion } from "framer-motion"
 import { useLoginInfo } from "@/hooks/useLoginInfo"
 import { checkEnvironment } from "@/utils/environment"
-import { aiLog } from "@/utils/AITraceLogger"
 import { useFormState } from "./hooks/useFormState"
-import { useAuthFlow } from "./hooks/useAuthFlow"
 import { useFormData } from "./hooks/useFormData"
 import { FormError } from "./components/FormError"
 import { FormLoading } from "./components/FormLoading"
@@ -15,7 +13,7 @@ import ShareModal from "./components/ShareModal"
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
-import { useAuthCheck } from "@/hooks/useAuthCheck"
+import { useAuthCheck } from "@/pages/form/hooks/useAuthCheck"
 
 const NewForm: React.FC = () => {
   const { formId } = useParams<{ formId: string }>()
@@ -24,7 +22,7 @@ const NewForm: React.FC = () => {
   const { loginInfo } = useLoginInfo()
   const [selectedTab, setSelectedTab] = useState("form")
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
-  const isWechat = checkEnvironment() === 'wechat'
+  const isWechat = checkEnvironment() === "wechat"
   const [webShareSupported, setWebShareSupported] = useState(false)
 
   // 添加权限检查
@@ -36,7 +34,7 @@ const NewForm: React.FC = () => {
     },
     onError: (error) => {
       formActions.setError(error.message)
-    }
+    },
   })
 
   useEffect(() => {
@@ -109,12 +107,12 @@ const NewForm: React.FC = () => {
       message.success("已复制链接")
     } catch (err) {
       message.error("复制失败，请手动复制")
-      console.error('复制错误:', err)
+      console.error("复制错误:", err)
     }
   }
 
   const handleWechatShare = () => {
-    if (typeof wx !== 'undefined') {
+    if (typeof wx !== "undefined") {
       const link = generateShareLink()
       wx.ready(() => {
         wx.updateAppMessageShareData({
@@ -122,16 +120,16 @@ const NewForm: React.FC = () => {
           desc: "请查看这个表单",
           link,
           success: () => {
-            message.success('已准备好分享')
+            message.success("已准备好分享")
           },
           fail: (res: any) => {
-            message.error('微信分享设置失败')
-            console.error('微信分享设置失败:', res)
-          }
+            message.error("微信分享设置失败")
+            console.error("微信分享设置失败:", res)
+          },
         })
       })
     } else {
-      message.error('微信环境未就绪')
+      message.error("微信环境未就绪")
     }
   }
 
@@ -162,37 +160,37 @@ const NewForm: React.FC = () => {
                   <Icon icon='mdi:share' className='w-4 h-4' />
                 </Button>
               </DropdownTrigger>
-              <DropdownMenu aria-label="分享选项">
+              <DropdownMenu aria-label='分享选项'>
                 {webShareSupported && (
                   <DropdownItem
-                    key="share"
-                    startContent={<Icon icon="mdi:share" className="w-4 h-4" />}
-                    description="使用系统分享"
+                    key='share'
+                    startContent={<Icon icon='mdi:share' className='w-4 h-4' />}
+                    description='使用系统分享'
                     onClick={handleNativeShare}
                   >
                     分享表单
                   </DropdownItem>
                 )}
-                <DropdownItem 
-                  key="copy"
-                  startContent={<Icon icon="mdi:content-copy" className="w-4 h-4" />}
-                  description="复制表单链接"
+                <DropdownItem
+                  key='copy'
+                  startContent={<Icon icon='mdi:content-copy' className='w-4 h-4' />}
+                  description='复制表单链接'
                   onClick={handleQuickCopy}
                 >
                   复制链接
                 </DropdownItem>
                 {isWechat && (
                   <DropdownItem
-                    key="wechat-share"
-                    startContent={<Icon icon="mdi:wechat" className="w-4 h-4" />}
+                    key='wechat-share'
+                    startContent={<Icon icon='mdi:wechat' className='w-4 h-4' />}
                     onClick={handleWechatShare}
                   >
                     分享给微信好友
                   </DropdownItem>
                 )}
                 <DropdownItem
-                  key="more-options"
-                  startContent={<Icon icon="mdi:qrcode" className="w-4 h-4" />}
+                  key='more-options'
+                  startContent={<Icon icon='mdi:qrcode' className='w-4 h-4' />}
                   onClick={() => setIsShareModalOpen(true)}
                 >
                   生成二维码
@@ -219,9 +217,9 @@ const NewForm: React.FC = () => {
             templateId={formState.templateId}
           />
 
-          <ShareModal 
-            isOpen={isShareModalOpen} 
-            onClose={() => setIsShareModalOpen(false)} 
+          <ShareModal
+            isOpen={isShareModalOpen}
+            onClose={() => setIsShareModalOpen(false)}
             formId={formId!}
             title={formState.formConfig?.metadata?.title}
           />
