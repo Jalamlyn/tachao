@@ -15,80 +15,68 @@ import ShareModal from "./components/ShareModal"
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
-
-// 配置微信appId
-const WX_APP_ID = import.meta.env.VITE_WX_APP_ID || "wxd792f04d6c8ca1be"
+import { useAuthCheck } from "@/hooks/useAuthCheck"
 
 const NewForm: React.FC = () => {
   const { formId } = useParams<{ formId: string }>()
   const [formState, formActions] = useFormState()
-  const { authState, handleWxAuth, handleWecomAuth } = useAuthFlow()
   const { loadFormData } = useFormData()
   const { loginInfo } = useLoginInfo()
   const [selectedTab, setSelectedTab] = useState("form")
-  const [authRetrying, setAuthRetrying] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const isWechat = checkEnvironment() === 'wechat'
   const [webShareSupported, setWebShareSupported] = useState(false)
+
+  // 添加权限检查
+  const { isChecking, isAuthorized } = useAuthCheck({
+    formId: formId!,
+    onSuccess: () => {
+      // 授权成功后加载数据
+      initializeForm()
+    },
+    onError: (error) => {
+      formActions.setError(error.message)
+    }
+  })
 
   useEffect(() => {
     setWebShareSupported(navigator.share !== undefined)
   }, [])
 
-  useEffect(() => {
-    const initializeForm = async () => {
-      const traceId = aiLog.start()
-      if (!formId) {
-        formActions.setError("表单ID不能为空")
-        return
-      }
-
-      formActions.setLoading()
-
-      try {
-        // 处理授权
-        if (loginInfo.type === "none") {
-          const env = checkEnvironment()
-          if (env === "wechat") {
-            const isAuthorized = await handleWxAuth(WX_APP_ID, formId)
-            if (!isAuthorized) {
-              aiLog.log("等待微信授权，暂停加载表单")
-              return
-            }
-          } else if (env === "wecom") {
-            const isAuthorized = await handleWecomAuth(formId)
-            if (!isAuthorized) {
-              aiLog.log("等待企业微信授权，暂停加载表单")
-              return
-            }
-          }
-        }
-
-        // 加载表单数据
-        const data = await loadFormData(formId)
-        formActions.setSuccess(data)
-      } catch (error) {
-        formActions.setError(error instanceof Error ? error.message : "加载表单数据失败")
-      }
+  const initializeForm = async () => {
+    if (!formId) {
+      formActions.setError("表单ID不能为空")
+      return
     }
 
-    if (!authRetrying) {
-      initializeForm()
-    }
-  }, [formId, loginInfo.type, authRetrying])
+    formActions.setLoading()
 
-  const handleRetry = () => {
-    setAuthRetrying(true)
-    formActions.reset()
-    const env = checkEnvironment()
-    if (env === "wechat") {
-      handleWxAuth(WX_APP_ID, formId!)
-    } else if (env === "wecom") {
-      handleWecomAuth(formId!)
+    try {
+      const data = await loadFormData(formId)
+      formActions.setSuccess(data)
+    } catch (error) {
+      formActions.setError(error instanceof Error ? error.message : "加载表单数据失败")
     }
-    setAuthRetrying(false)
   }
 
+  // 显示权限检查loading
+  if (isChecking) {
+    return <FormLoading />
+  }
+
+  if (formState.status === "loading") {
+    return <FormLoading />
+  }
+
+  if (formState.status === "error") {
+    return <FormError error={formState.error!} />
+  }
+
+  if (formState.status === "success" && (!formState.formConfig || !formState.formData)) {
+    return <FormError error='未找到表单配置或数据' />
+  }
+
+  // 其余代码保持不变...
   const generateShareLink = () => {
     return `${window.location.origin}/form/${formId}`
   }
@@ -145,18 +133,6 @@ const NewForm: React.FC = () => {
     } else {
       message.error('微信环境未就绪')
     }
-  }
-
-  if (formState.status === "loading") {
-    return <FormLoading />
-  }
-
-  if (formState.status === "error") {
-    return <FormError error={formState.error!} onRetry={handleRetry} showRetry={formState.error?.includes("授权")} />
-  }
-
-  if (formState.status === "success" && (!formState.formConfig || !formState.formData)) {
-    return <FormError error='未找到表单配置或数据' />
   }
 
   return (
@@ -241,10 +217,14 @@ const NewForm: React.FC = () => {
             formData={formState.formData}
             formId={formId!}
             templateId={formState.templateId}
-            isCreateMode={false}
           />
 
-          <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} formId={formId!} />
+          <ShareModal 
+            isOpen={isShareModalOpen} 
+            onClose={() => setIsShareModalOpen(false)} 
+            formId={formId!}
+            title={formState.formConfig?.metadata?.title}
+          />
         </div>
       </motion.div>
     </>
