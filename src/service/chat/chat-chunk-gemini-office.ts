@@ -78,49 +78,27 @@ export default async function chatChunkGeminiOffice(
       if (done) break
 
       const chunk = decoder.decode(value, { stream: true })
-      console.log("Received raw chunk:", chunk)
+      console.log("Received chunk:", chunk)
       
       buffer += chunk
-      
-      // 分割并处理多个JSON对象
-      const parts = buffer.split(/,\s*{/).filter(Boolean)
-      
-      for (let part of parts) {
-        // 如果不是以{开头，添加{
-        if (!part.startsWith("{")) {
-          part = "{" + part
-        }
+      const lines = buffer.split("\n")
+      buffer = lines.pop() || ""
+
+      for (const line of lines) {
+        console.log("Processing line:", line)
         
-        // 确保JSON对象完整
-        if (part.includes("}")) {
-          const endIndex = part.lastIndexOf("}") + 1
-          const jsonStr = part.substring(0, endIndex)
-          buffer = part.substring(endIndex)
-          
-          console.log("Processing JSON string:", jsonStr)
-          
-          try {
-            const parsed = jsonParse(jsonStr)
-            console.log("Successfully parsed JSON:", parsed)
-            
-            if (parsed.candidates && Array.isArray(parsed.candidates)) {
-              for (const candidate of parsed.candidates) {
-                if (candidate.content?.parts?.[0]?.text) {
-                  const content = candidate.content.parts[0].text
-                  console.log("Extracted content:", content)
-                  // 移除content中的特殊格式标记
-                  const cleanContent = content.replace(/```/g, "").trim()
-                  if (cleanContent) {
-                    console.log("Clean content to be sent:", cleanContent)
-                    fullContent += cleanContent
-                    onChunk(cleanContent)
-                  }
-                }
-              }
+        // 直接查找包含 "text": " 的行
+        if (line.includes('"text": "')) {
+          // 提取文本内容
+          const textStart = line.indexOf('"text": "') + 8
+          const textEnd = line.lastIndexOf('"')
+          if (textEnd > textStart) {
+            const content = line.substring(textStart, textEnd).trim()
+            console.log("Extracted content:", content)
+            if (content) {
+              fullContent += content
+              onChunk(content)
             }
-          } catch (error) {
-            console.error("Error parsing JSON:", error)
-            console.log("Problematic JSON:", jsonStr)
           }
         }
       }
