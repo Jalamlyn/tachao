@@ -56,7 +56,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose }) => {
               </ul>
             </div>
 
-            <p className='text-default-600 font-medium'>扫描下方二维码，立即开始体验</p>
+            <p className='text-default-600 font-medium'>扫描二维码联系预约演示</p>
 
             <motion.div
               className='flex justify-center'
@@ -69,12 +69,6 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose }) => {
                 className='w-48 h-48 object-contain rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300'
               />
             </motion.div>
-
-            <p className='text-sm text-default-500'>
-              扫码添加客服，获取免费体验资格
-              <br />
-              我们将为您提供专属的产品体验指导
-            </p>
           </motion.div>
         </ModalBody>
 

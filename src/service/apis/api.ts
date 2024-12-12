@@ -60,6 +60,43 @@ apiService.interceptors.response.use(
   }
 )
 
+// 等待列表接口类型定义
+export interface WaitListRequest {
+  email: string
+  phone: string
+  developer: boolean
+  industry: string
+  purpose: string
+}
+
+export interface WaitListQueryParams {
+  email?: string
+  phone?: string
+  developer?: boolean
+  industry?: string
+  purpose?: string
+}
+
+// 等待列表 API
+export const submitWaitList = async (data: WaitListRequest) => {
+  try {
+    const response = await apiService.post("/public/api/wait-lists", data)
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
+// 查询等待列表 API
+export const queryWaitList = async (params: WaitListQueryParams) => {
+  try {
+    const response = await apiService.get("/plat/api/wait-lists", { params })
+    return response.data
+  } catch (error) {
+    throw error
+  }
+}
+
 export * from "./auth"
 export * from "./enterprise"
 export * from "./user"

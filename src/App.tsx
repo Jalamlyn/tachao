@@ -18,8 +18,8 @@ import Form from "@/pages/form"
 import Report from "@/pages/report"
 import ResourceDataTable from "./components/common/data-table/ResourceDataTable"
 import AppEntry from "./pages/app-management/components/AppEntry"
+import WaitListPage from "./pages/WaitListPage"
 
-// 创建 QueryClient 实例
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -88,6 +88,10 @@ function App() {
             <Route
               path='/reports/view/:id'
               element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <ReadReportRenderer />}
+            />
+            <Route
+              path='/operations/wait-list'
+              element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <WaitListPage />}
             />
             {renderWeChatApp()}
           </Routes>
