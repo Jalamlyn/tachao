@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { QRCode } from "react-qrcode-logo"
@@ -9,9 +9,14 @@ interface ShareModalProps {
   isOpen: boolean
   onClose: () => void
   formId: string
+  title?: string
+  onShareContentChange?: (content: { title: string; description: string }) => void
 }
 
-const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, formId }) => {
+const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, formId, title = "", onShareContentChange }) => {
+  const [customTitle, setCustomTitle] = useState(title)
+  const [customDescription, setCustomDescription] = useState("请查看这个表单")
+
   const generateShareLink = () => {
     return `${window.location.origin}/form/${formId}`
   }
@@ -40,6 +45,15 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, formId }) => {
       message.success("二维码已下载")
     } else {
       message.error("二维码生成失败")
+    }
+  }
+
+  const handleContentChange = () => {
+    if (onShareContentChange) {
+      onShareContentChange({
+        title: customTitle,
+        description: customDescription
+      })
     }
   }
 
@@ -78,7 +92,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, formId }) => {
       }}
     >
       <ModalContent>
-        <ModalHeader className='flex flex-col gap-1'>分享二维码</ModalHeader>
+        <ModalHeader className='flex flex-col gap-1'>分享设置</ModalHeader>
         <ModalBody>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -87,6 +101,23 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, formId }) => {
             transition={{ duration: 0.2 }}
             className='space-y-4 p-4'
           >
+            <div className="space-y-4">
+              <Input
+                label="分享标题"
+                placeholder="请输入分享标题"
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                onBlur={handleContentChange}
+              />
+              <Input
+                label="分享描述"
+                placeholder="请输入分享描述"
+                value={customDescription}
+                onChange={(e) => setCustomDescription(e.target.value)}
+                onBlur={handleContentChange}
+              />
+            </div>
+
             <div className='flex items-center gap-2 bg-default-50 p-3 rounded-lg'>
               <Input
                 type='text'

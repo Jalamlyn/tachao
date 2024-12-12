@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { UserInfo } from "./UserInfo"
@@ -15,12 +15,21 @@ interface FormHeaderProps {
 export const FormHeader: React.FC<FormHeaderProps> = ({ title = "表单详情", formId }) => {
   const [isShareModalOpen, setIsShareModalOpen] = React.useState(false)
   const [webShareSupported, setWebShareSupported] = React.useState(false)
+  const [shareContent, setShareContent] = useState({ title, description: "请查看这个表单" })
   const { loginInfo } = useLoginInfo()
   const isWechat = checkEnvironment() === 'wechat'
 
-  React.useEffect(() => {
+  useEffect(() => {
     setWebShareSupported(navigator.share !== undefined)
   }, [])
+
+  useEffect(() => {
+    // 更新 meta 标签
+    const metaTitle = document.querySelector('meta[property="og:title"]')
+    if (metaTitle) {
+      metaTitle.setAttribute('content', shareContent.title)
+    }
+  }, [shareContent.title])
 
   const generateShareLink = () => {
     return `${window.location.origin}/form/${formId}`
@@ -28,8 +37,8 @@ export const FormHeader: React.FC<FormHeaderProps> = ({ title = "表单详情", 
 
   const getShareContent = () => {
     return {
-      title: title,
-      text: "请查看这个表单",
+      title: shareContent.title,
+      text: shareContent.description,
       url: generateShareLink(),
     }
   }
@@ -63,8 +72,8 @@ export const FormHeader: React.FC<FormHeaderProps> = ({ title = "表单详情", 
       const link = generateShareLink()
       wx.ready(() => {
         wx.updateAppMessageShareData({
-          title: title,
-          desc: "请查看这个表单",
+          title: shareContent.title,
+          desc: shareContent.description,
           link,
           success: () => {
             message.success('已准备好分享')
@@ -78,6 +87,10 @@ export const FormHeader: React.FC<FormHeaderProps> = ({ title = "表单详情", 
     } else {
       message.error('微信环境未就绪')
     }
+  }
+
+  const handleShareContentChange = (content: { title: string; description: string }) => {
+    setShareContent(content)
   }
 
   return (
@@ -145,7 +158,13 @@ export const FormHeader: React.FC<FormHeaderProps> = ({ title = "表单详情", 
         </div>
       </header>
 
-      <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} formId={formId} />
+      <ShareModal 
+        isOpen={isShareModalOpen} 
+        onClose={() => setIsShareModalOpen(false)} 
+        formId={formId}
+        title={title}
+        onShareContentChange={handleShareContentChange}
+      />
     </>
   )
 }
