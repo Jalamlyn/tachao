@@ -12,6 +12,7 @@ import Editor from "@monaco-editor/react"
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
 import AIFormAgent from "@/service/agents/AIFormAgent"
+import { ImageUploader } from "./ImageUpload"
 
 interface Message {
   role: "user" | "assistant"
@@ -25,7 +26,7 @@ interface Message {
   }
 }
 
-interface AIEditorProps {
+export interface AIEditorProps {
   parseConfig: any
   messages: Message[]
   selectedTab: string
@@ -48,7 +49,6 @@ interface AIEditorProps {
     addVersion: (version: any) => void
   }
   renderPreview: (version: any) => React.ReactNode
-  renderCodeView?: (version: any) => React.ReactNode
   renderDataView?: () => React.ReactNode
   showDataTab?: boolean
   showCodeTab?: boolean
@@ -61,90 +61,16 @@ interface AIEditorProps {
   }
 }
 
-// 图片上传组件
-const ImageUploader: React.FC<{ agent: AIEditorProps["agent"] }> = ({ agent }) => {
-  const [preview, setPreview] = useState<string>("")
-  const [isLoading, setIsLoading] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+// 辅助函数：提取 <shata-ai-form> 标签中的内容
+const extractShataAIFormContent = (content: string): string => {
+  const regex = /<shata-ai-form>([\s\S]*?)<\/shata-ai-form>/
+  const match = content.match(regex)
+  return match ? match[1].trim() : content
+}
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (file.size > 5 * 1024 * 1024) {
-      message.error("图片大小不能超过5MB")
-      return
-    }
-
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif"]
-    if (!allowedTypes.includes(file.type)) {
-      message.error("只支持 JPG, PNG, GIF 格式")
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const base64 = reader.result as string
-        setPreview(base64)
-        agent.cacheImage?.(base64)
-        setIsLoading(false)
-      }
-      reader.onerror = () => {
-        message.error("图片读取失败")
-        setIsLoading(false)
-      }
-      reader.readAsDataURL(file)
-    } catch (error) {
-      console.error("Error uploading image:", error)
-      message.error("图片上传失败")
-      setIsLoading(false)
-    }
-  }
-
-  const handleClear = () => {
-    setPreview("")
-    if (inputRef.current) {
-      inputRef.current.value = ""
-    }
-    agent.clearCachedImage?.()
-  }
-
-  return (
-    <div className='flex items-center gap-2 mb-2'>
-      <input
-        type='file'
-        ref={inputRef}
-        className='hidden'
-        accept='image/jpeg,image/png,image/gif'
-        onChange={handleUpload}
-      />
-      <Button
-        variant='flat'
-        size='sm'
-        onClick={() => inputRef.current?.click()}
-        disabled={isLoading}
-        className='flex items-center gap-2'
-      >
-        <Icon icon='mdi:image-plus' className='w-4 h-4' />
-        {isLoading ? "上传中..." : "上传图片"}
-      </Button>
-      {preview && (
-        <div className='relative'>
-          <img src={preview} alt='Preview' className='w-16 h-16 object-cover rounded border border-default-200' />
-          <SButton
-            size='sm'
-            variant='ghost'
-            className='absolute -top-2 -right-2 p-0 min-w-unit-6 w-unit-6 h-unit-6 rounded-full'
-            onClick={handleClear}
-          >
-            <Icon icon='mdi:close' className='w-3 h-3' />
-          </SButton>
-        </div>
-      )}
-    </div>
-  )
+// 辅助函数：用 <shata-ai-form> 标签包装内容
+const wrapWithShataAIForm = (content: string): string => {
+  return `<shata-ai-form>\n${content}\n</shata-ai-form>`
 }
 
 const AIEditor: React.FC<AIEditorProps> = ({
@@ -158,16 +84,15 @@ const AIEditor: React.FC<AIEditorProps> = ({
   agent,
   versionControl,
   renderPreview,
-  renderCodeView,
   renderDataView,
   showDataTab = false,
   showCodeTab = false,
   previewTabName = "预览",
   codeEditorOptions = {
-    language: 'json',
+    language: "json",
     readOnly: false,
-    theme: 'vs-dark'
-  }
+    theme: "vs-dark",
+  },
 }) => {
   const [currentVersion, setCurrentVersion] = useState(versionControl.getCurrentVersion())
   const [isEditing, setIsEditing] = useState(false)
@@ -176,23 +101,27 @@ const AIEditor: React.FC<AIEditorProps> = ({
   useEffect(() => {
     setCurrentVersion(versionControl.getCurrentVersion())
     setIsEditing(false)
-    setEditedCode(versionControl.getCurrentVersion()?.rawConfig || "")
+    // 处理可能包含 <shata-ai-form> 标签的内容
+    const rawConfig = versionControl.getCurrentVersion()?.rawConfig || ""
+    setEditedCode(extractShataAIFormContent(rawConfig))
   }, [versionControl.currentIndex])
 
   const handleSaveEdit = async () => {
     try {
       const parser = parseConfig || AIFormAgent.parseConfig
-      const parsedConfig = await parser(editedCode)
+      // 在保存前重新添加 <shata-ai-form> 标签
+      const wrappedCode = wrapWithShataAIForm(editedCode)
+      const parsedConfig = await parser(wrappedCode)
 
       versionControl.addVersion({
         formConfig: parsedConfig.config,
-        rawConfig: editedCode,
+        rawConfig: wrappedCode,
       })
 
       onCommandResult({
         success: true,
         config: parsedConfig.config,
-        rawConfig: editedCode,
+        rawConfig: wrappedCode,
       })
 
       setIsEditing(false)
@@ -204,7 +133,8 @@ const AIEditor: React.FC<AIEditorProps> = ({
   }
 
   const handleCancelEdit = () => {
-    setEditedCode(currentVersion?.rawConfig || "")
+    const rawConfig = currentVersion?.rawConfig || ""
+    setEditedCode(extractShataAIFormContent(rawConfig))
     setIsEditing(false)
   }
 
@@ -218,22 +148,22 @@ const AIEditor: React.FC<AIEditorProps> = ({
   // 统一的代码编辑器渲染
   const renderCodeEditor = (content: string, isEditing: boolean) => (
     <Editor
-      height="100%"
+      height='100%'
       language={codeEditorOptions.language}
-      value={content}
+      value={extractShataAIFormContent(content)}
       options={{
         readOnly: !isEditing,
         minimap: { enabled: false },
         fontSize: 14,
-        lineNumbers: 'on',
+        lineNumbers: "on",
         folding: true,
-        wordWrap: 'on',
+        wordWrap: "on",
         theme: codeEditorOptions.theme,
-        ...codeEditorOptions.customOptions
+        ...codeEditorOptions.customOptions,
       }}
       onChange={(value) => {
         if (isEditing) {
-          setEditedCode(value || '')
+          setEditedCode(value || "")
           setIsEditing(true)
         }
       }}
@@ -334,47 +264,40 @@ const AIEditor: React.FC<AIEditorProps> = ({
             )}
             {selectedTab === "code" && showCodeTab && (
               <div className='relative h-[calc(100vh-260px)] rounded-lg overflow-auto mt-2'>
-                {renderCodeView ? (
-                  renderCodeView(currentVersion)
-                ) : (
-                  <>
-                    {renderCodeEditor(
-                      isEditing ? editedCode : currentVersion?.rawConfig || "",
-                      isEditing
-                    )}
-                    {isEditing ? (
-                      <div className='absolute top-2 right-2 space-x-2'>
-                        <Button
-                          size='sm'
-                          color='primary'
-                          onClick={handleSaveEdit}
-                          startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
-                        >
-                          保存
-                        </Button>
-                        <Button
-                          size='sm'
-                          variant='flat'
-                          onClick={handleCancelEdit}
-                          startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
-                        >
-                          取消
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className='absolute top-2 right-2'>
-                        <Button
-                          size='sm'
-                          color='primary'
-                          onClick={() => setIsEditing(true)}
-                          startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
-                        >
-                          编辑
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                )}
+                <>
+                  {renderCodeEditor(isEditing ? editedCode : currentVersion?.rawConfig || "", isEditing)}
+                  {isEditing ? (
+                    <div className='absolute top-2 right-2 space-x-2'>
+                      <Button
+                        size='sm'
+                        color='primary'
+                        onClick={handleSaveEdit}
+                        startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
+                      >
+                        保存
+                      </Button>
+                      <Button
+                        size='sm'
+                        variant='flat'
+                        onClick={handleCancelEdit}
+                        startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
+                      >
+                        取消
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className='absolute top-2 right-2'>
+                      <Button
+                        size='sm'
+                        color='primary'
+                        onClick={() => setIsEditing(true)}
+                        startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
+                      >
+                        编辑
+                      </Button>
+                    </div>
+                  )}
+                </>
               </div>
             )}
           </div>
