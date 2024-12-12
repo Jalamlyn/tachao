@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform, useSpring } from "framer-motion"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useSwipeable } from "react-swipeable"
+import QRCodeModal from "./QRCodeModal"
 
 interface HeroProps {
   onGetStarted: () => void
@@ -15,6 +16,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   
   const [mounted, setMounted] = useState(false)
   const [touchStart, setTouchStart] = useState(0)
+  const [isQRCodeOpen, setIsQRCodeOpen] = useState(false)
 
   // 优化动画性能
   const springConfig = { mass: 1, stiffness: 100, damping: 30 }
@@ -184,7 +186,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             size="lg"
             className="bg-white text-primary-dark hover:bg-white/90 font-medium px-8 w-full md:w-auto
               transform hover:scale-105 active:scale-95 transition-all duration-300"
-            onClick={onGetStarted}
+            onClick={() => setIsQRCodeOpen(true)}
           >
             免费体验
           </Button>
@@ -193,6 +195,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             variant="bordered"
             className="text-white border-white hover:bg-white/10 font-medium px-8 w-full md:w-auto
               transform hover:scale-105 active:scale-95 transition-all duration-300"
+            onClick={() => setIsQRCodeOpen(true)}
           >
             查看演示
           </Button>
@@ -220,6 +223,8 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           </div>
         </motion.div>
       </motion.div>
+
+      <QRCodeModal isOpen={isQRCodeOpen} onClose={() => setIsQRCodeOpen(false)} />
     </div>
   )
 }
