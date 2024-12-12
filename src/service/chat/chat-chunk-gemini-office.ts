@@ -72,49 +72,56 @@ export default async function chatChunkGeminiOffice(
     const decoder = new TextDecoder()
     let buffer = ""
     let fullContent = ""
+    let jsonBuffer = ""
+    let bracketCount = 0
+    let inObject = false
 
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
 
       const chunk = decoder.decode(value, { stream: true })
-      console.log("Received chunk:", chunk)
+      console.log("Received raw chunk:", chunk)
       
-      buffer += chunk
-      const lines = buffer.split("\n")
-      buffer = lines.pop()
-
-      for (const line of lines) {
-        if (line.trim() === "") continue
-        
-        // 记录原始行数据
-        console.log("Processing line:", line)
-        
-        let jsonData = line
-        if (line.startsWith("data:")) {
-          jsonData = line.slice(5).trim()
+      // 处理每个字符，正确收集JSON对象
+      for (const char of chunk) {
+        if (char === '{') {
+          inObject = true
+          bracketCount++
         }
         
-        // 记录处理后的JSON数据
-        console.log("Processed JSON data:", jsonData)
+        if (inObject) {
+          jsonBuffer += char
+        }
         
-        try {
-          const parsed = jsonParse(jsonData)
-          console.log("Parsed data structure:", JSON.stringify(parsed, null, 2))
-          
-          if (parsed.candidates && Array.isArray(parsed.candidates)) {
-            for (const candidate of parsed.candidates) {
-              if (candidate.content?.parts?.[0]?.text) {
-                const content = candidate.content.parts[0].text
-                console.log("Extracted content:", content)
-                fullContent += content
-                onChunk(content)
+        if (char === '}') {
+          bracketCount--
+          if (bracketCount === 0 && inObject) {
+            // 收集到完整的JSON对象
+            console.log("Complete JSON object collected:", jsonBuffer)
+            try {
+              const parsed = jsonParse(jsonBuffer)
+              console.log("Successfully parsed JSON:", parsed)
+              
+              if (parsed.candidates && Array.isArray(parsed.candidates)) {
+                for (const candidate of parsed.candidates) {
+                  if (candidate.content?.parts?.[0]?.text) {
+                    const content = candidate.content.parts[0].text
+                    console.log("Extracted content:", content)
+                    fullContent += content
+                    onChunk(content)
+                  }
+                }
               }
+            } catch (error) {
+              console.error("Error parsing JSON object:", error)
+              console.log("Problematic JSON:", jsonBuffer)
             }
+            
+            // 重置缓冲区
+            jsonBuffer = ""
+            inObject = false
           }
-        } catch (error) {
-          console.error("Error parsing JSON:", error)
-          console.log("Problematic data:", jsonData)
         }
       }
     }
