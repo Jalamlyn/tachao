@@ -7,6 +7,7 @@ import MessageCard from "@/components/MessageCard"
 import AICommandInput from "@/components/AICommandInput"
 import { cn } from "@/lib/utils"
 import message from "@/components/Message"
+import Editor from "@monaco-editor/react"
 
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
@@ -30,7 +31,7 @@ interface AIEditorProps {
   selectedTab: string
   onTabChange: (key: string) => void
   onCommandResult: (result: any) => void
-  onClearMessages?: () => void // 新增清空消息的回调
+  onClearMessages?: () => void
   agent: {
     processCommand: (command: string) => Promise<any>
     cacheImage?: (imageData: string) => void
@@ -52,6 +53,12 @@ interface AIEditorProps {
   showDataTab?: boolean
   showCodeTab?: boolean
   previewTabName?: string
+  codeEditorOptions?: {
+    language?: string
+    readOnly?: boolean
+    theme?: string
+    customOptions?: any
+  }
 }
 
 // 图片上传组件
@@ -151,40 +158,37 @@ const AIEditor: React.FC<AIEditorProps> = ({
   agent,
   versionControl,
   renderPreview,
+  renderCodeView,
   renderDataView,
   showDataTab = false,
   showCodeTab = false,
   previewTabName = "预览",
+  codeEditorOptions = {
+    language: 'json',
+    readOnly: false,
+    theme: 'vs-dark'
+  }
 }) => {
-  // 添加版本变化的监听
   const [currentVersion, setCurrentVersion] = useState(versionControl.getCurrentVersion())
-  // 添加编辑状态管理
   const [isEditing, setIsEditing] = useState(false)
   const [editedCode, setEditedCode] = useState("")
-  // 添加确认对话框状态
-  const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   useEffect(() => {
     setCurrentVersion(versionControl.getCurrentVersion())
-    // 重置编辑状态
     setIsEditing(false)
     setEditedCode(versionControl.getCurrentVersion()?.rawConfig || "")
   }, [versionControl.currentIndex])
 
-  // 处理保存编辑
   const handleSaveEdit = async () => {
     try {
-      // 使用传入的解析器或默认的表单解析器
       const parser = parseConfig || AIFormAgent.parseConfig
       const parsedConfig = await parser(editedCode)
 
-      // 添加新版本
       versionControl.addVersion({
         formConfig: parsedConfig.config,
         rawConfig: editedCode,
       })
 
-      // 通知父组件更新状态
       onCommandResult({
         success: true,
         config: parsedConfig.config,
@@ -199,19 +203,42 @@ const AIEditor: React.FC<AIEditorProps> = ({
     }
   }
 
-  // 处理取消编辑
   const handleCancelEdit = () => {
     setEditedCode(currentVersion?.rawConfig || "")
     setIsEditing(false)
   }
 
-  // 处理清空消息
   const handleClearMessages = () => {
     if (onClearMessages) {
       onClearMessages()
       message.success("对话已清空")
     }
   }
+
+  // 统一的代码编辑器渲染
+  const renderCodeEditor = (content: string, isEditing: boolean) => (
+    <Editor
+      height="100%"
+      language={codeEditorOptions.language}
+      value={content}
+      options={{
+        readOnly: !isEditing,
+        minimap: { enabled: false },
+        fontSize: 14,
+        lineNumbers: 'on',
+        folding: true,
+        wordWrap: 'on',
+        theme: codeEditorOptions.theme,
+        ...codeEditorOptions.customOptions
+      }}
+      onChange={(value) => {
+        if (isEditing) {
+          setEditedCode(value || '')
+          setIsEditing(true)
+        }
+      }}
+    />
+  )
 
   return (
     <div className='h-[calc(100vh-140px)] overflow-hidden'>
@@ -247,7 +274,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
             </ScrollShadow>
 
             <div className='p-2'>
-              {imageUpload && <ImageUploader agent={AIFormAgent} />}
+              {imageUpload && <ImageUploader agent={agent} />}
               <AICommandInput agent={agent} onResult={onCommandResult} />
             </div>
           </div>
@@ -307,33 +334,46 @@ const AIEditor: React.FC<AIEditorProps> = ({
             )}
             {selectedTab === "code" && showCodeTab && (
               <div className='relative h-[calc(100vh-260px)] rounded-lg overflow-auto mt-2'>
-                <textarea
-                  value={isEditing ? editedCode : currentVersion?.rawConfig || ""}
-                  onChange={(e) => {
-                    setEditedCode(e.target.value)
-                    setIsEditing(true)
-                  }}
-                  className='w-full h-full p-4 bg-slate-900 text-white font-mono resize-none focus:outline-none focus:ring-2 focus:ring-primary rounded-lg'
-                />
-                {isEditing && (
-                  <div className='absolute top-2 right-2 space-x-2'>
-                    <Button
-                      size='sm'
-                      color='primary'
-                      onClick={handleSaveEdit}
-                      startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
-                    >
-                      保存
-                    </Button>
-                    <Button
-                      size='sm'
-                      variant='flat'
-                      onClick={handleCancelEdit}
-                      startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
-                    >
-                      取消
-                    </Button>
-                  </div>
+                {renderCodeView ? (
+                  renderCodeView(currentVersion)
+                ) : (
+                  <>
+                    {renderCodeEditor(
+                      isEditing ? editedCode : currentVersion?.rawConfig || "",
+                      isEditing
+                    )}
+                    {isEditing ? (
+                      <div className='absolute top-2 right-2 space-x-2'>
+                        <Button
+                          size='sm'
+                          color='primary'
+                          onClick={handleSaveEdit}
+                          startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
+                        >
+                          保存
+                        </Button>
+                        <Button
+                          size='sm'
+                          variant='flat'
+                          onClick={handleCancelEdit}
+                          startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
+                        >
+                          取消
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className='absolute top-2 right-2'>
+                        <Button
+                          size='sm'
+                          color='primary'
+                          onClick={() => setIsEditing(true)}
+                          startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
+                        >
+                          编辑
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
