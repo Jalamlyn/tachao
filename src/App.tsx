@@ -19,6 +19,7 @@ import Report from "@/pages/report"
 import ResourceDataTable from "./components/common/data-table/ResourceDataTable"
 import AppEntry from "./pages/app-management/components/AppEntry"
 import WaitListPage from "./pages/WaitListPage"
+import FormCreate from "./pages/form/components/FormCreate"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,7 +41,7 @@ function App() {
   }, [])
 
   const shouldRedirectToLogin = () => {
-    const publicPaths = ["/", "/we-chat-login", "/report"]
+    const publicPaths = ["/", "/login", "/report"]
     if (!publicPaths.includes(location.pathname)) {
       const token = localStorage.getItem("model-base-user-token")
       return !token
@@ -54,10 +55,10 @@ function App() {
         <div className='min-h-screen'>
           <Routes>
             <Route path='/' element={<LandingPage />} />
-            <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <AIHomePage />}>
+            <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <AIHomePage />}>
               <Route index element={<Navigate to='management' replace />} />
             </Route>
-            <Route path='/we-chat-login' element={<WeChatLoginPage />} />
+            <Route path='/login' element={<WeChatLoginPage />} />
             <Route
               path='/form-preview/:templateId'
               element={
@@ -67,31 +68,32 @@ function App() {
               }
             />
             <Route path='/form/:formId' element={<Form />} />
+            <Route path='/form-create/:templateId' element={<FormCreate />} />
             <Route path='/report/:reportId' element={<Report />} />
             <Route path='/apps/:appId' element={<AppEntry />} />
             <Route
               path='/forms/:id'
-              element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <FormRenderer />}
+              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <FormRenderer />}
             />
             <Route
               path='/forms/analysis'
-              element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <AnalysisPage />}
+              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <AnalysisPage />}
             />
             <Route
               path='/resources/view/:id'
-              element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <ResourceDataTable />}
+              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <ResourceDataTable />}
             />
             <Route
               path='/reports/create'
-              element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <CreateReportPage />}
+              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <CreateReportPage />}
             />
             <Route
               path='/reports/view/:id'
-              element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <ReadReportRenderer />}
+              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <ReadReportRenderer />}
             />
             <Route
               path='/operations/wait-list'
-              element={shouldRedirectToLogin() ? <Navigate to='/we-chat-login' /> : <WaitListPage />}
+              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <WaitListPage />}
             />
             {renderWeChatApp()}
           </Routes>

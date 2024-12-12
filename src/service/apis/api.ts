@@ -46,7 +46,7 @@ apiService.interceptors.response.use(
     if (error.response) {
       if (error.response.status === 401) {
         localStorage.removeItem(modelBaseUserToken)
-        window.location.href = `/we-chat-login`
+        window.location.href = `/login`
       } else if (error.response.data.code === 400) {
         if (error.response.data.data) {
           message.error(error.response.data.data.message)

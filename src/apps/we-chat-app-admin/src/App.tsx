@@ -29,7 +29,7 @@ export default function Component() {
   }, [])
 
   const handleLogout = () => {
-    navigate("/we-chat-login")
+    navigate("/login")
   }
 
   return (

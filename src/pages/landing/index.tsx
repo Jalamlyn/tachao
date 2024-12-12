@@ -20,7 +20,7 @@ const LandingPage: React.FC = () => {
   }, [controls])
 
   const handleGetStarted = () => {
-    navigate("/we-chat-login")
+    navigate("/login")
   }
 
   return (
