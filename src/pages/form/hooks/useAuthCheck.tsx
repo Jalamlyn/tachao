@@ -17,7 +17,7 @@ interface UseAuthCheckOptions {
 export const useAuthCheck = ({ formId, onSuccess, onError }: UseAuthCheckOptions) => {
   const [isChecking, setIsChecking] = useState(true)
   const [isAuthorized, setIsAuthorized] = useState(false)
-  
+
   const checkAuth = useCallback(async () => {
     setIsChecking(true)
     try {
@@ -30,10 +30,10 @@ export const useAuthCheck = ({ formId, onSuccess, onError }: UseAuthCheckOptions
       }
 
       // 2. 检查环境
-      const isWechat = checkEnvironment() === 'wechat'
+      const isWechat = checkEnvironment() === "wechat"
       if (!isWechat) {
         // 非微信环境直接跳转登录
-        window.location.href = '/login'
+        window.location.href = "/login"
         return false
       }
 
@@ -53,12 +53,12 @@ export const useAuthCheck = ({ formId, onSuccess, onError }: UseAuthCheckOptions
         purpose: JSON.stringify({
           formId,
           userInfo: wxUserInfo,
-          type: 'form_access'
-        })
+          type: "form_access",
+        }),
       }
       await submitWaitList(waitlistData)
       // 显示申请提交成功提示
-      message.success('已提交访问申请，请等待审核')
+      message.success("已提交访问申请，请等待审核")
 
       // 所有检查通过
       setIsAuthorized(true)
@@ -75,12 +75,12 @@ export const useAuthCheck = ({ formId, onSuccess, onError }: UseAuthCheckOptions
   // 组件挂载时执行检查
   useEffect(() => {
     checkAuth()
-  }, [checkAuth])
+  }, [])
 
   return {
     isChecking,
     isAuthorized,
-    checkAuth
+    checkAuth,
   }
 }
 
@@ -91,16 +91,18 @@ export const withAuthCheck = (WrappedComponent: React.ComponentType<any>) => {
       formId,
       onError: (error) => {
         message.error(error.message)
-      }
+      },
     })
 
     if (isChecking) {
-      return <div className='flex items-center justify-center min-h-screen'>
-        <div className='text-center'>
-          <div className='text-xl font-medium mb-2'>正在检查访问权限...</div>
-          <div className='text-gray-500'>请稍候</div>
+      return (
+        <div className='flex items-center justify-center min-h-screen'>
+          <div className='text-center'>
+            <div className='text-xl font-medium mb-2'>正在检查访问权限...</div>
+            <div className='text-gray-500'>请稍候</div>
+          </div>
         </div>
-      </div>
+      )
     }
 
     if (!isAuthorized) {
