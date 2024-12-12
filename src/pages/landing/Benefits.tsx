@@ -59,13 +59,13 @@ const Benefits: React.FC = () => {
   }
 
   return (
-    <section className='py-20 bg-gradient-to-b from-primary-dark/50 to-primary-dark relative overflow-hidden'>
-      {/* 背景装饰 */}
+    <section className='py-20 relative overflow-hidden'>
+      <div className='absolute inset-0 bg-gradient-to-b from-primary-dark/50 to-primary-dark' />
       <div className='absolute inset-0 bg-[url("/assets/grid.svg")] opacity-10' />
       <div className='absolute inset-0 bg-gradient-to-t from-primary-dark/80 to-transparent' />
 
       <div className='container mx-auto px-4 relative z-10'>
-        <ScrollAnimation className='text-center mb-16'>
+        <ScrollAnimation className='text-center mb-12 md:mb-16'>
           <h2 className='text-3xl md:text-4xl font-bold text-white mb-4'>为什么选择沙塔智能</h2>
           <p className='text-white/80 text-lg max-w-2xl mx-auto'>创新科技赋能，助力企业腾飞</p>
         </ScrollAnimation>
@@ -82,7 +82,7 @@ const Benefits: React.FC = () => {
               <Card className='bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-300 border border-white/10 hover:border-white/20'>
                 <CardBody className='text-center p-6'>
                   <motion.div 
-                    className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${benefit.color} ${benefit.shadowColor} shadow-lg flex items-center justify-center transform transition-all duration-300 hover:scale-110`}
+                    className={`w-20 h-20 mx-auto mb-6rounded-2xl bg-gradient-to-br ${benefit.color} ${benefit.shadowColor} shadow-lg flex items-center justify-center transform transition-all duration-300 hover:scale-110`}
                     whileHover={{ 
                       rotate: [0, -10, 10, -10, 0],
                       transition: { duration: 0.5 }
@@ -102,7 +102,6 @@ const Benefits: React.FC = () => {
           ))}
         </motion.div>
 
-        {/* 应用场景展示 */}
         <ScrollAnimation className='mt-20'>
           <div className='text-center mb-12'>
             <h3 className='text-2xl md:text-3xl font-bold text-white mb-4'>灵活应对多种场景</h3>

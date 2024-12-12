@@ -3,7 +3,6 @@ import { motion, useSpring } from "framer-motion"
 import { Card, CardBody, Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import ScrollAnimation from "./ScrollAnimation"
-import { useSwipeable } from "react-swipeable"
 
 const features = [
   {
@@ -126,20 +125,6 @@ const Features: React.FC = () => {
   const springConfig = { mass: 1, stiffness: 100, damping: 30 }
   const scaleSpring = useSpring(1, springConfig)
 
-  // 添加手势支持
-  const handlers = useSwipeable({
-    onSwipedLeft: (eventData) => {
-      const nextSection = document.getElementById("benefits")
-      nextSection?.scrollIntoView({ behavior: "smooth" })
-    },
-    onSwipedRight: (eventData) => {
-      const prevSection = document.getElementById("hero")
-      prevSection?.scrollIntoView({ behavior: "smooth" })
-    },
-    preventDefaultTouchmoveEvent: true,
-    trackMouse: true,
-  })
-
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: {
@@ -161,7 +146,7 @@ const Features: React.FC = () => {
   }
 
   return (
-    <div className='py-12 md:py-20 bg-white/10 backdrop-blur-lg' {...handlers}>
+    <section className='py-20 bg-white/10 backdrop-blur-lg' id="features">
       <div className='container mx-auto px-4'>
         <ScrollAnimation className='text-center mb-8 md:mb-16'>
           <h2 className='text-2xl md:text-4xl font-bold text-white mb-4'>企业管理的智能化解决方案</h2>
@@ -170,7 +155,7 @@ const Features: React.FC = () => {
           </p>
         </ScrollAnimation>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6'>
           {features.map((feature, index) => (
             <ScrollAnimation key={index}>
               <motion.div
@@ -179,9 +164,9 @@ const Features: React.FC = () => {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
                 <Card className='bg-white/20 backdrop-blur-lg hover:bg-white/30 transition-all duration-300 border border-white/10 hover:border-white/20'>
-                  <CardBody className='p-4 md:p-8'>
+                  <CardBody className='p-4 md:p-6'>
                     <motion.div
-                      className={`w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 md:mb-6 rounded-2xl bg-gradient-to-br ${feature.color} ${feature.shadowColor} shadow-lg flex items-center justify-center`}
+                      className={`w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${feature.color} ${feature.shadowColor} shadow-lg flex items-center justify-center`}
                       whileHover={{
                         scale: 1.1,
                         rotate: [0, -5, 5, -5, 0],
@@ -196,17 +181,17 @@ const Features: React.FC = () => {
                         className='text-2xl md:text-4xl text-white transform transition-all duration-300'
                       />
                     </motion.div>
-                    <h3 className='text-xl md:text-2xl font-bold text-white mb-2 md:mb-3 text-center'>
+                    <h3 className='text-lg md:text-xl font-bold text-white mb-2 text-center'>
                       {feature.title}
                     </h3>
-                    <p className='text-white/80 mb-4 md:mb-6 text-center leading-relaxed text-sm md:text-base'>
+                    <p className='text-white/80 mb-4 text-center leading-relaxed text-sm md:text-base'>
                       {feature.description}
                     </p>
-                    <ul className='space-y-2 md:space-y-3'>
+                    <ul className='space-y-2'>
                       {feature.details.map((detail, idx) => (
                         <li key={idx} className='flex items-center text-white/70 text-xs md:text-sm'>
-                          <motion.div whileHover={{ scale: 1.2 }} className='mr-2 md:mr-3'>
-                            <Icon icon='mdi:check-circle' className='text-green-400 text-base md:text-lg' />
+                          <motion.div whileHover={{ scale: 1.2 }} className='mr-2'>
+                            <Icon icon='mdi:check-circle' className='text-green-400 text-base' />
                           </motion.div>
                           {detail}
                         </li>
@@ -305,7 +290,7 @@ const Features: React.FC = () => {
           )}
         </ModalContent>
       </Modal>
-    </div>
+    </section>
   )
 }
 

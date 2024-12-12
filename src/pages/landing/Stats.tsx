@@ -43,7 +43,7 @@ const Stats: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className='grid grid-cols-2 md:grid-cols-4 gap-6'
+          className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'
         >
           {stats.map((stat, index) => (
             <Card key={index} className='bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-300'>
@@ -56,7 +56,7 @@ const Stats: React.FC = () => {
                   icon={stat.icon} 
                   className={`text-3xl ${stat.color} mb-4 mx-auto`}
                 />
-                <h3 className='text-3xl md:text-4xl font-bold text-white mb-2'>{stat.number}</h3>
+                <h3 className='text-2xl md:text-3xl font-bold text-white mb-2'>{stat.number}</h3>
                 <p className='text-white/80 font-medium mb-1'>{stat.label}</p>
                 <p className='text-white/60 text-sm'>{stat.description}</p>
               </motion.div>
@@ -64,7 +64,6 @@ const Stats: React.FC = () => {
           ))}
         </motion.div>
 
-        {/* 补充说明 */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}

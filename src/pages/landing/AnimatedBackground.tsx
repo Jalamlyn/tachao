@@ -22,16 +22,15 @@ const AnimatedBackground: React.FC = () => {
   }, [])
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden">
+    <div className="absolute inset-0 -z-10 overflow-hidden">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: isMobile ? 0.5 : 1 }} // 移动端更快的动画
+        transition={{ duration: isMobile ? 0.5 : 1 }}
         style={{ opacity }}
         className="absolute inset-0 bg-gradient-to-br from-primary-dark via-primary-light to-accent opacity-20"
       />
       
-      {/* 移动端降低网格图案的复杂度 */}
       <div 
         className="absolute inset-0 bg-[url('/assets/grid.svg')] opacity-10"
         style={{
@@ -40,7 +39,6 @@ const AnimatedBackground: React.FC = () => {
         }}
       />
 
-      {/* 优化渐变效果 */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -52,7 +50,6 @@ const AnimatedBackground: React.FC = () => {
         }}
       />
 
-      {/* 添加移动端性能优化的额外层 */}
       {isMobile && (
         <div 
           className="absolute inset-0"
