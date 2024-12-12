@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react"
 import { Icon } from "@iconify/react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { Button, Spinner } from "@nextui-org/react"
+import Editor from "@monaco-editor/react"
 import FormPreview from "./components/FormPreview"
 import { useFormState } from "./hooks/useFormState"
 import AIFormAgent from "@/service/agents/AIFormAgent"
@@ -22,6 +23,12 @@ import user from "/assets/user.png"
 import { useWatch } from "./hooks/useWatch"
 import { getFormAgent } from "./getFormAgent"
 import { useSave } from "./hooks/useSave"
+
+const extractFormConfig = (rawConfig: string): string => {
+  const regex = /<shata-ai-form>([\s\S]*?)<\/shata-ai-form>/;
+  const match = regex.exec(rawConfig);
+  return match ? match[1].trim() : rawConfig;
+};
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -283,9 +290,20 @@ const AIFormEditor: React.FC = () => {
           </ErrorBoundary>
         )}
         renderCodeView={(version) => (
-          <pre>
-            <code>{previewContent || version?.rawConfig || ""}</code>
-          </pre>
+          <Editor
+            height="500px"
+            defaultLanguage="json"
+            value={extractFormConfig(previewContent || version?.rawConfig || "")}
+            options={{
+              readOnly: true,
+              minimap: { enabled: false },
+              fontSize: 14,
+              lineNumbers: 'on',
+              folding: true,
+              wordWrap: 'on',
+              theme: 'vs-dark'
+            }}
+          />
         )}
         showCodeTab
         previewTabName='表单预览'
