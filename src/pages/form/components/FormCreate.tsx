@@ -1,31 +1,22 @@
 import React, { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
+import { motion } from "framer-motion"
 import DynamicForm from "@/components/common/DynamicForm"
-import type { DynamicFormConfig } from "@/components/common/DynamicForm/types"
+import { FormHeader } from "./FormHeader"
 import { useMetadata } from "@/hooks/useMetadata"
 import { parseFormConfig } from "@/utils/codeParser"
 import { Icon } from "@iconify/react"
 import { Spinner } from "@nextui-org/react"
 
-interface FormPreviewProps {
-  config: DynamicFormConfig | null
-  previewMode?: boolean
-}
-
-const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMode = true }) => {
+const FormCreate: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [loadedConfig, setLoadedConfig] = useState<DynamicFormConfig | null>(null)
+  const [loadedConfig, setLoadedConfig] = useState<any>(null)
   const { templateId } = useParams<any>()
-  const { getDetail } = useMetadata<{ config: DynamicFormConfig }>("template")
+  const { getDetail } = useMetadata<{ config: any }>("template")
 
   useEffect(() => {
     const loadFormConfig = async () => {
-      if (propConfig) {
-        setLoadedConfig(propConfig)
-        return
-      }
-
       if (templateId) {
         setIsLoading(true)
         setError(null)
@@ -50,9 +41,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
     }
 
     loadFormConfig()
-  }, [templateId, propConfig, getDetail])
-
-  const config = propConfig || loadedConfig
+  }, [templateId, getDetail])
 
   if (isLoading) {
     return (
@@ -78,22 +67,32 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
   }
 
   return (
-    <div className='relative h-full bg-background'>
-      {config ? (
-        <div className='h-full'>
-          <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
-            <DynamicForm previewMode={previewMode} config={config} templateId={templateId} />
-          </div>
+    <>
+      <FormHeader title={loadedConfig?.metadata?.title || "创建表单"} formId={templateId} />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className='container mx-auto py-8 px-4'
+      >
+        <div className='max-w-[1200px] mx-auto relative mt-6'>
+          {loadedConfig ? (
+            <div className='h-full'>
+              <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
+                <DynamicForm isCreateMode={true} config={loadedConfig} templateId={templateId} />
+              </div>
+            </div>
+          ) : (
+            <div className='flex flex-col items-center justify-center h-full bg-default-50'>
+              <Icon icon='mdi:form' className='w-20 h-20 text-default-400 mb-6' />
+              <p className='text-xl font-medium text-default-600 mb-2'>开始创建表单</p>
+              <p className='text-default-500'>请先生成表单模板来预览</p>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className='flex flex-col items-center justify-center h-full bg-default-50'>
-          <Icon icon='mdi:form' className='w-20 h-20 text-default-400 mb-6' />
-          <p className='text-xl font-medium text-default-600 mb-2'>开始创建表单</p>
-          <p className='text-default-500'>请先生成表单模板来预览</p>
-        </div>
-      )}
-    </div>
+      </motion.div>
+    </>
   )
 }
 
-export default FormPreview
+export default FormCreate
