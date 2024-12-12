@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from "react"
 import { queryWaitList, WaitListQueryParams } from "@/service/apis/api"
-import { Input, Checkbox, Button, Table } from "@nextui-org/react"
+import { 
+  Input, 
+  Checkbox, 
+  Button,
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell
+} from "@nextui-org/react"
 
 interface WaitListItem {
   id: string
@@ -123,7 +133,7 @@ const WaitListPage: React.FC = () => {
       </div>
 
       <Table
-        aria-label='Wait List Table'
+        aria-label="Wait List Table"
         isHeaderSticky
         classNames={{
           wrapper: "max-h-[600px]",
@@ -133,36 +143,28 @@ const WaitListPage: React.FC = () => {
         radius="lg"
         isStriped
       >
-        <Table.Header columns={columns}>
-          {(column) => (
-            <Table.Column 
+        <TableHeader>
+          {columns.map((column) => (
+            <TableColumn 
               key={column.uid}
               allowsSorting={column.sortable}
             >
               {column.name}
-            </Table.Column>
-          )}
-        </Table.Header>
-        <Table.Body 
+            </TableColumn>
+          ))}
+        </TableHeader>
+        <TableBody 
           items={waitList}
-          isLoading={loading}
-          loadingContent={
-            <div className="flex justify-center">
-              <span>Loading...</span>
-            </div>
-          }
-          emptyContent={
-            <div className="flex justify-center">
-              <span>No wait list records found</span>
-            </div>
-          }
+          emptyContent={loading ? "Loading..." : "No wait list records found"}
         >
-          {(item) => (
-            <Table.Row key={item.id}>
-              {(columnKey) => <Table.Cell>{renderCell(item, columnKey)}</Table.Cell>}
-            </Table.Row>
+          {(item: WaitListItem) => (
+            <TableRow key={item.id}>
+              {(columnKey: React.Key) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
+            </TableRow>
           )}
-        </Table.Body>
+        </TableBody>
       </Table>
     </div>
   )
