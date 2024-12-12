@@ -152,7 +152,7 @@ const MessageCard = React.memo(
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeRaw]}
               components={{
-                "shata-ai-form": () => {
+                "shata-ai-code": () => {
                   return <></>
                 },
                 code({ node, inline, className, children, ...props }) {
@@ -183,10 +183,10 @@ const MessageCard = React.memo(
                     if (children && children.toString().startsWith("<shata-ai-scene>")) {
                       return "分析用户意图..."
                     }
-                    if (children && children.toString().includes("</shata-ai-form>")) {
+                    if (children && children.toString().includes("</shata-ai-code>")) {
                       return "✔️ 表单开发完成"
                     }
-                    if (children && children.toString().startsWith("<shata-ai-form>")) {
+                    if (children && children.toString().startsWith("<shata-ai-code>")) {
                       return "正在开发表单..."
                     }
                     if (children && children.toString().includes("</shata-ai-error>")) {

@@ -128,7 +128,7 @@ export class AIFormAgent {
       }
 
       // 检查是否包含表单配置
-      if (response.includes("<shata-ai-form>")) {
+      if (response.includes("<shata-ai-code>")) {
         const parsedConfig = await this.parseConfig(response)
         if (parsedConfig) {
           this.setRawConfig(response) // parseConfig 会返回原始配置

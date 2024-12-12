@@ -1,17 +1,7 @@
 import React, { useState, useCallback } from "react"
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  Input,
-  Select,
-  SelectItem,
-  Chip,
-  ScrollShadow,
-} from "@nextui-org/react"
+import { Button, Input, Select, SelectItem, ScrollShadow } from "@nextui-org/react"
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/modal"
+import { Chip } from "@nextui-org/chip"
 import { Icon } from "@iconify/react"
 import { useTagManagement } from "@/hooks/useTagManagement"
 import { TagType } from "@/types/tag"
@@ -78,12 +68,6 @@ const TagManageModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type }
   }
 
   const handleDeleteTag = async (tagId: string) => {
-    const usageCount = getTagUsageCount(tagId)
-    if (usageCount > 0) {
-      message.error(`无法删除标签，当前有 ${usageCount} 个项目正在使用此标签`)
-      return
-    }
-
     try {
       const success = await deleteTag(tagId)
       if (success) {
@@ -130,6 +114,7 @@ const TagManageModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type }
                   }}
                 />
                 <Select
+                  classNames={""}
                   value={selectedColor}
                   onChange={(e) => setSelectedColor(e.target.value)}
                   className='w-32'
@@ -194,7 +179,6 @@ const TagManageModal: React.FC<TagManageModalProps> = ({ isOpen, onClose, type }
             <div className='bg-yellow-500 bg-gray-500 bg-indigo-500 bg-slate-500 bg-orange-500 bg-green-500 bg-sky-500 bg-blue-500'></div>
             <div className='text-sm text-default-400 space-y-1'>
               <p>• 标签一旦创建后名称不可修改</p>
-              <p>• 只有未被使用的标签才能删除</p>
               <p>• 标签名称最长20个字符</p>
             </div>
           </div>

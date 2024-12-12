@@ -1,6 +1,5 @@
-import React, { useState, useCallback, useEffect, useRef } from "react"
+import React, { useState, useEffect } from "react"
 import { ScrollShadow, Tabs, Tab, Button } from "@nextui-org/react"
-import { Button as SButton } from "@/components/ui/button"
 import { Icon } from "@iconify/react"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import MessageCard from "@/components/MessageCard"
@@ -61,16 +60,16 @@ export interface AIEditorProps {
   }
 }
 
-// 辅助函数：提取 <shata-ai-form> 标签中的内容
+// 辅助函数：提取 <shata-ai-code> 标签中的内容
 const extractShataAIFormContent = (content: string): string => {
-  const regex = /<shata-ai-form>([\s\S]*?)<\/shata-ai-form>/
+  const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
   const match = content.match(regex)
   return match ? match[1].trim() : content
 }
 
-// 辅助函数：用 <shata-ai-form> 标签包装内容
+// 辅助函数：用 <shata-ai-code> 标签包装内容
 const wrapWithShataAIForm = (content: string): string => {
-  return `<shata-ai-form>\n${content}\n</shata-ai-form>`
+  return `<shata-ai-code>\n${content}\n</shata-ai-code>`
 }
 
 const AIEditor: React.FC<AIEditorProps> = ({
@@ -101,7 +100,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
   useEffect(() => {
     setCurrentVersion(versionControl.getCurrentVersion())
     setIsEditing(false)
-    // 处理可能包含 <shata-ai-form> 标签的内容
+    // 处理可能包含 <shata-ai-code> 标签的内容
     const rawConfig = versionControl.getCurrentVersion()?.rawConfig || ""
     setEditedCode(extractShataAIFormContent(rawConfig))
   }, [versionControl.currentIndex])
@@ -109,7 +108,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
   const handleSaveEdit = async () => {
     try {
       const parser = parseConfig || AIFormAgent.parseConfig
-      // 在保存前重新添加 <shata-ai-form> 标签
+      // 在保存前重新添加 <shata-ai-code> 标签
       const wrappedCode = wrapWithShataAIForm(editedCode)
       const parsedConfig = await parser(wrappedCode)
 

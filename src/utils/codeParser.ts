@@ -162,7 +162,7 @@ export const parseFormEditOperations = async (
  */
 export const parseFormConfig = async (content: string): Promise<any> => {
   try {
-    return await parseAICode(content, "shata-ai-form")
+    return await parseAICode(content, "shata-ai-code")
   } catch (error) {
     aiLog.error(error as Error)
     // message.error("配置解析失败，请检查配置格式是否正确")

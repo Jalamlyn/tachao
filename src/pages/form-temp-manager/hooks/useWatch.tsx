@@ -35,7 +35,7 @@ export const useWatch = (
           }
         } catch (error) {
           console.error("Error parsing form config:", error)
-          if (lastResponseRef.current.includes("</shata-ai-form>")) {
+          if (lastResponseRef.current.includes("</shata-ai-code>")) {
             message.error("表单解析失败")
           }
           // updateLastMessage({

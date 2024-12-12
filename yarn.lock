@@ -1699,7 +1699,7 @@
     "@react-types/checkbox" "3.9.0"
     "@react-types/shared" "3.26.0"
 
-"@nextui-org/chip@2.2.4":
+"@nextui-org/chip@2.2.4", "@nextui-org/chip@^2.2.4":
   version "2.2.4"
   resolved "https://registry.npmmirror.com/@nextui-org/chip/-/chip-2.2.4.tgz#e915510ff3bf43d976e69b788a7bbcdcc6d38152"
   integrity sha512-7fii39lPei8o/3TwdmB8e8W/ZS0FdsQxSHQKXDQpB4meS3Q7CC9dxV1MtwiniE3SXOnSQY7ChvGmu6wkGRFOOA==
@@ -1992,7 +1992,7 @@
     "@react-types/menu" "3.9.13"
     "@react-types/shared" "3.26.0"
 
-"@nextui-org/modal@2.2.5":
+"@nextui-org/modal@2.2.5", "@nextui-org/modal@^2.2.5":
   version "2.2.5"
   resolved "https://registry.npmmirror.com/@nextui-org/modal/-/modal-2.2.5.tgz#125e4634d5668ff724d509562cfcb711382eb5e8"
   integrity sha512-Zp4YqLPBYyiIGcCofVQCZ7kqFXk/k+vAFZ/eulbK0lGpxCQeCZDgdXW+a4jsjVz4MXBMrZoPU90plKpr4BeVxA==
@@ -2152,7 +2152,7 @@
     "@nextui-org/react-rsc-utils" "2.1.1"
     "@nextui-org/shared-utils" "2.1.1"
 
-"@nextui-org/react@^2.4.2":
+"@nextui-org/react@^2.6.8":
   version "2.6.8"
   resolved "https://registry.npmmirror.com/@nextui-org/react/-/react-2.6.8.tgz#6243beba35f0ccce1f3e4c4e23c27d39ce3b35bb"
   integrity sha512-w6skiTItbrzjvHl+v4bHCYNkPjPpFz0UPM/s4vZZmaky6sxihguq+mdCcSe/qkXdhmSn7b+aY9E0ygQaMvibvw==
@@ -2232,7 +2232,7 @@
     "@nextui-org/shared-utils" "2.1.1"
     "@nextui-org/use-data-scroll-overflow" "2.2.1"
 
-"@nextui-org/select@2.4.7":
+"@nextui-org/select@2.4.7", "@nextui-org/select@^2.4.7":
   version "2.4.7"
   resolved "https://registry.npmmirror.com/@nextui-org/select/-/select-2.4.7.tgz#4230bdf6962bda61519dc0c1cbf9232f10c8e437"
   integrity sha512-MpplLt7kWVownuvX9wQMruy9wL3Rt2GcVUteRd6wriNwj/pP3wY7OnXOgih1aNWtbVM2+PpCpgummgau2AdaAg==
@@ -8653,11 +8653,13 @@ fraction.js@^4.3.7:
   resolved "https://registry.npmmirror.com/fraction.js/-/fraction.js-4.3.7.tgz#06ca0085157e42fda7f9e726e79fefc4068840f7"
   integrity sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==
 
-framer-motion@~11.1.1:
-  version "11.1.9"
-  resolved "https://registry.npmmirror.com/framer-motion/-/framer-motion-11.1.9.tgz#1ef021fc35615eb83d6baa903a47ba872be99187"
-  integrity sha512-flECDIPV4QDNcOrDafVFiIazp8X01HFpzc01eDKJsdNH/wrATcYydJSH9JbPWMS8UD5lZlw+J1sK8LG2kICgqw==
+framer-motion@^11.14.1:
+  version "11.14.1"
+  resolved "https://registry.npmmirror.com/framer-motion/-/framer-motion-11.14.1.tgz#65634e546cb7ee7a8f73e13979d42117a3c52ce1"
+  integrity sha512-6B7jC54zgnefmUSa2l4gkc/2CrqclHL9AUbDxxRfbFyWKLd+4guUYtEabzoYMU8G5ICZ6CdJdydOLy74Ekd7ag==
   dependencies:
+    motion-dom "^11.14.1"
+    motion-utils "^11.14.1"
     tslib "^2.4.0"
 
 front-matter@^4.0.0:
@@ -11049,6 +11051,16 @@ mlly@^1.7.2, mlly@^1.7.3:
     pathe "^1.1.2"
     pkg-types "^1.2.1"
     ufo "^1.5.4"
+
+motion-dom@^11.14.1:
+  version "11.14.1"
+  resolved "https://registry.npmmirror.com/motion-dom/-/motion-dom-11.14.1.tgz#06cb286606c70b3c2bb12508b11124fefd93326b"
+  integrity sha512-Y68tHWR0d2HxHDskNxpeY3pzUdz7L/m5A8TV7VSE6Sq4XUNJdZV8zXco1aeAQ44o48u0i8UKjt8TGIqkZSQ8ew==
+
+motion-utils@^11.14.1:
+  version "11.14.1"
+  resolved "https://registry.npmmirror.com/motion-utils/-/motion-utils-11.14.1.tgz#9935f28d55e45c9f96aadecf1c4135e036da98e8"
+  integrity sha512-R6SsehArpkEBUHydkcwQ/8ij8k2PyKWAJ7Y8PN3ztnFwq5RBU3zIamYH6esTp09OgsbwB57mBEZ9DORaN1WTxQ==
 
 mri@1.2.0:
   version "1.2.0"

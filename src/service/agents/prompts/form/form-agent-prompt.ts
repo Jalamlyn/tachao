@@ -84,7 +84,7 @@ ${resources}`
 3. 返回格式,参考<config-example>包裹的例子：
 """
 \`\`\`mo
-<shata-ai-form>
+<shata-ai-code>
 const components = {
    //自定义组件定义在这里,组件的代码不可以省略,不可以假设,不允许有外部依赖,UI 使用 uiComponents 里引入的 shadcn <uiComponents.Input/> <uiComponents.Button /> 
 }
@@ -101,7 +101,7 @@ export default {
     renderConfig: {} //仔细阅读 <doc>, 生成配置代码
   }
 }
-</shata-ai-form>
+</shata-ai-code>
 \`\`\`
 """
 `

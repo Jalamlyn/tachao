@@ -347,16 +347,6 @@ const AIReportEditor: React.FC = () => {
           activeDataTab,
           setActiveDataTab
         )}
-        renderCodeView={(version) => {
-          if (!previewContent && !version?.rawConfig) {
-            return <EmptyCodeState />
-          }
-          return (
-            <pre className='p-4 bg-gray-900 text-gray-100 rounded-lg overflow-auto'>
-              <code>{previewContent || version?.rawConfig || ""}</code>
-            </pre>
-          )
-        }}
         showDataTab
         showCodeTab
         previewTabName='分析报表'

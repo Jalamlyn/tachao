@@ -64,8 +64,8 @@ const ServiceSupportModal: React.FC<ServiceSupportModalProps> = ({ isOpen, onClo
       onClose={onClose}
       size='2xl'
       classNames={{
-        base: "max-w-2xl",
         backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-20",
+        closeButton: "right-2",
       }}
     >
       <ModalContent>

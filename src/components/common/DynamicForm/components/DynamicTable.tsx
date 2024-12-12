@@ -9,10 +9,7 @@ import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { cn } from "@/theme/cn"
 import { motion } from "framer-motion"
-import { debounce } from "lodash"
 import styles from "../styles/DynamicForm.module.css"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import message from "@/components/Message"
 import { createTableRenderer } from "./TableFields/renders"
 
 interface DynamicTableProps {
@@ -105,7 +102,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
   // 添加默认值初始化逻辑
   const handleAddRow = useCallback(() => {
-    console.log('[DynamicTable] Adding new row with default values')
+    console.log("[DynamicTable] Adding new row with default values")
     const newRow = config.columns.reduce(
       (acc, column) => {
         switch (column.type) {
@@ -131,15 +128,15 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     )
 
     append(newRow)
-    console.log('[DynamicTable] New row added:', newRow)
-    console.log('[DynamicTable] Current form values:', form.getValues())
+    console.log("[DynamicTable] New row added:", newRow)
+    console.log("[DynamicTable] Current form values:", form.getValues())
   }, [config.columns, append, form])
 
   const handleDeleteRow = useCallback(
     (index: number) => {
       console.log(`[DynamicTable] Deleting row at index ${index}`)
       remove(index)
-      console.log('[DynamicTable] Current form values after deletion:', form.getValues())
+      console.log("[DynamicTable] Current form values after deletion:", form.getValues())
     },
     [remove, form]
   )
