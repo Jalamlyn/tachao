@@ -40,6 +40,8 @@ const FileList: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [fileToDelete, setFileToDelete] = useState<{activity: Activity, file: FileInfo} | null>(null)
 
   useEffect(() => {
     fetchFiles()
@@ -94,6 +96,38 @@ const FileList: React.FC = () => {
     }
   }
 
+  const handleDeleteClick = (activity: Activity, file: FileInfo) => {
+    setFileToDelete({ activity, file })
+    setDeleteConfirmOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!fileToDelete) return
+
+    try {
+      const { activity, file } = fileToDelete
+      const updatedFiles = activity.files.filter(f => f.fileKey !== file.fileKey)
+      
+      await apiService.patch(`/public/data/file/activities/${activity.id}`, {
+        files: updatedFiles
+      })
+
+      message.success("文件删除成功")
+      fetchFiles()
+    } catch (error) {
+      console.error("Delete file error:", error)
+      message.error("删除文件失败")
+    } finally {
+      setDeleteConfirmOpen(false)
+      setFileToDelete(null)
+    }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmOpen(false)
+    setFileToDelete(null)
+  }
+
   const isImageFile = (fileName: string) => {
     return /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName)
   }
@@ -129,6 +163,15 @@ const FileList: React.FC = () => {
             )}
             <Button isIconOnly size='sm' variant='light' onPress={() => handleDownload(file)}>
               <Icon icon='solar:download-bold' className='w-4 h-4' />
+            </Button>
+            <Button 
+              isIconOnly 
+              size='sm' 
+              variant='light' 
+              color="danger"
+              onPress={() => handleDeleteClick(activity, file)}
+            >
+              <Icon icon='solar:trash-bin-trash-bold' className='w-4 h-4' />
             </Button>
           </div>
         )
@@ -177,6 +220,27 @@ const FileList: React.FC = () => {
                 </Button>
                 <Button color='primary' onPress={() => selectedFile && handleDownload(selectedFile)}>
                   下载
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      <Modal size='sm' isOpen={deleteConfirmOpen} onClose={handleDeleteCancel}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>确认删除</ModalHeader>
+              <ModalBody>
+                <p>确定要删除文件 "{fileToDelete?.file.fileName}" 吗？</p>
+              </ModalBody>
+              <ModalFooter>
+                <Button color='default' variant='light' onPress={handleDeleteCancel}>
+                  取消
+                </Button>
+                <Button color='danger' onPress={handleDeleteConfirm}>
+                  删除
                 </Button>
               </ModalFooter>
             </>
