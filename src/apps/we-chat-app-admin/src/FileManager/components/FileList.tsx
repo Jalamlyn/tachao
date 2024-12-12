@@ -16,7 +16,7 @@ import {
   useDisclosure,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { apiService } from "@/service/apis/api"
+import { apiService, queryData, updateData } from "@/service/apis/api"
 import message from "@/components/Message"
 
 interface FileInfo {
@@ -41,7 +41,7 @@ const FileList: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<FileInfo | null>(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-  const [fileToDelete, setFileToDelete] = useState<{activity: Activity, file: FileInfo} | null>(null)
+  const [fileToDelete, setFileToDelete] = useState<{ activity: Activity; file: FileInfo } | null>(null)
 
   useEffect(() => {
     fetchFiles()
@@ -50,6 +50,7 @@ const FileList: React.FC = () => {
   const fetchFiles = async () => {
     try {
       setIsLoading(true)
+      queryData({ namespace: "file", modelPluralCode: "activitiess" })
       const response = await apiService.post(
         "/public/data/file/activitiess/find",
         {},
@@ -106,10 +107,10 @@ const FileList: React.FC = () => {
 
     try {
       const { activity, file } = fileToDelete
-      const updatedFiles = activity.files.filter(f => f.fileKey !== file.fileKey)
-      
+      const updatedFiles = activity.files.filter((f) => f.fileKey !== file.fileKey)
+
       await apiService.patch(`/public/data/file/activities/${activity.id}`, {
-        files: updatedFiles
+        files: updatedFiles,
       })
 
       message.success("文件删除成功")
@@ -164,11 +165,11 @@ const FileList: React.FC = () => {
             <Button isIconOnly size='sm' variant='light' onPress={() => handleDownload(file)}>
               <Icon icon='solar:download-bold' className='w-4 h-4' />
             </Button>
-            <Button 
-              isIconOnly 
-              size='sm' 
-              variant='light' 
-              color="danger"
+            <Button
+              isIconOnly
+              size='sm'
+              variant='light'
+              color='danger'
               onPress={() => handleDeleteClick(activity, file)}
             >
               <Icon icon='solar:trash-bin-trash-bold' className='w-4 h-4' />

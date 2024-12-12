@@ -6,10 +6,7 @@ import PageLayout from "@/components/PageLayout"
 
 const EnterpriseSettings: React.FC = () => {
   return (
-    <PageLayout
-      title="企业设置"
-      titleIcon="solar:settings-outline"
-    >
+    <PageLayout title='企业设置' titleIcon='solar:settings-outline'>
       <Card>
         <CardBody>
           <Tabs aria-label='企业设置选项'>
@@ -18,7 +15,7 @@ const EnterpriseSettings: React.FC = () => {
                 <AccountManagement />
               </div>
             </Tab>
-            <Tab key='roles' title='角色管理'>
+            <Tab isDisabled key='roles' title='角色管理'>
               <div className='p-4'>
                 <RoleManagement />
               </div>
