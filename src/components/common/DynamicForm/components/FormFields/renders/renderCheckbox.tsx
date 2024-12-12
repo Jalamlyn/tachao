@@ -32,7 +32,7 @@ export const renderCheckbox = (
         >
           {(typeof field.options === "function" ? field.options(form) : field.options || []).map((option) => (
             <Checkbox key={option.value} value={option.value} isDisabled={option.disabled}>
-              {option.label}
+              <span className='ml-2'>{option.label}</span>
             </Checkbox>
           ))}
         </CheckboxGroup>

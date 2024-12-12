@@ -87,13 +87,13 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
   }, [calculateProgress, formValues])
 
   // 添加表单值变化监听
-  React.useEffect(() => {
-    const subscription = form.watch(() => {
-      console.log("Form values changed:", form.getValues(fieldName))
-      form.trigger(fieldName)
-    })
-    return () => subscription.unsubscribe()
-  }, [form, fieldName])
+  // React.useEffect(() => {
+  //   const subscription = form.watch(() => {
+  //     console.log("Form values changed:", form.getValues(fieldName))
+  //     form.trigger(fieldName)
+  //   })
+  //   return () => subscription.unsubscribe()
+  // }, [fieldName])
 
   // 检查步骤是否被阻塞
   const isStepBlocked = (step: ProcessStepType): { blocked: boolean; reason?: string } => {

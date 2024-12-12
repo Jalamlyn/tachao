@@ -4,7 +4,7 @@
 
 ## 完整示例
 
-```typescript
+```jsx
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 
 const formConfig: DynamicFormConfig = {
@@ -79,6 +79,27 @@ const formConfig: DynamicFormConfig = {
                   { key: "position", label: "职位" }
                 ]
               }
+            },
+           {
+            name: "customRender",
+            label: "自定义渲染",
+            type: "custom",
+            render: ({ field, form, isEditable }) => (
+              <div
+              style={{
+                padding: "10px",
+                backgroundColor: "#f0f0f0",
+                border: "1px solid #ccc",
+                borderRadius: "5px",
+                textAlign: "center"
+              }}
+              >
+              <h3 style={{ margin: 0 }}>这是一个自定义渲染字段</h3>
+              <p style={{ fontSize: "14px", color: "#666" }}>
+                你可以在这里展示任何静态内容或动态内容
+              </p>
+              </div>
+            )
             }
           ]
         }
@@ -338,6 +359,273 @@ const PurchaseRequestForm = () => {
 export default PurchaseRequestForm
 ```
 
+## 最佳实践和注意事项
+
+### 1. 表格列渲染
+
+在配置表格列的render函数时，请注意以下最佳实践：
+
+```typescript
+// 1. 基础用法 - 始终进行空值检查
+render: (value, record) => {
+  if (!value) return "-"
+  return value
+}
+
+// 2. 访问嵌套属性 - 使用可选链操作符
+render: (value, record) => {
+  return record?.parent?.child?.name || "-"
+}
+
+// 3. 计算场景 - 确保所有依赖值都存在
+render: (value, record) => {
+  if (!record?.quantity || !record?.price) {
+    return "0.00"
+  }
+  return (record.quantity * record.price).toFixed(2)
+}
+
+// 4. 复杂渲染 - 拆分逻辑提高可读性
+render: (value, record) => {
+  const formatValue = (val) => {
+    if (!val) return "0.00"
+    return Number(val).toFixed(2)
+  }
+
+  const getDisplayValue = () => {
+    if (!record) return "-"
+    return `${formatValue(record.amount)} ${record.currency || "CNY"}`
+  }
+
+  return getDisplayValue()
+}
+```
+
+### 2. 资源选择配置
+
+配置资源选择字段时的注意事项：
+
+```typescript
+resourceConfig: {
+  // 1. 始终提供显示字段配置
+  displayFields: [
+    { key: "name", label: "名称" },
+    { key: "code", label: "编号" }
+  ],
+
+  // 2. 使用displayFormat提供更灵活的显示
+  displayFormat: (resource) => {
+    if (!resource) return ''
+    return `${resource.name} (${resource.code})`
+  },
+
+  // 3. 字段映射要处理空值情况
+  fieldMapping: {
+    "targetField": {
+      fields: ["sourceField"],
+      transform: (values) => {
+        if (!values?.[0]) return null
+        return {
+          value: values[0],
+          display: `自定义显示: ${values[0]}`
+        }
+      }
+    }
+  }
+}
+```
+
+### 3. 表单验证
+
+实现表单验证时的最佳实践：
+
+```typescript
+validate: async (values) => {
+  const errors = {
+    fields: {},
+    categorizedErrors: {
+      required: [],
+      invalid: [],
+      other: [],
+    },
+  }
+
+  // 1. 分类处理错误
+  if (!values.required_field) {
+    errors.fields.required_field = "此字段为必填"
+    errors.categorizedErrors.required.push({
+      field: "required_field",
+      message: "此字段为必填",
+    })
+  }
+
+  // 2. 业务规则验证
+  if (values.end_date && values.start_date > values.end_date) {
+    errors.fields.end_date = "结束日期不能早于开始日期"
+    errors.categorizedErrors.invalid.push({
+      field: "end_date",
+      message: "结束日期不能早于开始日期",
+    })
+  }
+
+  // 3. 复杂验证逻辑
+  const validateComplexRule = () => {
+    // 复杂验证逻辑
+  }
+
+  return {
+    valid: Object.keys(errors.fields).length === 0,
+    errors: Object.values(errors.fields),
+    fields: errors.fields,
+    categorizedErrors: errors.categorizedErrors,
+  }
+}
+```
+
+### 4. 常见问题解答
+
+#### 新增表格行时的默认值处理
+
+```typescript
+// 在表格配置中添加默认值处理
+config: {
+  defaultRowData: {
+    quantity: 0,
+    price: 0,
+    amount: '0.00'
+  }
+}
+```
+
+#### 资源选择后的数据联动
+
+```typescript
+// 在resourceConfig中配置fieldMapping
+resourceConfig: {
+  fieldMapping: {
+    "relatedField": {
+      field: "sourceField",
+      transform: (value) => {
+        // 处理联动逻辑
+        return transformedValue
+      }
+    }
+  }
+}
+```
+
+#### 表单步骤依赖控制
+
+```typescript
+processSteps: [
+  {
+    key: "step2",
+    dependencies: [
+      {
+        step: "step1",
+        message: "请先完成步骤1",
+      },
+    ],
+    // 添加条件判断
+    condition: (values) => {
+      return values.step1_field === "completed"
+    },
+  },
+]
+```
+
+### 5. 性能优化建议
+
+1. 大数据量表格处理
+
+```typescript
+// 使用虚拟滚动
+config: {
+  virtualScroll: true,
+  rowHeight: 48,
+  bufferSize: 10
+}
+```
+
+2. 复杂计算优化
+
+```typescript
+// 使用缓存计算结果
+const memoizedCalculation = useMemo(() => {
+  return expensiveCalculation(dependencies)
+}, [dependencies])
+```
+
+3. 表单验证优化
+
+```typescript
+// 使用防抖处理实时验证
+const debouncedValidate = debounce((values) => {
+  validate(values)
+}, 300)
+```
+
+### 6. 安全性建议
+
+1. 文件上传
+
+```typescript
+uploadConfig: {
+  // 限制文件类型
+  accept: '.pdf,.doc,.docx',
+  // 限制文件大小
+  maxSize: 5 * 1024 * 1024,
+  // 文件校验
+  beforeUpload: (file) => {
+    // 自定义验证逻辑
+    return validateFile(file)
+  }
+}
+```
+
+2. 敏感数据处理
+
+```typescript
+// 使用加密传输
+resourceConfig: {
+  headers: {
+    'X-Encryption': 'enabled'
+  },
+  transformResponse: (data) => {
+    return decryptData(data)
+  }
+}
+```
+
+### 7. 可访问性建议
+
+1. 表单字段
+
+```typescript
+fields: [
+  {
+    name: "field",
+    label: "字段",
+    // 添加aria标签
+    aria-label: "字段说明",
+    // 添加帮助文本
+    helpText: "请输入字段内容"
+  }
+]
+```
+
+2. 错误提示
+
+```typescript
+validate: (values) => {
+  return {
+    // 添加aria-live区域
+    errorAnnouncement: "表单验证失败，请检查输入",
+    errors: [],
+  }
+}
+```
+
 ## 基础字段配置说明
 
 DynamicForm 组件支持两种基础字段配置方式:
@@ -353,13 +641,13 @@ renderConfig: {
       name: "field1",
       label: "字段1",
       type: "text",
-      required: true
+      required: true,
     },
     {
-      name: "field2", 
+      name: "field2",
       label: "字段2",
-      type: "number"
-    }
+      type: "number",
+    },
     // ... 更多字段
   ]
 }
@@ -382,9 +670,9 @@ renderConfig: {
           {
             name: "field1",
             label: "字段1",
-            type: "text"
-          }
-        ]
+            type: "text",
+          },
+        ],
       },
       {
         key: "group2",
@@ -393,10 +681,10 @@ renderConfig: {
           {
             name: "field2",
             label: "字段2",
-            type: "number"
-          }
-        ]
-      }
+            type: "number",
+          },
+        ],
+      },
     ]
   }
 }
@@ -408,7 +696,3 @@ renderConfig: {
 2. 使用分组方式时,必须提供 groups 数组
 3. 每个分组必须有唯一的 key
 4. 字段配置保持不变,只是组织方式不同
-
-## 最佳实践和注意事项
-
-[以下保持原有内容不变...]

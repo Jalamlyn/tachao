@@ -26,18 +26,18 @@ export default async function chatChunkGeminiOffice(
     if (msg.role === "system") {
       return {
         role: "system",
-        content: msg.content
+        content: msg.content,
       }
     }
     return {
       role: msg.role === "assistant" ? "model" : msg.role,
       content: msg.content,
-      images: msg.images || []
+      images: msg.images || [],
     }
   })
 
-  const systemMsg = _messages.find(msg => msg.role === "system")
-  _messages = _messages.filter(msg => msg.role !== "system")
+  const systemMsg = _messages.find((msg) => msg.role === "system")
+  _messages = _messages.filter((msg) => msg.role !== "system")
 
   const payload = {
     model: model,
@@ -47,7 +47,7 @@ export default async function chatChunkGeminiOffice(
     stream: true,
     apiKey,
     cid: "Hx9Kp2Qm7Zf3Lw5Ry8Tj6",
-    system: systemMsg ? systemMsg.content : ""
+    system: systemMsg ? systemMsg.content : "",
   }
 
   let controller = new AbortController()

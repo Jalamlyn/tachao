@@ -5,25 +5,6 @@ import { inject } from "@wpm-js/core"
 
 let systemMsg
 
-function mergeAdjacentRoles(arr) {
-  if (arr.length === 0) return []
-
-  const result = []
-  let current = { ...arr[0] }
-
-  for (let i = 1; i < arr.length; i++) {
-    if (arr[i].role === current.role) {
-      current.content += arr[i].content
-    } else {
-      result.push(current)
-      current = { ...arr[i] }
-    }
-  }
-
-  result.push(current)
-  return result
-}
-
 async function handleToolUse(toolUse, onChunk) {
   if (toolUse.name === "download_template") {
     try {

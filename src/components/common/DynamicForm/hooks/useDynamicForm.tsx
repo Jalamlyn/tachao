@@ -64,7 +64,7 @@ export const useDynamicForm = (
         }
       }
     }
-  }, [config.watch, form])
+  }, [])
 
   // 监听表单值变化
   useEffect(() => {
@@ -78,7 +78,7 @@ export const useDynamicForm = (
     })
 
     return () => subscription.unsubscribe()
-  }, [form])
+  }, [])
 
   // 统一的验证函数
   const validateForm = useCallback(async (): Promise<ValidationResult> => {
