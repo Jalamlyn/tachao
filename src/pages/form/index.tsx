@@ -95,7 +95,7 @@ const NewForm: React.FC = () => {
 
   const getShareContent = () => {
     return {
-      title: formState.formConfig?.metadata.title || "表单",
+      title: formState.formConfig?.metadata?.title || "表单",
       text: "请查看这个表单",
       url: generateShareLink(),
     }
@@ -130,7 +130,7 @@ const NewForm: React.FC = () => {
       const link = generateShareLink()
       wx.ready(() => {
         wx.updateAppMessageShareData({
-          title: formState.formConfig?.metadata.title || "表单",
+          title: formState.formConfig?.metadata?.title || "表单",
           desc: "请查看这个表单",
           link,
           success: () => {
@@ -167,7 +167,7 @@ const NewForm: React.FC = () => {
           {/* 左侧区域 - 表单标题 */}
           <div className='flex items-center gap-2'>
             <h1 className='text-sm font-medium truncate max-w-[200px] md:max-w-[400px]'>
-              {formState.formConfig?.metadata.title || "表单详情"}
+              {formState.formConfig?.metadata?.title || "表单详情"}
             </h1>
           </div>
 
