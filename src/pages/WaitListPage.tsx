@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useMemo } from "react"
 import { queryWaitList, WaitListQueryParams } from "@/service/apis/api"
 import {
   Input,
@@ -25,11 +25,18 @@ interface WaitListItem {
   createdAt: string
 }
 
+interface SortDescriptor {
+  column?: string
+  direction?: "ascending" | "descending"
+}
+
 const WaitListPage: React.FC = () => {
   const [waitList, setWaitList] = useState<WaitListItem[]>([])
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [searchText, setSearchText] = useState("")
+  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({})
   const [queryParams, setQueryParams] = useState<WaitListQueryParams>({
     email: "",
     phone: "",
@@ -61,6 +68,7 @@ const WaitListPage: React.FC = () => {
 
   const handleResetSearch = async () => {
     setPage(1)
+    setSearchText("")
     setQueryParams({
       email: "",
       phone: "",
@@ -134,8 +142,44 @@ const WaitListPage: React.FC = () => {
     }
   }
 
-  const pages = Math.ceil(waitList.length / rowsPerPage)
-  const items = waitList.slice((page - 1) * rowsPerPage, page * rowsPerPage)
+  // 模糊搜索逻辑
+  const filteredItems = useMemo(() => {
+    let filtered = [...waitList]
+    
+    if (searchText) {
+      filtered = filtered.filter((item) => {
+        return (
+          item.email.toLowerCase().includes(searchText.toLowerCase()) ||
+          item.phone.toLowerCase().includes(searchText.toLowerCase()) ||
+          item.industry.toLowerCase().includes(searchText.toLowerCase()) ||
+          item.purpose.toLowerCase().includes(searchText.toLowerCase())
+        )
+      })
+    }
+    return filtered
+  }, [waitList, searchText])
+
+  // 排序逻辑
+  const sortedItems = useMemo(() => {
+    if (!sortDescriptor.column) return filteredItems
+
+    return [...filteredItems].sort((a, b) => {
+      const first = a[sortDescriptor.column as keyof WaitListItem]
+      const second = b[sortDescriptor.column as keyof WaitListItem]
+
+      if (typeof first === 'boolean' || typeof second === 'boolean') {
+        return sortDescriptor.direction === "ascending" 
+          ? (first === second ? 0 : first ? 1 : -1)
+          : (first === second ? 0 : first ? -1 : 1)
+      }
+
+      const cmp = String(first).localeCompare(String(second))
+      return sortDescriptor.direction === "descending" ? -cmp : cmp
+    })
+  }, [filteredItems, sortDescriptor])
+
+  const pages = Math.ceil(sortedItems.length / rowsPerPage)
+  const items = sortedItems.slice((page - 1) * rowsPerPage, page * rowsPerPage)
 
   const topContent = (
     <div className="flex flex-col gap-4">
@@ -165,7 +209,15 @@ const WaitListPage: React.FC = () => {
           clearable
         />
       </div>
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between gap-3 items-end">
+        <Input
+          isClearable
+          className="w-full sm:max-w-[44%]"
+          placeholder="搜索邮箱、手机、行业或用途..."
+          value={searchText}
+          onClear={() => setSearchText("")}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
         <div className="flex gap-2 items-center">
           <Checkbox
             isSelected={queryParams.developer}
@@ -180,8 +232,10 @@ const WaitListPage: React.FC = () => {
             重置
           </Button>
         </div>
+      </div>
+      <div className="flex justify-end">
         <span className="text-default-400 text-small">
-          总计: {waitList.length} 条记录
+          总计: {sortedItems.length} 条记录
         </span>
       </div>
     </div>
@@ -190,7 +244,7 @@ const WaitListPage: React.FC = () => {
   const bottomContent = (
     <div className="py-2 px-2 flex justify-between items-center">
       <span className="text-small text-default-400">
-        {`${(page - 1) * rowsPerPage + 1}-${Math.min(page * rowsPerPage, waitList.length)} of ${waitList.length}`}
+        {`${(page - 1) * rowsPerPage + 1}-${Math.min(page * rowsPerPage, sortedItems.length)} of ${sortedItems.length}`}
       </span>
       <Pagination
         showControls
@@ -211,6 +265,8 @@ const WaitListPage: React.FC = () => {
         bottomContentPlacement="outside"
         topContent={topContent}
         topContentPlacement="outside"
+        sortDescriptor={sortDescriptor}
+        onSortChange={setSortDescriptor}
         classNames={{
           wrapper: "max-h-[600px]",
           table: "min-h-[400px]",
@@ -221,7 +277,11 @@ const WaitListPage: React.FC = () => {
       >
         <TableHeader>
           {columns.map((column) => (
-            <TableColumn key={column.uid} allowsSorting={column.sortable}>
+            <TableColumn 
+              key={column.uid} 
+              allowsSorting={column.sortable}
+              className={column.sortable ? "cursor-pointer" : ""}
+            >
               {column.name}
             </TableColumn>
           ))}
