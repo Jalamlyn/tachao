@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Avatar, Button, Spacer, Tab, Tabs, Tooltip, useDisclosure } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useMediaQuery } from "usehooks-ts"
@@ -14,6 +14,8 @@ import Logo from "../component/logo/Logo"
 import { BreadcrumbProvider } from "../../../contexts/BreadcrumbContext"
 import GlobalBreadcrumb from "../../../components/GlobalBreadcrumb"
 import ServiceSupportModal from "./ServiceSupportModal"
+import EnterpriseInitializer from "@/components/EnterpriseInitializer"
+import { localDB } from "@/utils/localDB"
 
 export default function Component() {
   const { isOpen, onOpenChange } = useDisclosure()
@@ -23,6 +25,22 @@ export default function Component() {
   const navigate = useNavigate()
   const { userInfo, loading } = useGlobalUser()
   const { isOpen: isServiceModalOpen, onOpen: onServiceModalOpen, onClose: onServiceModalClose } = useDisclosure()
+  const [showInitializer, setShowInitializer] = useState(false)
+
+  useEffect(() => {
+    checkInitialization()
+  }, [])
+
+  const checkInitialization = () => {
+    const appId = localDB.getAppId()
+    if (!appId) {
+      setShowInitializer(true)
+    }
+  }
+
+  const handleInitializationSuccess = () => {
+    setShowInitializer(false)
+  }
 
   const onToggle = React.useCallback(() => {
     setIsCollapsed((prev) => !prev)
@@ -196,6 +214,13 @@ export default function Component() {
 
         {/* Service Support Modal */}
         <ServiceSupportModal isOpen={isServiceModalOpen} onClose={onServiceModalClose} />
+
+        {/* Enterprise Initializer */}
+        <EnterpriseInitializer 
+          isOpen={showInitializer}
+          onClose={() => {}}
+          onSuccess={handleInitializationSuccess}
+        />
       </div>
     </BreadcrumbProvider>
   )
