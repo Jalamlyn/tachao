@@ -70,7 +70,7 @@ export const useAuthCheck = ({ formId, onSuccess, onError }: UseAuthCheckOptions
     } finally {
       setIsChecking(false)
     }
-  }, [formId, onSuccess, onError])
+  }, [])
 
   // 组件挂载时执行检查
   useEffect(() => {
