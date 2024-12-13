@@ -21,6 +21,20 @@ function cleanContent(text: string): string {
     .trim()
 }
 
+// 使用JSON解析处理文本内容
+function processTextContent(line: string): string | null {
+  try {
+    // 将单行包装成合法的JSON对象
+    const jsonStr = `{${line}}`
+    // 解析JSON
+    const parsed = JSON.parse(jsonStr)
+    return parsed.text || null
+  } catch (e) {
+    console.warn('Failed to parse line using JSON:', line, e)
+    return null
+  }
+}
+
 export default async function chatChunkGeminiOffice(
   messages,
   onChunk,
@@ -64,7 +78,7 @@ export default async function chatChunkGeminiOffice(
     temperature,
     max_tokens: 8192,
     stream: true,
-    apiKey,
+    apiKey:"ya29.a0ARW5m74Vq5eY4gzGYFbELuihG8Zr4Kuf_QZJFcLSuNxHGyFhckpfwQQzfqM4p2C1AOR6CmadAeVG-Jz_4-OnXMC-QgV6kQ3xhG3LKUwDlyGvIaAzff3v980tyKSVWvMKrCz1YOLcYq0oLJA0Wsh37MLAcCU9F_S0isG2OWJEnzca6AaCgYKAVwSARMSFQHGX2MiqFCSWjEksAlrZcedpF69Kw0181",
     cid: "Hx9Kp2Qm7Zf3Lw5Ry8Tj6",
     system: systemMsg ? systemMsg.content : "",
   }
@@ -106,14 +120,20 @@ export default async function chatChunkGeminiOffice(
       for (const line of lines) {
         console.log("Processing line:", line)
         
-        // 直接查找包含 "text": " 的行
         if (line.includes('"text": "')) {
-          // 提取文本内容
+          // 首先尝试使用JSON解析方式
+          const jsonContent = processTextContent(line)
+          if (jsonContent) {
+            fullContent += jsonContent
+            onChunk(jsonContent)
+            continue
+          }
+
+          // 如果JSON解析失败，回退到原有的处理方式
           const textStart = line.indexOf('"text": "') + 8
           const textEnd = line.lastIndexOf('"')
           if (textEnd > textStart) {
             const content = line.substring(textStart, textEnd)
-            // 清理并格式化内容
             const cleanedContent = cleanContent(content)
             console.log("Cleaned content:", cleanedContent)
             if (cleanedContent) {
