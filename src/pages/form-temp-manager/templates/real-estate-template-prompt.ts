@@ -145,23 +145,6 @@ export const realEstateTemplatePrompt = `这是一个用于房地产行业的看
 14. 支持维修工单管理
 15. 支持统计报表导出
 
-业务规则：
-1. 使用 orderNumberConfig 生成各类编号
-2. 使用 validators 进行字段验证
-3. 使用 calculate 进行字段计算
-4. 使用 processSteps 控制流程确认
-5. 使用 watch 实现字段联动
-6. 使用 resource 实现主数据关联
-7. 使用 signature 实现电子签名
-8. 使用 file/image 实现文件上传
-9. 支持房源状态管理
-10. 支持客户跟进管理
-11. 支持验收流程管理
-12. 支持维修工单跟踪
-13. 支持客户满意度分析
-14. 支持房屋质量跟踪
-15. 支持统计报表导出
-
 上述需求是否满足您的需求？如果不满足您可以告诉我您需要什么功能，我随时调整模板内容`
 
 export default realEstateTemplatePrompt

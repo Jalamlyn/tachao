@@ -75,13 +75,7 @@ ${resources}`
    - 设置适当的验证规则
    - 配置必要的默认值
 
-2. 业务规则：
-   - 使用 watch 处理联动
-   - 使用 validate 处理验证
-   - 使用 calculate 处理计算
-   - 确保规则的可维护性
-
-3. 返回格式,参考<config-example>包裹的例子：
+返回格式:
 """
 \`\`\`mo
 <shata-ai-code>

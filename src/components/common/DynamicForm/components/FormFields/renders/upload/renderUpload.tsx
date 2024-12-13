@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { UseFormReturn } from "react-hook-form"
-import { FormField, FileInfo } from "../../../types"
-import FormFieldWrapper from "../FormFieldWrapper"
+import { FormField, FileInfo } from "../../../../types"
+import FormFieldWrapper from "../../FormFieldWrapper"
 import { Input } from "@/components/ui/input"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
@@ -9,7 +9,6 @@ import { Progress } from "@/components/ui/progress"
 import message from "@/components/Message"
 import { cn } from "@/theme/cn"
 import { apiService } from "@/service/apis/api"
-import { Modal } from "@nextui-org/react"
 
 export const renderUpload = (
   field: FormField,
@@ -37,10 +36,10 @@ export const renderUpload = (
   // 创建活动数据
   const createActivity = async (fileInfo: { fileName: string; fileKey: string }) => {
     try {
-      const response = await apiService.post('/public/data/file/activitiess', {
+      const response = await apiService.post("/public/data/file/activitiess", {
         activityName: "测试",
         activityType: "test",
-        files: [fileInfo]
+        files: [fileInfo],
       })
       return response.data
     } catch (error) {
@@ -52,9 +51,13 @@ export const renderUpload = (
   // 查询活动数据
   const queryActivity = async () => {
     try {
-      const response = await apiService.post('/public/data/file/activitiess/find', {}, {
-        params: { display: 'paginate' }
-      })
+      const response = await apiService.post(
+        "/public/data/file/activitiess/find",
+        {},
+        {
+          params: { display: "paginate" },
+        }
+      )
       return response.data
     } catch (error) {
       console.error("Query activity error:", error)
@@ -64,7 +67,7 @@ export const renderUpload = (
 
   // 处理文件预览
   const handlePreview = async (file: FileInfo) => {
-    if (!file.type?.startsWith('image/')) {
+    if (!file.type?.startsWith("image/")) {
       return
     }
     setPreviewFile(file)
@@ -174,23 +177,25 @@ export const renderUpload = (
                 // 创建活动数据
                 await createActivity({
                   fileName: file.name,
-                  fileKey: signedData.fileKey
+                  fileKey: signedData.fileKey,
                 })
 
                 // 查询获取完整信息
                 const queryResult = await queryActivity()
-                
+
                 // 修改这里的数据处理逻辑
                 if (!queryResult?.data || !Array.isArray(queryResult.data) || queryResult.data.length === 0) {
                   throw new Error("未找到上传的文件信息")
                 }
 
                 // 获取最新的活动记录（按创建时间排序，取最新的）
-                const latestActivity = queryResult.data.sort((a, b) => 
-                  Number(b.createdAt) - Number(a.createdAt)
-                )[0]
+                const latestActivity = queryResult.data.sort((a, b) => Number(b.createdAt) - Number(a.createdAt))[0]
 
-                if (!latestActivity.files || !Array.isArray(latestActivity.files) || latestActivity.files.length === 0) {
+                if (
+                  !latestActivity.files ||
+                  !Array.isArray(latestActivity.files) ||
+                  latestActivity.files.length === 0
+                ) {
                   throw new Error("文件信息不完整")
                 }
 
@@ -233,49 +238,7 @@ export const renderUpload = (
       }
     }
 
-    // 兼容原有逻辑
-    if (field.onUpload) {
-      await field.onUpload(file)
-      return file
-    }
-
     return file
-  }
-
-  // 渲染预览内容
-  const renderPreviewContent = (file: FileInfo) => {
-    if (!file) return null
-
-    if (file.type?.startsWith("image/")) {
-      return (
-        <img
-          src={file.downloadUrl}
-          alt={file.fileName}
-          style={{
-            maxWidth: "100%",
-            maxHeight: "100%",
-            objectFit: "contain",
-          }}
-        />
-      )
-    }
-
-    return (
-      <div className='flex flex-col items-center justify-center p-4'>
-        <Icon icon='mdi:file-document-outline' className='w-16 h-16 text-gray-400' />
-        <p className='mt-2 text-gray-600'>{file.fileName}</p>
-        <Button
-          color='primary'
-          variant='flat'
-          size='sm'
-          className='mt-4'
-          onClick={() => handleDownload(file)}
-          startContent={<Icon icon='mdi:download' className='w-4 h-4' />}
-        >
-          下载查看
-        </Button>
-      </div>
-    )
   }
 
   return (
@@ -340,7 +303,7 @@ export const renderUpload = (
               size='sm'
               isDisabled={!isEditable || field.disabled || uploading || isProcessing}
               startContent={
-                (uploading || isProcessing) ? (
+                uploading || isProcessing ? (
                   <Icon icon='mdi:loading' className='w-4 h-4 animate-spin' />
                 ) : (
                   <Icon icon='mdi:upload' className='w-4 h-4' />
@@ -361,10 +324,10 @@ export const renderUpload = (
                   {Array.isArray(formField.value)
                     ? `已选择 ${formField.value.length} 个文件`
                     : formField.value instanceof File
-                    ? formField.value.name
-                    : formField.value.fileName}
+                      ? formField.value.name
+                      : formField.value.fileName}
                 </span>
-                {formField.value.type?.startsWith('image/') && (
+                {formField.value.type?.startsWith("image/") && (
                   <Button
                     isIconOnly
                     variant='light'
@@ -415,11 +378,7 @@ export const renderUpload = (
             <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
               {(Array.isArray(formField.value) ? formField.value : [formField.value]).map((file: FileInfo, index) => (
                 <div key={index} className='relative aspect-square rounded-lg overflow-hidden'>
-                  <img
-                    src={file.downloadUrl}
-                    alt={`预览图 ${index + 1}`}
-                    className='w-full h-full object-cover'
-                  />
+                  <img src={file.downloadUrl} alt={`预览图 ${index + 1}`} className='w-full h-full object-cover' />
                   <div className='absolute top-1 right-1 flex gap-1'>
                     <Button
                       isIconOnly
@@ -465,41 +424,6 @@ export const renderUpload = (
               ))}
             </div>
           )}
-
-          {/* 预览模态框 */}
-          <Modal
-            isOpen={previewVisible}
-            onClose={() => setPreviewVisible(false)}
-            size={field.uploadConfig?.previewConfig?.modalWidth ? "full" : "2xl"}
-            className='max-h-[90vh]'
-          >
-            <Modal.Header>
-              <h3 className='text-lg font-semibold'>
-                {field.uploadConfig?.previewConfig?.modalTitle || previewFile?.fileName || "文件预览"}
-              </h3>
-            </Modal.Header>
-            <Modal.Body>{previewFile && renderPreviewContent(previewFile)}</Modal.Body>
-            <Modal.Footer>
-              <Button
-                color='primary'
-                variant='light'
-                onPress={() => setPreviewVisible(false)}
-                startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
-              >
-                关闭
-              </Button>
-              {previewFile && (
-                <Button
-                  color='primary'
-                  variant='flat'
-                  onPress={() => handleDownload(previewFile)}
-                  startContent={<Icon icon='mdi:download' className='w-4 h-4' />}
-                >
-                  下载
-                </Button>
-              )}
-            </Modal.Footer>
-          </Modal>
         </div>
       )}
     </FormFieldWrapper>

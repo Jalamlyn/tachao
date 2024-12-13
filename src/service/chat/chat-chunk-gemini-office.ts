@@ -2,25 +2,6 @@ import { message } from "@/components/Message"
 import { fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 
-// 清理文本内容的函数
-function cleanContent(text: string): string {
-  return text
-    // 处理转义的换行符
-    .replace(/\\n/g, '\n')
-    // 处理转义的引号
-    .replace(/\\"/g, '"')
-    // 处理转义的斜杠
-    .replace(/\\\\/g, '\\')
-    // 处理 Unicode 转义序列
-    .replace(/\\u[\dA-F]{4}/gi, match => 
-      String.fromCharCode(parseInt(match.replace('\\u', ''), 16))
-    )
-    // 移除多余的空行
-    .replace(/\n\s*\n\s*\n/g, '\n\n')
-    // 移除行首行尾空白
-    .trim()
-}
-
 // 使用JSON解析处理文本内容
 function processTextContent(line: string): string | null {
   try {
@@ -30,7 +11,7 @@ function processTextContent(line: string): string | null {
     const parsed = JSON.parse(jsonStr)
     return parsed.text || null
   } catch (e) {
-    console.warn('Failed to parse line using JSON:', line, e)
+    console.warn("Failed to parse line using JSON:", line, e)
     return null
   }
 }
@@ -78,7 +59,8 @@ export default async function chatChunkGeminiOffice(
     temperature,
     max_tokens: 8192,
     stream: true,
-    apiKey:"ya29.a0ARW5m74Vq5eY4gzGYFbELuihG8Zr4Kuf_QZJFcLSuNxHGyFhckpfwQQzfqM4p2C1AOR6CmadAeVG-Jz_4-OnXMC-QgV6kQ3xhG3LKUwDlyGvIaAzff3v980tyKSVWvMKrCz1YOLcYq0oLJA0Wsh37MLAcCU9F_S0isG2OWJEnzca6AaCgYKAVwSARMSFQHGX2MiqFCSWjEksAlrZcedpF69Kw0181",
+    apiKey:
+      "ya29.a0ARW5m7598Fa-3C3LwD6byzVyYpXU_UV4F8SIX257wFyxuAO7JjmY46q9KU60LP4LnDRqXMSYRz55C3naByrr0o_4EkIQPAI_CEiY8G4e69ufEzE3jjtkX7h908cCHSsPh6OvS1mWod47OTlI0zqLxvQd-l6fUX0T7BN6KO1de28JXjkaCgYKAT8SARMSFQHGX2Mi2bMESVhMq2I4IBWu7IhIZA0182",
     cid: "Hx9Kp2Qm7Zf3Lw5Ry8Tj6",
     system: systemMsg ? systemMsg.content : "",
   }
@@ -112,14 +94,14 @@ export default async function chatChunkGeminiOffice(
 
       const chunk = decoder.decode(value, { stream: true })
       console.log("Received chunk:", chunk)
-      
+
       buffer += chunk
       const lines = buffer.split("\n")
       buffer = lines.pop() || ""
 
       for (const line of lines) {
         console.log("Processing line:", line)
-        
+
         if (line.includes('"text": "')) {
           // 首先尝试使用JSON解析方式
           const jsonContent = processTextContent(line)
@@ -127,19 +109,6 @@ export default async function chatChunkGeminiOffice(
             fullContent += jsonContent
             onChunk(jsonContent)
             continue
-          }
-
-          // 如果JSON解析失败，回退到原有的处理方式
-          const textStart = line.indexOf('"text": "') + 8
-          const textEnd = line.lastIndexOf('"')
-          if (textEnd > textStart) {
-            const content = line.substring(textStart, textEnd)
-            const cleanedContent = cleanContent(content)
-            console.log("Cleaned content:", cleanedContent)
-            if (cleanedContent) {
-              fullContent += cleanedContent
-              onChunk(cleanedContent)
-            }
           }
         }
       }

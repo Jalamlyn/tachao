@@ -129,23 +129,6 @@ export const healthcareTemplatePrompt = `这是一个用于医疗机构的问诊
 14. 支持随访计划管理
 15. 支持电子病历导出
 
-业务规则：
-1. 使用 orderNumberConfig 生成就诊号
-2. 使用 validators 进行字段验证
-3. 使用 calculate 进行字段计算
-4. 使用 processSteps 控制流程确认
-5. 使用 watch 实现字段联动
-6. 使用 resource 实现主数据关联
-7. 使用 signature 实现电子签名
-8. 使用 file/image 实现文件上传
-9. 支持医嘱自动生成
-10. 支持费用自动计算
-11. 支持用药提醒
-12. 支持随访提醒
-13. 支持检查结果分析
-14. 支持病历记录追踪
-15. 支持统计报表导出
-
 上述需求是否满足您的需求？如果不满足您可以告诉我您需要什么功能，我随时调整模板内容`
 
 export default healthcareTemplatePrompt

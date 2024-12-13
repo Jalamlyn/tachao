@@ -88,7 +88,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
   showCodeTab = false,
   previewTabName = "预览",
   codeEditorOptions = {
-    language: "json",
+    language: "javascript",
     readOnly: false,
     theme: "vs-dark",
   },
@@ -148,18 +148,16 @@ const AIEditor: React.FC<AIEditorProps> = ({
   const renderCodeEditor = (content: string, isEditing: boolean) => (
     <Editor
       height='100%'
-      language={codeEditorOptions.language}
+      language='javascript'
       value={extractShataAIFormContent(content)}
       options={{
         readOnly: !isEditing,
         minimap: { enabled: false },
-        fontSize: 14,
+        fontSize: "14",
         lineNumbers: "on",
-        folding: true,
         wordWrap: "on",
-        theme: codeEditorOptions.theme,
-        ...codeEditorOptions.customOptions,
       }}
+      theme='vs-dark'
       onChange={(value) => {
         if (isEditing) {
           setEditedCode(value || "")

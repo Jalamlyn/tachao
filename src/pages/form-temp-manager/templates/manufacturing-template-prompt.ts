@@ -120,23 +120,6 @@ export const manufacturingTemplatePrompt = `这是一个用于制造业的生产
 14. 支持设备维护提醒
 15. 支持生产报表导出
 
-业务规则：
-1. 使用 orderNumberConfig 生成计划编号
-2. 使用 validators 进行字段验证
-3. 使用 calculate 进行字段计算
-4. 使用 processSteps 控制流程确认
-5. 使用 watch 实现字段联动
-6. 使用 resource 实现主数据关联
-7. 使用 signature 实现电子签名
-8. 使用 file/image 实现文件上传
-9. 支持生产计划自动排程
-10. 支持物料需求计算
-11. 支持质量数据分析
-12. 支持设备维护提醒
-13. 支持生产异常预警
-14. 支持生产数据追踪
-15. 支持统计报表导出
-
 上述需求是否满足您的需求？如果不满足您可以告诉我您需要什么功能，我随时调整模板内容`
 
 export default manufacturingTemplatePrompt

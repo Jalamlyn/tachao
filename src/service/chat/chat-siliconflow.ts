@@ -26,7 +26,7 @@ export default async function chatChunkDeepseek(
   }
 
   const payload = {
-    model: "Qwen/Qwen2.5-Coder-32B-Instruct",
+    model: "Qwen/QwQ-32B-Preview",
     messages: _messages,
     temperature,
     max_tokens: 4096,

@@ -100,23 +100,6 @@ export const processTemplatePrompt = `这是一个用于通用审批流程管理
 14. 支持审批记录的完整追踪
 15. 支持流程进度的可视化展示
 
-业务规则：
-1. 使用 orderNumberConfig 生成流程编号
-2. 使用 validators 进行字段验证
-3. 使用 calculate 进行字段计算
-4. 使用 processSteps 控制流程确认
-5. 使用 watch 实现字段联动
-6. 使用 resource 实现主数据关联
-7. 使用 signature 实现电子签名
-8. 使用 file/image 实现文件上传
-9. 根据金额自动判断审批层级
-10. 支持流程的回退和重新提交
-11. 支持审批意见的必填验证
-12. 支持附件的类型限制
-13. 支持审批人的自动指定
-14. 支持会签的并行处理
-15. 支持流程超时提醒
-
 上述需求是否满足您的需求？如果不满足您可以告诉我您需要什么功能，我随时调整模板内容`
 
 export default processTemplatePrompt

@@ -3,6 +3,26 @@ import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { events } from "fetch-event-stream"
 
+function processAIMessages(messages: any[]) {
+  return messages.map((message) => {
+    if (message.role === "assistant") {
+      return {
+        ...message,
+        content: message.content.map((item) => {
+          if (item.type === "text") {
+            return {
+              ...item,
+              text: item.text.replace(/<shata-ai-code>[\s\S]*?<\/shata-ai-code>/g, "已更新 system 中的现有配置"),
+            }
+          }
+          return item
+        }),
+      }
+    }
+    return message
+  })
+}
+
 export default async function chatChunkOpenAIOffice(
   messages,
   onChunk,
@@ -36,11 +56,19 @@ export default async function chatChunkOpenAIOffice(
   const modelSupplierData = localDB.getItem("model-supplier-data") || []
   const supplierInfo = modelSupplierData.find((supplier) => supplier.id === provider)
 
-  const apiKey = "5d5c1f3cc91b440b8391851b2eadfb1c"
+  // 0513
+  // const apiKey = "5d5c1f3cc91b440b8391851b2eadfb1c"
+  // 0806
   // const apiKey = "303b8dcd61004bc0a7ad0c7316f91fbe"
+  // 0718
+  const apiKey = "5d5c1f3cc91b440b8391851b2eadfb1c"
   const apiEndPoint =
+    // 0513
     // "https://aistudioaiservices036976507415.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview"
-    "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview"
+    // 0806
+    // "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview"
+    //0718
+    "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o-mini-2/chat/completions?api-version=2024-02-15-preview"
 
   const payload = {
     // model: model,

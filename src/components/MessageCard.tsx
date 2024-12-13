@@ -152,9 +152,6 @@ const MessageCard = React.memo(
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeRaw]}
               components={{
-                "shata-ai-code": () => {
-                  return <></>
-                },
                 code({ node, inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || "")
                   if (match && match[1] == "mermaid") {
@@ -183,12 +180,6 @@ const MessageCard = React.memo(
                     if (children && children.toString().startsWith("<shata-ai-scene>")) {
                       return "分析用户意图..."
                     }
-                    if (children && children.toString().includes("</shata-ai-code>")) {
-                      return "✔️ 表单开发完成"
-                    }
-                    if (children && children.toString().startsWith("<shata-ai-code>")) {
-                      return "正在开发表单..."
-                    }
                     if (children && children.toString().includes("</shata-ai-error>")) {
                       return "❌ 错误信息"
                     }
@@ -201,12 +192,12 @@ const MessageCard = React.memo(
                     if (children && children.toString().startsWith("<shata-ai-response>")) {
                       return "正在生成响应..."
                     }
-                    if (children && children.toString().includes("</shata-ai-code>")) {
-                      return "✔️ 代码生成完成"
-                    }
-                    if (children && children.toString().startsWith("<shata-ai-code>")) {
-                      return "正在生成代码..."
-                    }
+                    // if (children && children.toString().includes("</shata-ai-code>")) {
+                    //   return "✔️ 代码生成完成"
+                    // }
+                    // if (children && children.toString().startsWith("<shata-ai-code>")) {
+                    //   return "正在生成代码..."
+                    // }
                     if (children && children.toString().includes("</shata-ai-intent>")) {
                       return "✔️ 理解用户意图完成"
                     }
