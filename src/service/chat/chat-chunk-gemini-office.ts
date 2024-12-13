@@ -2,6 +2,25 @@ import { message } from "@/components/Message"
 import { fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 
+// 清理文本内容的函数
+function cleanContent(text: string): string {
+  return text
+    // 处理转义的换行符
+    .replace(/\\n/g, '\n')
+    // 处理转义的引号
+    .replace(/\\"/g, '"')
+    // 处理转义的斜杠
+    .replace(/\\\\/g, '\\')
+    // 处理 Unicode 转义序列
+    .replace(/\\u[\dA-F]{4}/gi, match => 
+      String.fromCharCode(parseInt(match.replace('\\u', ''), 16))
+    )
+    // 移除多余的空行
+    .replace(/\n\s*\n\s*\n/g, '\n\n')
+    // 移除行首行尾空白
+    .trim()
+}
+
 export default async function chatChunkGeminiOffice(
   messages,
   onChunk,
@@ -93,11 +112,13 @@ export default async function chatChunkGeminiOffice(
           const textStart = line.indexOf('"text": "') + 8
           const textEnd = line.lastIndexOf('"')
           if (textEnd > textStart) {
-            const content = line.substring(textStart, textEnd).trim()
-            console.log("Extracted content:", content)
-            if (content) {
-              fullContent += content
-              onChunk(content)
+            const content = line.substring(textStart, textEnd)
+            // 清理并格式化内容
+            const cleanedContent = cleanContent(content)
+            console.log("Cleaned content:", cleanedContent)
+            if (cleanedContent) {
+              fullContent += cleanedContent
+              onChunk(cleanedContent)
             }
           }
         }
