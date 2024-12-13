@@ -31,9 +31,12 @@ export default async function chatChunkOpenAIOffice(
   onCancel,
   isFirst = true,
   temperature = 0,
-  overFlag = "YES",
-  baseModel = "advanced"
+  overFlag = "YES"
 ) {
+  // 从 sessionStorage 读取当前选择的模型
+  const baseModel = sessionStorage.getItem('aiLevel') || 'advanced'
+  console.log("[ChatService] Using model:", baseModel)
+
   // 检查塔币余额
   const aiLevel = Object.entries(AI_LEVELS).find(([_, level]) => level.value === baseModel)?.[0] as keyof typeof AI_LEVELS
   const tokenCost = AI_LEVELS[aiLevel || "ADVANCED"].cost
@@ -71,7 +74,8 @@ export default async function chatChunkOpenAIOffice(
   }
 
   const apiKey = "5d5c1f3cc91b440b8391851b2eadfb1c"
-  const apiEndPoint = modelEndpoints[baseModel] || modelEndpoints.advanced
+  const apiEndPoint = modelEndpoints[baseModel]
+  console.log("[ChatService] API Endpoint:", apiEndPoint)
 
   const payload = {
     messages: _messages,
@@ -131,8 +135,7 @@ export default async function chatChunkOpenAIOffice(
               onCancel,
               false,
               temperature,
-              overFlag,
-              baseModel
+              overFlag
             )
             return
           }

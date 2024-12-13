@@ -85,14 +85,12 @@ export interface AIEditorProps {
   imageUpload?: boolean
 }
 
-// 辅助函数：提取 <shata-ai-code> 标签中的内容
 const extractShataAIFormContent = (content: string): string => {
   const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
   const match = content.match(regex)
   return match ? match[1].trim() : content
 }
 
-// 辅助函数：用 <shata-ai-code> 标签包装内容
 const wrapWithShataAIForm = (content: string): string => {
   return `<shata-ai-code>\n${content}\n</shata-ai-code>`
 }
@@ -132,6 +130,10 @@ const AIEditor: React.FC<AIEditorProps> = ({
 
   const handleAILevelChange = (level: keyof typeof AI_LEVELS) => {
     setSelectedAILevel(level)
+    // 存储选择的模型
+    sessionStorage.setItem('aiLevel', AI_LEVELS[level].value)
+    console.log("[AIEditor] Model changed to:", level)
+    console.log("[AIEditor] Model config:", AI_LEVELS[level])
     message.success(
       <div className="flex items-center gap-2">
         {AI_LEVELS[level].icon} 已切换至{AI_LEVELS[level].label}模式
