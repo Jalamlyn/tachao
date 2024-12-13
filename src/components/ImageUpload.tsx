@@ -1,18 +1,31 @@
 import React, { useState, useRef } from "react"
-import { Button } from "@nextui-org/react"
+import { Button, Tooltip, Modal } from "@nextui-org/react"
 import { Button as SButton } from "@/components/ui/button"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
 import { AIEditorProps } from "./AIEditor"
+import { AI_LEVELS } from "./AIEditor/type"
 
-export const ImageUploader: React.FC<{ agent: AIEditorProps["agent"] }> = ({ agent }) => {
+interface ImageUploaderProps {
+  agent: AIEditorProps["agent"]
+  aiLevel?: keyof typeof AI_LEVELS
+}
+
+export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "ADVANCED" }) => {
   const [preview, setPreview] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const isExpertMode = aiLevel === "EXPERT"
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    if (!isExpertMode) {
+      message.warning("图片上传功能仅在专家模式下可用")
+      return
+    }
 
     if (file.size > 5 * 1024 * 1024) {
       message.error("图片大小不能超过5MB")
@@ -54,6 +67,18 @@ export const ImageUploader: React.FC<{ agent: AIEditorProps["agent"] }> = ({ age
     agent.clearCachedImage?.()
   }
 
+  const handleUploadClick = () => {
+    if (!isExpertMode) {
+      Modal.warning({
+        title: "功能限制",
+        content: "图片上传功能仅在专家模式下可用，请切换到专家模式后再试。",
+        onOk: () => console.log("Modal closed"),
+      })
+      return
+    }
+    inputRef.current?.click()
+  }
+
   return (
     <div className='flex items-center gap-2 mb-2'>
       <input
@@ -63,16 +88,32 @@ export const ImageUploader: React.FC<{ agent: AIEditorProps["agent"] }> = ({ age
         accept='image/jpeg,image/png,image/gif'
         onChange={handleUpload}
       />
-      <Button
-        variant='flat'
-        size='sm'
-        onClick={() => inputRef.current?.click()}
-        disabled={isLoading}
-        className='flex items-center gap-2'
+      <Tooltip
+        content={
+          !isExpertMode ? (
+            <div className="flex items-center gap-2 p-2">
+              <Icon icon='mdi:information' className='w-4 h-4' />
+              <span>图片上传功能仅在专家模式下可用</span>
+            </div>
+          ) : null
+        }
       >
-        <Icon icon='mdi:image-plus' className='w-4 h-4' />
-        {isLoading ? "上传中..." : "上传图片"}
-      </Button>
+        <Button
+          variant='flat'
+          size='sm'
+          onClick={handleUploadClick}
+          disabled={!isExpertMode || isLoading}
+          className={`flex items-center gap-2 relative ${!isExpertMode ? 'opacity-50' : ''}`}
+        >
+          <Icon icon='mdi:image-plus' className='w-4 h-4' />
+          {isLoading ? "上传中..." : "上传图片"}
+          {isExpertMode && (
+            <div className="absolute -top-1 -right-1">
+              <Icon icon='mdi:crown' className='w-3 h-3 text-warning-500' />
+            </div>
+          )}
+        </Button>
+      </Tooltip>
       {preview && (
         <div className='relative'>
           <img src={preview} alt='Preview' className='w-16 h-16 object-cover rounded border border-default-200' />
