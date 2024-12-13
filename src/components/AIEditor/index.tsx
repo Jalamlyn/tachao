@@ -46,14 +46,8 @@ const AIEditor: React.FC<AIEditorProps> = ({
   }, [versionControl.currentIndex])
 
   const handleAILevelChange = (level: keyof typeof AI_LEVELS) => {
-    if (imageUpload && level !== "EXPERT") {
-      message.info("切换到非专家模式将禁用图片上传功能")
-    }
     setSelectedAILevel(level)
     sessionStorage.setItem("aiLevel", AI_LEVELS[level].value)
-    console.log("[AIEditor] Model changed to:", level)
-    console.log("[AIEditor] Model config:", AI_LEVELS[level])
-    message.success(<div className='flex items-center gap-2'>已切换至{AI_LEVELS[level].label}模式</div>)
   }
 
   const handleSaveEdit = async () => {

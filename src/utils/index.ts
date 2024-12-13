@@ -1,4 +1,3 @@
-import { message } from "@/components/Message"
 import { localDB } from "./localDB"
 
 /**

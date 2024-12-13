@@ -23,12 +23,9 @@ export default function renderWeChatApp() {
   return (
     <Route path='/we-chat-app/admin' element={<AdminPage />}>
       <Route index element={<Dashboard />} />
-      <Route path='applications' element={<ApplicationList />} />
-      <Route path='applications/:appId' element={<AppDetail />} />
       <Route path='settings' element={<EnterpriseSettings />} />
       <Route path='documents' element={<FormTempManager />} />
       <Route path='forms' element={<FormManager />} />
-      <Route path='forms/analysis' element={<FormAnalysis />} />
       <Route path='documents/create' element={<FormTemplateSelect />} />
       <Route path='documents/create/:templateId' element={<AIFormEditor />} />
       <Route path='documents/edit/:templateId' element={<AIFormEditor />} />

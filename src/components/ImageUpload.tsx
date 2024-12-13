@@ -91,11 +91,26 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "
       <Tooltip
         content={
           !isExpertMode ? (
-            <div className="flex items-center gap-2 p-2">
+            <div className='flex items-center gap-2 p-2'>
               <Icon icon='mdi:information' className='w-4 h-4' />
               <span>图片上传功能仅在专家模式下可用</span>
             </div>
-          ) : null
+          ) : (
+            <div className='flex flex-col gap-1 p-2'>
+              <div className='flex items-center gap-2'>
+                <Icon icon='mdi:check-circle' className='w-4 h-4 text-success' />
+                <span className='font-medium'>上传图片帮助 AI 更好理解您的需求</span>
+              </div>
+              <div className='text-sm text-default-500 pl-6'>
+                支持场景：
+                <div>• 表单界面截图 </div>
+                <div>• 单据或文档截图 </div>
+                <div>• 需求说明文档 </div>
+                <div>• 手绘草图或设计稿</div>
+              </div>
+              <div className='text-xs text-default-400 pl-6'>支持 JPG、PNG格式，最大 5MB</div>
+            </div>
+          )
         }
       >
         <Button
@@ -103,15 +118,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "
           size='sm'
           onClick={handleUploadClick}
           disabled={!isExpertMode || isLoading}
-          className={`flex items-center gap-2 relative ${!isExpertMode ? 'opacity-50' : ''}`}
+          className={`flex items-center gap-2 relative ${!isExpertMode ? "opacity-50" : ""}`}
         >
           <Icon icon='mdi:image-plus' className='w-4 h-4' />
           {isLoading ? "上传中..." : "上传图片"}
-          {isExpertMode && (
-            <div className="absolute -top-1 -right-1">
-              <Icon icon='mdi:crown' className='w-3 h-3 text-warning-500' />
-            </div>
-          )}
         </Button>
       </Tooltip>
       {preview && (

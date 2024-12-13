@@ -3,7 +3,7 @@ import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { events } from "fetch-event-stream"
 import TokenService from "../token/TokenService"
-import { AI_LEVELS } from "@/components/AIEditor"
+import { AI_LEVELS } from "@/components/AIEditor/type"
 
 function processAIMessages(messages: any[]) {
   return messages.map((message) => {
@@ -34,11 +34,13 @@ export default async function chatChunkOpenAIOffice(
   overFlag = "YES"
 ) {
   // 从 sessionStorage 读取当前选择的模型
-  const baseModel = sessionStorage.getItem('aiLevel') || 'advanced'
+  const baseModel = sessionStorage.getItem("aiLevel") || "advanced"
   console.log("[ChatService] Using model:", baseModel)
 
   // 检查塔币余额
-  const aiLevel = Object.entries(AI_LEVELS).find(([_, level]) => level.value === baseModel)?.[0] as keyof typeof AI_LEVELS
+  const aiLevel = Object.entries(AI_LEVELS).find(
+    ([_, level]) => level.value === baseModel
+  )?.[0] as keyof typeof AI_LEVELS
   const tokenCost = AI_LEVELS[aiLevel || "ADVANCED"].cost
 
   if (isFirst) {
@@ -69,8 +71,10 @@ export default async function chatChunkOpenAIOffice(
   }
 
   const modelEndpoints = {
-    expert: "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview",
-    advanced: "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o-mini-2/chat/completions?api-version=2024-02-15-preview"
+    expert:
+      "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview",
+    advanced:
+      "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o-mini-2/chat/completions?api-version=2024-02-15-preview",
   }
 
   const apiKey = "5d5c1f3cc91b440b8391851b2eadfb1c"
