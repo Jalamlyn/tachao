@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { ScrollShadow, Tabs, Tab, Button } from "@nextui-org/react"
+import { ScrollShadow, Tabs, Tab, Button, Select, SelectItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import MessageCard from "@/components/MessageCard"
@@ -7,11 +7,34 @@ import AICommandInput from "@/components/AICommandInput"
 import { cn } from "@/lib/utils"
 import message from "@/components/Message"
 import Editor from "@monaco-editor/react"
+import TokenService from "@/service/token/TokenService"
 
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
 import AIFormAgent from "@/service/agents/AIFormAgent"
 import { ImageUploader } from "./ImageUpload"
+
+// AI级别配置
+export const AI_LEVELS = {
+  EXPERT: {
+    label: "专家",
+    value: "expert",
+    cost: 3,
+    color: "warning",
+    icon: "👨‍🔬",
+    description: "更专业的分析和建议",
+    model: "gpt4o"
+  },
+  ADVANCED: {
+    label: "高级",
+    value: "advanced",
+    cost: 0.3,
+    color: "primary",
+    icon: "👨‍💻",
+    description: "适合日常使用",
+    model: "gpt4o-mini"
+  }
+} as const
 
 interface Message {
   role: "user" | "assistant"
@@ -23,6 +46,7 @@ interface Message {
     preview?: React.ReactNode
     content?: string
   }
+  aiLevel?: keyof typeof AI_LEVELS
 }
 
 export interface AIEditorProps {
@@ -58,6 +82,7 @@ export interface AIEditorProps {
     theme?: string
     customOptions?: any
   }
+  imageUpload?: boolean
 }
 
 // 辅助函数：提取 <shata-ai-code> 标签中的内容
@@ -96,19 +121,27 @@ const AIEditor: React.FC<AIEditorProps> = ({
   const [currentVersion, setCurrentVersion] = useState(versionControl.getCurrentVersion())
   const [isEditing, setIsEditing] = useState(false)
   const [editedCode, setEditedCode] = useState("")
+  const [selectedAILevel, setSelectedAILevel] = useState<keyof typeof AI_LEVELS>("ADVANCED")
 
   useEffect(() => {
     setCurrentVersion(versionControl.getCurrentVersion())
     setIsEditing(false)
-    // 处理可能包含 <shata-ai-code> 标签的内容
     const rawConfig = versionControl.getCurrentVersion()?.rawConfig || ""
     setEditedCode(extractShataAIFormContent(rawConfig))
   }, [versionControl.currentIndex])
 
+  const handleAILevelChange = (level: keyof typeof AI_LEVELS) => {
+    setSelectedAILevel(level)
+    message.success(
+      <div className="flex items-center gap-2">
+        {AI_LEVELS[level].icon} 已切换至{AI_LEVELS[level].label}模式
+      </div>
+    )
+  }
+
   const handleSaveEdit = async () => {
     try {
       const parser = parseConfig || AIFormAgent.parseConfig
-      // 在保存前重新添加 <shata-ai-code> 标签
       const wrappedCode = wrapWithShataAIForm(editedCode)
       const parsedConfig = await parser(wrappedCode)
 
@@ -144,7 +177,6 @@ const AIEditor: React.FC<AIEditorProps> = ({
     }
   }
 
-  // 统一的代码编辑器渲染
   const renderCodeEditor = (content: string, isEditing: boolean) => (
     <Editor
       height='100%'
@@ -173,7 +205,27 @@ const AIEditor: React.FC<AIEditorProps> = ({
         <ResizablePanel defaultSize={50} className='resizable-panel'>
           <div className='h-full flex flex-col'>
             <div className='flex justify-between items-center p-2 border-b mb-2'>
-              <h3 className='text-lg font-medium'>对话</h3>
+              <div className="flex items-center gap-4">
+                <h3 className='text-lg font-medium'>对话</h3>
+                <Select
+                  size="sm"
+                  selectedKeys={[selectedAILevel]}
+                  onChange={(e) => handleAILevelChange(e.target.value as keyof typeof AI_LEVELS)}
+                  className="w-40"
+                  startContent={AI_LEVELS[selectedAILevel].icon}
+                >
+                  {Object.entries(AI_LEVELS).map(([key, level]) => (
+                    <SelectItem
+                      key={key}
+                      value={key}
+                      startContent={level.icon}
+                      description={`${level.cost} 塔币/次`}
+                    >
+                      {level.label}
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
               <Button
                 size='sm'
                 variant='light'
@@ -194,6 +246,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
                       role={message.role}
                       status={message.status || "success"}
                       className='message-card max-w-[90%]'
+                      aiLevel={message.aiLevel}
                     />
                   </div>
                 ))}
@@ -202,7 +255,12 @@ const AIEditor: React.FC<AIEditorProps> = ({
 
             <div className='p-2'>
               {imageUpload && <ImageUploader agent={agent} />}
-              <AICommandInput agent={agent} onResult={onCommandResult} />
+              <AICommandInput
+                agent={agent}
+                onResult={onCommandResult}
+                aiLevel={selectedAILevel}
+                tokenCost={AI_LEVELS[selectedAILevel].cost}
+              />
             </div>
           </div>
         </ResizablePanel>

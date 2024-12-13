@@ -2,6 +2,8 @@ import { message } from "@/components/Message"
 import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { events } from "fetch-event-stream"
+import TokenService from "../token/TokenService"
+import { AI_LEVELS } from "@/components/AIEditor"
 
 function processAIMessages(messages: any[]) {
   return messages.map((message) => {
@@ -30,8 +32,19 @@ export default async function chatChunkOpenAIOffice(
   isFirst = true,
   temperature = 0,
   overFlag = "YES",
-  baseModel = "openai::gpt-4"
+  baseModel = "advanced"
 ) {
+  // 检查塔币余额
+  const aiLevel = Object.entries(AI_LEVELS).find(([_, level]) => level.value === baseModel)?.[0] as keyof typeof AI_LEVELS
+  const tokenCost = AI_LEVELS[aiLevel || "ADVANCED"].cost
+
+  if (isFirst) {
+    const hasEnoughTokens = await TokenService.checkBalance(tokenCost)
+    if (!hasEnoughTokens) {
+      throw new Error(`塔币余额不足，当前对话需要 ${tokenCost} 塔币`)
+    }
+  }
+
   let _messages = messages
   if (isFirst) {
     _messages = messages.map((msg, index) => {
@@ -52,26 +65,15 @@ export default async function chatChunkOpenAIOffice(
     })
   }
 
-  const [provider, model] = baseModel.split("::")
-  const modelSupplierData = localDB.getItem("model-supplier-data") || []
-  const supplierInfo = modelSupplierData.find((supplier) => supplier.id === provider)
+  const modelEndpoints = {
+    expert: "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview",
+    advanced: "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o-mini-2/chat/completions?api-version=2024-02-15-preview"
+  }
 
-  // 0513
-  // const apiKey = "5d5c1f3cc91b440b8391851b2eadfb1c"
-  // 0806
-  // const apiKey = "303b8dcd61004bc0a7ad0c7316f91fbe"
-  // 0718
   const apiKey = "5d5c1f3cc91b440b8391851b2eadfb1c"
-  const apiEndPoint =
-    // 0513
-    // "https://aistudioaiservices036976507415.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview"
-    // 0806
-    // "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview"
-    //0718
-    "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o-mini-2/chat/completions?api-version=2024-02-15-preview"
+  const apiEndPoint = modelEndpoints[baseModel] || modelEndpoints.advanced
 
   const payload = {
-    // model: model,
     messages: _messages,
     temperature,
     max_tokens: 4096,
@@ -87,7 +89,6 @@ export default async function chatChunkOpenAIOffice(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Authorization: `Bearer ${apiKey}`,
         "api-key": `${apiKey}`,
       },
       body: jsonStringify(payload),
@@ -111,9 +112,7 @@ export default async function chatChunkOpenAIOffice(
           fullContent += content
           onChunk(content)
 
-          // 检查停止原因
           if (parsed?.choices[0]?.finish_reason === "length") {
-            // 如果停止原因是 length，则继续调用
             const lastTenChars = fullContent.slice(-10)
             await chatChunkOpenAIOffice(
               _messages.concat([
@@ -135,13 +134,17 @@ export default async function chatChunkOpenAIOffice(
               overFlag,
               baseModel
             )
-            return // 结束当前调用
+            return
           }
         } catch (error) {
           console.log("Error parsing JSON:", error)
         }
       } else {
         localDB.setItem("chat-chunk-over", overFlag)
+        // 扣除塔币
+        if (isFirst) {
+          await TokenService.deductTokens(tokenCost)
+        }
       }
     }
   } catch (error) {

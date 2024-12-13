@@ -1,4 +1,5 @@
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
+import { AI_LEVELS } from "@/components/AIEditor"
 
 // 响应类型定义
 export type ResponseType = "form" | "question" | "confirm" | "error"
@@ -37,6 +38,7 @@ export type Message = {
   content: string
   metadata?: ResponseMetadata
   images?: string[]
+  aiLevel?: keyof typeof AI_LEVELS
 }
 
 // 响应元数据类型
