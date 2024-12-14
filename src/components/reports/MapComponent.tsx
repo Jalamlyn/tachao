@@ -11,15 +11,15 @@ const loadBMapScript = (apiKey: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     // 如果已经加载过，直接返回
     if (window.BMap) {
-      resolve();
-      return;
+      resolve()
+      return
     }
 
     // 创建script标签
     const script = document.createElement("script")
     script.src = `https://api.map.baidu.com/api?v=3.0&ak=${apiKey}&callback=initMap`
-    script.onerror = () => reject(new Error('Failed to load BMap API'))
-    
+    script.onerror = () => reject(new Error("Failed to load BMap API"))
+
     // 设置回调函数
     window.initMap = () => {
       resolve()
@@ -61,8 +61,8 @@ const MapComponent: React.FC<MapComponentProps> = ({
         await loadBMapScript(apiKey)
         setIsMapReady(true)
       } catch (err) {
-        setError('Failed to load BMap API')
-        console.error('Error loading BMap:', err)
+        setError("Failed to load BMap API")
+        console.error("Error loading BMap:", err)
       } finally {
         setIsLoading(false)
       }
@@ -81,8 +81,8 @@ const MapComponent: React.FC<MapComponentProps> = ({
       chartInstance.current.setOption(option)
       geocodeAddresses()
     } catch (err) {
-      setError('Failed to initialize chart')
-      console.error('Error initializing chart:', err)
+      setError("Failed to initialize chart")
+      console.error("Error initializing chart:", err)
     }
 
     return () => {
@@ -239,17 +239,17 @@ const MapComponent: React.FC<MapComponentProps> = ({
         })
       }
     } catch (err) {
-      setError('Failed to geocode addresses')
-      console.error('Error geocoding addresses:', err)
+      setError("Failed to geocode addresses")
+      console.error("Error geocoding addresses:", err)
     }
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-[400px]">
-        <div className="flex flex-col items-center gap-2">
-          <Icon icon="eos-icons:loading" className="w-8 h-8 text-primary animate-spin" />
-          <span className="text-sm text-default-500">加载地图中...</span>
+      <div className='flex items-center justify-center h-[400px]'>
+        <div className='flex flex-col items-center gap-2'>
+          <Icon icon='eos-icons:loading' className='w-8 h-8 text-primary animate-spin' />
+          <span className='text-sm text-default-500'>加载地图中...</span>
         </div>
       </div>
     )
@@ -257,10 +257,10 @@ const MapComponent: React.FC<MapComponentProps> = ({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-[400px]">
-        <div className="flex flex-col items-center gap-2 text-danger">
-          <Icon icon="mdi:alert-circle" className="w-8 h-8" />
-          <span className="text-sm">{error}</span>
+      <div className='flex items-center justify-center h-[400px]'>
+        <div className='flex flex-col items-center gap-2 text-danger'>
+          <Icon icon='mdi:alert-circle' className='w-8 h-8' />
+          <span className='text-sm'>{error}</span>
         </div>
       </div>
     )

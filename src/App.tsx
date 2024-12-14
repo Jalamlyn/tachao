@@ -4,11 +4,8 @@ import { NextUIProvider } from "@nextui-org/react"
 import { useTranslation } from "react-i18next"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { getCurrentLanguage } from "./i18n"
-import LoginPage from "./pages/LoginPage"
-import FormRenderer from "./components/forms/FormRenderer"
+import WeChatLoginPage from "./pages/LoginPage"
 import AnalysisPage from "./pages/AnalysisPage"
-import CreateReportPage from "./components/reports/CreateReportPage"
-import ReadReportRenderer from "./components/reports/ReadReportRenderer"
 import { Toaster } from "./components/ui/toaster"
 import LandingPage from "./pages/landing"
 import AIHomePage from "./pages/AIHomePage"
@@ -58,7 +55,7 @@ function App() {
             <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <AIHomePage />}>
               <Route index element={<Navigate to='management' replace />} />
             </Route>
-            <Route path='/login' element={<LoginPage />} />
+            <Route path='/login' element={<WeChatLoginPage />} />
             <Route
               path='/form-preview/:templateId'
               element={
@@ -71,7 +68,6 @@ function App() {
             <Route path='/form-create/:templateId' element={<FormCreate />} />
             <Route path='/report/:reportId' element={<Report />} />
             <Route path='/apps/:appId' element={<AppEntry />} />
-            <Route path='/forms/:id' element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <FormRenderer />} />
             <Route
               path='/forms/analysis'
               element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <AnalysisPage />}
@@ -79,14 +75,6 @@ function App() {
             <Route
               path='/resources/view/:id'
               element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <ResourceDataTable />}
-            />
-            <Route
-              path='/reports/create'
-              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <CreateReportPage />}
-            />
-            <Route
-              path='/reports/view/:id'
-              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <ReadReportRenderer />}
             />
             <Route
               path='/operations/wait-list'
