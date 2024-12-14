@@ -1,101 +1,59 @@
-import { message } from "@/components/Message"
 import { apiService } from "./api"
 import { getAppId } from "@/utils"
 
-const url = `/internal/apps/${getAppId()}/metadata`
-const getUrl = `/internal/apps/${getAppId()}/metadata/AI_AGENT/list`
-const getPublicUrl = `/public/api/metadata/app/type/AI_AGENT`
-const historyUrl = `/internal/apps/${getAppId()}/metadata/AI_AGENT/histories`
-const deleteUrl = `/internal/apps/${getAppId()}/metadata`
-
-export const queryMetadataHistory = async (
-  data: {
-    jsonValueFilter?: {
-      field: string
-      operator: string
-      value: { [key: string]: any }
-    }
-    names: string[]
-    limit?: number
-    offset?: number
-    tags?: string[]
-    title?: string
-  },
-  appId = import.meta.env.VITE_SHATA_AI_APP_ID
-) => {
+export const queryMetadataHistory = async (data: {
+  jsonValueFilter?: {
+    field: string
+    operator: string
+    value: { [key: string]: any }
+  }
+  names: string[]
+  limit?: number
+  offset?: number
+  tags?: string[]
+  title?: string
+}) => {
+  const historyUrl = `/internal/apps/${getAppId()}/metadata/AI_AGENT/histories`
   let config = {
     headers: {},
-  }
-  if (appId) {
-    config.headers["x-app"] = appId
   }
   const res = await apiService.post(historyUrl, data, config)
   return res.data
 }
 
 export const getPublicMetaData = async (names) => {
-  let config = {
-    headers: {
-      appId: import.meta.env.VITE_SHATA_AI_APP_ID,
-    },
-  }
-  const res = await apiService.post(
-    getPublicUrl,
-    {
-      names,
-    },
-    config
-  )
+  const getPublicUrl = `/public/api/metadata/app/type/AI_AGENT`
+  const res = await apiService.post(getPublicUrl, {
+    names,
+  })
   return res.data
 }
 
-export const getMetadata = async (names, appId = null) => {
-  let config = {
-    headers: {},
-  }
-  if (appId) {
-    config.headers["x-app"] = appId
-  } else {
-    console.error("appId is required")
-    return new Error("appId is required")
-  }
-  const res = await apiService.post(
-    getUrl,
-    {
-      names,
-    },
-    config
-  )
+export const getMetadata = async (names) => {
+  const getUrl = `/internal/apps/${getAppId()}/metadata/AI_AGENT/list`
+  const res = await apiService.post(getUrl, {
+    names,
+  })
   return res.data
 }
 
-export const setMetadata = async (name, value, appId = null) => {
-  let config = { headers: {} }
-  if (appId) {
-    config.headers["x-app"] = appId
-  } else {
-    console.error("appId is required")
-    return new Error("appId is required")
-  }
-  // Ensure value is a string
+export const setMetadata = async (name, value) => {
+  const url = `/internal/apps/${getAppId()}/metadata`
   const stringValue = typeof value === "string" ? value : JSON.stringify(value)
-  const res = await apiService.post(
-    url,
-    {
-      type: "AI_AGENT",
-      name,
-      value: stringValue,
-      title: "",
-      tags: [],
-    },
-    config
-  )
+  const res = await apiService.post(url, {
+    type: "AI_AGENT",
+    name,
+    value: stringValue,
+    title: "",
+    tags: [],
+  })
   //最多保存最近 20次提交的版本
   deleteMetadata({ name, versionCode: Number(res.data.versionCode) - 20 })
   return res.data
 }
 
 export const deleteMetadata = async ({ name, versionCode }) => {
+  const deleteUrl = `/internal/apps/${getAppId()}/metadata`
   const res = await apiService.delete(deleteUrl, {
     data: {
       type: "AI_AGENT",
