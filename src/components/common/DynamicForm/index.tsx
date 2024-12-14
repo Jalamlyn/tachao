@@ -7,6 +7,7 @@ import { useDynamicForm } from "./hooks/useDynamicForm"
 import DynamicFormFields from "./components/DynamicFormFields"
 import DynamicTable from "./components/DynamicTable"
 import DynamicProcessConfirm from "./components/ProcessConfirm"
+import Summary from "./components/Summary"
 import OrderNumberField from "../OrderNumberField"
 import message from "@/components/Message"
 import { useMetadata } from "@/hooks/useMetadata"
@@ -373,6 +374,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
     return null
   }
+
   return (
     <Form {...form}>
       <form onSubmit={handleFormSubmit} className={cn(styles["dynamic-form"], "space-y-6 md:space-y-8 pb-2")}>
@@ -434,6 +436,18 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           <div className={cn(styles["form-card"])}>
             <h2 className={cn(styles["form-title"])}>流程确认</h2>
             <DynamicProcessConfirm steps={renderConfig.processSteps} form={form} isEditable={isEditing} />
+          </div>
+        )}
+
+        {/* 汇总信息 */}
+        {{/* 汇总信息 */}
+        {renderConfig.summaryGroups && (
+          <div className={cn(styles["form-card"])}>
+            <h2 className={cn(styles["form-title"])}>汇总信息</h2>
+            <Summary 
+              groups={renderConfig.summaryGroups} 
+              values={form.getValues()}
+            />
           </div>
         )}
 

@@ -10,6 +10,7 @@ import { TableConfig, TableGroup } from "./table"
 import { ProcessStep } from "./process"
 import { FormMetadata } from "./basic"
 import { ValidationContext, ValidationResult, ValidationRule, FormEventHandlers } from "./validation"
+import { SummaryGroup } from "./summary"
 
 /**
  * 订单号字段配置
@@ -50,26 +51,13 @@ export interface FormRenderConfig {
   tables?: TableGroup[]
   /** 流程步骤 */
   processSteps?: ProcessStep[]
+  /** 汇总信息 */
+  summaryGroups?: SummaryGroup[]
 }
 
 /**
  * 动态表单配置
  * @description 动态表单的完整配置接口
- * 
- * @example
- * ```typescript
- * const config: DynamicFormConfig = {
- *   metadata: {
- *     title: '用户信息表单',
- *     description: '请填写用户基本信息'
- *   },
- *   renderConfig: {
- *     basicFields: [
- *       { name: 'username', label: '用户名', type: 'text' }
- *     ]
- *   }
- * }
- * ```
  */
 export interface DynamicFormConfig {
   /** 表单元数据 */
