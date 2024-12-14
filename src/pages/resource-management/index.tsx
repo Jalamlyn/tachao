@@ -17,7 +17,6 @@ import SearchInput from "@/components/SearchInput"
 const ResourceManagement: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
-  const appId = import.meta.env.VITE_SHATA_AI_APP_ID
   const [selectedType, setSelectedType] = React.useState<string>("excel")
   const galleryRef = useRef<{ loadResources: () => Promise<void> }>()
 
@@ -44,7 +43,7 @@ const ResourceManagement: React.FC = () => {
   const renderUploadButton = (type: string) => {
     switch (type) {
       case "excel":
-        return <CreateResourceButton appId={appId} isDisabled={false} onSuccess={handleSuccess} />
+        return <CreateResourceButton isDisabled={false} onSuccess={handleSuccess} />
       case "word":
         return <WordUploadButton onSuccess={handleSuccess} onError={handleError} />
       case "pdf":

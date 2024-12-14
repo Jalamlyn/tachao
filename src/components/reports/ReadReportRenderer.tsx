@@ -3,6 +3,7 @@ import { useReportsMetadata } from "../report-templates/hook/useReportsMetadata"
 import { reportTemplatesMap } from "../report-templates/reportTemplateConfig"
 import { Spinner } from "@nextui-org/react"
 import { useParams, useLocation } from "react-router-dom"
+import { localDB } from "@/utils/localDB"
 
 interface ReadReportRendererProps {
   reportId?: string
@@ -18,8 +19,7 @@ const ReadReportRenderer: React.FC<ReadReportRendererProps> = ({ reportId: propR
   const [appId, setAppId] = useState<string | null>(null)
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const appIdParam = params.get("appId")
+    const appIdParam = localDB.getAppId()
     if (appIdParam) {
       setAppId(appIdParam)
     }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react"
-import { Autocomplete, AutocompleteItem, AutocompleteItemProps } from "@nextui-org/react"
+import { Autocomplete, AutocompleteItem } from "@nextui-org/react"
 import { queryEnterPriseList } from "@/service/apis/api"
 import { debounce } from "lodash"
 

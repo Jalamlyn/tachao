@@ -37,13 +37,19 @@ const eventEmitter = new EventEmitter()
 export const localDB = {
   setAppId: async (appId) => {
     currentAppId = appId
-    const data = await getCurrentAccountInfo()
-    localStorage.setItem(`${data.organizationId}_appId`, appId)
+    const loginData = jsonParse(localStorage.getItem("wechatLoginData"))
+    localStorage.setItem(`${loginData.organizationId}_appId`, appId)
   },
 
   getAppId: () => {
-    const organizationId = localStorage.getItem("@@organizationId")
-    return currentAppId || localStorage.getItem(`${organizationId}_appId`)
+    const loginData = jsonParse(localStorage.getItem("wechatLoginData"))
+    if (loginData) {
+      return currentAppId || localStorage.getItem(`${loginData.organizationId}_appId`)
+    } else {
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/login"
+      }
+    }
   },
 
   // 添加控制日志输出的方法

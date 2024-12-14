@@ -27,10 +27,8 @@ apiService.interceptors.request.use(
       config.headers["token"] = `${token}`
     }
     const appId = getAppId()
-    console.log(appId)
     if (appId) {
       config.headers["x-app"] = appId
-      console.log(appId)
     }
     return config
   },

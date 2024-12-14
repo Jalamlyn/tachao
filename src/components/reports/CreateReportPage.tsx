@@ -6,6 +6,7 @@ import { useReportsMetadata } from "../../components/report-templates/hook/useRe
 import { useFormMetadata } from "../../components/from-templates/hook/useFormMetadata"
 import { getMetadata, setMetadata } from "@/service/apis/api"
 import { formTemplates } from "../../components/from-templates/formTemplateConfig"
+import { localDB } from "@/utils/localDB"
 
 const CreateReportPage: React.FC = () => {
   const navigate = useNavigate()
@@ -17,8 +18,7 @@ const CreateReportPage: React.FC = () => {
   const [selectedFormTemplateId, setSelectedFormTemplateId] = useState<string>("")
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    const appIdParam = params.get("appId")
+    const appIdParam = localDB.getAppId()
     if (appIdParam) {
       setAppId(appIdParam)
     }
@@ -91,7 +91,7 @@ const CreateReportPage: React.FC = () => {
                 </SelectItem>
               ))}
             </Select>
-            
+
             <Button
               color='primary'
               onClick={handleCreateReport}
