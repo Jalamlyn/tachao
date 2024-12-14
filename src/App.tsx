@@ -4,7 +4,7 @@ import { NextUIProvider } from "@nextui-org/react"
 import { useTranslation } from "react-i18next"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { getCurrentLanguage } from "./i18n"
-import WeChatLoginPage from "./pages/WeChatLoginPage"
+import LoginPage from "./pages/LoginPage"
 import FormRenderer from "./components/forms/FormRenderer"
 import AnalysisPage from "./pages/AnalysisPage"
 import CreateReportPage from "./components/reports/CreateReportPage"
@@ -58,7 +58,7 @@ function App() {
             <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <AIHomePage />}>
               <Route index element={<Navigate to='management' replace />} />
             </Route>
-            <Route path='/login' element={<WeChatLoginPage />} />
+            <Route path='/login' element={<LoginPage />} />
             <Route
               path='/form-preview/:templateId'
               element={
@@ -71,10 +71,7 @@ function App() {
             <Route path='/form-create/:templateId' element={<FormCreate />} />
             <Route path='/report/:reportId' element={<Report />} />
             <Route path='/apps/:appId' element={<AppEntry />} />
-            <Route
-              path='/forms/:id'
-              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <FormRenderer />}
-            />
+            <Route path='/forms/:id' element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <FormRenderer />} />
             <Route
               path='/forms/analysis'
               element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <AnalysisPage />}

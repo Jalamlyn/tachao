@@ -6,6 +6,7 @@ import { parseFormConfig } from "@/utils/codeParser"
 import generateFormAgentPrompt from "./prompts/form/form-agent-prompt"
 import { Message } from "./AIFormAgentTypes"
 import { getMetadata } from "../apis/metadata"
+import { localDB } from "@/utils/localDB"
 
 export class AIFormAgent {
   private static instance: AIFormAgent
@@ -69,9 +70,10 @@ export class AIFormAgent {
     const result = await getMetadata([`resource_index`])
     try {
       // 构建系统消息
+      const cachedImage = localDB.getItem("cachedImage")
       const systemMessage = {
         role: "system" as const,
-        content: generateFormAgentPrompt(this._rawConfig, this._cachedImage !== null, result.data?.[0]?.value),
+        content: generateFormAgentPrompt(this._rawConfig, !!cachedImage, result.data?.[0]?.value),
       }
 
       // 增强用户命令，添加意图控制
@@ -94,13 +96,11 @@ export class AIFormAgent {
         role: "user" as const,
         content: enhancedCommand,
         // 如果有缓存图片，添加到 images 数组中
-        images: this._cachedImage ? [this._cachedImage] : undefined,
+        images: cachedImage ? [cachedImage] : undefined,
       }
 
       // 组合所有消息
       const allMessages = [systemMessage, ...messages, currentUserMessage]
-
-      console.log("[AIFormAgent] Sending messages with image:", !!this._cachedImage)
 
       // 获取AI响应
       let response = ""
@@ -117,11 +117,10 @@ export class AIFormAgent {
       )
 
       // 使用完图片后清除缓存
-      this.clearCachedImage()
+      localDB.removeItem("cachedImage")
 
       // 检查是否包含错误信息
       if (response.includes("<shata-ai-error>")) {
-        const errorMatch = response.match(/<shata-ai-error>(.*?)<\/shata-ai-error>/s)
         return {
           success: false,
           config: undefined,

@@ -41,7 +41,7 @@ const AppManagement: React.FC = () => {
   useEffect(() => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
-      { label: "页面管理", href: "/we-chat-app/admin/apps" },
+      { label: "应用管理", href: "/we-chat-app/admin/apps" },
     ])
   }, [])
 
@@ -65,12 +65,12 @@ const AppManagement: React.FC = () => {
 
   const pageActions = (
     <Button color='primary' startContent={<Icon icon='mdi:plus' />} onPress={() => setCreateModalOpen(true)}>
-      创建页面
+      创建应用
     </Button>
   )
 
   return (
-    <PageLayout title='页面管理' titleIcon='mdi:apps' actions={pageActions}>
+    <PageLayout title='应用管理' titleIcon='mdi:apps' actions={pageActions}>
       <div className='h-[calc(100vh-200px)] overflow-auto'>
         <AppGallery apps={apps} isLoading={isLoading} onDevelopClick={handleDevelopClick} />
       </div>

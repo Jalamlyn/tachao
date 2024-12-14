@@ -4,7 +4,7 @@ export const AI_LEVELS = {
   EXPERT: {
     label: "专家",
     value: "expert",
-    cost: 3,
+    cost: 5,
     color: "warning",
     icon: "mdi:atom", // 使用SVG图标
     description: "",
@@ -13,7 +13,7 @@ export const AI_LEVELS = {
   ADVANCED: {
     label: "高级",
     value: "advanced",
-    cost: 0.3,
+    cost: 0.5,
     color: "primary",
     icon: "mdi:rocket", // 使用SVG图标
     description: "",

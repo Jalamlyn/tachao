@@ -5,6 +5,7 @@ import { Icon } from "@iconify/react"
 import message from "@/components/Message"
 import { AIEditorProps } from "./AIEditor"
 import { AI_LEVELS } from "./AIEditor/type"
+import { localDB } from "@/utils/localDB"
 
 interface ImageUploaderProps {
   agent: AIEditorProps["agent"]
@@ -39,12 +40,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "
     }
 
     setIsLoading(true)
-    try {
+    try { 
       const reader = new FileReader()
       reader.onloadend = () => {
         const base64 = reader.result as string
         setPreview(base64)
-        agent.cacheImage?.(base64)
+        localDB.setItem("cachedImage", base64)
         setIsLoading(false)
       }
       reader.onerror = () => {

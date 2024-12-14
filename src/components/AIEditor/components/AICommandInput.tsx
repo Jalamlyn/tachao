@@ -1,7 +1,7 @@
 import React, { memo, useState, useCallback } from "react"
 import { Button, Textarea } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import message from "./Message"
+import message from "../../Message"
 
 interface AIAgent {
   processCommand: (command: string, onChunk?: (chunk: string) => void) => Promise<any>

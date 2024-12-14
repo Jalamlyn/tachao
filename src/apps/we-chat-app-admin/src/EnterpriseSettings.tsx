@@ -91,9 +91,9 @@ const SystemInfo: React.FC = () => {
         <InfoItem label='创建时间' value={project?.createdAt ? new Date(project.createdAt).toLocaleString() : "-"} />
       </InfoCard>
 
-      <InfoCard title='应用信息' icon='solar:widget-bold-duotone'>
-        <InfoItem label='应用名称' value={app?.name || "未初始化"} />
-        <InfoItem label='应用代码' value={app?.appCode || "-"} />
+      <InfoCard title='数据库信息' icon='solar:widget-bold-duotone'>
+        <InfoItem label='数据库名称' value={app?.name || "未初始化"} />
+        <InfoItem label='数据库代码' value={app?.appCode || "-"} />
         <InfoItem label='创建时间' value={app?.createdAt ? new Date(app.createdAt).toLocaleString() : "-"} />
       </InfoCard>
 

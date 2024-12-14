@@ -28,8 +28,8 @@ export const AppGallery: React.FC<AppGalleryProps> = ({
     return (
       <EmptyState
         type='no-data'
-        title='暂无页面'
-        description='创建您的第一个页面'
+        title='暂无应用'
+        description='创建您的第一个应用'
         icon={<Icon icon='mdi:apps' className='w-20 h-20 text-default-400' />}
       />
     )
