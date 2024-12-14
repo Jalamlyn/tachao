@@ -10,7 +10,6 @@ import SidebarDrawer from "../component/sidebar-drawer"
 import Sidebar from "../component/sidebar"
 import { useGlobalUser } from "@/hooks/useGlobalUser"
 import { items } from "../component/items"
-import Logo from "../component/logo/Logo"
 import { BreadcrumbProvider } from "../../../contexts/BreadcrumbContext"
 import GlobalBreadcrumb from "../../../components/GlobalBreadcrumb"
 import ServiceSupportModal from "./ServiceSupportModal"
@@ -33,9 +32,15 @@ export default function Component() {
   const [showInitializer, setShowInitializer] = useState(false)
   const { isOpen: isLogoutModalOpen, onOpen: onLogoutModalOpen, onClose: onLogoutModalClose } = useDisclosure()
   const [isInitializing, setIsInitializing] = useState(true)
+  const [enterpriseName, setEnterpriseName] = useState("")
 
   useEffect(() => {
     checkInitialization()
+    const loginData = localStorage.getItem("loginData")
+    if (loginData) {
+      const parsedData = JSON.parse(loginData)
+      setEnterpriseName(parsedData.enterpriseName || "")
+    }
   }, [])
 
   const checkInitialization = async () => {
@@ -60,8 +65,8 @@ export default function Component() {
         }
       }
     } catch (error) {
-      console.error('Initialization check failed:', error)
-      message.error('初始化检查失败')
+      console.error("Initialization check failed:", error)
+      message.error("初始化检查失败")
     } finally {
       setIsInitializing(false)
     }
@@ -69,14 +74,12 @@ export default function Component() {
 
   const handleInitializationSuccess = async () => {
     try {
-      // 初始化企业网盘模型
       const modelResponse = await createModel({
         namespace: "file",
         name: "activities",
         description: "企业网盘文件管理",
       })
 
-      // 创建files属性
       await createModelProperty({
         modelId: modelResponse.id,
         name: "files",
@@ -103,23 +106,21 @@ export default function Component() {
   }
 
   const confirmLogout = () => {
-    // 清除cookie
     document.cookie.split(";").forEach((c) => {
       document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
     })
 
-    // 清除localStorage
     localStorage.clear()
     sessionStorage.clear()
     onLogoutModalClose()
-    navigate("/login")
+    window.location.href = "/login"
   }
 
   if (isInitializing) {
     return (
-      <div className="h-screen w-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-2">
-          <Spinner size="lg" />
+      <div className='h-screen w-full flex items-center justify-center'>
+        <div className='flex flex-col items-center gap-2'>
+          <Spinner size='lg' />
           <div>正在初始化系统...</div>
         </div>
       </div>
@@ -129,7 +130,6 @@ export default function Component() {
   return (
     <BreadcrumbProvider>
       <div className='flex h-screen w-full gap-4 overflow-hidden'>
-        {/* Sidebar */}
         <SidebarDrawer
           className={cn("min-w-[288px] rounded-lg h-[calc(100vh-24px)] m-3", { "min-w-[76px]": isCollapsed })}
           hideCloseButton={true}
@@ -146,12 +146,9 @@ export default function Component() {
                 "justify-center gap-0 pl-0": isCollapsed,
               })}
             >
-              <Logo />
-              <span
-                className={cn("w-full text-small font-bold uppercase opacity-100", {
-                  "w-0 opacity-0": isCollapsed,
-                })}
-              ></span>
+              <span className={cn("text-lg font-bold", { "hidden": isCollapsed })}>
+                {enterpriseName || "企业管理平台"}
+              </span>
               <div className={cn("flex-end flex", { hidden: isCollapsed })}>
                 <Icon
                   className='cursor-pointer dark:text-primary-foreground/60 [&>g]:stroke-[1px]'
@@ -280,7 +277,6 @@ export default function Component() {
           </div>
         </SidebarDrawer>
 
-        {/*  Content */}
         <div className='w-full max-h-screen overflow-hidden md:max-w-[calc(100%-40px)] flex-1 p-4'>
           <GlobalBreadcrumb />
           <div className='content-container'>
@@ -288,13 +284,10 @@ export default function Component() {
           </div>
         </div>
 
-        {/* Service Support Modal */}
         <ServiceSupportModal isOpen={isServiceModalOpen} onClose={onServiceModalClose} />
 
-        {/* Enterprise Initializer */}
         <EnterpriseInitializer isOpen={showInitializer} onClose={() => {}} onSuccess={handleInitializationSuccess} />
 
-        {/* Logout Confirmation Modal */}
         <Modal isOpen={isLogoutModalOpen} onClose={onLogoutModalClose}>
           <ModalContent>
             <ModalHeader className='flex flex-col gap-1'>确认退出</ModalHeader>
