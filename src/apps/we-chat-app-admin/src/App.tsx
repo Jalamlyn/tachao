@@ -20,6 +20,7 @@ import { createModel, createModelProperty } from "@/service/apis/model"
 import message from "@/components/Message"
 import { queryMyProject } from "@/service/apis/project"
 import { queryApps } from "@/service/apis/app"
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 
 export default function Component() {
   const { isOpen, onOpenChange } = useDisclosure()
@@ -30,6 +31,7 @@ export default function Component() {
   const { userInfo, loading } = useGlobalUser()
   const { isOpen: isServiceModalOpen, onOpen: onServiceModalOpen, onClose: onServiceModalClose } = useDisclosure()
   const [showInitializer, setShowInitializer] = useState(false)
+  const { isOpen: isLogoutModalOpen, onOpen: onLogoutModalOpen, onClose: onLogoutModalClose } = useDisclosure()
 
   useEffect(() => {
     checkInitialization()
@@ -47,7 +49,7 @@ export default function Component() {
           name: "企业管理平台",
         })
         if (appResponse.data && appResponse.data.length > 0) {
-          localDB.setAppId(appResponse.data[0].id)
+          await localDB.setAppId(appResponse.data[0].id)
         } else {
           setShowInitializer(true)
         }
@@ -89,6 +91,21 @@ export default function Component() {
   }, [])
 
   const handleLogout = () => {
+    onLogoutModalOpen()
+  }
+
+  const confirmLogout = () => {
+    // 清除cookie
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
+    })
+    
+    // 清除localStorage
+    localStorage.clear()
+    
+    onLogoutModalClose()
     navigate("/login")
   }
 
@@ -259,6 +276,24 @@ export default function Component() {
 
         {/* Enterprise Initializer */}
         <EnterpriseInitializer isOpen={showInitializer} onClose={() => {}} onSuccess={handleInitializationSuccess} />
+
+        {/* Logout Confirmation Modal */}
+        <Modal isOpen={isLogoutModalOpen} onClose={onLogoutModalClose}>
+          <ModalContent>
+            <ModalHeader className="flex flex-col gap-1">确认退出</ModalHeader>
+            <ModalBody>
+              <p>确定要退出登录吗？</p>
+            </ModalBody>
+            <ModalFooter>
+              <Button color="danger" variant="light" onPress={onLogoutModalClose}>
+                取消
+              </Button>
+              <Button color="primary" onPress={confirmLogout}>
+                确认退出
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       </div>
     </BreadcrumbProvider>
   )
