@@ -23,7 +23,7 @@ const FormManager: React.FC = () => {
   }
 
   const handleTemplateSelect = (templateId: string) => {
-    window.open(`/form-preview/${templateId}`, "_blank")
+    window.open(`/form-create/${templateId}`, "_blank")
   }
 
   const pageActions = (

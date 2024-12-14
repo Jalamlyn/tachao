@@ -283,4 +283,6 @@ export const memHandle = (chatHistory) => {
   return memoryString
 }
 
-export const getAppId = () => ""
+export const getAppId = () => {
+  return localDB.getAppId()
+}

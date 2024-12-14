@@ -92,36 +92,30 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   }
 
   const handleDeleteClick = (template: Template, e: React.MouseEvent) => {
-    
     setSelectedTemplate(template)
     onOpen()
   }
 
   const handleShareClick = (template: Template, e: React.MouseEvent) => {
-    
     setSelectedTemplate(template)
     onShareOpen()
   }
 
   const handleAIEditClick = async (template: Template, e: React.MouseEvent) => {
-    
     navigate(`/we-chat-app/admin/documents/edit/${template.id}`, { state: { title: template.title } })
   }
 
   const handleRenameClick = (template: Template, e: React.MouseEvent) => {
-    
     setSelectedTemplate(template)
     setIsRenameModalOpen(true)
   }
 
   const handleEditTagsClick = (template: Template, e: React.MouseEvent) => {
-    
     setSelectedTemplate(template)
     setIsEditTagsModalOpen(true)
   }
 
   const handleDataManageClick = (template: Template, e: React.MouseEvent) => {
-    
     navigate(`/we-chat-app/admin/documents/data/${template.id}`, { state: { title: template.title } })
   }
 
@@ -157,21 +151,19 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   // 使用 useMemo 优化过滤后的模板列表
   const filteredTemplates = React.useMemo(() => {
     if (!internalTemplates) return []
-    
+
     let templates = [...internalTemplates]
-    
+
     // 应用标签筛选
     if (selectedTags.length > 0 && tagsIndex) {
       templates = filterItemsByTags(templates, selectedTags)
     }
-    
+
     // 应用搜索筛选
     if (searchValue) {
-      templates = templates.filter(template => 
-        template.title.toLowerCase().includes(searchValue.toLowerCase())
-      )
+      templates = templates.filter((template) => template.title.toLowerCase().includes(searchValue.toLowerCase()))
     }
-    
+
     return templates
   }, [internalTemplates, selectedTags, searchValue, filterItemsByTags, tagsIndex])
 
@@ -422,7 +414,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
       <ShareModal
         isOpen={isShareOpen}
         onClose={onShareClose}
-        shareUrl={`${window.location.origin}/form-preview/${selectedTemplate?.id || ""}`}
+        shareUrl={`${window.location.origin}/form-create/${selectedTemplate?.id || ""}`}
       />
 
       <RenameModal

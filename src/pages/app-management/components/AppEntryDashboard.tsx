@@ -142,7 +142,7 @@ export const AppEntryDashboard: React.FC = () => {
                           <Button
                             color='primary'
                             variant='flat'
-                            onPress={() => window.open(`/form-preview/${template.id}`, "_blank")}
+                            onPress={() => window.open(`/form-create/${template.id}`, "_blank")}
                           >
                             开始填写
                           </Button>

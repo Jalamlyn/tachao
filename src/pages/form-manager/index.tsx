@@ -207,7 +207,7 @@ const FormManager: React.FC = () => {
 
   const handleTemplateSelect = async (templateId: string) => {
     try {
-      window.open(`/form-preview/${templateId}?mode=create`, "_blank")
+      window.open(`/form-create/${templateId}?mode=create`, "_blank")
       setIsCreateModalOpen(false)
     } catch (error) {
       console.error("Failed to load template:", error)

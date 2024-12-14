@@ -7,7 +7,6 @@ import { useMetadata } from "@/hooks/useMetadata"
 import { parseFormConfig } from "@/utils/codeParser"
 import { Icon } from "@iconify/react"
 import { Spinner } from "@nextui-org/react"
-import { useAuthCheck } from "@/pages/form/hooks/useAuthCheck"
 
 const FormCreate: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
@@ -16,17 +15,9 @@ const FormCreate: React.FC = () => {
   const { templateId } = useParams<any>()
   const { getDetail } = useMetadata<{ config: any }>("template")
 
-  // 添加权限检查
-  const { isChecking, isAuthorized } = useAuthCheck({
-    formId: templateId!,
-    onSuccess: () => {
-      // 授权成功后加载数据
-      loadFormConfig()
-    },
-    onError: (error) => {
-      setError(error.message)
-    }
-  })
+  useEffect(() => {
+    loadFormConfig
+  }, [])
 
   const loadFormConfig = async () => {
     if (!templateId) return
