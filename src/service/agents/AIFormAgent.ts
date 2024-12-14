@@ -1,6 +1,4 @@
 import chatChunk from "../chat/chat-chunk-openai-office"
-// import chatChunk from "../chat/chat-chunk-gemini-office"
-// import chatChunk from "../chat/chat-siliconflow"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import generateFormAgentPrompt from "./prompts/form/form-agent-prompt"
@@ -12,6 +10,7 @@ export class AIFormAgent {
   private static instance: AIFormAgent
   private _rawConfig: string | null = null
   private _cachedImage: string | null = null
+  private _versionIndex: number = 0
 
   private constructor() {}
 
@@ -26,8 +25,19 @@ export class AIFormAgent {
     return this._rawConfig
   }
 
-  private setRawConfig(rawConfig: string | null): void {
+  public setRawConfig(rawConfig: string | null, versionIndex?: number): void {
     this._rawConfig = rawConfig
+    if (typeof versionIndex === 'number') {
+      this._versionIndex = versionIndex
+    }
+  }
+
+  public getVersionIndex(): number {
+    return this._versionIndex
+  }
+
+  public setVersionIndex(index: number): void {
+    this._versionIndex = index
   }
 
   public cacheImage(imageData: string): void {
@@ -51,7 +61,6 @@ export class AIFormAgent {
       return parsedConfig
     } catch (error) {
       console.error("Error parsing form config:", error, rawConfig)
-      // message.error("表单解析失败")
       throw new Error("Failed to parse form config")
     }
   }
@@ -69,14 +78,12 @@ export class AIFormAgent {
     }
     const result = await getMetadata([`resource_index`])
     try {
-      // 构建系统消息
       const cachedImage = localDB.getItem("cachedImage")
       const systemMessage = {
         role: "system" as const,
         content: generateFormAgentPrompt(this._rawConfig, !!cachedImage, result.data?.[0]?.value),
       }
 
-      // 增强用户命令，添加意图控制
       const enhancedCommand = `${command}
       [意图控制: 
       - 主要职责: 我是表单设计助手，专注于帮助用户设计和优化表单系统。
@@ -91,18 +98,14 @@ export class AIFormAgent {
         * 提供建设性建议
         * 引导用户明确需求,用户确认后再生成表单][格式要求:所有代码必须使用 \`\`\`mo 包裹, 必须返回完整代码, 不允许使用 //其他... 这样的方式来省略任何代码]`
 
-      // 构建当前用户消息，检查是否有缓存图片
       const currentUserMessage = {
         role: "user" as const,
         content: enhancedCommand,
-        // 如果有缓存图片，添加到 images 数组中
         images: cachedImage ? [cachedImage] : undefined,
       }
 
-      // 组合所有消息
       const allMessages = [systemMessage, ...messages, currentUserMessage]
 
-      // 获取AI响应
       let response = ""
       await chatChunk(
         allMessages,
@@ -116,10 +119,8 @@ export class AIFormAgent {
         "YES"
       )
 
-      // 使用完图片后清除缓存
       localDB.removeItem("cachedImage")
 
-      // 检查是否包含错误信息
       if (response.includes("<shata-ai-error>")) {
         return {
           success: false,
@@ -128,11 +129,10 @@ export class AIFormAgent {
         }
       }
 
-      // 检查是否包含表单配置
       if (response.includes("<shata-ai-code>")) {
         const parsedConfig = await this.parseConfig(response)
         if (parsedConfig) {
-          this.setRawConfig(response) // parseConfig 会返回原始配置
+          this.setRawConfig(response)
           return {
             success: true,
             config: parsedConfig.config,
@@ -141,7 +141,6 @@ export class AIFormAgent {
         }
       }
 
-      // 如果没有找到表单配置，返回成功但没有配置
       return {
         success: true,
         config: undefined,

@@ -39,10 +39,18 @@ const AIEditor: React.FC<AIEditorProps> = ({
   const [selectedAILevel, setSelectedAILevel] = useState<keyof typeof AI_LEVELS>("ADVANCED")
 
   useEffect(() => {
-    setCurrentVersion(versionControl.getCurrentVersion())
-    setIsEditing(false)
-    const rawConfig = versionControl.getCurrentVersion()?.rawConfig || ""
-    setEditedCode(extractShataAIFormContent(rawConfig))
+    const updateVersionState = () => {
+      const version = versionControl.getCurrentVersion()
+      setCurrentVersion(version)
+      setIsEditing(false)
+      const rawConfig = version?.rawConfig || ""
+      setEditedCode(extractShataAIFormContent(rawConfig))
+      
+      // 同步更新 AIFormAgent 的状态
+      AIFormAgent.setRawConfig(rawConfig, versionControl.currentIndex)
+    }
+
+    updateVersionState()
   }, [versionControl.currentIndex])
 
   const handleAILevelChange = (level: keyof typeof AI_LEVELS) => {
@@ -56,10 +64,16 @@ const AIEditor: React.FC<AIEditorProps> = ({
       const wrappedCode = wrapWithShataAIForm(editedCode)
       const parsedConfig = await parser(wrappedCode)
 
-      versionControl.addVersion({
+      const newVersion = {
         formConfig: parsedConfig.config,
         rawConfig: wrappedCode,
-      })
+      }
+
+      versionControl.addVersion(newVersion)
+
+      // 确保切换到最新版本
+      const newIndex = versionControl.versions.length - 1
+      versionControl.setCurrentIndex(newIndex)
 
       onCommandResult({
         success: true,
