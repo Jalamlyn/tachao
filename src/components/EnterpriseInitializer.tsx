@@ -96,6 +96,7 @@ const EnterpriseInitializer: React.FC<EnterpriseInitializerProps> = ({ isOpen, o
           updateProgress(1, "正在创建管理应用...")
           app = await createApp({
             name: "企业管理平台",
+            appCode: "admin-app",
             description: "企业管理平台默认应用",
             projectId: project.id,
           })

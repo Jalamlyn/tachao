@@ -41,11 +41,17 @@ export default function Component() {
       const projectResponse = await queryMyProject({
         name: "默认企业项目",
       })
-      const appResponse = await queryApps({
-        projectId: projectResponse.data[0].id,
-        name: "企业管理平台",
-      })
-      if (appResponse.data && appResponse.data.length > 0) {
+      if (projectResponse.data && projectResponse.data.length > 0) {
+        const appResponse = await queryApps({
+          projectId: projectResponse.data[0].id,
+          name: "企业管理平台",
+        })
+        if (appResponse.data && appResponse.data.length > 0) {
+          localDB.setAppId(appResponse.data[0].id)
+        } else {
+          setShowInitializer(true)
+        }
+      } else {
         setShowInitializer(true)
       }
     }
