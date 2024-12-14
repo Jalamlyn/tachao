@@ -16,6 +16,8 @@ import GlobalBreadcrumb from "../../../components/GlobalBreadcrumb"
 import ServiceSupportModal from "./ServiceSupportModal"
 import EnterpriseInitializer from "@/components/EnterpriseInitializer"
 import { localDB } from "@/utils/localDB"
+import { createModel, createModelProperty } from "@/service/apis/model"
+import message from "@/components/Message"
 
 export default function Component() {
   const { isOpen, onOpenChange } = useDisclosure()
@@ -38,8 +40,31 @@ export default function Component() {
     }
   }
 
-  const handleInitializationSuccess = () => {
-    setShowInitializer(false)
+  const handleInitializationSuccess = async () => {
+    try {
+      // 初始化企业网盘模型
+      const modelResponse = await createModel({
+        namespace: "file",
+        name: "activities",
+        description: "企业网盘文件管理",
+      })
+
+      // 创建files属性
+      await createModelProperty({
+        modelId: modelResponse.id,
+        name: "files",
+        type: "file",
+        description: "文件列表",
+        isRequired: true,
+        allowMultipleFiles: true,
+      })
+
+      setShowInitializer(false)
+      message.success("初始化成功")
+    } catch (error) {
+      console.error("Initialization error:", error)
+      message.error("初始化失败")
+    }
   }
 
   const onToggle = React.useCallback(() => {
