@@ -1,6 +1,7 @@
 import { message } from "@/components/Message"
 import { blog, jsonParse, jsonStringify } from "."
 import EventEmitter from "eventemitter3"
+import { getCurrentAccountInfo } from "@/service/apis/user"
 
 let currentAppId = localStorage.getItem("@@appId")
 if (!currentAppId) {
@@ -34,13 +35,15 @@ const logStyles = {
 const eventEmitter = new EventEmitter()
 
 export const localDB = {
-  setAppId: (appId) => {
+  setAppId: async (appId) => {
     currentAppId = appId
-    localStorage.setItem("@@appId", appId)
+    const data = await getCurrentAccountInfo()
+    localStorage.setItem(`${data.organizationId}_appId`, appId)
   },
 
   getAppId: () => {
-    return currentAppId || localStorage.getItem("@@appId")
+    const organizationId = localStorage.getItem("@@organizationId")
+    return currentAppId || localStorage.getItem(`${organizationId}_appId`)
   },
 
   // 添加控制日志输出的方法

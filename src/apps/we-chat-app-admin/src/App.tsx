@@ -18,6 +18,8 @@ import EnterpriseInitializer from "@/components/EnterpriseInitializer"
 import { localDB } from "@/utils/localDB"
 import { createModel, createModelProperty } from "@/service/apis/model"
 import message from "@/components/Message"
+import { queryMyProject } from "@/service/apis/project"
+import { queryApps } from "@/service/apis/app"
 
 export default function Component() {
   const { isOpen, onOpenChange } = useDisclosure()
@@ -33,10 +35,19 @@ export default function Component() {
     checkInitialization()
   }, [])
 
-  const checkInitialization = () => {
+  const checkInitialization = async () => {
     const appId = localDB.getAppId()
     if (!appId) {
-      setShowInitializer(true)
+      const projectResponse = await queryMyProject({
+        name: "默认企业项目",
+      })
+      const appResponse = await queryApps({
+        projectId: projectResponse.data[0].id,
+        name: "企业管理平台",
+      })
+      if (appResponse.data && appResponse.data.length > 0) {
+        setShowInitializer(true)
+      }
     }
   }
 
@@ -168,12 +179,12 @@ export default function Component() {
                   )}
                   startContent={
                     isCollapsed ? null : (
-                      <div className="relative">
+                      <div className='relative'>
                         <Icon className='flex-none text-primary-500' icon='solar:info-circle-line-duotone' width={24} />
-                        <span className="absolute -right-1 -top-1">
-                          <span className="relative flex h-2 w-2">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75"></span>
-                            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500"></span>
+                        <span className='absolute -right-1 -top-1'>
+                          <span className='relative flex h-2 w-2'>
+                            <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75'></span>
+                            <span className='relative inline-flex h-2 w-2 rounded-full bg-primary-500'></span>
                           </span>
                         </span>
                       </div>
@@ -183,20 +194,20 @@ export default function Component() {
                   onPress={onServiceModalOpen}
                 >
                   {isCollapsed ? (
-                    <div className="relative">
+                    <div className='relative'>
                       <Icon className='text-primary-500' icon='solar:info-circle-line-duotone' width={24} />
-                      <span className="absolute -right-1 -top-1">
-                        <span className="relative flex h-2 w-2">
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75"></span>
-                          <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-500"></span>
+                      <span className='absolute -right-1 -top-1'>
+                        <span className='relative flex h-2 w-2'>
+                          <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-400 opacity-75'></span>
+                          <span className='relative inline-flex h-2 w-2 rounded-full bg-primary-500'></span>
                         </span>
                       </span>
                     </div>
                   ) : (
-                    <span className="font-medium text-primary-700">增值服务</span>
+                    <span className='font-medium text-primary-700'>增值服务</span>
                   )}
                   {!isCollapsed && (
-                    <div className="absolute inset-0 -z-10 bg-gradient-to-r from-primary-500/10 to-secondary-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                    <div className='absolute inset-0 -z-10 bg-gradient-to-r from-primary-500/10 to-secondary-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100'></div>
                   )}
                 </Button>
               </Tooltip>
@@ -241,11 +252,7 @@ export default function Component() {
         <ServiceSupportModal isOpen={isServiceModalOpen} onClose={onServiceModalClose} />
 
         {/* Enterprise Initializer */}
-        <EnterpriseInitializer 
-          isOpen={showInitializer}
-          onClose={() => {}}
-          onSuccess={handleInitializationSuccess}
-        />
+        <EnterpriseInitializer isOpen={showInitializer} onClose={() => {}} onSuccess={handleInitializationSuccess} />
       </div>
     </BreadcrumbProvider>
   )
