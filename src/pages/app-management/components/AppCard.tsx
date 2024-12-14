@@ -2,7 +2,7 @@ import React from "react"
 import { Card, CardBody, CardFooter, Button, Chip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
-import { AppIndex, useAppStore } from "../store/usePageStore"
+import { AppIndex, useAppStore } from "../store/useAppStore"
 
 interface AppCardProps {
   app: AppIndex

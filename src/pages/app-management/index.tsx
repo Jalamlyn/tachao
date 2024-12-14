@@ -3,10 +3,10 @@ import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from
 import { Icon } from "@iconify/react"
 import PageLayout from "@/components/PageLayout"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
-import { AppGallery } from "./components/PageGallery"
+import { AppGallery } from "./components/AppGallery"
 import { CreateAppModal } from "./components/CreatePageModal"
 import { DevelopModal } from "./components/DevelopModal"
-import { AppIndex, useAppStore } from "./store/usePageStore"
+import { AppIndex, useAppStore } from "./store/useAppStore"
 
 const AppManagement: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()

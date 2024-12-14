@@ -1,6 +1,6 @@
 import React from "react"
-import { AppCard } from "./PageCard"
-import { AppIndex } from "../store/usePageStore"
+import { AppCard } from "./AppCard"
+import { AppIndex } from "../store/useAppStore"
 import { Icon } from "@iconify/react"
 import { Spinner } from "@nextui-org/react"
 import EmptyState from "@/components/EmptyState"

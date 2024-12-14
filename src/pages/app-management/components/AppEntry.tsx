@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
 import EmptyState from "@/components/EmptyState"
 import { FormTypeTabs } from "./FormTypeTabs"
-import AppEntryDashboard from "./PageEntryDashboard"
+import AppEntryDashboard from "./AppEntryDashboard"
 
 export const AppEntry: React.FC = () => {
   const { appId } = useParams<{ appId: string }>()
