@@ -55,6 +55,8 @@ export const getMetadata = async (names, appId = null) => {
   }
   if (appId) {
     config.headers["x-app"] = appId
+  } else {
+    return new Error("appId is required")
   }
   const res = await apiService.post(
     getUrl,
@@ -70,6 +72,8 @@ export const setMetadata = async (name, value, appId = null) => {
   let config = { headers: {} }
   if (appId) {
     config.headers["x-app"] = appId
+  } else {
+    return new Error("appId is required")
   }
   // Ensure value is a string
   const stringValue = typeof value === "string" ? value : JSON.stringify(value)

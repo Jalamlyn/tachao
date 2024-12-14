@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Progress, Card } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { createModel, createModelProperty } from "@/service/apis/model"
+import { createModel, createModelProperty, queryModelProperties, queryModels } from "@/service/apis/model"
 import { createProject, queryMyProject } from "@/service/apis/project"
 import { createApp, queryApps } from "@/service/apis/app"
 import message from "@/components/Message"
