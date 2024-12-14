@@ -265,6 +265,67 @@ const formConfig: DynamicFormConfig = {
           }
         ]
       }
+    ],
+
+    // 新增: 汇总信息配置
+    summaryGroups: [
+      {
+        key: "amounts",
+        title: "金额汇总",
+        icon: "mdi:currency-usd",
+        description: "采购申请的金额汇总信息",
+        fields: [
+          {
+            name: "totalAmount",
+            label: "采购总额",
+            type: "amount",
+            precision: 2,
+            trend: "up"
+          },
+          {
+            name: "budgetAmount",
+            label: "预算金额",
+            type: "amount",
+            precision: 2
+          },
+          {
+            name: "usageRate",
+            label: "预算使用率",
+            type: "percentage",
+            precision: 1,
+            trend: "up"
+          }
+        ],
+        layout: "grid",
+        columns: 3
+      },
+      {
+        key: "statistics",
+        title: "统计信息",
+        icon: "mdi:chart-box",
+        description: "采购申请的统计信息",
+        fields: [
+          {
+            name: "itemCount",
+            label: "物料种类",
+            type: "number",
+            format: (value) => `${value} 种`
+          },
+          {
+            name: "totalQuantity",
+            label: "采购数量",
+            type: "number",
+            format: (value) => `${value} 件`
+          },
+          {
+            name: "avgPrice",
+            label: "平均单价",
+            type: "amount",
+            precision: 2
+          }
+        ],
+        layout: "flow"
+      }
     ]
   },
 
@@ -689,6 +750,66 @@ renderConfig: {
   }
 }
 ```
+
+### 3. 汇总信息配置
+
+适用于需要展示数据汇总和统计信息的场景:
+
+```typescript
+renderConfig: {
+  summaryGroups: [
+    {
+      key: "amounts",
+      title: "金额汇总",
+      icon: "mdi:currency-usd",
+      description: "金额相关的汇总信息",
+      fields: [
+        {
+          name: "totalAmount",
+          label: "总金额",
+          type: "amount",
+          precision: 2,
+          trend: "up"  // 可选值: up | down | stable
+        },
+        {
+          name: "percentage",
+          label: "占比",
+          type: "percentage",
+          precision: 1
+        }
+      ],
+      layout: "grid",  // 布局方式: grid | flow
+      columns: 3       // 网格布局时的列数
+    },
+    {
+      key: "statistics",
+      title: "统计信息",
+      icon: "mdi:chart-box",
+      fields: [
+        {
+          name: "count",
+          label: "数量",
+          type: "number",
+          format: (value) => `${value}个`  // 自定义格式化函数
+        }
+      ],
+      layout: "flow"
+    }
+  ]
+}
+```
+
+汇总字段支持的类型:
+- amount: 金额类型,自动添加货币符号和千分位
+- percentage: 百分比类型,自动转换为百分比格式
+- number: 数字类型,支持自定义格式化
+- text: 文本类型,用于显示普通文本
+
+每个汇总字段可以配置:
+- precision: 精度(小数位数)
+- trend: 趋势指示(上升/下降/稳定)
+- format: 自定义格式化函数
+- style: 自定义样式
 
 ### 注意事项
 
