@@ -192,12 +192,12 @@ const MessageCard = React.memo(
                     if (children && children.toString().startsWith("<shata-ai-response>")) {
                       return "正在生成响应..."
                     }
-                    // if (children && children.toString().includes("</shata-ai-code>")) {
-                    //   return "✔️ 代码生成完成"
-                    // }
-                    // if (children && children.toString().startsWith("<shata-ai-code>")) {
-                    //   return "正在生成代码..."
-                    // }
+                    if (children && children.toString().includes("</shata-ai-code>")) {
+                      return "✔️ 代码生成完成"
+                    }
+                    if (children && children.toString().startsWith("<shata-ai-code>")) {
+                      return "正在生成代码..."
+                    }
                     if (children && children.toString().includes("</shata-ai-intent>")) {
                       return "✔️ 理解用户意图完成"
                     }

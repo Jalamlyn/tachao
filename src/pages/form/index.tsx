@@ -13,7 +13,6 @@ import ShareModal from "./components/ShareModal"
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
-import { useAuthCheck } from "@/pages/form/hooks/useAuthCheck"
 
 const NewForm: React.FC = () => {
   const { formId } = useParams<{ formId: string }>()
@@ -25,19 +24,8 @@ const NewForm: React.FC = () => {
   const isWechat = checkEnvironment() === "wechat"
   const [webShareSupported, setWebShareSupported] = useState(false)
 
-  // 添加权限检查
-  const { isChecking, isAuthorized } = useAuthCheck({
-    formId: formId!,
-    onSuccess: () => {
-      // 授权成功后加载数据
-      initializeForm()
-    },
-    onError: (error) => {
-      formActions.setError(error.message)
-    },
-  })
-
   useEffect(() => {
+    initializeForm()
     setWebShareSupported(navigator.share !== undefined)
   }, [])
 
@@ -57,11 +45,6 @@ const NewForm: React.FC = () => {
     }
   }
 
-  // 显示权限检查loading
-  if (isChecking) {
-    return <FormLoading />
-  }
-
   if (formState.status === "loading") {
     return <FormLoading />
   }
@@ -74,7 +57,6 @@ const NewForm: React.FC = () => {
     return <FormError error='未找到表单配置或数据' />
   }
 
-  // 其余代码保持不变...
   const generateShareLink = () => {
     return `${window.location.origin}/form/${formId}`
   }

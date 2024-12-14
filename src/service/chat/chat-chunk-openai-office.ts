@@ -2,28 +2,6 @@ import { message } from "@/components/Message"
 import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { events } from "fetch-event-stream"
-import TokenService from "../token/TokenService"
-import { AI_LEVELS } from "@/components/AIEditor/type"
-
-function processAIMessages(messages: any[]) {
-  return messages.map((message) => {
-    if (message.role === "assistant") {
-      return {
-        ...message,
-        content: message.content.map((item) => {
-          if (item.type === "text") {
-            return {
-              ...item,
-              text: item.text.replace(/<shata-ai-code>[\s\S]*?<\/shata-ai-code>/g, "已更新 system 中的现有配置"),
-            }
-          }
-          return item
-        }),
-      }
-    }
-    return message
-  })
-}
 
 export default async function chatChunkOpenAIOffice(
   messages,
@@ -36,19 +14,6 @@ export default async function chatChunkOpenAIOffice(
   // 从 sessionStorage 读取当前选择的模型
   const baseModel = sessionStorage.getItem("aiLevel") || "advanced"
   console.log("[ChatService] Using model:", baseModel)
-
-  // 检查塔币余额
-  const aiLevel = Object.entries(AI_LEVELS).find(
-    ([_, level]) => level.value === baseModel
-  )?.[0] as keyof typeof AI_LEVELS
-  const tokenCost = AI_LEVELS[aiLevel || "ADVANCED"].cost
-
-  if (isFirst) {
-    const hasEnoughTokens = await TokenService.checkBalance(tokenCost)
-    if (!hasEnoughTokens) {
-      throw new Error(`塔币余额不足，当前对话需要 ${tokenCost} 塔币`)
-    }
-  }
 
   let _messages = messages
   if (isFirst) {
@@ -91,7 +56,6 @@ export default async function chatChunkOpenAIOffice(
   let controller = new AbortController()
   fetchController.current = controller
   onCancel(() => controller.abort())
-
   try {
     const response = await fetch(apiEndPoint, {
       method: "POST",
@@ -148,10 +112,6 @@ export default async function chatChunkOpenAIOffice(
         }
       } else {
         localDB.setItem("chat-chunk-over", overFlag)
-        // 扣除塔币
-        if (isFirst) {
-          await TokenService.deductTokens(tokenCost)
-        }
       }
     }
   } catch (error) {

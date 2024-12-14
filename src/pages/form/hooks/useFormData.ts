@@ -4,8 +4,8 @@ import { parseFormConfig } from '@/utils/codeParser';
 import { aiLog } from '@/utils/AITraceLogger';
 
 export const useFormData = () => {
-  const { getDetail: getFormDetail } = useMetadata("form", { public: true });
-  const { getDetail: getTemplateDetail } = useMetadata("template", { public: true });
+  const { getDetail: getFormDetail } = useMetadata("form");
+  const { getDetail: getTemplateDetail } = useMetadata("template");
 
   const loadFormData = useCallback(async (formId: string) => {
     const traceId = aiLog.start();
