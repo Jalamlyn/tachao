@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Avatar, Button, Spacer, Tab, Tabs, Tooltip, useDisclosure } from "@nextui-org/react"
+import { Avatar, Button, Spacer, Tab, Tabs, Tooltip, useDisclosure, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useMediaQuery } from "usehooks-ts"
 import { cn } from "@nextui-org/react"
@@ -32,30 +32,38 @@ export default function Component() {
   const { isOpen: isServiceModalOpen, onOpen: onServiceModalOpen, onClose: onServiceModalClose } = useDisclosure()
   const [showInitializer, setShowInitializer] = useState(false)
   const { isOpen: isLogoutModalOpen, onOpen: onLogoutModalOpen, onClose: onLogoutModalClose } = useDisclosure()
+  const [isInitializing, setIsInitializing] = useState(true)
 
   useEffect(() => {
     checkInitialization()
   }, [])
 
   const checkInitialization = async () => {
-    const appId = localDB.getAppId()
-    if (!appId) {
-      const projectResponse = await queryMyProject({
-        name: "默认企业项目",
-      })
-      if (projectResponse.data && projectResponse.data.length > 0) {
-        const appResponse = await queryApps({
-          projectId: projectResponse.data[0].id,
-          name: "企业管理平台",
+    try {
+      const appId = localDB.getAppId()
+      if (!appId) {
+        const projectResponse = await queryMyProject({
+          name: "默认企业项目",
         })
-        if (appResponse.data && appResponse.data.length > 0) {
-          await localDB.setAppId(appResponse.data[0].id)
+        if (projectResponse.data && projectResponse.data.length > 0) {
+          const appResponse = await queryApps({
+            projectId: projectResponse.data[0].id,
+            name: "企业管理平台",
+          })
+          if (appResponse.data && appResponse.data.length > 0) {
+            await localDB.setAppId(appResponse.data[0].id)
+          } else {
+            setShowInitializer(true)
+          }
         } else {
           setShowInitializer(true)
         }
-      } else {
-        setShowInitializer(true)
       }
+    } catch (error) {
+      console.error('Initialization check failed:', error)
+      message.error('初始化检查失败')
+    } finally {
+      setIsInitializing(false)
     }
   }
 
@@ -97,16 +105,25 @@ export default function Component() {
   const confirmLogout = () => {
     // 清除cookie
     document.cookie.split(";").forEach((c) => {
-      document.cookie = c
-        .replace(/^ +/, "")
-        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
     })
-    
+
     // 清除localStorage
     localStorage.clear()
-    
+    sessionStorage.clear()
     onLogoutModalClose()
     navigate("/login")
+  }
+
+  if (isInitializing) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <Spinner size="lg" />
+          <div>正在初始化系统...</div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -280,15 +297,15 @@ export default function Component() {
         {/* Logout Confirmation Modal */}
         <Modal isOpen={isLogoutModalOpen} onClose={onLogoutModalClose}>
           <ModalContent>
-            <ModalHeader className="flex flex-col gap-1">确认退出</ModalHeader>
+            <ModalHeader className='flex flex-col gap-1'>确认退出</ModalHeader>
             <ModalBody>
               <p>确定要退出登录吗？</p>
             </ModalBody>
             <ModalFooter>
-              <Button color="danger" variant="light" onPress={onLogoutModalClose}>
+              <Button color='danger' variant='light' onPress={onLogoutModalClose}>
                 取消
               </Button>
-              <Button color="primary" onPress={confirmLogout}>
+              <Button color='primary' onPress={confirmLogout}>
                 确认退出
               </Button>
             </ModalFooter>
