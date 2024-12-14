@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react"
-import { Tabs, Tab, Card, CardBody, Spinner } from "@nextui-org/react"
+import { Tabs, Tab, Card, CardBody, Spinner, ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import AccountManagement from "./AccountManagement"
 import RoleManagement from "./RoleManagement"
@@ -26,7 +26,7 @@ const SystemInfo: React.FC = () => {
       const projectRes = await queryMyProject({ name: "默认企业项目" })
       if (projectRes.data && projectRes.data.length > 0) {
         setProject(projectRes.data[0])
-        
+
         // 获取应用信息
         const appRes = await queryApps({
           projectId: projectRes.data[0].id,
@@ -58,18 +58,18 @@ const SystemInfo: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <Spinner size="lg" />
+      <div className='flex items-center justify-center p-8'>
+        <Spinner size='lg' />
       </div>
     )
   }
 
   const InfoCard = ({ title, icon, children }) => (
-    <Card className="w-full">
+    <Card className='w-full'>
       <CardBody>
-        <div className="flex items-center gap-2 mb-4">
-          <Icon icon={icon} className="w-6 h-6 text-primary" />
-          <h3 className="text-lg font-medium">{title}</h3>
+        <div className='flex items-center gap-2 mb-4'>
+          <Icon icon={icon} className='w-6 h-6 text-primary' />
+          <h3 className='text-lg font-medium'>{title}</h3>
         </div>
         {children}
       </CardBody>
@@ -77,44 +77,39 @@ const SystemInfo: React.FC = () => {
   )
 
   const InfoItem = ({ label, value }) => (
-    <div className="flex justify-between items-center py-2 border-b border-default-200 last:border-none">
-      <span className="text-default-600">{label}</span>
-      <span className="font-medium">{value}</span>
+    <div className='flex justify-between items-center py-2 border-b border-default-200 last:border-none'>
+      <span className='text-default-600'>{label}</span>
+      <span className='font-medium'>{value}</span>
     </div>
   )
 
   return (
-    <div className="grid gap-6 p-4">
-      <InfoCard title="项目信息" icon="solar:folder-with-files-bold-duotone">
-        <InfoItem label="项目名称" value={project?.name || "未初始化"} />
-        <InfoItem label="项目描述" value={project?.description || "暂无描述"} />
-        <InfoItem label="创建时间" value={project?.createdAt ? new Date(project.createdAt).toLocaleString() : "-"} />
+    <div className='grid gap-6 p-4'>
+      <InfoCard title='项目信息' icon='solar:folder-with-files-bold-duotone'>
+        <InfoItem label='项目名称' value={project?.name || "未初始化"} />
+        <InfoItem label='项目描述' value={project?.description || "暂无描述"} />
+        <InfoItem label='创建时间' value={project?.createdAt ? new Date(project.createdAt).toLocaleString() : "-"} />
       </InfoCard>
 
-      <InfoCard title="应用信息" icon="solar:widget-bold-duotone">
-        <InfoItem label="应用名称" value={app?.name || "未初始化"} />
-        <InfoItem label="应用代码" value={app?.appCode || "-"} />
-        <InfoItem label="创建时间" value={app?.createdAt ? new Date(app.createdAt).toLocaleString() : "-"} />
+      <InfoCard title='应用信息' icon='solar:widget-bold-duotone'>
+        <InfoItem label='应用名称' value={app?.name || "未初始化"} />
+        <InfoItem label='应用代码' value={app?.appCode || "-"} />
+        <InfoItem label='创建时间' value={app?.createdAt ? new Date(app.createdAt).toLocaleString() : "-"} />
       </InfoCard>
 
-      <InfoCard title="模型信息" icon="solar:database-bold-duotone">
-        <InfoItem label="模型名称" value={model?.name || "未初始化"} />
-        <InfoItem label="命名空间" value={model?.namespace || "-"} />
-        <InfoItem label="描述" value={model?.description || "暂无描述"} />
+      <InfoCard title='模型信息' icon='solar:database-bold-duotone'>
+        <InfoItem label='模型名称' value={model?.name || "未初始化"} />
+        <InfoItem label='命名空间' value={model?.namespace || "-"} />
+        <InfoItem label='描述' value={model?.description || "暂无描述"} />
       </InfoCard>
 
-      <InfoCard title="账户信息" icon="solar:wallet-money-bold-duotone">
-        <InfoItem 
-          label="算力余额" 
-          value={account?.computePower ? `${account.computePower} 算力` : "0 算力"} 
+      <InfoCard title='账户信息' icon='solar:wallet-money-bold-duotone'>
+        <InfoItem label='算力余额' value={account?.computePower ? `${account.computePower} 算力` : "0 算力"} />
+        <InfoItem
+          label='塔币额度'
+          value={account?.computePower ? `${(account.computePower / 100).toFixed(2)} 塔币` : "0 塔币"}
         />
-        <InfoItem 
-          label="塔币额度" 
-          value={account?.computePower ? `${(account.computePower / 100).toFixed(2)} 塔币` : "0 塔币"} 
-        />
-        <div className="mt-2 text-sm text-default-500">
-          注: 100算力 = 1塔币
-        </div>
+        <div className='mt-2 text-sm text-default-500'>注: 100算力 = 1塔币</div>
       </InfoCard>
     </div>
   )
@@ -131,13 +126,15 @@ const EnterpriseSettings: React.FC = () => {
                 <AccountManagement />
               </div>
             </Tab>
+            <Tab key='system' title='系统信息'>
+              <ScrollShadow className='h-[calc(100vh-300px)]'>
+                <SystemInfo />
+              </ScrollShadow>
+            </Tab>
             <Tab isDisabled key='roles' title='角色管理'>
               <div className='p-4'>
                 <RoleManagement />
               </div>
-            </Tab>
-            <Tab key='system' title='系统信息'>
-              <SystemInfo />
             </Tab>
           </Tabs>
         </CardBody>

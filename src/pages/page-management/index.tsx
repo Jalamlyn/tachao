@@ -3,10 +3,10 @@ import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from
 import { Icon } from "@iconify/react"
 import PageLayout from "@/components/PageLayout"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
-import { AppGallery } from "./components/AppGallery"
-import { CreateAppModal } from "./components/CreateAppModal"
+import { AppGallery } from "./components/PageGallery"
+import { CreateAppModal } from "./components/CreatePageModal"
 import { DevelopModal } from "./components/DevelopModal"
-import { AppIndex, useAppStore } from "./store/useAppStore"
+import { AppIndex, useAppStore } from "./store/usePageStore"
 
 const AppManagement: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()
@@ -41,7 +41,7 @@ const AppManagement: React.FC = () => {
   useEffect(() => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
-      { label: "应用管理", href: "/we-chat-app/admin/apps" },
+      { label: "页面管理", href: "/we-chat-app/admin/apps" },
     ])
   }, [])
 
@@ -65,12 +65,12 @@ const AppManagement: React.FC = () => {
 
   const pageActions = (
     <Button color='primary' startContent={<Icon icon='mdi:plus' />} onPress={() => setCreateModalOpen(true)}>
-      创建应用
+      创建页面
     </Button>
   )
 
   return (
-    <PageLayout title='应用管理' titleIcon='mdi:apps' actions={pageActions}>
+    <PageLayout title='页面管理' titleIcon='mdi:apps' actions={pageActions}>
       <div className='h-[calc(100vh-200px)] overflow-auto'>
         <AppGallery apps={apps} isLoading={isLoading} onDevelopClick={handleDevelopClick} />
       </div>

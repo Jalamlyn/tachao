@@ -15,7 +15,7 @@ import {
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useMetadata } from "@/hooks/useMetadata"
-import { AppIndex } from "../store/useAppStore"
+import { AppIndex } from "../store/usePageStore"
 import message from "@/components/Message"
 import wecomqr from "../../../../public/wechat.jpg"
 

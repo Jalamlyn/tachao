@@ -8,7 +8,7 @@ import {
   Button,
   Input
 } from '@nextui-org/react'
-import { CreateAppInput } from '../store/useAppStore'
+import { CreateAppInput } from '../store/usePageStore'
 
 interface CreateAppModalProps {
   isOpen: boolean
@@ -43,7 +43,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({
       }}
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">创建应用</ModalHeader>
+        <ModalHeader className="flex flex-col gap-1">创建页面</ModalHeader>
         <ModalBody>
           <Input
             label="应用名称"

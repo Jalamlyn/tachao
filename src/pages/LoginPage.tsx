@@ -32,7 +32,7 @@ export default function WeChatLoginPage() {
   })
 
   useEffect(() => {
-    const savedLoginData = localStorage.getItem("wechatLoginData")
+    const savedLoginData = localStorage.getItem("loginData")
     if (savedLoginData) {
       const parsedData = jsonParse(savedLoginData)
       loginData.current = parsedData
@@ -77,9 +77,9 @@ export default function WeChatLoginPage() {
 
       if (res === "has token") {
         if (rememberMe) {
-          localStorage.setItem("wechatLoginData", jsonStringify(loginData.current))
+          localStorage.setItem("loginData", jsonStringify(loginData.current))
         } else {
-          localStorage.removeItem("wechatLoginData")
+          localStorage.removeItem("loginData")
         }
 
         const callback = new URL(location.href).searchParams.get("callback")
@@ -87,7 +87,7 @@ export default function WeChatLoginPage() {
         if (callback) {
           window.location.href = callback
         } else {
-          navigate("/we-chat-app/admin")
+          window.location.href = "/we-chat-app/admin"
         }
       } else {
         message.error(t("login_failed"))

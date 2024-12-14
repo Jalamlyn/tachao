@@ -37,12 +37,12 @@ const eventEmitter = new EventEmitter()
 export const localDB = {
   setAppId: async (appId) => {
     currentAppId = appId
-    const loginData = jsonParse(localStorage.getItem("wechatLoginData"))
+    const loginData = jsonParse(localStorage.getItem("loginData"))
     localStorage.setItem(`${loginData.organizationId}_appId`, appId)
   },
 
   getAppId: () => {
-    const loginData = jsonParse(localStorage.getItem("wechatLoginData"))
+    const loginData = jsonParse(localStorage.getItem("loginData"))
     if (loginData) {
       return currentAppId || localStorage.getItem(`${loginData.organizationId}_appId`)
     } else {

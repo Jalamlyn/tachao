@@ -36,10 +36,9 @@ export default function Component() {
 
   useEffect(() => {
     checkInitialization()
-    const loginData = localStorage.getItem("loginData")
-    if (loginData) {
-      const parsedData = JSON.parse(loginData)
-      setEnterpriseName(parsedData.enterpriseName || "")
+    const cachedLabel = localStorage.getItem("cachedLabel")
+    if (cachedLabel) {
+      setEnterpriseName(cachedLabel || "")
     }
   }, [])
 
@@ -146,7 +145,7 @@ export default function Component() {
                 "justify-center gap-0 pl-0": isCollapsed,
               })}
             >
-              <span className={cn("text-lg font-bold", { "hidden": isCollapsed })}>
+              <span className={cn("text-medium font-bold", { hidden: isCollapsed })}>
                 {enterpriseName || "企业管理平台"}
               </span>
               <div className={cn("flex-end flex", { hidden: isCollapsed })}>
