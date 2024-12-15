@@ -430,13 +430,18 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
         {/* 表格 */}
         {renderTables()}
+
         {/* 汇总信息 */}
         {renderConfig.summaryGroups && (
           <div className={cn(styles["form-card"])}>
             <h2 className={cn(styles["form-title"])}>汇总信息</h2>
-            <Summary groups={renderConfig.summaryGroups} values={form.getValues()} />
+            <Summary 
+              groups={renderConfig.summaryGroups} 
+              form={form}  // 修改这里，传递 form 而不是 values
+            />
           </div>
         )}
+
         {/* 流程确认 */}
         {renderConfig.processSteps && (
           <div className={cn(styles["form-card"])}>
