@@ -84,9 +84,8 @@ export class AIFormAgent {
         content: generateFormAgentPrompt(this._rawConfig, !!cachedImage, result.data?.[0]?.value),
       }
 
-      const enhancedCommand = `${command}
-      [意图控制: 
-      - 主要职责: 我是表单设计助手，专注于帮助用户设计和优化表单系统。
+      const enhancedCommand = `这是我的问题:${command}
+      [对于我的问题: 
       - 回答策略:
         * 对于表单直接相关问题：提供具体解决方案
         * 对于业务相关问题：进行分析并给出建议
@@ -96,7 +95,7 @@ export class AIFormAgent {
         * 优先理解用户意图
         * 结合上下文分析
         * 提供建设性建议
-        * 引导用户明确需求,用户确认后再生成表单][格式要求:所有代码必须使用 \`\`\`mo 包裹, 必须返回完整代码, 不允许使用 //其他... 这样的方式来省略任何代码]`
+        * 引导我明确需求,我确认后再生成表单][格式要求:所有代码必须使用 \`\`\`mo 包裹, 必须返回完整代码, 不允许使用 //其他... 这样的方式来省略任何代码]`
 
       const currentUserMessage = {
         role: "user" as const,

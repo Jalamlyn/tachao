@@ -45,7 +45,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
       setIsEditing(false)
       const rawConfig = version?.rawConfig || ""
       setEditedCode(extractShataAIFormContent(rawConfig))
-      
+
       // 同步更新 AIFormAgent 的状态
       AIFormAgent.setRawConfig(rawConfig, versionControl.currentIndex)
     }
@@ -70,10 +70,6 @@ const AIEditor: React.FC<AIEditorProps> = ({
       }
 
       versionControl.addVersion(newVersion)
-
-      // 确保切换到最新版本
-      const newIndex = versionControl.versions.length - 1
-      versionControl.setCurrentIndex(newIndex)
 
       onCommandResult({
         success: true,

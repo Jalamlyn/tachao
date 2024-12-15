@@ -92,6 +92,7 @@ export function useVersionControl<T>() {
     currentIndex,
     addVersion,
     getCurrentVersion,
+    setCurrentIndex,
     getVersion,
     rollback,
     forward,
