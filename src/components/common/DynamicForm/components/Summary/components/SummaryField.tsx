@@ -3,19 +3,22 @@ import { Icon } from "@iconify/react"
 import { cn } from "@/theme/cn"
 import { SummaryField as SummaryFieldType } from "../../../types/summary"
 import { getDefaultFormatter } from "../utils/formatters"
+import { FormField, FormItem, FormControl } from "@/components/ui/form"
+import { UseFormReturn } from "react-hook-form"
 
 interface SummaryFieldProps extends SummaryFieldType {
-  value: any
+  form: UseFormReturn<any>
 }
 
 const SummaryField: React.FC<SummaryFieldProps> = ({
   label,
-  value,
+  name,
   type,
   trend,
   precision = 2,
   style,
-  format
+  format,
+  form
 }) => {
   const formatter = format || getDefaultFormatter(type)
   
@@ -35,25 +38,35 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
   }
 
   return (
-    <div className={cn(
-      "p-4 bg-gray-50 rounded-lg",
-      "transition-all duration-200",
-      "hover:bg-gray-100"
-    )}>
-      <div className="text-sm text-gray-500">{label}</div>
-      <div className="mt-1 flex items-center">
-        <span 
-          className={cn(
-            "text-xl font-bold",
-            type === 'amount' && 'font-mono'
-          )} 
-          style={style}
-        >
-          {formatter(value, precision)}
-        </span>
-        {renderTrend()}
-      </div>
-    </div>
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormControl>
+            <div className={cn(
+              "p-4 bg-gray-50 rounded-lg",
+              "transition-all duration-200",
+              "hover:bg-gray-100"
+            )}>
+              <div className="text-sm text-gray-500">{label}</div>
+              <div className="mt-1 flex items-center">
+                <span 
+                  className={cn(
+                    "text-xl font-bold",
+                    type === 'amount' && 'font-mono'
+                  )} 
+                  style={style}
+                >
+                  {formatter(field.value, precision)}
+                </span>
+                {renderTrend()}
+              </div>
+            </div>
+          </FormControl>
+        </FormItem>
+      )}
+    />
   )
 }
 

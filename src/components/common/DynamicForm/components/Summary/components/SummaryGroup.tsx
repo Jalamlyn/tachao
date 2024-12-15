@@ -3,9 +3,10 @@ import { Icon } from "@iconify/react"
 import { cn } from "@/theme/cn"
 import { SummaryGroup as SummaryGroupType } from "../../../types/summary"
 import SummaryField from "./SummaryField"
+import { UseFormReturn } from "react-hook-form"
 
-interface SummaryGroupProps extends SummaryGroupType {
-  values: Record<string, any>
+interface SummaryGroupProps extends Omit<SummaryGroupType, 'values'> {
+  form: UseFormReturn<any>
 }
 
 const SummaryGroup: React.FC<SummaryGroupProps> = ({
@@ -15,7 +16,7 @@ const SummaryGroup: React.FC<SummaryGroupProps> = ({
   fields,
   layout = 'grid',
   columns = 3,
-  values
+  form
 }) => {
   return (
     <div className="space-y-4">
@@ -37,7 +38,7 @@ const SummaryGroup: React.FC<SummaryGroupProps> = ({
           <SummaryField
             key={field.name}
             {...field}
-            value={values[field.name]}
+            form={form}
           />
         ))}
       </div>

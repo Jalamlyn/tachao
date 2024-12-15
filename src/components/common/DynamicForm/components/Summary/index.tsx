@@ -2,10 +2,15 @@ import React from "react"
 import { cn } from "@/theme/cn"
 import { SummaryProps } from "../../types/summary"
 import SummaryGroup from "./components/SummaryGroup"
+import { UseFormReturn } from "react-hook-form"
 
-const Summary: React.FC<SummaryProps> = ({
+interface ExtendedSummaryProps extends Omit<SummaryProps, 'values'> {
+  form: UseFormReturn<any>
+}
+
+const Summary: React.FC<ExtendedSummaryProps> = ({
   groups,
-  values,
+  form,
   className,
   style
 }) => {
@@ -20,7 +25,7 @@ const Summary: React.FC<SummaryProps> = ({
         <SummaryGroup
           key={group.key}
           {...group}
-          values={values}
+          form={form}
         />
       ))}
     </div>
