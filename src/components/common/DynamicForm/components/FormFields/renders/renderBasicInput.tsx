@@ -4,6 +4,7 @@ import { FormField } from "../../../types"
 import FormFieldWrapper from "../FormFieldWrapper"
 import BasicInput from "../BasicInput"
 import { cn } from "@/theme/cn"
+import { FormatterService } from "../../../utils/formatters"
 
 export const renderBasicInput = (
   field: FormField,
@@ -21,27 +22,36 @@ export const renderBasicInput = (
       tooltip={field.tooltip}
       required={field.required}
     >
-      {(formField) => (
-        <BasicInput
-          type={field.type}
-          field={{
-            ...formField,
-            onChange: (e: any) => {
-              formField.onChange(e)
-              onChange?.(field.name, e.target.value)
-            },
-          }}
-          className={cn(
-            field.type === "number" ? "text-right font-mono" : "",
-            "w-full rounded-md",
-            "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
-            "transition-colors duration-200",
-            "placeholder:text-gray-400",
-            field.className
-          )}
-          placeholder={field.placeholder}
-        />
-      )}
+      {(formField) => {
+        // 使用新的格式化系统
+        const formattedValue = field.formatConfig
+          ? FormatterService.format(formField.value, field.formatConfig)
+          : { formattedValue: formField.value, style: undefined }
+
+        return (
+          <BasicInput
+            type={field.type}
+            field={{
+              ...formField,
+              value: isEditable ? formField.value : formattedValue.formattedValue,
+              onChange: (e: any) => {
+                formField.onChange(e)
+                onChange?.(field.name, e.target.value)
+              },
+            }}
+            className={cn(
+              field.type === "number" ? "text-right font-mono" : "",
+              "w-full rounded-md",
+              "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+              "transition-colors duration-200",
+              "placeholder:text-gray-400",
+              field.className
+            )}
+            style={formattedValue.style}
+            placeholder={field.placeholder}
+          />
+        )
+      }}
     </FormFieldWrapper>
   )
 }

@@ -5,6 +5,7 @@ import { SummaryField as SummaryFieldType } from "../../../types/summary"
 import { getDefaultFormatter } from "../utils/formatters"
 import { FormField, FormItem, FormControl } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
+import { FormatterService } from "../../../utils/formatters"
 
 interface SummaryFieldProps extends SummaryFieldType {
   form: UseFormReturn<any>
@@ -18,9 +19,11 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
   precision = 2,
   style,
   format,
+  formatConfig,
   form,
 }) => {
-  const formatter = format || getDefaultFormatter(type)
+  // 保留原有的格式化器以保持向后兼容
+  const legacyFormatter = format || getDefaultFormatter(type)
 
   const renderTrend = () => {
     if (!trend) return null
@@ -42,8 +45,16 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
             <div className={cn("p-4 bg-gray-50 rounded-lg", "transition-all duration-200", "hover:bg-gray-100")}>
               <div className='text-sm text-gray-500'>{label}</div>
               <div className='mt-1 flex items-center'>
-                <span className={cn("text-xl font-bold", type === "amount" && "font-mono")} style={style}>
-                  {formatter(field.value, precision)}
+                <span 
+                  className={cn("text-xl font-bold", type === "amount" && "font-mono")} 
+                  style={{
+                    ...style,
+                    ...(formatConfig && FormatterService.format(field.value, formatConfig).style)
+                  }}
+                >
+                  {formatConfig 
+                    ? FormatterService.format(field.value, formatConfig).formattedValue
+                    : legacyFormatter(field.value, precision)}
                 </span>
                 {renderTrend()}
               </div>

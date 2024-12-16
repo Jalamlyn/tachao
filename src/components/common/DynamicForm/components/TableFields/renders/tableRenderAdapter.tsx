@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Input } from "@/components/ui/input"
 import { cn } from "@/theme/cn"
 import { TableColumn, TableRenderProps } from "../../../types"
+import { FormatterService } from "../../../utils/formatters"
 
 interface TableCellProps {
   column: TableColumn
@@ -129,28 +130,37 @@ const renderTableInput = ({ column, rowIndex, tableProps }: TableCellProps) => {
     <FormField
       control={form.control}
       name={cellFieldName}
-      render={({ field }) => (
-        <FormItem className="w-full">
-          <FormControl>
-            <Input
-              {...field}
-              type={column.type}
-              disabled={!isEditable || column.disabled}
-              className={cn(
-                "min-h-[2rem] h-8 px-2",
-                "border-0 focus:ring-0 bg-transparent",
-                column.type === "number" && "text-right font-mono",
-                "placeholder:text-gray-400"
-              )}
-              placeholder={column.placeholder}
-              onChange={(e) => {
-                field.onChange(e)
-                onChange?.(cellFieldName, e.target.value)
-              }}
-            />
-          </FormControl>
-        </FormItem>
-      )}
+      render={({ field }) => {
+        // 使用新的格式化系统
+        const formattedValue = column.formatConfig
+          ? FormatterService.format(field.value, column.formatConfig)
+          : { formattedValue: field.value, style: undefined }
+
+        return (
+          <FormItem className="w-full">
+            <FormControl>
+              <Input
+                {...field}
+                value={isEditable ? field.value : formattedValue.formattedValue}
+                type={column.type}
+                disabled={!isEditable || column.disabled}
+                className={cn(
+                  "min-h-[2rem] h-8 px-2",
+                  "border-0 focus:ring-0 bg-transparent",
+                  column.type === "number" && "text-right font-mono",
+                  "placeholder:text-gray-400"
+                )}
+                style={formattedValue.style}
+                placeholder={column.placeholder}
+                onChange={(e) => {
+                  field.onChange(e)
+                  onChange?.(cellFieldName, e.target.value)
+                }}
+              />
+            </FormControl>
+          </FormItem>
+        )
+      }}
     />
   )
 }
