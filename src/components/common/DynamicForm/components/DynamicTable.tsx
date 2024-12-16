@@ -46,15 +46,12 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     defaultValue: [],
   })
 
-  // 添加日志：监控表格数据变化
   useEffect(() => {
     //console.log(`[DynamicTable] Table data changed for ${fieldName}:`, tableData)
   }, [tableData, fieldName])
 
-  // 处理资源选择后的字段映射
   const handleResourceSelect = useCallback(
     (rowIndex: number, columnKey: string, selected: any) => {
-      //console.log(`[DynamicTable] Resource selected for row ${rowIndex}, column ${columnKey}:`, selected)
       if (!selected || !selected[0]) return
 
       const resource = selected[0]
@@ -73,7 +70,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             const value = resource[mapping]
             if (value !== undefined) {
               form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value)
-              //console.log(`[DynamicTable] Mapped value for ${targetField}:`, value)
             }
           } else {
             if (mapping.condition && !mapping.condition(resource)) {
@@ -84,13 +80,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
               const values = mapping.fields.map((field) => resource[field])
               const value = mapping.transform ? mapping.transform(values) : values.join(" ")
               form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value)
-              //console.log(`[DynamicTable] Mapped multiple fields for ${targetField}:`, value)
             } else {
               const value = resource[mapping.field]
               const transformedValue = mapping.transform ? mapping.transform(value) : value
               if (transformedValue !== undefined) {
                 form.setValue(`${fieldName}.${rowIndex}.${targetField}`, transformedValue)
-                //console.log(`[DynamicTable] Mapped transformed value for ${targetField}:`, transformedValue)
               }
             }
           }
@@ -100,9 +94,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     [config.columns, fieldName, form]
   )
 
-  // 添加默认值初始化逻辑
   const handleAddRow = useCallback(() => {
-    //console.log("[DynamicTable] Adding new row with default values")
     const newRow = config.columns.reduce(
       (acc, column) => {
         switch (column.type) {
@@ -128,20 +120,15 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     )
 
     append(newRow)
-    //console.log("[DynamicTable] New row added:", newRow)
-    //console.log("[DynamicTable] Current form values:", form.getValues())
-  }, [config.columns, append, form])
+  }, [config.columns, append])
 
   const handleDeleteRow = useCallback(
     (index: number) => {
-      //console.log(`[DynamicTable] Deleting row at index ${index}`)
       remove(index)
-      //console.log("[DynamicTable] Current form values after deletion:", form.getValues())
     },
-    [remove, form]
+    [remove]
   )
 
-  // 渲染单元格
   const renderCell = (column: TableConfig["columns"][0], rowIndex: number) => {
     const cellFieldName = `${fieldName}.${rowIndex}.${column.key}`
     const isFieldEditable = isEditable && column.editable !== false && !column.isMappedField
@@ -218,97 +205,132 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     <div>
       {config.toolbar}
 
-      <div className='hidden md:block overflow-x-auto'>
-        <div className='min-w-full inline-block align-middle'>
-          <div className='overflow-x-auto border rounded-lg'>
-            <Table>
-              <TableHeader className='bg-gray-100'>
-                <TableRow>
-                  {config.columns.map((column) => (
-                    <TableHead
-                      key={column.key}
-                      style={{
-                        width: column.width,
-                        minWidth: column.width || "80px",
-                      }}
-                      className='border border-gray-200 whitespace-nowrap'
-                    >
-                      <div className='flex items-center gap-1'>
-                        {column.title}
-                        {column.isMappedField && (
-                          <Icon icon='mdi:link-variant' className='text-gray-400' title='自动填充字段' />
-                        )}
-                      </div>
-                    </TableHead>
-                  ))}
-                  {isEditable && <TableHead className='border border-gray-200 w-[80px]'>操作</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {fields.map((field, rowIndex) => (
-                  <TableRow key={field.id}>
+      <div className='w-full'>
+        {/* 桌面端表格视图 */}
+        <div className='hidden md:block overflow-x-auto'>
+          <div className='min-w-full inline-block align-middle'>
+            <div className='overflow-x-auto border rounded-lg'>
+              <Table>
+                <TableHeader className='bg-gray-100'>
+                  <TableRow>
                     {config.columns.map((column) => (
-                      <TableCell
+                      <TableHead
                         key={column.key}
-                        className={cn("border border-gray-200", column.isMappedField && "bg-gray-50")}
                         style={{
+                          width: column.width,
                           minWidth: column.width || "80px",
                         }}
+                        className='border border-gray-200 whitespace-nowrap'
                       >
-                        {renderCell(column, rowIndex)}
-                      </TableCell>
+                        <div className='flex items-center gap-1'>
+                          {column.title}
+                          {column.isMappedField && (
+                            <Icon icon='mdi:link-variant' className='text-gray-400' title='自动填充字段' />
+                          )}
+                        </div>
+                      </TableHead>
                     ))}
-                    {isEditable && (
-                      <TableCell className='border border-gray-200 w-[80px]'>
-                        <Button
-                          isIconOnly
-                          color='danger'
-                          variant='light'
-                          size='sm'
-                          onClick={() => handleDeleteRow(rowIndex)}
+                    {isEditable && <TableHead className='border border-gray-200 w-[80px]'>操作</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {fields.map((field, rowIndex) => (
+                    <TableRow key={field.id}>
+                      {config.columns.map((column) => (
+                        <TableCell
+                          key={column.key}
+                          className={cn("border border-gray-200", column.isMappedField && "bg-gray-50")}
+                          style={{
+                            minWidth: column.width || "80px",
+                          }}
                         >
-                          <Icon icon='mdi:delete' className='w-4 h-4' />
-                        </Button>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-                {config.summary?.show && (
-                  <TableRow className={cn("bg-default-50", config.summary.className)} style={config.summary.style}>
-                    {config.columns.map((column) => (
-                      <TableCell
-                        key={column.key}
-                        className='border border-gray-200'
-                        style={{
-                          minWidth: column.width || "80px",
-                        }}
-                      >
-                        {renderSummaryCell(column)}
-                      </TableCell>
-                    ))}
-                    {isEditable && <TableCell className='border border-gray-200 w-[80px]' />}
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                          {renderCell(column, rowIndex)}
+                        </TableCell>
+                      ))}
+                      {isEditable && (
+                        <TableCell className='border border-gray-200 w-[80px]'>
+                          <Button
+                            isIconOnly
+                            color='danger'
+                            variant='light'
+                            size='sm'
+                            onClick={() => handleDeleteRow(rowIndex)}
+                          >
+                            <Icon icon='mdi:delete' className='w-4 h-4' />
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                  {config.summary?.show && (
+                    <TableRow className={cn("bg-default-50", config.summary.className)} style={config.summary.style}>
+                      {config.columns.map((column) => (
+                        <TableCell
+                          key={column.key}
+                          className='border border-gray-200'
+                          style={{
+                            minWidth: column.width || "80px",
+                          }}
+                        >
+                          {renderSummaryCell(column)}
+                        </TableCell>
+                      ))}
+                      {isEditable && <TableCell className='border border-gray-200 w-[80px]' />}
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </div>
-      </div>
 
-      {isEditable && (
-        <motion.div className='mt-4' initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Button
-            color='primary'
-            variant='flat'
-            size='sm'
-            onClick={handleAddRow}
-            startContent={<Icon icon='mdi:plus' className='w-4 h-4' />}
-            className='w-full md:w-auto'
+        {/* 移动端卡片视图 */}
+        <div className='md:hidden space-y-4'>
+          {fields.map((field, rowIndex) => (
+            <div key={field.id} className='bg-white rounded-lg border shadow-sm p-4 space-y-3'>
+              {config.columns.map((column) => (
+                <div key={column.key} className='flex justify-between items-center'>
+                  <span className='text-sm text-gray-500'>{column.title}</span>
+                  <div className='flex-1 ml-4'>{renderCell(column, rowIndex)}</div>
+                </div>
+              ))}
+              {isEditable && (
+                <div className='flex justify-end pt-2 border-t'>
+                  <Button
+                    isIconOnly
+                    color='danger'
+                    variant='light'
+                    size='sm'
+                    onClick={() => handleDeleteRow(rowIndex)}
+                  >
+                    <Icon icon='mdi:delete' className='w-4 h-4' />
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* 添加行按钮 */}
+        {isEditable && (
+          <motion.div
+            className='sticky bottom-4 mt-4 flex justify-center md:relative md:bottom-auto'
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
           >
-            添加行
-          </Button>
-        </motion.div>
-      )}
+            <Button
+              color='primary'
+              variant='flat'
+              size='sm'
+              onClick={handleAddRow}
+              startContent={<Icon icon='mdi:plus' className='w-4 h-4' />}
+              className='w-full md:w-auto shadow-lg md:shadow-none'
+            >
+              添加行
+            </Button>
+          </motion.div>
+        )}
+      </div>
     </div>
   )
 }
