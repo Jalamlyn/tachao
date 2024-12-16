@@ -9,7 +9,7 @@ export const defaultToolbarButtons: ToolbarButton[] = [
     color: "primary",
     variant: "flat",
     onClick: () => {
-      console.log("Default save action")
+      //console.log("Default save action")
     },
   },
   {
@@ -19,7 +19,7 @@ export const defaultToolbarButtons: ToolbarButton[] = [
     color: "primary",
     variant: "flat",
     onClick: () => {
-      console.log("Default edit action")
+      //console.log("Default edit action")
     },
   },
   {
@@ -29,7 +29,7 @@ export const defaultToolbarButtons: ToolbarButton[] = [
     color: "primary",
     variant: "flat",
     onClick: () => {
-      console.log("Default print action")
+      //console.log("Default print action")
     },
   },
   {
@@ -39,7 +39,7 @@ export const defaultToolbarButtons: ToolbarButton[] = [
     color: "default",
     variant: "flat",
     onClick: () => {
-      console.log("Default cancel action")
+      //console.log("Default cancel action")
     },
   },
 ]

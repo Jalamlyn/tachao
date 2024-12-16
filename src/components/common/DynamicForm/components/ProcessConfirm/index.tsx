@@ -82,14 +82,14 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
 
   // 计算进度
   const progress = useMemo(() => {
-    console.log("Calculating progress with values:", formValues)
+    //console.log("Calculating progress with values:", formValues)
     return calculateProgress()
   }, [calculateProgress, formValues])
 
   // 添加表单值变化监听
   // React.useEffect(() => {
   //   const subscription = form.watch(() => {
-  //     console.log("Form values changed:", form.getValues(fieldName))
+  //     //console.log("Form values changed:", form.getValues(fieldName))
   //     form.trigger(fieldName)
   //   })
   //   return () => subscription.unsubscribe()
@@ -133,7 +133,7 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
 
   // 新增：监听表单变化并触发重新渲染
   React.useEffect(() => {
-    console.log("Current progress:", progress)
+    //console.log("Current progress:", progress)
     const subscription = form.watch(() => {
       form.trigger(fieldName)
     })

@@ -26,12 +26,6 @@ const ProcessStepForm: React.FC<ProcessStepFormProps> = ({
   const handleFieldChange = (field: string, value: any) => {
     // 使用正确的路径格式设置表单值
     const formDataPath = `${fieldName}.${step.key}.formData.${field}`
-    console.log('Setting form value:', {
-      path: formDataPath,
-      value,
-      currentFormData: form.getValues(`${fieldName}.${step.key}.formData`),
-      allValues: form.getValues()
-    })
     form.setValue(formDataPath, value)
   }
 
@@ -48,20 +42,20 @@ const ProcessStepForm: React.FC<ProcessStepFormProps> = ({
       exit={{ opacity: 0, y: -20 }}
       transition={{
         duration: 0.3,
-        ease: "easeOut"
+        ease: "easeOut",
       }}
     >
       <motion.div
-        initial="hidden"
-        animate="visible"
+        initial='hidden'
+        animate='visible'
         variants={{
           hidden: { opacity: 0 },
           visible: {
             opacity: 1,
             transition: {
-              staggerChildren: 0.1
-            }
-          }
+              staggerChildren: 0.1,
+            },
+          },
         }}
       >
         <DynamicFormFields

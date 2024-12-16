@@ -48,13 +48,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
   // 添加日志：监控表格数据变化
   useEffect(() => {
-    console.log(`[DynamicTable] Table data changed for ${fieldName}:`, tableData)
+    //console.log(`[DynamicTable] Table data changed for ${fieldName}:`, tableData)
   }, [tableData, fieldName])
 
   // 处理资源选择后的字段映射
   const handleResourceSelect = useCallback(
     (rowIndex: number, columnKey: string, selected: any) => {
-      console.log(`[DynamicTable] Resource selected for row ${rowIndex}, column ${columnKey}:`, selected)
+      //console.log(`[DynamicTable] Resource selected for row ${rowIndex}, column ${columnKey}:`, selected)
       if (!selected || !selected[0]) return
 
       const resource = selected[0]
@@ -73,7 +73,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             const value = resource[mapping]
             if (value !== undefined) {
               form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value)
-              console.log(`[DynamicTable] Mapped value for ${targetField}:`, value)
+              //console.log(`[DynamicTable] Mapped value for ${targetField}:`, value)
             }
           } else {
             if (mapping.condition && !mapping.condition(resource)) {
@@ -84,13 +84,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
               const values = mapping.fields.map((field) => resource[field])
               const value = mapping.transform ? mapping.transform(values) : values.join(" ")
               form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value)
-              console.log(`[DynamicTable] Mapped multiple fields for ${targetField}:`, value)
+              //console.log(`[DynamicTable] Mapped multiple fields for ${targetField}:`, value)
             } else {
               const value = resource[mapping.field]
               const transformedValue = mapping.transform ? mapping.transform(value) : value
               if (transformedValue !== undefined) {
                 form.setValue(`${fieldName}.${rowIndex}.${targetField}`, transformedValue)
-                console.log(`[DynamicTable] Mapped transformed value for ${targetField}:`, transformedValue)
+                //console.log(`[DynamicTable] Mapped transformed value for ${targetField}:`, transformedValue)
               }
             }
           }
@@ -102,7 +102,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
 
   // 添加默认值初始化逻辑
   const handleAddRow = useCallback(() => {
-    console.log("[DynamicTable] Adding new row with default values")
+    //console.log("[DynamicTable] Adding new row with default values")
     const newRow = config.columns.reduce(
       (acc, column) => {
         switch (column.type) {
@@ -128,15 +128,15 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     )
 
     append(newRow)
-    console.log("[DynamicTable] New row added:", newRow)
-    console.log("[DynamicTable] Current form values:", form.getValues())
+    //console.log("[DynamicTable] New row added:", newRow)
+    //console.log("[DynamicTable] Current form values:", form.getValues())
   }, [config.columns, append, form])
 
   const handleDeleteRow = useCallback(
     (index: number) => {
-      console.log(`[DynamicTable] Deleting row at index ${index}`)
+      //console.log(`[DynamicTable] Deleting row at index ${index}`)
       remove(index)
-      console.log("[DynamicTable] Current form values after deletion:", form.getValues())
+      //console.log("[DynamicTable] Current form values after deletion:", form.getValues())
     },
     [remove, form]
   )
@@ -195,7 +195,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
         form,
         isEditable,
         onChange: (field, value) => {
-          console.log(`[DynamicTable] Cell value changed - field: ${field}, value:`, value)
+          //console.log(`[DynamicTable] Cell value changed - field: ${field}, value:`, value)
         },
         fieldName,
       },

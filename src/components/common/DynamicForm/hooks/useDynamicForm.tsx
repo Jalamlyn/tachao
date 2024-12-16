@@ -35,16 +35,16 @@ export const useDynamicForm = (
   // 设置 watch 函数
   useEffect(() => {
     if (!config.watch) {
-      console.log("[useDynamicForm] No watch function provided")
+      //console.log("[useDynamicForm] No watch function provided")
       return
     }
 
-    console.log("[useDynamicForm] Setting up watch function")
+    //console.log("[useDynamicForm] Setting up watch function")
     let unsubscribe: (() => void) | undefined
 
     try {
       unsubscribe = config.watch(form)
-      console.log("[useDynamicForm] After setting up watch, unsubscribe:", unsubscribe)
+      //console.log("[useDynamicForm] After setting up watch, unsubscribe:", unsubscribe)
 
       if (typeof unsubscribe !== "function") {
         console.warn("[useDynamicForm] Watch function should return an unsubscribe function")
@@ -54,11 +54,11 @@ export const useDynamicForm = (
     }
 
     return () => {
-      console.log("[useDynamicForm] Cleaning up watch subscriptions")
+      //console.log("[useDynamicForm] Cleaning up watch subscriptions")
       if (typeof unsubscribe === "function") {
         try {
           unsubscribe()
-          console.log("[useDynamicForm] Successfully unsubscribed watch")
+          //console.log("[useDynamicForm] Successfully unsubscribed watch")
         } catch (error) {
           console.error("[useDynamicForm] Error unsubscribing watch:", error)
         }
@@ -68,10 +68,10 @@ export const useDynamicForm = (
 
   // 监听表单值变化
   useEffect(() => {
-    console.log("[useDynamicForm] Setting up form value change listener")
+    //console.log("[useDynamicForm] Setting up form value change listener")
     const subscription = form.watch((value, { name, type }) => {
-      console.log("[useDynamicForm] Form value changed:", { field: name, type, value })
-      console.log("[useDynamicForm] Current form values:", form.getValues())
+      //console.log("[useDynamicForm] Form value changed:", { field: name, type, value })
+      //console.log("[useDynamicForm] Current form values:", form.getValues())
 
       // 触发表单重新渲染
       form.trigger(name)

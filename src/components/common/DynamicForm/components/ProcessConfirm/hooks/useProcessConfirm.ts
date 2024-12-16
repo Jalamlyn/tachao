@@ -75,7 +75,7 @@ export const useProcessConfirm = ({
     }
 
     const values = form.getValues(fieldName) || {}
-    console.log("Calculating progress with values:", values)
+    //console.log("Calculating progress with values:", values)
     
     const totalWeight = steps.reduce((sum, step) => sum + (step.weight || 1), 0)
     let completedWeight = 0
@@ -123,7 +123,7 @@ export const useProcessConfirm = ({
       status
     }
 
-    console.log("Calculated progress:", progress)
+    //console.log("Calculated progress:", progress)
     return progress
   }, [steps, form, fieldName])
 
