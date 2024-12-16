@@ -20,11 +20,11 @@ const formConfig: DynamicFormConfig = {
 
     const subscription = form.watch((value, { name }) => {
       // 只在相关字段变化时触发计算
-      if (!isCalculating && name.includes('tableData')) {
+      if (!isCalculating && name.startsWith('table.items.')) {
         isCalculating = true;
         try {
           // 获取表格数据
-          const items = form.getValues('tableData.items') || [];
+          const items = form.getValues('table.items') || [];
           
           // 计算汇总信息
           const totalAmount = items.reduce((sum, item) => 
@@ -34,9 +34,9 @@ const formConfig: DynamicFormConfig = {
           const avgPrice = itemCount > 0 ? totalAmount / itemCount : 0;
           
           // 更新汇总字段
-          form.setValue('summary.totalAmount', totalAmount);
-          form.setValue('summary.itemCount', itemCount);
-          form.setValue('summary.avgPrice', avgPrice);
+          form.setValue('summary.amounts.totalAmount', totalAmount);
+          form.setValue('summary.statistics.itemCount', itemCount);
+          form.setValue('summary.statistics.avgPrice', avgPrice);
           
         } finally {
           isCalculating = false;
@@ -58,8 +58,8 @@ const formConfig: DynamicFormConfig = {
     let isCalculating = false;
 
     const calculateSummary = () => {
-      const items = form.getValues('tableData.items') || [];
-      const budget = form.getValues('budgetInfo.amount') || 0;
+      const items = form.getValues('table.items') || [];
+      const budget = form.getValues('form.basic.budgetInfo.amount') || 0;
 
       // 计算基础汇总数据
       const summary = items.reduce((acc, item) => {
@@ -103,8 +103,8 @@ const formConfig: DynamicFormConfig = {
 
     const subscription = form.watch((value, { name }) => {
       if (!isCalculating && (
-        name.includes('tableData') || 
-        name.includes('budgetInfo')
+        name.startsWith('table.items.') || 
+        name.startsWith('form.basic.budgetInfo.')
       )) {
         isCalculating = true;
         try {
@@ -138,7 +138,7 @@ const formConfig: DynamicFormConfig = {
       isCalculating = true;
       try {
         // 执行计算逻辑
-        const items = form.getValues('tableData.items') || [];
+        const items = form.getValues('table.items') || [];
         // ... 计算过程
       } finally {
         isCalculating = false;
@@ -146,7 +146,7 @@ const formConfig: DynamicFormConfig = {
     }, 300);
 
     const subscription = form.watch((value, { name }) => {
-      if (name.includes('tableData')) {
+      if (name.startsWith('table.items.')) {
         debouncedCalculate();
       }
     });
@@ -166,7 +166,7 @@ const formConfig: DynamicFormConfig = {
   watch: (form) => {
     const handleCalculation = () => {
       try {
-        const items = form.getValues('tableData.items') || [];
+        const items = form.getValues('table.items') || [];
         
         // 数据验证
         if (!Array.isArray(items)) {
@@ -189,7 +189,7 @@ const formConfig: DynamicFormConfig = {
           };
         }, { total: 0 });
 
-        form.setValue('summary.total', summary.total);
+        form.setValue('summary.amounts.total', summary.total);
         
       } catch (error) {
         console.error('Error calculating summary:', error);
@@ -199,7 +199,7 @@ const formConfig: DynamicFormConfig = {
     };
 
     const subscription = form.watch((value, { name }) => {
-      if (name.includes('tableData')) {
+      if (name.startsWith('table.items.')) {
         handleCalculation();
       }
     });
@@ -232,7 +232,7 @@ const formConfig: DynamicFormConfig = {
     let isCalculating = false;
 
     const updateSummary = () => {
-      const items = form.getValues('tableData.items') || [];
+      const items = form.getValues('table.items') || [];
       
       // 分步骤计算
       const amounts = calculateAmounts(items);
@@ -244,7 +244,7 @@ const formConfig: DynamicFormConfig = {
     };
 
     const subscription = form.watch((value, { name }) => {
-      if (!isCalculating && name.includes('tableData')) {
+      if (!isCalculating && name.startsWith('table.items.')) {
         isCalculating = true;
         try {
           updateSummary();

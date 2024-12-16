@@ -23,12 +23,12 @@ const formConfig: DynamicFormConfig = {
       groups: [
         {
           key: "basic",
-          title: "基本信息",
+          title: "基本信息", 
           icon: "mdi:information",
           description: "请填写申请的基本信息",
           fields: [
             {
-              name: "department",
+              name: "form.basic.department",
               label: "申请部门",
               type: "resource",
               required: true,
@@ -48,15 +48,15 @@ const formConfig: DynamicFormConfig = {
                   className: "bg-blue-50 hover:bg-blue-100"
                 },
                 fieldMapping: {
-                  "departmentManager": {
+                  "form.basic.departmentManager": {
                     field: "manager",
                     transform: (value) => ({
                       dataid: value.id,
                       displayValue: value.name
                     })
                   },
-                  "costCenter": "costCenter",
-                  "budgetInfo": {
+                  "form.basic.costCenter": "costCenter",
+                  "form.basic.budgetInfo": {
                     fields: ["budget", "currency"],
                     transform: (values) => ({
                       amount: values[0],
@@ -67,7 +67,7 @@ const formConfig: DynamicFormConfig = {
               }
             },
             {
-              name: "departmentManager",
+              name: "form.basic.departmentManager",
               label: "部门主管",
               type: "resource",
               required: true,
@@ -81,7 +81,7 @@ const formConfig: DynamicFormConfig = {
               }
             },
            {
-            name: "customRender",
+            name: "form.basic.customRender",
             label: "自定义渲染",
             type: "custom",
             render: ({ field, form, isEditable }) => (
@@ -115,7 +115,7 @@ const formConfig: DynamicFormConfig = {
         config: {
           columns: [
             {
-              key: "material",
+              key: "table.items.material",
               title: "物料",
               type: "resource",
               width: 300,
@@ -130,8 +130,8 @@ const formConfig: DynamicFormConfig = {
                 showTrigger: true,
                 triggerPosition: "right",
                 fieldMapping: {
-                  "unit": "unit",
-                  "unitPrice": {
+                  "table.items.unit": "unit",
+                  "table.items.unitPrice": {
                     field: "price",
                     transform: (value) => Number(value).toFixed(2)
                   }
@@ -139,21 +139,21 @@ const formConfig: DynamicFormConfig = {
               }
             },
             {
-              key: "quantity",
+              key: "table.items.quantity",
               title: "数量",
               type: "number",
               width: 120,
               required: true
             },
             {
-              key: "unitPrice",
+              key: "table.items.unitPrice",
               title: "单价",
               type: "number",
               width: 120,
               required: true
             },
             {
-              key: "amount",
+              key: "table.items.amount",
               title: "金额",
               type: "number",
               width: 120,
@@ -196,13 +196,13 @@ const formConfig: DynamicFormConfig = {
         required: true,
         fields: [
           {
-            name: "confirmDate",
+            name: "process.applicant.confirmDate",
             label: "确认日期",
             type: "date",
             required: true
           },
           {
-            name: "signature",
+            name: "process.applicant.signature",
             label: "签名",
             type: "signature",
             required: true,
@@ -210,7 +210,7 @@ const formConfig: DynamicFormConfig = {
             height: 150
           },
           {
-            name: "attachments",
+            name: "process.applicant.attachments",
             label: "附件",
             type: "upload",
             uploadConfig: {
@@ -248,7 +248,7 @@ const formConfig: DynamicFormConfig = {
         ],
         fields: [
           {
-            name: "approved",
+            name: "process.manager.approved",
             label: "审批结果",
             type: "radio",
             required: true,
@@ -258,7 +258,7 @@ const formConfig: DynamicFormConfig = {
             ]
           },
           {
-            name: "comment",
+            name: "process.manager.comment",
             label: "审批意见",
             type: "textarea",
             required: true
@@ -267,7 +267,6 @@ const formConfig: DynamicFormConfig = {
       }
     ],
 
-    // 新增: 汇总信息配置
     summaryGroups: [
       {
         key: "amounts",
@@ -276,20 +275,20 @@ const formConfig: DynamicFormConfig = {
         description: "采购申请的金额汇总信息",
         fields: [
           {
-            name: "totalAmount",
+            name: "summary.amounts.totalAmount",
             label: "采购总额",
             type: "amount",
             precision: 2,
             trend: "up"
           },
           {
-            name: "budgetAmount",
+            name: "summary.amounts.budgetAmount",
             label: "预算金额",
             type: "amount",
             precision: 2
           },
           {
-            name: "usageRate",
+            name: "summary.amounts.usageRate",
             label: "预算使用率",
             type: "percentage",
             precision: 1,
@@ -306,19 +305,19 @@ const formConfig: DynamicFormConfig = {
         description: "采购申请的统计信息",
         fields: [
           {
-            name: "itemCount",
+            name: "summary.statistics.itemCount",
             label: "物料种类",
             type: "number",
             format: (value) => `${value} 种`
           },
           {
-            name: "totalQuantity",
+            name: "summary.statistics.totalQuantity",
             label: "采购数量",
             type: "number",
             format: (value) => `${value} 件`
           },
           {
-            name: "avgPrice",
+            name: "summary.statistics.avgPrice",
             label: "平均单价",
             type: "amount",
             precision: 2
@@ -331,34 +330,30 @@ const formConfig: DynamicFormConfig = {
 
   orderNumberConfig: {
     prefix: "PO",
-    fieldName: "orderNumber",
+    fieldName: "form.basic.orderNumber",
     label: "采购单号"
   },
 
   watch: (form) => {
-    // ✅ 添加标志位防止递归
     let isCalculating = false;
 
     const subscription = form.watch((value, { name }) => {
-      // ✅ 只监听数量和单价的变化
-      if (!isCalculating && (name.includes('.quantity') || name.includes('.price'))) {
+      if (!isCalculating && (name.startsWith('table.items.') || name.startsWith('form.basic.'))) {
         isCalculating = true;
         try {
-          const details = form.getValues('tableData.orderDetails') || []
+          const items = form.getValues('table.items') || []
 
-          details.forEach((item, index) => {
+          items.forEach((item, index) => {
             const quantity = Number(item.quantity) || 0
             const price = Number(item.price) || 0
             const newAmount = quantity * price
 
-            // ✅ 比较值是否变化后再设置
             const currentAmount = Number(item.amount) || 0
             if (currentAmount !== newAmount) {
-              form.setValue(`tableData.orderDetails.${index}.amount`, newAmount)
+              form.setValue(`table.items.${index}.amount`, newAmount)
             }
           })
         } finally {
-          // ✅ 确保标志位被重置
           isCalculating = false
         }
       }
@@ -376,15 +371,14 @@ const formConfig: DynamicFormConfig = {
       }
     }
 
-    // 业务规则验证
-    const items = values.tableData?.items || []
+    const items = values.table?.items || []
     const totalAmount = items.reduce((sum, item) =>
       sum + (item.quantity || 0) * (item.unitPrice || 0), 0)
 
-    if (totalAmount > values.budgetInfo?.amount) {
-      errors.fields.tableData = "采购总额超出预算"
+    if (totalAmount > values.form?.basic?.budgetInfo?.amount) {
+      errors.fields['table.items'] = "采购总额超出预算"
       errors.categorizedErrors.other.push({
-        field: "tableData",
+        field: 'table.items',
         message: "采购总额超出预算"
       })
     }
@@ -482,7 +476,7 @@ resourceConfig: {
 
   // 3. 字段映射要处理空值情况
   fieldMapping: {
-    "targetField": {
+    "form.basic.targetField": {
       fields: ["sourceField"],
       transform: (values) => {
         if (!values?.[0]) return null
@@ -507,38 +501,33 @@ validate: async (values) => {
     categorizedErrors: {
       required: [],
       invalid: [],
-      other: [],
-    },
+      other: []
+    }
   }
 
   // 1. 分类处理错误
-  if (!values.required_field) {
-    errors.fields.required_field = "此字段为必填"
+  if (!values.form?.basic?.required_field) {
+    errors.fields['form.basic.required_field'] = "此字段为必填"
     errors.categorizedErrors.required.push({
-      field: "required_field",
-      message: "此字段为必填",
+      field: 'form.basic.required_field',
+      message: "此字段为必填"
     })
   }
 
   // 2. 业务规则验证
-  if (values.end_date && values.start_date > values.end_date) {
-    errors.fields.end_date = "结束日期不能早于开始日期"
+  if (values.form?.basic?.end_date && values.form?.basic?.start_date > values.form?.basic?.end_date) {
+    errors.fields['form.basic.end_date'] = "结束日期不能早于开始日期"
     errors.categorizedErrors.invalid.push({
-      field: "end_date",
-      message: "结束日期不能早于开始日期",
+      field: 'form.basic.end_date',
+      message: "结束日期不能早于开始日期"
     })
-  }
-
-  // 3. 复杂验证逻辑
-  const validateComplexRule = () => {
-    // 复杂验证逻辑
   }
 
   return {
     valid: Object.keys(errors.fields).length === 0,
     errors: Object.values(errors.fields),
     fields: errors.fields,
-    categorizedErrors: errors.categorizedErrors,
+    categorizedErrors: errors.categorizedErrors
   }
 }
 ```
@@ -551,9 +540,9 @@ validate: async (values) => {
 // 在表格配置中添加默认值处理
 config: {
   defaultRowData: {
-    quantity: 0,
-    price: 0,
-    amount: '0.00'
+    'table.items.quantity': 0,
+    'table.items.price': 0,
+    'table.items.amount': '0.00'
   }
 }
 ```
@@ -564,7 +553,7 @@ config: {
 // 在resourceConfig中配置fieldMapping
 resourceConfig: {
   fieldMapping: {
-    "relatedField": {
+    "form.basic.relatedField": {
       field: "sourceField",
       transform: (value) => {
         // 处理联动逻辑
@@ -584,14 +573,14 @@ processSteps: [
     dependencies: [
       {
         step: "step1",
-        message: "请先完成步骤1",
-      },
+        message: "请先完成步骤1"
+      }
     ],
     // 添加条件判断
     condition: (values) => {
-      return values.step1_field === "completed"
-    },
-  },
+      return values.process?.step1?.field === "completed"
+    }
+  }
 ]
 ```
 
@@ -665,7 +654,7 @@ resourceConfig: {
 ```typescript
 fields: [
   {
-    name: "field",
+    name: "form.basic.field",
     label: "字段",
     // 添加aria标签
     aria-label: "字段说明",
@@ -682,7 +671,7 @@ validate: (values) => {
   return {
     // 添加aria-live区域
     errorAnnouncement: "表单验证失败，请检查输入",
-    errors: [],
+    errors: []
   }
 }
 ```
@@ -699,16 +688,16 @@ DynamicForm 组件支持两种基础字段配置方式:
 renderConfig: {
   basicFields: [
     {
-      name: "field1",
+      name: "form.basic.field1",
       label: "字段1",
       type: "text",
-      required: true,
+      required: true
     },
     {
-      name: "field2",
+      name: "form.basic.field2",
       label: "字段2",
-      type: "number",
-    },
+      type: "number"
+    }
     // ... 更多字段
   ]
 }
@@ -729,23 +718,23 @@ renderConfig: {
         description: "分组1的描述",
         fields: [
           {
-            name: "field1",
+            name: "form.basic.field1",
             label: "字段1",
-            type: "text",
-          },
-        ],
+            type: "text"
+          }
+        ]
       },
       {
         key: "group2",
         title: "分组2",
         fields: [
           {
-            name: "field2",
+            name: "form.basic.field2",
             label: "字段2",
-            type: "number",
-          },
-        ],
-      },
+            type: "number"
+          }
+        ]
+      }
     ]
   }
 }
@@ -765,14 +754,14 @@ renderConfig: {
       description: "金额相关的汇总信息",
       fields: [
         {
-          name: "totalAmount",
+          name: "summary.amounts.totalAmount",
           label: "总金额",
           type: "amount",
           precision: 2,
           trend: "up"  // 可选值: up | down | stable
         },
         {
-          name: "percentage",
+          name: "summary.amounts.percentage",
           label: "占比",
           type: "percentage",
           precision: 1
@@ -787,7 +776,7 @@ renderConfig: {
       icon: "mdi:chart-box",
       fields: [
         {
-          name: "count",
+          name: "summary.statistics.count",
           label: "数量",
           type: "number",
           format: (value) => `${value}个`  // 自定义格式化函数
