@@ -678,33 +678,6 @@ validate: (values) => {
 
 ## 基础字段配置说明
 
-DynamicForm 组件支持两种基础字段配置方式:
-
-### 1. 直接字段数组方式
-
-适用于需要平铺显示所有字段的场景:
-
-```typescript
-renderConfig: {
-  basicFields: [
-    {
-      name: "form.basic.field1",
-      label: "字段1",
-      type: "text",
-      required: true,
-    },
-    {
-      name: "form.basic.field2",
-      label: "字段2",
-      type: "number",
-    },
-    // ... 更多字段
-  ]
-}
-```
-
-### 2. 分组方式
-
 适用于需要将字段分组显示的场景:
 
 ```typescript

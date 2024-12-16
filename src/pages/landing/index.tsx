@@ -26,10 +26,10 @@ const LandingPage: React.FC = () => {
   return (
     <div className='min-h-screen bg-gradient-to-b from-primary-dark to-primary-light relative'>
       <Helmet>
-        <title>沙塔智能 - 智慧企业服务专家</title>
+        <title>沙塔智能 - 让天下没有难管的企业</title>
         <meta name='description' content='让 AI 为企业赋能，提升效率，降低成本' />
         <meta name='keywords' content='AI,企业服务,效率提升,智能化,沙塔' />
-        <meta property='og:title' content='沙塔智能 - 智慧企业服务专家' />
+        <meta property='og:title' content='沙塔智能 - 让天下没有难管的企业' />
         <meta property='og:description' content='让 AI 为企业赋能，提升效率，降低成本' />
         <meta property='og:type' content='website' />
         <meta name='viewport' content='width=device-width, initial-scale=1.0' />

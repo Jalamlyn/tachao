@@ -13,7 +13,7 @@ const PendingTasks: React.FC = () => {
   useEffect(() => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
-      { label: "待办事项", href: "/we-chat-app/admin/pending-tasks" },
+      { label: "待我处理", href: "/we-chat-app/admin/pending-tasks" },
     ])
   }, [])
   useEffect(() => {
@@ -52,7 +52,7 @@ const PendingTasks: React.FC = () => {
 
   if (isLoading) {
     return (
-      <PageLayout title='待办事项' titleIcon='solar:list-check-bold'>
+      <PageLayout title='待我处理' titleIcon='solar:list-check-bold'>
         <div className='flex items-center justify-center h-[400px]'>
           <Spinner label='加载中...' />
         </div>
@@ -61,7 +61,7 @@ const PendingTasks: React.FC = () => {
   }
 
   return (
-    <PageLayout title='待办事项' titleIcon='solar:list-check-bold'>
+    <PageLayout title='待我处理' titleIcon='solar:list-check-bold'>
       <div className='space-y-4 p-4'>
         <AnimatePresence>
           {tasks.map((task, index) => (
@@ -135,7 +135,7 @@ const PendingTasks: React.FC = () => {
         {tasks.length === 0 && (
           <div className='flex flex-col items-center justify-center py-12 text-default-400'>
             <Icon icon='solar:checklist-minimalistic-linear' className='w-16 h-16 mb-4' />
-            <p>暂无待办事项</p>
+            <p>暂无待我处理</p>
           </div>
         )}
       </div>

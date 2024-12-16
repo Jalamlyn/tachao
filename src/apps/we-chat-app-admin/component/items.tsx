@@ -35,7 +35,7 @@ export const items: SidebarItem[] = [
     key: "pending-tasks",
     href: "/we-chat-app/admin/pending-tasks",
     icon: "solar:list-check-bold",
-    title: "待办事项",
+    title: "待我处理",
   },
   {
     key: "file-manager",

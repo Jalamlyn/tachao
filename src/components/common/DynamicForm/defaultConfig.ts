@@ -56,15 +56,15 @@ export const defaultFormConfig: DynamicFormConfig = {
     },
   },
   renderConfig: {
-    basicFields: [],
+    basicFields: {
+      groups: [],
+      defaultGroup: "",
+    },
   },
   orderNumberConfig: {
     prefix: "DG",
     fieldName: "orderNumber",
     label: "表单编号",
-  },
-  toolbar: {
-    buttons: defaultToolbarButtons,
   },
 }
 

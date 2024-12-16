@@ -3,10 +3,21 @@
  * 包含财务报销相关表单的标准化需求描述
  * 基于 DynamicForm 组件的实际功能进行优化
  */
-export const financeTemplatePrompt = `这是一个用于财务报销和预算申请的综合性表单。
+export const financeTemplatePrompt = `
+
+返回的结构要包含
+"""
+### 基本信息
+### 明细信息[表格]
+### 汇总信息
+### 表单流程
+"""
+下面是一个示例
+"""
+这是一个用于财务报销和预算申请的综合性表单。
 
 具体需求如下：
-
+### 基本信息
 1. 申请人信息分组
    - 基本信息
      * 申请人（resource，关联员工主数据，必填）
@@ -17,8 +28,8 @@ export const financeTemplatePrompt = `这是一个用于财务报销和预算申
      * 申请说明（textarea，必填）
      * 是否预支（switch）
      * 预支金额（number，条件显示）
-
-2. 费用明细表格
+### 明细信息[表格]
+1. 费用明细表格
    - 可添加多行记录，包含字段：
      * 费用类型（select，必填）
      * 发生日期（date，必填）
@@ -44,18 +55,8 @@ export const financeTemplatePrompt = `这是一个用于财务报销和预算申
      * 费用合计（number，自动计算）
      * 票据图片（image，支持多图片）
 
-4. 预算信息分组
-   - 预算控制
-     * 预算年度（select，必填）
-     * 预算期间（select，必填）
-     * 预算科目（select，必填）
-     * 可用预算（number，自动计算）
-     * 已用预算（number，自动计算）
-     * 本次申请（number，自动计算）
-     * 剩余预算（number，自动计算）
-     * 超预算说明（textarea，条件必填）
-
-5. 审批流程步骤
+### 表单流程
+1. 审批流程步骤
    - 直接主管审批
      * 审批人（resource，关联员工主数据）
      * 审批时间（datetime）
@@ -86,7 +87,8 @@ export const financeTemplatePrompt = `这是一个用于财务报销和预算申
      * 支付凭证（image）
      * 确认签名（signature）
 
-6. 报销汇总信息
+### 汇总信息
+1. 报销汇总信息
    - 费用统计
      * 报销总额（number，自动计算）
      * 核定总额（number，自动计算）
@@ -94,6 +96,8 @@ export const financeTemplatePrompt = `这是一个用于财务报销和预算申
      * 应付金额（number，自动计算）
      * 大写金额（text，自动转换）
 
-上述需求是否满足您的需求？如果不满足您可以告诉我您需要什么功能，我随时调整模板内容`
+上述需求是否满足您的需求？如果不满足您可以告诉我您需要什么功能，我随时调整模板内容
+"""
+`
 
 export default financeTemplatePrompt

@@ -56,11 +56,10 @@ ${resources}`
 # 交互确认流程
 1. 需求理解确认：
    "我将首先确认理解的需求：
-   ${hasImage ? "- 图片分析：[图片中识别到的内容]\n   " : ""}- 业务场景：[描述]
+   ${hasImage ? "- 图片分析：[图片中识别到的内容]\n   " : ""}
+   - 业务场景：[描述]
    - 主要功能：[列表]
-   - 补充问题: [3个和用户需求密切相关的业务问题,不涉及任何技术]"
-
-2. 方案确认：
+  方案确认：
    "基于${hasImage ? "图片内容和" : ""}需求，我计划：
     [按照这个示例 ${financeTemplatePrompt} 的结构返回方案和用户进行确认]
    请确认这个方案是否符合预期。"
@@ -92,7 +91,18 @@ export default {
     metadata: {
       title: "",//表单标题
     },
-    renderConfig: {} //仔细阅读 <doc>, 生成配置代码
+    renderConfig: {
+      basicFields:[
+        groups: FormFieldGroup[]
+        defaultGroup?: string
+      ],
+      tables:[]
+      processSteps:[]
+      summaryGroups:[]
+      orderNumberConfig:{}
+      watch:()=>{},
+      validate:async()=>{},
+    } //仔细阅读 <doc>, 生成配置代码
   }
 }
 </shata-ai-code>

@@ -34,7 +34,6 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
       />
     )
   }
-  console.log(formatter(form.getValues(name), precision))
   return (
     <FormField
       control={form.control}
@@ -45,14 +44,14 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
             <div className={cn("p-4 bg-gray-50 rounded-lg", "transition-all duration-200", "hover:bg-gray-100")}>
               <div className='text-sm text-gray-500'>{label}</div>
               <div className='mt-1 flex items-center'>
-                <span 
-                  className={cn("text-xl font-bold", type === "amount" && "font-mono")} 
+                <span
+                  className={cn("text-xl font-bold", type === "amount" && "font-mono")}
                   style={{
                     ...style,
-                    ...(formatConfig && FormatterService.format(field.value, formatConfig).style)
+                    ...(formatConfig && FormatterService.format(field.value, formatConfig).style),
                   }}
                 >
-                  {formatConfig 
+                  {formatConfig
                     ? FormatterService.format(field.value, formatConfig).formattedValue
                     : legacyFormatter(field.value, precision)}
                 </span>

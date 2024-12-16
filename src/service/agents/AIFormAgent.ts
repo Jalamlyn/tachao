@@ -27,7 +27,7 @@ export class AIFormAgent {
 
   public setRawConfig(rawConfig: string | null, versionIndex?: number): void {
     this._rawConfig = rawConfig
-    if (typeof versionIndex === 'number') {
+    if (typeof versionIndex === "number") {
       this._versionIndex = versionIndex
     }
   }
@@ -91,11 +91,7 @@ export class AIFormAgent {
         * 对于业务相关问题：进行分析并给出建议
         * 对于间接相关问题：提供参考信息和最佳实践
         * 对于完全无关问题：礼貌建议咨询其他专业助手
-      - 互动原则:
-        * 优先理解用户意图
-        * 结合上下文分析
-        * 提供建设性建议
-        * 引导我明确需求,我确认后再生成表单][格式要求:所有代码必须使用 \`\`\`mo 包裹, 必须返回完整代码, 不允许使用 //其他... 这样的方式来省略任何代码]`
+        * [格式要求:所有代码必须使用 \`\`\`mo 包裹, 必须返回完整代码, 不允许使用 //其他... 这样的方式来省略任何代码, 字段 type 严格使用文档中提供的类型,不要使用不存在的类型]`
 
       const currentUserMessage = {
         role: "user" as const,

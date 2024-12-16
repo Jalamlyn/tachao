@@ -100,7 +100,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   }, [])
 
   const { form, submitForm } = useDynamicForm(config, initialValues)
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(true)
   const printRef = useRef<HTMLDivElement>(null)
   const printId = useRef<string>()
 

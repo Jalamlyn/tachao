@@ -81,6 +81,7 @@ interface DynamicFormConfig {
            * - 'upload' - 文件上传
            * - 'signature' - 签名
            * - 'custom' - 自定义
+           * - 'clockIn' - 打卡
            */
           type: string
           /** 是否必填 @type {boolean} */
@@ -188,7 +189,7 @@ interface DynamicFormConfig {
      * 表格配置
      * @type {array}
      */
-    tables?: Array<{
+    tables: Array<{
       /** 表格键名 @type {string} */
       key: string
       /** 表格标题 @type {string} */
@@ -287,7 +288,7 @@ interface DynamicFormConfig {
      * 流程步骤配置
      * @type {array}
      */
-    processSteps?: Array<{
+    processSteps: Array<{
       /** 步骤键名 @type {string} */
       key: string
       /** 步骤标题 @type {string} */

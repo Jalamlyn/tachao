@@ -14,6 +14,8 @@ import { renderCheckbox } from "./renders/renderCheckbox"
 import { renderSwitch } from "./renders/renderSwitch"
 import { renderSlider } from "./renders/renderSlider"
 import { renderCustom } from "./renders/renderCustom"
+import { renderClockIn } from "./renders/ClockIn"
+import { renderLocation } from "./renders/Location"
 
 interface DynamicFormFieldsProps {
   fields: DynamicFormField[]
@@ -66,7 +68,7 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
       // 兼容旧的file和image类型
       if (field.type === "file" || field.type === "image") {
         const uploadConfig = {
-          uploadType: field.type === "file" ? "file" : "image" as "file" | "image",
+          uploadType: field.type === "file" ? "file" : ("image" as "file" | "image"),
           multiple: false,
           maxSize: undefined,
           maxCount: 1,
@@ -102,6 +104,13 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
       return renderCustom(field, form, isEditable, onChange)
     }
 
+    if (field.type === "clockIn") {
+      return renderClockIn(field, form, isEditable, onChange)
+    }
+    if (field.type === "location") {
+      return renderLocation(field, form, isEditable, onChange)
+    }
+
     return null
   }
 
@@ -123,15 +132,11 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
         // 获取字段容器的样式
         const containerStyle: React.CSSProperties = {
           ...(field.style?.custom || {}),
-          ...(field.customStyle || {})
+          ...(field.customStyle || {}),
         }
 
         return (
-          <div
-            key={field.name}
-            className={containerClassName}
-            style={containerStyle}
-          >
+          <div key={field.name} className={containerClassName} style={containerStyle}>
             {renderField(field)}
           </div>
         )

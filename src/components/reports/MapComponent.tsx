@@ -7,7 +7,7 @@ import { MapComponentProps, MapDataItem } from "./mapTypes"
 import { DEFAULT_MAP_CONFIG, MAP_STYLES, DEFAULT_STYLE_CONFIG, DEFAULT_CONTROLS } from "./mapConfig"
 
 // 加载百度地图API的函数
-const loadBMapScript = (apiKey: string): Promise<void> => {
+export const loadBMapScript = (apiKey: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     // 如果已经加载过，直接返回
     if (window.BMap) {
