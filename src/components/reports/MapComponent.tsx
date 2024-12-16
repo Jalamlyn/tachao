@@ -7,26 +7,23 @@ import { MapComponentProps, MapDataItem } from "./mapTypes"
 import { DEFAULT_MAP_CONFIG, MAP_STYLES, DEFAULT_STYLE_CONFIG, DEFAULT_CONTROLS } from "./mapConfig"
 
 // 加载百度地图API的函数
-export const loadBMapScript = (apiKey: string): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    // 如果已经加载过，直接返回
-    if (window.BMap) {
-      resolve()
-      return
-    }
+export const loadBMapScript = (apiKey = "4vmZ4F78PjlmoZrabEScBjI1g4gRCY2B") => {
+  // 如果已经加载过，直接返回
+  if (window.BMap) {
+    return
+  }
 
-    // 创建script标签
-    const script = document.createElement("script")
-    script.src = `https://api.map.baidu.com/api?v=3.0&ak=${apiKey}&callback=initMap`
-    script.onerror = () => reject(new Error("Failed to load BMap API"))
+  // 创建script标签
+  const script = document.createElement("script")
+  script.src = `https://api.map.baidu.com/api?v=3.0&ak=${apiKey}&callback=initMap`
+  script.onerror = () => new Error("Failed to load BMap API")
 
-    // 设置回调函数
-    window.initMap = () => {
-      resolve()
-    }
+  // 设置回调函数
+  window.initMap = () => {
+    return true
+  }
 
-    document.body.appendChild(script)
-  })
+  document.body.appendChild(script)
 }
 
 const MapComponent: React.FC<MapComponentProps> = ({
@@ -58,7 +55,6 @@ const MapComponent: React.FC<MapComponentProps> = ({
     const initBMap = async () => {
       try {
         setIsLoading(true)
-        await loadBMapScript(apiKey)
         setIsMapReady(true)
       } catch (err) {
         setError("Failed to load BMap API")

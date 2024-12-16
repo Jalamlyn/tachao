@@ -13,7 +13,6 @@ import ShareModal from "./components/ShareModal"
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
-import { loadBMapScript } from "@/components/reports/MapComponent"
 
 const NewForm: React.FC = () => {
   const { formId } = useParams<{ formId: string }>()
@@ -28,7 +27,6 @@ const NewForm: React.FC = () => {
   useEffect(() => {
     initializeForm()
     setWebShareSupported(navigator.share !== undefined)
-    loadBMapScript("4vmZ4F78PjlmoZrabEScBjI1g4gRCY2B")
   }, [])
 
   const initializeForm = async () => {

@@ -18,6 +18,9 @@ import AppEntry from "./pages/app-management/components/AppEntry"
 import WaitListPage from "./pages/WaitListPage"
 import FormCreate from "./pages/form/components/FormCreate"
 
+import { loadBMapScript } from "@/components/reports/MapComponent"
+loadBMapScript()
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
