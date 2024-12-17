@@ -35,7 +35,7 @@ export default async function chatChunkOpenAIOffice(
 ) {
   // 从 sessionStorage 读取当前选择的模型
   const baseModel = sessionStorage.getItem("aiLevel") || "ADVANCED"
-  const model = "chatgpt-4o-latest" // 假设模型名称从 payload 中获取
+  const model = baseModel  // 假设模型名称从 payload 中获取
   console.log("[ChatService] Using model:", baseModel)
 
   let _messages = messages
