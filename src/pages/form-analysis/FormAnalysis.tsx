@@ -12,6 +12,7 @@ import {
   ModalHeader,
   ModalBody,
   useDisclosure,
+  ButtonGroup,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadata"
@@ -30,6 +31,7 @@ import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
 import mermaid from "mermaid"
 import { localDB } from "@/utils/localDB"
+import { AI_LEVELS } from "@/components/AIEditor/type" // 引入AI级别配置
 
 interface Template {
   id: string
@@ -73,6 +75,7 @@ const FormAnalysis: React.FC = () => {
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>([])
   const [templates, setTemplates] = useState<Template[]>([])
   const [recentTemplates, setRecentTemplates] = useState<string[]>([])
+  const [selectedAILevel, setSelectedAILevel] = useState<keyof typeof AI_LEVELS>("ADVANCED") // 添加AI级别状态
   const { isOpen: isTemplateModalOpen, onOpen: onTemplateModalOpen, onClose: onTemplateModalClose } = useDisclosure()
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -238,7 +241,7 @@ const FormAnalysis: React.FC = () => {
           () => {},
           true,
           0.3,
-          "YES",
+          selectedAILevel, // 将AI级别传递给chatChunk
           true
         )
 
@@ -260,19 +263,42 @@ const FormAnalysis: React.FC = () => {
     }
   }
 
+  const handleAILevelChange = (level: keyof typeof AI_LEVELS) => {
+    setSelectedAILevel(level)
+  }
+
   const pageActions = (
     <div className='flex items-center gap-2'>
-      <Chip
-        variant='shadow'
-        color='primary'
-        size='lg'
-        classNames={{
-          content: "drop-shadow shadow-black text-white",
-        }}
-        startContent={<Icon icon='mdi:atom' className='text-white' />}
-      >
-        专家
-      </Chip>
+      <ButtonGroup variant='flat' className='gap-2 p-1 bg-default-100 rounded-lg'>
+        {Object.entries(AI_LEVELS).map(([key, level]) => (
+          <Tooltip content={level.description} key={key}>
+            <Button
+              className={`min-w-[140px] h-12 px-4 transition-all duration-200 ${
+                selectedAILevel === key ? "bg-primary text-white shadow-lg scale-105" : "bg-white hover:bg-primary/10"
+              }`}
+              onClick={() => handleAILevelChange(key as keyof typeof AI_LEVELS)}
+            >
+              <div className='flex items-center gap-2'>
+                <div
+                  className={`p-1.5 rounded-full ${
+                    selectedAILevel === key ? "bg-white/20" : "bg-primary/10"
+                  }`}
+                >
+                  <Icon
+                    icon={level.icon}
+                    className={`w-4 h-4 ${
+                      selectedAILevel === key ? "text-white" : "text-primary"
+                    }`}
+                  />
+                </div>
+                <div className='flex flex-col items-start'>
+                  <span className='font-medium'>{level.label}</span>
+                </div>
+              </div>
+            </Button>
+          </Tooltip>
+        ))}
+      </ButtonGroup>
     </div>
   )
 
