@@ -1,25 +1,65 @@
 import { useEffect, useState } from "react"
-import { Card, CardBody, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@nextui-org/react"
-import { Pagination } from "@nextui-org/react" // 引入 nextui 的 Pagination 组件
+import {
+  Card,
+  CardBody,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Button,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { getMetadata } from "@/service/apis/metadata"
-import { useMetadataTable } from "@/components/metadata-table/useMetadataTable" // 引入 useMetadataTable
 
 const CostRecords = () => {
-  // 使用 useMetadataTable 来管理分页和数据逻辑
-  const {
-    data: records,
-    currentPage,
-    pageSize,
-    total,
-    handlePageChange,
-    handlePageSizeChange,
-    handleRefresh,
-  } = useMetadataTable({
-    type: "ai-cost-records",
-    searchFields: ["timestamp", "model"],
-    pagination: { defaultPageSize: 10, pageSizeOptions: [10, 20, 50] },
-  })
+  const [records, setRecords] = useState([])
+  const [currentPage, setCurrentPage] = useState(1) // 当前页码
+  const [recordsPerPage] = useState(10) // 每页显示的记录数
+
+  useEffect(() => {
+    fetchCostRecords()
+  }, [])
+
+  const fetchCostRecords = async () => {
+    try {
+      // 使用 getMetadata 方法读取费用记录
+      const costRecords = await getMetadata(["ai-cost-records"])
+      const parsedRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
+      setRecords(parsedRecords)
+    } catch (error) {
+      console.error("Error fetching cost records:", error)
+    }
+  }
+
+  // 计算当前页显示的记录
+  const indexOfLastRecord = currentPage * recordsPerPage
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage
+  const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord)
+
+  // 计算总页数
+  const totalPages = Math.ceil(records.length / recordsPerPage)
+
+  // 分页控件
+  const Pagination = () => (
+    <div className='flex justify-center items-center gap-2 mt-4'>
+      <Button isDisabled={currentPage === 1} onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}>
+        上一页
+      </Button>
+      {Array.from({ length: totalPages }, (_, index) => (
+        <Button key={index + 1} isDisabled={currentPage === index + 1} onClick={() => setCurrentPage(index + 1)}>
+          {index + 1}
+        </Button>
+      ))}
+      <Button
+        isDisabled={currentPage === totalPages}
+        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+      >
+        下一页
+      </Button>
+    </div>
+  )
 
   return (
     <Card className='w-full'>
@@ -39,7 +79,7 @@ const CostRecords = () => {
             <TableColumn>总费用(塔币)</TableColumn>
           </TableHeader>
           <TableBody>
-            {records.map((record) => (
+            {currentRecords.map((record) => (
               <TableRow key={record.id}>
                 <TableCell>{new Date(record.timestamp).toLocaleString()}</TableCell>
                 <TableCell>{record.model === "ADVANCED" ? "高级模型" : "专家模型"}</TableCell>
@@ -52,21 +92,7 @@ const CostRecords = () => {
             ))}
           </TableBody>
         </Table>
-        {/* 使用 nextui 的 Pagination 组件 */}
-        <div className="flex justify-center items-center mt-4">
-          <Pagination
-            total={Math.ceil(total / pageSize)}
-            initialPage={1}
-            page={currentPage}
-            onChange={handlePageChange}
-            showControls
-            size="lg"
-            color="primary" // 设置主题颜色
-            showShadow // 为当前页添加阴影效果
-            isCompact // 启用紧凑模式
-            loop // 启用分页循环
-          />
-        </div>
+        <Pagination />
       </CardBody>
     </Card>
   )
