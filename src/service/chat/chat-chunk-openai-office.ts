@@ -12,7 +12,7 @@ export default async function chatChunkOpenAIOffice(
   overFlag = "YES"
 ) {
   // 从 sessionStorage 读取当前选择的模型
-  const baseModel = sessionStorage.getItem("aiLevel") || "advanced"
+  const baseModel = sessionStorage.getItem("aiLevel") || "ADVANCED"
   console.log("[ChatService] Using model:", baseModel)
 
   let _messages = messages
@@ -36,9 +36,9 @@ export default async function chatChunkOpenAIOffice(
   }
 
   const modelEndpoints = {
-    expert:
+    EXPERT:
       "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview",
-    advanced:
+    ADVANCED:
       "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o-mini-2/chat/completions?api-version=2024-02-15-preview",
   }
 

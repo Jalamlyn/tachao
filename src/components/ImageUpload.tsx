@@ -23,11 +23,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (!isExpertMode) {
-      message.warning("图片上传功能仅在专家模式下可用")
-      return
-    }
-
     if (file.size > 5 * 1024 * 1024) {
       message.error("图片大小不能超过5MB")
       return
@@ -40,7 +35,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "
     }
 
     setIsLoading(true)
-    try { 
+    try {
       const reader = new FileReader()
       reader.onloadend = () => {
         const base64 = reader.result as string
@@ -69,14 +64,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "
   }
 
   const handleUploadClick = () => {
-    if (!isExpertMode) {
-      Modal.warning({
-        title: "功能限制",
-        content: "图片上传功能仅在专家模式下可用，请切换到专家模式后再试。",
-        onOk: () => console.log("Modal closed"),
-      })
-      return
-    }
     inputRef.current?.click()
   }
 
@@ -91,35 +78,28 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "
       />
       <Tooltip
         content={
-          !isExpertMode ? (
-            <div className='flex items-center gap-2 p-2'>
-              <Icon icon='mdi:information' className='w-4 h-4' />
-              <span>图片上传功能仅在专家模式下可用</span>
+          <div className='flex flex-col gap-1 p-2'>
+            <div className='flex items-center gap-2'>
+              <Icon icon='mdi:check-circle' className='w-4 h-4 text-success' />
+              <span className='font-medium'>上传图片帮助 AI 更好理解您的需求</span>
             </div>
-          ) : (
-            <div className='flex flex-col gap-1 p-2'>
-              <div className='flex items-center gap-2'>
-                <Icon icon='mdi:check-circle' className='w-4 h-4 text-success' />
-                <span className='font-medium'>上传图片帮助 AI 更好理解您的需求</span>
-              </div>
-              <div className='text-sm text-default-500 pl-6'>
-                支持场景：
-                <div>• 表单界面截图 </div>
-                <div>• 单据或文档截图 </div>
-                <div>• 需求说明文档 </div>
-                <div>• 手绘草图或设计稿</div>
-              </div>
-              <div className='text-xs text-default-400 pl-6'>支持 JPG、PNG格式，最大 5MB</div>
+            <div className='text-sm text-default-500 pl-6'>
+              支持场景：
+              <div>• 表单界面截图 </div>
+              <div>• 单据或文档截图 </div>
+              <div>• 需求说明文档 </div>
+              <div>• 手绘草图或设计稿</div>
             </div>
-          )
+            <div className='text-xs text-default-400 pl-6'>支持 JPG、PNG格式，最大 5MB</div>
+          </div>
         }
       >
         <Button
           variant='flat'
           size='sm'
           onClick={handleUploadClick}
-          disabled={!isExpertMode || isLoading}
-          className={`flex items-center gap-2 relative ${!isExpertMode ? "opacity-50" : ""}`}
+          disabled={isLoading}
+          className={`flex items-center gap-2 relative`}
         >
           <Icon icon='mdi:image-plus' className='w-4 h-4' />
           {isLoading ? "上传中..." : "上传图片"}

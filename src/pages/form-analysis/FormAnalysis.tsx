@@ -17,8 +17,8 @@ import { Icon } from "@iconify/react"
 import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadata"
 import message from "@/components/Message"
 import MessageCard from "@/components/MessageCard"
-import chatChunk from "@/service/chat/chat-chunk-openai-office"
-// import chatChunk from "@/service/chat/chat-chunk-gemini-office"
+// import chatChunk from "@/service/chat/chat-chunk-openai-office"
+import chatChunk from "@/service/chat/chat-chunk-gemini-office"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
@@ -113,7 +113,7 @@ const FormAnalysis: React.FC = () => {
 
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
-      { label: "AI 智能助手", href: "/we-chat-app/admin/ai-assistant" },
+      { label: "AI 数据分析", href: "/we-chat-app/admin/ai-assistant" },
     ])
   }, [])
 
@@ -259,25 +259,23 @@ const FormAnalysis: React.FC = () => {
   }
 
   const pageActions = (
-    <div>
-      <Tooltip content='对话次数' placement='left'>
-        <Chip
-          variant='shadow'
-          size='lg'
-          classNames={{
-            base: "bg-gradient-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30",
-            content: "drop-shadow shadow-black text-white",
-          }}
-          startContent={<Icon icon='solar:chat-round-dots-bold' className='text-white' />}
-        >
-          {chatCount}
-        </Chip>
-      </Tooltip>
+    <div className='flex items-center gap-2'>
+      <Chip
+        variant='shadow'
+        color='primary'
+        size='lg'
+        classNames={{
+          content: "drop-shadow shadow-black text-white",
+        }}
+        startContent={<Icon icon='mdi:atom' className='text-white' />}
+      >
+        专家
+      </Chip>
     </div>
   )
 
   return (
-    <PageLayout title='AI 智能助手' titleIcon='hugeicons:ai-chat-02' actions={pageActions}>
+    <PageLayout title='AI 数据分析' titleIcon='hugeicons:ai-chat-02' actions={pageActions}>
       <Card className='w-full shadow-lg'>
         <CardBody className='p-4 flex flex-col gap-4'>
           <ScrollShadow className='flex-grow h-[calc(100vh-380px)] mb-4'>

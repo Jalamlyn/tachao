@@ -1,4 +1,4 @@
-import { ScrollShadow, Button, ButtonGroup } from "@nextui-org/react"
+import { ScrollShadow, Button, ButtonGroup, Tooltip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { ResizablePanel } from "@/components/ui/resizable"
 import MessageCard from "@/components/MessageCard"
@@ -26,34 +26,33 @@ export const renderLeftPanel = (
             <h3 className='text-lg font-medium'>对话</h3>
             <ButtonGroup variant='flat' className='gap-2 p-1 bg-default-100 rounded-lg'>
               {Object.entries(AI_LEVELS).map(([key, level]) => (
-                <Button
-                  key={key}
-                  className={cn(
-                    "min-w-[140px] h-12 px-4",
-                    "transition-all duration-200",
-                    selectedAILevel === key
-                      ? "bg-primary text-white shadow-lg scale-105"
-                      : "bg-white hover:bg-primary/10"
-                  )}
-                  onClick={() => handleAILevelChange(key)}
-                >
-                  <div className='flex items-center gap-2'>
-                    <div
-                      className={cn("p-1.5 rounded-full", selectedAILevel === key ? "bg-white/20" : "bg-primary/10")}
-                    >
-                      <Icon
-                        icon={level.icon}
-                        className={cn("w-4 h-4", selectedAILevel === key ? "text-white" : "text-primary")}
-                      />
+                <Tooltip content={level.description}>
+                  <Button
+                    key={key}
+                    className={cn(
+                      "min-w-[140px] h-12 px-4",
+                      "transition-all duration-200",
+                      selectedAILevel === key
+                        ? "bg-primary text-white shadow-lg scale-105"
+                        : "bg-white hover:bg-primary/10"
+                    )}
+                    onClick={() => handleAILevelChange(key)}
+                  >
+                    <div className='flex items-center gap-2'>
+                      <div
+                        className={cn("p-1.5 rounded-full", selectedAILevel === key ? "bg-white/20" : "bg-primary/10")}
+                      >
+                        <Icon
+                          icon={level.icon}
+                          className={cn("w-4 h-4", selectedAILevel === key ? "text-white" : "text-primary")}
+                        />
+                      </div>
+                      <div className='flex flex-col items-start'>
+                        <span className='font-medium'>{level.label}</span>
+                      </div>
                     </div>
-                    <div className='flex flex-col items-start'>
-                      <span className='font-medium'>{level.label}</span>
-                      <span className={cn("text-xs", selectedAILevel === key ? "text-white/80" : "text-default-500")}>
-                        {level.cost} 塔币/次
-                      </span>
-                    </div>
-                  </div>
-                </Button>
+                  </Button>
+                </Tooltip>
               ))}
             </ButtonGroup>
           </div>
@@ -86,12 +85,7 @@ export const renderLeftPanel = (
 
         <div className='p-2'>
           {imageUpload && <ImageUploader agent={agent} aiLevel={selectedAILevel} />}
-          <AICommandInput
-            agent={agent}
-            onResult={onCommandResult}
-            aiLevel={selectedAILevel}
-            tokenCost={AI_LEVELS[selectedAILevel].cost}
-          />
+          <AICommandInput agent={agent} onResult={onCommandResult} aiLevel={selectedAILevel} />
         </div>
       </div>
     </ResizablePanel>

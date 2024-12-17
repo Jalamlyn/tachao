@@ -78,13 +78,6 @@ ${resources}`
 """
 \`\`\`mo
 <shata-ai-code>
-const components = {
-   //自定义组件定义在这里,组件的代码不可以省略,不可以假设,不允许有外部依赖,UI 使用 uiComponents 里引入的 shadcn <uiComponents.Input/> <uiComponents.Button /> 
-}
-
-const utils = {
-  //工具函数定义在这里,工具函数的代码不可以省略,不可以假设,不允许有外部依赖,
-}
 export default {
   title: "",//表单标题
   config: {

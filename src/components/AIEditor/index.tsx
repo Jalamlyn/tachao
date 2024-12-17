@@ -36,7 +36,9 @@ const AIEditor: React.FC<AIEditorProps> = ({
   const [currentVersion, setCurrentVersion] = useState(versionControl.getCurrentVersion())
   const [isEditing, setIsEditing] = useState(false)
   const [editedCode, setEditedCode] = useState("")
-  const [selectedAILevel, setSelectedAILevel] = useState<keyof typeof AI_LEVELS>("ADVANCED")
+  const [selectedAILevel, setSelectedAILevel] = useState<keyof typeof AI_LEVELS>(
+    (sessionStorage.getItem("aiLevel") as keyof typeof AI_LEVELS) || "ADVANCED"
+  )
 
   useEffect(() => {
     const updateVersionState = () => {
