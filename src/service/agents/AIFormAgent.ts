@@ -1,4 +1,5 @@
-import chatChunk from "../chat/chat-chunk-openai-office"
+// import chatChunk from "../chat/chat-chunk-openai-office"
+import chatChunk from "../chat/chat-chunk-gemini-office"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import generateFormAgentPrompt from "./prompts/form/form-agent-prompt"
@@ -84,9 +85,8 @@ export class AIFormAgent {
         content: generateFormAgentPrompt(this._rawConfig, !!cachedImage, result.data?.[0]?.value),
       }
 
-      const enhancedCommand = `这是我的问题:${command}
-      [对于我的问题: 
-      - 回答策略:
+      const enhancedCommand = `${command}
+      [回答策略:
         * 对于表单直接相关问题：提供具体解决方案
         * 对于业务相关问题：进行分析并给出建议
         * 对于间接相关问题：提供参考信息和最佳实践

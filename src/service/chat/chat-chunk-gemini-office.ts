@@ -59,8 +59,7 @@ export default async function chatChunkGeminiOffice(
     temperature,
     max_tokens: 8192,
     stream: true,
-    apiKey:
-      "ya29.a0ARW5m7598Fa-3C3LwD6byzVyYpXU_UV4F8SIX257wFyxuAO7JjmY46q9KU60LP4LnDRqXMSYRz55C3naByrr0o_4EkIQPAI_CEiY8G4e69ufEzE3jjtkX7h908cCHSsPh6OvS1mWod47OTlI0zqLxvQd-l6fUX0T7BN6KO1de28JXjkaCgYKAT8SARMSFQHGX2Mi2bMESVhMq2I4IBWu7IhIZA0182",
+    apiKey: "",
     cid: "Hx9Kp2Qm7Zf3Lw5Ry8Tj6",
     system: systemMsg ? systemMsg.content : "",
   }

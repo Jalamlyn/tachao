@@ -43,7 +43,7 @@ interface FormatOptions {
 
 ```typescript
 const fieldConfig = {
-  name: "form.basic.amount",
+  name: "amount",
   label: "金额",
   type: "number",
   formatConfig: {
@@ -100,7 +100,7 @@ const summaryConfig = {
 
 ```typescript
 const fieldConfig = {
-  name: "form.basic.score",
+  name: "score",
   label: "得分",
   type: "number",
   formatConfig: {
@@ -131,7 +131,7 @@ const fieldConfig = {
 
 ```typescript
 const fieldConfig = {
-  name: "form.basic.custom",
+  name: "custom",
   label: "自定义",
   type: "text",
   formatConfig: {

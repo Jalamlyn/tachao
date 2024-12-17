@@ -10,7 +10,7 @@
 
 ```typescript
 {
-  name: "form.basic.fieldName",
+  name: "fieldName",
   label: "字段标签",
   type: "text",
   // 布局配置应该在顶层，而不是在style中
@@ -46,7 +46,7 @@
 
 ```typescript
 {
-  name: "form.basic.fieldName",
+  name: "fieldName",
   label: "字段标签",
   type: "text",
   // 方式1: 使用顶层 layout 属性
@@ -65,7 +65,7 @@
 
 ```typescript
 {
-  name: "form.basic.fieldName",
+  name: "fieldName",
   label: "字段标签",
   type: "text",
   style: {
@@ -106,7 +106,7 @@ const formConfig = {
   renderConfig: {
     basicFields: [
       {
-        name: "form.basic.title",
+        name: "title",
         label: "标题",
         type: "text",
         layout: "full-width", // 布局配置应该在顶层
@@ -120,7 +120,7 @@ const formConfig = {
         }
       },
       {
-        name: "form.basic.description",
+        name: "description",
         label: "描述",
         type: "textarea",
         layout: "full-width",
@@ -144,7 +144,7 @@ const formConfig = {
   renderConfig: {
     basicFields: [
       {
-        name: "form.basic.name",
+        name: "name",
         label: "姓名",
         type: "text",
         style: {
@@ -153,7 +153,7 @@ const formConfig = {
         }
       },
       {
-        name: "form.basic.email",
+        name: "email",
         label: "邮箱",
         type: "email",
         style: {
@@ -162,7 +162,7 @@ const formConfig = {
         }
       },
       {
-        name: "form.basic.address",
+        name: "address",
         label: "地址",
         type: "textarea",
         layout: "full-width", // 使用顶层layout属性
@@ -185,7 +185,7 @@ const formConfig = {
   renderConfig: {
     basicFields: [
       {
-        name: "form.basic.header",
+        name: "header",
         label: "表单标题",
         type: "text",
         layout: "full-width",
@@ -199,7 +199,7 @@ const formConfig = {
         }
       },
       {
-        name: "form.basic.leftColumn",
+        name: "leftColumn",
         label: "左侧内容",
         type: "textarea",
         style: {
@@ -212,7 +212,7 @@ const formConfig = {
         }
       },
       {
-        name: "form.basic.rightColumn",
+        name: "rightColumn",
         label: "右侧内容",
         type: "textarea",
         style: {
@@ -225,7 +225,7 @@ const formConfig = {
         }
       },
       {
-        name: "form.basic.footer",
+        name: "footer",
         label: "底部内容",
         type: "text",
         layout: "full-width",
@@ -272,7 +272,7 @@ const stylePresets = {
 // 使用预设
 const field = {
   ...stylePresets.halfWidth,
-  name: "form.basic.fieldName",
+  name: "fieldName",
   label: "字段标签",
   type: "text"
 }
