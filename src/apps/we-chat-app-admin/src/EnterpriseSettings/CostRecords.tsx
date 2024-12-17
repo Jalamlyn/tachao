@@ -72,6 +72,10 @@ const CostRecords = () => {
             onChange={(page) => setCurrentPage(page)}
             showControls
             size="lg"
+            color="primary" // 设置主题颜色
+            showShadow // 为当前页添加阴影效果
+            isCompact // 启用紧凑模式
+            loop // 启用分页循环
           />
         </div>
       </CardBody>
