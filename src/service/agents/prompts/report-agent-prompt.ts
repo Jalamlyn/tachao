@@ -511,44 +511,12 @@ ${JSON.stringify(structure, null, 2)}
 function generateActualData(groups: Record<string, any[]>, templateInfoMap: Record<string, string>) {
   return Object.entries(groups)
     .map(([templateId, items]) => {
-      const templateTitle = templateInfoMap[templateId] || `模板 ${templateId}`
+      const templateTitle = templateInfoMap[templateId]
       const actualData = items.slice(0, 10)
 
       return `
 ${templateTitle} (模板ID: ${templateId}) 的数据:
 ${JSON.stringify(actualData, null, 2)}
-    `
-    })
-    .join("\n")
-}
-
-// 生成数据统计信息
-function generateDataStatistics(groups: Record<string, any[]>) {
-  return Object.entries(groups)
-    .map(([templateId, items]) => {
-      const numericColumns = Object.entries(items[0])
-        .filter(([_, value]) => typeof value === "number")
-        .map(([key]) => key)
-
-      const statistics = numericColumns
-        .map((column) => {
-          const values = items.map((item) => item[column]).filter((v) => !isNaN(v))
-          const avg = values.reduce((a, b) => a + b, 0) / values.length
-          const max = Math.max(...values)
-          const min = Math.min(...values)
-
-          return `
-- ${column}:
-  平均值: ${avg.toFixed(2)}
-  最大值: ${max}
-  最小值: ${min}
-      `
-        })
-        .join("\n")
-
-      return `
-模板 ${templateId} 数值字段统计:
-${statistics}
     `
     })
     .join("\n")
@@ -576,9 +544,6 @@ ${Object.entries(groups)
 
 数据结构说明:
 ${generateDataStructureDescription(groups)}
-
-数据统计信息:
-${generateDataStatistics(groups)}
 
 实际数据:
 ${generateActualData(groups, templateInfoMap)}

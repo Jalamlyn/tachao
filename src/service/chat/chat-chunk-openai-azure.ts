@@ -2,28 +2,6 @@ import { message } from "@/components/Message"
 import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { events } from "fetch-event-stream"
-import { countTokens } from "gpt-tokenizer/model/gpt-4o" // 引入 o200k_base 编码
-import { setMetadata, getMetadata } from "@/service/apis/metadata" // 引入元数据存储方法
-
-// 计算费用的函数（复用 Gemini 的逻辑）
-function calculateCost(tokenCount: number, isInput: boolean, model: string): number {
-  const ratePerThousandTokens = {
-    ADVANCED: {
-      input: 0.04,
-      output: 0.15,
-    },
-    EXPERT: {
-      input: 0.4,
-      output: 1.5,
-    },
-  }
-
-  const rate = ratePerThousandTokens[model === "ADVANCED" ? "ADVANCED" : "EXPERT"]
-  const tokenRate = isInput ? rate.input : rate.output
-  return (tokenCount / 1000) * tokenRate
-}
-
-// 根据模型选择合适的 countTokens 方法
 
 export default async function chatChunkOpenAIOffice(
   messages,
@@ -35,7 +13,6 @@ export default async function chatChunkOpenAIOffice(
 ) {
   // 从 sessionStorage 读取当前选择的模型
   const baseModel = sessionStorage.getItem("aiLevel") || "ADVANCED"
-  const model = "chatgpt-4o-latest" // 假设模型名称从 payload 中获取
   console.log("[ChatService] Using model:", baseModel)
 
   let _messages = messages
@@ -57,21 +34,23 @@ export default async function chatChunkOpenAIOffice(
       }
     })
   }
-  const apiKey = "xxxxxxx"
-  const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-openai-office"
 
-  const payload = {
-    apiKey,
-    model,
-    messages: _messages,
-    temperature,
-    max_tokens: 16000,
-    stream: true,
+  const modelEndpoints = {
+    EXPERT:
+      "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview",
+    ADVANCED:
+      "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o-mini-2/chat/completions?api-version=2024-02-15-preview",
   }
 
-  // 使用动态选择的 countTokens 方法统计输入 token 数量，并传递模型名称
-  const inputTokenCount = countTokens(JSON.stringify(_messages))
-  console.log("[TokenStats] Input token count:", inputTokenCount)
+  const apiKey = "5d5c1f3cc91b440b8391851b2eadfb1c"
+  const apiEndPoint = modelEndpoints[baseModel]
+
+  const payload = {
+    messages: _messages,
+    temperature,
+    max_tokens: 4096,
+    stream: true,
+  }
 
   let controller = new AbortController()
   fetchController.current = controller
@@ -95,7 +74,6 @@ export default async function chatChunkOpenAIOffice(
 
     const eventStream = events(response, controller.signal)
     let fullContent = ""
-    let outputTokenCount = 0 // 初始化输出 token 计数
 
     for await (let event of eventStream) {
       if (event.data !== "[DONE]") {
@@ -104,8 +82,6 @@ export default async function chatChunkOpenAIOffice(
           const content = parsed?.choices[0]?.delta?.content || ""
           fullContent += content
           onChunk(content)
-
-          // 使用动态选择的 countTokens 方法统计输出 token 数量，并传递模型名称
 
           if (parsed?.choices[0]?.finish_reason === "length") {
             const lastTenChars = fullContent.slice(-10)
@@ -134,48 +110,17 @@ export default async function chatChunkOpenAIOffice(
           console.log("Error parsing JSON:", error)
         }
       } else {
-        outputTokenCount = countTokens(fullContent)
         localDB.setItem("chat-chunk-over", overFlag)
       }
-    }
-
-    // 计算费用
-    const inputCost = calculateCost(inputTokenCount, true, baseModel)
-    const outputCost = calculateCost(outputTokenCount, false, baseModel)
-    console.log("[CostStats] Input cost:", inputCost, "Output cost:", outputCost, "Total cost:", inputCost + outputCost)
-
-    // 存储成本记录
-    try {
-      const costRecords = await getMetadata(["ai-cost-records"])
-      const existingRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
-
-      const newRecord = {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        model: baseModel,
-        promptTokenCount: inputTokenCount,
-        candidatesTokenCount: outputTokenCount,
-        inputCost,
-        outputCost,
-        totalCost: inputCost + outputCost,
-      }
-
-      // 判断是否已有数据
-      if (existingRecords.length > 0) {
-        // 插入新记录到现有数据
-        await setMetadata("ai-cost-records", [...existingRecords, newRecord])
-      } else {
-        // 没有数据，直接设置
-        await setMetadata("ai-cost-records", [newRecord])
-      }
-    } catch (e) {
-      console.error("Error storing cost records:", e)
     }
   } catch (error) {
     if (error.name === "AbortError") {
       console.log("Fetch aborted")
     } else {
       message.error(`An error occurred while fetching data: ${error.message}`)
+      if (error.message.includes("context_length_exceeded")) {
+        onChunk(`项目大小超过了最大上下文，无法使用自动检索模式，请切换到手动检索模式，手动勾选需要修改的文件`)
+      }
     }
     throw error
   }

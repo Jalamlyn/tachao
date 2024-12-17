@@ -98,36 +98,11 @@ export class AIReportAgent {
     this._rawConfig = rawConfig
   }
 
-  private validateConfig(config: string): boolean {
-    try {
-      const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
-      const match = config.match(regex)
-      if (!match) {
-        throw new Error("Invalid configuration format")
-      }
-      return true
-    } catch (error) {
-      throw new Error(`Invalid report configuration: ${error.message}`)
-    }
-  }
-
   private async executeCode(code: string, data: AnalysisData): Promise<any> {
     try {
       console.log("[AIReportAgent] Executing analysis code")
       const wrappedCode = `
         return (function(data, formulajs) {
-          // data 结构:
-          // interface AnalysisData {
-          //   groups: Record<string, {
-          //     id: string
-          //     title: string
-          //     data: any[]
-          //   }>
-          //   metadata: {
-          //     templateInfoMap: Record<string, string>
-          //     columns: any[]
-          //   }
-          // }
           ${code}
         })(data, formulajs);
       `
@@ -146,15 +121,11 @@ export class AIReportAgent {
       console.log("[AIReportAgent] Analyzing data with rawConfig")
       const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
       const match = this.lastResponseRef.match(regex)
-      if (!match) {
-        console.error("[AIReportAgent] No valid analysis code found in AI response")
-        throw new Error("No valid analysis code found in AI response")
+      let generatedCode = rawConfig
+      if (match) {
+        generatedCode = match[1].trim()
       }
-      const generatedCode = match[1].trim()
 
-      if (!this.validateConfig(this.lastResponseRef)) {
-        throw new Error("Invalid generated configuration")
-      }
       // 转换数据结构
       const analysisData = prepareAnalysisData(data, this._templateInfoMap)
 
@@ -230,14 +201,9 @@ export class AIReportAgent {
 
       const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
       const match = this.lastResponseRef.match(regex)
-      if (!match) {
-        console.error("[AIReportAgent] No valid analysis code found in AI response")
-        throw new Error("No valid analysis code found in AI response")
-      }
-      const generatedCode = match[1].trim()
-
-      if (!this.validateConfig(this.lastResponseRef)) {
-        throw new Error("Invalid generated configuration")
+      let generatedCode = rawConfig
+      if (match) {
+        generatedCode = match[1].trim()
       }
 
       // 转换数据结构

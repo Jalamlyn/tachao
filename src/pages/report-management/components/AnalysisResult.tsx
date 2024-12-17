@@ -106,7 +106,9 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo(({ analysis }) 
                 >
                   <div className='text-sm text-muted-foreground font-medium mb-2'>
                     {item.label}
-                    {item.sourceTitle && <span className='ml-2 text-xs text-primary'>来自: {item.sourceTitle}</span>}
+                    {item.sourceTitle && (
+                      <span className='ml-2 text-xs text-primary break-words'>来自: {item.sourceTitle}</span>
+                    )}
                   </div>
                   <div className='text-xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70'>
                     {typeof item.value === "object" ? JSON.stringify(item.value) : item.value}

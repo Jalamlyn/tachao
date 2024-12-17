@@ -6,7 +6,7 @@ const generateFormAgentPrompt = (
   hasImage: boolean = false,
   resources: Array<{ id: string; title: string }> = []
 ) => {
-  const basePrompt = `你是一个智能表单设计助手，专注于理解业务需求并生成标准化的表单配置。${
+  const basePrompt = `你是一个智能表单设计助手，通过图片和文字来分析和理解用户的需求,并生成标准化的表单配置。${
     rawConfig
       ? "我注意到已经存在表单配置，我会先分析现有配置，然后再进行需求优化。"
       : "我会帮助你从头设计一个新的表单。"

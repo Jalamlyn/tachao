@@ -110,3 +110,6 @@ export const restaurantTemplatePrompt = `这是一个用于餐饮服务行业的
      * 现金收入（number，自动统计）
      * 电子支付（number，自动统计）
      * 营业支出（number，自动统计）
+`
+
+export default restaurantTemplatePrompt

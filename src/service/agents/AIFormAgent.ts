@@ -1,5 +1,5 @@
-// import chatChunk from "../chat/chat-chunk-openai-office"
-import chatChunk from "../chat/chat-chunk-gemini-office"
+import chatChunk from "../chat/chat-chunk-openai-office"
+// import chatChunk from "../chat/chat-chunk-gemini-office"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import generateFormAgentPrompt from "./prompts/form/form-agent-prompt"
@@ -91,7 +91,7 @@ export class AIFormAgent {
         * 对于业务相关问题：进行分析并给出建议
         * 对于间接相关问题：提供参考信息和最佳实践
         * 对于完全无关问题：礼貌建议咨询其他专业助手
-        * [格式要求:所有代码必须使用 \`\`\`mo <shata-ai-code>../</shata-ai-code>\`\`\` 包裹, 必须返回完整代码, 不允许使用 //其他... 这样的方式来省略任何代码或者省略任何字段,因为用户不懂代码, 所以你省略了代码, 会让用户非常困扰, 因此你返回的 shata-ai-code 包裹的代码必须是完整的, 不能用注释来省略任何代码, 不允许分模块提供, 必须一次性提供完整的代码, 字段 type 严格使用文档中提供的类型,不要使用不存在的类型]`
+        * [格式要求:所有代码必须使用 \`\`\`mo <shata-ai-code>../</shata-ai-code>\`\`\` 包裹, 字段 type 严格使用文档中提供的类型,不要使用不存在的类型,不存在 type: "table", 配置必须是完整的，严格按照<doc>中的配置来生成代码, 不要使用任何文档中没有的配置, 不使用文档中没有的 type 类型,例如 type: "table",不要使用注释来省略任何代码或逻辑。不要分段展示, ]`
 
       const currentUserMessage = {
         role: "user" as const,
