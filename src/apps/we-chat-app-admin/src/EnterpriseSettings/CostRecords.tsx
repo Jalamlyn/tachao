@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react"
-import { Card, CardBody, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@nextui-org/react"
+import { Card, CardBody, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { getMetadata } from "@/service/apis/metadata"
 
 const CostRecords = () => {
   const [records, setRecords] = useState([])
+  const [currentPage, setCurrentPage] = useState(1) // 当前页码
+  const [recordsPerPage] = useState(10) // 每页显示的记录数
 
   useEffect(() => {
     fetchCostRecords()
@@ -20,6 +22,41 @@ const CostRecords = () => {
       console.error("Error fetching cost records:", error)
     }
   }
+
+  // 计算当前页显示的记录
+  const indexOfLastRecord = currentPage * recordsPerPage
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage
+  const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord)
+
+  // 计算总页数
+  const totalPages = Math.ceil(records.length / recordsPerPage)
+
+  // 分页控件
+  const Pagination = () => (
+    <div className="flex justify-center items-center gap-2 mt-4">
+      <Button
+        isDisabled={currentPage === 1}
+        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+      >
+        上一页
+      </Button>
+      {Array.from({ length: totalPages }, (_, index) => (
+        <Button
+          key={index + 1}
+          isDisabled={currentPage === index + 1}
+          onClick={() => setCurrentPage(index + 1)}
+        >
+          {index + 1}
+        </Button>
+      ))}
+      <Button
+        isDisabled={currentPage === totalPages}
+        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+      >
+        下一页
+      </Button>
+    </div>
+  )
 
   return (
     <Card className='w-full'>
@@ -39,7 +76,7 @@ const CostRecords = () => {
             <TableColumn>总费用(塔币)</TableColumn>
           </TableHeader>
           <TableBody>
-            {records.map((record) => (
+            {currentRecords.map((record) => (
               <TableRow key={record.id}>
                 <TableCell>{new Date(record.timestamp).toLocaleString()}</TableCell>
                 <TableCell>{record.model === "ADVANCED" ? "高级模型" : "专家模型"}</TableCell>
@@ -52,6 +89,7 @@ const CostRecords = () => {
             ))}
           </TableBody>
         </Table>
+        <Pagination />
       </CardBody>
     </Card>
   )
