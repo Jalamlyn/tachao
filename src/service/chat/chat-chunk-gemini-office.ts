@@ -1,19 +1,42 @@
 import { message } from "@/components/Message"
 import { fetchController, jsonParse, jsonStringify } from "@/utils"
-import { localDB } from "@/utils/localDB"
+import { setMetadata, getMetadata } from "@/service/apis/metadata"
 
-// 使用JSON解析处理文本内容
+// 处理返回的数据行
 function processTextContent(line: string): string | null {
   try {
-    // 将单行包装成合法的JSON对象
-    const jsonStr = `{${line}}`
-    // 解析JSON
+    // 移除 "data:" 前缀
+    const jsonStr = line.replace(/^data:\s*/, "")
+    // 解析完整的JSON
     const parsed = JSON.parse(jsonStr)
-    return parsed.text || null
+
+    // 检查并提取文本内容
+    if (parsed.candidates?.[0]?.content?.parts?.[0]?.text) {
+      return parsed.candidates[0].content.parts[0].text
+    }
+    return null
   } catch (e) {
-    console.warn("Failed to parse line using JSON:", line, e)
+    console.warn("Failed to parse line:", line, e)
     return null
   }
+}
+
+// 计算费用的函数
+function calculateCost(tokenCount: number, isInput: boolean, model: string): number {
+  const ratePerThousandTokens = {
+    ADVANCED: {
+      input: 0.02,
+      output: 0.08,
+    },
+    EXPERT: {
+      input: 0.2,
+      output: 0.8,
+    },
+  }
+
+  const rate = ratePerThousandTokens[model === "ADVANCED" ? "ADVANCED" : "EXPERT"]
+  const tokenRate = isInput ? rate.input : rate.output
+  return (tokenCount / 1000) * tokenRate
 }
 
 export default async function chatChunkGeminiOffice(
@@ -22,19 +45,11 @@ export default async function chatChunkGeminiOffice(
   onCancel,
   isFirst = true,
   temperature = 0,
-  overFlag = "YES",
-  baseModel = "gemini::gemini-2.0-flash-exp"
+  overFlag = "YES"
 ) {
-  const [provider, model] = baseModel.split("::")
-  const modelSupplierData = localDB.getItem("model-supplier-data") || []
-  const supplierInfo = modelSupplierData.find((supplier) => supplier.id === provider) || "gemini"
-
-  if (!supplierInfo) {
-    throw new Error(`未找到服务商信息：${provider}`)
-  }
-
-  const apiKey = supplierInfo.apiKey || "default_api_key"
-  const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-gemini-office"
+  // 从 sessionStorage 读取当前选择的模型
+  const model = sessionStorage.getItem("aiLevel") || "ADVANCED"
+  const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat"
 
   let _messages = messages.map((msg) => {
     if (msg.role === "system") {
@@ -54,12 +69,11 @@ export default async function chatChunkGeminiOffice(
   _messages = _messages.filter((msg) => msg.role !== "system")
 
   const payload = {
-    model: model,
+    model,
     messages: _messages,
     temperature,
     max_tokens: 8192,
     stream: true,
-    apiKey: "",
     cid: "Hx9Kp2Qm7Zf3Lw5Ry8Tj6",
     system: systemMsg ? systemMsg.content : "",
   }
@@ -99,31 +113,58 @@ export default async function chatChunkGeminiOffice(
       buffer = lines.pop() || ""
 
       for (const line of lines) {
-        console.log("Processing line:", line)
+        if (line.trim()) {
+          console.log("Processing line:", line)
+          const content = processTextContent(line)
+          if (content) {
+            fullContent += content
+            onChunk(content)
+          }
 
-        if (line.includes('"text": "')) {
-          // 首先尝试使用JSON解析方式
-          const jsonContent = processTextContent(line)
-          if (jsonContent) {
-            fullContent += jsonContent
-            onChunk(jsonContent)
-            continue
+          // 检查是否是最后一行（包含token统计信息）
+          if (line.includes(`STOP`)) {
+            try {
+              const jsonStr = line.replace(/^data:\s*/, "")
+              const parsed = JSON.parse(jsonStr)
+              const { promptTokenCount, candidatesTokenCount } = parsed.usageMetadata
+              // 计算费用
+              const inputCost = calculateCost(promptTokenCount, true, model)
+              const outputCost = calculateCost(candidatesTokenCount, false, model)
+
+              // 获取现有的费用记录
+              const costRecords = await getMetadata(["ai-cost-records"])
+              const existingRecords = costRecords?.[0]?.value ? JSON.parse(costRecords[0].value) : []
+
+              // 添加新的记录
+              const newRecord = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                model,
+                promptTokenCount,
+                candidatesTokenCount,
+                inputCost,
+                outputCost,
+                totalCost: inputCost + outputCost,
+              }
+
+              // 保存更新后的记录
+              await setMetadata("ai-cost-records", [...existingRecords, newRecord])
+            } catch (e) {
+              console.error("Error processing usage metadata:", e)
+            }
           }
         }
       }
     }
 
     console.log("Final accumulated content:", fullContent)
-    localDB.setItem("chat-chunk-over", overFlag)
+    await setMetadata("chat-chunk-over", overFlag)
   } catch (error) {
     if (error.name === "AbortError") {
       console.log("Fetch aborted")
     } else {
       console.error("Error:", error)
       message.error(`An error occurred while fetching data: ${error.message}`)
-      if (error.message.includes("context_length_exceeded")) {
-        onChunk(`项目大小超过了最大上下文，无法使用自动检索模式，请切换到手动检索模式，手动勾选需要修改的文件`)
-      }
     }
     throw error
   }
