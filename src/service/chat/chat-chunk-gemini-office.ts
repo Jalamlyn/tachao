@@ -133,7 +133,7 @@ export default async function chatChunkGeminiOffice(
 
               // 获取现有的费用记录
               const costRecords = await getMetadata(["ai-cost-records"])
-              const existingRecords = costRecords?.[0]?.value ? JSON.parse(costRecords[0].value) : []
+              const existingRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
 
               // 添加新的记录
               const newRecord = {
