@@ -1,15 +1,6 @@
-import { useEffect, useState } from "react"
-import {
-  Card,
-  CardBody,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  Button,
-} from "@nextui-org/react"
+import { useEffect, useState, useMemo } from "react"
+import { Card, CardBody, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@nextui-org/react"
+import { Pagination } from "@nextui-org/react" // 引入 nextui 的 Pagination 组件
 import { Icon } from "@iconify/react"
 import { getMetadata } from "@/service/apis/metadata"
 
@@ -41,25 +32,14 @@ const CostRecords = () => {
   // 计算总页数
   const totalPages = Math.ceil(records.length / recordsPerPage)
 
-  // 分页控件
-  const Pagination = () => (
-    <div className='flex justify-center items-center gap-2 mt-4'>
-      <Button isDisabled={currentPage === 1} onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}>
-        上一页
-      </Button>
-      {Array.from({ length: totalPages }, (_, index) => (
-        <Button key={index + 1} isDisabled={currentPage === index + 1} onClick={() => setCurrentPage(index + 1)}>
-          {index + 1}
-        </Button>
-      ))}
-      <Button
-        isDisabled={currentPage === totalPages}
-        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-      >
-        下一页
-      </Button>
-    </div>
-  )
+  // 统计功能
+  const totalCost = useMemo(() => {
+    return records.reduce((sum, record) => sum + record.totalCost, 0).toFixed(4)
+  }, [records])
+
+  const currentPageCost = useMemo(() => {
+    return currentRecords.reduce((sum, record) => sum + record.totalCost, 0).toFixed(4)
+  }, [currentRecords])
 
   return (
     <Card className='w-full'>
@@ -67,6 +47,15 @@ const CostRecords = () => {
         <div className='flex items-center gap-2 mb-4'>
           <Icon icon='solar:card-transfer-bold-duotone' className='w-6 h-6 text-primary' />
           <h3 className='text-lg font-medium'>费用明细</h3>
+        </div>
+        {/* 统计信息 */}
+        <div className='mb-4'>
+          <p className='text-sm text-default-600'>
+            总费用: <span className='font-medium text-default-800'>{totalCost} 塔币</span>
+          </p>
+          <p className='text-sm text-default-600'>
+            当前页费用: <span className='font-medium text-default-800'>{currentPageCost} 塔币</span>
+          </p>
         </div>
         <Table aria-label='费用明细表'>
           <TableHeader>
@@ -92,7 +81,17 @@ const CostRecords = () => {
             ))}
           </TableBody>
         </Table>
-        <Pagination />
+        {/* 使用 nextui 的 Pagination 组件 */}
+        <div className='flex justify-center items-center mt-4'>
+          <Pagination
+            total={totalPages}
+            initialPage={1}
+            page={currentPage}
+            onChange={(page) => setCurrentPage(page)}
+            showControls
+            size='lg'
+          />
+        </div>
       </CardBody>
     </Card>
   )
