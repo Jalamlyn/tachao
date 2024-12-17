@@ -1,6 +1,7 @@
 import { message } from "@/components/Message"
 import { fetchController, jsonParse, jsonStringify } from "@/utils"
 import { setMetadata, getMetadata } from "@/service/apis/metadata"
+import { localDB } from "@/utils/localDB"
 
 // 处理返回的数据行
 function processTextContent(line: string): string | null {
@@ -148,6 +149,7 @@ export default async function chatChunkGeminiOffice(
 
               // 保存更新后的记录
               await setMetadata("ai-cost-records", [...existingRecords, newRecord])
+              localDB.setItem("chat-chunk-over", overFlag)
             } catch (e) {
               console.error("Error processing usage metadata:", e)
             }
@@ -155,10 +157,10 @@ export default async function chatChunkGeminiOffice(
         }
       }
     }
-
     console.log("Final accumulated content:", fullContent)
   } catch (error) {
-    if (error.name === "AbortError") {s
+    if (error.name === "AbortError") {
+      s
     } else {
       message.error(`An error occurred while fetching data: ${error.message}`)
     }

@@ -146,7 +146,7 @@ ${ANALYSIS_SCENARIOS.visualization}
 ${ANALYSIS_SCENARIOS.dataQuery}
 
 注意事项：
-1. 输出表单编号时使用：<a target="_blank" href="/form/表单编号">表单编号</a> 但不要用 \`\`\` 包裹
+1. 输出表单编号时使用：<a target="_blank" href="/form/表单编号">表单编号</a>, 但是不要输出成代码块
 2. 涉及金额时保留两位小数
 3. 使用标准日期格式
 4. 数据不存在时要明确告知
