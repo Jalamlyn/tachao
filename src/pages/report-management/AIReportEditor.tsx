@@ -288,6 +288,23 @@ const AIReportEditor: React.FC = () => {
     setIsVersionSelectModalOpen(false)
   }
 
+  // 修复：在版本切换时处理 null 值
+  const handleVersionSwitch = (version) => {
+    if (version) {
+      setPreviewContent(version.rawConfig || "")
+      AIReportAgent.analyzeData(processedDataRef.current, version.rawConfig || "")
+        .then((analysis) => {
+          setPreviewComponent(<AnalysisResult analysis={analysis} />)
+        })
+        .catch((error) => {
+          message.error("分析数据失败")
+          console.error(error)
+        })
+    } else {
+      message.error("无法切换到指定版本")
+    }
+  }
+
   const pageActions = (
     <Button
       color='primary'
@@ -322,17 +339,7 @@ const AIReportEditor: React.FC = () => {
             <ErrorBoundary
               onReset={() => {
                 const prevVersion = versionControl.rollback()
-                if (prevVersion) {
-                  setPreviewContent(prevVersion.rawConfig || "")
-                  AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
-                    .then((analysis) => {
-                      setPreviewComponent(<AnalysisResult analysis={analysis} />)
-                    })
-                    .catch((error) => {
-                      message.error("分析数据失败")
-                      console.error(error)
-                    })
-                }
+                handleVersionSwitch(prevVersion)
               }}
             >
               {previewComponent}
