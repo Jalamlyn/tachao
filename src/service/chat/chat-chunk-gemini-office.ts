@@ -147,8 +147,15 @@ export default async function chatChunkGeminiOffice(
                 totalCost: inputCost + outputCost,
               }
 
-              // 保存更新后的记录
-              await setMetadata("ai-cost-records", [...existingRecords, newRecord])
+              // 判断是否已有数据
+              if (existingRecords.length > 0) {
+                // 插入新记录到现有数据
+                await setMetadata("ai-cost-records", [...existingRecords, newRecord])
+              } else {
+                // 没有数据，直接设置
+                await setMetadata("ai-cost-records", [newRecord])
+              }
+
               localDB.setItem("chat-chunk-over", overFlag)
             } catch (e) {
               console.error("Error processing usage metadata:", e)
