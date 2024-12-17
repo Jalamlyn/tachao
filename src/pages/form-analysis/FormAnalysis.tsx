@@ -237,7 +237,9 @@ const FormAnalysis: React.FC = () => {
           },
           () => {},
           true,
-          0.3
+          0.3,
+          "YES",
+          true
         )
 
         setChatCount((prev) => prev + 1)

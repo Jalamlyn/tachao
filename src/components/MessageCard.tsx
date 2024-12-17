@@ -157,7 +157,7 @@ const MessageCard = React.memo(
                   if (match && match[1] == "mermaid") {
                     return (
                       <>
-                        <pre className='mermaid'>{children}</pre>
+                        <code className='mermaid'>{children}</code>
                       </>
                     )
                   }

@@ -45,10 +45,11 @@ export default async function chatChunkGeminiOffice(
   onCancel,
   isFirst = true,
   temperature = 0,
-  overFlag = "YES"
+  overFlag = "YES",
+  isExpert = false
 ) {
   // 从 sessionStorage 读取当前选择的模型
-  const model = sessionStorage.getItem("aiLevel") || "ADVANCED"
+  const model = isExpert ? "EXPERT" : sessionStorage.getItem("aiLevel") || "ADVANCED"
   const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat"
 
   let _messages = messages.map((msg) => {
@@ -106,7 +107,6 @@ export default async function chatChunkGeminiOffice(
       if (done) break
 
       const chunk = decoder.decode(value, { stream: true })
-      console.log("Received chunk:", chunk)
 
       buffer += chunk
       const lines = buffer.split("\n")
@@ -114,7 +114,6 @@ export default async function chatChunkGeminiOffice(
 
       for (const line of lines) {
         if (line.trim()) {
-          console.log("Processing line:", line)
           const content = processTextContent(line)
           if (content) {
             fullContent += content
@@ -158,12 +157,9 @@ export default async function chatChunkGeminiOffice(
     }
 
     console.log("Final accumulated content:", fullContent)
-    await setMetadata("chat-chunk-over", overFlag)
   } catch (error) {
-    if (error.name === "AbortError") {
-      console.log("Fetch aborted")
+    if (error.name === "AbortError") {s
     } else {
-      console.error("Error:", error)
       message.error(`An error occurred while fetching data: ${error.message}`)
     }
     throw error

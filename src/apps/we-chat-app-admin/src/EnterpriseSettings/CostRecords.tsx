@@ -14,7 +14,7 @@ const CostRecords = () => {
     try {
       // 使用 getMetadata 方法读取费用记录
       const costRecords = await getMetadata(["ai-cost-records"])
-      const parsedRecords = costRecords?.[0]?.value ? JSON.parse(costRecords[0].value) : []
+      const parsedRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
       setRecords(parsedRecords)
     } catch (error) {
       console.error("Error fetching cost records:", error)

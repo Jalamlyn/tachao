@@ -117,32 +117,6 @@ System->>Database: 数据流转 (2024-11-22 至 2024-12-01)
 `,
 }
 
-// 输出格式模板
-const OUTPUT_TEMPLATES = {
-  analysis: `
-分析结果：
-1. 数据概览
-   - 总数：{total}
-   - 状态分布：{statusDistribution}
-   - 时间范围：{dateRange}
-
-2. 关键发现
-   {findings}
-
-3. 可视化展示
-   {visualization}
-
-4. 建议措施
-   {suggestions}
-`,
-
-  error: `
-抱歉，无法完成分析：
-- 原因：{reason}
-- 建议：{suggestion}
-`,
-}
-
 // 生成系统提示词
 const generateSystemPrompt = (selectedForms: any[]) => {
   const formCount = selectedForms.length
