@@ -1,13 +1,15 @@
 import { useEffect, useState, useMemo } from "react"
 import { Card, CardBody, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@nextui-org/react"
-import { Pagination, Select, SelectItem } from "@nextui-org/react" // 引入 nextui 的 Pagination 和 Select 组件
+import { Pagination } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { getMetadata } from "@/service/apis/metadata"
+import { Select, SelectItem } from "@nextui-org/react"
 
 const CostRecords = () => {
   const [records, setRecords] = useState([])
-  const [currentPage, setCurrentPage] = useState(1) // 当前页码
-  const [recordsPerPage, setRecordsPerPage] = useState(10) // 每页显示的记录数，默认10
+  const [currentPage, setCurrentPage] = useState(1)
+  const [recordsPerPage, setRecordsPerPage] = useState(10)
+  const [showAll, setShowAll] = useState(false)
 
   useEffect(() => {
     fetchCostRecords()
@@ -15,7 +17,6 @@ const CostRecords = () => {
 
   const fetchCostRecords = async () => {
     try {
-      // 使用 getMetadata 方法读取费用记录
       const costRecords = await getMetadata(["ai-cost-records"])
       const parsedRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
       setRecords(parsedRecords)
@@ -24,15 +25,12 @@ const CostRecords = () => {
     }
   }
 
-  // 计算当前页显示的记录
-  const indexOfLastRecord = currentPage * recordsPerPage
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage
-  const currentRecords = recordsPerPage === -1 ? records : records.slice(indexOfFirstRecord, indexOfLastRecord)
+  const indexOfLastRecord = showAll ? records.length : currentPage * recordsPerPage
+  const indexOfFirstRecord = showAll ? 0 : indexOfFirstRecord = indexOfLastRecord - recordsPerPage
+  const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord)
 
-  // 计算总页数
-  const totalPages = recordsPerPage === -1 ? 1 : Math.ceil(records.length / recordsPerPage)
+  const totalPages = Math.ceil(records.length / recordsPerPage)
 
-  // 统计功能
   const totalCost = useMemo(() => {
     return records.reduce((sum, record) => sum + record.totalCost, 0).toFixed(4)
   }, [records])
@@ -41,11 +39,24 @@ const CostRecords = () => {
     return currentRecords.reduce((sum, record) => sum + record.totalCost, 0).toFixed(4)
   }, [currentRecords])
 
-  const handleRecordsPerPageChange = (value) => {
-    const newRecordsPerPage = value === "all" ? -1 : parseInt(value, 10)
-    setRecordsPerPage(newRecordsPerPage)
-    setCurrentPage(1) // 重置到第一页
+  const handlePageSizeChange = (value: string) => {
+    if (value === "all") {
+      setShowAll(true)
+      setCurrentPage(1)
+    } else {
+      setShowAll(false)
+      setRecordsPerPage(Number(value))
+      setCurrentPage(1)
+    }
   }
+
+  const pageSizeOptions = [
+    { value: "10", label: "10 条/页" },
+    { value: "20", label: "20 条/页" },
+    { value: "50", label: "50 条/页" },
+    { value: "100", label: "100 条/页" },
+    { value: "all", label: "显示全部" }
+  ]
 
   return (
     <Card className='w-full'>
@@ -54,13 +65,12 @@ const CostRecords = () => {
           <Icon icon='solar:card-transfer-bold-duotone' className='w-6 h-6 text-primary' />
           <h3 className='text-lg font-medium'>费用明细</h3>
         </div>
-        {/* 统计信息 */}
         <div className='mb-4'>
           <p className='text-sm text-default-600'>
             总费用: <span className='font-medium text-default-800'>{totalCost} 塔币</span>
           </p>
           <p className='text-sm text-default-600'>
-            当前页费用: <span className='font-medium text-default-800'>{currentPageCost} 塔币</span>
+            当前显示费用: <span className='font-medium text-default-800'>{currentPageCost} 塔币</span>
           </p>
         </div>
         <Table aria-label='费用明细表'>
@@ -87,30 +97,43 @@ const CostRecords = () => {
             ))}
           </TableBody>
         </Table>
-        {/* 分页和每页记录数选择 */}
-        <div className='flex justify-between items-center mt-4'>
-          <Select
-            size='sm'
-            value={recordsPerPage === -1 ? "all" : recordsPerPage.toString()}
-            onChange={(e) => handleRecordsPerPageChange(e.target.value)}
-            className='w-[140px]'
-            aria-label='选择每页显示条数'
-          >
-            <SelectItem value="10">10 条/页</SelectItem>
-            <SelectItem value="20">20 条/页</SelectItem>
-            <SelectItem value="50">50 条/页</SelectItem>
-            <SelectItem value="100">100 条/页</SelectItem>
-            <SelectItem value="all">所有记录</SelectItem>
-          </Select>
-          <Pagination
-            total={totalPages}
-            initialPage={1}
-            page={currentPage}
-            onChange={(page) => setCurrentPage(page)}
-            showControls
-            size='lg'
-            isDisabled={recordsPerPage === -1} // 禁用分页控件
-          />
+        <div className='flex justify-between items-center px-4 py-3 bg-default-50 rounded-lg mt-4'>
+          <div className='text-small text-default-600 flex items-center gap-1'>
+            <Icon icon='mdi:file-document-outline' className='w-4 h-4' />
+            共 {records.length} 条记录
+          </div>
+          <div className='flex gap-4 items-center'>
+            <Select
+              size='sm'
+              value={showAll ? "all" : recordsPerPage.toString()}
+              onChange={(e) => handlePageSizeChange(e.target.value)}
+              className='w-[140px]'
+              classNames={{
+                trigger: "h-unit-8 min-h-unit-8 py-0.5 shadow-sm hover:shadow transition-shadow duration-200",
+                value: "text-small",
+                listbox: "text-small",
+              }}
+              aria-label='选择每页显示条数'
+            >
+              {pageSizeOptions.map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className='data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary'
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </Select>
+            {!showAll && (
+              <Pagination
+                total={Math.ceil(records.length / recordsPerPage)}
+                page={currentPage}
+                onChange={(page) => setCurrentPage(page)}
+                showControls
+              />
+            )}
+          </div>
         </div>
       </CardBody>
     </Card>
