@@ -3,34 +3,23 @@ import { Card, CardBody, Table, TableHeader, TableColumn, TableBody, TableRow, T
 import { Pagination } from "@nextui-org/react" // 引入 nextui 的 Pagination 组件
 import { Icon } from "@iconify/react"
 import { getMetadata } from "@/service/apis/metadata"
+import { useMetadataTable } from "@/components/metadata-table/useMetadataTable" // 引入 useMetadataTable
 
 const CostRecords = () => {
-  const [records, setRecords] = useState([])
-  const [currentPage, setCurrentPage] = useState(1) // 当前页码
-  const [recordsPerPage] = useState(10) // 每页显示的记录数
-
-  useEffect(() => {
-    fetchCostRecords()
-  }, [])
-
-  const fetchCostRecords = async () => {
-    try {
-      // 使用 getMetadata 方法读取费用记录
-      const costRecords = await getMetadata(["ai-cost-records"])
-      const parsedRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
-      setRecords(parsedRecords)
-    } catch (error) {
-      console.error("Error fetching cost records:", error)
-    }
-  }
-
-  // 计算当前页显示的记录
-  const indexOfLastRecord = currentPage * recordsPerPage
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage
-  const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord)
-
-  // 计算总页数
-  const totalPages = Math.ceil(records.length / recordsPerPage)
+  // 使用 useMetadataTable 来管理分页和数据逻辑
+  const {
+    data: records,
+    currentPage,
+    pageSize,
+    total,
+    handlePageChange,
+    handlePageSizeChange,
+    handleRefresh,
+  } = useMetadataTable({
+    type: "ai-cost-records",
+    searchFields: ["timestamp", "model"],
+    pagination: { defaultPageSize: 10, pageSizeOptions: [10, 20, 50] },
+  })
 
   return (
     <Card className='w-full'>
@@ -50,7 +39,7 @@ const CostRecords = () => {
             <TableColumn>总费用(塔币)</TableColumn>
           </TableHeader>
           <TableBody>
-            {currentRecords.map((record) => (
+            {records.map((record) => (
               <TableRow key={record.id}>
                 <TableCell>{new Date(record.timestamp).toLocaleString()}</TableCell>
                 <TableCell>{record.model === "ADVANCED" ? "高级模型" : "专家模型"}</TableCell>
@@ -66,10 +55,10 @@ const CostRecords = () => {
         {/* 使用 nextui 的 Pagination 组件 */}
         <div className="flex justify-center items-center mt-4">
           <Pagination
-            total={totalPages}
+            total={Math.ceil(total / pageSize)}
             initialPage={1}
             page={currentPage}
-            onChange={(page) => setCurrentPage(page)}
+            onChange={handlePageChange}
             showControls
             size="lg"
             color="primary" // 设置主题颜色
