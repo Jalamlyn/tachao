@@ -26,7 +26,7 @@ const CostRecords = () => {
   }
 
   const indexOfLastRecord = showAll ? records.length : currentPage * recordsPerPage
-  const indexOfFirstRecord = showAll ? 0 : indexOfFirstRecord = indexOfLastRecord - recordsPerPage
+  const indexOfFirstRecord = showAll ? 0 : (currentPage - 1) * recordsPerPage
   const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord)
 
   const totalPages = Math.ceil(records.length / recordsPerPage)
