@@ -48,7 +48,7 @@ export const renderLeftPanel = (
                         />
                       </div>
                       <div className='flex flex-col items-start'>
-                        <span className='font-medium'>{level.label}</span>
+                        <span className='font-medium'>{level.label}工程师</span>
                       </div>
                     </div>
                   </Button>

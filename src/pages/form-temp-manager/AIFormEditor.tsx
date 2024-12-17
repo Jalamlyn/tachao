@@ -257,7 +257,7 @@ const AIFormEditor: React.FC = () => {
   }
 
   return (
-    <PageLayout title='AI 表单助手' titleIcon='mdi:form-select' actions={pageActions}>
+    <PageLayout title='AI 表单开发' titleIcon='mdi:form-select' actions={pageActions}>
       <AIEditor
         parseConfig={AIFormAgent.parseConfig}
         messages={messages}

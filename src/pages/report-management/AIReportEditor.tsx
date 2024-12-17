@@ -152,7 +152,7 @@ const AIReportEditor: React.FC = () => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "报表管理", href: "/we-chat-app/admin/reports" },
-      { label: "AI 报表助手", href: `/we-chat-app/admin/reports/ai/${reportId || templateId}` },
+      { label: "AI 报表开发", href: `/we-chat-app/admin/reports/ai/${reportId || templateId}` },
     ])
   }, [])
 
@@ -301,7 +301,7 @@ const AIReportEditor: React.FC = () => {
   )
 
   return (
-    <PageLayout title='AI 报表助手' titleIcon='mdi:form-select' className='p-0' actions={pageActions}>
+    <PageLayout title='AI 报表开发' titleIcon='mdi:form-select' className='p-0' actions={pageActions}>
       <AIEditor
         parseConfig={async (code) => {
           // 使用报表的解析方法

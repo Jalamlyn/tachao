@@ -241,8 +241,8 @@ const FormAnalysis: React.FC = () => {
           () => {},
           true,
           0.3,
-          selectedAILevel, // 将AI级别传递给chatChunk
-          true
+          "YES",
+          selectedAILevel // 将AI级别传递给chatChunk
         )
 
         setChatCount((prev) => prev + 1)
@@ -279,20 +279,14 @@ const FormAnalysis: React.FC = () => {
               onClick={() => handleAILevelChange(key as keyof typeof AI_LEVELS)}
             >
               <div className='flex items-center gap-2'>
-                <div
-                  className={`p-1.5 rounded-full ${
-                    selectedAILevel === key ? "bg-white/20" : "bg-primary/10"
-                  }`}
-                >
+                <div className={`p-1.5 rounded-full ${selectedAILevel === key ? "bg-white/20" : "bg-primary/10"}`}>
                   <Icon
                     icon={level.icon}
-                    className={`w-4 h-4 ${
-                      selectedAILevel === key ? "text-white" : "text-primary"
-                    }`}
+                    className={`w-4 h-4 ${selectedAILevel === key ? "text-white" : "text-primary"}`}
                   />
                 </div>
                 <div className='flex flex-col items-start'>
-                  <span className='font-medium'>{level.label}</span>
+                  <span className='font-medium'>{level.label}数据分析师</span>
                 </div>
               </div>
             </Button>

@@ -1,5 +1,5 @@
-import chatChunk from "@/service/chat/chat-chunk-openai-office"
-// import chatChunk from "@/service/chat/chat-chunk-gemini-office"
+// import chatChunk from "@/service/chat/chat-chunk-openai-office"
+import chatChunk from "@/service/chat/chat-chunk-gemini-office"
 import { Message } from "@/service/agents/AIFormAgentTypes"
 import { formulaService } from "@/services/formulaService"
 import { markdown as doc } from "@/pages/report-management/components/AnalysisResult.md"
@@ -144,12 +144,22 @@ export class AIReportAgent {
   public async analyzeData(data: ProcessedData, rawConfig: string): Promise<AnalysisResult["analysis"]> {
     try {
       console.log("[AIReportAgent] Analyzing data with rawConfig")
+      const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
+      const match = this.lastResponseRef.match(regex)
+      if (!match) {
+        console.error("[AIReportAgent] No valid analysis code found in AI response")
+        throw new Error("No valid analysis code found in AI response")
+      }
+      const generatedCode = match[1].trim()
 
+      if (!this.validateConfig(this.lastResponseRef)) {
+        throw new Error("Invalid generated configuration")
+      }
       // 转换数据结构
       const analysisData = prepareAnalysisData(data, this._templateInfoMap)
 
       // 执行分析
-      const result = await this.executeCode(rawConfig, analysisData)
+      const result = await this.executeCode(generatedCode, analysisData)
 
       if (!result || !result.type || !result.data) {
         throw new Error("Invalid analysis result format")
@@ -191,9 +201,17 @@ export class AIReportAgent {
         templateInfoMap: this._templateInfoMap,
       })
 
+      const enhancedCommand = `${command}
+      [回答策略:
+        * 对于报表直接相关问题：提供具体解决方案
+        * 对于业务相关问题：进行分析并给出建议
+        * 对于间接相关问题：提供参考信息和最佳实践
+        * 对于完全无关问题：礼貌建议咨询其他专业助手
+        * [格式要求:所有代码必须使用 \`\`\`mo <shata-ai-code>../</shata-ai-code>\`\`\` 包裹, 必须返回完整代码, 不允许使用 //其他... 这样的方式来省略任何代码或者省略任何字段,因为用户不懂代码, 所以你省略了代码, 会让用户非常困扰, 因此你返回的 shata-ai-code 包裹的代码必须是完整的, 不能用注释来省略任何代码, 不允许分模块提供, 必须一次性提供完整的代码]`
+
       const messages: Message[] = [
         { role: "system", content: systemPrompt },
-        { role: "user", content: command },
+        { role: "user", content: enhancedCommand },
       ]
 
       this.lastResponseRef = ""

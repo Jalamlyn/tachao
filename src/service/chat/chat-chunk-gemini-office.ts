@@ -47,10 +47,11 @@ export default async function chatChunkGeminiOffice(
   isFirst = true,
   temperature = 0,
   overFlag = "YES",
-  isExpert = false
+  aiLevel
 ) {
   // 从 sessionStorage 读取当前选择的模型
-  const model = isExpert ? "EXPERT" : sessionStorage.getItem("aiLevel") || "ADVANCED"
+  debugger
+  const model = aiLevel ? aiLevel : sessionStorage.getItem("aiLevel") || "ADVANCED"
   const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat"
 
   let _messages = messages.map((msg) => {
