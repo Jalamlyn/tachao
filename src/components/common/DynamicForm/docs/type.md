@@ -239,40 +239,15 @@ interface DynamicFormConfig {
            * }
            */
           render?: (value: any, record: any) => React.ReactNode
-          /**
-           * 列汇总配置
-           * @type {object}
-           */
-          summary?: {
-            /**
-             * 汇总渲染函数
-             * @type {function}
-             * @param records - 所有数据记录
-             * @returns {React.ReactNode} 返回要渲染的汇总内容
-             * @example
-             * summary: {
-             *   render: (records) => {
-             *     const total = records.reduce((sum, record) =>
-             *       sum + (record.amount || 0), 0)
-             *     return total.toFixed(2)
-             *   }
-             * }
-             */
-            render: (records: any[]) => React.ReactNode
-          }
         }>
         /**
          * 表格汇总配置
          * @type {object}
          */
         summary?: {
-          /** 是否显示汇总行 @type {boolean} */
-          show?: boolean
-          /** 汇总标签 @type {string} */
-          label?: string
-          /** 自定义类名 @type {string} */
-          className?: string
-        }
+          show: true,  // 是否显示汇总行
+          firstColumnText: "合计",  // 第一列显示的文本
+          onCompute: (data) => {}
       }
     }>
 
