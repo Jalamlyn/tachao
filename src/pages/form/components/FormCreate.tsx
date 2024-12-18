@@ -7,11 +7,13 @@ import { useMetadata } from "@/hooks/useMetadata"
 import { parseFormConfig } from "@/utils/codeParser"
 import { Icon } from "@iconify/react"
 import { ScrollShadow, Spinner } from "@nextui-org/react"
+import { DynamicComponentRenderer } from "@/components/DynamicComponentRenderer"
 
 const FormCreate: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadedConfig, setLoadedConfig] = useState<any>(null)
+  const [componentCode, setComponentCode] = useState<string | null>(null)
   const { templateId } = useParams<any>()
   const { getDetail } = useMetadata<{ config: any }>("template")
 
@@ -23,13 +25,16 @@ const FormCreate: React.FC = () => {
       try {
         const result = await getDetail(templateId)
         if (result && result.data.rawConfig) {
-          const { config } = await parseFormConfig(result.data.rawConfig)
+          const { config, code } = await parseFormConfig(result.data.rawConfig)
           if (!config.metadata) {
             config.metadata = {
               title: result.title,
             }
           }
           setLoadedConfig(config)
+          if (code) {
+            setComponentCode(code)
+          }
         }
       } catch (err) {
         console.error("加载表单配置失败:", err)
@@ -74,7 +79,27 @@ const FormCreate: React.FC = () => {
         className='container mx-auto py-8 px-4'
       >
         <ScrollShadow className='h-[calc(100vh-60px)] mt-6'>
-          <DynamicForm isCreateMode={true} config={loadedConfig} templateId={templateId} />
+          {componentCode ? (
+            // 使用新的动态组件渲染器
+            <DynamicComponentRenderer
+              code={componentCode}
+              templateId={templateId}
+              mode="create"
+            />
+          ) : loadedConfig ? (
+            // 保持原有的渲染逻辑
+            <DynamicForm 
+              isCreateMode={true} 
+              config={loadedConfig} 
+              templateId={templateId} 
+            />
+          ) : (
+            <div className='flex flex-col items-center justify-center'>
+              <Icon icon='mdi:form' className='w-20 h-20 text-default-400 mb-6' />
+              <p className='text-xl font-medium text-default-600 mb-2'>开始创建表单</p>
+              <p className='text-default-500'>请先生成表单模板来预览</p>
+            </div>
+          )}
         </ScrollShadow>
       </motion.div>
     </>

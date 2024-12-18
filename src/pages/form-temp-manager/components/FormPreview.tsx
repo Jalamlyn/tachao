@@ -6,13 +6,15 @@ import { useMetadata } from "@/hooks/useMetadata"
 import { parseFormConfig } from "@/utils/codeParser"
 import { Icon } from "@iconify/react"
 import { Spinner } from "@nextui-org/react"
+import { DynamicComponentRenderer } from "@/components/DynamicComponentRenderer"
 
 interface FormPreviewProps {
   config: DynamicFormConfig | null
+  code?: string // 新增：组件代码
   previewMode?: boolean
 }
 
-const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMode = true }) => {
+const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, code, previewMode = true }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadedConfig, setLoadedConfig] = useState<DynamicFormConfig | null>(null)
@@ -52,8 +54,6 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
     loadFormConfig()
   }, [templateId, propConfig, getDetail])
 
-  const config = propConfig || loadedConfig
-
   if (isLoading) {
     return (
       <div className='flex flex-col items-center justify-center h-screen'>
@@ -79,10 +79,22 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, previewMo
 
   return (
     <div className='relative h-full bg-background'>
-      {config ? (
+      {code ? (
+        // 使用新的动态组件渲染器
         <div className='h-full'>
           <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
-            <DynamicForm previewMode={previewMode} config={config} templateId={templateId} />
+            <DynamicComponentRenderer
+              code={code}
+              templateId={templateId}
+              mode="preview"
+            />
+          </div>
+        </div>
+      ) : loadedConfig ? (
+        // 保持原有的渲染逻辑
+        <div className='h-full'>
+          <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
+            <DynamicForm previewMode={previewMode} config={loadedConfig} templateId={templateId} />
           </div>
         </div>
       ) : (

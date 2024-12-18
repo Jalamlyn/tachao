@@ -3,6 +3,7 @@ import { Tabs, Tab } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import DynamicForm from "@/components/common/DynamicForm"
 import FormHistoryTable from "@/components/forms/FormHistoryTable"
+import { DynamicComponentRenderer } from "@/components/DynamicComponentRenderer"
 
 interface FormTabsProps {
   selectedTab: string
@@ -11,6 +12,7 @@ interface FormTabsProps {
   formData: any
   formId: string
   templateId: string | null
+  componentCode?: string // 新增：组件代码
 }
 
 export const FormTabs: React.FC<FormTabsProps> = ({
@@ -20,6 +22,7 @@ export const FormTabs: React.FC<FormTabsProps> = ({
   formData,
   formId,
   templateId,
+  componentCode
 }) => (
   <Tabs
     selectedKey={selectedTab}
@@ -42,7 +45,24 @@ export const FormTabs: React.FC<FormTabsProps> = ({
       }
     >
       <div className='mt-4 h-[calc(100vh-140px)] overflow-auto rounded-lg'>
-        <DynamicForm config={formConfig} id={formId} templateId={templateId} initialValues={formData} />
+        {componentCode ? (
+          // 使用新的动态组件渲染器
+          <DynamicComponentRenderer
+            code={componentCode}
+            formId={formId}
+            templateId={templateId}
+            initialValues={formData}
+            mode="edit"
+          />
+        ) : (
+          // 保持原有的渲染逻辑
+          <DynamicForm 
+            config={formConfig} 
+            id={formId} 
+            templateId={templateId} 
+            initialValues={formData} 
+          />
+        )}
       </div>
     </Tab>
     <Tab
