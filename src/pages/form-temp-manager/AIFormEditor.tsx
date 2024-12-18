@@ -279,7 +279,7 @@ const AIFormEditor: React.FC = () => {
               }
             }}
           >
-            <FormPreview previewMode config={version?.formConfig} />
+            <FormPreview previewMode code={version?.formConfig} />
           </ErrorBoundary>
         )}
         showCodeTab

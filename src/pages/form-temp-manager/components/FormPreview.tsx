@@ -9,12 +9,11 @@ import { Spinner } from "@nextui-org/react"
 import { DynamicComponentRenderer } from "@/components/DynamicComponentRenderer"
 
 interface FormPreviewProps {
-  config: DynamicFormConfig | null
   code?: string // 新增：组件代码
   previewMode?: boolean
 }
 
-const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, code, previewMode = true }) => {
+const FormPreview: React.FC<FormPreviewProps> = ({ code, previewMode = true }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadedConfig, setLoadedConfig] = useState<DynamicFormConfig | null>(null)
@@ -24,11 +23,6 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, code, pre
 
   useEffect(() => {
     const loadFormConfig = async () => {
-      if (propConfig) {
-        setLoadedConfig(propConfig)
-        return
-      }
-
       if (code) {
         setComponentCode(code)
       }
@@ -60,7 +54,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, code, pre
     }
 
     loadFormConfig()
-  }, [templateId, propConfig, code, getDetail])
+  }, [templateId, code, getDetail])
 
   if (isLoading) {
     return (
@@ -91,11 +85,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, code, pre
         // 使用新的动态组件渲染器
         <div className='h-full'>
           <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
-            <DynamicComponentRenderer
-              code={componentCode}
-              templateId={templateId}
-              mode="preview"
-            />
+            <DynamicComponentRenderer code={componentCode} templateId={templateId} mode='preview' />
           </div>
         </div>
       ) : loadedConfig ? (

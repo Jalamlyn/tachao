@@ -160,12 +160,30 @@ export const parseFormEditOperations = async (
 /**
  * 解析表单配置代码
  */
-export const parseFormConfig = async (content: string): Promise<any> => {
+export const parseFormConfig = async (content: string) => {
   try {
-    return await parseAICode(content, "shata-ai-code")
+    // 1. 提取代码
+    const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
+    const match = content.match(regex)
+    if (!match) {
+      throw new Error("No valid code found")
+    }
+
+    const code = match[1].trim()
+
+    // 2. 基本验证
+    if (!code.includes("CustomForm")) {
+      throw new Error("Invalid component code")
+    }
+
+    // 3. 直接返回代码，不做转换
+    return {
+      code,
+      // 为了向后兼容，可以返回一个空的配置对象
+      config: {},
+    }
   } catch (error) {
-    aiLog.error(error as Error)
-    // message.error("配置解析失败，请检查配置格式是否正确")
+    console.error("Error parsing form code:", error)
     throw error
   }
 }

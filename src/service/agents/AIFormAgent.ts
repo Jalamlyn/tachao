@@ -95,6 +95,7 @@ export class AIFormAgent {
         * 对于间接相关问题：提供参考信息和最佳实践
         * 对于完全无关问题：礼貌建议咨询其他专业助手
         * 明确我的意图再回复
+        * 一次只生成一份 <shata-ai-code>
         * [格式要求:所有代码必须使用 
         \`\`\`mo 
         <shata-ai-code>

@@ -30,6 +30,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   previewMode = false,
 }) => {
   const config = merge({}, defaultFormConfig, userConfig)
+  console.log("config:", config)
   const [isLoading, setIsLoading] = useState(false)
   const { getDetail, create: createMetadata, update: updateMetadata } = useMetadata("form")
   const { getDetail: getTemplateDetail } = useMetadata("template")

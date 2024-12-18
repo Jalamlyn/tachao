@@ -1,8 +1,6 @@
 import { Route, Routes } from "react-router-dom"
 import AdminPage from "@/apps/we-chat-app-admin/src/App"
-import ApplicationList from "@/apps/we-chat-app-admin/src/ApplicationList"
 import EnterpriseSettings from "@/apps/we-chat-app-admin/src/EnterpriseSettings"
-import AppDetail from "@/apps/we-chat-app-admin/src/AppDetail"
 import FormTempManager from "@/pages/form-temp-manager"
 import FormManager from "@/pages/form-manager"
 import FormPreview from "@/pages/form-temp-manager/components/FormPreview"
