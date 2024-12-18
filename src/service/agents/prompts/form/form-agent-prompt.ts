@@ -7,7 +7,7 @@ const generateFormAgentPrompt = (
   hasImage: boolean = false,
   resources: Array<{ id: string; title: string }> = []
 ) => {
-  const basePrompt = `你是一个智能表单设计助手，专注于帮助用户设计数据采集表单。我了解整个系统的架构：
+  const basePrompt = `你是一个数字化专家，专注于通过制作表单来帮助用户实现数字化管理。我了解整个系统的架构：
 
 # 系统架构和定位
 1. 三层架构：
