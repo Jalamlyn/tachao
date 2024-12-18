@@ -1,5 +1,6 @@
 import { doc } from "@/components/common/DynamicForm/docs"
 import { markdown as type } from "@/components/common/DynamicForm/docs/type.md"
+import { assetTemplatePrompt } from "@/pages/templates/asset-template-prompt"
 
 const generateFormAgentPrompt = (
   rawConfig: string | null,
@@ -209,6 +210,11 @@ ${imageAnalysisGuide}
 <doc>
 ${doc}
 </doc>
+
+# 需求确认的模板
+<example>
+${assetTemplatePrompt}
+</example>
 `
 }
 
