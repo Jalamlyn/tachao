@@ -18,6 +18,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, code, pre
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadedConfig, setLoadedConfig] = useState<DynamicFormConfig | null>(null)
+  const [componentCode, setComponentCode] = useState<string | null>(null)
   const { templateId } = useParams<any>()
   const { getDetail } = useMetadata<{ config: DynamicFormConfig }>("template")
 
@@ -28,19 +29,26 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, code, pre
         return
       }
 
+      if (code) {
+        setComponentCode(code)
+      }
+
       if (templateId) {
         setIsLoading(true)
         setError(null)
         try {
           const result = await getDetail(templateId)
           if (result && result.data.rawConfig) {
-            const { config } = await parseFormConfig(result.data.rawConfig)
+            const { config, code: parsedCode } = await parseFormConfig(result.data.rawConfig)
             if (!config.metadata) {
               config.metadata = {
                 title: result.title,
               }
             }
             setLoadedConfig(config)
+            if (parsedCode) {
+              setComponentCode(parsedCode)
+            }
           }
         } catch (err) {
           console.error("加载表单配置失败:", err)
@@ -52,7 +60,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, code, pre
     }
 
     loadFormConfig()
-  }, [templateId, propConfig, getDetail])
+  }, [templateId, propConfig, code, getDetail])
 
   if (isLoading) {
     return (
@@ -79,12 +87,12 @@ const FormPreview: React.FC<FormPreviewProps> = ({ config: propConfig, code, pre
 
   return (
     <div className='relative h-full bg-background'>
-      {code ? (
+      {componentCode ? (
         // 使用新的动态组件渲染器
         <div className='h-full'>
           <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
             <DynamicComponentRenderer
-              code={code}
+              code={componentCode}
               templateId={templateId}
               mode="preview"
             />
