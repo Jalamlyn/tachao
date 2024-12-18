@@ -153,30 +153,28 @@ const formConfig: DynamicFormConfig = {
               type: "number",
               width: 120,
               disabled: true,
-              render: (value, record) => {
-                // 空值检查
-                if (!record?.quantity || !record?.unitPrice) {
-                  return '0.00'
-                }
-                const amount = (record.quantity || 0) * (record.unitPrice || 0)
-                return amount.toFixed(2)
-              },
-              summary: {
-                render: (records) => {
-                  const total = records.reduce((sum, record) =>
-                    sum + ((record.quantity || 0) * (record.unitPrice || 0)), 0)
-                  return <span className="font-bold text-blue-600">
-                    {total.toFixed(2)}
-                  </span>
+              formatConfig: {
+                type: "currency",
+                options: {
+                  precision: 2,
+                  currency: "CNY"
                 }
               }
             }
           ],
           summary: {
             show: true,
-            label: "合计",
-            className: "bg-gray-50 font-bold",
-            style: { borderTop: "2px solid #e5e7eb" }
+            firstColumnText: "合计",
+            onCompute: (data) => {
+              // 计算汇总数据
+              const total = data.reduce((sum, row) => 
+                sum + (Number(row.quantity) || 0) * (Number(row.unitPrice) || 0), 0)
+              
+              // 返回与列key对应的汇总数据
+              return {
+                "table.items.amount": total
+              }
+            }
           }
         }
       }
@@ -259,66 +257,6 @@ const formConfig: DynamicFormConfig = {
             required: true
           }
         ]
-      }
-    ],
-
-    summaryGroups: [
-      {
-        key: "amounts",
-        title: "金额汇总",
-        icon: "mdi:currency-usd",
-        description: "采购申请的金额汇总信息",
-        fields: [
-          {
-            name: "totalAmount",
-            label: "采购总额",
-            type: "amount",
-            precision: 2,
-            trend: "up"
-          },
-          {
-            name: "budgetAmount",
-            label: "预算金额",
-            type: "amount",
-            precision: 2
-          },
-          {
-            name: "usageRate",
-            label: "预算使用率",
-            type: "percentage",
-            precision: 1,
-            trend: "up"
-          }
-        ],
-        layout: "grid",
-        columns: 3
-      },
-      {
-        key: "statistics",
-        title: "统计信息",
-        icon: "mdi:chart-box",
-        description: "采购申请的统计信息",
-        fields: [
-          {
-            name: "itemCount",
-            label: "物料种类",
-            type: "number",
-            format: (value) => `${value} 种`
-          },
-          {
-            name: "totalQuantity",
-            label: "采购数量",
-            type: "number",
-            format: (value) => `${value} 件`
-          },
-          {
-            name: "avgPrice",
-            label: "平均单价",
-            type: "amount",
-            precision: 2
-          }
-        ],
-        layout: "flow"
       }
     ]
   },
@@ -409,512 +347,110 @@ const PurchaseRequestForm = () => {
 export default PurchaseRequestForm
 ```
 
-## 最佳实践和注意事项
+## 表格汇总配置说明
 
-### 1. 表格列渲染
-
-在配置表格列的render函数时，请注意以下最佳实践：
+表格支持灵活的汇总计算功能，通过 `summary` 配置实现：
 
 ```typescript
-// 1. 基础用法 - 始终进行空值检查
-render: (value, record) => {
-  if (!value) return "-"
-  return value
-}
-
-// 2. 访问嵌套属性 - 使用可选链操作符
-render: (value, record) => {
-  return record?.parent?.child?.name || "-"
-}
-
-// 3. 计算场景 - 确保所有依赖值都存在
-render: (value, record) => {
-  if (!record?.quantity || !record?.price) {
-    return "0.00"
-  }
-  return (record.quantity * record.price).toFixed(2)
-}
-
-// 4. 复杂渲染 - 拆分逻辑提高可读性
-render: (value, record) => {
-  const formatValue = (val) => {
-    if (!val) return "0.00"
-    return Number(val).toFixed(2)
-  }
-
-  const getDisplayValue = () => {
-    if (!record) return "-"
-    return `${formatValue(record.amount)} ${record.currency || "CNY"}`
-  }
-
-  return getDisplayValue()
-}
-```
-
-### 2. 资源选择配置
-
-配置资源选择字段时的注意事项：
-
-```typescript
-resourceConfig: {
-  // 1. 始终提供显示字段配置
-  displayFields: [
-    { key: "name", label: "名称" },
-    { key: "code", label: "编号" }
-  ],
-
-  // 2. 使用displayFormat提供更灵活的显示
-  displayFormat: (resource) => {
-    if (!resource) return ''
-    return `${resource.name} (${resource.code})`
-  },
-
-  // 3. 字段映射要处理空值情况
-  fieldMapping: {
-    "targetField": {
-      fields: ["sourceField"],
-      transform: (values) => {
-        if (!values?.[0]) return null
-        return {
-          value: values[0],
-          display: `自定义显示: ${values[0]}`
-        }
-      }
-    }
-  }
-}
-```
-
-### 3. 表单验证
-
-实现表单验证时的最佳实践：
-
-```typescript
-validate: async (values) => {
-  const errors = {
-    fields: {},
-    categorizedErrors: {
-      required: [],
-      invalid: [],
-      other: [],
-    },
-  }
-
-  // 1. 分类处理错误
-  if (!values.form?.basic?.required_field) {
-    errors.fields["required_field"] = "此字段为必填"
-    errors.categorizedErrors.required.push({
-      field: "required_field",
-      message: "此字段为必填",
-    })
-  }
-
-  // 2. 业务规则验证
-  if (values.form?.basic?.end_date && values.form?.basic?.start_date > values.form?.basic?.end_date) {
-    errors.fields["end_date"] = "结束日期不能早于开始日期"
-    errors.categorizedErrors.invalid.push({
-      field: "end_date",
-      message: "结束日期不能早于开始日期",
-    })
-  }
-
-  return {
-    valid: Object.keys(errors.fields).length === 0,
-    errors: Object.values(errors.fields),
-    fields: errors.fields,
-    categorizedErrors: errors.categorizedErrors,
-  }
-}
-```
-
-### 4. 常见问题解答
-
-#### 新增表格行时的默认值处理
-
-```typescript
-// 在表格配置中添加默认值处理
-config: {
-  defaultRowData: {
-    'table.items.quantity': 0,
-    'table.items.price': 0,
-    'table.items.amount': '0.00'
-  }
-}
-```
-
-#### 资源选择后的数据联动
-
-```typescript
-// 在resourceConfig中配置fieldMapping
-resourceConfig: {
-  fieldMapping: {
-    "relatedField": {
-      field: "sourceField",
-      transform: (value) => {
-        // 处理联动逻辑
-        return transformedValue
-      }
-    }
-  }
-}
-```
-
-#### 表单步骤依赖控制
-
-```typescript
-processSteps: [
-  {
-    key: "step2",
-    dependencies: [
-      {
-        step: "step1",
-        message: "请先完成步骤1",
-      },
-    ],
-    // 添加条件判断
-    condition: (values) => {
-      return values.process?.step1?.field === "completed"
-    },
-  },
-]
-```
-
-### 5. 性能优化建议
-
-1. 大数据量表格处理
-
-```typescript
-// 使用虚拟滚动
-config: {
-  virtualScroll: true,
-  rowHeight: 48,
-  bufferSize: 10
-}
-```
-
-2. 复杂计算优化
-
-```typescript
-// 使用缓存计算结果
-const memoizedCalculation = useMemo(() => {
-  return expensiveCalculation(dependencies)
-}, [dependencies])
-```
-
-3. 表单验证优化
-
-```typescript
-// 使用防抖处理实时验证
-const debouncedValidate = debounce((values) => {
-  validate(values)
-}, 300)
-```
-
-### 6. 安全性建议
-
-1. 文件上传
-
-```typescript
-uploadConfig: {
-  // 限制文件类型
-  accept: '.pdf,.doc,.docx',
-  // 限制文件大小
-  maxSize: 5 * 1024 * 1024,
-  // 文件校验
-  beforeUpload: (file) => {
-    // 自定义验证逻辑
-    return validateFile(file)
-  }
-}
-```
-
-2. 敏感数据处理
-
-```typescript
-// 使用加密传输
-resourceConfig: {
-  headers: {
-    'X-Encryption': 'enabled'
-  },
-  transformResponse: (data) => {
-    return decryptData(data)
-  }
-}
-```
-
-### 7. 可访问性建议
-
-1. 表单字段
-
-```typescript
-fields: [
-  {
-    name: "field",
-    label: "字段",
-    // 添加aria标签
-    aria-label: "字段说明",
-    // 添加帮助文本
-    helpText: "请输入字段内容"
-  }
-]
-```
-
-2. 错误提示
-
-```typescript
-validate: (values) => {
-  return {
-    // 添加aria-live区域
-    errorAnnouncement: "表单验证失败，请检查输入",
-    errors: [],
-  }
-}
-```
-
-## 基础字段配置说明
-
-适用于需要将字段分组显示的场景:
-
-```typescript
-renderConfig: {
-  basicFields: {
-    groups: [
-      {
-        key: "group1",
-        title: "分组1",
-        icon: "mdi:group",
-        description: "分组1的描述",
-        fields: [
-          {
-            name: "field1",
-            label: "字段1",
-            type: "text",
-          },
-        ],
-      },
-      {
-        key: "group2",
-        title: "分组2",
-        fields: [
-          {
-            name: "field2",
-            label: "字段2",
-            type: "number",
-          },
-        ],
-      },
-    ]
-  }
-}
-```
-
-### 3. 汇总信息配置
-
-适用于需要展示数据汇总和统计信息的场景:
-
-```typescript
-renderConfig: {
-  summaryGroups: [
+{
+  columns: [
     {
-      key: "amounts",
-      title: "金额汇总",
-      icon: "mdi:currency-usd",
-      description: "金额相关的汇总信息",
-      fields: [
-        {
-          name: "totalAmount",
-          label: "总金额",
-          type: "amount",
+      key: "quantity",
+      title: "数量",
+      type: "number"
+    },
+    {
+      key: "price",
+      title: "单价",
+      type: "number"
+    },
+    {
+      key: "amount",
+      title: "金额",
+      type: "number",
+      formatConfig: {
+        type: "currency",
+        options: {
           precision: 2,
-          trend: "up", // 可选值: up | down | stable
-        },
-        {
-          name: "percentage",
-          label: "占比",
-          type: "percentage",
-          precision: 1,
-        },
-      ],
-      layout: "grid", // 布局方式: grid | flow
-      columns: 3, // 网格布局时的列数
-    },
-    {
-      key: "statistics",
-      title: "统计信息",
-      icon: "mdi:chart-box",
-      fields: [
-        {
-          name: "count",
-          label: "数量",
-          type: "number",
-          format: (value) => `${value}个`, // 自定义格式化函数
-        },
-      ],
-      layout: "flow",
-    },
-  ]
+          currency: "CNY"
+        }
+      }
+    }
+  ],
+  summary: {
+    show: true,  // 是否显示汇总行
+    firstColumnText: "合计",  // 第一列显示的文本
+    onCompute: (data) => {
+      // 计算汇总数据
+      const quantity = data.reduce((sum, row) => sum + (Number(row.quantity) || 0), 0)
+      const amount = data.reduce((sum, row) => 
+        sum + (Number(row.quantity) || 0) * (Number(row.price) || 0), 0)
+      
+      // 返回与列key对应的汇总数据
+      return {
+        quantity,  // 数量合计
+        amount    // 金额合计
+      }
+    }
+  }
 }
 ```
 
-汇总字段支持的类型:
+### 汇总配置说明
 
-- amount: 金额类型,自动添加货币符号和千分位
-- percentage: 百分比类型,自动转换为百分比格式
-- number: 数字类型,支持自定义格式化
-- text: 文本类型,用于显示普通文本
+1. `show`: 控制是否显示汇总行
+2. `firstColumnText`: 设置汇总行第一列显示的文本
+3. `onCompute`: 计算汇总数据的函数
+   - 参数: `data` - 表格的所有数据
+   - 返回值: 与列key对应的汇总数据对象
 
-每个汇总字段可以配置:
+### 格式化配置
 
-- precision: 精度(小数位数)
-- trend: 趋势指示(上升/下降/稳定)
-- format: 自定义格式化函数
-- style: 自定义样式
-
-### 注意事项
-
-1. 两种配置方式互斥,只能选择其中一种
-2. 使用分组方式时,必须提供 groups 数组
-3. 每个分组必须有唯一的 key
-4. 字段配置保持不变,只是组织方式不同
-
-### Watch 使用注意事项 - 省市区联动示例
-
-以下示例展示了如何正确实现省市区三级联动,同时避免watch和setValue的循环依赖问题:
+汇总数据会自动应用对应列的 `formatConfig` 配置进行格式化显示：
 
 ```typescript
-const formConfig: DynamicFormConfig = {
-  metadata: {
-    title: "地址信息"
-  },
-  renderConfig: {
-    basicFields: {
-      groups: [
-        {
-          key: "address",
-          title: "地址信息",
-          fields: [
-            {
-              name: "province",
-              label: "省份",
-              type: "select",
-              required: true,
-              options: [] // 省份数据
-            },
-            {
-              name: "city",
-              label: "城市",
-              type: "select",
-              required: true,
-              options: [] // 初始为空,根据省份动态加载
-            },
-            {
-              name: "district",
-              label: "区县",
-              type: "select",
-              required: true,
-              options: [] // 初始为空,根据城市动态加载
-            }
-          ]
-        }
-      ]
+{
+  key: "amount",
+  title: "金额",
+  type: "number",
+  formatConfig: {
+    type: "currency",
+    options: {
+      precision: 2,
+      currency: "CNY"
     }
-  },
-
-  // ✅ 正确示例 - 使用标志位和具体字段监听
-  watch: (form) => {
-    let isUpdating = false;
-
-    const subscription = form.watch((value, { name }) => {
-      // 避免在更新选项时触发watch
-      if (isUpdating) return;
-
-      try {
-        isUpdating = true;
-
-        // 当省份变化时
-        if (name === 'province') {
-          // 清空城市和区县
-          form.setValue('city', '');
-          form.setValue('district', '');
-
-          // 更新城市选项
-          const cities = getCitiesByProvince(value.province);
-          form.setValue('city.options', cities);
-        }
-
-        // 当城市变化时
-        if (name === 'city') {
-          // 只清空区县
-          form.setValue('district', '');
-
-          // 更新区县选项
-          const districts = getDistrictsByCity(value.city);
-          form.setValue('district.options', districts);
-        }
-      } finally {
-        // 确保标志位被重置
-        isUpdating = false;
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }
-};
+}
+```
 
-// ❌ 错误示例 - 可能导致循环
-watch: (form) => {
-  const subscription = form.watch((value) => {
-    // 危险!每次值变化都触发
-    if (value.province) {
-      form.setValue('city.options', getCitiesByProvince(value.province));
+### 最佳实践
+
+1. 返回的汇总数据key要与列key保持一致
+2. 注意数值计算时的类型转换和空值处理
+3. 可以只返回需要显示汇总的列
+4. 建议使用formatConfig统一数据显示格式
+
+```typescript
+// 推荐的汇总配置方式
+summary: {
+  show: true,
+  firstColumnText: "合计",
+  onCompute: (data) => {
+    // 处理空值和类型转换
+    const validData = data.filter(row => 
+      row.quantity != null && row.price != null)
+    
+    // 计算汇总
+    const result = validData.reduce((acc, row) => ({
+      quantity: acc.quantity + Number(row.quantity),
+      amount: acc.amount + (Number(row.quantity) * Number(row.price))
+    }), { quantity: 0, amount: 0 })
+    
+    // 只返回需要显示汇总的列
+    return {
+      quantity: result.quantity,
+      amount: result.amount
     }
-    if (value.city) {
-      form.setValue('district.options', getDistrictsByCity(value.city));
-    }
-  });
-  return () => subscription.unsubscribe();
-}
-为什么正确示例可以避免循环?
-使用标志位控制:
-
-isUpdating 标志确保在更新过程中不会触发新的watch回调
-通过 try/finally 确保标志位一定会被重置
-精确的字段监听:
-
-使用 name 参数明确知道是哪个字段发生变化
-只在特定字段变化时执行相应的更新
-合理的更新顺序:
-
-先清空下级选项
-再更新选项数据
-避免不必要的中间状态
-最佳实践总结
-使用标志位避免循环:
-
-let isUpdating = false;
-if (isUpdating) return;
-isUpdating = true;
-try {
-  // 更新操作
-} finally {
-  isUpdating = false;
-}
-精确监听字段:
-
-if (name === 'specificField') {
-  // 处理特定字段的变化
-}
-合理的清理操作:
-
-// 清空关联字段
-form.setValue('dependentField', '');
-// 更新选项
-form.setValue('dependentField.options', newOptions);
-使用 try/finally 确保标志位重置:
-
-try {
-  // 更新操作
-} finally {
-  isUpdating = false;
+  }
 }
 ```
