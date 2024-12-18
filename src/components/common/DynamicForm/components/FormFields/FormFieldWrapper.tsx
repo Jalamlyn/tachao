@@ -33,6 +33,7 @@ interface FormFieldWrapperProps {
   layout?: "default" | "full-width" | "inline"
   className?: string
   customStyle?: React.CSSProperties
+  description?: string
 }
 
 const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
@@ -47,7 +48,8 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
   style,
   layout,
   className,
-  customStyle
+  customStyle,
+  description
 }) => {
   // 处理样式配置
   const getStyles = () => {
@@ -144,6 +146,16 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
                 </Popover>
               )}
             </div>
+            {description && (
+              <motion.p
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="text-sm text-gray-500 mt-1"
+              >
+                {description}
+              </motion.p>
+            )}
             <FormControl>
               <div className={getClassName()} style={getStyles()}>
                 {children({ ...field, disabled: !isEditable || disabled })}

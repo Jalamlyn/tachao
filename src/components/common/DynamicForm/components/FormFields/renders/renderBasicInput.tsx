@@ -12,6 +12,13 @@ export const renderBasicInput = (
   isEditable: boolean,
   onChange?: (fieldName: string, value: any) => void
 ) => {
+  // 设置默认值
+  React.useEffect(() => {
+    if (field.defaultValue !== undefined && !form.getValues(field.name)) {
+      form.setValue(field.name, field.defaultValue)
+    }
+  }, [field.defaultValue, field.name, form])
+
   return (
     <FormFieldWrapper
       name={field.name}
@@ -21,6 +28,7 @@ export const renderBasicInput = (
       disabled={field.disabled}
       tooltip={field.tooltip}
       required={field.required}
+      description={field.description}
     >
       {(formField) => {
         // 使用新的格式化系统
@@ -35,9 +43,22 @@ export const renderBasicInput = (
               ...formField,
               value: isEditable ? formField.value : formattedValue.formattedValue,
               onChange: (e: any) => {
-                formField.onChange(e)
-                onChange?.(field.name, e.target.value)
+                let value = e.target.value
+                // 处理数值类型的范围限制
+                if (field.type === "number") {
+                  value = e.target.valueAsNumber
+                  if (field.min !== undefined && value < field.min) {
+                    value = field.min
+                  }
+                  if (field.max !== undefined && value > field.max) {
+                    value = field.max
+                  }
+                }
+                formField.onChange(value)
+                onChange?.(field.name, value)
               },
+              min: field.type === "number" ? field.min : undefined,
+              max: field.type === "number" ? field.max : undefined,
             }}
             className={cn(
               field.type === "number" ? "text-right font-mono" : "",
