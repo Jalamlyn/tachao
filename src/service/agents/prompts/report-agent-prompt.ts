@@ -1,7 +1,7 @@
-import { mapVisualizationGuide } from "../map-visualization-guide"
-import { templates } from "./template"
-import { generateDataSourceInfo, generateExistingConfigPrompt } from "./generators"
-import { SystemPromptOptions } from "./types"
+import { mapVisualizationGuide } from "./map-visualization-guide"
+import { generateDataSourceInfo, generateExistingConfigPrompt } from "./report/generators"
+import { templates } from "./report/template"
+import { SystemPromptOptions } from "./report/types"
 
 const generateSystemPrompt = ({ data, doc, existingConfig, templateInfoMap = {} }: SystemPromptOptions): string => {
   const promptParts = [
@@ -110,7 +110,7 @@ const ReportAnalysis = ({ data, templateId, mode = 'preview' }) => {
 5. 提供必要的注释
 `,
     mapVisualizationGuide,
-    `<doc>${doc}</doc>`
+    `<doc>${doc}</doc>`,
   ]
 
   if (existingConfig) {
