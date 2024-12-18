@@ -11,6 +11,7 @@ import { cn } from "@/theme/cn"
 import { motion } from "framer-motion"
 import styles from "../styles/DynamicForm.module.css"
 import { createTableRenderer } from "./TableFields/renders"
+import { FormatterService } from "../utils/formatters"
 
 interface DynamicTableProps {
   config: TableConfig
@@ -45,10 +46,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     name: fieldName,
     defaultValue: [],
   })
-
-  useEffect(() => {
-    //console.log(`[DynamicTable] Table data changed for ${fieldName}:`, tableData)
-  }, [tableData, fieldName])
 
   const handleResourceSelect = useCallback(
     (rowIndex: number, columnKey: string, selected: any) => {
@@ -189,16 +186,50 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     })
   }
 
-  const renderSummaryCell = (column: TableConfig["columns"][0]) => {
-    if (column.key === config.columns[0].key) {
-      return <div className='font-medium'>{config.summary?.label || "合计"}</div>
-    }
+  const renderSummaryRow = () => {
+    if (!config.summary?.show) return null
 
-    if (!column.summary?.render) {
-      return null
-    }
+    const summaryData = config.summary.onCompute?.(tableData) || {}
 
-    return column.summary.render(tableData || [])
+    return (
+      <TableRow className='bg-gray-50 font-medium'>
+        {config.columns.map((column, index) => {
+          let content: React.ReactNode = null
+
+          // 处理第一列显示"合计"文本
+          if (index === 0) {
+            content = config.summary?.firstColumnText || "合计"
+          } else {
+            const value = summaryData[column.key]
+            if (value !== undefined) {
+              if (column.formatConfig) {
+                const formatted = FormatterService.format(value, column.formatConfig)
+                content = (
+                  <span style={formatted.style}>
+                    {formatted.formattedValue}
+                  </span>
+                )
+              } else {
+                content = value
+              }
+            }
+          }
+
+          return (
+            <TableCell
+              key={column.key}
+              className={cn(
+                "border border-gray-200",
+                column.type === "number" && "text-right font-mono"
+              )}
+            >
+              {content}
+            </TableCell>
+          )
+        })}
+        {isEditable && <TableCell className='border border-gray-200 w-[80px]' />}
+      </TableRow>
+    )
   }
 
   return (
@@ -262,22 +293,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                       )}
                     </TableRow>
                   ))}
-                  {config.summary?.show && (
-                    <TableRow className={cn("bg-default-50", config.summary.className)} style={config.summary.style}>
-                      {config.columns.map((column) => (
-                        <TableCell
-                          key={column.key}
-                          className='border border-gray-200'
-                          style={{
-                            minWidth: column.width || "80px",
-                          }}
-                        >
-                          {renderSummaryCell(column)}
-                        </TableCell>
-                      ))}
-                      {isEditable && <TableCell className='border border-gray-200 w-[80px]' />}
-                    </TableRow>
-                  )}
+                  {renderSummaryRow()}
                 </TableBody>
               </Table>
             </div>

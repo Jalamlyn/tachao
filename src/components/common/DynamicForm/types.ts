@@ -1,11 +1,30 @@
 import { UseFormReturn } from "react-hook-form"
 import { ReactNode } from "react"
 
+// 基础字段配置
+export interface BaseField {
+  name: string
+  label: string
+  type: string
+  placeholder?: string
+  disabled?: boolean
+  required?: boolean
+  className?: string
+  tooltip?: TooltipConfig
+  description?: string
+  style?: FieldStyle
+  layout?: "default" | "full-width" | "inline"
+  customStyle?: React.CSSProperties
+  formatConfig?: FormatConfig
+}
+
+// 工具提示配置
 export interface TooltipConfig {
-  content: ReactNode
+  content: string | ReactNode
   placement?: "top" | "bottom" | "left" | "right"
 }
 
+// 字段样式配置
 export interface FieldStyle {
   width?: string | number
   height?: string | number
@@ -15,113 +34,58 @@ export interface FieldStyle {
   textAlign?: string
   colSpan?: number
   custom?: React.CSSProperties
-  className?: string
-  sm?: Record<string, string | number>
-  md?: Record<string, string | number>
-  lg?: Record<string, string | number>
+  sm?: Partial<Record<string, string | number>>
+  md?: Partial<Record<string, string | number>>
+  lg?: Partial<Record<string, string | number>>
 }
 
-export interface FormField {
-  name: string
-  label: string
-  type: string
-  required?: boolean
-  disabled?: boolean
-  placeholder?: string
-  tooltip?: TooltipConfig
-  className?: string
-  style?: FieldStyle
-  customStyle?: React.CSSProperties
-  layout?: "default" | "full-width" | "inline"
-  // 新增字段配置
-  min?: number
-  max?: number
-  defaultValue?: any
-  description?: string
-  // 其他已有配置
-  options?: Array<{ label: string; value: string | number; disabled?: boolean }> | ((form: UseFormReturn<any>) => Array<{ label: string; value: string | number; disabled?: boolean }>)
-  width?: number
-  height?: number
-  lineWidth?: number
-  lineColor?: string
-  checkedLabel?: string
-  uncheckedLabel?: string
-  step?: number
-  accept?: string
-  multiple?: boolean
-  maxSize?: number
-  maxCount?: number
-  render?: (props: any) => ReactNode
+// 格式化配置
+export interface FormatConfig {
+  type: "number" | "currency" | "percentage" | "date" | "custom"
+  options?: {
+    precision?: number
+    currency?: string
+    locale?: string
+    format?: string
+  }
+  style?: React.CSSProperties
+  formatter?: (value: any) => { formattedValue: string; style?: React.CSSProperties }
+}
+
+// 表格配置
+export interface TableConfig {
+  toolbar?: ReactNode
+  columns: TableColumn[]
+  summary?: {
+    show?: boolean
+    firstColumnText?: string
+    onCompute?: (data: any[]) => Record<string, any>
+  }
+}
+
+// 表格列配置
+export interface TableColumn extends BaseField {
+  title: string
+  width?: string | number
+  editable?: boolean
+  render?: (value: any, record: any, index: number) => ReactNode
   resourceConfig?: ResourceConfig
-  uploadConfig?: UploadConfig
+  options?: SelectOption[] | ((form: UseFormReturn<any>) => SelectOption[])
   formatConfig?: FormatConfig
 }
 
-export interface FormFieldGroup {
-  key: string
-  title: string
-  icon?: string
-  description?: string
-  fields: FormField[]
+// 选择项配置
+export interface SelectOption {
+  label: string | ReactNode
+  value: string | number
+  disabled?: boolean
 }
 
-export interface TableColumn extends FormField {
-  title: string
-  key: string
-  width?: number | string
-  editable?: boolean
-  isMappedField?: boolean
-  mappedFrom?: string
-  summary?: {
-    render: (data: any[]) => ReactNode
-  }
-}
-
-export interface TableConfig {
-  columns: TableColumn[]
-  toolbar?: ReactNode
-  summary?: {
-    show?: boolean
-    label?: string
-    className?: string
-    style?: React.CSSProperties
-  }
-}
-
-export interface ProcessStep {
-  key: string
-  title: string
-  icon?: string
-  description?: string
-  fields?: FormField[]
-  weight?: number
-  required?: boolean
-  dependencies?: Array<{
-    step: string
-    message?: string
-    condition?: {
-      field?: string
-      value?: any
-      custom?: (formData: any) => boolean
-    }
-  }>
-}
-
-export interface ProcessProgress {
-  total: number
-  completed: number
-  current: number
-  percentage: number
-  status: Record<string, {
-    isCompleted: boolean
-    isBlocked: boolean
-    blockReason?: string
-  }>
-}
-
+// 资源配置
 export interface ResourceConfig {
   resourceId: string
   multiple?: boolean
+  fieldMapping?: Record<string, string | ResourceFieldMapping>
   displayField?: string
   displayFormat?: (resource: any) => string
   displayFields?: Array<{
@@ -136,26 +100,105 @@ export interface ResourceConfig {
     className?: string
     style?: React.CSSProperties
   }
-  fieldMapping?: Record<string, string | {
-    field: string
-    fields?: string[]
-    transform?: (value: any) => any
-    condition?: (resource: any) => boolean
-  }>
+  uploadConfig?: {
+    customRequest?: (options: { file: File; onProgress: (percent: number) => void }) => Promise<any>
+    onProgress?: (percent: number) => void
+    onSuccess?: (response: any) => void
+    onError?: (error: Error) => void
+  }
+  downloadConfig?: {
+    method?: string
+    headers?: Record<string, string>
+    withCredentials?: boolean
+  }
 }
 
+// 资源字段映射
+export interface ResourceFieldMapping {
+  field: string
+  fields?: string[]
+  condition?: (resource: any) => boolean
+  transform?: (value: any) => any
+}
+
+// 资源值
 export interface ResourceValue {
   dataid: string | string[]
   displayValue?: string
 }
 
+// 文件信息
 export interface FileInfo {
   fileName: string
-  fileKey: string
-  downloadUrl: string
+  fileKey?: string
+  downloadUrl?: string
   type?: string
 }
 
+// 表格渲染属性
+export interface TableRenderProps {
+  form: UseFormReturn<any>
+  isEditable?: boolean
+  onChange?: (fieldName: string, value: any) => void
+  fieldName: string
+}
+
+// 动态表单配置
+export interface DynamicFormConfig {
+  metadata: {
+    title: string
+    description?: string
+  }
+  renderConfig: {
+    basicFields: FormField[] | FieldsWithGroups
+    table?: TableConfig
+    processSteps?: ProcessStep[]
+  }
+  orderNumberConfig?: {
+    prefix?: string
+    format?: string
+  }
+}
+
+// 表单字段
+export interface FormField extends BaseField {
+  defaultValue?: any
+  min?: number
+  max?: number
+  step?: number
+  accept?: string
+  options?: SelectOption[] | ((form: UseFormReturn<any>) => SelectOption[])
+  render?: (props: {
+    field: any
+    form: UseFormReturn<any>
+    isEditable: boolean
+  }) => ReactNode
+  resourceConfig?: ResourceConfig
+  uploadConfig?: UploadConfig
+  width?: number
+  height?: number
+  lineWidth?: number
+  lineColor?: string
+  checkedLabel?: string
+  uncheckedLabel?: string
+}
+
+// 字段分组
+export interface FormFieldGroup {
+  key: string
+  title: string
+  icon?: string
+  description?: string
+  fields: FormField[]
+}
+
+// 字段分组配置
+export interface FieldsWithGroups {
+  groups: FormFieldGroup[]
+  defaultGroup?: string
+}
+
+// 上传配置
 export interface UploadConfig {
   uploadType: "file" | "image"
   multiple?: boolean
@@ -163,42 +206,52 @@ export interface UploadConfig {
   maxCount?: number
   thumbnail?: boolean
   cropOptions?: {
-    aspect?: number
     quality?: number
   }
   uploadConfig?: {
-    customRequest?: (options: {
-      file: File
-      onProgress: (percent: number) => void
-    }) => Promise<FileInfo>
+    customRequest?: (options: { file: File; onProgress: (percent: number) => void }) => Promise<any>
   }
+  onProgress?: (percent: number) => void
+  onSuccess?: (response: any) => void
+  onError?: (error: Error) => void
+  onPreview?: (file: FileInfo) => void
+  onDownload?: (file: FileInfo) => void
   downloadConfig?: {
     method?: string
     headers?: Record<string, string>
     withCredentials?: boolean
   }
-  onProgress?: (percent: number) => void
-  onSuccess?: (fileInfo: FileInfo) => void
-  onError?: (error: Error) => void
-  onPreview?: (file: FileInfo) => void
-  onDownload?: (file: FileInfo) => void
 }
 
-export interface FormatConfig {
-  type: "number" | "currency" | "percentage" | "date" | "custom"
-  options?: {
-    locale?: string
-    currency?: string
-    minimumFractionDigits?: number
-    maximumFractionDigits?: number
-    dateFormat?: string
-    customFormat?: (value: any) => { formattedValue: string; style?: React.CSSProperties }
-  }
+// 流程步骤
+export interface ProcessStep {
+  key: string
+  title: string
+  icon?: string
+  description?: string
+  fields?: FormField[]
+  required?: boolean
+  weight?: number
+  dependencies?: Array<{
+    step: string
+    message?: string
+    condition?: {
+      field?: string
+      value?: any
+      custom?: (data: any) => boolean
+    }
+  }>
 }
 
-export interface TableRenderProps {
-  form: UseFormReturn<any>
-  isEditable?: boolean
-  onChange?: (fieldName: string, value: any) => void
-  fieldName: string
+// 流程进度
+export interface ProcessProgress {
+  total: number
+  completed: number
+  current: number
+  percentage: number
+  status: Record<string, {
+    isCompleted: boolean
+    isBlocked: boolean
+    blockReason?: string
+  }>
 }
