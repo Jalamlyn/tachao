@@ -1,4 +1,3 @@
-// import chatChunk from "@/service/chat/chat-chunk-openai-office"
 import chatChunk from "@/service/chat/chat-chunk-gemini-office"
 import { Message } from "@/service/agents/AIFormAgentTypes"
 import { formulaService } from "@/services/formulaService"
@@ -32,7 +31,6 @@ interface AIReportAgentConfig {
 }
 
 function prepareAnalysisData(data: ProcessedData, templateInfoMap: Record<string, string>): AnalysisData {
-  // 按模板ID分组
   const groups = data.originalData.reduce(
     (acc, item) => {
       const templateId = item._sourceTemplateId
@@ -144,6 +142,21 @@ export class AIReportAgent {
     }
   }
 
+  // 新增：解析组件代码
+  private async parseComponentCode(code: string): Promise<string | null> {
+    try {
+      const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
+      const match = code.match(regex)
+      if (match) {
+        return match[1].trim()
+      }
+      return null
+    } catch (error) {
+      console.error("[AIReportAgent] Error parsing component code:", error)
+      return null
+    }
+  }
+
   public async processCommand({
     data,
     command,
@@ -178,7 +191,7 @@ export class AIReportAgent {
         * 对于业务相关问题：进行分析并给出建议
         * 对于间接相关问题：提供参考信息和最佳实践
         * 对于完全无关问题：礼貌建议咨询其他专业助手
-        * [格式要求:所有代码必须使用 \`\`\`mo <shata-ai-code>../</shata-ai-code>\`\`\` 包裹, 必须返回完整代码, 不允许使用 //其他... 这样的方式来省略任何代码或者省略任何字段,因为用户不懂代码, 所以你省略了代码, 会让用户非常困扰, 因此你返回的 shata-ai-code 包裹的代码必须是完整的, 不能用注释来省略任何代码, 不允许分模块提供, 必须一次性提供完整的代码]`
+        * [格式要求:所有代码必须使用 \`\`\`mo <shata-ai-code>../</shata-ai-code>\`\`\` 包裹, 必须返回完整代码, 不允许使用 //其他... 这样的方式来省略任何代码或者省略任何字段]`
 
       const messages: Message[] = [
         { role: "system", content: systemPrompt },
@@ -199,30 +212,18 @@ export class AIReportAgent {
 
       console.log("[AIReportAgent] AI response received")
 
-      const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
-      const match = this.lastResponseRef.match(regex)
-      let generatedCode = rawConfig
-      if (match) {
-        generatedCode = match[1].trim()
+      const componentCode = await this.parseComponentCode(this.lastResponseRef)
+      if (!componentCode) {
+        throw new Error("Invalid component code format")
       }
 
-      // 转换数据结构
-      const analysisData = prepareAnalysisData(data, this._templateInfoMap)
-      const result = (await this.executeCode(generatedCode, analysisData)) as ResourceOperationResult
-
-      if (!result || !result.type || !result.data) {
-        console.error("[AIReportAgent] Invalid analysis result format")
-        throw new Error("Invalid analysis result format")
-      }
-
-      this.setRawConfig(generatedCode)
+      this.setRawConfig(componentCode)
 
       console.log("[AIReportAgent] Analysis completed successfully")
       return {
         success: true,
         message: "分析完成",
-        rawConfig: generatedCode,
-        analysis: result.analysis,
+        rawConfig: componentCode,
       }
     } catch (error) {
       console.error("[AIReportAgent] Error processing analysis command:", error)
