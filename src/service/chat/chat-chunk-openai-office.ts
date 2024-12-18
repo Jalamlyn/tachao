@@ -35,7 +35,7 @@ export default async function chatChunkOpenAIOffice(
 ) {
   // 从 sessionStorage 读取当前选择的模型
   const baseModel = sessionStorage.getItem("aiLevel") || "ADVANCED"
-  const model = baseModel  // 假设模型名称从 payload 中获取
+  const model = baseModel // 假设模型名称从 payload 中获取
   console.log("[ChatService] Using model:", baseModel)
 
   let _messages = messages
@@ -153,8 +153,8 @@ export default async function chatChunkOpenAIOffice(
         id: Date.now(),
         timestamp: new Date().toISOString(),
         model: baseModel,
-        promptTokenCount: inputTokenCount,
-        candidatesTokenCount: outputTokenCount,
+        promptTokenCount: inputTokenCount * 5,
+        candidatesTokenCount: outputTokenCount * 5,
         inputCost,
         outputCost,
         totalCost: inputCost + outputCost,
