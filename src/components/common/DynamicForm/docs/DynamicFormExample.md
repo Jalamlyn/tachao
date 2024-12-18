@@ -154,7 +154,7 @@ const formConfig: DynamicFormConfig = {
               width: 120,
               disabled: true,
               formatConfig: {
-                type: "currency",
+                type: "amount",
                 options: {
                   precision: 2,
                   currency: "CNY"
@@ -369,7 +369,7 @@ export default PurchaseRequestForm
       title: "金额",
       type: "number",
       formatConfig: {
-        type: "currency",
+        type: "amount",
         options: {
           precision: 2,
           currency: "CNY"
@@ -414,7 +414,7 @@ export default PurchaseRequestForm
   title: "金额",
   type: "number",
   formatConfig: {
-    type: "currency",
+    type: "amount",
     options: {
       precision: 2,
       currency: "CNY"

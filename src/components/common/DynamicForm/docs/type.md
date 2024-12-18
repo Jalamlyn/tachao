@@ -363,20 +363,7 @@ render: (value, record) => {
   return (record.quantity * record.price).toFixed(2)
 }
 
-// 4. 复杂渲染 - 拆分逻辑提高可读性
-render: (value, record) => {
-  const formatValue = (val) => {
-    if (!val) return '0.00'
-    return Number(val).toFixed(2)
-  }
 
-  const getDisplayValue = () => {
-    if (!record) return '-'
-    return `${formatValue(record.amount)} ${record.currency || 'CNY'}`
-  }
-
-  return getDisplayValue()
-}
 2. 资源选择配置
 配置资源选择字段时的注意事项：
 
