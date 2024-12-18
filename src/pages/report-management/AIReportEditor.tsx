@@ -156,31 +156,6 @@ const AIReportEditor: React.FC = () => {
     ])
   }, [])
 
-  const handleCodeEditResult = async (result: any) => {
-    if (result.success && result.rawConfig) {
-      try {
-        // 分析数据
-        const analysis = await AIReportAgent.analyzeData(processedData, result.rawConfig)
-
-        // 更新预览
-        setPreviewComponent(
-          <ErrorBoundary>
-            <AnalysisResult analysis={analysis} />
-          </ErrorBoundary>
-        )
-
-        // 更新内容
-        setPreviewContent(result.rawConfig)
-
-        // 切换到预览标签
-        setSelectedTab("preview")
-      } catch (error) {
-        console.error("分析数据失败:", error)
-        message.error("分析数据失败")
-      }
-    }
-  }
-
   const handleCommandResult = useCallback(
     async (result) => {
       if (result.success) {
