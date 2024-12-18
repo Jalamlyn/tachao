@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
-import DynamicForm from "@/components/common/DynamicForm"
 import type { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { useMetadata } from "@/hooks/useMetadata"
 import { parseFormConfig } from "@/utils/codeParser"
 import { Icon } from "@iconify/react"
 import { Spinner } from "@nextui-org/react"
 import { DynamicComponentRenderer } from "@/components/DynamicComponentRenderer"
+import { extractShataAIFormContent } from "@/components/AIEditor"
 
 interface FormPreviewProps {
   code?: string // 新增：组件代码
@@ -24,7 +24,8 @@ const FormPreview: React.FC<FormPreviewProps> = ({ code, previewMode = true }) =
   useEffect(() => {
     const loadFormConfig = async () => {
       if (code) {
-        setComponentCode(code)
+        const _code = extractShataAIFormContent(code)
+        setComponentCode(_code)
       }
 
       if (templateId) {
@@ -82,17 +83,9 @@ const FormPreview: React.FC<FormPreviewProps> = ({ code, previewMode = true }) =
   return (
     <div className='relative h-full bg-background'>
       {componentCode ? (
-        // 使用新的动态组件渲染器
         <div className='h-full'>
           <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
-            <DynamicComponentRenderer code={componentCode} templateId={templateId} mode='preview' />
-          </div>
-        </div>
-      ) : loadedConfig ? (
-        // 保持原有的渲染逻辑
-        <div className='h-full'>
-          <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
-            <DynamicForm previewMode={previewMode} config={loadedConfig} templateId={templateId} />
+            <DynamicComponentRenderer code={componentCode} templateId={templateId} previewMode={previewMode} />
           </div>
         </div>
       ) : (

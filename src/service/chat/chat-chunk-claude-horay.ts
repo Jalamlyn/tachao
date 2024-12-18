@@ -49,7 +49,7 @@ export default async function chatChunkClaudeHoray(
     throw new Error(`未找到服务商信息：${provider}`)
   }
 
-  const apiKey = "sk-ttybjxxgbpeaelqamcorbcfojczintmlwrifhwyfxlqbqenm"
+  const apiKey = "sk-eqoxibfuslwmxpnmlvjzwleeqdaltstzwmnavydsayujhvnj"
   const apiEndPoint = supplierInfo.endpoint || "https://api.horay.ai/v1/messages"
 
   let _messages

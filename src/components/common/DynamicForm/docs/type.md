@@ -19,14 +19,6 @@ interface DynamicFormConfig {
      * 权限配置
      * @type {object}
      */
-    permissions: {
-      /** 是否可编辑 @type {boolean} */
-      edit?: boolean
-      /** 是否可删除 @type {boolean} */
-      delete?: boolean
-      /** 是否可打印 @type {boolean} */
-      print?: boolean
-    }
   }
 
   /**

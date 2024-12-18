@@ -85,8 +85,6 @@ export interface DynamicFormProps {
   config: DynamicFormConfig
   /** 表单ID */
   id?: string
-  /** 提交回调 */
-  onSubmit?: (validationResult: ValidationResult, values: any) => Promise<void>
   /** 取消回调 */
   onCancel?: () => void
   /** 模板ID */
@@ -95,6 +93,4 @@ export interface DynamicFormProps {
   isCreateMode?: boolean
   /** 是否为预览模式 */
   previewMode?: boolean
-  /** 初始值 */
-  initialValues?: any
 }

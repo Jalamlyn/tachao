@@ -11,11 +11,6 @@ const formConfig: DynamicFormConfig = {
   metadata: {
     title: "采购申请单",
     description: "用于提交采购申请的电子表单",
-    permissions: {
-      edit: true,
-      delete: true,
-      print: true
-    }
   },
 
   renderConfig: {
@@ -408,7 +403,7 @@ const PurchaseRequestForm = () => {
     }
   }
 
-  return <DynamicForm config={formConfig} onSubmit={handleSubmit} isCreateMode={true} />
+  return <DynamicForm config={formConfig} />
 }
 
 export default PurchaseRequestForm

@@ -152,6 +152,9 @@ const MessageCard = React.memo(
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeRaw]}
               components={{
+                "shata-ai-code": () => {
+                  return <div>正在生成代码...</div>
+                },
                 code({ node, inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || "")
                   if (match && match[1] == "mermaid") {

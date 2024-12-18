@@ -22,15 +22,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 const DynamicForm: React.FC<DynamicFormProps> = ({
   config: userConfig,
   id,
-  onSubmit,
   onCancel,
   templateId,
-  initialValues,
   isCreateMode,
   previewMode = false,
 }) => {
   const config = merge({}, defaultFormConfig, userConfig)
-  console.log("config:", config)
   const [isLoading, setIsLoading] = useState(false)
   const { getDetail, create: createMetadata, update: updateMetadata } = useMetadata("form")
   const { getDetail: getTemplateDetail } = useMetadata("template")
@@ -75,11 +72,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
   useEffect(() => {
     const initializeForm = async () => {
-      if (initialValues) {
-        setFormValues(initialValues)
-        return
-      }
-
       if (id) {
         setIsLoading(true)
         try {
@@ -91,7 +83,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     }
 
     initializeForm()
-  }, [id, getDetail, initialValues])
+  }, [id, getDetail])
 
   useEffect(() => {
     // 设置默认选中的表格
@@ -100,7 +92,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     }
   }, [])
 
-  const { form, submitForm } = useDynamicForm(config, initialValues)
+  const { form, submitForm } = useDynamicForm(config)
   const [isEditing, setIsEditing] = useState(true)
   const printRef = useRef<HTMLDivElement>(null)
   const printId = useRef<string>()
@@ -140,7 +132,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
     return {
       title: orderNumber || config.metadata.title,
-      status: "submitted",
       data: formValues,
       templateId: templateId,
       template: templateInfo,
@@ -251,12 +242,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           return
         }
 
-        if (onSubmit) {
-          await onSubmit(validationResult!, values)
-          form.reset()
-          return
-        }
-
         const templateInfo = await getTemplateInfo(templateId)
         const formData = prepareFormData(values, templateInfo)
 
@@ -305,7 +290,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         message.error("提交失败，请重试")
       }
     },
-    [form, id, onSubmit, templateId, updateMetadata, createMetadata]
+    [form, id, templateId, updateMetadata, createMetadata]
   )
 
   const { metadata, renderConfig } = config

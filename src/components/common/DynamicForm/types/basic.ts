@@ -91,12 +91,6 @@ export interface TooltipConfig {
  * const metadata: FormMetadata = {
  *   title: '用户信息表单',
  *   description: '请填写用户基本信息',
- *   permissions: {
- *     edit: true,
- *     delete: true,
- *     print: true
- *   }
- * }
  * ```
  */
 export interface FormMetadata {

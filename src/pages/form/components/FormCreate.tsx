@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
 import { motion } from "framer-motion"
-import DynamicForm from "@/components/common/DynamicForm"
 import { FormHeader } from "./FormHeader"
 import { useMetadata } from "@/hooks/useMetadata"
 import { parseFormConfig } from "@/utils/codeParser"
@@ -80,19 +79,7 @@ const FormCreate: React.FC = () => {
       >
         <ScrollShadow className='h-[calc(100vh-60px)] mt-6'>
           {componentCode ? (
-            // 使用新的动态组件渲染器
-            <DynamicComponentRenderer
-              code={componentCode}
-              templateId={templateId}
-              mode="create"
-            />
-          ) : loadedConfig ? (
-            // 保持原有的渲染逻辑
-            <DynamicForm 
-              isCreateMode={true} 
-              config={loadedConfig} 
-              templateId={templateId} 
-            />
+            <DynamicComponentRenderer code={componentCode} templateId={templateId} isCreateMode={true} />
           ) : (
             <div className='flex flex-col items-center justify-center'>
               <Icon icon='mdi:form' className='w-20 h-20 text-default-400 mb-6' />

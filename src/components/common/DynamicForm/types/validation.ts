@@ -36,7 +36,6 @@ export interface FormState {
 }
 
 export interface FormEventHandlers {
-  onSubmit?: (validationResult: ValidationResult, values: any) => Promise<void>
   onChange?: (values: any) => void
   onError?: (error: Error) => void
   onCancel?: () => void

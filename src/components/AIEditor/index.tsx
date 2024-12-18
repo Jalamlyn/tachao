@@ -7,7 +7,7 @@ import { renderLeftPanel } from "./render/renderLeftPanel"
 import { renderRightPanel } from "./render/renderRightPanel"
 import { AI_LEVELS, AIEditorProps } from "./type"
 
-const extractShataAIFormContent = (content: string): string => {
+export const extractShataAIFormContent = (content: string): string => {
   const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
   const match = content.match(regex)
   return match ? match[1].trim() : content

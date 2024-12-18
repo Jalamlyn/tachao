@@ -3,16 +3,18 @@ import { useForm } from "react-hook-form"
 import { DynamicFormConfig, ValidationResult } from "../types"
 import { ValidationManager } from "../validation/ValidationManager"
 
-// 创建带防抖的 watch
+export const useDynamicForm = (config: DynamicFormConfig) => {
+  const form = useForm()
 
-export const useDynamicForm = (
-  config: DynamicFormConfig,
-  initialValues?: any,
-  onValuesChange?: (changedValues: any, allValues: any) => void
-) => {
-  const form = useForm({
-    defaultValues: initialValues || {},
-  })
+  // 监听表单值变化
+  useEffect(() => {
+    const subscription = form.watch((value, { name, type }) => {
+      // 触发表单重新渲染
+      form.trigger(name)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [config.watch])
 
   // 统一的验证函数
   const validateForm = useCallback(async (): Promise<ValidationResult> => {

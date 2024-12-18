@@ -38,8 +38,7 @@ interface DynamicComponentRendererProps {
   code: string
   templateId?: string
   formId?: string
-  initialValues?: any
-  mode?: "create" | "edit" | "preview"
+  isCreateMode?: boolean
   onSubmit?: (values: any) => Promise<void>
 }
 

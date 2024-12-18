@@ -87,43 +87,6 @@ const generateFormAgentPrompt = (
    DynamicForm  // 动态表单组件
    \`\`\`
 
-## 代码模板
-\`\`\`javascript
-// 标准组件模板
-const CustomForm = ({
-  templateId,    // 模板ID
-  formId,        // 表单ID
-  initialValues, // 初始值
-  mode = 'create', // 模式：create/edit/preview
-  onSubmit      // 提交回调
-}) => {
-  // 1. Hooks 调用 - 使用 React.xxx
-  const [loading, setLoading] = React.useState(false)
-  const [data, setData] = React.useState(initialValues)
-
-  // 2. 事件处理
-  const handleSubmit = React.useCallback(async (values) => {
-    setLoading(true)
-    try {
-      await onSubmit?.(values)
-    } finally {
-      setLoading(false)
-    }
-  }, [onSubmit])
-
-  // 3. 渲染 UI - 使用预定义组件
-  return (
-    <Card>
-      <DynamicForm
-        config={formConfig}
-        initialValues={data}
-        onSubmit={handleSubmit}
-      />
-    </Card>
-  )
-}
-\`\`\`
-
 ## 最佳实践
 1. 状态管理：
    - 使用 React.useState 管理局部状态
@@ -167,40 +130,19 @@ const CustomForm = ({
 \`\`\`jsx
 <shata-ai-code>
 const CustomForm = ({
-  templateId,
-  formId,
-  initialValues,
-  mode = 'create',
-  onSubmit
+    ...props
 }) => {
   // 1. 在组件内部定义配置
   const formConfig = {}
-  /* formConfig 的类型说明 ${type}
+  /* formConfig 的类型说明 ${type}, 
   */
-  
-  // 2. 组件状态
-  const [loading, setLoading] = React.useState(false)
-  
-  // 3. 事件处理
-  const handleSubmit = async (values) => {
-    setLoading(true)
-    try {
-      await onSubmit?.(values)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // 必须按照类型说明生成 formConfig 的代码
   
   // 4. 渲染表单
   return (
     <div className="custom-form">
       <DynamicForm
-        config={formConfig}
-        templateId={templateId}
-        formId={formId}
-        initialValues={initialValues}
-        mode={mode}
-        onSubmit={handleSubmit}
+         {...props}
       />
     </div>
   )
@@ -263,7 +205,7 @@ ${resources}`
 ${resourceMappingPrompt}
 ${imageAnalysisGuide}
 
-# 动态表单使用文档
+# 动态表单的源代码, 阅读源代码来生成配置
 <doc>
 ${doc}
 </doc>

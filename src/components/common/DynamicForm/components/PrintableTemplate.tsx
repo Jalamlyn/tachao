@@ -26,11 +26,6 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
         metadata: {
           title: rawConfig.title || "表单",
           description: rawConfig.description,
-          permissions: {
-            edit: true,
-            delete: true,
-            print: true,
-          },
         },
         renderConfig: rawConfig.config.renderConfig,
         orderNumberConfig: rawConfig.config.orderNumberConfig,
