@@ -6,7 +6,7 @@ import { useReportState } from "@/pages/report/hooks/useReportState"
 import { useReportData } from "@/pages/report/hooks/useReportData"
 import { ReportError } from "@/pages/report/components/ReportError"
 import { ReportLoading } from "@/pages/report/components/ReportLoading"
-import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
+import { DynamicReportRenderer } from "@/components/DynamicReportRenderer"
 import AIReportAgent from "@/service/agents/AIReportAgent"
 import { processReportData } from "@/utils/processReportData"
 import { ScrollShadow } from "@nextui-org/react"
@@ -78,7 +78,11 @@ const Report: React.FC = () => {
     >
       <div className='max-w-[1200px] mx-auto'>
         <ScrollShadow className='h-screen pb-8'>
-          <AnalysisResult analysis={reportState.reportData} />
+          <DynamicReportRenderer
+            code={reportState.reportConfig}
+            data={reportState.reportData}
+            mode="preview"
+          />
         </ScrollShadow>
       </div>
     </motion.div>
