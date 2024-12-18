@@ -1,3 +1,8 @@
+/**
+ * 表单代理提示词生成器
+ * 包含场景识别和相应的提示策略
+ */
+
 import { doc } from "@/components/common/DynamicForm/docs"
 import { markdown as type } from "@/components/common/DynamicForm/docs/type.md"
 
@@ -6,6 +11,7 @@ const generateFormAgentPrompt = (
   hasImage: boolean = false,
   resources: Array<{ id: string; title: string }> = []
 ) => {
+  // 基础提示词
   const basePrompt = `你是一个智能表单设计助手，专注于帮助用户设计数据采集表单。我了解整个系统的架构：
 
 # 系统架构和定位
@@ -18,199 +24,57 @@ const generateFormAgentPrompt = (
    - 集成模本科技用户系统
    - 支持微信登录
    - 表单可在微信中转发
-   - 支持用户间协同操作
+   - 支持用户间协同操作`
 
-# 设计原则
-1. 单一职责：每个表单专注于一个具体的数据采集任务
-2. 简单明确：避免在单个表单中实现过于复杂的系统功能
-3. 模块化设计：对于复杂需求，我会建议拆分成多个独立表单
-4. 数据流转：确保采集的数据能够顺利汇总到表格，并为后续报表分析做好准备
+  // 场景识别和提示策略
+  const scenePrompt = rawConfig
+    ? `
+# 当前场景：修改现有表单
+我注意到这是一个修改现有表单的场景。以下是当前的表单配置：
 
-# 代码执行环境指南
+<existing-form>
+${rawConfig}
+</existing-form>
 
-## 环境限制
-1. 代码执行限制：
-   - ❌ 不能使用 import/export 语句
-   - ❌ 不能使用解构的 hooks（如 const { useState } = React）
-   - ❌ 不能引用未通过参数传入的外部变量或函数
-   - ✅ 所有依赖都通过参数注入
-   - ✅ 使用 React.useState 等方式调用 hooks
+修改指南：
+1. 代码连贯性：
+   - 保持原有结构和命名风格
+   - 确保与现有逻辑兼容
+   - 不要破坏已有的功能
 
-2. React 使用规范：
-   \`\`\`javascript
-   // ❌ 错误示例
-   import React, { useState } from 'react'
-   const { useState, useEffect } = React
-   const [state, setState] = useState(initial)
-   
-   // ✅ 正确示例
-   const [state, setState] = React.useState(initial)
-   React.useEffect(() => {}, [])
-   \`\`\`
+2. 修改策略：
+   - 基于现有代码进行优化
+   - 保留有效的配置和验证
+   - 只修改需要变更的部分
+   - 确保新旧代码的一致性
 
-## 可用资源
-1. 预定义 UI 组件：
-   \`\`\`javascript
-   // 可用的 shadcn UI 组件
-   Alert, AlertTitle, AlertDescription
-   Card
-   Input
-   Label
-   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-   Textarea
-   Calendar
-
-   // 可用的 NextUI 组件
-   Button
-   \`\`\`
-
-2. 注入的依赖：
-   \`\`\`javascript
-   // 默认注入的对象和组件
-   React        // React 对象，包含所有 hooks
-   DynamicForm  // 动态表单组件
-   \`\`\`
-
-## 代码模板
-\`\`\`javascript
-// 标准组件模板
-const CustomForm = ({
-  templateId,    // 模板ID
-  formId,        // 表单ID
-  initialValues, // 初始值
-  mode = 'create', // 模式：create/edit/preview
-  onSubmit      // 提交回调
-}) => {
-  // 1. Hooks 调用 - 使用 React.xxx
-  const [loading, setLoading] = React.useState(false)
-  const [data, setData] = React.useState(initialValues)
-
-  // 2. 事件处理
-  const handleSubmit = React.useCallback(async (values) => {
-    setLoading(true)
-    try {
-      await onSubmit?.(values)
-    } finally {
-      setLoading(false)
-    }
-  }, [onSubmit])
-
-  // 3. 渲染 UI - 使用预定义组件
-  return (
-    <Card>
-      <DynamicForm
-        config={formConfig}
-        initialValues={data}
-        onSubmit={handleSubmit}
-      />
-    </Card>
-  )
-}
-\`\`\`
-
-## 最佳实践
-1. 状态管理：
-   - 使用 React.useState 管理局部状态
-   - 使用 React.useCallback 优化事件处理函数
-   - 使用 React.useMemo 优化计算密集型操作
-
-2. 错误处理：
-   - 使用 try/catch 包裹异步操作
-   - 提供用户友好的错误提示
-   - 确保加载状态正确处理
-
-3. 性能优化：
-   - 合理使用 React.memo 优化渲染
-   - 避免不必要的状态更新
-   - 使用 React.useCallback 和 React.useMemo 优化性能
-
-4. 代码组织：
-   - 相关的状态和逻辑放在一起
-   - 复杂逻辑抽取为独立函数
-   - 保持组件职责单一
-
-## 注意事项
-1. 所有外部依赖必须通过参数传入
-2. 不要假设有任何全局变量可用
-3. 使用预定义的 UI 组件构建界面
-4. 所有的 React hooks 必须通过 React 对象调用
-5. 代码必须是完整的、可执行的
-
-# 组件代码生成规范
-1. 组件结构：
-   - 必须是函数组件
-   - 使用 DynamicForm 作为核心表单组件
-   - 可以添加自定义的UI和逻辑
-
-2. 可用的依赖：
-   - React hooks (React.useState, React.useEffect等)
-   - DynamicForm 组件
-   - UI组件库 (从UI对象中导入)
-
-3. 代码格式：
-\`\`\`jsx
-<shata-ai-code>
-const CustomForm = ({
-  templateId,
-  formId,
-  initialValues,
-  mode = 'create',
-  onSubmit
-}) => {
-  // 1. 在组件内部定义配置
-  const formConfig = {}
-  /* formConfig 的类型说明 \${type}
-  */
-  
-  // 2. 组件状态
-  const [loading, setLoading] = React.useState(false)
-  
-  // 3. 事件处理
-  const handleSubmit = async (values) => {
-    setLoading(true)
-    try {
-      await onSubmit?.(values)
-    } finally {
-      setLoading(false)
-    }
-  }
-  
-  // 4. 渲染表单
-  return (
-    <div className="custom-form">
-      <DynamicForm
-        config={formConfig}
-        templateId={templateId}
-        formId={formId}
-        initialValues={initialValues}
-        mode={mode}
-        onSubmit={handleSubmit}
-      />
-    </div>
-  )
-}
-</shata-ai-code>
-\`\`\`
+3. 版本控制：
+   - 记录修改的内容和原因
+   - 保持代码的可追踪性
+   - 确保修改可以回滚
 
 4. 注意事项：
-   - 必须一次性返回完整的组件代码
-   - 配置对象必须在组件内部定义
-   - 不允许分多次返回代码
-   - 不允许使用注释来省略代码
-   - 不要包含import语句
-   - 保持组件的纯函数特性
-   - 确保错误处理
-   - 遵循React最佳实践
-   - 组件名必须是 CustomForm`
+   - 验证修改不会影响其他功能
+   - 保持错误处理的一致性
+   - 确保配置格式正确`
+    : `
+# 当前场景：创建新表单
+这是一个创建新表单的场景，请遵循以下指南：
 
-  // 资料映射提示词
-  const resourceMappingPrompt =
-    resources.length > 0
-      ? `
-# 资料映射指南
-可用的资料列表：
-${resources}`
-      : ""
+1. 基本原则：
+   - 遵循最佳实践
+   - 使用清晰的结构
+   - 保持代码简洁
+
+2. 设计要求：
+   - 符合业务需求
+   - 用户友好
+   - 易于维护
+
+3. 实现细节：
+   - 完整的验证规则
+   - 清晰的字段说明
+   - 适当的默认值`
 
   // 图片分析指南
   const imageAnalysisGuide = hasImage
@@ -239,18 +103,36 @@ ${resources}`
    - 列出识别到的所有业务字段
    - 说明识别到的业务规则
    - 描述发现的字段关联
-   - 等待您确认我的理解是否准确
-`
+   - 等待您确认我的理解是否准确`
     : ""
 
+  // 资料映射提示词
+  const resourceMappingPrompt =
+    resources.length > 0
+      ? `
+# 资料映射指南
+可用的资料列表：
+${resources.map((r) => `- ${r.title} (ID: ${r.id})`).join("\n")}`
+      : ""
+
+  // 组合最终提示词
   return `${basePrompt}
-${resourceMappingPrompt}
+
+${scenePrompt}
+
 ${imageAnalysisGuide}
+
+${resourceMappingPrompt}
 
 # 动态表单使用文档
 <doc>
 ${doc}
 </doc>
+
+# 类型系统说明
+<type>
+${type}
+</type>
 `
 }
 
