@@ -85,12 +85,16 @@ export class AIFormAgent {
         content: generateFormAgentPrompt(this._rawConfig, !!cachedImage, result.data?.[0]?.value),
       }
 
-      const enhancedCommand = `${command}
-      [回答策略:
+      const enhancedCommand = `这是我的输入
+      """
+      ${command}
+      """
+      [回复策略:
         * 对于表单直接相关问题：提供具体解决方案
         * 对于业务相关问题：进行分析并给出建议
         * 对于间接相关问题：提供参考信息和最佳实践
         * 对于完全无关问题：礼貌建议咨询其他专业助手
+        * 明确我的意图再回复
         * [格式要求:所有代码必须使用 
         \`\`\`mo 
         <shata-ai-code>

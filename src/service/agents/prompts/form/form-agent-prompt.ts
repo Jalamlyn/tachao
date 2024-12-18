@@ -185,6 +185,12 @@ ${existingConfigAnalysis}
 # 动态表单使用文档
 <doc>
 ${doc}
+# 动态表单配置规范
+- 配置中 watch 只能有一个, 所有的动态逻辑都写在一起
+- form 是 react-hook-form 的实例
+- 所有 UI 组件用的是 shadcn 实现的, 除了 Button 是 NextUI 的
+- 不要使用不存在的方法
+- 更新表单,只使用 form.setValue 方法
 </doc>
 `
 }

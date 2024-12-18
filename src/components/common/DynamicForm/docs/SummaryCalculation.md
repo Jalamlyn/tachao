@@ -34,9 +34,9 @@ const formConfig: DynamicFormConfig = {
           const avgPrice = itemCount > 0 ? totalAmount / itemCount : 0;
           
           // 更新汇总字段
-          form.setValue('summary.amounts.totalAmount', totalAmount);
-          form.setValue('summary.statistics.itemCount', itemCount);
-          form.setValue('summary.statistics.avgPrice', avgPrice);
+          form.setValue('summaryAmountsTotalAmount', totalAmount);
+          form.setValue('summaryStatisticsItemCount', itemCount);
+          form.setValue('summaryStatisticsAvgPrice', avgPrice);
           
         } finally {
           isCalculating = false;
@@ -189,12 +189,12 @@ const formConfig: DynamicFormConfig = {
           };
         }, { total: 0 });
 
-        form.setValue('summary.amounts.total', summary.total);
+        form.setValue('summaryAmountsTotal', summary.total);
         
       } catch (error) {
         console.error('Error calculating summary:', error);
         // 可以选择设置一个错误状态
-        form.setValue('summary.error', '计算出错');
+        form.setValue('summaryError', '计算出错');
       }
     };
 
@@ -239,8 +239,8 @@ const formConfig: DynamicFormConfig = {
       const statistics = calculateStatistics(items, amounts);
 
       // 批量更新
-      form.setValue('summary.amounts', amounts);
-      form.setValue('summary.statistics', statistics);
+      form.setValue('summaryAmounts', amounts);
+      form.setValue('summaryStatistics', statistics);
     };
 
     const subscription = form.watch((value, { name }) => {

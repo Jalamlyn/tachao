@@ -113,7 +113,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         }
       }
     }
-  }, [config.watch, form])
+  }, [config.watch])
 
   const getTemplateInfo = async (templateId: string | undefined) => {
     if (!templateId) return null
@@ -435,9 +435,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         {renderConfig.summaryGroups && (
           <div className={cn(styles["form-card"])}>
             <h2 className={cn(styles["form-title"])}>汇总信息</h2>
-            <Summary 
-              groups={renderConfig.summaryGroups} 
-              form={form}  // 修改这里，传递 form 而不是 values
+            <Summary
+              groups={renderConfig.summaryGroups}
+              form={form} // 修改这里，传递 form 而不是 values
             />
           </div>
         )}

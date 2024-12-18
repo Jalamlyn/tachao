@@ -781,3 +781,145 @@ renderConfig: {
 2. 使用分组方式时,必须提供 groups 数组
 3. 每个分组必须有唯一的 key
 4. 字段配置保持不变,只是组织方式不同
+
+### Watch 使用注意事项 - 省市区联动示例
+
+以下示例展示了如何正确实现省市区三级联动,同时避免watch和setValue的循环依赖问题:
+
+```typescript
+const formConfig: DynamicFormConfig = {
+  metadata: {
+    title: "地址信息"
+  },
+  renderConfig: {
+    basicFields: {
+      groups: [
+        {
+          key: "address",
+          title: "地址信息",
+          fields: [
+            {
+              name: "province",
+              label: "省份",
+              type: "select",
+              required: true,
+              options: [] // 省份数据
+            },
+            {
+              name: "city",
+              label: "城市",
+              type: "select",
+              required: true,
+              options: [] // 初始为空,根据省份动态加载
+            },
+            {
+              name: "district",
+              label: "区县",
+              type: "select",
+              required: true,
+              options: [] // 初始为空,根据城市动态加载
+            }
+          ]
+        }
+      ]
+    }
+  },
+
+  // ✅ 正确示例 - 使用标志位和具体字段监听
+  watch: (form) => {
+    let isUpdating = false;
+
+    const subscription = form.watch((value, { name }) => {
+      // 避免在更新选项时触发watch
+      if (isUpdating) return;
+
+      try {
+        isUpdating = true;
+
+        // 当省份变化时
+        if (name === 'province') {
+          // 清空城市和区县
+          form.setValue('city', '');
+          form.setValue('district', '');
+
+          // 更新城市选项
+          const cities = getCitiesByProvince(value.province);
+          form.setValue('city.options', cities);
+        }
+
+        // 当城市变化时
+        if (name === 'city') {
+          // 只清空区县
+          form.setValue('district', '');
+
+          // 更新区县选项
+          const districts = getDistrictsByCity(value.city);
+          form.setValue('district.options', districts);
+        }
+      } finally {
+        // 确保标志位被重置
+        isUpdating = false;
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }
+};
+
+// ❌ 错误示例 - 可能导致循环
+watch: (form) => {
+  const subscription = form.watch((value) => {
+    // 危险!每次值变化都触发
+    if (value.province) {
+      form.setValue('city.options', getCitiesByProvince(value.province));
+    }
+    if (value.city) {
+      form.setValue('district.options', getDistrictsByCity(value.city));
+    }
+  });
+  return () => subscription.unsubscribe();
+}
+为什么正确示例可以避免循环?
+使用标志位控制:
+
+isUpdating 标志确保在更新过程中不会触发新的watch回调
+通过 try/finally 确保标志位一定会被重置
+精确的字段监听:
+
+使用 name 参数明确知道是哪个字段发生变化
+只在特定字段变化时执行相应的更新
+合理的更新顺序:
+
+先清空下级选项
+再更新选项数据
+避免不必要的中间状态
+最佳实践总结
+使用标志位避免循环:
+
+let isUpdating = false;
+if (isUpdating) return;
+isUpdating = true;
+try {
+  // 更新操作
+} finally {
+  isUpdating = false;
+}
+精确监听字段:
+
+if (name === 'specificField') {
+  // 处理特定字段的变化
+}
+合理的清理操作:
+
+// 清空关联字段
+form.setValue('dependentField', '');
+// 更新选项
+form.setValue('dependentField.options', newOptions);
+使用 try/finally 确保标志位重置:
+
+try {
+  // 更新操作
+} finally {
+  isUpdating = false;
+}
+```

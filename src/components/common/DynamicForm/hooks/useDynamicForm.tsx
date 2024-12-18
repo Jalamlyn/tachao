@@ -2,26 +2,8 @@ import { useEffect, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { DynamicFormConfig, ValidationResult } from "../types"
 import { ValidationManager } from "../validation/ValidationManager"
-import { debounce } from "lodash"
 
 // 创建带防抖的 watch
-export const createDebouncedWatch = (form: UseFormReturn<any>, delay = 300) => {
-  return (fields: string | string[], callback: (values: any) => void) => {
-    const debouncedCallback = debounce(callback, delay)
-
-    const subscription = form.watch((value, { name }) => {
-      if (Array.isArray(fields)) {
-        if (fields.includes(name)) {
-          debouncedCallback(value)
-        }
-      } else if (fields === name) {
-        debouncedCallback(value)
-      }
-    })
-
-    return subscription
-  }
-}
 
 export const useDynamicForm = (
   config: DynamicFormConfig,
@@ -31,54 +13,6 @@ export const useDynamicForm = (
   const form = useForm({
     defaultValues: initialValues || {},
   })
-
-  // 设置 watch 函数
-  useEffect(() => {
-    if (!config.watch) {
-      //console.log("[useDynamicForm] No watch function provided")
-      return
-    }
-
-    //console.log("[useDynamicForm] Setting up watch function")
-    let unsubscribe: (() => void) | undefined
-
-    try {
-      unsubscribe = config.watch(form)
-      //console.log("[useDynamicForm] After setting up watch, unsubscribe:", unsubscribe)
-
-      if (typeof unsubscribe !== "function") {
-        console.warn("[useDynamicForm] Watch function should return an unsubscribe function")
-      }
-    } catch (error) {
-      console.error("[useDynamicForm] Error in watch setup:", error)
-    }
-
-    return () => {
-      //console.log("[useDynamicForm] Cleaning up watch subscriptions")
-      if (typeof unsubscribe === "function") {
-        try {
-          unsubscribe()
-          //console.log("[useDynamicForm] Successfully unsubscribed watch")
-        } catch (error) {
-          console.error("[useDynamicForm] Error unsubscribing watch:", error)
-        }
-      }
-    }
-  }, [])
-
-  // 监听表单值变化
-  useEffect(() => {
-    //console.log("[useDynamicForm] Setting up form value change listener")
-    const subscription = form.watch((value, { name, type }) => {
-      //console.log("[useDynamicForm] Form value changed:", { field: name, type, value })
-      //console.log("[useDynamicForm] Current form values:", form.getValues())
-
-      // 触发表单重新渲染
-      form.trigger(name)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
 
   // 统一的验证函数
   const validateForm = useCallback(async (): Promise<ValidationResult> => {

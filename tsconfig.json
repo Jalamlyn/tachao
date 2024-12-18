@@ -26,6 +26,6 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false
   },
-  "include": ["src", "src/main.tsx", "vite-env.d.ts"],
+  "include": ["src", "src/main.tsx", "vite-env.d.ts", "node_modules/templates"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

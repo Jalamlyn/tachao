@@ -85,7 +85,7 @@ const AIFormEditor: React.FC = () => {
     const loadTemplatePrompt = async () => {
       if (promptTemplate && !isEditMode) {
         try {
-          const templateModule = await import(`./templates/${promptTemplate}`)
+          const templateModule = await import(`../templates/${promptTemplate}`)
           addMessage({
             role: "assistant",
             content: `我将帮您创建一个${templateTitle}。${templateModule.default}`,
