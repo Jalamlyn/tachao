@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
+import { addPermission } from "@/permissions/utils/permissionUtils"
 
 const PERMISSION_REQUESTS_KEY = 'permission_requests'
 
@@ -68,9 +69,21 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
       const requests = JSON.parse(result.data?.[0]?.value || '{}')
       
       if (requests[taskId]) {
-        requests[taskId].status = status
-        requests[taskId].updatedAt = new Date().toISOString()
+        const request = requests[taskId]
+        request.status = status
+        request.updatedAt = new Date().toISOString()
         
+        // 如果批准了权限申请，直接添加权限
+        if (status === 'completed') {
+          await addPermission(
+            request.resourceType,
+            request.resourceId,
+            request.requesterId,
+            'viewer'
+          )
+        }
+        
+        // 更新申请状态(仅用于展示)
         await setMetadata(PERMISSION_REQUESTS_KEY, JSON.stringify(requests))
         
         set((state) => ({

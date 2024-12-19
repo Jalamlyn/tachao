@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useCurrentUser } from "../hooks/useCurrentUser"
-import { usePermissions } from "../hooks/usePermissions"
+import { hasPermission } from "../utils/permissionUtils"
 import { Spinner } from "@nextui-org/react"
 import { Navigate } from "react-router-dom"
 
@@ -8,11 +8,10 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
   resourceType,
   resourceId,
   children,
-  fallback = <Navigate to={`/unauthorized?type=${resourceType}&id=${resourceId}`} />,
+  fallback = <Navigate to={`/unauthorized?type=${resourceType}&id=${resourceId}`} />
 }) => {
   const { user, isLoading: userLoading } = useCurrentUser()
-  const { checkPermission } = usePermissions(resourceType)
-  const [hasPermission, setHasPermission] = useState(false)
+  const [hasAccess, setHasAccess] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -20,11 +19,12 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
       if (!user) return
 
       try {
-        const result = await checkPermission(resourceId, user.id, user)
-        setHasPermission(result)
+        // 直接检查权限，不需要检查申请状态
+        const result = await hasPermission(resourceType, resourceId, user.id)
+        setHasAccess(result)
       } catch (error) {
         console.error("Permission check failed:", error)
-        setHasPermission(false)
+        setHasAccess(false)
       } finally {
         setLoading(false)
       }
@@ -37,16 +37,15 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
 
   if (userLoading || loading) {
     return (
-      <div className='flex items-center justify-center p-4'>
-        <Spinner size='sm' />
+      <div className="flex items-center justify-center p-4">
+        <Spinner size="sm" />
       </div>
     )
   }
 
-  // 如果没有用户信息，显示未授权状态
   if (!user) {
     return <>{fallback}</>
   }
 
-  return hasPermission ? <>{children}</> : <>{fallback}</>
+  return hasAccess ? <>{children}</> : <>{fallback}</>
 }

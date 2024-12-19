@@ -34,10 +34,53 @@ export const isAdmin = (user: any): boolean => {
   return user?.account === "admin"
 }
 
-export const hasPermission = (permission: Permission | null, accountId: string): boolean => {
-  if (!permission) return false
-  if (isAdmin({ account: accountId })) return true
-  return permission.accounts.some((acc) => acc.accountId === accountId)
+export const hasPermission = async (
+  resourceType: ResourceType,
+  resourceId: string,
+  accountId: string
+): Promise<boolean> => {
+  // 1. 检查是否是管理员
+  if (isAdmin({ account: accountId })) {
+    return true
+  }
+
+  // 2. 只检查实际权限
+  const permissions = await getResourcePermissions(resourceType)
+  const resourcePermission = permissions[resourceId]
+  return resourcePermission?.accounts.some(acc => acc.accountId === accountId) || false
+}
+
+export const addPermission = async (
+  resourceType: ResourceType,
+  resourceId: string,
+  accountId: string,
+  role: string = 'viewer'
+) => {
+  const permissions = await getResourcePermissions(resourceType)
+  
+  if (!permissions[resourceId]) {
+    permissions[resourceId] = {
+      resourceType,
+      resourceId,
+      accounts: []
+    }
+  }
+
+  // 检查是否已存在权限
+  const existingPermission = permissions[resourceId].accounts.find(
+    acc => acc.accountId === accountId
+  )
+
+  if (!existingPermission) {
+    permissions[resourceId].accounts.push({
+      accountId,
+      role,
+      grantedAt: new Date().toISOString(),
+      grantedBy: 'system'
+    })
+
+    await setResourcePermissions(resourceType, permissions)
+  }
 }
 
 export const createPermissionRequest = async (request: {
