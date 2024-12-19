@@ -2,6 +2,7 @@ import { useCallback } from "react"
 import { useMetadata } from "@/hooks/useMetadata"
 import { aiLog } from "@/utils/AITraceLogger"
 import { ReportData, ReportDetail } from "@/pages/report/types"
+import { processReportData } from "@/utils/processReportData"
 
 export const useReportData = () => {
   const { getDetail: getReportDetail } = useMetadata("report")
@@ -48,18 +49,22 @@ export const useReportData = () => {
           ...detail.data,
         }))
 
+        // 6. 使用 processReportData 处理数据
+        const processedData = processReportData(formData, templateInfoMap)
+
         aiLog.log("[useReportData] Data loaded successfully", {
           templateCount: templateIds.length,
           formCount: formData.length,
         })
 
+        // 7. 返回处理后的数据结构
         return {
           id: reportDetail.id,
           title: reportDetail.title,
           templateIds: templateIds,
-          formData: formData,
+          formData: processedData.originalData, // 使用处理后的原始数据
           rawConfig: reportDetail.data?.rawConfig,
-          templateInfoMap: templateInfoMap,
+          templateInfoMap: templateInfoMap
         }
       } catch (error) {
         aiLog.log("[useReportData] Error loading report data", { error })

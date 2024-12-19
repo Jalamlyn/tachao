@@ -32,9 +32,13 @@ const Report: React.FC = () => {
           throw new Error("报表配置不存在")
         }
 
+        // 直接使用处理好的数据
         reportActions.setSuccess({
           reportConfig: data.rawConfig,
-          reportData: data
+          reportData: {
+            formData: data.formData,
+            templateInfoMap: data.templateInfoMap
+          }
         })
       } catch (error) {
         reportActions.setError(error instanceof Error ? error.message : "加载报表数据失败")
