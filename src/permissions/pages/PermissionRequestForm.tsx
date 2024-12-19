@@ -6,6 +6,7 @@ import { createPermissionRequest, getPermissionRequests } from "../utils/permiss
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import message from "@/components/Message"
 import { motion } from "framer-motion"
+import { PERMISSION_DESCRIPTIONS, PERMISSION_ROLES } from "../config/constants"
 
 const PermissionRequestForm = ({
   resourceType,
@@ -68,6 +69,8 @@ const PermissionRequestForm = ({
       if (resourceType === 'template') {
         if (selectedRole === 'editor') {
           finalRole = ['editor', 'viewer']
+        } else if (selectedRole === 'creator') {
+          finalRole = ['creator', 'editor', 'viewer']
         } else {
           finalRole = [selectedRole]
         }
@@ -179,10 +182,11 @@ const PermissionRequestForm = ({
           label='申请权限类型'
           value={selectedRole}
           onValueChange={(value) => setSelectedRole(value as TemplatePermissionRole)}
-          description="选择编辑权限将自动包含查看权限"
+          description="选择更高级别的权限将自动包含下级权限"
         >
-          <Radio value='viewer'>查看权限</Radio>
-          <Radio value='editor'>编辑权限（包含查看权限）</Radio>
+          <Radio value={PERMISSION_ROLES.CREATOR}>{PERMISSION_DESCRIPTIONS[PERMISSION_ROLES.CREATOR]}</Radio>
+          <Radio value={PERMISSION_ROLES.EDITOR}>{PERMISSION_DESCRIPTIONS[PERMISSION_ROLES.EDITOR]}</Radio>
+          <Radio value={PERMISSION_ROLES.VIEWER}>{PERMISSION_DESCRIPTIONS[PERMISSION_ROLES.VIEWER]}</Radio>
         </RadioGroup>
       )}
 

@@ -2,6 +2,7 @@ import { ResourceType } from "../types"
 import { ResourceTypeContent } from "../types/unauthorized"
 import { TemplatePermissionRole } from "../types"
 import { useNavigate } from "react-router-dom"
+import { PERMISSION_LABELS } from "./constants"
 
 export const getUnauthorizedContent = (
   type: ResourceType,
@@ -47,12 +48,12 @@ export const getUnauthorizedContent = (
     template: (id) => ({
       title: "表单模板访问受限",
       description: role
-        ? `您没有${role === "viewer" ? "查看" : "编辑"}此表单模板的权限，请申请相应权限。`
+        ? `您没有${PERMISSION_LABELS[role]}此表单模板的权限，请申请相应权限。`
         : "您没有访问此表单模板的权限，请申请相应权限。",
       icon: "solar:file-shield-cross-bold-duotone",
       actions: {
         primary: {
-          label: role ? `申请${role === "viewer" ? "查看" : "编辑"}权限` : "申请访问权限",
+          label: role ? `申请${PERMISSION_LABELS[role]}权限` : "申请访问权限",
           action: handlers.onRequestAccess || (() => {}),
         },
         secondary: {

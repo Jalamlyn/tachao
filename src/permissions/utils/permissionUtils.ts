@@ -1,5 +1,6 @@
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { Permission, PermissionMetadata, ResourceType, TemplatePermissionRole } from "../types"
+import { PERMISSION_HIERARCHY, hasRequiredPermission } from "../config/constants"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
 
@@ -69,24 +70,7 @@ export const hasTemplatePermission = async (
   }
 
   const userRoles = Array.isArray(userPermission.role) ? userPermission.role : [userPermission.role]
-
-  // 权限层级检查
-  if (requiredRole === "viewer") {
-    return userRoles.includes("viewer") || 
-           userRoles.includes("editor") || 
-           userRoles.includes("creator")
-  }
-
-  if (requiredRole === "editor") {
-    return userRoles.includes("editor") || 
-           userRoles.includes("creator")
-  }
-
-  if (requiredRole === "creator") {
-    return userRoles.includes("creator")
-  }
-
-  return false
+  return hasRequiredPermission(userRoles, requiredRole)
 }
 
 // 新增：获取资源标题的函数
