@@ -34,17 +34,14 @@ const PendingTasks: React.FC = () => {
   return (
     <PageLayout title='待我处理' titleIcon='solar:list-check-bold'>
       <div className='space-y-4 p-4'>
-        <Tabs 
-          selectedKey={activeTab} 
-          onSelectionChange={(key) => setActiveTab(key as string)}
-        >
-          <Tab 
-            key="permission_requests" 
+        <Tabs selectedKey={activeTab} onSelectionChange={(key) => setActiveTab(key as string)}>
+          <Tab
+            key='permission_requests'
             title={
-              <div className="flex items-center gap-2">
-                <Icon icon="solar:shield-user-bold-duotone" />
+              <div className='flex items-center gap-2'>
+                <Icon icon='solar:shield-user-bold-duotone' />
                 <span>权限申请</span>
-                <Chip size="sm" variant="flat" color="primary">
+                <Chip size='sm' variant='flat' color='primary'>
                   {tasks.length}
                 </Chip>
               </div>
@@ -68,39 +65,62 @@ const PendingTasks: React.FC = () => {
                           </div>
                         </div>
                         <div className='flex-1'>
-                          <div className='flex items-center justify-between'>
+                          {/* 头部信息区域 */}
+                          <div className='flex items-center justify-between mb-2'>
                             <div className='flex items-center gap-2'>
-                              <h3 className='text-lg font-semibold'>{task.title}</h3>
-                              <Chip size='sm' variant='flat' color='primary'>
-                                权限申请
+                              <span className='text-lg font-semibold text-default-700'>{task.user}</span>
+                              <Chip size='sm' variant='flat' color='secondary'>
+                                申请人
                               </Chip>
                             </div>
-                            <span className='text-small text-default-400'>{task.time}</span>
+                            <Chip
+                              size='sm'
+                              variant='flat'
+                              color='primary'
+                              startContent={<Icon icon='solar:clock-circle' className='w-4 h-4' />}
+                            >
+                              {task.time}
+                            </Chip>
                           </div>
-                          <p className='text-default-500 mt-1'>{task.description}</p>
-                          <div className='flex items-center justify-between mt-4'>
-                            <div className='flex items-center gap-2'>
-                              <span className='text-small text-default-500'>{task.user}</span>
+
+                          {/* 申请标题区域 */}
+                          <div className='flex items-center gap-2 mb-3 pb-2 border-b border-default-100'>
+                            <h3 className='text-lg font-semibold'>{task.title}</h3>
+                            <Chip size='sm' variant='flat' color='primary'>
+                              权限申请
+                            </Chip>
+                          </div>
+
+                          {/* 申请原因区域 */}
+                          <div className='mb-4'>
+                            <div className='p-3 bg-default-50 rounded-lg'>
+                              <div className='text-small font-semibold text-default-600 mb-1 flex items-center gap-2'>
+                                <Icon icon='solar:document-text-linear' className='w-4 h-4' />
+                                申请原因：
+                              </div>
+                              <p className='text-default-500'>{task.description}</p>
                             </div>
-                            <div className='flex gap-2'>
-                              <Button
-                                size='sm'
-                                color='danger'
-                                variant='flat'
-                                startContent={<Icon icon='solar:close-circle-linear' className='w-4 h-4' />}
-                                onPress={() => updateTaskStatus(task.id, 'rejected')}
-                              >
-                                拒绝
-                              </Button>
-                              <Button
-                                size='sm'
-                                color='primary'
-                                startContent={<Icon icon='solar:check-circle-linear' className='w-4 h-4' />}
-                                onPress={() => updateTaskStatus(task.id, 'completed')}
-                              >
-                                同意
-                              </Button>
-                            </div>
+                          </div>
+
+                          {/* 操作按钮区域 */}
+                          <div className='flex justify-end gap-2 mt-4'>
+                            <Button
+                              size='sm'
+                              color='danger'
+                              variant='flat'
+                              startContent={<Icon icon='solar:close-circle-linear' className='w-4 h-4' />}
+                              onPress={() => updateTaskStatus(task.id, "rejected")}
+                            >
+                              拒绝
+                            </Button>
+                            <Button
+                              size='sm'
+                              color='primary'
+                              startContent={<Icon icon='solar:check-circle-linear' className='w-4 h-4' />}
+                              onPress={() => updateTaskStatus(task.id, "completed")}
+                            >
+                              同意
+                            </Button>
                           </div>
                         </div>
                       </div>
