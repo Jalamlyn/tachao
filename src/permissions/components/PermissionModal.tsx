@@ -9,10 +9,14 @@ import {
   Input,
   Chip,
   useDisclosure,
+  Select,
+  SelectItem,
+  Spinner,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { usePermissions } from "../hooks/usePermissions"
 import { Permission, ResourceType } from "../types"
+import { queryRamAccount } from "@/service/apis/user"
 import message from "@/components/Message"
 
 interface PermissionModalProps {
@@ -33,12 +37,28 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   const { getPermissions, grantPermission, revokePermission, loading } = usePermissions(resourceType)
   const [permissions, setPermissions] = useState<Permission | null>(null)
   const [newAccountId, setNewAccountId] = useState("")
+  const [accounts, setAccounts] = useState<any[]>([])
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
       loadPermissions()
+      loadAccounts()
     }
   }, [isOpen])
+
+  const loadAccounts = async () => {
+    try {
+      setIsLoadingAccounts(true)
+      const response = await queryRamAccount()
+      setAccounts(response.data || [])
+    } catch (error) {
+      console.error("Error loading accounts:", error)
+      message.error("加载账号列表失败")
+    } finally {
+      setIsLoadingAccounts(false)
+    }
+  }
 
   const loadPermissions = async () => {
     const data = await getPermissions(resourceId)
@@ -47,7 +67,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
 
   const handleAddPermission = async () => {
     if (!newAccountId.trim()) {
-      message.error("请输入账号ID")
+      message.error("请选择账号")
       return
     }
 
@@ -71,6 +91,11 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
     }
   }
 
+  // 过滤掉已经有权限的账号
+  const availableAccounts = accounts.filter(
+    (account) => !permissions?.accounts.some((perm) => perm.accountId === account.id)
+  )
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
       <ModalContent>
@@ -82,16 +107,31 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
             <ModalBody>
               <div className="space-y-4">
                 <div className="flex gap-2">
-                  <Input
-                    value={newAccountId}
-                    onChange={(e) => setNewAccountId(e.target.value)}
-                    placeholder="输入账号ID"
-                    variant="bordered"
-                  />
+                  {isLoadingAccounts ? (
+                    <div className="w-full flex items-center gap-2 h-12">
+                      <Spinner size="sm" />
+                      <span className="text-small">加载账号列表中...</span>
+                    </div>
+                  ) : (
+                    <Select
+                      label="选择账号"
+                      placeholder="请选择要授权的账号"
+                      selectedKeys={newAccountId ? [newAccountId] : []}
+                      onSelectionChange={(keys) => setNewAccountId(Array.from(keys)[0] as string)}
+                      className="flex-1"
+                    >
+                      {availableAccounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.username || account.id}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  )}
                   <Button
                     color="primary"
                     isLoading={loading}
                     onPress={handleAddPermission}
+                    isDisabled={isLoadingAccounts || !newAccountId}
                   >
                     添加
                   </Button>
@@ -106,7 +146,9 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
                     >
                       <div className="flex items-center gap-2">
                         <Icon icon="mdi:account" className="text-default-500" />
-                        <span>{account.accountId}</span>
+                        <span>
+                          {accounts.find((a) => a.id === account.accountId)?.username || account.accountId}
+                        </span>
                         <Chip size="sm" variant="flat" color="primary">
                           {account.role}
                         </Chip>
