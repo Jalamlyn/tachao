@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import React, { useEffect } from "react"
 import { Button, Card, CardBody, Divider } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate, useSearchParams } from "react-router-dom"
@@ -52,9 +52,12 @@ const UnauthorizedPage = () => {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className='inline-block p-4 rounded-full bg-danger-50'
+                className='inline-block p-4 rounded-full bg-default-100'
               >
-                <Icon icon={content.icon} className='w-16 h-16 text-danger' />
+                <Icon 
+                  icon={content.icon} 
+                  className='w-16 h-16 text-default-500'
+                />
               </motion.div>
               <motion.h1
                 initial={{ y: 20, opacity: 0 }}
@@ -77,7 +80,11 @@ const UnauthorizedPage = () => {
             <Divider className='my-6' />
 
             <AnimatePresence mode='wait'>
-              <PermissionRequestForm resourceType={resourceType} resourceId={resourceId} />
+              <PermissionRequestForm 
+                resourceType={resourceType} 
+                resourceId={resourceId} 
+                metadata={content.metadata}
+              />
             </AnimatePresence>
 
             <motion.div
