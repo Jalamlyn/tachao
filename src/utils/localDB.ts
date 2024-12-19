@@ -46,7 +46,7 @@ export const localDB = {
     if (loginData) {
       return currentAppId || localStorage.getItem(`${loginData.organizationId}_appId`)
     } else {
-      if (!window.location.pathname.includes("/login")) {
+      if (!window.location.pathname.includes("/login") || !window.location.pathname.includes("/unauthorized")) {
         window.location.href = "/login"
       }
     }
