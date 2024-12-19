@@ -8,6 +8,8 @@ import { createPermissionRequest, getPermissionRequests } from "../utils/permiss
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import message from "@/components/Message"
 import { motion, AnimatePresence } from "framer-motion"
+import { queryMyProjectApps } from "@/service/apis/app"
+import { localDB } from "@/utils/localDB"
 
 const PermissionRequestForm = ({ resourceType, resourceId }: { resourceType: string; resourceId: string }) => {
   const { user } = useCurrentUser()
@@ -150,6 +152,22 @@ const UnauthorizedPage = () => {
   const [searchParams] = useSearchParams()
   const resourceType = searchParams.get("type") as ResourceType
   const resourceId = searchParams.get("id") || ""
+
+  useEffect(() => {
+    const initAppId = async () => {
+      try {
+        const response = await queryMyProjectApps({ page: 1, size: 1 })
+        if (response.items && response.items.length > 0) {
+          const firstApp = response.items[0]
+          await localDB.setAppId(firstApp.id)
+        }
+      } catch (error) {
+        console.error("Error initializing appId:", error)
+      }
+    }
+
+    initAppId()
+  }, [])
 
   const content = getUnauthorizedContent(resourceType, resourceId, {
     onBack: () => navigate(-1),
