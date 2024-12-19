@@ -16,6 +16,7 @@ import { renderSlider } from "./renders/renderSlider"
 import { renderCustom } from "./renders/renderCustom"
 import { renderClockIn } from "./renders/ClockIn"
 import { renderLocation } from "./renders/Location"
+import { renderOrderNumber } from "./renders/renderOrderNumber"
 
 interface DynamicFormFieldsProps {
   fields: DynamicFormField[]
@@ -107,8 +108,14 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
     if (field.type === "clockIn") {
       return renderClockIn(field, form, isEditable, onChange)
     }
+
     if (field.type === "location") {
       return renderLocation(field, form, isEditable, onChange)
+    }
+
+    // 订单编号
+    if (field.type === "orderNumber") {
+      return renderOrderNumber(field, form, isEditable, onChange)
     }
 
     return null
