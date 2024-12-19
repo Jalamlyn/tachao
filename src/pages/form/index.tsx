@@ -13,6 +13,7 @@ import ShareModal from "./components/ShareModal"
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
+import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 
 const NewForm: React.FC = () => {
   const { formId } = useParams<{ formId: string }>()
@@ -45,18 +46,84 @@ const NewForm: React.FC = () => {
     }
   }
 
-  if (formState.status === "loading") {
-    return <FormLoading />
+  const renderContent = () => {
+    if (formState.status === "loading") {
+      return <FormLoading />
+    }
+
+    if (formState.status === "error") {
+      return <FormError error={formState.error!} />
+    }
+
+    if (formState.status === "success" && (!formState.formConfig || !formState.formData)) {
+      return <FormError error='未找到表单配置或数据' />
+    }
+
+    return (
+      <>
+        {/* 固定顶部的 Header */}
+        <header className='fixed top-0 left-0 right-0 h-12 bg-white/80 backdrop-blur-md border-b border-gray-100 z-50'>
+          <div className='max-w-[1200px] mx-auto px-4 h-full flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+              <h1 className='text-sm font-medium truncate max-w-[200px] md:max-w-[400px]'>
+                {formState.formConfig?.metadata?.title || "表单详情"}
+              </h1>
+            </div>
+
+            <div className='flex items-center gap-2'>
+              {loginInfo.type !== "none" && <UserInfo userInfo={loginInfo.userInfo!} type={loginInfo.type} />}
+              <ShareButton
+                isWechat={isWechat}
+                webShareSupported={webShareSupported}
+                onShareModalOpen={() => setIsShareModalOpen(true)}
+                formState={formState}
+                formId={formId!}
+              />
+            </div>
+          </div>
+        </header>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className='container mx-auto py-8 px-4'
+        >
+          <div className='max-w-[1200px] mx-auto relative mt-6'>
+            <FormTabs
+              selectedTab={selectedTab}
+              onTabChange={setSelectedTab}
+              componentCode={formState.formConfig}
+              formId={formId!}
+              formData={formState.formData}
+              templateId={formState.templateId}
+            />
+
+            <ShareModal
+              isOpen={isShareModalOpen}
+              onClose={() => setIsShareModalOpen(false)}
+              formId={formId!}
+              title={formState.formConfig?.metadata?.title}
+            />
+          </div>
+        </motion.div>
+      </>
+    )
   }
 
-  if (formState.status === "error") {
-    return <FormError error={formState.error!} />
+  if (!formState.templateId) {
+    return renderContent()
   }
 
-  if (formState.status === "success" && (!formState.formConfig || !formState.formData)) {
-    return <FormError error='未找到表单配置或数据' />
-  }
+  return (
+    <PermissionCheck resourceType="template" resourceId={formState.templateId} role="viewer">
+      {renderContent()}
+    </PermissionCheck>
+  )
+}
 
+// ShareButton组件保持不变
+const ShareButton = ({ isWechat, webShareSupported, onShareModalOpen, formState, formId }) => {
   const generateShareLink = () => {
     return `${window.location.origin}/form/${formId}`
   }
@@ -114,99 +181,57 @@ const NewForm: React.FC = () => {
       message.error("微信环境未就绪")
     }
   }
+
   return (
-    <>
-      {/* 固定顶部的 Header */}
-      <header className='fixed top-0 left-0 right-0 h-12 bg-white/80 backdrop-blur-md border-b border-gray-100 z-50'>
-        <div className='max-w-[1200px] mx-auto px-4 h-full flex items-center justify-between'>
-          {/* 左侧区域 - 表单标题 */}
-          <div className='flex items-center gap-2'>
-            <h1 className='text-sm font-medium truncate max-w-[200px] md:max-w-[400px]'>
-              {formState.formConfig?.metadata?.title || "表单详情"}
-            </h1>
-          </div>
-
-          {/* 右侧区域 - 操作按钮 */}
-          <div className='flex items-center gap-2'>
-            {loginInfo.type !== "none" && <UserInfo userInfo={loginInfo.userInfo!} type={loginInfo.type} />}
-            <Dropdown>
-              <DropdownTrigger>
-                <Button
-                  isIconOnly
-                  variant='light'
-                  size='sm'
-                  className='w-8 h-8 min-w-0 hover:bg-gray-100 transition-colors'
-                  aria-label='分享表单'
-                >
-                  <Icon icon='mdi:share' className='w-4 h-4' />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu aria-label='分享选项'>
-                {webShareSupported && (
-                  <DropdownItem
-                    key='share'
-                    startContent={<Icon icon='mdi:share' className='w-4 h-4' />}
-                    description='使用系统分享'
-                    onClick={handleNativeShare}
-                  >
-                    分享表单
-                  </DropdownItem>
-                )}
-                <DropdownItem
-                  key='copy'
-                  startContent={<Icon icon='mdi:content-copy' className='w-4 h-4' />}
-                  description='复制表单链接'
-                  onClick={handleQuickCopy}
-                >
-                  复制链接
-                </DropdownItem>
-                {isWechat && (
-                  <DropdownItem
-                    key='wechat-share'
-                    startContent={<Icon icon='mdi:wechat' className='w-4 h-4' />}
-                    onClick={handleWechatShare}
-                  >
-                    分享给微信好友
-                  </DropdownItem>
-                )}
-                <DropdownItem
-                  key='more-options'
-                  startContent={<Icon icon='mdi:qrcode' className='w-4 h-4' />}
-                  onClick={() => setIsShareModalOpen(true)}
-                >
-                  生成二维码
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
-        </div>
-      </header>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className='container mx-auto py-8 px-4'
-      >
-        <div className='max-w-[1200px] mx-auto relative mt-6'>
-          <FormTabs
-            selectedTab={selectedTab}
-            onTabChange={setSelectedTab}
-            componentCode={formState.formConfig}
-            formId={formId!}
-            formData={formState.formData}
-            templateId={formState.templateId}
-          />
-
-          <ShareModal
-            isOpen={isShareModalOpen}
-            onClose={() => setIsShareModalOpen(false)}
-            formId={formId!}
-            title={formState.formConfig?.metadata?.title}
-          />
-        </div>
-      </motion.div>
-    </>
+    <Dropdown>
+      <DropdownTrigger>
+        <Button
+          isIconOnly
+          variant='light'
+          size='sm'
+          className='w-8 h-8 min-w-0 hover:bg-gray-100 transition-colors'
+          aria-label='分享表单'
+        >
+          <Icon icon='mdi:share' className='w-4 h-4' />
+        </Button>
+      </DropdownTrigger>
+      <DropdownMenu aria-label='分享选项'>
+        {webShareSupported && (
+          <DropdownItem
+            key='share'
+            startContent={<Icon icon='mdi:share' className='w-4 h-4' />}
+            description='使用系统分享'
+            onClick={handleNativeShare}
+          >
+            分享表单
+          </DropdownItem>
+        )}
+        <DropdownItem
+          key='copy'
+          startContent={<Icon icon='mdi:content-copy' className='w-4 h-4' />}
+          description='复制表单链接'
+          onClick={handleQuickCopy}
+        >
+          复制链接
+        </DropdownItem>
+        {isWechat && (
+          <DropdownItem
+            key='wechat-share'
+            startContent={<Icon icon='mdi:wechat' className='w-4 h-4' />}
+            onClick={handleWechatShare}
+          >
+            分享给微信好友
+          </DropdownItem>
+        )}
+        <DropdownItem
+          key='more-options'
+          startContent={<Icon icon='mdi:qrcode' className='w-4 h-4' />}
+          onClick={onShareModalOpen}
+        >
+          生成二维码
+        </DropdownItem>
+      </DropdownMenu>
+    </Dropdown>
   )
 }
 

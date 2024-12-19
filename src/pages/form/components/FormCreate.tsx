@@ -7,6 +7,7 @@ import { parseFormConfig } from "@/utils/codeParser"
 import { Icon } from "@iconify/react"
 import { ScrollShadow, Spinner } from "@nextui-org/react"
 import { DynamicComponentRenderer } from "@/components/DynamicComponentRenderer"
+import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 
 const FormCreate: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
@@ -45,51 +46,59 @@ const FormCreate: React.FC = () => {
     loadFormConfig()
   }, [])
 
-  if (isLoading) {
-    return (
-      <div className='flex flex-col items-center justify-center h-screen'>
-        <Spinner
-          label='加载中...'
-          classNames={{
-            wrapper: "w-12 h-12",
-            label: "text-xl font-medium text-default-600 mt-4",
-          }}
-        />
-      </div>
-    )
-  }
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className='flex flex-col items-center justify-center h-screen'>
+          <Spinner
+            label='加载中...'
+            classNames={{
+              wrapper: "w-12 h-12",
+              label: "text-xl font-medium text-default-600 mt-4",
+            }}
+          />
+        </div>
+      )
+    }
 
-  if (error) {
+    if (error) {
+      return (
+        <div className='bg-danger-50 rounded-xl p-8 text-center'>
+          <Icon icon='mdi:alert-circle' className='w-16 h-16 text-danger mb-4' />
+          <p className='text-xl font-medium text-danger'>{error}</p>
+        </div>
+      )
+    }
+
     return (
-      <div className='bg-danger-50 rounded-xl p-8 text-center'>
-        <Icon icon='mdi:alert-circle' className='w-16 h-16 text-danger mb-4' />
-        <p className='text-xl font-medium text-danger'>{error}</p>
-      </div>
+      <>
+        <FormHeader title={loadedConfig?.metadata?.title || "创建表单"} formId={templateId} />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className='container mx-auto py-8 px-4'
+        >
+          <ScrollShadow className='h-[calc(100vh-60px)] mt-6'>
+            {componentCode ? (
+              <DynamicComponentRenderer code={componentCode} templateId={templateId} isCreateMode={true} />
+            ) : (
+              <div className='flex flex-col items-center justify-center'>
+                <Icon icon='mdi:form' className='w-20 h-20 text-default-400 mb-6' />
+                <p className='text-xl font-medium text-default-600 mb-2'>开始创建表单</p>
+                <p className='text-default-500'>请先生成表单模板来预览</p>
+              </div>
+            )}
+          </ScrollShadow>
+        </motion.div>
+      </>
     )
   }
 
   return (
-    <>
-      <FormHeader title={loadedConfig?.metadata?.title || "创建表单"} formId={templateId} />
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className='container mx-auto py-8 px-4'
-      >
-        <ScrollShadow className='h-[calc(100vh-60px)] mt-6'>
-          {componentCode ? (
-            <DynamicComponentRenderer code={componentCode} templateId={templateId} isCreateMode={true} />
-          ) : (
-            <div className='flex flex-col items-center justify-center'>
-              <Icon icon='mdi:form' className='w-20 h-20 text-default-400 mb-6' />
-              <p className='text-xl font-medium text-default-600 mb-2'>开始创建表单</p>
-              <p className='text-default-500'>请先生成表单模板来预览</p>
-            </div>
-          )}
-        </ScrollShadow>
-      </motion.div>
-    </>
+    <PermissionCheck resourceType="template" resourceId={templateId} role="creator">
+      {renderContent()}
+    </PermissionCheck>
   )
 }
 
