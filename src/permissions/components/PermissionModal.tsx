@@ -81,7 +81,12 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
     try {
       // 如果是模板资源，使用多角色权限
       if (resourceType === "template") {
-        await grantPermission(resourceId, newAccountId, selectedRoles)
+        // 确保如果有编辑权限，必须有查看权限
+        const roles = new Set(selectedRoles)
+        if (roles.has('editor')) {
+          roles.add('viewer')
+        }
+        await grantPermission(resourceId, newAccountId, Array.from(roles))
       } else {
         // 保持原有逻辑兼容性
         await grantPermission(resourceId, newAccountId, "viewer")
@@ -113,7 +118,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
         // 如果选中editor，自动添加viewer
         if (newRoles.has(role)) {
           newRoles.delete(role)
-          // 如果取消editor，保留viewer
+          // 保留viewer权限
         } else {
           newRoles.add(role)
           newRoles.add('viewer')
@@ -126,13 +131,6 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
           } else {
             newRoles.add(role)
           }
-        }
-      } else {
-        // 其他权限（如creator）独立处理
-        if (newRoles.has(role)) {
-          newRoles.delete(role)
-        } else {
-          newRoles.add(role)
         }
       }
       
@@ -155,12 +153,6 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
         <div className="text-small font-medium">选择权限：</div>
         <div className="flex gap-2">
           <Checkbox
-            isSelected={selectedRoles.includes('creator')}
-            onValueChange={() => handleRoleChange('creator')}
-          >
-            创建权限
-          </Checkbox>
-          <Checkbox
             isSelected={selectedRoles.includes('editor')}
             onValueChange={() => handleRoleChange('editor')}
           >
@@ -168,7 +160,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
           </Checkbox>
           <Checkbox
             isSelected={selectedRoles.includes('viewer')}
-            onValueChange={() => handleRoleChange('editor')}
+            onValueChange={() => handleRoleChange('viewer')}
             isDisabled={selectedRoles.includes('editor')}
           >
             查看权限
@@ -181,9 +173,6 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   const getRoleChips = (roles: string[]) => {
     return (
       <div className="flex gap-1">
-        {roles.includes('creator') && (
-          <Chip size="sm" variant="flat" color="primary">创建</Chip>
-        )}
         {roles.includes('editor') && (
           <Chip size="sm" variant="flat" color="secondary">编辑</Chip>
         )}

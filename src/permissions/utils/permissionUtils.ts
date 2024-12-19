@@ -68,12 +68,20 @@ export const hasTemplatePermission = async (
     return false
   }
 
-  // 如果检查编辑权限，需要同时具有查看权限
+  // 更新权限检查逻辑
+  const userRoles = Array.isArray(userPermission.role) ? userPermission.role : [userPermission.role]
+  
+  // 如果用户有编辑权限，自动拥有查看权限
+  if (requiredRole === 'viewer') {
+    return userRoles.includes('viewer') || userRoles.includes('editor')
+  }
+  
+  // 检查编辑权限时，必须同时具有查看权限
   if (requiredRole === 'editor') {
-    return userPermission.role.includes('editor') && userPermission.role.includes('viewer')
+    return userRoles.includes('editor') && userRoles.includes('viewer')
   }
 
-  return userPermission.role.includes(requiredRole)
+  return userRoles.includes(requiredRole)
 }
 
 export const addPermission = async (
@@ -96,9 +104,17 @@ export const addPermission = async (
   const existingPermission = permissions[resourceId].accounts.find((acc) => acc.accountId === accountId)
 
   if (!existingPermission) {
+    // 确保角色是数组形式
+    const roles = Array.isArray(role) ? role : [role]
+    
+    // 如果包含编辑权限，自动添加查看权限
+    if (roles.includes('editor') && !roles.includes('viewer')) {
+      roles.push('viewer')
+    }
+
     permissions[resourceId].accounts.push({
       accountId,
-      role: Array.isArray(role) ? role : [role],
+      role: roles,
       grantedAt: new Date().toISOString(),
       grantedBy: "system",
     })
@@ -113,6 +129,7 @@ export const createPermissionRequest = async (request: {
   requesterId: string
   requesterName: string
   reason: string
+  role?: string | string[]
 }) => {
   try {
     const result = await getMetadata([PERMISSION_REQUESTS_KEY])

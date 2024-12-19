@@ -96,7 +96,7 @@ const FormCreate: React.FC = () => {
   }
 
   return (
-    <PermissionCheck resourceType="template" resourceId={templateId} role="creator">
+    <PermissionCheck resourceType="page" resourceId="form-create">
       {renderContent()}
     </PermissionCheck>
   )
