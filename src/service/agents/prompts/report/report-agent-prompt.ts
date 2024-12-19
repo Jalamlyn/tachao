@@ -15,17 +15,45 @@ const generateSystemPrompt = ({ data, doc, existingConfig, templateInfoMap = {} 
    - ✅ 使用 React.useState 等方式调用 hooks
 
 2. 可用的依赖：
-   - React：通过参数注入的 React 对象
-   - AnalysisResult：通过参数注入的结果展示组件
-   - data：通过参数注入的已处理数据对象
+   - React：通过上下文注入的 React 对象
+   - AnalysisResult：通过上下文注入的结果展示组件
+   - data：通过上下文注入的已处理数据对象
 
-3. 组件接口规范：
-   export default ({ data }) => {
-     // 组件实现
-     return <AnalysisResult analysis={...} />
-   }
+3. 组件格式规范：
+❌ 错误格式 - 不要使用这种格式：
+export default ({ data, React, AnalysisResult }) => {
+  // 错误：不要显式声明这些参数，它们会自动注入
+  return <AnalysisResult analysis={...} />
+}
 
-4. 数据结构说明：
+✅ 正确格式 - 必须使用这种格式：
+export default () => {
+  // 正确：这些依赖都是通过上下文注入的
+  const analysis = {
+    type: 'analyze',
+    data: data,
+    analysis: {...}
+  }
+  return <AnalysisResult analysis={analysis} />
+}
+
+4. 重要说明：
+   - data, React, AnalysisResult 都是通过上下文自动注入的
+   - 严禁在组件参数中显式声明这些依赖
+   - 直接使用这些变量，它们在运行时会被注入
+   - 只有在特殊情况下需要其他参数时才声明参数
+
+5. 代码示例：
+// ❌ 错误示例
+import React, { useState } from 'react'
+const { useState, useEffect } = React
+const [state, setState] = useState(initial)
+   
+// ✅ 正确示例
+const [state, setState] = React.useState(initial)
+React.useEffect(() => {}, [])
+
+6. 数据结构说明：
    data = {
      groups: {
        [templateId: string]: {
@@ -40,14 +68,13 @@ const generateSystemPrompt = ({ data, doc, existingConfig, templateInfoMap = {} 
      }
    }
 
-5. 代码示例：
-   // ❌ 错误示例
-   import React, { useState } from 'react'
-   const { useState, useEffect } = React
-   
-   // ✅ 正确示例
-   const [state, setState] = React.useState(initial)
-   React.useEffect(() => {}, [])
+7. 代码生成注意事项：
+   - 必须使用 export default () => {} 格式
+   - 不要显式声明任何注入的依赖
+   - 保持组件的纯函数特性
+   - 确保错误处理
+   - 不要使用注释省略任何代码
+   - 生成完整的可执行代码
 `
 
   const promptParts = [
@@ -59,7 +86,7 @@ const generateSystemPrompt = ({ data, doc, existingConfig, templateInfoMap = {} 
     generateDataSourceInfo(data, templateInfoMap),
     templates.analysis.requirements,
     mapVisualizationGuide,
-    `<doc>${doc}</doc>`
+    `<doc>${doc}</doc>`,
   ]
 
   if (existingConfig) {
@@ -67,19 +94,28 @@ const generateSystemPrompt = ({ data, doc, existingConfig, templateInfoMap = {} 
   }
 
   promptParts.push(`
-请使用 <shata-ai-code> 标签包裹你生成的代码,直接返回可执行的 JavaScript 代码。
-注意:
-1. 不要将代码包装在函数定义中
-2. 直接使用传入的 data 参数
-3. 直接返回分析结果对象
-4. 确保返回对象包含必要的 type 和 data 字段
-5. 统计结果放在 analysis 字段中
+请使用 <shata-ai-code> 标签包裹你生成的代码,直接返回可执行的 React 组件代码。
+注意: 
+1. 必须使用 export default () => {} 格式
+2. 必须返回 AnalysisResult 组件
+3. 确保分析配置包含必要的字段
+4. 统计结果必须包含数据源信息
+5. 不要使用注释省略任何代码
+6. 生成完整的可执行代码
 
 分析流程：
 1. 首先进行场景识别 <shata-ai-scene>
 2. 然后进行思考过程 <shata-ai-think>
 3. 必要时进行反思 <shata-ai-reflection>
-4. 最后生成分析代码 <shata-ai-code>
+4. 最后返回下列结构的代码
+\`\`\`mo
+<shata-ai-code>
+export default () => {
+  // 组件实现
+  return <AnalysisResult analysis={...} />
+}
+</shata-ai-code>
+\`\`\`
 
 请确保完整执行以上流程，保证分析的质量和可靠性。
 `)
