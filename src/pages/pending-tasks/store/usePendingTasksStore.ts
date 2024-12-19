@@ -22,17 +22,21 @@ export interface Task {
 interface PendingTasksStore {
   tasks: Task[]
   activeTab: string
+  activeStatus: string
   isLoading: boolean
   loadTasks: () => Promise<void>
   updateTaskStatus: (taskId: string, status: Task["status"]) => Promise<void>
   setActiveTab: (tab: string) => void
+  setActiveStatus: (status: string) => void
 }
 
 export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
   tasks: [],
   activeTab: 'permission_requests',
+  activeStatus: 'pending',
   isLoading: false,
   setActiveTab: (tab) => set({ activeTab: tab }),
+  setActiveStatus: (status) => set({ activeStatus: status }),
   loadTasks: async () => {
     set({ isLoading: true })
     try {
@@ -40,13 +44,12 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
       const permissionRequests = JSON.parse(result.data?.[0]?.value || '{}')
       
       const tasks = Object.values(permissionRequests)
-        .filter((request: any) => request.status === 'pending')
         .map((request: any) => ({
           id: request.id,
           title: `访问权限申请 - ${request.resourceType}`,
           description: request.reason,
           type: 'permission_request',
-          status: 'pending',
+          status: request.status,
           priority: 'medium',
           department: '系统',
           user: request.requesterName,
@@ -73,7 +76,6 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
         request.status = status
         request.updatedAt = new Date().toISOString()
         
-        // 如果批准了权限申请，直接添加权限
         if (status === 'completed') {
           await addPermission(
             request.resourceType,
@@ -83,11 +85,15 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
           )
         }
         
-        // 更新申请状态(仅用于展示)
         await setMetadata(PERMISSION_REQUESTS_KEY, JSON.stringify(requests))
         
+        // 更新本地状态，但不移除任务
         set((state) => ({
-          tasks: state.tasks.filter(task => task.id !== taskId)
+          tasks: state.tasks.map(task => 
+            task.id === taskId 
+              ? { ...task, status, time: new Date().toLocaleString() }
+              : task
+          )
         }))
         
         message.success(status === 'completed' ? '已批准权限申请' : '已拒绝权限申请')
