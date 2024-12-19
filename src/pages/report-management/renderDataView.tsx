@@ -3,7 +3,16 @@ import { processReportData } from "@/utils/processReportData"
 import DataTable from "@/pages/report-management/components/DataTable"
 
 export const getRenderDataView =
-  (templateInfoMap, currentTemplateIds, processedData, reportData, activeDataTab, setActiveDataTab) => () => {
+  (
+    templateInfoMapRef,
+    templateInfoMap,
+    currentTemplateIds,
+    processedData,
+    reportData,
+    activeDataTab,
+    setActiveDataTab
+  ) =>
+  () => {
     const getTemplateTitle = (templateId: string) => {
       return templateInfoMap[templateId] || `模板 ${templateId}`
     }
@@ -44,7 +53,7 @@ export const getRenderDataView =
           />
         </Tab>
         {Object.entries(templateData).map(([templateId, data]) => {
-          const processed = processReportData(data as any[], templateInfoMap)
+          const processed = processReportData(data as any[], templateInfoMapRef.current)
           const templateTitle = getTemplateTitle(templateId)
 
           return (

@@ -1,7 +1,6 @@
 import message from "@/components/Message"
 import AIFormAgent from "@/service/agents/AIFormAgent"
 import { localDB } from "@/utils/localDB"
-import { Icon } from "@iconify/react"
 import { useEffect } from "react"
 
 export const useWatch = (

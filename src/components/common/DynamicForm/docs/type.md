@@ -282,19 +282,6 @@ interface DynamicFormConfig {
   }
 
   /**
-   * 订单号配置
-   * @type {object}
-   */
-  orderNumberConfig?: {
-    /** 前缀 @type {string} */
-    prefix?: string
-    /** 字段名 @type {string} */
-    fieldName?: string
-    /** 显示标签 @type {string} */
-    label?: string
-  }
-
-  /**
    * 表单监听函数
    * @type {function}
    */

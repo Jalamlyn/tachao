@@ -55,12 +55,7 @@ export const defaultFormConfig: DynamicFormConfig = {
       print: true,
     },
   },
-  renderConfig: {
-    basicFields: {
-      groups: [],
-      defaultGroup: "",
-    },
-  },
+  renderConfig: {},
   orderNumberConfig: {
     prefix: "DG",
     fieldName: "orderNumber",

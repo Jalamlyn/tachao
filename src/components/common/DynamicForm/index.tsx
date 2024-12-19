@@ -21,11 +21,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
   config: userConfig,
-  id,
+  formId,
   onCancel,
   templateId,
   isCreateMode,
   previewMode = false,
+  formData,
 }) => {
   const config = merge({}, defaultFormConfig, userConfig)
   const [isLoading, setIsLoading] = useState(false)
@@ -72,10 +73,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
   useEffect(() => {
     const initializeForm = async () => {
-      if (id) {
+      if (formId) {
         setIsLoading(true)
         try {
-          await loadFormData(id)
+          await loadFormData(formId)
         } finally {
           setIsLoading(false)
         }
@@ -83,7 +84,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     }
 
     initializeForm()
-  }, [id, getDetail])
+  }, [formId, getDetail])
 
   useEffect(() => {
     // 设置默认选中的表格
@@ -92,7 +93,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     }
   }, [])
 
-  const { form, submitForm } = useDynamicForm(config)
+  const { form, submitForm } = useDynamicForm(config, formData)
   const [isEditing, setIsEditing] = useState(true)
   const printRef = useRef<HTMLDivElement>(null)
   const printId = useRef<string>()
@@ -246,11 +247,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         const formData = prepareFormData(values, templateInfo)
 
         let savedFormId: string | undefined
-
-        if (id) {
-          const result = await updateMetadata(id, formData)
+        if (formId) {
+          const result = await updateMetadata(formId, formData)
           if (result) {
-            savedFormId = id
+            savedFormId = formId
           } else {
             throw new Error("更新失败")
           }
@@ -270,7 +270,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           message.success("保存成功")
 
           // 如果是新创建的表单，显示确认对话框
-          if (!id) {
+          if (!formId) {
             message.confirm({
               title: "表单创建成功",
               content: "是否前往查看创建好的表单?",
@@ -290,7 +290,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         message.error("提交失败，请重试")
       }
     },
-    [form, id, templateId, updateMetadata, createMetadata]
+    [form, formId, templateId, updateMetadata, createMetadata]
   )
 
   const { metadata, renderConfig } = config
@@ -310,21 +310,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   }
 
   const renderTables = () => {
-    // 如果有旧版的单表格配置，使用旧版配置
-    if (renderConfig.table) {
-      return (
-        <div className={cn(styles["form-card"])}>
-          <h2 className={cn(styles["form-title"])}>明细信息</h2>
-          <DynamicTable config={renderConfig.table} form={form} isEditable={isEditing} fieldName='tableData' />
-        </div>
-      )
-    }
-
     // 如果有新版的多表格配置，使用新版配置
     if (renderConfig.tables && renderConfig.tables.length > 0) {
       return (
         <div className={cn(styles["form-card"])}>
-          <h2 className={cn(styles["form-title"])}>明细信息</h2>
           <Tabs value={selectedTable} onValueChange={setSelectedTable}>
             <div className={styles["tabs-scroll-container"]}>
               <TabsList
@@ -409,10 +398,12 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         </div>
 
         {/* 基本信息 */}
-        <div className={cn(styles["form-card"])}>
-          <h2 className={cn(styles["form-title"])}>基本信息</h2>
-          <DynamicFormFields fields={renderConfig.basicFields} form={form} isEditable={isEditing} />
-        </div>
+        {renderConfig.basicFields && (
+          <div className={cn(styles["form-card"])}>
+            {renderConfig.basicFields.length}
+            <DynamicFormFields fields={renderConfig.basicFields} form={form} isEditable={isEditing} />
+          </div>
+        )}
 
         {/* 表格 */}
         {renderTables()}
@@ -431,7 +422,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         {/* 流程确认 */}
         {renderConfig.processSteps && (
           <div className={cn(styles["form-card"])}>
-            <h2 className={cn(styles["form-title"])}>流程确认</h2>
             <DynamicProcessConfirm steps={renderConfig.processSteps} form={form} isEditable={isEditing} />
           </div>
         )}

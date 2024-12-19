@@ -3,8 +3,10 @@ import { useForm } from "react-hook-form"
 import { DynamicFormConfig, ValidationResult } from "../types"
 import { ValidationManager } from "../validation/ValidationManager"
 
-export const useDynamicForm = (config: DynamicFormConfig) => {
-  const form = useForm()
+export const useDynamicForm = (config: DynamicFormConfig, formData) => {
+  const form = useForm({
+    defaultValues: formData,
+  })
 
   // 监听表单值变化
   useEffect(() => {

@@ -23,7 +23,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextu
 
 export default function Component() {
   const { isOpen, onOpenChange } = useDisclosure()
-  const [isCollapsed, setIsCollapsed] = React.useState(false)
+  const [isCollapsed, setIsCollapsed] = React.useState(true)
   const isMobile = useMediaQuery("(max-width: 768px)")
   const location = useLocation()
   const navigate = useNavigate()

@@ -171,11 +171,6 @@ export const parseFormConfig = async (content: string) => {
 
     const code = match[1].trim()
 
-    // 2. 基本验证
-    if (!code.includes("CustomForm")) {
-      throw new Error("Invalid component code")
-    }
-
     // 3. 直接返回代码，不做转换
     return {
       code,

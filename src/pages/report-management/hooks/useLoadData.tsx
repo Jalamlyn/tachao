@@ -135,7 +135,7 @@ export const useLoadData = (
             }))
 
             setReportData(formData)
-            const processed = processReportData(formData, templateInfoMap)
+            const processed = processReportData(formData, templateInfoMapRef.current)
             setProcessedData(processed)
             processedDataRef.current = processed
           }

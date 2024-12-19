@@ -114,7 +114,6 @@ const NewForm: React.FC = () => {
       message.error("微信环境未就绪")
     }
   }
-
   return (
     <>
       {/* 固定顶部的 Header */}
@@ -193,9 +192,9 @@ const NewForm: React.FC = () => {
           <FormTabs
             selectedTab={selectedTab}
             onTabChange={setSelectedTab}
-            formConfig={formState.formConfig}
-            formData={formState.formData}
+            componentCode={formState.formConfig}
             formId={formId!}
+            formData={formState.formData}
             templateId={formState.templateId}
           />
 

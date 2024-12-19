@@ -322,6 +322,7 @@ const AIReportEditor: React.FC = () => {
           )
         }}
         renderDataView={getRenderDataView(
+          templateInfoMapRef,
           templateInfoMap,
           currentTemplateIds,
           processedData,

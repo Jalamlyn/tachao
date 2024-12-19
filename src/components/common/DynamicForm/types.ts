@@ -154,10 +154,6 @@ export interface DynamicFormConfig {
     table?: TableConfig
     processSteps?: ProcessStep[]
   }
-  orderNumberConfig?: {
-    prefix?: string
-    format?: string
-  }
 }
 
 // 表单字段

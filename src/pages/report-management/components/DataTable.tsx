@@ -21,7 +21,6 @@ const DataTable: React.FC<DataTableProps> = ({ columns, flattenedData, isLoading
       </div>
     )
   }
-
   return (
     <div className='bg-white rounded-lg shadow'>
       <Table>
