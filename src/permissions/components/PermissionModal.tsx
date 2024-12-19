@@ -12,10 +12,11 @@ import {
   Select,
   SelectItem,
   Spinner,
+  Checkbox,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { usePermissions } from "../hooks/usePermissions"
-import { Permission, ResourceType } from "../types"
+import { Permission, ResourceType, TemplatePermissionRole } from "../types"
 import { queryRamAccount } from "@/service/apis/user"
 import message from "@/components/Message"
 
@@ -39,6 +40,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   const [newAccountId, setNewAccountId] = useState("")
   const [accounts, setAccounts] = useState<any[]>([])
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false)
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([])
 
   useEffect(() => {
     if (isOpen) {
@@ -71,10 +73,22 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
       return
     }
 
+    if (selectedRoles.length === 0) {
+      message.error("请选择至少一个权限")
+      return
+    }
+
     try {
-      await grantPermission(resourceId, newAccountId, "viewer")
+      // 如果是模板资源，使用多角色权限
+      if (resourceType === "template") {
+        await grantPermission(resourceId, newAccountId, selectedRoles)
+      } else {
+        // 保持原有逻辑兼容性
+        await grantPermission(resourceId, newAccountId, "viewer")
+      }
       await loadPermissions()
       setNewAccountId("")
+      setSelectedRoles([])
       message.success("添加权限成功")
     } catch (error) {
       message.error("添加权限失败")
@@ -91,10 +105,94 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
     }
   }
 
+  const handleRoleChange = (role: TemplatePermissionRole) => {
+    setSelectedRoles(prev => {
+      const newRoles = new Set(prev)
+      
+      if (role === 'editor') {
+        // 如果选中editor，自动添加viewer
+        if (newRoles.has(role)) {
+          newRoles.delete(role)
+          // 如果取消editor，保留viewer
+        } else {
+          newRoles.add(role)
+          newRoles.add('viewer')
+        }
+      } else if (role === 'viewer') {
+        // 如果有editor权限，不允许取消viewer
+        if (!newRoles.has('editor')) {
+          if (newRoles.has(role)) {
+            newRoles.delete(role)
+          } else {
+            newRoles.add(role)
+          }
+        }
+      } else {
+        // 其他权限（如creator）独立处理
+        if (newRoles.has(role)) {
+          newRoles.delete(role)
+        } else {
+          newRoles.add(role)
+        }
+      }
+      
+      return Array.from(newRoles)
+    })
+  }
+
   // 过滤掉已经有权限的账号
   const availableAccounts = accounts.filter(
     (account) => !permissions?.accounts.some((perm) => perm.accountId === account.id)
   )
+
+  const renderPermissionSelection = () => {
+    if (resourceType !== "template") {
+      return null
+    }
+
+    return (
+      <div className="space-y-2 mt-4">
+        <div className="text-small font-medium">选择权限：</div>
+        <div className="flex gap-2">
+          <Checkbox
+            isSelected={selectedRoles.includes('creator')}
+            onValueChange={() => handleRoleChange('creator')}
+          >
+            创建权限
+          </Checkbox>
+          <Checkbox
+            isSelected={selectedRoles.includes('editor')}
+            onValueChange={() => handleRoleChange('editor')}
+          >
+            编辑权限
+          </Checkbox>
+          <Checkbox
+            isSelected={selectedRoles.includes('viewer')}
+            onValueChange={() => handleRoleChange('editor')}
+            isDisabled={selectedRoles.includes('editor')}
+          >
+            查看权限
+          </Checkbox>
+        </div>
+      </div>
+    )
+  }
+
+  const getRoleChips = (roles: string[]) => {
+    return (
+      <div className="flex gap-1">
+        {roles.includes('creator') && (
+          <Chip size="sm" variant="flat" color="primary">创建</Chip>
+        )}
+        {roles.includes('editor') && (
+          <Chip size="sm" variant="flat" color="secondary">编辑</Chip>
+        )}
+        {roles.includes('viewer') && (
+          <Chip size="sm" variant="flat">查看</Chip>
+        )}
+      </div>
+    )
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size='lg'>
@@ -131,11 +229,13 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
                     variant='light'
                     isLoading={loading}
                     onPress={handleAddPermission}
-                    isDisabled={isLoadingAccounts || !newAccountId}
+                    isDisabled={isLoadingAccounts || !newAccountId || (resourceType === "template" && selectedRoles.length === 0)}
                   >
                     添加
                   </Button>
                 </div>
+
+                {renderPermissionSelection()}
 
                 <div className='space-y-2'>
                   <div className='text-small font-medium'>当前权限列表：</div>
@@ -147,9 +247,13 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
                       <div className='flex items-center gap-2'>
                         <Icon icon='mdi:account' className='text-default-500' />
                         <span>{accounts.find((a) => a.id === account.accountId)?.name || account.accountId}</span>
-                        <Chip size='sm' variant='flat' color='primary'>
-                          {account.role}
-                        </Chip>
+                        {Array.isArray(account.role) ? (
+                          getRoleChips(account.role)
+                        ) : (
+                          <Chip size='sm' variant='flat' color='primary'>
+                            {account.role}
+                          </Chip>
+                        )}
                       </div>
                       <Button
                         size='sm'
