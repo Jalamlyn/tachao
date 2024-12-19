@@ -5,20 +5,12 @@ import { markdown as doc } from "@/pages/report-management/components/AnalysisRe
 import generateSystemPrompt from "@/service/agents/prompts/report-agent-prompt"
 import { ProcessedData } from "@/utils/processReportData"
 import { AnalysisDataGroup, AnalysisData } from "./types/report-agent.types"
-import { jsxToJs } from "@/utils/codeParser"
-import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
 import React from "react"
-
-export type ReportColumn = {
-  header: string
-  accessorKey: string
-}
 
 interface CommandResult {
   success: boolean
   message: string
   rawConfig?: string
-  analysis?: any
 }
 
 interface ProcessCommandOptions {
@@ -31,36 +23,8 @@ interface AIReportAgentConfig {
   templateInfoMap?: Record<string, string>
 }
 
-function prepareAnalysisData(data: ProcessedData, templateInfoMap: Record<string, string>): AnalysisData {
-  const groups = data.originalData.reduce(
-    (acc, item) => {
-      const templateId = item._sourceTemplateId
-      if (!acc[templateId]) {
-        acc[templateId] = {
-          id: templateId,
-          title: templateInfoMap[templateId] || `模板 ${templateId}`,
-          data: [],
-        }
-      }
-      acc[templateId].data.push(item)
-      return acc
-    },
-    {} as Record<string, AnalysisDataGroup>
-  )
-
-  return {
-    groups,
-    metadata: {
-      templateInfoMap,
-      columns: data.columns,
-    },
-  }
-}
-
 export class AIReportAgent {
   private static instance: AIReportAgent
-  private _data: ProcessedData | null = null
-  private _rawConfig: string | null = null
   private _templateInfoMap: Record<string, string> = {}
   private lastResponseRef: string = ""
 
@@ -82,87 +46,13 @@ export class AIReportAgent {
     }
   }
 
-  public setData(data: ProcessedData): void {
-    console.log("[AIReportAgent] Setting data, length:", data?.flattenedData?.length)
-    this._data = data
-  }
-
-  public getRawConfig(): string | null {
-    console.log("[AIReportAgent] getRawConfig called, returning:", this._rawConfig?.substring(0, 100) + "...")
-    return this._rawConfig
-  }
-
-  private setRawConfig(rawConfig: string | null): void {
-    console.log("[AIReportAgent] setRawConfig called with:", rawConfig?.substring(0, 100) + "...")
-    this._rawConfig = rawConfig
-  }
-
-  private async executeCode(code: string, data: AnalysisData): Promise<any> {
-    try {
-      const _code = await jsxToJs(code)
-      const __code = _code.replace(/export default/, "return")
-      // 2. 创建组件
-      const componentFn = new Function("React", "data", "AnalysisResult", "formulaService", `${__code}`)
-
-      const result = componentFn(React, data, AnalysisResult, formulaService)
-      debugger
-      return result
-    } catch (error) {
-      console.error("[AIReportAgent] Error executing analysis code:", error)
-      throw error
-    }
-  }
-
-  public async analyzeData(data: ProcessedData, rawConfig: string): Promise<AnalysisResult["analysis"]> {
-    try {
-      console.log("[AIReportAgent] Analyzing data with rawConfig")
-      const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
-      const match = this.lastResponseRef.match(regex)
-      let generatedCode = rawConfig
-      if (match) {
-        generatedCode = match[1].trim()
-      }
-
-      // 转换数据结构
-      const analysisData = prepareAnalysisData(data, this._templateInfoMap)
-
-      // 执行分析
-      const result = await this.executeCode(generatedCode, analysisData)
-
-      if (!result || !result.type || !result.data) {
-        throw new Error("Invalid analysis result format")
-      }
-
-      console.log("[AIReportAgent] Data analysis completed successfully")
-      return result.analysis
-    } catch (error) {
-      console.error("[AIReportAgent] Error analyzing data:", error)
-      throw error
-    }
-  }
-
-  // 新增：解析组件代码
-  private async parseComponentCode(code: string): Promise<string | null> {
-    try {
-      const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
-      const match = code.match(regex)
-      if (match) {
-        return match[1].trim()
-      }
-      return null
-    } catch (error) {
-      console.error("[AIReportAgent] Error parsing component code:", error)
-      return null
-    }
-  }
-
   public async processCommand({
     data,
     command,
     onChunk,
     rawConfig,
   }: ProcessCommandOptions & { rawConfig?: string }): Promise<CommandResult> {
-    console.log("[AIReportAgent] Processing analysis command:", command)
+    console.log("[AIReportAgent] Processing command:", command)
 
     if (!data || !data.flattenedData.length || !data.originalData.length) {
       console.log("[AIReportAgent] Invalid or incomplete data provided")
@@ -173,14 +63,10 @@ export class AIReportAgent {
     }
 
     try {
-      if (rawConfig) {
-        this.setRawConfig(rawConfig)
-      }
-
       const systemPrompt = generateSystemPrompt({
         data: data.originalData,
         doc,
-        existingConfig: this._rawConfig,
+        existingConfig: rawConfig,
         templateInfoMap: this._templateInfoMap,
       })
 
@@ -222,20 +108,32 @@ export class AIReportAgent {
         throw new Error("Invalid component code format")
       }
 
-      this.setRawConfig(componentCode)
-
-      console.log("[AIReportAgent] Analysis completed successfully")
+      console.log("[AIReportAgent] Code generation completed successfully")
       return {
         success: true,
-        message: "分析完成",
+        message: "代码生成完成",
         rawConfig: componentCode,
       }
     } catch (error) {
-      console.error("[AIReportAgent] Error processing analysis command:", error)
+      console.error("[AIReportAgent] Error processing command:", error)
       return {
         success: false,
-        message: "分析过程中发生错误：" + (error as Error).message,
+        message: "处理过程中发生错误：" + (error as Error).message,
       }
+    }
+  }
+
+  private async parseComponentCode(code: string): Promise<string | null> {
+    try {
+      const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
+      const match = code.match(regex)
+      if (match) {
+        return match[1].trim()
+      }
+      return null
+    } catch (error) {
+      console.error("[AIReportAgent] Error parsing component code:", error)
+      return null
     }
   }
 }

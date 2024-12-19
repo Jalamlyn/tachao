@@ -1,24 +1,41 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import { transform } from "@babel/standalone"
 import ErrorBoundary from "./ErrorBoundary"
 import { Spinner } from "@nextui-org/react"
 import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
+import { processReportData } from "@/utils/processReportData"
 
 interface DynamicReportRendererProps {
   code: string
-  data: any
-  templateId?: string
+  rawData: {
+    formData: any[]
+    templateInfoMap?: Record<string, string>
+  }
 }
 
-export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ code, ...props }) => {
+export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ code, rawData }) => {
   const [Component, setComponent] = useState<React.ComponentType<any> | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // 处理数据
+  const processedData = useMemo(() => {
+    if (!rawData?.formData) return null
+    try {
+      return processReportData(rawData.formData)
+    } catch (err) {
+      console.error("Error processing data:", err)
+      setError(err as Error)
+      return null
+    }
+  }, [rawData])
 
   useEffect(() => {
     const createComponent = async () => {
       try {
         setLoading(true)
+        setError(null)
+
         // 1. 转换JSX
         const { code: transformedCode } = await transform(code, {
           presets: ["react"],
@@ -28,13 +45,13 @@ export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ co
         const componentFn = new Function(
           "React",
           "AnalysisResult",
+          "data",
           `${transformedCode}
            return ReportAnalysis`
         )
 
-        // 3. 获取组件
-        const CustomComponent = componentFn(React, AnalysisResult)
-
+        // 3. 获取组件，传入处理后的数据
+        const CustomComponent = componentFn(React, AnalysisResult, processedData)
         setComponent(() => CustomComponent)
       } catch (err) {
         console.error("Error creating component:", err)
@@ -44,10 +61,10 @@ export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ co
       }
     }
 
-    if (code) {
+    if (code && processedData) {
       createComponent()
     }
-  }, [code])
+  }, [code, processedData])
 
   if (loading) {
     return (
@@ -71,7 +88,7 @@ export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ co
 
   return (
     <ErrorBoundary>
-      <Component {...props} />
+      <Component />
     </ErrorBoundary>
   )
 }

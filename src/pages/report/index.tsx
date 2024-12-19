@@ -7,8 +7,6 @@ import { useReportData } from "@/pages/report/hooks/useReportData"
 import { ReportError } from "@/pages/report/components/ReportError"
 import { ReportLoading } from "@/pages/report/components/ReportLoading"
 import { DynamicReportRenderer } from "@/components/DynamicReportRenderer"
-import AIReportAgent from "@/service/agents/AIReportAgent"
-import { processReportData } from "@/utils/processReportData"
 import { ScrollShadow } from "@nextui-org/react"
 
 const Report: React.FC = () => {
@@ -34,20 +32,9 @@ const Report: React.FC = () => {
           throw new Error("报表配置不存在")
         }
 
-        // 配置 AIReportAgent
-        AIReportAgent.configure({
-          templateInfoMap: data.templateInfoMap,
-        })
-
-        // 处理表单数据
-        const processedData = processReportData(data.formData)
-
-        // 使用处理后的数据进行分析
-        const analysis = await AIReportAgent.analyzeData(processedData, data.rawConfig)
-
         reportActions.setSuccess({
           reportConfig: data.rawConfig,
-          reportData: analysis,
+          reportData: data
         })
       } catch (error) {
         reportActions.setError(error instanceof Error ? error.message : "加载报表数据失败")
@@ -80,8 +67,10 @@ const Report: React.FC = () => {
         <ScrollShadow className='h-screen pb-8'>
           <DynamicReportRenderer
             code={reportState.reportConfig}
-            data={reportState.reportData}
-            mode="preview"
+            rawData={{
+              formData: reportState.reportData.formData,
+              templateInfoMap: reportState.reportData.templateInfoMap
+            }}
           />
         </ScrollShadow>
       </div>

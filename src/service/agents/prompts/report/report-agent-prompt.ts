@@ -1,11 +1,58 @@
 import { mapVisualizationGuide } from "../map-visualization-guide"
-import { templates } from "./template"
 import { generateDataSourceInfo, generateExistingConfigPrompt } from "./generators"
+import { templates } from "./template"
 import { SystemPromptOptions } from "./types"
 
 const generateSystemPrompt = ({ data, doc, existingConfig, templateInfoMap = {} }: SystemPromptOptions): string => {
+  const executionEnvironmentPrompt = `
+你正在生成一个将在受限环境中执行的React组件。请注意：
+
+1. 执行环境限制：
+   - ❌ 不能使用 import/export 语句
+   - ❌ 不能使用解构的 hooks（如 const { useState } = React）
+   - ❌ 不能引用未通过参数传入的外部变量或函数
+   - ✅ 所有依赖都通过参数注入
+   - ✅ 使用 React.useState 等方式调用 hooks
+
+2. 可用的依赖：
+   - React：通过参数注入的 React 对象
+   - AnalysisResult：通过参数注入的结果展示组件
+   - data：通过参数注入的已处理数据对象
+
+3. 组件接口规范：
+   export default ({ data }) => {
+     // 组件实现
+     return <AnalysisResult analysis={...} />
+   }
+
+4. 数据结构说明：
+   data = {
+     groups: {
+       [templateId: string]: {
+         id: string,
+         title: string,
+         data: any[]
+       }
+     },
+     metadata: {
+       templateInfoMap: Record<string, string>,
+       columns: any[]
+     }
+   }
+
+5. 代码示例：
+   // ❌ 错误示例
+   import React, { useState } from 'react'
+   const { useState, useEffect } = React
+   
+   // ✅ 正确示例
+   const [state, setState] = React.useState(initial)
+   React.useEffect(() => {}, [])
+`
+
   const promptParts = [
     templates.base.roleDefinition,
+    executionEnvironmentPrompt,
     templates.base.sceneRecognition,
     templates.base.thinkingProcess,
     templates.analysis.reflection,
@@ -26,8 +73,7 @@ const generateSystemPrompt = ({ data, doc, existingConfig, templateInfoMap = {} 
 2. 直接使用传入的 data 参数
 3. 直接返回分析结果对象
 4. 确保返回对象包含必要的 type 和 data 字段
-5. data 字段必须保持原始数据不变
-6. 统计结果放在 analysis 字段中
+5. 统计结果放在 analysis 字段中
 
 分析流程：
 1. 首先进行场景识别 <shata-ai-scene>
