@@ -21,17 +21,13 @@ export const AppEntry: React.FC = () => {
     loadData()
   }, [])
 
-  if (isLoading) {
+  const app = apps.find((app) => app.id === appId)
+  if (!app) {
     return (
       <div className='flex items-center justify-center min-h-screen'>
         <Spinner label='加载中...' />
       </div>
     )
-  }
-
-  const app = apps.find((app) => app.id === appId)
-  if (!app) {
-    return <EmptyState type='error' title='未找到应用' description='该应用可能已被删除或您没有访问权限' />
   }
 
   // 根据应用的模板类型选择渲染不同的界面

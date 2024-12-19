@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { motion } from "framer-motion"
 import { useMetadata } from "@/hooks/useMetadata"
-import { processReportData } from "@/utils/processReportData"
 import { DynamicReportRenderer } from "@/components/DynamicReportRenderer"
 import { ScrollShadow, Spinner } from "@nextui-org/react"
 
@@ -56,9 +55,7 @@ const Report: React.FC = () => {
           ...detail.data,
         }))
 
-        // 4. 处理数据
-        const processedData = processReportData(rawFormData, templateMap)
-        setFormData(processedData.originalData)
+        setFormData(rawFormData)
       } catch (error) {
         setError(error instanceof Error ? error.message : "加载报表数据失败")
       } finally {

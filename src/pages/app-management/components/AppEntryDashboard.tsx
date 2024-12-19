@@ -1,7 +1,6 @@
 import React from "react"
 import { useParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
-import EmptyState from "@/components/EmptyState"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Spinner, Input, Button, Select, SelectItem } from "@nextui-org/react"
@@ -50,17 +49,9 @@ export const AppEntryDashboard: React.FC = () => {
     loadData()
   }, [])
 
-  if (isLoading) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <Spinner label='加载中...' />
-      </div>
-    )
-  }
-
   const app = apps.find((app) => app.id === appId)
   if (!app) {
-    return <EmptyState type='error' title='未找到应用' description='该应用可能已被删除或您没有访问权限' />
+    return null
   }
 
   const appTemplates = templates.filter((template) => app.indexFields?.templateIds?.includes(template.id))
@@ -196,23 +187,11 @@ export const AppEntryDashboard: React.FC = () => {
           <TabsContent value='forms' className='space-y-4'>
             <div className='grid gap-4 md:grid-cols-3'>
               <StatCard title='总表单数' value={appForms.length} icon='mdi:form-select' description='所有表单' />
-              <StatCard
-                title='已提交表单'
-                value={appForms.filter((f) => f.status === "submitted").length}
-                icon='mdi:checkbox-marked-circle'
-                description='已完成提交的表单'
-              />
-              <StatCard
-                title='待处理表单'
-                value={appForms.filter((f) => f.status === "draft").length}
-                icon='mdi:clock'
-                description='草稿状态的表单'
-              />
             </div>
 
             <Card>
               <CardHeader>
-                <CardTitle>表单列表</CardTitle>
+                <CardTitle className='mb-2'>表单列表</CardTitle>
                 <div className='flex gap-2'>
                   <Input
                     placeholder='搜索表单...'
@@ -220,17 +199,6 @@ export const AppEntryDashboard: React.FC = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     startContent={<Icon icon='mdi:magnify' />}
                   />
-                  <Select placeholder='状态筛选' value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                    <SelectItem key='all' value='all'>
-                      全部
-                    </SelectItem>
-                    <SelectItem key='submitted' value='submitted'>
-                      已提交
-                    </SelectItem>
-                    <SelectItem key='draft' value='draft'>
-                      草稿
-                    </SelectItem>
-                  </Select>
                 </div>
               </CardHeader>
               <CardContent>

@@ -22,7 +22,7 @@ export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ co
   const processedData = useMemo(() => {
     if (!rawData?.formData) return null
     try {
-      return processReportData(rawData.formData)
+      return processReportData(rawData.formData, rawData.templateInfoMap)
     } catch (err) {
       console.error("Error processing data:", err)
       setError(err as Error)
