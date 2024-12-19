@@ -23,6 +23,7 @@ const PermissionRequestForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [requestStatus, setRequestStatus] = useState<"none" | "pending" | "approved" | "rejected">("none")
   const [selectedRole, setSelectedRole] = useState<TemplatePermissionRole>(metadata?.role || "viewer")
+  const [lastRequest, setLastRequest] = useState<any>(null)
 
   useEffect(() => {
     checkExistingRequest()
@@ -35,11 +36,14 @@ const PermissionRequestForm = ({
       const requests = await getPermissionRequests()
       const existingRequest = Object.values(requests).find(
         (request: any) =>
-          request.resourceType === resourceType && request.resourceId === resourceId && request.requesterId === user.id
+          request.resourceType === resourceType && 
+          request.resourceId === resourceId && 
+          request.requesterId === user.id
       )
 
       if (existingRequest) {
         setRequestStatus(existingRequest.status)
+        setLastRequest(existingRequest)
       }
     } catch (error) {
       console.error("Error checking existing request:", error)
@@ -76,6 +80,15 @@ const PermissionRequestForm = ({
         requesterName: user.name || user.id,
         reason: reason.trim(),
         role: finalRole,
+        resubmitted: requestStatus === "rejected", // 标记是否是重新提交
+        history: lastRequest ? [
+          ...(lastRequest.history || []),
+          {
+            timestamp: new Date().toISOString(),
+            status: "resubmitted",
+            reason: reason.trim()
+          }
+        ] : undefined
       })
 
       setRequestStatus("pending")
@@ -88,6 +101,11 @@ const PermissionRequestForm = ({
     }
   }
 
+  const handleResubmit = () => {
+    setRequestStatus("none")
+    setReason("")  // 清空原有申请理由
+  }
+
   const getStatusContent = () => {
     const statusConfig = {
       pending: {
@@ -98,9 +116,14 @@ const PermissionRequestForm = ({
       },
       rejected: {
         icon: "solar:close-circle-bold-duotone",
-        text: "您的权限申请已被拒绝，如有疑问请联系管理员",
+        text: "您的权限申请已被拒绝",
         color: "bg-danger-50",
         textColor: "text-danger",
+        action: {
+          label: "重新申请",
+          icon: "solar:refresh-circle-bold-duotone",
+          onClick: handleResubmit
+        }
       },
       approved: {
         icon: "solar:check-circle-bold-duotone",
@@ -119,9 +142,27 @@ const PermissionRequestForm = ({
         animate={{ opacity: 1, y: 0 }}
         className={`mt-4 p-4 rounded-lg ${config.color}`}
       >
-        <div className={`flex items-center gap-2 ${config.textColor}`}>
-          <Icon icon={config.icon} className='w-5 h-5' />
-          <span>{config.text}</span>
+        <div className="flex flex-col gap-2">
+          <div className={`flex items-center gap-2 ${config.textColor}`}>
+            <Icon icon={config.icon} className='w-5 h-5' />
+            <span>{config.text}</span>
+          </div>
+          {requestStatus === "rejected" && (
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-sm text-danger-600">
+                如有疑问请联系管理员了解具体原因
+              </span>
+              <Button
+                size="sm"
+                color="primary"
+                variant="flat"
+                startContent={<Icon icon={config.action.icon} className="w-4 h-4" />}
+                onPress={config.action.onClick}
+              >
+                {config.action.label}
+              </Button>
+            </div>
+          )}
         </div>
       </motion.div>
     )
@@ -166,7 +207,7 @@ const PermissionRequestForm = ({
           className='px-6'
           size='sm'
         >
-          提交权限申请
+          {requestStatus === "rejected" ? "重新提交申请" : "提交权限申请"}
         </Button>
       </div>
     </motion.div>
