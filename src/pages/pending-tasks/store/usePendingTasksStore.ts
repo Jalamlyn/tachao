@@ -2,76 +2,59 @@ import { create } from "zustand"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
 
+const PERMISSION_REQUESTS_KEY = 'permission_requests'
+
 export interface Task {
   id: string
   title: string
   description: string
   time: string
-  type: "sync" | "auth" | "report"
-  status: "pending" | "processing" | "completed"
+  type: "sync" | "auth" | "report" | "permission_request"
+  status: "pending" | "processing" | "completed" | "rejected"
   priority: "high" | "medium" | "low"
   department: string
   user: string
   avatar: string
+  metadata?: any
 }
 
 interface PendingTasksStore {
   tasks: Task[]
+  activeTab: string
   isLoading: boolean
   loadTasks: () => Promise<void>
   updateTaskStatus: (taskId: string, status: Task["status"]) => Promise<void>
+  setActiveTab: (tab: string) => void
 }
-
-// 模拟数据
-const mockTasks: Task[] = [
-  {
-    id: "1",
-    title: "新的数据同步请求",
-    description: "来自销售部门的数据同步申请需要您的审批",
-    time: "10分钟前",
-    type: "sync",
-    status: "pending",
-    priority: "high",
-    department: "销售部",
-    user: "张经理",
-    avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-  },
-  {
-    id: "2",
-    title: "系统权限申请",
-    description: "人力资源部门请求访问表单管理系统的权限",
-    time: "30分钟前",
-    type: "auth",
-    status: "pending",
-    priority: "medium",
-    department: "人力资源",
-    user: "李主管",
-    avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024c",
-  },
-  {
-    id: "3",
-    title: "报表访问授权",
-    description: "财务部门申请查看月度销售报表的权限",
-    time: "2小时前",
-    type: "report",
-    status: "pending",
-    priority: "low",
-    department: "财务部",
-    user: "王总监",
-    avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024b",
-  },
-]
 
 export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
   tasks: [],
+  activeTab: 'permission_requests',
   isLoading: false,
+  setActiveTab: (tab) => set({ activeTab: tab }),
   loadTasks: async () => {
     set({ isLoading: true })
     try {
-      // TODO: 替换为实际的API调用
-      // 模拟API延迟
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      set({ tasks: mockTasks })
+      const result = await getMetadata([PERMISSION_REQUESTS_KEY])
+      const permissionRequests = JSON.parse(result.data?.[0]?.value || '{}')
+      
+      const tasks = Object.values(permissionRequests)
+        .filter((request: any) => request.status === 'pending')
+        .map((request: any) => ({
+          id: request.id,
+          title: `访问权限申请 - ${request.resourceType}`,
+          description: request.reason,
+          type: 'permission_request',
+          status: 'pending',
+          priority: 'medium',
+          department: '系统',
+          user: request.requesterName,
+          time: new Date(request.createdAt).toLocaleString(),
+          avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d',
+          metadata: request
+        }))
+
+      set({ tasks })
     } catch (error) {
       console.error("Error loading tasks:", error)
       message.error("加载任务失败")
@@ -79,13 +62,23 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
       set({ isLoading: false })
     }
   },
-  updateTaskStatus: async (taskId, status) => {
+  updateTaskStatus: async (taskId: string, status: Task["status"]) => {
     try {
-      // TODO: 替换为实际的API调用
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      set((state) => ({
-        tasks: state.tasks.map((task) => (task.id === taskId ? { ...task, status } : task)),
-      }))
+      const result = await getMetadata([PERMISSION_REQUESTS_KEY])
+      const requests = JSON.parse(result.data?.[0]?.value || '{}')
+      
+      if (requests[taskId]) {
+        requests[taskId].status = status
+        requests[taskId].updatedAt = new Date().toISOString()
+        
+        await setMetadata(PERMISSION_REQUESTS_KEY, JSON.stringify(requests))
+        
+        set((state) => ({
+          tasks: state.tasks.filter(task => task.id !== taskId)
+        }))
+        
+        message.success(status === 'completed' ? '已批准权限申请' : '已拒绝权限申请')
+      }
     } catch (error) {
       console.error("Error updating task status:", error)
       message.error("更新任务状态失败")
