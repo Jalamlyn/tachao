@@ -7,7 +7,6 @@ import { parseFormConfig } from "@/utils/codeParser"
 import { Icon } from "@iconify/react"
 import { ScrollShadow, Spinner } from "@nextui-org/react"
 import { DynamicComponentRenderer } from "@/components/DynamicComponentRenderer"
-import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 
 const FormCreate: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
@@ -95,11 +94,7 @@ const FormCreate: React.FC = () => {
     )
   }
 
-  return (
-    <PermissionCheck resourceType="page" resourceId="form-create">
-      {renderContent()}
-    </PermissionCheck>
-  )
+  return renderContent()
 }
 
 export default FormCreate
