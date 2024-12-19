@@ -65,32 +65,6 @@ const Dashboard: React.FC = () => {
     { label: "企业设置", icon: "solar:settings-outline", path: "/we-chat-app/admin/settings" },
   ]
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case "sync":
-        return "solar:refresh-circle-linear"
-      case "auth":
-        return "solar:shield-user-linear"
-      case "report":
-        return "solar:document-lock-linear"
-      default:
-        return "solar:info-circle-linear"
-    }
-  }
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "danger"
-      case "medium":
-        return "warning"
-      case "low":
-        return "primary"
-      default:
-        return "default"
-    }
-  }
-
   const handleAIAssistantClick = () => {
     navigate("/we-chat-app/admin/ai-assistant")
   }
@@ -232,7 +206,7 @@ const Dashboard: React.FC = () => {
             <CardBody className='max-h-60'>
               <ScrollShadow>
                 <AnimatePresence>
-                  {tasks.slice(0, 3).map((activity, index) => (
+                  {tasks.slice(0, 3).map((task, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, y: 10 }}
@@ -241,37 +215,24 @@ const Dashboard: React.FC = () => {
                       className='flex items-start gap-4 p-4 hover:bg-default-100 transition-all border-b last:border-b-0'
                     >
                       <div className='relative'>
-                        <img src={activity.avatar} alt={activity.user} className='w-10 h-10 rounded-full' />
-                        <div
-                          className={`absolute -bottom-1 -right-1 p-1 rounded-full bg-${getPriorityColor(activity.priority)}/10`}
-                        >
-                          <Icon
-                            icon={getActivityIcon(activity.type)}
-                            className={`w-4 h-4 text-${getPriorityColor(activity.priority)}`}
-                          />
+                        <img src={task.avatar} alt={task.user} className='w-10 h-10 rounded-full' />
+                        <div className='absolute -bottom-1 -right-1 p-1 rounded-full bg-primary/10'>
+                          <Icon icon='solar:shield-user-bold-duotone' className='w-4 h-4 text-primary' />
                         </div>
                       </div>
                       <div className='flex-1'>
                         <div className='flex items-center justify-between'>
                           <div className='flex items-center gap-2'>
-                            <p className='font-medium'>{activity.title}</p>
-                            <Chip size='sm' variant='flat' color={getPriorityColor(activity.priority)}>
-                              {activity.priority === "high"
-                                ? "紧急"
-                                : activity.priority === "medium"
-                                  ? "普通"
-                                  : "低优先级"}
+                            <p className='font-medium'>{task.title}</p>
+                            <Chip size='sm' variant='flat' color='primary'>
+                              权限申请
                             </Chip>
                           </div>
-                          <span className='text-small text-default-400'>{activity.time}</span>
+                          <span className='text-small text-default-400'>{task.time}</span>
                         </div>
-                        <p className='text-small text-default-500 mt-1'>{activity.description}</p>
+                        <p className='text-small text-default-500 mt-1'>{task.description}</p>
                         <div className='flex items-center gap-2 mt-2'>
-                          <Chip size='sm' variant='flat' color='default'>
-                            {activity.department}
-                          </Chip>
-                          <span className='text-small text-default-400'>•</span>
-                          <span className='text-small text-default-500'>{activity.user}</span>
+                          <span className='text-small text-default-500'>{task.user}</span>
                         </div>
                       </div>
                     </motion.div>
