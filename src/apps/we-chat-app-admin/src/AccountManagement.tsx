@@ -84,15 +84,16 @@ const AccountManagement: React.FC = () => {
     try {
       // 创建账号
       const accountRes = await createRamAccount(values)
-      
+
       // 查询默认企业项目
       const projectRes = await queryMyProject({ name: "默认企业项目" })
       if (projectRes.data && projectRes.data.length > 0) {
         // 将新账号添加到默认项目中
         await addProjectMember({
           projectId: projectRes.data[0].id,
-          userId: accountRes.id,
-          role: "MEMBER" // 默认角色
+          ramUserId: accountRes.id,
+          role: "PROJECT_MANAGER", // 默认角色
+          name: accountRes.name,
         })
       }
 

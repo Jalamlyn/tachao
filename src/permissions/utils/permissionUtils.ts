@@ -1,7 +1,7 @@
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { Permission, PermissionMetadata, ResourceType } from "../types"
 
-const PERMISSION_REQUESTS_KEY = 'permission_requests'
+const PERMISSION_REQUESTS_KEY = "permission_requests"
 
 export const getPermissionMetadataKey = (resourceType: ResourceType) => `permissions_${resourceType}`
 
@@ -34,49 +34,44 @@ export const isAdmin = (user: any): boolean => {
   return user?.account === "admin"
 }
 
-export const hasPermission = async (
-  resourceType: ResourceType,
-  resourceId: string,
-  accountId: string
-): Promise<boolean> => {
+export const hasPermission = async (resourceType: ResourceType, resourceId: string, user: any): Promise<boolean> => {
+  const accountId = user?.id
   // 1. 检查是否是管理员
-  if (isAdmin({ account: accountId })) {
+  if (isAdmin(user)) {
     return true
   }
 
   // 2. 只检查实际权限
   const permissions = await getResourcePermissions(resourceType)
   const resourcePermission = permissions[resourceId]
-  return resourcePermission?.accounts.some(acc => acc.accountId === accountId) || false
+  return resourcePermission?.accounts.some((acc) => acc.accountId === accountId) || false
 }
 
 export const addPermission = async (
   resourceType: ResourceType,
   resourceId: string,
   accountId: string,
-  role: string = 'viewer'
+  role: string = "viewer"
 ) => {
   const permissions = await getResourcePermissions(resourceType)
-  
+
   if (!permissions[resourceId]) {
     permissions[resourceId] = {
       resourceType,
       resourceId,
-      accounts: []
+      accounts: [],
     }
   }
 
   // 检查是否已存在权限
-  const existingPermission = permissions[resourceId].accounts.find(
-    acc => acc.accountId === accountId
-  )
+  const existingPermission = permissions[resourceId].accounts.find((acc) => acc.accountId === accountId)
 
   if (!existingPermission) {
     permissions[resourceId].accounts.push({
       accountId,
       role,
       grantedAt: new Date().toISOString(),
-      grantedBy: 'system'
+      grantedBy: "system",
     })
 
     await setResourcePermissions(resourceType, permissions)
@@ -92,20 +87,23 @@ export const createPermissionRequest = async (request: {
 }) => {
   try {
     const result = await getMetadata([PERMISSION_REQUESTS_KEY])
-    const existingRequests = JSON.parse(result.data?.[0]?.value || '{}')
-    
+    const existingRequests = JSON.parse(result.data?.[0]?.value || "{}")
+
     const newRequest = {
       ...request,
       id: `pr_${Date.now()}`,
-      status: 'pending',
+      status: "pending",
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
 
-    await setMetadata(PERMISSION_REQUESTS_KEY, JSON.stringify({
-      ...existingRequests,
-      [newRequest.id]: newRequest
-    }))
+    await setMetadata(
+      PERMISSION_REQUESTS_KEY,
+      JSON.stringify({
+        ...existingRequests,
+        [newRequest.id]: newRequest,
+      })
+    )
 
     return newRequest
   } catch (error) {
@@ -117,7 +115,7 @@ export const createPermissionRequest = async (request: {
 export const getPermissionRequests = async () => {
   try {
     const result = await getMetadata([PERMISSION_REQUESTS_KEY])
-    return JSON.parse(result.data?.[0]?.value || '{}')
+    return JSON.parse(result.data?.[0]?.value || "{}")
   } catch (error) {
     console.error("Error fetching permission requests:", error)
     return {}

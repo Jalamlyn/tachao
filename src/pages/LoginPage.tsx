@@ -76,12 +76,7 @@ export default function WeChatLoginPage() {
       const res = await login(loginData.current)
 
       if (res === "has token") {
-        if (rememberMe) {
-          localStorage.setItem("loginData", jsonStringify(loginData.current))
-        } else {
-          localStorage.removeItem("loginData")
-        }
-
+        localStorage.setItem("loginData", jsonStringify(loginData.current))
         const callback = new URL(location.href).searchParams.get("callback")
 
         if (callback) {

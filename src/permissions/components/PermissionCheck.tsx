@@ -8,7 +8,7 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
   resourceType,
   resourceId,
   children,
-  fallback = <Navigate to={`/unauthorized?type=${resourceType}&id=${resourceId}`} />
+  fallback = <Navigate to={`/unauthorized?type=${resourceType}&id=${resourceId}`} />,
 }) => {
   const { user, isLoading: userLoading } = useCurrentUser()
   const [hasAccess, setHasAccess] = useState(false)
@@ -20,7 +20,7 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
 
       try {
         // 直接检查权限，不需要检查申请状态
-        const result = await hasPermission(resourceType, resourceId, user.id)
+        const result = await hasPermission(resourceType, resourceId, user)
         setHasAccess(result)
       } catch (error) {
         console.error("Permission check failed:", error)
@@ -37,8 +37,8 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
 
   if (userLoading || loading) {
     return (
-      <div className="flex items-center justify-center p-4">
-        <Spinner size="sm" />
+      <div className='flex items-center justify-center p-4'>
+        <Spinner size='sm' />
       </div>
     )
   }
