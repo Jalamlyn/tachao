@@ -130,9 +130,7 @@ const generateFormAgentPrompt = (
 3. 代码格式：
 \`\`\`jsx
 <shata-ai-code>
-export default ({
-    ...props
-}) => {
+export default () => {
   // 1. 在组件内部定义配置
   const formConfig = {}
   /* formConfig 的类型说明 ${type}, 

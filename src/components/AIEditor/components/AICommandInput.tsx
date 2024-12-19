@@ -19,6 +19,7 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
 
   // 处理发送消息
   const handleSend = useCallback(async () => {
+    debugger
     if (!input.trim() || isLoading) return
 
     try {

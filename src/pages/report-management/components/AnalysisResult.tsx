@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { motion, AnimatePresence } from "framer-motion"
 import ChartRenderer from "./ChartRenderer"
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table"
-import { cn } from "@/theme/cn"
 import { Tabs, Tab, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -46,7 +45,8 @@ interface AnalysisResultProps {
   analysis?: MultiSourceAnalysisResult["analysis"]
 }
 
-const AnalysisResult: React.FC<AnalysisResultProps> = React.memo(({ analysis }) => {
+const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
+  const { analysis } = props.analysis
   const isMobile = useMemo(() => window.innerWidth < 768, [])
 
   if (!analysis) {

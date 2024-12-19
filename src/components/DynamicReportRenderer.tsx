@@ -36,23 +36,25 @@ export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ co
         setLoading(true)
         setError(null)
 
-        // 1. 转换JSX
-        const { code: transformedCode } = await transform(code, {
+        // 1. 转换代码
+        const _code = code.replace("```", "")
+        const { code: transformedCode } = await transform(_code, {
           presets: ["react"],
         })
+        const __code = transformedCode.replace(/export default/, "return")
 
-        // 2. 创建组件
-        const componentFn = new Function(
-          "React",
-          "AnalysisResult",
-          "data",
-          `${transformedCode}
-           return ReportAnalysis`
-        )
+        // 2. 创建组件工厂函数
+        const componentFactory = new Function("React", "AnalysisResult", "data", `${__code}`)
 
-        // 3. 获取组件，传入处理后的数据
-        const CustomComponent = componentFn(React, AnalysisResult, processedData)
-        setComponent(() => CustomComponent)
+        // 3. 执行工厂函数获取组件函数
+        const ComponentFunction = componentFactory(React, AnalysisResult, processedData)
+
+        // 4. 设置组件
+        setComponent(() => ComponentFunction)
+
+        // 调试日志
+        console.log("Component type:", typeof ComponentFunction)
+        console.log("Is valid component:", typeof ComponentFunction === "function")
       } catch (err) {
         console.error("Error creating component:", err)
         setError(err as Error)

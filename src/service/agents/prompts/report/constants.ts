@@ -144,103 +144,165 @@ export const REFLECTION_TEMPLATE = `
 `
 
 export const RETURN_STRUCTURE_REQUIREMENTS = `
-返回格式要求:
-1. 必须使用 <shata-ai-code> 标签包裹生成的代码
-2. 生成的代码必须以 return 语句开头,返回一个完整的对象
-3. 返回的对象必须符合以下结构:
+# 代码生成规范
 
-return {
-  type: 'analyze',
-  data: data, // 保持原始数据不变
-  analysis: {
-    summary: {...},  // 必须在顶层
-    charts: [...],   // 必须在顶层
-    tables: [...],   // 必须在顶层
-    insights: [...], // 必须在顶层
-    processAnalysis: {...} // 可选,用于流程数据
-  }
-};
+1. 组件结构要求:
+必须使用标准的 React 组件格式:
 
-示例代码:
+✅ 正确示例 - 完整的组件格式:
+\`\`\`mo
 <shata-ai-code>
-return {
-  type: 'analyze',
-  data: data,
-  analysis: {
-    summary: {
-      totalCount: {
-        value: Object.values(data.groups)
-          .reduce((sum, group) => sum + group.data.length, 0),
-        label: '总数量'
-      }
-    },
-    charts: [{
-      type: 'pie',
-      title: '分布统计',
-      data: []
-    }],
-    insights: ['数据分析见解']
+export default () => {
+  // 1. 在组件内部构建分析配置
+  const analysis = {
+    type: 'analyze',
+    data: data,
+    analysis: {
+      summary: {...},  // 必须在顶层
+      charts: [...],   // 必须在顶层
+      tables: [...],   // 必须在顶层
+      insights: [...], // 必须在顶层
+      processAnalysis: {...} // 可选,用于流程数据
+    }
   }
-};
-</shata-ai-code>
 
-注意:
-- 代码必须以 return 开头
-- 不要省略 return 语句
-- 确保代码可以在 Function 构造函数中执行
-- 保持与现有代码的兼容性
-- 不要删除或修改现有功能
+  // 2. 返回 AnalysisResult 组件
+  return <AnalysisResult analysis={analysis} />
+}
+</shata-ai-code> 
+\`\`\`
+
+2. 完整示例:
+\`\`\`mo
+<shata-ai-code>
+export default () => {
+  // 1. 获取数据源信息
+  const firstGroup = data.groups[Object.keys(data.groups)[0]]
+  
+  // 2. 构建分析配置
+  const analysis = {
+    type: 'analyze',
+    data: data,
+    analysis: {
+      // 数据源配置
+      sources: {
+        [firstGroup.id]: {
+          id: firstGroup.id,
+          title: firstGroup.title
+        }
+      },
+      
+      // 基础统计
+      summary: {
+        totalCount: {
+          value: firstGroup.data.length,
+          label: '总数量',
+          sourceId: firstGroup.id,
+          sourceTitle: firstGroup.title
+        }
+      },
+      
+      // 图表配置
+      charts: [{
+        type: 'pie',
+        title: '分布统计',
+        data: firstGroup.data.map(item => ({
+          name: item.name,
+          value: item.value,
+          sourceId: firstGroup.id,
+          sourceTitle: firstGroup.title
+        }))
+      }],
+      
+      // 数据洞察
+      insights: [{
+        content: '数据分析见解',
+        sourceIds: [firstGroup.id]
+      }]
+    }
+  }
+
+  // 3. 返回分析结果组件
+  return <AnalysisResult analysis={analysis} />
+}
+</shata-ai-code>
+\`\`\`
+
+注意事项:
+1. 必须使用 export default 导出组件
+2. 必须接收 data 作为 props
+3. 必须返回 AnalysisResult 组件
+4. 分析配置必须包含完整的数据源信息
+5. 所有统计项必须包含 sourceId 和 sourceTitle
+6. 不要使用注释省略任何代码
+7. 保持代码的完整性和可执行性
 `
 
 export const DATA_SOURCE_REQUIREMENTS = `
-生成的分析结果必须包含:
+# 数据源处理规范
 
-1. 数据源基础配置
-分析时请注意:
-- 每条数据都包含 _sourceTemplateId 和 _sourceTemplateName 字段标识数据来源
-- 数据按模板ID分组存储在 data.groups 中
-- 在统计结果中标注数据来源
+1. 组件格式示例:
+\`\`\`mo
+<shata-ai-code>
+export default () => {
+  // 1. 数据源配置
+  const sources = Object.entries(data.groups).reduce((acc, [templateId, group]) => {
+    acc[templateId] = {
+      id: group.id,
+      title: group.title
+    }
+    return acc
+  }, {})
 
-返回结果必须符合以下结构:
-{
-  type: "analyze",
-  data: data, // 保持原始数据不变
-  analysis: {
-    // 数据源配置 - 必须包含
-    sources: {
-      [templateId: string]: {
-        id: string,      // 模板ID
-        title: string,   // 模板名称
-      }
-    },
-    
-    // 基础统计 - 每个统计项都需要包含数据源信息
-    summary: {
-      [key: string]: {
-        value: number | string,
-        label: string,
-        sourceId: string,    // 数据来源ID
-        sourceTitle: string  // 数据来源名称
-      }
-    },
-    
-    // 图表配置 - 需要标识数据来源
-    charts: [{
-      type: string,
-      title: string,
-      data: Array<{
-        name: string,
-        value: number,
-        sourceId: string,    // 数据来源ID
-        sourceTitle: string  // 数据来源名称
-      }>
-    }],
-    
-    // 洞察信息 - 需要标识相关的数据源
-    insights: Array<{
-      content: string,
-      sourceIds: string[]  // 相关的数据源ID数组
-    }>
+  // 2. 构建分析配置
+  const analysis = {
+    type: "analyze",
+    data: data,
+    analysis: {
+      // 数据源配置 - 必须包含
+      sources,
+      
+      // 基础统计 - 每个统计项都需要包含数据源信息
+      summary: Object.entries(data.groups).reduce((acc, [templateId, group]) => {
+        acc[templateId] = {
+          value: group.data.length,
+          label: \`\${group.title}数量\`,
+          sourceId: group.id,
+          sourceTitle: group.title
+        }
+        return acc
+      }, {}),
+      
+      // 图表配置 - 需要标识数据来源
+      charts: Object.entries(data.groups).map(([templateId, group]) => ({
+        type: 'pie',
+        title: \`\${group.title}分布\`,
+        data: group.data.map(item => ({
+          name: item.name,
+          value: item.value,
+          sourceId: group.id,
+          sourceTitle: group.title
+        }))
+      })),
+      
+      // 洞察信息 - 需要标识相关的数据源
+      insights: [{
+        content: \`共分析 \${Object.keys(data.groups).length} 个数据源\`,
+        sourceIds: Object.keys(data.groups)
+      }]
+    }
   }
+
+  // 3. 返回分析结果组件
+  return <AnalysisResult analysis={analysis} />
 }
+</shata-ai-code>
+\`\`\`
+
+注意事项:
+1. 必须通过 data.groups 访问数据源
+2. 每个统计项都必须包含数据源信息
+3. 图表数据必须包含来源标识
+4. 洞察信息必须关联数据源ID
+5. 必须返回完整的组件代码
 `

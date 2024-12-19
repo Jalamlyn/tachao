@@ -1,63 +1,96 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { motion } from "framer-motion"
-import { aiLog } from "@/utils/AITraceLogger"
-import { useReportState } from "@/pages/report/hooks/useReportState"
-import { useReportData } from "@/pages/report/hooks/useReportData"
-import { ReportError } from "@/pages/report/components/ReportError"
-import { ReportLoading } from "@/pages/report/components/ReportLoading"
+import { useMetadata } from "@/hooks/useMetadata"
+import { processReportData } from "@/utils/processReportData"
 import { DynamicReportRenderer } from "@/components/DynamicReportRenderer"
-import { ScrollShadow } from "@nextui-org/react"
+import { ScrollShadow, Spinner } from "@nextui-org/react"
 
 const Report: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>()
-  const [reportState, reportActions] = useReportState()
-  const { loadReportData } = useReportData()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [reportConfig, setReportConfig] = useState<string | null>(null)
+  const [formData, setFormData] = useState<any[]>([])
+  const [templateInfoMap, setTemplateInfoMap] = useState<Record<string, string>>({})
+
+  const { getDetail: getReportDetail } = useMetadata("report")
+  const { loadFilteredDetails: loadFormFilteredDetails } = useMetadata("form")
+  const { loadFilteredDetails: loadTemplateFilteredDetails } = useMetadata("template")
 
   useEffect(() => {
-    const initializeReport = async () => {
-      const traceId = aiLog.start()
+    const loadReportData = async () => {
       if (!reportId) {
-        reportActions.setError("报表ID不能为空")
+        setError("报表ID不能为空")
+        setLoading(false)
         return
       }
 
-      reportActions.setLoading()
-
       try {
-        // 加载报表和表单数据
-        const data = await loadReportData(reportId)
-
-        if (!data.rawConfig) {
+        // 1. 加载报表详情
+        const reportDetail = await getReportDetail(reportId)
+        if (!reportDetail?.data?.rawConfig) {
           throw new Error("报表配置不存在")
         }
+        setReportConfig(reportDetail.data.rawConfig)
 
-        // 直接使用处理好的数据
-        reportActions.setSuccess({
-          reportConfig: data.rawConfig,
-          reportData: {
-            formData: data.formData,
-            templateInfoMap: data.templateInfoMap
-          }
-        })
+        // 2. 加载模板信息
+        const templateIds = reportDetail.data.templateIds
+        const templateDetails = await loadTemplateFilteredDetails((index) => templateIds.includes(index.id))
+        const templateMap = templateDetails.reduce(
+          (acc, template) => {
+            acc[template.id] = template.title
+            return acc
+          },
+          {} as Record<string, string>
+        )
+        setTemplateInfoMap(templateMap)
+
+        // 3. 加载表单数据
+        const formDetails = await loadFormFilteredDetails((index) =>
+          templateIds.includes(index.indexFields?.templateId)
+        )
+        const rawFormData = formDetails.map((detail) => ({
+          id: detail.id,
+          templateId: detail.indexFields?.templateId,
+          ...detail.data,
+        }))
+
+        // 4. 处理数据
+        const processedData = processReportData(rawFormData, templateMap)
+        setFormData(processedData.originalData)
       } catch (error) {
-        reportActions.setError(error instanceof Error ? error.message : "加载报表数据失败")
+        setError(error instanceof Error ? error.message : "加载报表数据失败")
+      } finally {
+        setLoading(false)
       }
     }
 
-    initializeReport()
+    loadReportData()
   }, [reportId])
 
-  if (reportState.status === "loading") {
-    return <ReportLoading />
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <Spinner label='加载中...' />
+      </div>
+    )
   }
 
-  if (reportState.status === "error") {
-    return <ReportError error={reportState.error!} />
+  if (error) {
+    return (
+      <div className='flex items-center justify-center min-h-screen text-danger'>
+        <p>{error}</p>
+      </div>
+    )
   }
 
-  if (reportState.status === "success" && (!reportState.reportConfig || !reportState.reportData)) {
-    return <ReportError error='未找到报表配置或数据' />
+  if (!reportConfig || !formData.length) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <p>未找到报表数据</p>
+      </div>
+    )
   }
 
   return (
@@ -70,10 +103,10 @@ const Report: React.FC = () => {
       <div className='max-w-[1200px] mx-auto'>
         <ScrollShadow className='h-screen pb-8'>
           <DynamicReportRenderer
-            code={reportState.reportConfig}
+            code={reportConfig}
             rawData={{
-              formData: reportState.reportData.formData,
-              templateInfoMap: reportState.reportData.templateInfoMap
+              formData,
+              templateInfoMap,
             }}
           />
         </ScrollShadow>
