@@ -83,11 +83,11 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
       if (resourceType === "template") {
         // 确保权限的包含关系
         const roles = new Set(selectedRoles)
-        if (roles.has('creator')) {
-          roles.add('editor')
-          roles.add('viewer')
-        } else if (roles.has('editor')) {
-          roles.add('viewer')
+        if (roles.has("creator")) {
+          roles.add("editor")
+          roles.add("viewer")
+        } else if (roles.has("editor")) {
+          roles.add("viewer")
         }
         await grantPermission(resourceId, newAccountId, Array.from(roles))
       } else {
@@ -114,33 +114,33 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   }
 
   const handleRoleChange = (role: TemplatePermissionRole) => {
-    setSelectedRoles(prev => {
+    setSelectedRoles((prev) => {
       const newRoles = new Set(prev)
-      
-      if (role === 'creator') {
+
+      if (role === "creator") {
         // 如果选中creator，自动添加editor和viewer
         if (newRoles.has(role)) {
           newRoles.delete(role)
           // 保留editor和viewer权限
         } else {
           newRoles.add(role)
-          newRoles.add('editor')
-          newRoles.add('viewer')
+          newRoles.add("editor")
+          newRoles.add("viewer")
         }
-      } else if (role === 'editor') {
+      } else if (role === "editor") {
         // 如果有creator权限，不允许取消editor
-        if (!newRoles.has('creator')) {
+        if (!newRoles.has("creator")) {
           if (newRoles.has(role)) {
             newRoles.delete(role)
             // 保留viewer权限
           } else {
             newRoles.add(role)
-            newRoles.add('viewer')
+            newRoles.add("viewer")
           }
         }
-      } else if (role === 'viewer') {
+      } else if (role === "viewer") {
         // 如果有editor或creator权限，不允许取消viewer
-        if (!newRoles.has('editor') && !newRoles.has('creator')) {
+        if (!newRoles.has("editor") && !newRoles.has("creator")) {
           if (newRoles.has(role)) {
             newRoles.delete(role)
           } else {
@@ -148,7 +148,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
           }
         }
       }
-      
+
       return Array.from(newRoles)
     })
   }
@@ -164,26 +164,23 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
     }
 
     return (
-      <div className="space-y-2 mt-4">
-        <div className="text-small font-medium">选择权限：</div>
-        <div className="flex gap-2">
-          <Checkbox
-            isSelected={selectedRoles.includes('creator')}
-            onValueChange={() => handleRoleChange('creator')}
-          >
+      <div className='space-y-2 mt-4'>
+        <div className='text-small font-medium'>选择权限：</div>
+        <div className='gap-2'>
+          <Checkbox isSelected={selectedRoles.includes("creator")} onValueChange={() => handleRoleChange("creator")}>
             创建权限（包含编辑和查看权限）
           </Checkbox>
           <Checkbox
-            isSelected={selectedRoles.includes('editor')}
-            onValueChange={() => handleRoleChange('editor')}
-            isDisabled={selectedRoles.includes('creator')}
+            isSelected={selectedRoles.includes("editor")}
+            onValueChange={() => handleRoleChange("editor")}
+            isDisabled={selectedRoles.includes("creator")}
           >
             编辑权限（包含查看权限）
           </Checkbox>
           <Checkbox
-            isSelected={selectedRoles.includes('viewer')}
-            onValueChange={() => handleRoleChange('viewer')}
-            isDisabled={selectedRoles.includes('editor') || selectedRoles.includes('creator')}
+            isSelected={selectedRoles.includes("viewer")}
+            onValueChange={() => handleRoleChange("viewer")}
+            isDisabled={selectedRoles.includes("editor") || selectedRoles.includes("creator")}
           >
             查看权限
           </Checkbox>
@@ -195,15 +192,21 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   const getRoleChips = (roles: string[] | string) => {
     const roleArray = Array.isArray(roles) ? roles : [roles]
     return (
-      <div className="flex gap-1">
-        {roleArray.includes('creator') && (
-          <Chip size="sm" variant="flat" color="warning">创建</Chip>
+      <div className='flex gap-1'>
+        {roleArray.includes("creator") && (
+          <Chip size='sm' variant='flat' color='warning'>
+            创建
+          </Chip>
         )}
-        {roleArray.includes('editor') && (
-          <Chip size="sm" variant="flat" color="secondary">编辑</Chip>
+        {roleArray.includes("editor") && (
+          <Chip size='sm' variant='flat' color='secondary'>
+            编辑
+          </Chip>
         )}
-        {roleArray.includes('viewer') && (
-          <Chip size="sm" variant="flat">查看</Chip>
+        {roleArray.includes("viewer") && (
+          <Chip size='sm' variant='flat'>
+            查看
+          </Chip>
         )}
       </div>
     )
@@ -244,7 +247,9 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
                     variant='light'
                     isLoading={loading}
                     onPress={handleAddPermission}
-                    isDisabled={isLoadingAccounts || !newAccountId || (resourceType === "template" && selectedRoles.length === 0)}
+                    isDisabled={
+                      isLoadingAccounts || !newAccountId || (resourceType === "template" && selectedRoles.length === 0)
+                    }
                   >
                     添加
                   </Button>
