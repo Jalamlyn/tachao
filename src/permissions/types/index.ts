@@ -4,7 +4,7 @@ export type TemplatePermissionRole = "creator" | "editor" | "viewer"
 
 export interface PermissionAccount {
   accountId: string
-  role: string[]
+  role: string[] | string
   grantedAt: string
   grantedBy: string
 }
@@ -22,7 +22,7 @@ export interface PermissionMetadata {
 export interface UsePermissionsReturn {
   getPermissions: (resourceId: string) => Promise<Permission | null>
   checkPermission: (resourceId: string, accountId: string) => Promise<boolean>
-  grantPermission: (resourceId: string, accountId: string, role: string) => Promise<void>
+  grantPermission: (resourceId: string, accountId: string, role: string | string[]) => Promise<void>
   revokePermission: (resourceId: string, accountId: string) => Promise<void>
   loading: boolean
   error: Error | null

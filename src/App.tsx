@@ -17,6 +17,7 @@ import ResourceDataTable from "./components/common/data-table/ResourceDataTable"
 import AppEntry from "./pages/app-management/components/AppEntry"
 import WaitListPage from "./pages/WaitListPage"
 import FormCreate from "./pages/form/components/FormCreate"
+import { PermissionCheck } from "./permissions/components/PermissionCheck"
 
 import { loadBMapScript } from "@/components/reports/MapComponent"
 import UnauthorizedPage from "./permissions/pages/UnauthorizedPage"
@@ -69,7 +70,18 @@ function App() {
               }
             />
             <Route path='/form/:formId' element={<Form />} />
-            <Route path='/form-create/:templateId' element={<FormCreate />} />
+            <Route 
+              path='/form-create/:templateId' 
+              element={
+                <PermissionCheck
+                  resourceType="template"
+                  resourceId={location.pathname.split('/').pop() || ''}
+                  role="creator"
+                >
+                  <FormCreate />
+                </PermissionCheck>
+              } 
+            />
             <Route path='/report/:reportId' element={<Report />} />
             <Route path='/apps/:appId' element={<AppEntry />} />
             <Route

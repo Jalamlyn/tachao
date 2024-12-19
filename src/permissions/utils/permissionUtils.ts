@@ -1,6 +1,5 @@
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { Permission, PermissionMetadata, ResourceType, TemplatePermissionRole } from "../types"
-import { queryAppDetail } from "@/service/apis/app"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
 
@@ -59,43 +58,53 @@ export const hasTemplatePermission = async (
 
   const permissions = await getResourcePermissions("template")
   const templatePermission = permissions[templateId]
-  
+
   if (!templatePermission) {
     return false
   }
 
-  const userPermission = templatePermission.accounts.find(acc => acc.accountId === user.id)
+  const userPermission = templatePermission.accounts.find((acc) => acc.accountId === user.id)
   if (!userPermission) {
     return false
   }
 
   const userRoles = Array.isArray(userPermission.role) ? userPermission.role : [userPermission.role]
-  
-  if (requiredRole === 'viewer') {
-    return userRoles.includes('viewer') || userRoles.includes('editor')
-  }
-  
-  if (requiredRole === 'editor') {
-    return userRoles.includes('editor') && userRoles.includes('viewer')
+
+  // 权限层级检查
+  if (requiredRole === "viewer") {
+    return userRoles.includes("viewer") || 
+           userRoles.includes("editor") || 
+           userRoles.includes("creator")
   }
 
-  return userRoles.includes(requiredRole)
+  if (requiredRole === "editor") {
+    return userRoles.includes("editor") || 
+           userRoles.includes("creator")
+  }
+
+  if (requiredRole === "creator") {
+    return userRoles.includes("creator")
+  }
+
+  return false
 }
 
 // 新增：获取资源标题的函数
 export const getResourceTitle = async (resourceType: ResourceType, resourceId: string): Promise<string> => {
   try {
     switch (resourceType) {
-      case 'template':
-      case 'form':
-      case 'report':
+      case "template":
+      case "form":
+      case "report":
         const result = await getMetadata([`${resourceType}_${resourceId}`])
         return result.data?.[0]?.title || resourceId
-      
-      case 'app':
-        const appDetail = await queryAppDetail(resourceId)
-        return appDetail?.name || resourceId
-      
+
+      case "app":
+        // 从元数据中获取应用信息
+        const appsResult = await getMetadata(["app_index"])
+        const apps = JSON.parse(appsResult.data?.[0]?.value || "[]")
+        const app = apps.find((app) => app.id === resourceId)
+        return app?.title || resourceId
       default:
         return resourceId
     }
@@ -125,9 +134,12 @@ export const addPermission = async (
 
   if (!existingPermission) {
     const roles = Array.isArray(role) ? role : [role]
-    
-    if (roles.includes('editor') && !roles.includes('viewer')) {
-      roles.push('viewer')
+
+    // 处理权限包含关系
+    if (roles.includes("creator")) {
+      roles.push("editor", "viewer")
+    } else if (roles.includes("editor")) {
+      roles.push("viewer")
     }
 
     permissions[resourceId].accounts.push({

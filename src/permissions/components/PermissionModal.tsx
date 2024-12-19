@@ -81,9 +81,12 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
     try {
       // 如果是模板资源，使用多角色权限
       if (resourceType === "template") {
-        // 确保如果有编辑权限，必须有查看权限
+        // 确保权限的包含关系
         const roles = new Set(selectedRoles)
-        if (roles.has('editor')) {
+        if (roles.has('creator')) {
+          roles.add('editor')
+          roles.add('viewer')
+        } else if (roles.has('editor')) {
           roles.add('viewer')
         }
         await grantPermission(resourceId, newAccountId, Array.from(roles))
@@ -114,18 +117,30 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
     setSelectedRoles(prev => {
       const newRoles = new Set(prev)
       
-      if (role === 'editor') {
-        // 如果选中editor，自动添加viewer
+      if (role === 'creator') {
+        // 如果选中creator，自动添加editor和viewer
         if (newRoles.has(role)) {
           newRoles.delete(role)
-          // 保留viewer权限
+          // 保留editor和viewer权限
         } else {
           newRoles.add(role)
+          newRoles.add('editor')
           newRoles.add('viewer')
         }
+      } else if (role === 'editor') {
+        // 如果有creator权限，不允许取消editor
+        if (!newRoles.has('creator')) {
+          if (newRoles.has(role)) {
+            newRoles.delete(role)
+            // 保留viewer权限
+          } else {
+            newRoles.add(role)
+            newRoles.add('viewer')
+          }
+        }
       } else if (role === 'viewer') {
-        // 如果有editor权限，不允许取消viewer
-        if (!newRoles.has('editor')) {
+        // 如果有editor或creator权限，不允许取消viewer
+        if (!newRoles.has('editor') && !newRoles.has('creator')) {
           if (newRoles.has(role)) {
             newRoles.delete(role)
           } else {
@@ -153,15 +168,22 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
         <div className="text-small font-medium">选择权限：</div>
         <div className="flex gap-2">
           <Checkbox
+            isSelected={selectedRoles.includes('creator')}
+            onValueChange={() => handleRoleChange('creator')}
+          >
+            创建权限（包含编辑和查看权限）
+          </Checkbox>
+          <Checkbox
             isSelected={selectedRoles.includes('editor')}
             onValueChange={() => handleRoleChange('editor')}
+            isDisabled={selectedRoles.includes('creator')}
           >
-            编辑权限
+            编辑权限（包含查看权限）
           </Checkbox>
           <Checkbox
             isSelected={selectedRoles.includes('viewer')}
             onValueChange={() => handleRoleChange('viewer')}
-            isDisabled={selectedRoles.includes('editor')}
+            isDisabled={selectedRoles.includes('editor') || selectedRoles.includes('creator')}
           >
             查看权限
           </Checkbox>
@@ -170,13 +192,17 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
     )
   }
 
-  const getRoleChips = (roles: string[]) => {
+  const getRoleChips = (roles: string[] | string) => {
+    const roleArray = Array.isArray(roles) ? roles : [roles]
     return (
       <div className="flex gap-1">
-        {roles.includes('editor') && (
+        {roleArray.includes('creator') && (
+          <Chip size="sm" variant="flat" color="warning">创建</Chip>
+        )}
+        {roleArray.includes('editor') && (
           <Chip size="sm" variant="flat" color="secondary">编辑</Chip>
         )}
-        {roles.includes('viewer') && (
+        {roleArray.includes('viewer') && (
           <Chip size="sm" variant="flat">查看</Chip>
         )}
       </div>
@@ -236,13 +262,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
                       <div className='flex items-center gap-2'>
                         <Icon icon='mdi:account' className='text-default-500' />
                         <span>{accounts.find((a) => a.id === account.accountId)?.name || account.accountId}</span>
-                        {Array.isArray(account.role) ? (
-                          getRoleChips(account.role)
-                        ) : (
-                          <Chip size='sm' variant='flat' color='primary'>
-                            {account.role}
-                          </Chip>
-                        )}
+                        {getRoleChips(account.role)}
                       </div>
                       <Button
                         size='sm'
