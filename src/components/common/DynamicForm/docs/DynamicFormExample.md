@@ -23,6 +23,13 @@ const formConfig: DynamicFormConfig = {
           description: "请填写申请的基本信息",
           fields: [
             {
+              type: "orderNumber",
+              name: "orderNo",
+              label: "采购单号",
+              prefix: "PO",
+              disabled: true
+            },
+            {
               name: "department",
               label: "申请部门",
               type: "resource",
@@ -109,6 +116,13 @@ const formConfig: DynamicFormConfig = {
         description: "请填写需要采购的物品明细",
         config: {
           columns: [
+            {
+              key: "table.items.orderNo",
+              title: "物料编号",
+              type: "orderNumber",
+              width: 200,
+              prefix: "MAT"
+            },
             {
               key: "table.items.material",
               title: "物料",
@@ -259,12 +273,6 @@ const formConfig: DynamicFormConfig = {
         ]
       }
     ]
-  },
-
-  orderNumberConfig: {
-    prefix: "PO",
-    fieldName: "orderNumber",
-    label: "采购单号"
   },
 
   watch: (form) => {
