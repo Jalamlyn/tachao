@@ -1,11 +1,6 @@
 import { useState } from "react"
 import { Permission, ResourceType, UsePermissionsReturn } from "../types"
-import {
-  getResourcePermissions,
-  setResourcePermissions,
-  hasPermission,
-  isAdmin,
-} from "../utils/permissionUtils"
+import { getResourcePermissions, setResourcePermissions, hasPermission, isAdmin } from "../utils/permissionUtils"
 
 export const usePermissions = (resourceType: ResourceType): UsePermissionsReturn => {
   const [loading, setLoading] = useState(false)
@@ -25,11 +20,11 @@ export const usePermissions = (resourceType: ResourceType): UsePermissionsReturn
     }
   }
 
-  const checkPermission = async (resourceId: string, accountId: string): Promise<boolean> => {
+  const checkPermission = async (resourceId: string, accountId: string, user: any): Promise<boolean> => {
     try {
       setLoading(true)
       // 添加admin权限判断
-      if (isAdmin(accountId)) {
+      if (isAdmin(user)) {
         return true
       }
       const permission = await getPermissions(resourceId)
@@ -47,26 +42,24 @@ export const usePermissions = (resourceType: ResourceType): UsePermissionsReturn
     try {
       setLoading(true)
       const permissions = await getResourcePermissions(resourceType)
-      
+
       if (!permissions[resourceId]) {
         permissions[resourceId] = {
           resourceType,
           resourceId,
-          accounts: []
+          accounts: [],
         }
       }
 
       // Remove existing permission for this account if exists
-      permissions[resourceId].accounts = permissions[resourceId].accounts.filter(
-        (acc) => acc.accountId !== accountId
-      )
+      permissions[resourceId].accounts = permissions[resourceId].accounts.filter((acc) => acc.accountId !== accountId)
 
       // Add new permission
       permissions[resourceId].accounts.push({
         accountId,
         role,
         grantedAt: new Date().toISOString(),
-        grantedBy: "currentUser" // TODO: Get from context
+        grantedBy: "currentUser", // TODO: Get from context
       })
 
       await setResourcePermissions(resourceType, permissions)
@@ -83,11 +76,9 @@ export const usePermissions = (resourceType: ResourceType): UsePermissionsReturn
     try {
       setLoading(true)
       const permissions = await getResourcePermissions(resourceType)
-      
+
       if (permissions[resourceId]) {
-        permissions[resourceId].accounts = permissions[resourceId].accounts.filter(
-          (acc) => acc.accountId !== accountId
-        )
+        permissions[resourceId].accounts = permissions[resourceId].accounts.filter((acc) => acc.accountId !== accountId)
         await setResourcePermissions(resourceType, permissions)
       }
     } catch (err) {
@@ -105,6 +96,6 @@ export const usePermissions = (resourceType: ResourceType): UsePermissionsReturn
     grantPermission,
     revokePermission,
     loading,
-    error
+    error,
   }
 }

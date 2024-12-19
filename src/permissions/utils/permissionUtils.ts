@@ -28,8 +28,8 @@ export const setResourcePermissions = async (
   }
 }
 
-export const isAdmin = (accountId: string): boolean => {
-  return accountId === "admin"
+export const isAdmin = (user: any): boolean => {
+  return user.account === "admin"
 }
 
 export const hasPermission = (permission: Permission | null, accountId: string): boolean => {

@@ -19,6 +19,7 @@ import WaitListPage from "./pages/WaitListPage"
 import FormCreate from "./pages/form/components/FormCreate"
 
 import { loadBMapScript } from "@/components/reports/MapComponent"
+import UnauthorizedPage from "./permissions/pages/UnauthorizedPage"
 loadBMapScript()
 
 const queryClient = new QueryClient({
@@ -79,6 +80,7 @@ function App() {
               path='/resources/view/:id'
               element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <ResourceDataTable />}
             />
+            <Route path='/unauthorized' element={<UnauthorizedPage />} />
             <Route
               path='/operations/wait-list'
               element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <WaitListPage />}

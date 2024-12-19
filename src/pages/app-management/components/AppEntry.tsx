@@ -117,7 +117,9 @@ export const AppEntry: React.FC = () => {
                       </div>
                     </div>
                   ))}
-                  {appReports.length === 0 && <div className='text-center py-8 text-default-500'>暂无可用的数据报表</div>}
+                  {appReports.length === 0 && (
+                    <div className='text-center py-8 text-default-500'>暂无可用的数据报表</div>
+                  )}
                 </div>
               </CardBody>
             </Card>
@@ -138,25 +140,8 @@ export const AppEntry: React.FC = () => {
     )
   }
 
-  // 无权限时的显示内容
-  const NoPermissionContent = () => (
-    <div className='min-h-screen flex items-center justify-center bg-gradient-to-b from-primary-50 to-background p-4'>
-      <EmptyState
-        type='no-permission'
-        title='无访问权限'
-        description='您没有访问此应用的权限'
-        icon={<Icon icon='mdi:shield-lock' className='w-20 h-20 text-danger' />}
-      />
-    </div>
-  )
-
   return (
-    <PermissionCheck
-      resourceType="app"
-      resourceId={appId}
-      accountId="currentUser" // TODO: 从用户上下文获取实际的用户ID
-      fallback={<NoPermissionContent />}
-    >
+    <PermissionCheck resourceType='app' resourceId={appId}>
       <AppContent />
     </PermissionCheck>
   )

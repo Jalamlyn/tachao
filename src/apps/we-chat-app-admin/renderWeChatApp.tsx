@@ -16,10 +16,18 @@ import AppManagement from "@/pages/app-management"
 import PendingTasks from "@/pages/pending-tasks"
 import FormTemplateSelect from "@/pages/form-temp-manager/components/FormTemplateSelect"
 import FileManager from "@/apps/we-chat-app-admin/src/FileManager"
+import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 
 export default function renderWeChatApp() {
   return (
-    <Route path='/we-chat-app/admin' element={<AdminPage />}>
+    <Route
+      path='/we-chat-app/admin'
+      element={
+        <PermissionCheck resourceType='page' resourceId='/we-chat-app/admin'>
+          <AdminPage />
+        </PermissionCheck>
+      }
+    >
       <Route index element={<Dashboard />} />
       <Route path='settings' element={<EnterpriseSettings />} />
       <Route path='documents' element={<FormTempManager />} />
