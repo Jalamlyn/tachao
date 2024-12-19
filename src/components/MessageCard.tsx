@@ -150,7 +150,7 @@ const MessageCard = React.memo(
           <div className={contentClassName}>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              // rehypePlugins={[rehypeRaw]}
+              rehypePlugins={[rehypeRaw]}
               components={{
                 code({ node, inline, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || "")
@@ -161,7 +161,7 @@ const MessageCard = React.memo(
                       </>
                     )
                   }
-                  if (match && match[1] == "mo") {
+                  if (match && match[1] == "mo1") {
                     if (children && children.toString().includes("</shata-ai-reflection>")) {
                       return "✔️ 深度思考完成"
                     }

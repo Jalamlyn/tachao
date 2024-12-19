@@ -11,30 +11,6 @@ const generateSystemPrompt = ({ data, doc, existingConfig, templateInfoMap = {} 
     templates.analysis.reflection,
     generateDataSourceInfo(data, templateInfoMap),
     `
-# React 组件生成指南
-
-## 1. 组件结构
-\`\`\`typescript
-const ReportAnalysis = ({
-  data,
-  templateId,
-  mode = 'preview'
-}) => {
-  // 1. Hooks
-  const [loading, setLoading] = React.useState(false)
-  
-  // 2. 数据处理
-  const analysisData = {
-    summary: {...},
-    charts: [...],
-    insights: [...],
-    tables: [...]
-  }
-  
-  // 3. 渲染
-  return <AnalysisResult analysis={analysisData} />
-}
-\`\`\`
 
 ## 2. 代码规范
 1. 必须使用函数组件
@@ -48,19 +24,40 @@ const ReportAnalysis = ({
 2. 必须包含 summary, charts, insights 等关键字段
 3. 确保数据格式正确
 
-## 4. 错误处理
-1. 使用 try-catch 包裹数据处理逻辑
-2. 提供用户友好的错误提示
-3. 保持错误状态的一致性
+## 7. 注意事项
+1. 不要使用类组件
+2. 不要使用外部状态管理
+3. 保持代码简洁清晰
+4. 确保类型正确
+5. 提供必要的注释
+`,
+    mapVisualizationGuide,
+    `<doc>${doc}</doc>`,
+  ]
 
-## 5. 性能优化
-1. 使用 React.useMemo 缓存计算结果
-2. 使用 React.useCallback 优化回调函数
-3. 避免不必要的重渲染
+  if (existingConfig) {
+    promptParts.push(generateExistingConfigPrompt(existingConfig))
+  }
 
-## 6. 代码示例
-\`\`\`typescript
-const ReportAnalysis = ({ data, templateId, mode = 'preview' }) => {
+  promptParts.push(`
+
+注意:
+1. 必须生成完整的组件代码
+2. 必须包含所有必要的状态管理
+3. 必须处理错误情况
+4. 必须使用 AnalysisResult 组件
+5. 确保代码可以正常执行
+6. 不使用 import 引入和外部依赖
+
+分析流程：
+1. 首先进行场景识别 <shata-ai-scene>
+2. 然后进行思考过程 <shata-ai-think>
+3. 必要时进行反思 <shata-ai-reflection>
+4. 最后返回下列结构的代码,不使用 import 引入和外部依赖:
+"""
+\`\`\`mo
+<shata-ai-code>
+export default ({ data, templateId}) => {
   // 状态管理
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState(null)
@@ -100,37 +97,11 @@ const ReportAnalysis = ({ data, templateId, mode = 'preview' }) => {
 
   return <AnalysisResult analysis={analysisData} />
 }
+
+</shata-ai-code>
 \`\`\`
+"""
 
-## 7. 注意事项
-1. 不要使用类组件
-2. 不要使用外部状态管理
-3. 保持代码简洁清晰
-4. 确保类型正确
-5. 提供必要的注释
-`,
-    mapVisualizationGuide,
-    `<doc>${doc}</doc>`,
-  ]
-
-  if (existingConfig) {
-    promptParts.push(generateExistingConfigPrompt(existingConfig))
-  }
-
-  promptParts.push(`
-请使用 <shata-ai-code> 标签包裹你生成的代码,直接返回可执行的 React 组件代码。
-注意:
-1. 必须生成完整的组件代码
-2. 必须包含所有必要的状态管理
-3. 必须处理错误情况
-4. 必须使用 AnalysisResult 组件
-5. 确保代码可以正常执行
-
-分析流程：
-1. 首先进行场景识别 <shata-ai-scene>
-2. 然后进行思考过程 <shata-ai-think>
-3. 必要时进行反思 <shata-ai-reflection>
-4. 最后生成组件代码 <shata-ai-code>
 
 请确保完整执行以上流程，保证分析的质量和可靠性。
 `)

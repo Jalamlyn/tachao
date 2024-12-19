@@ -4,7 +4,10 @@ import { formulaService } from "@/services/formulaService"
 import { markdown as doc } from "@/pages/report-management/components/AnalysisResult.md"
 import generateSystemPrompt from "@/service/agents/prompts/report-agent-prompt"
 import { ProcessedData } from "@/utils/processReportData"
-import { AnalysisDataGroup, AnalysisData, AnalysisResult } from "./types/report-agent.types"
+import { AnalysisDataGroup, AnalysisData } from "./types/report-agent.types"
+import { jsxToJs } from "@/utils/codeParser"
+import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
+import React from "react"
 
 export type ReportColumn = {
   header: string
@@ -15,10 +18,8 @@ interface CommandResult {
   success: boolean
   message: string
   rawConfig?: string
-  analysis?: AnalysisResult["analysis"]
+  analysis?: any
 }
-
-type ResourceOperationResult = AnalysisResult
 
 interface ProcessCommandOptions {
   data: ProcessedData
@@ -98,15 +99,13 @@ export class AIReportAgent {
 
   private async executeCode(code: string, data: AnalysisData): Promise<any> {
     try {
-      console.log("[AIReportAgent] Executing analysis code")
-      const wrappedCode = `
-        return (function(data, formulajs) {
-          ${code}
-        })(data, formulajs);
-      `
-      const executeFunction = new Function("data", "formulajs", wrappedCode)
-      const result = executeFunction(data, formulaService)
-      console.log("[AIReportAgent] Analysis completed successfully")
+      const _code = await jsxToJs(code)
+      const __code = _code.replace(/export default/, "return")
+      // 2. 创建组件
+      const componentFn = new Function("React", "data", "AnalysisResult", "formulaService", `${__code}`)
+
+      const result = componentFn(React, data, AnalysisResult, formulaService)
+      debugger
       return result
     } catch (error) {
       console.error("[AIReportAgent] Error executing analysis code:", error)
@@ -191,7 +190,13 @@ export class AIReportAgent {
         * 对于业务相关问题：进行分析并给出建议
         * 对于间接相关问题：提供参考信息和最佳实践
         * 对于完全无关问题：礼貌建议咨询其他专业助手
-        * [格式要求:所有代码必须使用 \`\`\`mo <shata-ai-code>../</shata-ai-code>\`\`\` 包裹, 必须返回完整代码, 不允许使用 //其他... 这样的方式来省略任何代码或者省略任何字段]`
+        * [格式要求:所有代码必须使用 
+        \`\`\`mo 
+        <shata-ai-code>
+        代码
+        </shata-ai-code>
+        \`\`\` 
+        包裹, 必须返回完整代码, 不要使用注释来省略任何代码或逻辑]`
 
       const messages: Message[] = [
         { role: "system", content: systemPrompt },

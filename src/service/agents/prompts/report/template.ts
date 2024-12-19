@@ -45,7 +45,7 @@ interface AnalysisData {
 数据访问示例:
 
 1. ❌ 错误的访问方式:
-return {
+const analyzeConfig = {
   type: 'analyze',
   data: data,
   analysis: {
@@ -65,7 +65,7 @@ return {
 };
 
 2. ✅ 正确的访问方式:
-return {
+const analyzeConfig ={
   type: 'analyze',
   data: data,
   analysis: {
@@ -123,7 +123,7 @@ const firstGroupId = Object.keys(data.groups)[0]
 const firstGroup = data.groups[firstGroupId]
 const items = firstGroup.data
 
-return {
+const analyzeConfig ={
   type: 'analyze',
   data: data,
   analysis: {
@@ -162,7 +162,7 @@ return {
 const allGroups = Object.entries(data.groups)
 const totalCount = allGroups.reduce((sum, [_, group]) => sum + group.data.length, 0)
 
-return {
+const analyzeConfig = {
   type: 'analyze',
   data: data,
   analysis: {
@@ -199,7 +199,7 @@ return {
 const firstGroup = data.groups[Object.keys(data.groups)[0]]
 const locations = firstGroup.data
 
-return {
+const analyzeConfig ={
   type: 'analyze',
   data: data,
   analysis: {
@@ -254,7 +254,6 @@ return {
 5. 图表数据必须包含数据源信息
 6. 洞察信息必须关联数据源ID
 7. 不要直接访问 data[0] 或 data.length
-8. 使用 IIFE 来组织复杂的数据处理逻辑
 `
 
 export const returnStructureRequirements = RETURN_STRUCTURE_REQUIREMENTS

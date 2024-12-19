@@ -8,7 +8,6 @@ interface DynamicReportRendererProps {
   code: string
   data: any
   templateId?: string
-  mode?: "preview" | "edit"
 }
 
 export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ code, ...props }) => {

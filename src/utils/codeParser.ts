@@ -63,40 +63,15 @@ export const parseAICode = async (content: string, tag: string): Promise<any> =>
 }
 
 /**
- * 验证自定义组件是否只使用了允许的 UI 组件
- */
-const validateCustomComponents = (jsxCode: string): boolean => {
-  const componentPattern = /<([A-Z][a-zA-Z0-9]*)/g
-  const matches = jsxCode.match(componentPattern) || []
-
-  for (const match of matches) {
-    const componentName = match.slice(1)
-    if (!uiComponents[componentName]) {
-      message.error(`不支持的组件: ${componentName}，请只使用允许的 UI 组件`)
-      return false
-    }
-  }
-
-  return true
-}
-
-/**
  * 将 JSX 代码转换为 JavaScript
  */
-const jsxToJs = async (jsxCode: string): Promise<string> => {
+export const jsxToJs = async (jsxCode: string): Promise<string> => {
   try {
-    aiLog.log("Starting JSX transformation")
-    if (!validateCustomComponents(jsxCode)) {
-      throw new Error("自定义组件验证失败")
-    }
-
     const result = Babel.transform(jsxCode, {
       presets: ["react"],
     }).code
-    aiLog.log("Transformed code", { result })
     return result
   } catch (error) {
-    aiLog.error(error as Error)
     throw new Error("Failed to transform JSX")
   }
 }
