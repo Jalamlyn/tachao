@@ -4,6 +4,7 @@ import {
   getResourcePermissions,
   setResourcePermissions,
   hasPermission,
+  isAdmin,
 } from "../utils/permissionUtils"
 
 export const usePermissions = (resourceType: ResourceType): UsePermissionsReturn => {
@@ -27,6 +28,10 @@ export const usePermissions = (resourceType: ResourceType): UsePermissionsReturn
   const checkPermission = async (resourceId: string, accountId: string): Promise<boolean> => {
     try {
       setLoading(true)
+      // 添加admin权限判断
+      if (isAdmin(accountId)) {
+        return true
+      }
       const permission = await getPermissions(resourceId)
       return hasPermission(permission, accountId)
     } catch (err) {
