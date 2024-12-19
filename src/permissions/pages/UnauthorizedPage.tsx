@@ -54,10 +54,7 @@ const UnauthorizedPage = () => {
                 transition={{ delay: 0.2 }}
                 className='inline-block p-4 rounded-full bg-default-100'
               >
-                <Icon 
-                  icon={content.icon} 
-                  className='w-16 h-16 text-default-500'
-                />
+                <Icon icon='solar:lock-bold-duotone' className='w-16 h-16 text-default-500' />
               </motion.div>
               <motion.h1
                 initial={{ y: 20, opacity: 0 }}
@@ -80,11 +77,7 @@ const UnauthorizedPage = () => {
             <Divider className='my-6' />
 
             <AnimatePresence mode='wait'>
-              <PermissionRequestForm 
-                resourceType={resourceType} 
-                resourceId={resourceId} 
-                metadata={content.metadata}
-              />
+              <PermissionRequestForm resourceType={resourceType} resourceId={resourceId} metadata={content.metadata} />
             </AnimatePresence>
 
             <motion.div
