@@ -6,6 +6,13 @@ import { usePendingTasksStore } from "@/pages/pending-tasks/store/usePendingTask
 import { motion, AnimatePresence } from "framer-motion"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 
+// 状态配置
+const statusConfig = {
+  pending: { color: "warning", label: "待处理", icon: "solar:clock-circle-bold-duotone" },
+  completed: { color: "success", label: "已通过", icon: "solar:check-circle-bold-duotone" },
+  rejected: { color: "danger", label: "已拒绝", icon: "solar:close-circle-bold-duotone" },
+}
+
 const PendingTasks: React.FC = () => {
   const { tasks, isLoading, loadTasks, updateTaskStatus, activeTab, setActiveTab, activeStatus, setActiveStatus } = usePendingTasksStore()
   const { updateBreadcrumbs } = useBreadcrumb()
@@ -27,11 +34,6 @@ const PendingTasks: React.FC = () => {
   })
 
   const getStatusChip = (status: string) => {
-    const statusConfig = {
-      pending: { color: "warning", label: "待处理", icon: "solar:clock-circle-bold-duotone" },
-      completed: { color: "success", label: "已通过", icon: "solar:check-circle-bold-duotone" },
-      rejected: { color: "danger", label: "已拒绝", icon: "solar:close-circle-bold-duotone" },
-    }
     const config = statusConfig[status] || statusConfig.pending
     return (
       <Chip
@@ -123,9 +125,6 @@ const PendingTasks: React.FC = () => {
 
                           <div className='flex items-center gap-2 mb-3 pb-2 border-b border-default-100'>
                             <h3 className='text-lg font-semibold'>{task.title}</h3>
-                            <Chip size='sm' variant='flat' color='primary'>
-                              权限申请
-                            </Chip>
                           </div>
 
                           <div className='mb-4'>
@@ -169,7 +168,7 @@ const PendingTasks: React.FC = () => {
             {filteredTasks.length === 0 && (
               <div className='flex flex-col items-center justify-center py-12 text-default-400'>
                 <Icon icon='solar:shield-check-bold-duotone' className='w-16 h-16 mb-4' />
-                <p>暂无{activeStatus === 'all' ? '' : getStatusChip(activeStatus).props.children}的权限申请</p>
+                <p>暂无{activeStatus === 'all' ? '' : statusConfig[activeStatus].label}的权限申请</p>
               </div>
             )}
           </Tab>

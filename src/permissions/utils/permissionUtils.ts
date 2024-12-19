@@ -1,5 +1,6 @@
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { Permission, PermissionMetadata, ResourceType, TemplatePermissionRole } from "../types"
+import { queryAppDetail } from "@/service/apis/app"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
 
@@ -68,20 +69,40 @@ export const hasTemplatePermission = async (
     return false
   }
 
-  // 更新权限检查逻辑
   const userRoles = Array.isArray(userPermission.role) ? userPermission.role : [userPermission.role]
   
-  // 如果用户有编辑权限，自动拥有查看权限
   if (requiredRole === 'viewer') {
     return userRoles.includes('viewer') || userRoles.includes('editor')
   }
   
-  // 检查编辑权限时，必须同时具有查看权限
   if (requiredRole === 'editor') {
     return userRoles.includes('editor') && userRoles.includes('viewer')
   }
 
   return userRoles.includes(requiredRole)
+}
+
+// 新增：获取资源标题的函数
+export const getResourceTitle = async (resourceType: ResourceType, resourceId: string): Promise<string> => {
+  try {
+    switch (resourceType) {
+      case 'template':
+      case 'form':
+      case 'report':
+        const result = await getMetadata([`${resourceType}_${resourceId}`])
+        return result.data?.[0]?.title || resourceId
+      
+      case 'app':
+        const appDetail = await queryAppDetail(resourceId)
+        return appDetail?.name || resourceId
+      
+      default:
+        return resourceId
+    }
+  } catch (error) {
+    console.error(`Error getting resource title for ${resourceType}:${resourceId}:`, error)
+    return resourceId
+  }
 }
 
 export const addPermission = async (
@@ -100,14 +121,11 @@ export const addPermission = async (
     }
   }
 
-  // 检查是否已存在权限
   const existingPermission = permissions[resourceId].accounts.find((acc) => acc.accountId === accountId)
 
   if (!existingPermission) {
-    // 确保角色是数组形式
     const roles = Array.isArray(role) ? role : [role]
     
-    // 如果包含编辑权限，自动添加查看权限
     if (roles.includes('editor') && !roles.includes('viewer')) {
       roles.push('viewer')
     }
@@ -135,10 +153,14 @@ export const createPermissionRequest = async (request: {
     const result = await getMetadata([PERMISSION_REQUESTS_KEY])
     const existingRequests = JSON.parse(result.data?.[0]?.value || "{}")
 
+    // 获取资源标题
+    const resourceTitle = await getResourceTitle(request.resourceType, request.resourceId)
+
     const newRequest = {
       ...request,
       id: `pr_${Date.now()}`,
       status: "pending",
+      resourceTitle, // 添加资源标题
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }

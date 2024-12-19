@@ -5,6 +5,23 @@ import { addPermission } from "@/permissions/utils/permissionUtils"
 
 const PERMISSION_REQUESTS_KEY = 'permission_requests'
 
+// 资源类型映射
+const resourceTypeMap = {
+  app: "应用",
+  form: "表单",
+  report: "报表",
+  page: "页面",
+  resource: "资源",
+  template: "表单模板"
+}
+
+// 角色映射
+const roleMap = {
+  viewer: "查看",
+  editor: "编辑",
+  admin: "管理"
+}
+
 export interface Task {
   id: string
   title: string
@@ -30,6 +47,14 @@ interface PendingTasksStore {
   setActiveStatus: (status: string) => void
 }
 
+// 格式化权限角色显示
+const formatRoles = (roles: string | string[]): string => {
+  if (Array.isArray(roles)) {
+    return roles.map(role => roleMap[role] || role).join("和")
+  }
+  return roleMap[roles] || roles
+}
+
 export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
   tasks: [],
   activeTab: 'permission_requests',
@@ -46,7 +71,7 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
       const tasks = Object.values(permissionRequests)
         .map((request: any) => ({
           id: request.id,
-          title: `访问权限申请 - ${request.resourceType}`,
+          title: `${resourceTypeMap[request.resourceType] || request.resourceType}「${request.resourceTitle}」的${formatRoles(request.role)}权限申请`,
           description: request.reason,
           type: 'permission_request',
           status: request.status,
@@ -81,13 +106,12 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
             request.resourceType,
             request.resourceId,
             request.requesterId,
-            'viewer'
+            request.role
           )
         }
         
         await setMetadata(PERMISSION_REQUESTS_KEY, JSON.stringify(requests))
         
-        // 更新本地状态，但不移除任务
         set((state) => ({
           tasks: state.tasks.map(task => 
             task.id === taskId 
