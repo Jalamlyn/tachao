@@ -1,5 +1,5 @@
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
-import { Permission, PermissionMetadata, ResourceType } from "../types"
+import { Permission, PermissionMetadata, ResourceType, TemplatePermissionRole } from "../types"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
 
@@ -47,11 +47,40 @@ export const hasPermission = async (resourceType: ResourceType, resourceId: stri
   return resourcePermission?.accounts.some((acc) => acc.accountId === accountId) || false
 }
 
+export const hasTemplatePermission = async (
+  templateId: string,
+  requiredRole: TemplatePermissionRole,
+  user: any
+): Promise<boolean> => {
+  if (isAdmin(user)) {
+    return true
+  }
+
+  const permissions = await getResourcePermissions("template")
+  const templatePermission = permissions[templateId]
+  
+  if (!templatePermission) {
+    return false
+  }
+
+  const userPermission = templatePermission.accounts.find(acc => acc.accountId === user.id)
+  if (!userPermission) {
+    return false
+  }
+
+  // 如果检查编辑权限，需要同时具有查看权限
+  if (requiredRole === 'editor') {
+    return userPermission.role.includes('editor') && userPermission.role.includes('viewer')
+  }
+
+  return userPermission.role.includes(requiredRole)
+}
+
 export const addPermission = async (
   resourceType: ResourceType,
   resourceId: string,
   accountId: string,
-  role: string = "viewer"
+  role: string | string[] = "viewer"
 ) => {
   const permissions = await getResourcePermissions(resourceType)
 
@@ -69,7 +98,7 @@ export const addPermission = async (
   if (!existingPermission) {
     permissions[resourceId].accounts.push({
       accountId,
-      role,
+      role: Array.isArray(role) ? role : [role],
       grantedAt: new Date().toISOString(),
       grantedBy: "system",
     })

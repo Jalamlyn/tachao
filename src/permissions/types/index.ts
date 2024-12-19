@@ -1,8 +1,10 @@
-export type ResourceType = "app" | "form" | "report" | "page" | "resource"
+export type ResourceType = "app" | "form" | "report" | "page" | "resource" | "template"
+
+export type TemplatePermissionRole = "creator" | "editor" | "viewer"
 
 export interface PermissionAccount {
   accountId: string
-  role: string
+  role: string[]
   grantedAt: string
   grantedBy: string
 }
