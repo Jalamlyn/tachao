@@ -32,6 +32,7 @@ import {
   queryRamAccountDetail,
 } from "@/service/apis/api"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
+import { queryMyProject, addProjectMember } from "@/service/apis/project"
 
 const AccountManagement: React.FC = () => {
   const [accounts, setAccounts] = useState([])
@@ -81,11 +82,24 @@ const AccountManagement: React.FC = () => {
 
   const handleCreateAccount = async (values) => {
     try {
-      await createRamAccount(values)
+      // 创建账号
+      const accountRes = await createRamAccount(values)
+      
+      // 查询默认企业项目
+      const projectRes = await queryMyProject({ name: "默认企业项目" })
+      if (projectRes.data && projectRes.data.length > 0) {
+        // 将新账号添加到默认项目中
+        await addProjectMember({
+          projectId: projectRes.data[0].id,
+          userId: accountRes.id,
+          role: "MEMBER" // 默认角色
+        })
+      }
+
       onCreateModalClose()
       fetchAccounts()
     } catch (error) {
-      console.error("Failed to create account", error)
+      console.error("Failed to create account or add to project", error)
     }
   }
 
