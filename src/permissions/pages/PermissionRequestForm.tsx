@@ -1,17 +1,28 @@
 import { useState, useEffect } from "react"
-import { Button, Textarea } from "@nextui-org/react"
+import { Button, Textarea, Radio, RadioGroup } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { ResourceType } from "../types"
+import { ResourceType, TemplatePermissionRole } from "../types"
 import { createPermissionRequest, getPermissionRequests } from "../utils/permissionUtils"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import message from "@/components/Message"
 import { motion } from "framer-motion"
 
-const PermissionRequestForm = ({ resourceType, resourceId }: { resourceType: string; resourceId: string }) => {
+const PermissionRequestForm = ({
+  resourceType,
+  resourceId,
+  metadata,
+}: {
+  resourceType: string
+  resourceId: string
+  metadata?: {
+    role?: TemplatePermissionRole
+  }
+}) => {
   const { user } = useCurrentUser()
   const [reason, setReason] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [requestStatus, setRequestStatus] = useState<"none" | "pending" | "approved" | "rejected">("none")
+  const [selectedRole, setSelectedRole] = useState<TemplatePermissionRole>(metadata?.role || "viewer")
 
   useEffect(() => {
     checkExistingRequest()
@@ -48,12 +59,23 @@ const PermissionRequestForm = ({ resourceType, resourceId }: { resourceType: str
 
     setIsSubmitting(true)
     try {
+      // 处理权限包含关系
+      let finalRole = selectedRole
+      if (resourceType === 'template') {
+        if (selectedRole === 'editor') {
+          finalRole = ['editor', 'viewer']
+        } else {
+          finalRole = [selectedRole]
+        }
+      }
+
       await createPermissionRequest({
         resourceType: resourceType as ResourceType,
         resourceId,
         requesterId: user.id,
         requesterName: user.name || user.id,
         reason: reason.trim(),
+        role: finalRole,
       })
 
       setRequestStatus("pending")
@@ -86,12 +108,6 @@ const PermissionRequestForm = ({ resourceType, resourceId }: { resourceType: str
         color: "bg-success-50",
         textColor: "text-success",
       },
-      completed: {
-        icon: "solar:check-circle-bold-duotone",
-        text: "您的权限申请已通过，请刷新页面",
-        color: "bg-success-50",
-        textColor: "text-success",
-      },
     }
 
     if (requestStatus === "none") return null
@@ -117,6 +133,18 @@ const PermissionRequestForm = ({ resourceType, resourceId }: { resourceType: str
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className='mt-4 space-y-4'>
+      {resourceType === "template" && (
+        <RadioGroup
+          label='申请权限类型'
+          value={selectedRole}
+          onValueChange={(value) => setSelectedRole(value as TemplatePermissionRole)}
+          description="选择编辑权限将自动包含查看权限"
+        >
+          <Radio value='viewer'>查看权限</Radio>
+          <Radio value='editor'>编辑权限（包含查看权限）</Radio>
+        </RadioGroup>
+      )}
+
       <Textarea
         label='申请原因'
         placeholder='请详细说明您需要访问该资源的原因...'
