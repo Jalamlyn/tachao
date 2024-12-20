@@ -46,9 +46,9 @@ export const localDB = {
     if (loginData) {
       return currentAppId || localStorage.getItem(`${loginData.organizationId}_appId`)
     } else {
-      if (!window.location.pathname.includes("/login")) {
-        window.location.href = "/login"
-      }
+      // if (!window.location.pathname.includes("/login")) {
+      //   window.location.href = "/login"
+      // }
     }
   },
 

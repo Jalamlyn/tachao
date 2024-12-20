@@ -68,12 +68,14 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
       // 提交到等待列表
       await submitWaitList({
         phone: phone.trim(),
-        email: "",
+        email: "info@mobenai.com.cn",
         developer: false,
-        industry: loginData.current.enterpriseName,
-        purpose: `account_request:${loginData.current.organizationId}`,
-        status: "pending",
-        type: "account_request"
+        industry: "模本科技",
+        purpose: `{
+        "status":"pending",
+        "type":"account_request",
+        "organizationId":"${loginData.current.organizationId}"
+        }`,
       })
 
       setShowQRCode(true)

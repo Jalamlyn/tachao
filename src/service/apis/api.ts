@@ -43,8 +43,15 @@ apiService.interceptors.response.use(
     console.log(error)
     if (error.response) {
       if (error.response.status === 401) {
-        localStorage.removeItem(modelBaseUserToken)
-        window.location.href = `/login`
+        // 保存当前的完整 URL
+        const currentUrl = window.location.href
+        // 排除登录页面本身，避免循环
+        if (!currentUrl.includes("/external-login") && !currentUrl.includes("/login")) {
+          localStorage.removeItem(modelBaseUserToken)
+          // 将当前 URL 编码后作为 callback 参数
+          const encodedCallback = encodeURIComponent(currentUrl)
+          window.location.href = `/external-login?callback=${encodedCallback}`
+        }
       } else if (error.response.data.code === 400) {
         if (error.response.data.data) {
           message.error(error.response.data.data.message)

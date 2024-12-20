@@ -65,7 +65,7 @@ export default ({ loginData }) => {
         value={value}
         onSelectionChange={onSelectionChange}
         onInputChange={onInputChange}
-        placeholder='输入您所在的企业名称'
+        placeholder='输入企业名称'
       >
         {options.map((option) => (
           <AutocompleteItem key={option.value} value={option.value}>

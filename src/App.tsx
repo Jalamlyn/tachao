@@ -44,7 +44,7 @@ function App() {
   }, [])
 
   const shouldRedirectToLogin = () => {
-    const publicPaths = ["/", "/login", "/report", "/external-login"]
+    const publicPaths = ["/", "/login", "/external-login"]
     if (!publicPaths.includes(location.pathname)) {
       const token = localStorage.getItem("model-base-user-token")
       return !token
@@ -58,7 +58,7 @@ function App() {
         <div className='min-h-screen'>
           <Routes>
             <Route path='/' element={<LandingPage />} />
-            <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <AIHomePage />}>
+            <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to='/external-login' /> : <AIHomePage />}>
               <Route index element={<Navigate to='management' replace />} />
             </Route>
             <Route path='/login' element={<WeChatLoginPage />} />
@@ -72,17 +72,17 @@ function App() {
               }
             />
             <Route path='/form/:formId' element={<Form />} />
-            <Route 
-              path='/form-create/:templateId' 
+            <Route
+              path='/form-create/:templateId'
               element={
                 <PermissionCheck
-                  resourceType="template"
-                  resourceId={location.pathname.split('/').pop() || ''}
-                  role="creator"
+                  resourceType='template'
+                  resourceId={location.pathname.split("/").pop() || ""}
+                  role='creator'
                 >
                   <FormCreate />
                 </PermissionCheck>
-              } 
+              }
             />
             <Route path='/report/:reportId' element={<Report />} />
             <Route path='/apps/:appId' element={<AppEntry />} />
