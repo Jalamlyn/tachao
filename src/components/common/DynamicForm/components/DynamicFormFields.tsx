@@ -31,7 +31,7 @@ const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, fo
   }
 
   // 处理分组配置
-  const { groups, defaultGroup, layout = 'tabs' } = fields as FieldsWithGroups
+  const { groups, defaultGroup, layout = 'vertical' } = fields as FieldsWithGroups
   const [selectedGroup, setSelectedGroup] = React.useState(defaultGroup || groups[0]?.key)
   const [hasScroll, setHasScroll] = React.useState(false)
 
@@ -53,7 +53,6 @@ const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, fo
   if (!groups?.length) {
     return null
   }
-
   // 垂直布局渲染
   if (layout === 'vertical') {
     return (

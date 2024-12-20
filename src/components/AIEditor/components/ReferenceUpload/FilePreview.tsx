@@ -35,48 +35,40 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
   }
 
   return (
-    <div className={cn(
-      "relative group w-48 h-24 rounded-lg transition-all duration-200",
-      "border hover:border-primary/50 hover:shadow-md",
-      getTypeColor(type)
-    )}>
+    <div
+      className={cn(
+        "relative group w-32 h-20 rounded-lg transition-all duration-200",
+        "border hover:border-primary/50 hover:shadow-md",
+        getTypeColor(type)
+      )}
+    >
       <button
         onClick={onDelete}
         className={cn(
-          "absolute -top-2 -right-2 z-10 p-1 rounded-full",
+          "absolute top-1 right-1 z-10 p-1 rounded-full",
           "bg-white/80 backdrop-blur-sm shadow-sm border",
           "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
           "hover:bg-red-50 hover:border-red-200"
         )}
       >
-        <Icon icon="mdi:close" className="w-3 h-3 text-gray-500 hover:text-red-500" />
+        <Icon icon='mdi:close' className='w-3 h-3 text-gray-500 hover:text-red-500' />
       </button>
 
-      <div className="h-full p-3 cursor-pointer" onClick={onView}>
-        <div className="flex items-center gap-2 mb-2">
-          <Icon icon={getTypeIcon(type)} className="w-4 h-4" />
-          <span className="text-xs font-medium truncate flex-1">{fileName}</span>
+      <div className='h-full p-3 cursor-pointer' onClick={onView}>
+        <div className='flex items-center gap-2 mb-2'>
+          <Icon icon={getTypeIcon(type)} className='w-4 h-4' />
+          <span className='text-xs font-medium truncate flex-1'>{fileName}</span>
         </div>
 
         {type === "image" && previewData.image ? (
-          <div className="w-full h-8 overflow-hidden rounded">
-            <img
-              src={previewData.image}
-              alt={fileName}
-              className="w-full h-full object-cover"
-            />
+          <div className='w-full h-8 overflow-hidden rounded'>
+            <img src={previewData.image} alt={fileName} className='w-full h-full object-cover' />
           </div>
         ) : type === "excel" && previewData.excel ? (
-          <div className="text-xs">
-            <p className="truncate text-gray-600">
-              {previewData.excel.headers.length} 个字段
-            </p>
+          <div className='text-xs'>
+            <p className='truncate text-gray-600'>{previewData.excel.headers.length} 个字段</p>
           </div>
         ) : null}
-
-        <div className="absolute bottom-2 left-3 right-3">
-          <p className="text-[10px] text-gray-500">{fileSize}</p>
-        </div>
       </div>
     </div>
   )

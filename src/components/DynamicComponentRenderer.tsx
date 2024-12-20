@@ -41,6 +41,7 @@ interface DynamicComponentRendererProps {
   formId?: string
   isCreateMode?: boolean
   onSubmit?: (values: any) => Promise<void>
+  previewMode?: boolean
 }
 
 export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> = ({ code, ...props }) => {

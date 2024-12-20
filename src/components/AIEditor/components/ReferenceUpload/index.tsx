@@ -8,6 +8,7 @@ import { readExcel } from "@/utils/ExcelReader"
 import { localDB } from "@/utils/localDB"
 import { AIEditorProps } from "../.."
 import { AI_LEVELS } from "../../type"
+import { cn } from "@/theme/cn"
 
 interface ReferenceUploadProps {
   agent: AIEditorProps["agent"]
@@ -114,39 +115,33 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
     }
   }
 
-  const formatFileSize = (size: number) => {
-    if (size < 1024) return `${size}B`
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)}KB`
-    return `${(size / (1024 * 1024)).toFixed(1)}MB`
-  }
-
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-4">
+    <div className='space-y-3'>
+      <div className='flex items-center gap-4 h-20'>
         {/* 上传按钮 */}
         <Dropdown>
           <DropdownTrigger>
             <Button
-              size="sm"
-              variant="bordered"
-              startContent={<Icon icon="hugeicons:file-attachment" className="w-4 h-4" />}
+              size='sm'
+              variant='bordered'
+              startContent={<Icon icon='hugeicons:file-attachment' className='w-4 h-4' />}
             >
-              上传参考文件
+              上传
             </Button>
           </DropdownTrigger>
           <DropdownMenu>
             <DropdownItem
-              key="image"
-              startContent={<Icon icon="mdi:image" className="w-4 h-4" />}
-              description="上传界面截图、设计稿等"
+              key='image'
+              startContent={<Icon icon='mdi:image' className='w-4 h-4' />}
+              description='上传单据图片,小票图片,需求截图...'
               onClick={() => handleUploadClick("image")}
             >
               上传图片
             </DropdownItem>
             <DropdownItem
-              key="excel"
-              startContent={<Icon icon="mdi:file-excel" className="w-4 h-4" />}
-              description="上传数据模板、配置表等"
+              key='excel'
+              startContent={<Icon icon='mdi:file-excel' className='w-4 h-4' />}
+              description='上传数据表,配置表...'
               onClick={() => handleUploadClick("excel")}
             >
               上传Excel
@@ -162,13 +157,12 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
             "scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent",
             "hover:scrollbar-thumb-gray-300 transition-all duration-200"
           )}
-          style={{ maxWidth: "calc(100% - 150px)" }}
         >
           {imagePreview && (
             <FilePreview
-              type="image"
-              fileName="图片预览"
-              fileSize="--"
+              type='image'
+              fileName='图片预览'
+              fileSize='--'
               onDelete={() => handleClearFile("image")}
               onView={() => {}}
               previewData={{ image: imagePreview }}
@@ -177,9 +171,9 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
 
           {excelPreview && (
             <FilePreview
-              type="excel"
+              type='excel'
               fileName={excelPreview.fileName}
-              fileSize="--"
+              fileSize='--'
               onDelete={() => handleClearFile("excel")}
               onView={() => {}}
               previewData={{
@@ -193,9 +187,9 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
         </div>
 
         <input
-          type="file"
+          type='file'
           ref={fileInputRef}
-          className="hidden"
+          className='hidden'
           onChange={(e) => {
             const file = e.target.files?.[0]
             if (file) {
@@ -208,11 +202,7 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
 
       {/* 上传进度 */}
       {isUploading && (
-        <UploadProgress
-          progress={uploadProgress}
-          status={uploadStatus}
-          onCancel={() => setIsUploading(false)}
-        />
+        <UploadProgress progress={uploadProgress} status={uploadStatus} onCancel={() => setIsUploading(false)} />
       )}
     </div>
   )

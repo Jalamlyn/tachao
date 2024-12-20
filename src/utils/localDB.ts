@@ -47,7 +47,6 @@ export const localDB = {
       return currentAppId || localStorage.getItem(`${loginData.organizationId}_appId`)
     } else {
       if (!window.location.pathname.includes("/login")) {
-        debugger
         window.location.href = "/login"
       }
     }

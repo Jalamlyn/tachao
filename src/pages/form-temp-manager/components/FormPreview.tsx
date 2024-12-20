@@ -85,7 +85,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({ code, previewMode = true }) =
       {componentCode ? (
         <div className='h-full'>
           <div className='max-w-[1200px] mx-auto pt-2 bg-white h-screen'>
-            <DynamicComponentRenderer code={componentCode} templateId={templateId} previewMode={previewMode} />
+            <DynamicComponentRenderer code={componentCode} templateId={templateId} previewMode />
           </div>
         </div>
       ) : (

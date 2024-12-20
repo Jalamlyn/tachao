@@ -178,7 +178,7 @@ ${resources}`
   // Excel数据分析指南
   const excelAnalysisGuide = excelData
     ? `
-# Excel数据分析指南
+这是用户上传的 Excel 文件信息:
 1. Excel文件信息：
    - 文件名：${excelData.fileName}
    - 字段数量：${excelData.headers.length}
@@ -302,25 +302,18 @@ ${doc}
 
 我将按照以下格式输出思考过程：
 """
-...对用户输入的思考过程
+[对用户输入的思考过程]
 """
 
 我将按照以下格式输出思考后的反思：
 """
-\`\`\`mo
-<shata-ai-reflection>
-对思考过程进行反思
-</shata-ai-reflection>
-\`\`\`mo
+[对思考过程进行反思]
 """
 
 我将按照以下格式的例子输出的方案：
 """
 ${assetTemplatePrompt}
 """
-请确认上述方案是否符合您的需求, 如果符合,请回复 "确认"
-
-
 只有在用户确认需求分析准确后，我才会进入代码生成阶段。如果分析过程中发现问题或需要澄清的地方，我会优先提出问题，等待用户反馈。`
 }
 

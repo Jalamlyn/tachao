@@ -91,27 +91,16 @@ export class AIFormAgent {
     try {
       const cachedImage = localDB.getItem("cachedImage")
       const cachedExcel = localDB.getItem("cachedExcel")
-      let parsedExcel = null
-      if (cachedExcel) {
-        try {
-          parsedExcel = JSON.parse(cachedExcel)
-        } catch (e) {
-          console.error("Error parsing cached excel:", e)
-        }
-      }
-
       const systemMessage = {
         role: "system" as const,
-        content: generateFormAgentPrompt(this._rawConfig, !!cachedImage, result.data?.[0]?.value, parsedExcel),
+        content: generateFormAgentPrompt(this._rawConfig, !!cachedImage, result.data?.[0]?.value, cachedExcel),
       }
 
       const enhancedCommand = `这是我的输入
       """
       ${command}
       """
-      [
-      回答我的问题前先查看是否包含现有配置代码, 在现有配置代码基础上回答我的问题, 并询问我是否需要生成代码, 在没有得到我确认前, 不生成任何话代码,
-      回复策略:
+      [回复策略:
         * 对于表单直接相关问题：提供具体解决方案
         * 对于业务相关问题：进行分析并给出建议
         * 对于间接相关问题：提供参考信息和最佳实践
@@ -130,7 +119,7 @@ export class AIFormAgent {
         role: "user" as const,
         content: enhancedCommand,
         images: cachedImage ? [cachedImage] : undefined,
-        excel: parsedExcel,
+        excel: cachedExcel,
       }
 
       const allMessages = [systemMessage, ...messages, currentUserMessage]
