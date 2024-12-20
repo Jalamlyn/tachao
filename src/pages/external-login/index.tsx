@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useRef } from "react"
 import { Card, CardBody, Input, Button, Link } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next"
 import { motion } from "framer-motion"
 import { getPhoneOrgMapping } from "@/service/apis/metadata"
 import AccountRequest from "./AccountRequest"
+import EnterpriseList from "@/components/EnterpriseList"
 
 export default function ExternalLoginPage() {
   const { t } = useTranslation()
@@ -16,27 +17,31 @@ export default function ExternalLoginPage() {
   const [showRequest, setShowRequest] = useState(false)
   const navigate = useNavigate()
 
+  const loginData = useRef({
+    organizationId: "",
+    enterpriseName: "",
+  })
+
   const handleLogin = async () => {
     const trimmedPhone = phone.trim()
     if (!trimmedPhone) {
       return message.error(t("phone_required"))
     }
 
+    if (!loginData.current.organizationId) {
+      return message.error("请选择企业")
+    }
+
     setLoginLoading(true)
     try {
-      // 获取组织ID
-      const orgId = await getPhoneOrgMapping(trimmedPhone)
-      if (!orgId) {
-        message.error("该手机号未注册，请先申请账号")
-        setShowRequest(true)
-        return
-      }
+      // 优先使用选择的组织ID
+      const organizationId = loginData.current.organizationId
 
       // 使用手机号登录
       const res = await login({
         account: trimmedPhone,
         password: trimmedPhone,
-        organizationId: orgId
+        organizationId
       })
 
       if (res === "has token") {
@@ -90,6 +95,10 @@ export default function ExternalLoginPage() {
               </motion.div>
 
               <form className='flex flex-col gap-4' onSubmit={(e) => e.preventDefault()}>
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+                  <EnterpriseList loginData={loginData} />
+                </motion.div>
+
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
                   <Input
                     isRequired
