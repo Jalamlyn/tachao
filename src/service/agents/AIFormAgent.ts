@@ -4,15 +4,13 @@ import { parseFormConfig } from "@/utils/codeParser"
 import generateFormAgentPrompt from "./prompts/form/form-agent-prompt"
 import { Message } from "./AIFormAgentTypes"
 import { getMetadata } from "../apis/metadata"
-import { localDB } from "@/utils/localDB"
+import { imageStore } from "@/components/AIEditor/components/ImageStore"
+import { excelStore } from "@/components/AIEditor/components/excelStore"
 
 export class AIFormAgent {
   private static instance: AIFormAgent
   private _rawConfig: string | null = null
-  private _cachedImages: string[] = []
-  private _cachedExcel: { headers: string[]; firstRow: any; fileName: string } | null = null
   private _versionIndex: number = 0
-  private readonly MAX_IMAGES = 5
 
   private constructor() {}
 
@@ -40,57 +38,6 @@ export class AIFormAgent {
 
   public setVersionIndex(index: number): void {
     this._versionIndex = index
-  }
-
-  public cacheImage(imageData: string): void {
-    if (!imageData) {
-      console.warn("[AIFormAgent] Attempted to cache empty image data")
-      return
-    }
-
-    if (this._cachedImages.length >= this.MAX_IMAGES) {
-      console.warn("[AIFormAgent] Maximum number of images reached")
-      return
-    }
-
-    console.log("[AIFormAgent] Caching image data")
-    this._cachedImages.push(imageData)
-  }
-
-  public cacheImages(imageDataArray: string[]): void {
-    console.log("[AIFormAgent] Caching multiple images")
-    const remainingSlots = this.MAX_IMAGES - this._cachedImages.length
-    const imagesToAdd = imageDataArray.slice(0, remainingSlots)
-    this._cachedImages = [...this._cachedImages, ...imagesToAdd]
-  }
-
-  public clearCachedImage(): void {
-    console.log("[AIFormAgent] Clearing cached images")
-    this._cachedImages = []
-  }
-
-  public getCachedImagesCount(): number {
-    return this._cachedImages.length
-  }
-
-  public hasCachedImages(): boolean {
-    return this._cachedImages.length > 0
-  }
-
-  public removeCachedImageAt(index: number): void {
-    if (index >= 0 && index < this._cachedImages.length) {
-      this._cachedImages.splice(index, 1)
-    }
-  }
-
-  public cacheExcel(excelData: { headers: string[]; firstRow: any; fileName: string }): void {
-    console.log("[AIFormAgent] Caching excel data")
-    this._cachedExcel = excelData
-  }
-
-  public clearCachedExcel(): void {
-    console.log("[AIFormAgent] Clearing cached excel")
-    this._cachedExcel = null
   }
 
   public async parseConfig(rawConfig: string) {
@@ -121,22 +68,25 @@ export class AIFormAgent {
     }
     const result = await getMetadata([`resource_index`])
     try {
-      const cachedImages = JSON.parse(localDB.getItem("cachedImages") || "[]")
-      const cachedExcel = localDB.getItem("cachedExcel")
-      
+      const cachedImages = imageStore.images
+      const cachedExcel = excelStore.cachedExcel
+
       const systemMessage = {
         role: "system" as const,
         content: generateFormAgentPrompt(
-          this._rawConfig, 
-          cachedImages.length > 0, 
-          result.data?.[0]?.value, 
+          this._rawConfig,
+          cachedImages.length > 0,
+          result.data?.[0]?.value,
           cachedExcel
         ),
       }
 
-      const enhancedCommand = `这是我的输入
+      const enhancedCommand = `在这份代码上继续修改,生成修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码
+      ---
+      ${this._rawConfig}
+      ---
       """
-      ${command}
+      这是我的需求或者问题: ${command}, 如果是需求你就生成代码, 如果是问题, 你就结合代码回答我的问题
       """
       [回复策略:
         * 对于表单直接相关问题：提供具体解决方案
@@ -174,9 +124,8 @@ export class AIFormAgent {
         0,
         "YES"
       )
-
-      localDB.removeItem("cachedImages")
-      localDB.removeItem("cachedExcel")
+      imageStore.images = []
+      excelStore.cachedExcel = null
 
       if (response.includes("<shata-ai-error>")) {
         return {

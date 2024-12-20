@@ -151,7 +151,6 @@ const AIFormEditor: React.FC = () => {
     }
 
     loadTemplateData()
-    AIFormAgent.clearCachedImage()
 
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },

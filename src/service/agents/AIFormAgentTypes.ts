@@ -67,10 +67,6 @@ export interface AIResponse {
 // AI表单代理接口
 export interface IAIFormAgent {
   getRawConfig(): string | null
-  cacheImage(imageData: string): void
-  clearCachedImage(): void
-  cacheExcel(excelData: { headers: string[]; firstRow: any; fileName: string }): void
-  clearCachedExcel(): void
   parseConfig(rawConfig: string): Promise<any>
   processCommand(
     messages: Message[],

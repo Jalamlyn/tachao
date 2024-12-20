@@ -6,6 +6,7 @@ import message from "@/components/Message"
 import { AIEditorProps } from "./AIEditor"
 import { AI_LEVELS } from "./AIEditor/type"
 import { localDB } from "@/utils/localDB"
+import { imageStore } from "./ImageStore"
 
 interface ImageUploaderProps {
   agent: AIEditorProps["agent"]
@@ -40,7 +41,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "
       reader.onloadend = () => {
         const base64 = reader.result as string
         setPreview(base64)
-        localDB.setItem("cachedImage", base64)
+        imageStore.images.push(base64)
         setIsLoading(false)
       }
       reader.onerror = () => {
@@ -60,7 +61,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "
     if (inputRef.current) {
       inputRef.current.value = ""
     }
-    agent.clearCachedImage?.()
   }
 
   const handleUploadClick = () => {

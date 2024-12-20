@@ -41,8 +41,6 @@ export interface AIEditorProps {
   onClearMessages?: () => void
   agent: {
     processCommand: (command: string) => Promise<any>
-    cacheImage?: (imageData: string) => void
-    clearCachedImage?: () => void
   }
   versionControl: {
     versions: any[]

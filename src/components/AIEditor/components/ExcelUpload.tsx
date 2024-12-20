@@ -7,6 +7,7 @@ import { AIEditorProps } from ".."
 import { AI_LEVELS } from "../type"
 import { readExcel } from "@/utils/ExcelReader"
 import { localDB } from "@/utils/localDB"
+import { excelStore } from "./excelStore"
 
 interface ExcelUploaderProps {
   agent: AIEditorProps["agent"]
@@ -47,14 +48,11 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({ agent, aiLevel = "
       setPreview({ headers, firstRow: firstRowData })
 
       // 将Excel数据存储到localDB
-      localDB.setItem(
-        "cachedExcel",
-        JSON.stringify({
-          headers,
-          firstRow: firstRowData,
-          fileName: file.name,
-        })
-      )
+      excelStore.cachedExcel = {
+        headers,
+        firstRow: firstRowData,
+        fileName: file.name,
+      }
 
       message.success("Excel解析成功")
     } catch (error) {
@@ -70,7 +68,7 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({ agent, aiLevel = "
     if (inputRef.current) {
       inputRef.current.value = ""
     }
-    localDB.removeItem("cachedExcel")
+    excelStore.cachedExcel = null
   }
 
   const handleUploadClick = () => {

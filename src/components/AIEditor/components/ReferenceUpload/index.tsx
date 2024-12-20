@@ -9,6 +9,8 @@ import { localDB } from "@/utils/localDB"
 import { AIEditorProps } from "../.."
 import { AI_LEVELS } from "../../type"
 import { cn } from "@/theme/cn"
+import { imageStore } from "../ImageStore"
+import { excelStore } from "../excelStore"
 
 interface ReferenceUploadProps {
   agent: AIEditorProps["agent"]
@@ -32,9 +34,8 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
 
   // 初始化时加载缓存的图片
   useEffect(() => {
-    const cachedImages = JSON.parse(localDB.getItem("cachedImages") || "[]")
-    if (cachedImages.length > 0) {
-      setImagePreviews(cachedImages)
+    if (imageStore.images.length > 0) {
+      setImagePreviews(imageStore.images)
     }
   }, [])
 
@@ -66,12 +67,10 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
         const reader = new FileReader()
         reader.onload = (e) => {
           const base64 = e.target?.result as string
-          setImagePreviews(prev => [...prev, base64])
-          
+          setImagePreviews((prev) => [...prev, base64])
+
           // 修改本地存储，存储图片数组
-          const cachedImages = JSON.parse(localDB.getItem("cachedImages") || "[]")
-          localDB.setItem("cachedImages", JSON.stringify([...cachedImages, base64]))
-          
+          imageStore.images.push(base64)
           setUploadProgress(100)
           setUploadStatus("上传完成")
           message.success("图片上传成功")
@@ -99,8 +98,7 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
         }
 
         setExcelPreview(excelData)
-        localDB.setItem("cachedExcel", JSON.stringify(excelData))
-
+        excelStore.cachedExcel = excelData
         setUploadProgress(100)
         setUploadStatus("上传完成")
         message.success("Excel解析成功")
@@ -126,10 +124,10 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
   const handleClearFile = (type: "image" | "excel") => {
     if (type === "image") {
       setImagePreviews([])
-      localDB.removeItem("cachedImages")
+      imageStore.images = []
     } else {
       setExcelPreview(null)
-      localDB.removeItem("cachedExcel")
+      excelStore.cachedExcel = null
     }
   }
 
@@ -183,7 +181,7 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
               onDelete={() => {
                 const newImages = imagePreviews.filter((_, i) => i !== index)
                 setImagePreviews(newImages)
-                localDB.setItem("cachedImages", JSON.stringify(newImages))
+                imageStore.images = newImages
               }}
               onView={() => {}}
               previewData={{ image }}
