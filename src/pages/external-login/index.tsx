@@ -32,10 +32,8 @@ export default function ExternalLoginPage() {
 
     setLoginLoading(true)
     try {
-      // 优先使用选择的组织ID
       const organizationId = loginData.current.organizationId
 
-      // 使用手机号登录
       const res = await login({
         account: `wb_${trimmedPhone}`,
         password: trimmedPhone,
@@ -125,6 +123,9 @@ export default function ExternalLoginPage() {
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
+                  <p className="text-sm text-gray-600 text-center mb-2">
+                    没有账号？向企业管理员申请开通后即可登录访问
+                  </p>
                   <Button variant='light' className='w-full' onClick={() => setShowRequest(true)}>
                     申请账号
                   </Button>

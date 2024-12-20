@@ -26,7 +26,6 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [smsCooldown, setSmsCooldown] = useState(0)
   const [showQRCode, setShowQRCode] = useState(false)
-  // 新增状态控制验证码输入框
   const [canInputSmsCode, setCanInputSmsCode] = useState(false)
 
   const loginData = React.useRef({
@@ -34,12 +33,10 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
     enterpriseName: "",
   })
 
-  // 验证手机号格式
   const isValidPhone = (phone: string) => {
     return /^1[3-9]\d{9}$/.test(phone)
   }
 
-  // 验证验证码格式
   const isValidSmsCode = (code: string) => {
     return /^\d{6}$/.test(code)
   }
@@ -59,7 +56,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
 
       message.success("验证码已发送")
       setSmsCooldown(60)
-      setCanInputSmsCode(true) // 发送成功后启用验证码输入框
+      setCanInputSmsCode(true)
       const interval = setInterval(() => {
         setSmsCooldown((prev) => {
           if (prev <= 1) {
@@ -72,7 +69,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
     } catch (error) {
       console.error("Failed to send SMS:", error)
       message.error("发送验证码失败，请重试")
-      setCanInputSmsCode(false) // 发送失败时禁用验证码输入框
+      setCanInputSmsCode(false)
     } finally {
       setIsLoading(false)
     }
@@ -123,13 +120,11 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
     }
   }
 
-  // 处理手机号输入
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 11)
     setPhone(value)
   }
 
-  // 处理验证码输入
   const handleSmsCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 6)
     setSmsCode(value)
@@ -178,6 +173,9 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
                 className='text-center'
               >
                 <h2 className='text-2xl font-bold mb-2 drop-shadow-lg'>申请账号</h2>
+                <p className='text-sm text-gray-600 mb-4'>
+                  您正在向所选企业的管理员申请账号，申请通过后您将收到账号开通通知，届时可使用手机号登录访问系统
+                </p>
               </motion.div>
 
               <form className='flex flex-col gap-4' onSubmit={(e) => e.preventDefault()}>
