@@ -26,57 +26,56 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
   onView,
   previewData,
 }) => {
-  return (
-    <div className="relative p-4 border rounded-lg bg-default-50 hover:bg-default-100 transition-all duration-200">
-      <div className="flex items-start gap-3">
-        {/* 文件图标或图片预览 */}
-        {type === "image" && previewData.image ? (
-          <img
-            src={previewData.image}
-            alt={fileName}
-            className="w-16 h-16 object-cover rounded-lg border"
-          />
-        ) : (
-          <div className="w-16 h-16 flex items-center justify-center bg-default-100 rounded-lg">
-            <Icon
-              icon={type === "image" ? "mdi:image" : "mdi:file-excel"}
-              className="w-8 h-8 text-default-500"
-            />
-          </div>
-        )}
+  const getTypeColor = (type: "image" | "excel") => {
+    return type === "image" ? "bg-blue-50 text-blue-500" : "bg-green-50 text-green-500"
+  }
 
-        {/* 文件信息 */}
-        <div className="flex-1">
-          <h4 className="font-medium text-sm">{fileName}</h4>
-          <p className="text-xs text-default-500">{fileSize}</p>
-          
-          {/* Excel预览 */}
-          {type === "excel" && previewData.excel && (
-            <div className="mt-2 text-xs">
-              <p className="text-default-700">已解析 {previewData.excel.headers.length} 个字段</p>
-            </div>
-          )}
+  const getTypeIcon = (type: "image" | "excel") => {
+    return type === "image" ? "mdi:image" : "mdi:file-excel"
+  }
+
+  return (
+    <div className={cn(
+      "relative group w-48 h-24 rounded-lg transition-all duration-200",
+      "border hover:border-primary/50 hover:shadow-md",
+      getTypeColor(type)
+    )}>
+      <button
+        onClick={onDelete}
+        className={cn(
+          "absolute -top-2 -right-2 z-10 p-1 rounded-full",
+          "bg-white/80 backdrop-blur-sm shadow-sm border",
+          "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+          "hover:bg-red-50 hover:border-red-200"
+        )}
+      >
+        <Icon icon="mdi:close" className="w-3 h-3 text-gray-500 hover:text-red-500" />
+      </button>
+
+      <div className="h-full p-3 cursor-pointer" onClick={onView}>
+        <div className="flex items-center gap-2 mb-2">
+          <Icon icon={getTypeIcon(type)} className="w-4 h-4" />
+          <span className="text-xs font-medium truncate flex-1">{fileName}</span>
         </div>
 
-        {/* 操作按钮 */}
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="light"
-            onClick={onView}
-            isIconOnly
-          >
-            <Icon icon="mdi:eye" className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="light"
-            color="danger"
-            onClick={onDelete}
-            isIconOnly
-          >
-            <Icon icon="mdi:delete" className="w-4 h-4" />
-          </Button>
+        {type === "image" && previewData.image ? (
+          <div className="w-full h-8 overflow-hidden rounded">
+            <img
+              src={previewData.image}
+              alt={fileName}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : type === "excel" && previewData.excel ? (
+          <div className="text-xs">
+            <p className="truncate text-gray-600">
+              {previewData.excel.headers.length} 个字段
+            </p>
+          </div>
+        ) : null}
+
+        <div className="absolute bottom-2 left-3 right-3">
+          <p className="text-[10px] text-gray-500">{fileSize}</p>
         </div>
       </div>
     </div>

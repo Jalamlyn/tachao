@@ -14,10 +14,7 @@ interface ReferenceUploadProps {
   aiLevel?: keyof typeof AI_LEVELS
 }
 
-export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({
-  agent,
-  aiLevel = "ADVANCED"
-}) => {
+export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel = "ADVANCED" }) => {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadStatus, setUploadStatus] = useState("")
   const [isUploading, setIsUploading] = useState(false)
@@ -27,8 +24,9 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({
     firstRow: any
     fileName: string
   } | null>(null)
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const handleFileSelect = async (file: File, type: "image" | "excel") => {
     if (!file) return
@@ -74,16 +72,16 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({
           throw new Error("Excel文件为空")
         }
 
-        const headers = Object.keys(firstRowData || {}).filter(key => key !== "dataid")
+        const headers = Object.keys(firstRowData || {}).filter((key) => key !== "dataid")
         const excelData = {
           headers,
           firstRow: firstRowData,
-          fileName: file.name
+          fileName: file.name,
         }
 
         setExcelPreview(excelData)
         localDB.setItem("cachedExcel", JSON.stringify(excelData))
-        
+
         setUploadProgress(100)
         setUploadStatus("上传完成")
         message.success("Excel解析成功")
@@ -101,9 +99,7 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({
 
   const handleUploadClick = (type: "image" | "excel") => {
     if (fileInputRef.current) {
-      fileInputRef.current.accept = type === "image" 
-        ? "image/jpeg,image/png,image/gif"
-        : ".xlsx,.xls"
+      fileInputRef.current.accept = type === "image" ? "image/jpeg,image/png,image/gif" : ".xlsx,.xls"
       fileInputRef.current.click()
     }
   }
@@ -126,15 +122,16 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({
 
   return (
     <div className="space-y-3">
-      {/* 上传按钮 */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
+        {/* 上传按钮 */}
         <Dropdown>
           <DropdownTrigger>
             <Button
+              size="sm"
               variant="bordered"
-              startContent={<Icon icon="mdi:plus" className="w-4 h-4" />}
+              startContent={<Icon icon="hugeicons:file-attachment" className="w-4 h-4" />}
             >
-              添加参考资料
+              上传参考文件
             </Button>
           </DropdownTrigger>
           <DropdownMenu>
@@ -156,6 +153,44 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({
             </DropdownItem>
           </DropdownMenu>
         </Dropdown>
+
+        {/* 文件预览区域 - 水平滚动 */}
+        <div
+          ref={scrollContainerRef}
+          className={cn(
+            "flex gap-3 overflow-x-auto pb-2",
+            "scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent",
+            "hover:scrollbar-thumb-gray-300 transition-all duration-200"
+          )}
+          style={{ maxWidth: "calc(100% - 150px)" }}
+        >
+          {imagePreview && (
+            <FilePreview
+              type="image"
+              fileName="图片预览"
+              fileSize="--"
+              onDelete={() => handleClearFile("image")}
+              onView={() => {}}
+              previewData={{ image: imagePreview }}
+            />
+          )}
+
+          {excelPreview && (
+            <FilePreview
+              type="excel"
+              fileName={excelPreview.fileName}
+              fileSize="--"
+              onDelete={() => handleClearFile("excel")}
+              onView={() => {}}
+              previewData={{
+                excel: {
+                  headers: excelPreview.headers,
+                  firstRow: excelPreview.firstRow,
+                },
+              }}
+            />
+          )}
+        </div>
 
         <input
           type="file"
@@ -179,34 +214,6 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({
           onCancel={() => setIsUploading(false)}
         />
       )}
-
-      {/* 文件预览 */}
-      <div className="space-y-2">
-        {imagePreview && (
-          <FilePreview
-            type="image"
-            fileName="上传的图片"
-            fileSize="--"
-            onDelete={() => handleClearFile("image")}
-            onView={() => {}}
-            previewData={{ image: imagePreview }}
-          />
-        )}
-        
-        {excelPreview && (
-          <FilePreview
-            type="excel"
-            fileName={excelPreview.fileName}
-            fileSize="--"
-            onDelete={() => handleClearFile("excel")}
-            onView={() => {}}
-            previewData={{ excel: {
-              headers: excelPreview.headers,
-              firstRow: excelPreview.firstRow
-            }}}
-          />
-        )}
-      </div>
     </div>
   )
 }
