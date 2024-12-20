@@ -106,7 +106,7 @@ const EnterpriseInitializer: React.FC<EnterpriseInitializerProps> = ({ isOpen, o
       }
 
       // 保存 appId
-      localDB.setAppId(app.id)
+      localDB.setAppId(app)
 
       // 3. 检查并初始化企业网盘
       updateProgress(2, "检查企业网盘...")

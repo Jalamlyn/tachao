@@ -1,6 +1,6 @@
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { Permission, PermissionMetadata, ResourceType, TemplatePermissionRole } from "../types"
-import { PERMISSION_HIERARCHY, hasRequiredPermission } from "../config/constants"
+import { hasRequiredPermission } from "../config/constants"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
 
@@ -80,7 +80,7 @@ export const getResourceTitle = async (resourceType: ResourceType, resourceId: s
       case "template":
       case "form":
       case "report":
-        const result = await getMetadata([`${resourceType}_${resourceId}`])
+        const result = await getMetadata([`${resourceId}`])
         return result.data?.[0]?.title || resourceId
 
       case "app":

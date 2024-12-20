@@ -1,12 +1,10 @@
 import React, { useState, useRef } from "react"
 import { Card, CardBody, Input, Button, Link } from "@nextui-org/react"
-import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { login } from "@/service/apis/api"
 import { message } from "@/components/Message"
 import { useTranslation } from "react-i18next"
 import { motion } from "framer-motion"
-import { getPhoneOrgMapping } from "@/service/apis/metadata"
 import AccountRequest from "./AccountRequest"
 import EnterpriseList from "@/components/EnterpriseList"
 
@@ -39,9 +37,9 @@ export default function ExternalLoginPage() {
 
       // 使用手机号登录
       const res = await login({
-        account: trimmedPhone,
+        account: `wb_${trimmedPhone}`,
         password: trimmedPhone,
-        organizationId
+        organizationId,
       })
 
       if (res === "has token") {
@@ -127,11 +125,7 @@ export default function ExternalLoginPage() {
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
-                  <Button
-                    variant="light"
-                    className="w-full"
-                    onClick={() => setShowRequest(true)}
-                  >
+                  <Button variant='light' className='w-full' onClick={() => setShowRequest(true)}>
                     申请账号
                   </Button>
                 </motion.div>

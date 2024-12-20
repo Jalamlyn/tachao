@@ -55,7 +55,7 @@ export default function Component() {
             name: "企业管理平台",
           })
           if (appResponse.data && appResponse.data.length > 0) {
-            await localDB.setAppId(appResponse.data[0].id)
+            await localDB.setAppId(appResponse.data[0])
           } else {
             setShowInitializer(true)
           }

@@ -107,7 +107,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
         developer: false,
         industry: "模本科技",
         purpose: `{
-        "phone":${phone.trim()}}",
+        "phone":"${phone.trim()}",
         "status":"pending",
         "type":"account_request",
         "organizationId":"${loginData.current.organizationId}"
@@ -125,13 +125,13 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
 
   // 处理手机号输入
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 11)
+    const value = e.target.value.replace(/\D/g, "").slice(0, 11)
     setPhone(value)
   }
 
   // 处理验证码输入
   const handleSmsCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+    const value = e.target.value.replace(/\D/g, "").slice(0, 6)
     setSmsCode(value)
   }
 
@@ -194,7 +194,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
                     variant='bordered'
                     value={phone}
                     onChange={handlePhoneChange}
-                    description="请输入11位手机号"
+                    description='请输入11位手机号'
                   />
                 </motion.div>
 
@@ -209,7 +209,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
                       value={smsCode}
                       onChange={handleSmsCodeChange}
                       isDisabled={!canInputSmsCode}
-                      description="请输入6位数字验证码"
+                      description='请输入6位数字验证码'
                     />
                     <Button size='lg' onClick={handleSendSms} disabled={smsCooldown > 0}>
                       {smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码"}

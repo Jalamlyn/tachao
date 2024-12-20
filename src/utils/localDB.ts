@@ -33,23 +33,25 @@ const logStyles = {
 
 // 创建 EventEmitter 实例
 const eventEmitter = new EventEmitter()
+let currentOrganizationId = null
 
 export const localDB = {
-  setAppId: async (appId) => {
-    currentAppId = appId
-    const loginData = jsonParse(localStorage.getItem("loginData"))
-    localStorage.setItem(`${loginData.organizationId}_appId`, appId)
+  setAppId: async ({ id, organizationId }) => {
+    currentAppId = id
+    currentOrganizationId = organizationId
+    localStorage.setItem(`${organizationId}_appId`, id)
   },
 
   getAppId: () => {
-    const loginData = jsonParse(localStorage.getItem("loginData"))
-    if (loginData) {
-      return currentAppId || localStorage.getItem(`${loginData.organizationId}_appId`)
-    } else {
-      // if (!window.location.pathname.includes("/login")) {
-      //   window.location.href = "/login"
-      // }
-    }
+    return currentAppId || localStorage.getItem(`${currentOrganizationId}_appId`)
+    // const loginData = jsonParse(localStorage.getItem("loginData"))
+    // if (loginData) {
+    //   return currentAppId || localStorage.getItem(`${currentOrganizationId}_appId`)
+    // } else {
+    //   // if (!window.location.pathname.includes("/login")) {
+    //   //   window.location.href = "/login"
+    //   // }
+    // }
   },
 
   // 添加控制日志输出的方法

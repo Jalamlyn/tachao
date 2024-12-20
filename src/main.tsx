@@ -10,6 +10,7 @@ import "./i18n"
 import "./globalStore"
 import "./tools"
 
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   // <React.StrictMode>
   <BrowserRouter>
