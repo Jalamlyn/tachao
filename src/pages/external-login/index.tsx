@@ -129,6 +129,21 @@ export default function ExternalLoginPage() {
                     申请账号
                   </Button>
                 </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0 }} 
+                  animate={{ opacity: 1 }} 
+                  transition={{ delay: 0.9 }}
+                  className="mt-2 text-center"
+                >
+                  <Button
+                    variant="light"
+                    className="text-sm opacity-80 hover:opacity-100 transition-opacity"
+                    onClick={() => navigate('/login')}
+                  >
+                    管理员登录
+                  </Button>
+                </motion.div>
               </form>
             </CardBody>
           </Card>
