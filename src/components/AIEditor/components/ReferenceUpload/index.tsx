@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
@@ -19,7 +19,8 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadStatus, setUploadStatus] = useState("")
   const [isUploading, setIsUploading] = useState(false)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+
   const [excelPreview, setExcelPreview] = useState<{
     headers: string[]
     firstRow: any
@@ -28,6 +29,17 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // 初始化时加载缓存的图片
+  useEffect(() => {
+    const cachedImages = JSON.parse(localDB.getItem("cachedImages") || "[]")
+    if (cachedImages.length > 0) {
+      setImagePreviews(cachedImages)
+    }
+  }, [])
+
+  const MAX_IMAGES = 5 // 最大图片数量
+  const MAX_TOTAL_SIZE = 20 * 1024 * 1024 // 20MB总限制
 
   const handleFileSelect = async (file: File, type: "image" | "excel") => {
     if (!file) return
@@ -38,22 +50,28 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
 
     try {
       if (type === "image") {
+        if (imagePreviews.length >= MAX_IMAGES) {
+          throw new Error(`最多只能上传${MAX_IMAGES}张图片`)
+        }
+
         if (file.size > 5 * 1024 * 1024) {
-          throw new Error("图片大小不能超过5MB")
+          throw new Error("单张图片大小不能超过5MB")
+        }
+
+        const currentTotalSize = imagePreviews.length * 5 * 1024 * 1024
+        if (currentTotalSize + file.size > MAX_TOTAL_SIZE) {
+          throw new Error("总文件大小不能超过20MB")
         }
 
         const reader = new FileReader()
-        reader.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const progress = (e.loaded / e.total) * 100
-            setUploadProgress(progress)
-          }
-        }
-
         reader.onload = (e) => {
           const base64 = e.target?.result as string
-          setImagePreview(base64)
-          localDB.setItem("cachedImage", base64)
+          setImagePreviews(prev => [...prev, base64])
+          
+          // 修改本地存储，存储图片数组
+          const cachedImages = JSON.parse(localDB.getItem("cachedImages") || "[]")
+          localDB.setItem("cachedImages", JSON.stringify([...cachedImages, base64]))
+          
           setUploadProgress(100)
           setUploadStatus("上传完成")
           message.success("图片上传成功")
@@ -107,8 +125,8 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
 
   const handleClearFile = (type: "image" | "excel") => {
     if (type === "image") {
-      setImagePreview(null)
-      localDB.removeItem("cachedImage")
+      setImagePreviews([])
+      localDB.removeItem("cachedImages")
     } else {
       setExcelPreview(null)
       localDB.removeItem("cachedExcel")
@@ -118,7 +136,6 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
   return (
     <div className='space-y-3'>
       <div className='flex items-center gap-4 h-20'>
-        {/* 上传按钮 */}
         <Dropdown>
           <DropdownTrigger>
             <Button
@@ -149,7 +166,6 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
           </DropdownMenu>
         </Dropdown>
 
-        {/* 文件预览区域 - 水平滚动 */}
         <div
           ref={scrollContainerRef}
           className={cn(
@@ -158,16 +174,21 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
             "hover:scrollbar-thumb-gray-300 transition-all duration-200"
           )}
         >
-          {imagePreview && (
+          {imagePreviews.map((image, index) => (
             <FilePreview
+              key={index}
               type='image'
-              fileName='图片预览'
+              fileName={`图片 ${index + 1}`}
               fileSize='--'
-              onDelete={() => handleClearFile("image")}
+              onDelete={() => {
+                const newImages = imagePreviews.filter((_, i) => i !== index)
+                setImagePreviews(newImages)
+                localDB.setItem("cachedImages", JSON.stringify(newImages))
+              }}
               onView={() => {}}
-              previewData={{ image: imagePreview }}
+              previewData={{ image }}
             />
-          )}
+          ))}
 
           {excelPreview && (
             <FilePreview
@@ -200,7 +221,6 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
         />
       </div>
 
-      {/* 上传进度 */}
       {isUploading && (
         <UploadProgress progress={uploadProgress} status={uploadStatus} onCancel={() => setIsUploading(false)} />
       )}

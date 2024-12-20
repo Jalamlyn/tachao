@@ -9,9 +9,10 @@ import { localDB } from "@/utils/localDB"
 export class AIFormAgent {
   private static instance: AIFormAgent
   private _rawConfig: string | null = null
-  private _cachedImage: string | null = null
+  private _cachedImages: string[] = []
   private _cachedExcel: { headers: string[]; firstRow: any; fileName: string } | null = null
   private _versionIndex: number = 0
+  private readonly MAX_IMAGES = 5
 
   private constructor() {}
 
@@ -42,13 +43,44 @@ export class AIFormAgent {
   }
 
   public cacheImage(imageData: string): void {
+    if (!imageData) {
+      console.warn("[AIFormAgent] Attempted to cache empty image data")
+      return
+    }
+
+    if (this._cachedImages.length >= this.MAX_IMAGES) {
+      console.warn("[AIFormAgent] Maximum number of images reached")
+      return
+    }
+
     console.log("[AIFormAgent] Caching image data")
-    this._cachedImage = imageData
+    this._cachedImages.push(imageData)
+  }
+
+  public cacheImages(imageDataArray: string[]): void {
+    console.log("[AIFormAgent] Caching multiple images")
+    const remainingSlots = this.MAX_IMAGES - this._cachedImages.length
+    const imagesToAdd = imageDataArray.slice(0, remainingSlots)
+    this._cachedImages = [...this._cachedImages, ...imagesToAdd]
   }
 
   public clearCachedImage(): void {
-    console.log("[AIFormAgent] Clearing cached image")
-    this._cachedImage = null
+    console.log("[AIFormAgent] Clearing cached images")
+    this._cachedImages = []
+  }
+
+  public getCachedImagesCount(): number {
+    return this._cachedImages.length
+  }
+
+  public hasCachedImages(): boolean {
+    return this._cachedImages.length > 0
+  }
+
+  public removeCachedImageAt(index: number): void {
+    if (index >= 0 && index < this._cachedImages.length) {
+      this._cachedImages.splice(index, 1)
+    }
   }
 
   public cacheExcel(excelData: { headers: string[]; firstRow: any; fileName: string }): void {
@@ -89,11 +121,17 @@ export class AIFormAgent {
     }
     const result = await getMetadata([`resource_index`])
     try {
-      const cachedImage = localDB.getItem("cachedImage")
+      const cachedImages = JSON.parse(localDB.getItem("cachedImages") || "[]")
       const cachedExcel = localDB.getItem("cachedExcel")
+      
       const systemMessage = {
         role: "system" as const,
-        content: generateFormAgentPrompt(this._rawConfig, !!cachedImage, result.data?.[0]?.value, cachedExcel),
+        content: generateFormAgentPrompt(
+          this._rawConfig, 
+          cachedImages.length > 0, 
+          result.data?.[0]?.value, 
+          cachedExcel
+        ),
       }
 
       const enhancedCommand = `这是我的输入
@@ -118,7 +156,7 @@ export class AIFormAgent {
       const currentUserMessage = {
         role: "user" as const,
         content: enhancedCommand,
-        images: cachedImage ? [cachedImage] : undefined,
+        images: cachedImages,
         excel: cachedExcel,
       }
 
@@ -137,7 +175,7 @@ export class AIFormAgent {
         "YES"
       )
 
-      localDB.removeItem("cachedImage")
+      localDB.removeItem("cachedImages")
       localDB.removeItem("cachedExcel")
 
       if (response.includes("<shata-ai-error>")) {
