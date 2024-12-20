@@ -1,7 +1,8 @@
-import React, { useEffect, useCallback } from "react"
+import React, { useEffect, useCallback, useState } from "react"
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
 import { Input } from "@nextui-org/react"
+import { useLocation } from "react-router-dom"
 
 interface OrderNumberFieldProps {
   form: UseFormReturn<any>
@@ -10,7 +11,6 @@ interface OrderNumberFieldProps {
   label?: string
   disabled?: boolean
   isUpdating?: number
-  isCreateMode?: boolean
 }
 
 const OrderNumberField: React.FC<OrderNumberFieldProps> = ({
@@ -20,8 +20,10 @@ const OrderNumberField: React.FC<OrderNumberFieldProps> = ({
   label = "订单编号",
   disabled = true,
   isUpdating = 0,
-  isCreateMode = false
 }) => {
+  const [isCreateMode, setIsCreateMode] = useState(false)
+  const location = useLocation()
+
   // 生成包含随机性的订单编号
   const generateOrderNumber = useCallback(() => {
     const timestamp = Date.now()
@@ -45,9 +47,12 @@ const OrderNumberField: React.FC<OrderNumberFieldProps> = ({
 
   // 首次渲染时的处理
   useEffect(() => {
-    const currentNumber = form.getValues(fieldName)
-    if (!currentNumber && isCreateMode) {
-      resetOrderNumber()
+    if (location.pathname.includes("form-create")) {
+      const currentNumber = form.getValues(fieldName)
+      if (!currentNumber) {
+        resetOrderNumber()
+      }
+      setIsCreateMode(true)
     }
   }, [])
 

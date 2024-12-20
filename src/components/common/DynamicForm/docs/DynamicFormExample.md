@@ -8,8 +8,8 @@
 export default () => {
   const formConfig = {
     metadata: {
-      title: "成本分析报表 - 材料成本",
-      description: "采集材料成本的明细数据",
+      title: "HCB模具(注塑)成本分析报表",
+      description: "采集材料成本的明细",
     },
     renderConfig: {
       basicFields: {
@@ -92,81 +92,6 @@ export default () => {
                 type: "number",
                 required: true,
                 defaultValue: 5423.26,
-              },
-            ],
-          },
-          {
-            key: "moldDimensions",
-            title: "模具基础尺寸",
-            fields: [
-              {
-                name: "moldLength",
-                label: "长/直径（mm）",
-                type: "number",
-                required: true,
-                defaultValue: 374.41,
-              },
-              {
-                name: "moldWidth",
-                label: "宽（mm）",
-                type: "number",
-                required: true,
-                defaultValue: 326.06,
-              },
-              {
-                name: "moldHeight",
-                label: "高（mm）",
-                type: "number",
-                required: true,
-                defaultValue: 229.18,
-              },
-              {
-                name: "moldWeight",
-                label: "模具重量（KG）",
-                type: "number",
-                required: true,
-                defaultValue: 111.1,
-              },
-            ],
-          },
-          {
-            key: "moldPerformance",
-            title: "模具性能参数",
-            fields: [
-              {
-                name: "moldLife",
-                label: "模具寿命（万次）",
-                type: "text",
-                required: true,
-                defaultValue: "模具寿命-30万模",
-              },
-              {
-                name: "cavities",
-                label: "一模几穴（穴）",
-                type: "number",
-                required: true,
-                defaultValue: 4.0,
-              },
-              {
-                name: "clampingTime",
-                label: "合模时间（秒）",
-                type: "number",
-                required: true,
-                defaultValue: 49.11,
-              },
-              {
-                name: "machineTonnage",
-                label: "机台吨位（T）",
-                type: "number",
-                required: true,
-                defaultValue: 185.51,
-              },
-              {
-                name: "capacity",
-                label: "产能（Pcs/天）",
-                type: "number",
-                required: true,
-                defaultValue: 1466.04,
               },
             ],
           },
@@ -324,355 +249,6 @@ export default () => {
           },
         },
         {
-          key: "hardwareStandardParts",
-          title: "五金/标准件成本明细表",
-          description: "记录五金/标准件的详细信息，并自动计算成本合计",
-          config: {
-            columns: [
-              {
-                key: "serialNumber",
-                title: "序号",
-                type: "number",
-                width: 80,
-                required: true,
-              },
-              {
-                key: "projectName",
-                title: "项目名称",
-                type: "text",
-                width: 150,
-                required: true,
-              },
-              {
-                key: "component",
-                title: "部件",
-                type: "text",
-                width: 150,
-              },
-              {
-                key: "quantity",
-                title: "数量（套）",
-                type: "number",
-                width: 120,
-                required: true,
-              },
-              {
-                key: "processCost",
-                title: "工序成本(RMB)",
-                type: "number",
-                width: 150,
-                required: true,
-                disabled: true, // 自动计算字段
-              },
-              {
-                key: "unitPrice",
-                title: "单价（元/个）",
-                type: "number",
-                width: 150,
-                required: true,
-              },
-            ],
-            summary: {
-              show: true,
-              firstColumnText: "总计",
-              onCompute: (data) => {
-                const totalProcessCost = data.reduce((sum, row) => {
-                  const processCost = Number(row.processCost) || 0
-                  return sum + processCost
-                }, 0)
-
-                return {
-                  processCost: totalProcessCost,
-                }
-              },
-            },
-          },
-        },
-        {
-          key: "moldMachiningCost",
-          title: "模架机加工成本明细表",
-          description: "记录模架机加工成本的详细信息，并自动计算成本合计",
-          config: {
-            columns: [
-              {
-                key: "serialNumber",
-                title: "序号",
-                type: "number",
-                width: 80,
-                required: true,
-              },
-              {
-                key: "processName",
-                title: "工序名称",
-                type: "text",
-                width: 150,
-                required: true,
-              },
-              {
-                key: "material",
-                title: "材料",
-                type: "text",
-                width: 150,
-              },
-              {
-                key: "length",
-                title: "长/直径(mm)",
-                type: "number",
-                width: 120,
-              },
-              {
-                key: "width",
-                title: "宽(mm)",
-                type: "number",
-                width: 120,
-              },
-              {
-                key: "height",
-                title: "高/厚(mm)",
-                type: "number",
-                width: 120,
-              },
-              {
-                key: "processingTime",
-                title: "加工时长(小时）",
-                type: "number",
-                width: 150,
-                required: true,
-              },
-              {
-                key: "processCost",
-                title: "工序成本(RMB)",
-                type: "number",
-                width: 150,
-                required: true,
-                disabled: true, // 自动计算字段
-              },
-              {
-                key: "unitPrice",
-                title: "工序单价（元/H）",
-                type: "number",
-                width: 150,
-                required: true,
-              },
-            ],
-            summary: {
-              show: true,
-              firstColumnText: "总计",
-              onCompute: (data) => {
-                const totalProcessCost = data.reduce((sum, row) => {
-                  const processCost = Number(row.processCost) || 0
-                  return sum + processCost
-                }, 0)
-
-                return {
-                  processCost: totalProcessCost,
-                }
-              },
-            },
-          },
-        },
-        {
-          key: "moldCoreMachiningCost",
-          title: "模仁机加工成本明细表",
-          description: "记录模仁机加工成本的详细信息，并自动计算成本合计",
-          config: {
-            columns: [
-              {
-                key: "serialNumber",
-                title: "序号",
-                type: "number",
-                width: 80,
-                required: true,
-              },
-              {
-                key: "processName",
-                title: "工序名称",
-                type: "text",
-                width: 150,
-                required: true,
-              },
-              {
-                key: "material",
-                title: "材料",
-                type: "text",
-                width: 150,
-              },
-              {
-                key: "length",
-                title: "长/直径(mm)",
-                type: "number",
-                width: 120,
-              },
-              {
-                key: "width",
-                title: "宽(mm)",
-                type: "number",
-                width: 120,
-              },
-              {
-                key: "height",
-                title: "高/厚(mm)",
-                type: "number",
-                width: 120,
-              },
-              {
-                key: "processingTime",
-                title: "加工时长(小时）",
-                type: "number",
-                width: 150,
-                required: true,
-              },
-              {
-                key: "processCost",
-                title: "工序成本(RMB)",
-                type: "number",
-                width: 150,
-                required: true,
-                disabled: true, // 自动计算字段
-              },
-              {
-                key: "unitPrice",
-                title: "工序单价（元/H）",
-                type: "number",
-                width: 150,
-                required: true,
-              },
-            ],
-            summary: {
-              show: true,
-              firstColumnText: "总计",
-              onCompute: (data) => {
-                const totalProcessCost = data.reduce((sum, row) => {
-                  const processCost = Number(row.processCost) || 0
-                  return sum + processCost
-                }, 0)
-
-                return {
-                  processCost: totalProcessCost,
-                }
-              },
-            },
-          },
-        },
-        {
-          key: "designCost",
-          title: "设计成本明细表",
-          description: "记录设计成本的详细信息，并自动计算成本合计",
-          config: {
-            columns: [
-              {
-                key: "serialNumber",
-                title: "序号",
-                type: "number",
-                width: 80,
-                required: true,
-              },
-              {
-                key: "processName",
-                title: "工序名称",
-                type: "text",
-                width: 150,
-                required: true,
-              },
-              {
-                key: "processingTime",
-                title: "加工时长(小时）",
-                type: "number",
-                width: 150,
-                required: true,
-              },
-              {
-                key: "processCost",
-                title: "工序成本(RMB)",
-                type: "number",
-                width: 150,
-                required: true,
-                disabled: true, // 自动计算字段
-              },
-              {
-                key: "unitPrice",
-                title: "工序单价（元/H）",
-                type: "number",
-                width: 150,
-                required: true,
-              },
-            ],
-            summary: {
-              show: true,
-              firstColumnText: "总计",
-              onCompute: (data) => {
-                const totalProcessCost = data.reduce((sum, row) => {
-                  const processCost = Number(row.processCost) || 0
-                  return sum + processCost
-                }, 0)
-
-                return {
-                  processCost: totalProcessCost,
-                }
-              },
-            },
-          },
-        },
-        {
-          key: "inspectionCost",
-          title: "检测成本明细表",
-          description: "记录检测成本的详细信息，并自动计算成本合计",
-          config: {
-            columns: [
-              {
-                key: "serialNumber",
-                title: "序号",
-                type: "number",
-                width: 80,
-                required: true,
-              },
-              {
-                key: "processName",
-                title: "工序名称",
-                type: "text",
-                width: 150,
-                required: true,
-              },
-              {
-                key: "processingTime",
-                title: "加工时长(小时）",
-                type: "number",
-                width: 150,
-                required: true,
-              },
-              {
-                key: "processCost",
-                title: "工序成本(RMB)",
-                type: "number",
-                width: 150,
-                required: true,
-                disabled: true, // 自动计算字段
-              },
-              {
-                key: "unitPrice",
-                title: "工序单价（元/H）",
-                type: "number",
-                width: 150,
-                required: true,
-              },
-            ],
-            summary: {
-              show: true,
-              firstColumnText: "总计",
-              onCompute: (data) => {
-                const totalProcessCost = data.reduce((sum, row) => {
-                  const processCost = Number(row.processCost) || 0
-                  return sum + processCost
-                }, 0)
-
-                return {
-                  processCost: totalProcessCost,
-                }
-              },
-            },
-          },
-        },
-        {
           key: "otherCosts",
           title: "其他费用成本明细表",
           description: "记录其他费用成本的详细信息，并自动计算成本合计",
@@ -763,104 +339,6 @@ export default () => {
                 },
               },
             },
-            {
-              name: "totalProcessingCost",
-              label: "加工费(总计）",
-              type: "amount",
-              defaultValue: 9253.75,
-              disabled: true,
-              formatConfig: {
-                type: "currency",
-                options: {
-                  currency: "CNY",
-                  precision: 2,
-                },
-              },
-            },
-            {
-              name: "managementFee",
-              label: "管销费（20%）",
-              type: "amount",
-              defaultValue: 1901.4,
-              disabled: true,
-              formatConfig: {
-                type: "currency",
-                options: {
-                  currency: "CNY",
-                  precision: 2,
-                },
-              },
-            },
-            {
-              name: "totalCost",
-              label: "总成本（元）",
-              type: "amount",
-              defaultValue: 14577.36,
-              disabled: true,
-              formatConfig: {
-                type: "currency",
-                options: {
-                  currency: "CNY",
-                  precision: 2,
-                },
-              },
-            },
-            {
-              name: "tax",
-              label: "税费（13%）",
-              type: "amount",
-              defaultValue: 1895.06,
-              disabled: true,
-              formatConfig: {
-                type: "currency",
-                options: {
-                  currency: "CNY",
-                  precision: 2,
-                },
-              },
-            },
-            {
-              name: "profit",
-              label: "利润（40%）",
-              type: "amount",
-              defaultValue: 8746.42,
-              disabled: true,
-              formatConfig: {
-                type: "currency",
-                options: {
-                  currency: "CNY",
-                  precision: 2,
-                },
-              },
-            },
-            {
-              name: "moldPriceExclTax",
-              label: "模具单价(元）-不含税",
-              type: "amount",
-              defaultValue: 25225.18,
-              disabled: true,
-              formatConfig: {
-                type: "currency",
-                options: {
-                  currency: "CNY",
-                  precision: 2,
-                },
-              },
-            },
-            {
-              name: "moldPriceInclTax",
-              label: "模具单价(元）--含税",
-              type: "amount",
-              defaultValue: 27120.23,
-              disabled: true,
-              formatConfig: {
-                type: "currency",
-                options: {
-                  currency: "CNY",
-                  precision: 2,
-                },
-              },
-            },
           ],
         },
       ],
@@ -873,7 +351,6 @@ export default () => {
               name: "productionPerson",
               label: "制作人",
               type: "text",
-              required: true,
             },
           ],
         },
@@ -885,7 +362,6 @@ export default () => {
               name: "reviewPerson",
               label: "审核人",
               type: "text",
-              required: true,
             },
           ],
         },
@@ -909,10 +385,10 @@ export default () => {
       const subscription = form.watch((value, { name }) => {
         if (
           !isCalculating &&
-          (name.endsWith(".weight") ||
-            name.endsWith(".unitPrice") ||
-            name.endsWith(".quantity") ||
-            name.endsWith(".processingTime"))
+          (name?.endsWith(".weight") ||
+            name?.endsWith(".unitPrice") ||
+            name?.endsWith(".quantity") ||
+            name?.endsWith(".processingTime"))
         ) {
           isCalculating = true
           try {
@@ -946,30 +422,6 @@ export default () => {
               const unitPrice = Number(row.unitPrice) || 0
               const processCost = processingTime * unitPrice
               form.setValue(`tableData.moldCoreMachiningCost.${index}.processCost`, processCost)
-            })
-
-            const designRows = form.getValues("tableData.designCost") || []
-            designRows.forEach((row, index) => {
-              const processingTime = Number(row.processingTime) || 0
-              const unitPrice = Number(row.unitPrice) || 0
-              const processCost = processingTime * unitPrice
-              form.setValue(`tableData.designCost.${index}.processCost`, processCost)
-            })
-
-            const inspectionRows = form.getValues("tableData.inspectionCost") || []
-            inspectionRows.forEach((row, index) => {
-              const processingTime = Number(row.processingTime) || 0
-              const unitPrice = Number(row.unitPrice) || 0
-              const processCost = processingTime * unitPrice
-              form.setValue(`tableData.inspectionCost.${index}.processCost`, processCost)
-            })
-
-            const otherRows = form.getValues("tableData.otherCosts") || []
-            otherRows.forEach((row, index) => {
-              const processingTime = Number(row.processingTime) || 0
-              const unitPrice = Number(row.unitPrice) || 0
-              const processCost = processingTime * unitPrice
-              form.setValue(`tableData.otherCosts.${index}.processCost`, processCost)
             })
           } finally {
             isCalculating = false

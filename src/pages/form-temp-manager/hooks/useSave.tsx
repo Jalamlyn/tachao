@@ -81,7 +81,6 @@ export const useSave = (
                       },
                     })
                   } else {
-                    debugger
                     const templateData = {
                       title: title || versionToSave.formConfig.metadata?.title || "新建模板",
                       type: "custom",
@@ -151,7 +150,6 @@ export const useSave = (
         }
 
         try {
-          debugger
           const pattern = /title:\s*"([^"]+)"/
           const match = formState.rawConfig.match(pattern)
           const title = match ? match[1] : null // "hello world"

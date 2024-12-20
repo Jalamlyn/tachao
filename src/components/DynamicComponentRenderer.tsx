@@ -49,6 +49,7 @@ export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> =
   const [Component, setComponent] = useState<React.ComponentType<any> | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const [loading, setLoading] = useState(true)
+  const { templateId } = props
 
   useEffect(() => {
     const createComponent = async () => {
@@ -71,9 +72,9 @@ export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> =
           ...Object.keys(uiComponents),
           `${transformedCode.replace(/export default/, "return")}`
         )
-
+        const DynamicFormWrapper = (props) => <DynamicForm templateId={templateId} {...props} />
         // 3. 获取组件
-        const CustomComponent = componentFn(React, DynamicForm, ...Object.values(uiComponents))
+        const CustomComponent = componentFn(React, DynamicFormWrapper, ...Object.values(uiComponents))
 
         setComponent(() => CustomComponent)
       } catch (err) {

@@ -18,16 +18,9 @@ import { defaultFormConfig } from "./defaultConfig"
 import { merge } from "lodash"
 import styles from "./styles/DynamicForm.module.css"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useLocation } from "react-router-dom"
 
-const DynamicForm: React.FC<DynamicFormProps> = ({
-  config: userConfig,
-  formId,
-  onCancel,
-  templateId,
-  isCreateMode,
-  previewMode = false,
-  formData,
-}) => {
+const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, formId, onCancel, templateId, formData }) => {
   const config = merge({}, defaultFormConfig, userConfig)
   const [isLoading, setIsLoading] = useState(false)
   const { getDetail, create: createMetadata, update: updateMetadata } = useMetadata("form")
@@ -41,6 +34,18 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   }>({})
   const [selectedTable, setSelectedTable] = useState<string>("")
   const [hasScroll, setHasScroll] = React.useState(false)
+  const [isCreateMode, setIsCreateMode] = useState(false)
+  const [previewMode, setPreviewMode] = useState(false)
+  const location = useLocation()
+
+  useEffect(() => {
+    if (location.pathname.includes("form-create")) {
+      setIsCreateMode(true)
+    }
+    if (location.pathname.includes("form-preview")) {
+      setPreviewMode(true)
+    }
+  }, [])
 
   // 检查是否需要显示滚动阴影
   React.useEffect(() => {
@@ -255,6 +260,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             throw new Error("更新失败")
           }
         } else {
+          debugger
           const result = await createMetadata(formData)
           if (result) {
             savedFormId = result.id
