@@ -19,7 +19,7 @@ export default () => {
             title: "客户信息",
             fields: [
               {
-                name: "dataField",
+                name: "customer",
                 label: "客户",
                 type: "text",
                 required: true
@@ -958,6 +958,45 @@ export default () => {
               const processCost = processingTime * unitPrice;
               form.setValue(`tableData.otherCosts.${index}.processCost`, processCost);
             });
+            const materialCostTotal = (form.getValues("tableData.materialCost") || [])
+              .reduce((sum, row) => sum + (Number(row.materialCost) || 0), 0);
+
+            const processingCostTotal = [
+              "heatTreatmentCost",
+              "hardwareStandardParts",
+              "moldMachiningCost",
+              "moldCoreMachiningCost",
+              "designCost",
+              "inspectionCost",
+              "otherCosts"
+            ].reduce((sum, tableName) => {
+              const tableData = form.getValues(`tableData.${tableName}`) || [];
+              return sum + tableData.reduce((tableSum, row) =>
+                tableSum + (Number(row.processCost) || 0), 0);
+            }, 0);
+
+            // 设置汇总数据
+            form.setValue("totalMaterialCost", materialCostTotal);
+            form.setValue("totalProcessingCost", processingCostTotal);
+
+            const managementFee = (materialCostTotal + processingCostTotal) * 0.2;
+            form.setValue("managementFee", managementFee);
+
+            const totalCost = materialCostTotal + processingCostTotal + managementFee;
+            form.setValue("totalCost", totalCost);
+
+            const tax = totalCost * 0.13;
+            form.setValue("tax", tax);
+
+            const profit = totalCost * 0.4;
+            form.setValue("profit", profit);
+
+            const moldPriceExclTax = totalCost + profit;
+            form.setValue("moldPriceExclTax", moldPriceExclTax);
+
+            const moldPriceInclTax = moldPriceExclTax + tax;
+            form.setValue("moldPriceInclTax", moldPriceInclTax);
+
           } finally {
             isCalculating = false;
           }

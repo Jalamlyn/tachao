@@ -1,6 +1,7 @@
 // import chatChunk from "../chat/chat-chunk-openai-office"
-// import chatChunk from "../chat/chat-chunk-openai-azure"
-import chatChunk from "../chat/chat-chunk-gemini-office"
+import chatChunk from "../chat/chat-chunk-openai-azure"
+// import chatChunk from "../chat/chat-chunk-claude-horay"
+// import chatChunk from "../chat/chat-chunk-gemini-office"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import generateFormAgentPrompt from "./prompts/form/form-agent-prompt"
@@ -85,21 +86,13 @@ export class AIFormAgent {
 
       const enhancedCommand = `在这份代码"""
       ${this._rawConfig}
-      """上继续修改实现我的需求或者回答我的问题"""${command}"""如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码
-      [回复策略:
-        * 对于表单直接相关问题：提供具体解决方案
-        * 对于业务相关问题：进行分析并给出建议
-        * 对于间接相关问题：提供参考信息和最佳实践
-        * 对于完全无关问题：礼貌建议咨询其他专业助手
-        * 回复我尽可能简洁和口语化
-        * 一次只生成一份 <shata-ai-code>
-        * [格式要求:所有代码必须使用 
-        \`\`\`mo 
-        <shata-ai-code>
-          代码
-        </shata-ai-code>
-        \`\`\` 
-        包裹]`
+      """上继续修改实现我的需求或者回答我的问题"""${command}"""如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码,类似这种返回
+      """
+      const formConfig = {
+      // ... 保持原有配置不变 ...
+      watch: (form) => {
+      """
+      都是错误的, 会导致代码无法运行, 不允许用注释省略代码, 如果修改很简单, 可以返回修改的片段指导用户手动修改`
 
       const currentUserMessage = {
         role: "user" as const,
