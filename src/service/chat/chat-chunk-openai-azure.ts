@@ -2,6 +2,26 @@ import { message } from "@/components/Message"
 import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { events } from "fetch-event-stream"
+import { countTokens } from "gpt-tokenizer/model/gpt-4o"
+import { setMetadata, getMetadata } from "@/service/apis/metadata"
+
+// 计算费用的函数
+function calculateCost(tokenCount: number, isInput: boolean, model: string): number {
+  const ratePerThousandTokens = {
+    ADVANCED: {
+      input: 0.01,
+      output: 0.03,
+    },
+    EXPERT: {
+      input: 0.1,
+      output: 0.3,
+    },
+  }
+
+  const rate = ratePerThousandTokens[model === "ADVANCED" ? "ADVANCED" : "EXPERT"]
+  const tokenRate = isInput ? rate.input : rate.output
+  return (tokenCount / 1000) * tokenRate
+}
 
 export default async function chatChunkOpenAIOffice(
   messages,
@@ -52,6 +72,10 @@ export default async function chatChunkOpenAIOffice(
     stream: true,
   }
 
+  // 计算输入token数量
+  const inputTokenCount = countTokens(JSON.stringify(_messages))
+  console.log("[TokenStats] Input token count:", inputTokenCount)
+
   let controller = new AbortController()
   fetchController.current = controller
   onCancel(() => controller.abort())
@@ -74,6 +98,7 @@ export default async function chatChunkOpenAIOffice(
 
     const eventStream = events(response, controller.signal)
     let fullContent = ""
+    let outputTokenCount = 0
 
     for await (let event of eventStream) {
       if (event.data !== "[DONE]") {
@@ -110,9 +135,41 @@ export default async function chatChunkOpenAIOffice(
           console.log("Error parsing JSON:", error)
         }
       } else {
+        outputTokenCount = countTokens(fullContent)
         localDB.setItem("chat-chunk-over", overFlag)
       }
     }
+
+    // 计算费用
+    const inputCost = calculateCost(inputTokenCount, true, baseModel)
+    const outputCost = calculateCost(outputTokenCount, false, baseModel)
+    console.log("[CostStats] Input cost:", inputCost, "Output cost:", outputCost, "Total cost:", inputCost + outputCost)
+
+    // 存储成本记录
+    try {
+      const costRecords = await getMetadata(["ai-cost-records"])
+      const existingRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
+
+      const newRecord = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        model: baseModel,
+        promptTokenCount: inputTokenCount * 5,
+        candidatesTokenCount: outputTokenCount * 5,
+        inputCost,
+        outputCost,
+        totalCost: inputCost + outputCost,
+      }
+
+      if (existingRecords.length > 0) {
+        await setMetadata("ai-cost-records", [...existingRecords, newRecord])
+      } else {
+        await setMetadata("ai-cost-records", [newRecord])
+      }
+    } catch (e) {
+      console.error("Error storing cost records:", e)
+    }
+
   } catch (error) {
     if (error.name === "AbortError") {
       console.log("Fetch aborted")
