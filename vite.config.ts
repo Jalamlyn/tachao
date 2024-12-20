@@ -5,12 +5,25 @@ import million from "million/compiler"
 import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa"
 import mdPlugin, { Mode } from "vite-plugin-markdown"
+import { visualizer } from "rollup-plugin-visualizer"
 
 export default defineConfig({
   define: {
     __API_BASE_URL__: JSON.stringify(process.env.NODE_ENV === "production" ? "/api" : "/dev"),
   },
-  plugins: [million.vite({ auto: true }), react(), tsconfigPaths(), mdPlugin.default({ mode: [Mode.MARKDOWN] })],
+  plugins: [
+    million.vite({ auto: true }),
+    react(),
+    tsconfigPaths(),
+    mdPlugin.default({ mode: [Mode.MARKDOWN] }),
+    visualizer({
+      // emitFile: true,
+      // filename: "stats.html",
+      open: true, // 打包后自动打开页面
+      gzipSize: true, // 查看 gzip 压缩大小
+      brotliSize: true, // 查看 brotli 压缩大小
+    }),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -29,10 +42,15 @@ export default defineConfig({
           "@nextui-org/react": ["@nextui-org/react"],
           recharts: ["recharts"],
           "react-markdown": ["react-markdown"],
-          "@visactor/vtable": ["@visactor/vtable"],
           "@visactor/react-vtable": ["@visactor/react-vtable"],
           babel: ["@babel/standalone"],
           mermaid: ["mermaid"],
+          xlsx: ["xlsx"],
+          lodash: ["lodash"],
+          gpt: ["gpt-tokenizer/model/gpt-4o"],
+          echarts: ["echarts"],
+          dateFns: ["date-fns"],
+          parse5: ["parse5"],
         },
         // manualChunks(id) {
         //   // 打包依赖
