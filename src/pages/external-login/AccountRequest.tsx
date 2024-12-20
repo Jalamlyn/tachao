@@ -1,13 +1,11 @@
 import React, { useState } from "react"
-import { Card, CardBody, Input, Button, Spinner } from "@nextui-org/react"
-import { Icon } from "@iconify/react"
+import { Card, CardBody, Input, Button } from "@nextui-org/react"
 import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { message } from "@/components/Message"
 import EnterpriseList from "@/components/EnterpriseList"
-import { submitWaitList } from "@/service/apis/api"
-import { addAccountRequest } from "@/service/apis/metadata"
-import { v4 as uuidv4 } from 'uuid'
+import { smsCaptcha, submitWaitList } from "@/service/apis/api"
+import { v4 as uuidv4 } from "uuid"
 
 interface AccountRequestProps {
   onBack: () => void
@@ -20,7 +18,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [smsCooldown, setSmsCooldown] = useState(0)
   const [showQRCode, setShowQRCode] = useState(false)
-  
+
   const loginData = React.useRef({
     organizationId: "",
     enterpriseName: "",
@@ -31,17 +29,27 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
       return message.error(t("phone_required"))
     }
 
-    // TODO: 实现发送验证码逻辑
-    setSmsCooldown(60)
-    const interval = setInterval(() => {
-      setSmsCooldown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
+    try {
+      setIsLoading(true)
+      await smsCaptcha(phone.trim())
+
+      message.success("验证码已发送")
+      setSmsCooldown(60)
+      const interval = setInterval(() => {
+        setSmsCooldown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } catch (error) {
+      console.error("Failed to send SMS:", error)
+      message.error("发送验证码失败，请重试")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleSubmit = async () => {
@@ -57,31 +65,21 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
 
     setIsLoading(true)
     try {
-      // 创建账号申请记录
-      const requestId = uuidv4()
-      await addAccountRequest({
-        id: requestId,
-        phone: phone.trim(),
-        organizationId: loginData.current.organizationId,
-        organizationName: loginData.current.enterpriseName,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      })
-
       // 提交到等待列表
       await submitWaitList({
         phone: phone.trim(),
-        email: '',
+        email: "",
         developer: false,
         industry: loginData.current.enterpriseName,
-        purpose: `account_request:${loginData.current.organizationId}`
+        purpose: `account_request:${loginData.current.organizationId}`,
+        status: "pending",
+        type: "account_request"
       })
 
       setShowQRCode(true)
     } catch (error) {
-      console.error('Failed to submit request:', error)
-      message.error('提交申请失败，请重试')
+      console.error("Failed to submit request:", error)
+      message.error("提交申请失败，请重试")
     } finally {
       setIsLoading(false)
     }
@@ -96,12 +94,13 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
               <h2 className='text-2xl font-bold mb-4'>申请已提交</h2>
               <p className='mb-4'>请关注公众号，等待审核通知</p>
               <div className='w-48 h-48 mx-auto bg-gray-200 rounded-lg mb-4'>
-                {/* TODO: 添加二维码图片 */}
                 <div className='w-full h-full flex items-center justify-center'>
                   <span>二维码占位</span>
                 </div>
               </div>
-              <Button color='primary' onClick={onBack}>返回登录</Button>
+              <Button color='primary' onClick={onBack}>
+                返回登录
+              </Button>
             </CardBody>
           </Card>
         </div>
@@ -157,31 +156,18 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
                       value={smsCode}
                       onChange={(e) => setSmsCode(e.target.value)}
                     />
-                    <Button
-                      size='lg'
-                      onClick={handleSendSms}
-                      disabled={smsCooldown > 0}
-                    >
-                      {smsCooldown > 0 ? `${smsCooldown}s` : '获取验证码'}
+                    <Button size='lg' onClick={handleSendSms} disabled={smsCooldown > 0}>
+                      {smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码"}
                     </Button>
                   </div>
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
                   <div className='flex gap-2'>
-                    <Button
-                      variant='light'
-                      className='flex-1'
-                      onClick={onBack}
-                    >
+                    <Button variant='light' className='flex-1' onClick={onBack}>
                       返回
                     </Button>
-                    <Button
-                      color='primary'
-                      className='flex-1'
-                      onClick={handleSubmit}
-                      isLoading={isLoading}
-                    >
+                    <Button color='primary' className='flex-1' onClick={handleSubmit} isLoading={isLoading}>
                       提交申请
                     </Button>
                   </div>
