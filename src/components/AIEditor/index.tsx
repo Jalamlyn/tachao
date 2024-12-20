@@ -19,6 +19,7 @@ const wrapWithShataAIForm = (content: string): string => {
 
 const AIEditor: React.FC<AIEditorProps> = ({
   imageUpload = true,
+  excelUpload = true,
   parseConfig,
   messages,
   selectedTab,
@@ -131,6 +132,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
           handleClearMessages,
           messages,
           imageUpload,
+          excelUpload,
           agent,
           onCommandResult
         )}

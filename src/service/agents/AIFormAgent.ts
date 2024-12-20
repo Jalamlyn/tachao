@@ -1,6 +1,4 @@
 import chatChunk from "../chat/chat-chunk-openai-office"
-// import chatChunk from "../chat/chat-chunk-gemini-office"
-// import chatChunk from "../chat/chat-chunk-claude-horay"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import generateFormAgentPrompt from "./prompts/form/form-agent-prompt"
@@ -12,6 +10,7 @@ export class AIFormAgent {
   private static instance: AIFormAgent
   private _rawConfig: string | null = null
   private _cachedImage: string | null = null
+  private _cachedExcel: { headers: string[]; firstRow: any; fileName: string } | null = null
   private _versionIndex: number = 0
 
   private constructor() {}
@@ -52,6 +51,16 @@ export class AIFormAgent {
     this._cachedImage = null
   }
 
+  public cacheExcel(excelData: { headers: string[]; firstRow: any; fileName: string }): void {
+    console.log("[AIFormAgent] Caching excel data")
+    this._cachedExcel = excelData
+  }
+
+  public clearCachedExcel(): void {
+    console.log("[AIFormAgent] Clearing cached excel")
+    this._cachedExcel = null
+  }
+
   public async parseConfig(rawConfig: string) {
     try {
       const parsedConfig = await parseFormConfig(rawConfig)
@@ -81,9 +90,19 @@ export class AIFormAgent {
     const result = await getMetadata([`resource_index`])
     try {
       const cachedImage = localDB.getItem("cachedImage")
+      const cachedExcel = localDB.getItem("cachedExcel")
+      let parsedExcel = null
+      if (cachedExcel) {
+        try {
+          parsedExcel = JSON.parse(cachedExcel)
+        } catch (e) {
+          console.error("Error parsing cached excel:", e)
+        }
+      }
+
       const systemMessage = {
         role: "system" as const,
-        content: generateFormAgentPrompt(this._rawConfig, !!cachedImage, result.data?.[0]?.value),
+        content: generateFormAgentPrompt(this._rawConfig, !!cachedImage, result.data?.[0]?.value, parsedExcel),
       }
 
       const enhancedCommand = `这是我的输入
@@ -111,6 +130,7 @@ export class AIFormAgent {
         role: "user" as const,
         content: enhancedCommand,
         images: cachedImage ? [cachedImage] : undefined,
+        excel: parsedExcel,
       }
 
       const allMessages = [systemMessage, ...messages, currentUserMessage]
@@ -129,6 +149,7 @@ export class AIFormAgent {
       )
 
       localDB.removeItem("cachedImage")
+      localDB.removeItem("cachedExcel")
 
       if (response.includes("<shata-ai-error>")) {
         return {

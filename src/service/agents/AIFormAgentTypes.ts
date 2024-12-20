@@ -16,6 +16,11 @@ export type CommandResult = {
 export type AIFormAgentConfig = {
   rawConfig: string | null
   cachedImage: string | null
+  cachedExcel: {
+    headers: string[]
+    firstRow: any
+    fileName: string
+  } | null
   systemPrompt: string
 }
 
@@ -38,6 +43,11 @@ export type Message = {
   content: string
   metadata?: ResponseMetadata
   images?: string[]
+  excel?: {
+    headers: string[]
+    firstRow: any
+    fileName: string
+  }
   aiLevel?: keyof typeof AI_LEVELS
 }
 
@@ -59,6 +69,8 @@ export interface IAIFormAgent {
   getRawConfig(): string | null
   cacheImage(imageData: string): void
   clearCachedImage(): void
+  cacheExcel(excelData: { headers: string[]; firstRow: any; fileName: string }): void
+  clearCachedExcel(): void
   parseConfig(rawConfig: string): Promise<any>
   processCommand(
     messages: Message[],
