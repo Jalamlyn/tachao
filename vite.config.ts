@@ -6,7 +6,6 @@ import { defineConfig } from "vite"
 import { VitePWA } from "vite-plugin-pwa"
 import mdPlugin, { Mode } from "vite-plugin-markdown"
 
-console.log(mdPlugin.default)
 export default defineConfig({
   define: {
     __API_BASE_URL__: JSON.stringify(process.env.NODE_ENV === "production" ? "/api" : "/dev"),
@@ -16,9 +15,6 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-  },
-  optimizeDeps: {
-    allowNodeBuiltins: ["pouchdb-browser", "pouchdb-utils"],
   },
   build: {
     rollupOptions: {
