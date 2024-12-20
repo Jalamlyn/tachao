@@ -20,7 +20,7 @@ const UnauthorizedPage = () => {
       try {
         const response = await queryMyProjectApps({ page: 1, size: 1 })
         if (response.data[0].id) {
-          await localDB.setAppId(response.data[0])
+          localDB.setAppId(response.data[0])
         }
       } catch (error) {
         console.error("Error initializing appId:", error)

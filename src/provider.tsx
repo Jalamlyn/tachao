@@ -56,6 +56,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
             name: "企业管理平台",
           })
           if (appResponse.data && appResponse.data.length > 0) {
+            // debugger
             localDB.setAppId(appResponse.data[0])
             setIsInit(true)
           }
@@ -138,7 +139,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
             isInit && modulesLoaded && !isTransitioning ? "opacity-100" : "opacity-0"
           }`}
         >
-          {children}
+          {isInit && modulesLoaded && !isTransitioning && children}
         </div>
       </main>
     </NextUIProvider>

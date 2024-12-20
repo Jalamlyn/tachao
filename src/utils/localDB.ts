@@ -35,15 +35,16 @@ const logStyles = {
 const eventEmitter = new EventEmitter()
 
 export const localDB = {
-  setAppId: async ({ id, organizationId }) => {
+  setAppId: ({ id, organizationId }) => {
     currentAppId = id
     globalStore.organizationId = organizationId
+    globalStore.appId = id
   },
 
   getAppId: () => {
     return currentAppId
   },
-  
+
   notifyChange: (key, value) => {
     eventEmitter.emit(key, jsonParse(value))
   },
