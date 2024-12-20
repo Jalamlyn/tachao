@@ -43,15 +43,18 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({ agent, aiLevel = "
         throw new Error("Excel文件为空")
       }
 
-      const headers = Object.keys(firstRowData || {}).filter(key => key !== 'dataid')
+      const headers = Object.keys(firstRowData || {}).filter((key) => key !== "dataid")
       setPreview({ headers, firstRow: firstRowData })
 
       // 将Excel数据存储到localDB
-      localDB.setItem("cachedExcel", JSON.stringify({
-        headers,
-        firstRow: firstRowData,
-        fileName: file.name
-      }))
+      localDB.setItem(
+        "cachedExcel",
+        JSON.stringify({
+          headers,
+          firstRow: firstRowData,
+          fileName: file.name,
+        })
+      )
 
       message.success("Excel解析成功")
     } catch (error) {
@@ -73,16 +76,10 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({ agent, aiLevel = "
   const handleUploadClick = () => {
     inputRef.current?.click()
   }
-
+  console.log(preview)
   return (
     <div className='flex items-center gap-2 mb-2'>
-      <input
-        type='file'
-        ref={inputRef}
-        className='hidden'
-        accept='.xlsx,.xls'
-        onChange={handleUpload}
-      />
+      <input type='file' ref={inputRef} className='hidden' accept='.xlsx,.xls' onChange={handleUpload} />
       <Tooltip
         content={
           <div className='flex flex-col gap-1 p-2'>
@@ -102,7 +99,7 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({ agent, aiLevel = "
         }
       >
         <Button
-          variant='flat'
+          variant='bordered'
           size='sm'
           onClick={handleUploadClick}
           disabled={isLoading}

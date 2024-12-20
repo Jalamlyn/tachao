@@ -86,8 +86,10 @@ export const renderLeftPanel = (
         </ScrollShadow>
 
         <div className='p-2'>
-          {imageUpload && <ImageUploader agent={agent} aiLevel={selectedAILevel} />}
-          {excelUpload && <ExcelUploader agent={agent} aiLevel={selectedAILevel} />}
+          <div className='flex gap-1'>
+            {imageUpload && <ImageUploader agent={agent} aiLevel={selectedAILevel} />}
+            {excelUpload && <ExcelUploader agent={agent} aiLevel={selectedAILevel} />}
+          </div>
           <AICommandInput agent={agent} onResult={onCommandResult} aiLevel={selectedAILevel} />
         </div>
       </div>

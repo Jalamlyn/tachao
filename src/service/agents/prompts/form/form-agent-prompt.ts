@@ -184,7 +184,7 @@ ${resources}`
    - 字段数量：${excelData.headers.length}
    - 字段列表：${excelData.headers.join(", ")}
 
-2. 数据示例：
+2. 数据说明：
    第一行数据：
    ${JSON.stringify(excelData.firstRow, null, 2)}
 
