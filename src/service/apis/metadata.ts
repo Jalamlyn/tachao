@@ -1,6 +1,10 @@
 import { apiService } from "./api"
 import { getAppId } from "@/utils"
 
+// 元数据键名常量
+export const PHONE_ORG_MAPPING_KEY = 'phone_org_mapping'
+export const ACCOUNT_REQUESTS_KEY = 'account_requests'
+
 export const queryMetadataHistory = async (data: {
   jsonValueFilter?: {
     field: string
@@ -77,6 +81,7 @@ export const deletePlatMetaData = async (name, versionCode = false) => {
   })
   return res.data
 }
+
 export const setPlatMetaData = async ({ name, value }) => {
   const res = await apiService.post(`/global/metadata`, {
     name,
@@ -87,10 +92,59 @@ export const setPlatMetaData = async ({ name, value }) => {
   })
   return res.data
 }
+
 export const getPlatMetaData = async (names = [], limit = 1) => {
   const res = await apiService.post(`/global/metadata/PLUGIN/queryByNames`, {
     limit,
     offset: 0,
   })
   return res.data
+}
+
+// 手机号-组织映射相关方法
+export const getPhoneOrgMapping = async (phone: string) => {
+  const result = await getPublicMetaData([PHONE_ORG_MAPPING_KEY])
+  const mapping = JSON.parse(result.data?.[0]?.value || '{}')
+  return mapping[phone]
+}
+
+export const setPhoneOrgMapping = async (phone: string, orgId: string) => {
+  const result = await getMetadata([PHONE_ORG_MAPPING_KEY])
+  const mapping = JSON.parse(result.data?.[0]?.value || '{}')
+  mapping[phone] = orgId
+  await setMetadata(PHONE_ORG_MAPPING_KEY, mapping)
+}
+
+// 账号申请相关方法
+export const getAccountRequests = async () => {
+  const result = await getMetadata([ACCOUNT_REQUESTS_KEY])
+  return JSON.parse(result.data?.[0]?.value || '{}')
+}
+
+export const addAccountRequest = async (request: {
+  id: string
+  phone: string
+  organizationId: string
+  organizationName: string
+  status: 'pending' | 'completed' | 'rejected'
+  createdAt: string
+  updatedAt: string
+}) => {
+  const requests = await getAccountRequests()
+  requests[request.id] = request
+  await setMetadata(ACCOUNT_REQUESTS_KEY, requests)
+}
+
+export const updateAccountRequest = async (requestId: string, updates: Partial<{
+  status: 'pending' | 'completed' | 'rejected'
+  updatedAt: string
+}>) => {
+  const requests = await getAccountRequests()
+  if (requests[requestId]) {
+    requests[requestId] = {
+      ...requests[requestId],
+      ...updates
+    }
+    await setMetadata(ACCOUNT_REQUESTS_KEY, requests)
+  }
 }
