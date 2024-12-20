@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next"
 import { message } from "@/components/Message"
 import EnterpriseList from "@/components/EnterpriseList"
 import { smsCaptcha, submitWaitList } from "@/service/apis/api"
-import { v4 as uuidv4 } from "uuid"
 
 interface AccountRequestProps {
   onBack: () => void

@@ -6,7 +6,7 @@ import { setPhoneOrgMapping } from "@/service/apis/metadata"
 import { jsonParse } from "@/utils"
 import { addPermission } from "@/permissions/utils/permissionUtils"
 
-const PERMISSION_REQUESTS_KEY = 'permission_requests'
+const PERMISSION_REQUESTS_KEY = "permission_requests"
 
 // 资源类型映射
 const resourceTypeMap = {
@@ -15,7 +15,7 @@ const resourceTypeMap = {
   report: "报表",
   page: "页面",
   resource: "资源",
-  template: "表单模板"
+  template: "表单模板",
 }
 
 // 角色映射
@@ -23,7 +23,7 @@ const roleMap = {
   viewer: "查看",
   editor: "编辑",
   admin: "管理",
-  creator: "创建"
+  creator: "创建",
 }
 
 export interface Task {
@@ -54,15 +54,15 @@ interface PendingTasksStore {
 // 格式化权限角色显示
 const formatRoles = (roles: string | string[]): string => {
   if (Array.isArray(roles)) {
-    return roles.map(role => roleMap[role] || role).join("和")
+    return roles.map((role) => roleMap[role] || role).join("和")
   }
   return roleMap[roles] || roles
 }
 
 export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
   tasks: [],
-  activeTab: 'permission_requests',
-  activeStatus: 'pending',
+  activeTab: "permission_requests",
+  activeStatus: "pending",
   isLoading: false,
   setActiveTab: (tab) => set({ activeTab: tab }),
   setActiveStatus: (status) => set({ activeStatus: status }),
@@ -71,26 +71,28 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
     try {
       // 1. 加载权限申请数据
       const permissionResult = await getMetadata([PERMISSION_REQUESTS_KEY])
-      const permissionRequests = JSON.parse(permissionResult.data?.[0]?.value || '{}')
-      
-      const permissionTasks = Object.values(permissionRequests)
-        .map((request: any) => ({
-          id: request.id,
-          title: `${resourceTypeMap[request.resourceType] || request.resourceType}「${request.resourceTitle}」的${formatRoles(request.role)}权限申请`,
-          description: request.reason,
-          type: 'permission_request',
-          status: request.status,
-          priority: 'medium',
-          department: '系统',
-          user: request.requesterName,
-          time: new Date(request.createdAt).toLocaleString(),
-          avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d',
-          metadata: request
-        }))
+      const permissionRequests = JSON.parse(permissionResult.data?.[0]?.value || "{}")
+
+      const permissionTasks = Object.values(permissionRequests).map((request: any) => ({
+        id: request.id,
+        title: `${resourceTypeMap[request.resourceType] || request.resourceType}「${request.resourceTitle}」的${formatRoles(request.role)}权限申请`,
+        description: request.reason,
+        type: "permission_request",
+        status: request.status,
+        priority: "medium",
+        department: "系统",
+        user: request.requesterName,
+        time: new Date(request.createdAt).toLocaleString(),
+        avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
+        metadata: request,
+      }))
 
       // 2. 加载账号申请数据
       const waitlistResult = await queryWaitList({})
-      const accountTasks = waitlistResult.data.map((item: any) => {
+      const _waitlistResult = waitlistResult.data.filter((item) => {
+        return item.purpose.includes("account_request")
+      })
+      const accountTasks = _waitlistResult.map((item: any) => {
         const requestInfo = jsonParse(item.purpose)
         const isAccountRequest = requestInfo.type === "account_request"
         const organizationId = isAccountRequest ? requestInfo.organizationId : null
@@ -126,8 +128,8 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
     try {
       // 获取当前任务
       const state = usePendingTasksStore.getState()
-      const task = state.tasks.find(t => t.id === taskId)
-      
+      const task = state.tasks.find((t) => t.id === taskId)
+
       if (!task) {
         throw new Error("Task not found")
       }
@@ -135,24 +137,19 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
       if (task.type === "permission_request") {
         // 处理权限申请
         const result = await getMetadata([PERMISSION_REQUESTS_KEY])
-        const requests = JSON.parse(result.data?.[0]?.value || '{}')
-        
+        const requests = JSON.parse(result.data?.[0]?.value || "{}")
+
         if (requests[taskId]) {
           const request = requests[taskId]
           request.status = status
           request.updatedAt = new Date().toISOString()
-          
-          if (status === 'completed') {
-            await addPermission(
-              request.resourceType,
-              request.resourceId,
-              request.requesterId,
-              request.role
-            )
+
+          if (status === "completed") {
+            await addPermission(request.resourceType, request.resourceId, request.requesterId, request.role)
           }
-          
+
           await setMetadata(PERMISSION_REQUESTS_KEY, JSON.stringify(requests))
-          message.success(status === 'completed' ? '已批准权限申请' : '已拒绝权限申请')
+          message.success(status === "completed" ? "已批准权限申请" : "已拒绝权限申请")
         }
       } else if (task.type === "account_request") {
         // 处理账号申请
@@ -170,7 +167,7 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
           })
           await setPhoneOrgMapping(phone, organizationId)
         }
-        message.success(status === 'completed' ? '已批准账号申请' : '已拒绝账号申请')
+        message.success(status === "completed" ? "已批准账号申请" : "已拒绝账号申请")
       }
 
       // 更新本地状态

@@ -115,7 +115,7 @@ const PendingTasks: React.FC = () => {
                 <Tab key='rejected' title='已拒绝' />
               </Tabs>
             </div>
-            <ScrollShadow className='h-[calc(100vh-300px)] px-2'>
+            <ScrollShadow className='h-[calc(100vh-300px)] p-2'>
               <AnimatePresence>
                 {filteredTasks
                   .filter((task) => task.type === "permission_request")
@@ -217,7 +217,7 @@ const PendingTasks: React.FC = () => {
               </Tabs>
             </div>
 
-            <ScrollShadow className='h-[calc(100vh-300px)] px-2'>
+            <ScrollShadow className='h-[calc(100vh-300px)] p-2'>
               <AnimatePresence>
                 {filteredTasks
                   .filter((task) => task.type === "account_request")
