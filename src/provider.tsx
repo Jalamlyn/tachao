@@ -85,7 +85,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
           // 添加延迟以确保过渡动画完成
           setTimeout(() => {
             setIsTransitioning(false)
-          }, 600) // 与CSS过渡时间匹配
+          }, 300) // 与CSS过渡时间匹配
         })
         .catch((err) => console.error("Failed to preload modules:", err))
     }
@@ -96,34 +96,46 @@ export function Provider({ children }: { children: React.ReactNode }) {
       <main className={`${darkMode.value ? "light" : "light"} text-foreground bg-background relative`}>
         <div
           className={`fixed inset-0 bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col justify-center items-center transition-opacity duration-600 ease-in-out z-50 ${
-            isInit && modulesLoaded && !isTransitioning ? 'opacity-0 pointer-events-none' : 'opacity-100'
+            isInit && modulesLoaded && !isTransitioning ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
         >
-          <div className="relative flex flex-col items-center">
-            <h1 className="text-5xl font-bold text-white mb-8 relative">
-              <span className="inline-block animate-pulse">S</span>
-              <span className="inline-block animate-pulse" style={{animationDelay: '0.1s'}}>h</span>
-              <span className="inline-block animate-pulse" style={{animationDelay: '0.2s'}}>a</span>
-              <span className="inline-block animate-pulse" style={{animationDelay: '0.3s'}}>t</span>
-              <span className="inline-block animate-pulse" style={{animationDelay: '0.4s'}}>a</span>
-              <span className="inline-block animate-pulse" style={{animationDelay: '0.5s'}}>A</span>
-              <span className="inline-block animate-pulse" style={{animationDelay: '0.6s'}}>I</span>
+          <div className='relative flex flex-col items-center'>
+            <h1 className='text-5xl font-bold text-white mb-8 relative'>
+              <span className='inline-block animate-pulse'>S</span>
+              <span className='inline-block animate-pulse' style={{ animationDelay: "0.1s" }}>
+                h
+              </span>
+              <span className='inline-block animate-pulse' style={{ animationDelay: "0.2s" }}>
+                a
+              </span>
+              <span className='inline-block animate-pulse' style={{ animationDelay: "0.3s" }}>
+                t
+              </span>
+              <span className='inline-block animate-pulse' style={{ animationDelay: "0.4s" }}>
+                a
+              </span>
+              <span className='inline-block animate-pulse' style={{ animationDelay: "0.5s" }}>
+                A
+              </span>
+              <span className='inline-block animate-pulse' style={{ animationDelay: "0.6s" }}>
+                I
+              </span>
             </h1>
-            <div className="absolute -bottom-12">
-              <Spinner 
-                size="lg"
+            <div className='absolute -bottom-12'>
+              <Spinner
+                size='lg'
                 classNames={{
                   base: "w-8 h-8",
                   wrapper: "w-8 h-8",
                 }}
-                color="white"
+                color='white'
               />
             </div>
           </div>
         </div>
         <div
-          className={`transition-opacity duration-600 ease-in-out ${
-            isInit && modulesLoaded && !isTransitioning ? 'opacity-100' : 'opacity-0'
+          className={`transition-opacity duration-300 ease-in-out ${
+            isInit && modulesLoaded && !isTransitioning ? "opacity-100" : "opacity-0"
           }`}
         >
           {children}
