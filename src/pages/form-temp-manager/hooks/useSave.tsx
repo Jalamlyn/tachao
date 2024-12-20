@@ -1,5 +1,6 @@
 import message from "@/components/Message"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
+import { sleep } from "@/utils"
 
 export const useSave = (
   formState,
@@ -29,7 +30,6 @@ export const useSave = (
         message.error("表单原始配置缺失，请先生成表单")
         return
       }
-      debugger
       try {
         // 检查是否在查看历史版本
         if (versionControl.currentIndex < versionControl.versions.length - 1) {
@@ -48,6 +48,7 @@ export const useSave = (
                   }
 
                   if (!isEditMode) {
+                    sleep(1000)
                     setNewTitle(title || versionToSave.formConfig.metadata?.title || "")
                     setTitleModalOpen(true)
                     setPendingSave({
