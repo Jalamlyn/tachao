@@ -55,21 +55,11 @@ export default async function chatChunkOpenAIOffice(
     })
   }
 
-  const modelEndpoints = {
-    EXPERT:
-      "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview",
-    ADVANCED:
-      "https://ai-mobenaimo177654748466.openai.azure.com/openai/deployments/gpt-4o-mini-2/chat/completions?api-version=2024-02-15-preview",
-  }
-
-  const apiKey = "5d5c1f3cc91b440b8391851b2eadfb1c"
-  const apiEndPoint = modelEndpoints[baseModel]
-
   const payload = {
     messages: _messages,
     temperature,
     max_tokens: 16000,
-    stream: true,
+    model: baseModel,
   }
 
   // 计算输入token数量
@@ -80,11 +70,10 @@ export default async function chatChunkOpenAIOffice(
   fetchController.current = controller
   onCancel(() => controller.abort())
   try {
-    const response = await fetch(apiEndPoint, {
+    const response = await fetch("http://localhost:9000/chat-azure", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "api-key": `${apiKey}`,
       },
       body: jsonStringify(payload),
       signal: controller.signal,
@@ -160,7 +149,6 @@ export default async function chatChunkOpenAIOffice(
         outputCost,
         totalCost: inputCost + outputCost,
       }
-      debugger
       if (existingRecords.length > 0) {
         await setMetadata("ai-cost-records", [...existingRecords, newRecord])
       } else {
