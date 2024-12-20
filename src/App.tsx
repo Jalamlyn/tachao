@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { getCurrentLanguage } from "./i18n"
 import WeChatLoginPage from "./pages/LoginPage"
+import ExternalLoginPage from "./pages/external-login"
 import AnalysisPage from "./pages/AnalysisPage"
 import { Toaster } from "./components/ui/toaster"
 import LandingPage from "./pages/landing"
@@ -43,7 +44,7 @@ function App() {
   }, [])
 
   const shouldRedirectToLogin = () => {
-    const publicPaths = ["/", "/login", "/report"]
+    const publicPaths = ["/", "/login", "/report", "/external-login"]
     if (!publicPaths.includes(location.pathname)) {
       const token = localStorage.getItem("model-base-user-token")
       return !token
@@ -61,6 +62,7 @@ function App() {
               <Route index element={<Navigate to='management' replace />} />
             </Route>
             <Route path='/login' element={<WeChatLoginPage />} />
+            <Route path='/external-login' element={<ExternalLoginPage />} />
             <Route
               path='/form-preview/:templateId'
               element={

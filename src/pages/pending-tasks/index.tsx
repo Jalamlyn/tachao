@@ -47,6 +47,34 @@ const PendingTasks: React.FC = () => {
     )
   }
 
+  const renderTaskContent = (task) => {
+    if (task.type === 'account_request') {
+      return (
+        <div className='mb-4'>
+          <div className='p-3 bg-default-50 rounded-lg'>
+            <div className='text-small font-semibold text-default-600 mb-1 flex items-center gap-2'>
+              <Icon icon='solar:user-plus-bold-duotone' className='w-4 h-4' />
+              申请信息：
+            </div>
+            <p className='text-default-500'>{task.description}</p>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className='mb-4'>
+        <div className='p-3 bg-default-50 rounded-lg'>
+          <div className='text-small font-semibold text-default-600 mb-1 flex items-center gap-2'>
+            <Icon icon='solar:document-text-linear' className='w-4 h-4' />
+            申请原因：
+          </div>
+          <p className='text-default-500'>{task.description}</p>
+        </div>
+      </div>
+    )
+  }
+
   if (isLoading) {
     return (
       <PageLayout title='待我处理' titleIcon='solar:list-check-bold'>
@@ -68,7 +96,7 @@ const PendingTasks: React.FC = () => {
                 <Icon icon='solar:shield-user-bold-duotone' />
                 <span>权限申请</span>
                 <Chip size='sm' variant='flat' color='primary'>
-                  {tasks.length}
+                  {tasks.filter(t => t.type === 'permission_request').length}
                 </Chip>
               </div>
             }
@@ -88,7 +116,9 @@ const PendingTasks: React.FC = () => {
             </div>
             
             <AnimatePresence>
-              {filteredTasks.map((task, index) => (
+              {filteredTasks
+                .filter(task => task.type === 'permission_request')
+                .map((task, index) => (
                 <motion.div
                   key={task.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -127,15 +157,7 @@ const PendingTasks: React.FC = () => {
                             <h3 className='text-lg font-semibold'>{task.title}</h3>
                           </div>
 
-                          <div className='mb-4'>
-                            <div className='p-3 bg-default-50 rounded-lg'>
-                              <div className='text-small font-semibold text-default-600 mb-1 flex items-center gap-2'>
-                                <Icon icon='solar:document-text-linear' className='w-4 h-4' />
-                                申请原因：
-                              </div>
-                              <p className='text-default-500'>{task.description}</p>
-                            </div>
-                          </div>
+                          {renderTaskContent(task)}
 
                           {task.status === 'pending' && (
                             <div className='flex justify-end gap-2 mt-4'>
@@ -165,14 +187,115 @@ const PendingTasks: React.FC = () => {
                 </motion.div>
               ))}
             </AnimatePresence>
-            {filteredTasks.length === 0 && (
-              <div className='flex flex-col items-center justify-center py-12 text-default-400'>
-                <Icon icon='solar:shield-check-bold-duotone' className='w-16 h-16 mb-4' />
-                <p>暂无{activeStatus === 'all' ? '' : statusConfig[activeStatus].label}的权限申请</p>
+          </Tab>
+
+          <Tab
+            key='account_requests'
+            title={
+              <div className='flex items-center gap-2'>
+                <Icon icon='solar:user-plus-bold-duotone' />
+                <span>账号申请</span>
+                <Chip size='sm' variant='flat' color='primary'>
+                  {tasks.filter(t => t.type === 'account_request').length}
+                </Chip>
               </div>
-            )}
+            }
+          >
+            <div className="mb-4">
+              <Tabs 
+                selectedKey={activeStatus} 
+                onSelectionChange={(key) => setActiveStatus(key as string)}
+                variant="light"
+                size="sm"
+              >
+                <Tab key="all" title="全部" />
+                <Tab key="pending" title="待处理" />
+                <Tab key="completed" title="已通过" />
+                <Tab key="rejected" title="已拒绝" />
+              </Tabs>
+            </div>
+            
+            <AnimatePresence>
+              {filteredTasks
+                .filter(task => task.type === 'account_request')
+                .map((task, index) => (
+                <motion.div
+                  key={task.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card className='hover:shadow-md transition-shadow duration-200 mb-4'>
+                    <CardBody className='p-6'>
+                      <div className='flex items-start gap-4'>
+                        <div className='relative'>
+                          <img src={task.avatar} alt={task.user} className='w-12 h-12 rounded-full' />
+                          <div className='absolute -bottom-1 -right-1 p-1 rounded-full bg-primary/10'>
+                            <Icon icon='solar:user-plus-bold-duotone' className='w-5 h-5 text-primary' />
+                          </div>
+                        </div>
+                        <div className='flex-1'>
+                          <div className='flex items-center justify-between mb-2'>
+                            <div className='flex items-center gap-2'>
+                              <span className='text-lg font-semibold text-default-700'>{task.user}</span>
+                              <Chip size='sm' variant='flat' color='secondary'>
+                                申请人
+                              </Chip>
+                              {getStatusChip(task.status)}
+                            </div>
+                            <Chip
+                              size='sm'
+                              variant='flat'
+                              color='primary'
+                              startContent={<Icon icon='solar:clock-circle' className='w-4 h-4' />}
+                            >
+                              {task.time}
+                            </Chip>
+                          </div>
+
+                          <div className='flex items-center gap-2 mb-3 pb-2 border-b border-default-100'>
+                            <h3 className='text-lg font-semibold'>{task.title}</h3>
+                          </div>
+
+                          {renderTaskContent(task)}
+
+                          {task.status === 'pending' && (
+                            <div className='flex justify-end gap-2 mt-4'>
+                              <Button
+                                size='sm'
+                                color='danger'
+                                variant='flat'
+                                startContent={<Icon icon='solar:close-circle-linear' className='w-4 h-4' />}
+                                onPress={() => updateTaskStatus(task.id, "rejected")}
+                              >
+                                拒绝
+                              </Button>
+                              <Button
+                                size='sm'
+                                color='primary'
+                                startContent={<Icon icon='solar:check-circle-linear' className='w-4 h-4' />}
+                                onPress={() => updateTaskStatus(task.id, "completed")}
+                              >
+                                同意
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </Tab>
         </Tabs>
+
+        {filteredTasks.length === 0 && (
+          <div className='flex flex-col items-center justify-center py-12 text-default-400'>
+            <Icon icon='solar:shield-check-bold-duotone' className='w-16 h-16 mb-4' />
+            <p>暂无{activeStatus === 'all' ? '' : statusConfig[activeStatus].label}的申请</p>
+          </div>
+        )}
       </div>
     </PageLayout>
   )
