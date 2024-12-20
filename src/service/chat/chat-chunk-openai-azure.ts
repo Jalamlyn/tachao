@@ -2,7 +2,7 @@ import { message } from "@/components/Message"
 import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { events } from "fetch-event-stream"
-import { countTokens } from "gpt-tokenizer/model/gpt-4o"
+import { countTokens } from "@/utils/moduleLoader"
 import { setMetadata, getMetadata } from "@/service/apis/metadata"
 
 // 计算费用的函数
@@ -31,7 +31,6 @@ export default async function chatChunkOpenAIOffice(
   temperature = 0,
   overFlag = "YES"
 ) {
-  // 从 sessionStorage 读取当前选择的模型
   const baseModel = sessionStorage.getItem("aiLevel") || "ADVANCED"
   console.log("[ChatService] Using model:", baseModel)
 
@@ -62,7 +61,6 @@ export default async function chatChunkOpenAIOffice(
     model: baseModel,
   }
 
-  // 计算输入token数量
   const inputTokenCount = countTokens(JSON.stringify(_messages))
   console.log("[TokenStats] Input token count:", inputTokenCount)
 
@@ -129,12 +127,10 @@ export default async function chatChunkOpenAIOffice(
       }
     }
 
-    // 计算费用
     const inputCost = calculateCost(inputTokenCount, true, baseModel)
     const outputCost = calculateCost(outputTokenCount, false, baseModel)
     console.log("[CostStats] Input cost:", inputCost, "Output cost:", outputCost, "Total cost:", inputCost + outputCost)
 
-    // 存储成本记录
     try {
       const costRecords = await getMetadata(["ai-cost-records"])
       const existingRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
