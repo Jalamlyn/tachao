@@ -86,6 +86,82 @@ const PendingTasks: React.FC = () => {
     )
   }
 
+  const renderActionButtons = (task) => {
+    if (task.status !== "pending") return null
+    
+    // 账号申请只显示同意按钮
+    if (task.type === "account_request") {
+      return (
+        <div className='flex justify-end gap-2 mt-4'>
+          <Button
+            size='sm'
+            color='primary'
+            startContent={<Icon icon='solar:check-circle-linear' className='w-4 h-4' />}
+            onPress={() => updateTaskStatus(task.id, "completed")}
+          >
+            同意
+          </Button>
+        </div>
+      )
+    }
+
+    // 权限申请显示完整的操作按钮
+    return (
+      <div className='flex justify-end gap-2 mt-4'>
+        <Button
+          size='sm'
+          color='danger'
+          variant='flat'
+          startContent={<Icon icon='solar:close-circle-linear' className='w-4 h-4' />}
+          onPress={() => updateTaskStatus(task.id, "rejected")}
+        >
+          拒绝
+        </Button>
+        <Button
+          size='sm'
+          color='primary'
+          startContent={<Icon icon='solar:check-circle-linear' className='w-4 h-4' />}
+          onPress={() => updateTaskStatus(task.id, "completed")}
+        >
+          同意
+        </Button>
+      </div>
+    )
+  }
+
+  const renderStatusTabs = (taskType: string) => {
+    // 账号申请只显示全部和待处理、已通过状态
+    if (taskType === "account_request") {
+      return (
+        <Tabs
+          selectedKey={activeStatus}
+          onSelectionChange={(key) => setActiveStatus(key as string)}
+          variant='light'
+          size='sm'
+        >
+          <Tab key='all' title='全部' />
+          <Tab key='pending' title='待处理' />
+          <Tab key='completed' title='已通过' />
+        </Tabs>
+      )
+    }
+
+    // 权限申请显示所有状态
+    return (
+      <Tabs
+        selectedKey={activeStatus}
+        onSelectionChange={(key) => setActiveStatus(key as string)}
+        variant='light'
+        size='sm'
+      >
+        <Tab key='all' title='全部' />
+        <Tab key='pending' title='待处理' />
+        <Tab key='completed' title='已通过' />
+        <Tab key='rejected' title='已拒绝' />
+      </Tabs>
+    )
+  }
+
   return (
     <PageLayout title='待我处理' titleIcon='solar:list-check-bold'>
       <div className='space-y-4 p-4'>
@@ -103,17 +179,7 @@ const PendingTasks: React.FC = () => {
             }
           >
             <div className='mb-4'>
-              <Tabs
-                selectedKey={activeStatus}
-                onSelectionChange={(key) => setActiveStatus(key as string)}
-                variant='light'
-                size='sm'
-              >
-                <Tab key='all' title='全部' />
-                <Tab key='pending' title='待处理' />
-                <Tab key='completed' title='已通过' />
-                <Tab key='rejected' title='已拒绝' />
-              </Tabs>
+              {renderStatusTabs("permission_request")}
             </div>
             <ScrollShadow className='h-[calc(100vh-300px)] p-2'>
               <AnimatePresence>
@@ -159,28 +225,7 @@ const PendingTasks: React.FC = () => {
                               </div>
 
                               {renderTaskContent(task)}
-
-                              {task.status === "pending" && (
-                                <div className='flex justify-end gap-2 mt-4'>
-                                  <Button
-                                    size='sm'
-                                    color='danger'
-                                    variant='flat'
-                                    startContent={<Icon icon='solar:close-circle-linear' className='w-4 h-4' />}
-                                    onPress={() => updateTaskStatus(task.id, "rejected")}
-                                  >
-                                    拒绝
-                                  </Button>
-                                  <Button
-                                    size='sm'
-                                    color='primary'
-                                    startContent={<Icon icon='solar:check-circle-linear' className='w-4 h-4' />}
-                                    onPress={() => updateTaskStatus(task.id, "completed")}
-                                  >
-                                    同意
-                                  </Button>
-                                </div>
-                              )}
+                              {renderActionButtons(task)}
                             </div>
                           </div>
                         </CardBody>
@@ -204,17 +249,7 @@ const PendingTasks: React.FC = () => {
             }
           >
             <div className='mb-4'>
-              <Tabs
-                selectedKey={activeStatus}
-                onSelectionChange={(key) => setActiveStatus(key as string)}
-                variant='light'
-                size='sm'
-              >
-                <Tab key='all' title='全部' />
-                <Tab key='pending' title='待处理' />
-                <Tab key='completed' title='已通过' />
-                <Tab key='rejected' title='已拒绝' />
-              </Tabs>
+              {renderStatusTabs("account_request")}
             </div>
 
             <ScrollShadow className='h-[calc(100vh-300px)] p-2'>
@@ -261,28 +296,7 @@ const PendingTasks: React.FC = () => {
                               </div>
 
                               {renderTaskContent(task)}
-
-                              {task.status === "pending" && (
-                                <div className='flex justify-end gap-2 mt-4'>
-                                  <Button
-                                    size='sm'
-                                    color='danger'
-                                    variant='flat'
-                                    startContent={<Icon icon='solar:close-circle-linear' className='w-4 h-4' />}
-                                    onPress={() => updateTaskStatus(task.id, "rejected")}
-                                  >
-                                    拒绝
-                                  </Button>
-                                  <Button
-                                    size='sm'
-                                    color='primary'
-                                    startContent={<Icon icon='solar:check-circle-linear' className='w-4 h-4' />}
-                                    onPress={() => updateTaskStatus(task.id, "completed")}
-                                  >
-                                    同意
-                                  </Button>
-                                </div>
-                              )}
+                              {renderActionButtons(task)}
                             </div>
                           </div>
                         </CardBody>
