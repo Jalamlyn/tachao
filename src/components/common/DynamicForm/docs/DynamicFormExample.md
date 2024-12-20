@@ -105,7 +105,9 @@ const formConfig: DynamicFormConfig = {
             }
           ]
         }
-      ]
+      ],
+      // 新增布局配置选项
+      layout: 'vertical' // 'tabs' | 'vertical'
     },
 
     tables: [
@@ -462,3 +464,66 @@ summary: {
   }
 }
 ```
+
+## 基础字段布局配置
+
+动态表单支持两种基础字段布局模式：
+
+### 1. Tabs布局（默认）
+
+字段分组以标签页形式水平展示：
+
+```typescript
+const formConfig = {
+  renderConfig: {
+    basicFields: {
+      groups: [
+        {
+          key: "basic",
+          title: "基本信息",
+          fields: [...]
+        },
+        {
+          key: "additional",
+          title: "附加信息",
+          fields: [...]
+        }
+      ],
+      layout: 'tabs' // 默认值，可省略
+    }
+  }
+}
+```
+
+### 2. 垂直布局
+
+字段分组以卡片形式垂直排列：
+
+```typescript
+const formConfig = {
+  renderConfig: {
+    basicFields: {
+      groups: [
+        {
+          key: "basic",
+          title: "基本信息",
+          fields: [...]
+        },
+        {
+          key: "additional",
+          title: "附加信息",
+          fields: [...]
+        }
+      ],
+      layout: 'vertical' // 使用垂直布局
+    }
+  }
+}
+```
+
+垂直布局特点：
+- 所有分组同时可见
+- 每个分组使用卡片样式展示
+- 支持分组标题、图标和描述
+- 包含平滑的动画效果
+- 适合内容较多或需要同时查看多个分组的场景
