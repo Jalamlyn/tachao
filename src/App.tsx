@@ -22,7 +22,10 @@ import { PermissionCheck } from "./permissions/components/PermissionCheck"
 
 import { loadBMapScript } from "@/components/reports/MapComponent"
 import UnauthorizedPage from "./permissions/pages/UnauthorizedPage"
-loadBMapScript()
+
+setTimeout(() => {
+  loadBMapScript()
+}, 5000)
 
 const queryClient = new QueryClient({
   defaultOptions: {

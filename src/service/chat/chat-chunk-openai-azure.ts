@@ -48,7 +48,7 @@ export default async function chatChunkOpenAIOffice(
   const payload = {
     messages: _messages,
     temperature,
-    max_tokens: 4096,
+    max_tokens: 16000,
     stream: true,
   }
 

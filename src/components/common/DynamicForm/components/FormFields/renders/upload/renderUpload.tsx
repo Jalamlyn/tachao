@@ -227,7 +227,7 @@ export const renderUpload = (
           }
         })
 
-        xhr.open("POST", signedData.formUploadHost, true)
+        xhr.open("POST", signedData.formUploadHost.replace("http:", ""), true)
         xhr.send(formData)
 
         return await uploadPromise

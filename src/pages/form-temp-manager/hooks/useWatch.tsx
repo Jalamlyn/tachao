@@ -2,6 +2,7 @@ import message from "@/components/Message"
 import AIFormAgent from "@/service/agents/AIFormAgent"
 import { localDB } from "@/utils/localDB"
 import { useEffect } from "react"
+import { codeStore } from "../components/codeStore"
 
 export const useWatch = (
   lastResponseRef,
@@ -9,8 +10,7 @@ export const useWatch = (
   setRawConfig,
   setPreviewContent,
   setSelectedTab,
-  versionControl,
-  updateLastMessage
+  versionControl
 ) => {
   useEffect(() => {
     const unwatch = localDB.watchKey("chat-chunk-over", async ({ value }) => {
@@ -23,6 +23,7 @@ export const useWatch = (
             // 更新表单配置
             setFormConfig(parsedConfig.config)
             setRawConfig(formContent)
+            codeStore.code = formContent
             setPreviewContent(formContent)
             setSelectedTab("preview")
 
