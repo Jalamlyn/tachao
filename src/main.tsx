@@ -7,7 +7,6 @@ import "./styles/globals.css"
 import "./styles/github-markdown.css"
 import { Toaster } from "sonner"
 import "./i18n"
-import "./globalStore"
 import "./tools"
 
 

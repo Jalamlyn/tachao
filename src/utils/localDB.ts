@@ -1,6 +1,7 @@
 import { message } from "@/components/Message"
 import { blog, jsonParse, jsonStringify } from "."
 import EventEmitter from "eventemitter3"
+import globalStore from "@/globalStore"
 
 let currentAppId = localStorage.getItem("@@appId")
 if (!currentAppId) {
@@ -32,27 +33,20 @@ const logStyles = {
 
 // 创建 EventEmitter 实例
 const eventEmitter = new EventEmitter()
-let currentOrganizationId = null
 
 export const localDB = {
   setAppId: async ({ id, organizationId }) => {
     currentAppId = id
-    currentOrganizationId = organizationId
-    localStorage.setItem(`${organizationId}_appId`, id)
+    globalStore.organizationId = organizationId
   },
 
   getAppId: () => {
-    return currentAppId || localStorage.getItem(`${currentOrganizationId}_appId`)
-    // const loginData = jsonParse(localStorage.getItem("loginData"))
-    // if (loginData) {
-    //   return currentAppId || localStorage.getItem(`${currentOrganizationId}_appId`)
-    // } else {
-    //   // if (!window.location.pathname.includes("/login")) {
-    //   //   window.location.href = "/login"
-    //   // }
-    // }
+    return currentAppId
   },
-
+  
+  notifyChange: (key, value) => {
+    eventEmitter.emit(key, jsonParse(value))
+  },
   // 添加控制日志输出的方法
   enableLogging: (enable) => {
     isLoggingEnabled = enable

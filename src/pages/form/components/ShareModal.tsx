@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react"
 import { QRCode } from "react-qrcode-logo"
 import { motion } from "framer-motion"
 import message from "@/components/Message"
+import { createShareUrl } from "@/utils/createShareUrl"
 
 interface ShareModalProps {
   isOpen: boolean
@@ -52,7 +53,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, formId, title 
     if (onShareContentChange) {
       onShareContentChange({
         title: customTitle,
-        description: customDescription
+        description: customDescription,
       })
     }
   }
@@ -101,17 +102,17 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, formId, title 
             transition={{ duration: 0.2 }}
             className='space-y-4 p-4'
           >
-            <div className="space-y-4">
+            <div className='space-y-4'>
               <Input
-                label="分享标题"
-                placeholder="请输入分享标题"
+                label='分享标题'
+                placeholder='请输入分享标题'
                 value={customTitle}
                 onChange={(e) => setCustomTitle(e.target.value)}
                 onBlur={handleContentChange}
               />
               <Input
-                label="分享描述"
-                placeholder="请输入分享描述"
+                label='分享描述'
+                placeholder='请输入分享描述'
                 value={customDescription}
                 onChange={(e) => setCustomDescription(e.target.value)}
                 onBlur={handleContentChange}
@@ -147,7 +148,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, formId, title 
             >
               <div className='relative'>
                 <QRCode
-                  value={link}
+                  value={createShareUrl(link)}
                   size={200}
                   qrStyle='dots'
                   eyeRadius={8}

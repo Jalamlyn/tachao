@@ -3,11 +3,12 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
 import { ShareModalProps } from "./types"
+import { createShareUrl } from "@/utils/createShareUrl"
 
 const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, title = "分享", description, shareUrl }) => {
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl)
+      await navigator.clipboard.writeText(createShareUrl(shareUrl))
       message.success("链接已复制, 快去分享吧!")
     } catch (error) {
       console.error("复制链接失败:", error)

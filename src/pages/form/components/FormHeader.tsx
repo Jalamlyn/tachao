@@ -6,6 +6,7 @@ import ShareModal from "./ShareModal"
 import message from "@/components/Message"
 import { useLoginInfo } from "@/hooks/useLoginInfo"
 import { checkEnvironment } from "@/utils/environment"
+import { createShareUrl } from "@/utils/createShareUrl"
 
 interface FormHeaderProps {
   title?: string
@@ -17,7 +18,7 @@ export const FormHeader: React.FC<FormHeaderProps> = ({ title = "表单详情", 
   const [webShareSupported, setWebShareSupported] = React.useState(false)
   const [shareContent, setShareContent] = useState({ title, description: "请查看这个表单" })
   const { loginInfo } = useLoginInfo()
-  const isWechat = checkEnvironment() === 'wechat'
+  const isWechat = checkEnvironment() === "wechat"
 
   useEffect(() => {
     setWebShareSupported(navigator.share !== undefined)
@@ -27,7 +28,7 @@ export const FormHeader: React.FC<FormHeaderProps> = ({ title = "表单详情", 
     // 更新 meta 标签
     const metaTitle = document.querySelector('meta[property="og:title"]')
     if (metaTitle) {
-      metaTitle.setAttribute('content', shareContent.title)
+      metaTitle.setAttribute("content", shareContent.title)
     }
   }, [shareContent.title])
 
@@ -59,16 +60,16 @@ export const FormHeader: React.FC<FormHeaderProps> = ({ title = "表单详情", 
   const handleQuickCopy = async () => {
     const link = generateShareLink()
     try {
-      await navigator.clipboard.writeText(link)
+      await navigator.clipboard.writeText(createShareUrl(link))
       message.success("已复制链接")
     } catch (err) {
       message.error("复制失败，请手动复制")
-      console.error('复制错误:', err)
+      console.error("复制错误:", err)
     }
   }
 
   const handleWechatShare = () => {
-    if (typeof wx !== 'undefined') {
+    if (typeof wx !== "undefined") {
       const link = generateShareLink()
       wx.ready(() => {
         wx.updateAppMessageShareData({
@@ -76,16 +77,16 @@ export const FormHeader: React.FC<FormHeaderProps> = ({ title = "表单详情", 
           desc: shareContent.description,
           link,
           success: () => {
-            message.success('已准备好分享')
+            message.success("已准备好分享")
           },
           fail: (res: any) => {
-            message.error('微信分享设置失败')
-            console.error('微信分享设置失败:', res)
-          }
+            message.error("微信分享设置失败")
+            console.error("微信分享设置失败:", res)
+          },
         })
       })
     } else {
-      message.error('微信环境未就绪')
+      message.error("微信环境未就绪")
     }
   }
 
@@ -98,9 +99,7 @@ export const FormHeader: React.FC<FormHeaderProps> = ({ title = "表单详情", 
       <header className='fixed top-0 left-0 right-0 h-12 bg-white/80 backdrop-blur-md border-b border-gray-100 z-50'>
         <div className='max-w-[1200px] mx-auto px-4 h-full flex items-center justify-between'>
           <div className='flex items-center gap-2'>
-            <h1 className='text-sm font-medium truncate max-w-[200px] md:max-w-[400px]'>
-              {title}
-            </h1>
+            <h1 className='text-sm font-medium truncate max-w-[200px] md:max-w-[400px]'>{title}</h1>
           </div>
 
           <div className='flex items-center gap-2'>
@@ -117,37 +116,37 @@ export const FormHeader: React.FC<FormHeaderProps> = ({ title = "表单详情", 
                   <Icon icon='mdi:share' className='w-4 h-4' />
                 </Button>
               </DropdownTrigger>
-              <DropdownMenu aria-label="分享选项">
+              <DropdownMenu aria-label='分享选项'>
                 {webShareSupported && (
                   <DropdownItem
-                    key="share"
-                    startContent={<Icon icon="mdi:share" className="w-4 h-4" />}
-                    description="使用系统分享"
+                    key='share'
+                    startContent={<Icon icon='mdi:share' className='w-4 h-4' />}
+                    description='使用系统分享'
                     onClick={handleNativeShare}
                   >
                     分享表单
                   </DropdownItem>
                 )}
-                <DropdownItem 
-                  key="copy"
-                  startContent={<Icon icon="mdi:content-copy" className="w-4 h-4" />}
-                  description="复制表单链接"
+                <DropdownItem
+                  key='copy'
+                  startContent={<Icon icon='mdi:content-copy' className='w-4 h-4' />}
+                  description='复制表单链接'
                   onClick={handleQuickCopy}
                 >
                   复制链接
                 </DropdownItem>
                 {isWechat && (
                   <DropdownItem
-                    key="wechat-share"
-                    startContent={<Icon icon="mdi:wechat" className="w-4 h-4" />}
+                    key='wechat-share'
+                    startContent={<Icon icon='mdi:wechat' className='w-4 h-4' />}
                     onClick={handleWechatShare}
                   >
                     分享给微信好友
                   </DropdownItem>
                 )}
                 <DropdownItem
-                  key="more-options"
-                  startContent={<Icon icon="mdi:qrcode" className="w-4 h-4" />}
+                  key='more-options'
+                  startContent={<Icon icon='mdi:qrcode' className='w-4 h-4' />}
                   onClick={() => setIsShareModalOpen(true)}
                 >
                   生成二维码
@@ -158,9 +157,9 @@ export const FormHeader: React.FC<FormHeaderProps> = ({ title = "表单详情", 
         </div>
       </header>
 
-      <ShareModal 
-        isOpen={isShareModalOpen} 
-        onClose={() => setIsShareModalOpen(false)} 
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
         formId={formId}
         title={title}
         onShareContentChange={handleShareContentChange}

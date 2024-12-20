@@ -1,4 +1,4 @@
 export default {
-  currentFileContent: "",
-  currentFilePath: "",
+  organizationId: null,
+  username: null,
 }
