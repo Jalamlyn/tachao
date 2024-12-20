@@ -37,9 +37,7 @@ const PermissionRequestForm = ({
       const requests = await getPermissionRequests()
       const existingRequest = Object.values(requests).find(
         (request: any) =>
-          request.resourceType === resourceType && 
-          request.resourceId === resourceId && 
-          request.requesterId === user.id
+          request.resourceType === resourceType && request.resourceId === resourceId && request.requesterId === user.id
       )
 
       if (existingRequest) {
@@ -66,11 +64,11 @@ const PermissionRequestForm = ({
     try {
       // 处理权限包含关系
       let finalRole = selectedRole
-      if (resourceType === 'template') {
-        if (selectedRole === 'editor') {
-          finalRole = ['editor', 'viewer']
-        } else if (selectedRole === 'creator') {
-          finalRole = ['creator', 'editor', 'viewer']
+      if (resourceType === "template") {
+        if (selectedRole === "editor") {
+          finalRole = ["editor", "viewer"]
+        } else if (selectedRole === "creator") {
+          finalRole = ["creator", "editor", "viewer"]
         } else {
           finalRole = [selectedRole]
         }
@@ -84,14 +82,16 @@ const PermissionRequestForm = ({
         reason: reason.trim(),
         role: finalRole,
         resubmitted: requestStatus === "rejected", // 标记是否是重新提交
-        history: lastRequest ? [
-          ...(lastRequest.history || []),
-          {
-            timestamp: new Date().toISOString(),
-            status: "resubmitted",
-            reason: reason.trim()
-          }
-        ] : undefined
+        history: lastRequest
+          ? [
+              ...(lastRequest.history || []),
+              {
+                timestamp: new Date().toISOString(),
+                status: "resubmitted",
+                reason: reason.trim(),
+              },
+            ]
+          : undefined,
       })
 
       setRequestStatus("pending")
@@ -106,7 +106,7 @@ const PermissionRequestForm = ({
 
   const handleResubmit = () => {
     setRequestStatus("none")
-    setReason("")  // 清空原有申请理由
+    setReason("") // 清空原有申请理由
   }
 
   const getStatusContent = () => {
@@ -125,8 +125,8 @@ const PermissionRequestForm = ({
         action: {
           label: "重新申请",
           icon: "solar:refresh-circle-bold-duotone",
-          onClick: handleResubmit
-        }
+          onClick: handleResubmit,
+        },
       },
       approved: {
         icon: "solar:check-circle-bold-duotone",
@@ -143,26 +143,24 @@ const PermissionRequestForm = ({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`mt-4 p-4 rounded-lg ${config.color}`}
+        className={`mt-4 p-4 rounded-lg ${config?.color}`}
       >
-        <div className="flex flex-col gap-2">
-          <div className={`flex items-center gap-2 ${config.textColor}`}>
-            <Icon icon={config.icon} className='w-5 h-5' />
-            <span>{config.text}</span>
+        <div className='flex flex-col gap-2'>
+          <div className={`flex items-center gap-2 ${config?.textColor}`}>
+            <Icon icon={config?.icon} className='w-5 h-5' />
+            <span>{config?.text}</span>
           </div>
           {requestStatus === "rejected" && (
-            <div className="flex items-center justify-between mt-2">
-              <span className="text-sm text-danger-600">
-                如有疑问请联系管理员了解具体原因
-              </span>
+            <div className='flex items-center justify-between mt-2'>
+              <span className='text-sm text-danger-600'>如有疑问请联系管理员了解具体原因</span>
               <Button
-                size="sm"
-                color="primary"
-                variant="flat"
-                startContent={<Icon icon={config.action.icon} className="w-4 h-4" />}
-                onPress={config.action.onClick}
+                size='sm'
+                color='primary'
+                variant='flat'
+                startContent={<Icon icon={config?.action?.icon} className='w-4 h-4' />}
+                onPress={config?.action?.onClick}
               >
-                {config.action.label}
+                {config?.action?.label}
               </Button>
             </div>
           )}
@@ -182,7 +180,7 @@ const PermissionRequestForm = ({
           label='申请权限类型'
           value={selectedRole}
           onValueChange={(value) => setSelectedRole(value as TemplatePermissionRole)}
-          description="选择更高级别的权限将自动包含下级权限"
+          description='选择更高级别的权限将自动包含下级权限'
         >
           <Radio value={PERMISSION_ROLES.CREATOR}>{PERMISSION_DESCRIPTIONS[PERMISSION_ROLES.CREATOR]}</Radio>
           <Radio value={PERMISSION_ROLES.EDITOR}>{PERMISSION_DESCRIPTIONS[PERMISSION_ROLES.EDITOR]}</Radio>
