@@ -10,6 +10,11 @@ import message from "@/components/Message"
 import { cn } from "@/theme/cn"
 import { apiService } from "@/service/apis/api"
 
+// 添加微信环境检测函数
+const isWeixinBrowser = () => {
+  return /MicroMessenger/i.test(navigator.userAgent)
+}
+
 export const renderUpload = (
   field: FormField,
   form: UseFormReturn<any>,
@@ -119,6 +124,12 @@ export const renderUpload = (
 
   // 处理新的upload类型
   const handleUploadType = async (file: File) => {
+    // 检查是否是微信环境
+    if (isWeixinBrowser()) {
+      message.info('微信环境暂不支持上传功能，我们正在努力开发中，请稍后再试或使用其他浏览器~')
+      return null
+    }
+
     if (field.uploadConfig) {
       // 检查文件大小
       if (field.uploadConfig.maxSize && file.size > field.uploadConfig.maxSize) {
@@ -301,7 +312,7 @@ export const renderUpload = (
               htmlFor={field.name}
               variant='bordered'
               size='sm'
-              isDisabled={!isEditable || field.disabled || uploading || isProcessing}
+              isDisabled={!isEditable || field.disabled || uploading || isProcessing || isWeixinBrowser()}
               startContent={
                 uploading || isProcessing ? (
                   <Icon icon='mdi:loading' className='w-4 h-4 animate-spin' />
@@ -316,7 +327,11 @@ export const renderUpload = (
                 field.className
               )}
             >
-              {uploading ? "上传中..." : isProcessing ? "处理中..." : field.placeholder || "选择文件"}
+              {uploading ? "上传中..." : 
+               isProcessing ? "处理中..." : 
+               isWeixinBrowser() ? 
+               "微信暂不支持" : 
+               field.placeholder || "选择文件"}
             </Button>
             {formField.value && !uploading && !isProcessing && (
               <>
