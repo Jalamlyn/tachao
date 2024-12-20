@@ -260,7 +260,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, formId, o
             throw new Error("更新失败")
           }
         } else {
-          debugger
+          // debugger
           const result = await createMetadata(formData)
           if (result) {
             savedFormId = result.id

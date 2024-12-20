@@ -20,6 +20,7 @@ export const FormTabs: React.FC<FormTabsProps> = ({
   componentCode,
   formData,
 }) => {
+  // debugger
   return (
     <Tabs
       selectedKey={selectedTab}
