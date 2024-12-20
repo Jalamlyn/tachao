@@ -136,7 +136,7 @@ export const flattenData = (data: any[]) => {
 
 export const extractShataAICode = (content: string) => {
   const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
-  const match = content.match(regex)
+  const match = content?.match(regex)
   if (match) {
     return match[1].trim()
   }

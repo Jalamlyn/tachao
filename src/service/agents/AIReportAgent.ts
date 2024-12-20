@@ -125,7 +125,7 @@ export class AIReportAgent {
   private async parseComponentCode(code: string): Promise<string | null> {
     try {
       const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
-      const match = code.match(regex)
+      const match = code?.match(regex)
       if (match) {
         return match[1].trim()
       }

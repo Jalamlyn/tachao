@@ -139,7 +139,7 @@ export const parseFormConfig = async (content: string) => {
   try {
     // 1. 提取代码
     const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
-    const match = content.match(regex)
+    const match = content?.match(regex)
     if (!match) {
       throw new Error("No valid code found")
     }
