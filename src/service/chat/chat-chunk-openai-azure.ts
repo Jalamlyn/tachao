@@ -9,12 +9,12 @@ import { setMetadata, getMetadata } from "@/service/apis/metadata"
 function calculateCost(tokenCount: number, isInput: boolean, model: string): number {
   const ratePerThousandTokens = {
     ADVANCED: {
-      input: 0.01,
-      output: 0.03,
+      input: 0.02,
+      output: 0.06,
     },
     EXPERT: {
-      input: 0.1,
-      output: 0.3,
+      input: 0.2,
+      output: 0.7,
     },
   }
 
@@ -70,7 +70,7 @@ export default async function chatChunkOpenAIOffice(
   fetchController.current = controller
   onCancel(() => controller.abort())
   try {
-    const response = await fetch("http://localhost:9000/chat-azure", {
+    const response = await fetch("https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-azure", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
