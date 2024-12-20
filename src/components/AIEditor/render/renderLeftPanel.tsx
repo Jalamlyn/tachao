@@ -6,7 +6,8 @@ import AICommandInput from "@/components/AIEditor/components/AICommandInput"
 import { cn } from "@/lib/utils"
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
-import { ImageUploader } from "../../ImageUpload"
+import { ImageUploader } from "../components/ImageUpload"
+import { ExcelUploader } from "../components/ExcelUpload"
 import { AI_LEVELS } from "../type"
 
 export const renderLeftPanel = (
@@ -15,6 +16,7 @@ export const renderLeftPanel = (
   handleClearMessages,
   messages,
   imageUpload,
+  excelUpload,
   agent,
   onCommandResult
 ) => {
@@ -85,6 +87,7 @@ export const renderLeftPanel = (
 
         <div className='p-2'>
           {imageUpload && <ImageUploader agent={agent} aiLevel={selectedAILevel} />}
+          {excelUpload && <ExcelUploader agent={agent} aiLevel={selectedAILevel} />}
           <AICommandInput agent={agent} onResult={onCommandResult} aiLevel={selectedAILevel} />
         </div>
       </div>
