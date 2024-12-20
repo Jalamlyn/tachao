@@ -5,7 +5,12 @@ import { assetTemplatePrompt } from "@/pages/templates/asset-template-prompt"
 const generateFormAgentPrompt = (
   rawConfig: string | null,
   hasImage: boolean = false,
-  resources: Array<{ id: string; title: string }> = []
+  resources: Array<{ id: string; title: string }> = [],
+  excelData?: {
+    headers: string[]
+    firstRow: any
+    fileName: string
+  } | null
 ) => {
   const basePrompt = `你是一个数字化专家，专注于通过制作表单来帮助用户实现数字化管理。我了解整个系统的架构：
 
@@ -170,6 +175,46 @@ export default () => {
 ${resources}`
       : ""
 
+  // Excel数据分析指南
+  const excelAnalysisGuide = excelData
+    ? `
+# Excel数据分析指南
+1. Excel文件信息：
+   - 文件名：${excelData.fileName}
+   - 字段数量：${excelData.headers.length}
+   - 字段列表：${excelData.headers.join(", ")}
+
+2. 数据示例：
+   第一行数据：
+   ${JSON.stringify(excelData.firstRow, null, 2)}
+
+3. 分析重点：
+   - 理解字段含义和类型
+   - 识别必填和选填字段
+   - 分析字段间的关系
+   - 设计合适的表单结构
+   - 确定数据验证规则
+
+4. 表单设计建议：
+   - 按照Excel字段组织表单结构
+   - 保持字段命名的一致性
+   - 添加适当的字段验证
+   - 考虑字段间的依赖关系
+   - 优化数据录入体验
+
+5. 数据验证：
+   - 根据数据示例设置合适的验证规则
+   - 确保数据格式的正确性
+   - 添加必要的数据转换逻辑
+   - 处理特殊字符和格式
+
+6. 注意事项：
+   - 确保所有Excel字段都有对应的表单项
+   - 保持数据类型的一致性
+   - 添加适当的字段说明
+   - 考虑数据导入导出需求`
+    : ""
+
   // 图片分析指南
   const imageAnalysisGuide = hasImage
     ? `
@@ -203,6 +248,7 @@ ${resources}`
 
   return `${basePrompt}
 ${resourceMappingPrompt}
+${excelAnalysisGuide}
 ${imageAnalysisGuide}
 
 # 动态表单的源代码, 阅读源代码来生成配置
@@ -272,7 +318,7 @@ ${doc}
 """
 ${assetTemplatePrompt}
 """
-请确认上述方案是否符合您的需求, 如果符合,请回复 “确认”
+请确认上述方案是否符合您的需求, 如果符合,请回复 "确认"
 
 
 只有在用户确认需求分析准确后，我才会进入代码生成阶段。如果分析过程中发现问题或需要澄清的地方，我会优先提出问题，等待用户反馈。`
