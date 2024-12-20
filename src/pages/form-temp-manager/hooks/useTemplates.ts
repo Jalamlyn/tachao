@@ -92,6 +92,7 @@ export const useTemplates = () => {
     async (config: DynamicFormConfig) => {
       try {
         setIsLoading(true)
+        debugger
         const templateData = {
           title: "新建模板",
           type: "custom",
