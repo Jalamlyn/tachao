@@ -2,9 +2,9 @@ import { create } from "zustand"
 import { queryWaitList, createRamAccount, queryRamAccount } from "@/service/apis/api"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
-import { setPhoneOrgMapping } from "@/service/apis/metadata"
 import { jsonParse } from "@/utils"
 import { addPermission } from "@/permissions/utils/permissionUtils"
+import { queryMyProject, addProjectMember } from "@/service/apis/project"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
 
@@ -89,14 +89,14 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
 
       // 2. 获取所有现有RAM账号
       const ramAccountsResult = await queryRamAccount()
-      const existingAccounts = ramAccountsResult.data.map(acc => acc.account)
+      const existingAccounts = ramAccountsResult.data.map((acc) => acc.account)
 
       // 3. 加载账号申请数据
       const waitlistResult = await queryWaitList({})
       const _waitlistResult = waitlistResult.data.filter((item) => {
         const requestInfo = jsonParse(item.purpose)
         if (!requestInfo.phone) return false
-        
+
         // 检查 wb_手机号 是否已存在
         const accountName = `wb_${requestInfo.phone}`
         return !existingAccounts.includes(accountName)
@@ -169,13 +169,32 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
         })
 
         if (status === "completed") {
-          const { phone, organizationId } = task.metadata
-          await createRamAccount({
-            name: `wb_${phone}`,
-            account: `wb_${phone}`,
+          const { purpose } = task.metadata
+          const { phone } = jsonParse(purpose)
+          const accountName = `wb_${phone}`
+          
+          // 创建账号
+          const accountRes = await createRamAccount({
+            name: accountName,
+            account: accountName,
             password: phone,
           })
-          await setPhoneOrgMapping(phone, organizationId)
+
+          // 查询默认企业项目并添加成员
+          try {
+            const projectRes = await queryMyProject({ name: "默认企业项目" })
+            if (projectRes.data && projectRes.data.length > 0) {
+              await addProjectMember({
+                projectId: projectRes.data[0].id,
+                ramUserId: accountRes.id,
+                role: "PROJECT_MANAGER",
+                name: accountRes.name,
+              })
+            }
+          } catch (error) {
+            console.error("Error adding account to project:", error)
+            message.warning("账号已创建，但添加到项目失败")
+          }
         }
         message.success(status === "completed" ? "已开通账号" : "已拒绝账号申请")
       }
