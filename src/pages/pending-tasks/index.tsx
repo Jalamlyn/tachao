@@ -89,7 +89,7 @@ const PendingTasks: React.FC = () => {
   const renderActionButtons = (task) => {
     if (task.status !== "pending") return null
     
-    // 账号申请只显示同意按钮
+    // 账号申请只显示开通按钮
     if (task.type === "account_request") {
       return (
         <div className='flex justify-end gap-2 mt-4'>
@@ -99,7 +99,7 @@ const PendingTasks: React.FC = () => {
             startContent={<Icon icon='solar:check-circle-linear' className='w-4 h-4' />}
             onPress={() => updateTaskStatus(task.id, "completed")}
           >
-            同意
+            开通
           </Button>
         </div>
       )

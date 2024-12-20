@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { queryWaitList, createRamAccount } from "@/service/apis/api"
+import { queryWaitList, createRamAccount, queryRamAccount } from "@/service/apis/api"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
 import { setPhoneOrgMapping } from "@/service/apis/metadata"
@@ -87,11 +87,21 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
         metadata: request,
       }))
 
-      // 2. 加载账号申请数据
+      // 2. 获取所有现有RAM账号
+      const ramAccountsResult = await queryRamAccount()
+      const existingAccounts = ramAccountsResult.data.map(acc => acc.account)
+
+      // 3. 加载账号申请数据
       const waitlistResult = await queryWaitList({})
       const _waitlistResult = waitlistResult.data.filter((item) => {
-        return item.purpose.includes("account_request")
+        const requestInfo = jsonParse(item.purpose)
+        if (!requestInfo.phone) return false
+        
+        // 检查 wb_手机号 是否已存在
+        const accountName = `wb_${requestInfo.phone}`
+        return !existingAccounts.includes(accountName)
       })
+
       const accountTasks = _waitlistResult.map((item: any) => {
         const requestInfo = jsonParse(item.purpose)
         const isAccountRequest = requestInfo.type === "account_request"
@@ -99,13 +109,13 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
         const cachedLabel = localStorage.getItem("cachedLabel")
         return {
           id: item.id,
-          title: isAccountRequest ? `来自 ${item.phone} 的账号申请` : `${item.type} 申请`,
+          title: isAccountRequest ? `来自 ${requestInfo.phone} 的账号申请` : `${item.type} 申请`,
           description: isAccountRequest ? `申请加入企业：${cachedLabel}` : "申请开通账号",
           type: "account_request",
           status: item.status || "pending",
           priority: "medium",
           department: "系统",
-          user: item.phone || item.email,
+          user: item.email,
           time: new Date(item.createdAt).toLocaleString(),
           avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
           metadata: {
@@ -161,13 +171,13 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
         if (status === "completed") {
           const { phone, organizationId } = task.metadata
           await createRamAccount({
-            name: phone,
-            account: phone,
+            name: `wb_${phone}`,
+            account: `wb_${phone}`,
             password: phone,
           })
           await setPhoneOrgMapping(phone, organizationId)
         }
-        message.success(status === "completed" ? "已批准账号申请" : "已拒绝账号申请")
+        message.success(status === "completed" ? "已开通账号" : "已拒绝账号申请")
       }
 
       // 更新本地状态
