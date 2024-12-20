@@ -7,6 +7,7 @@ import { Icon } from "@iconify/react"
 import { Spinner } from "@nextui-org/react"
 import { DynamicComponentRenderer } from "@/components/DynamicComponentRenderer"
 import { extractShataAIFormContent } from "@/components/AIEditor"
+import { codeStore } from "./codeStore"
 
 interface FormPreviewProps {
   code?: string // 新增：组件代码
@@ -79,7 +80,6 @@ const FormPreview: React.FC<FormPreviewProps> = ({ code, previewMode = true }) =
       </div>
     )
   }
-
   return (
     <div className='relative h-full bg-background'>
       {componentCode ? (

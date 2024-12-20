@@ -22,12 +22,13 @@ import user from "/assets/user.png"
 import { useWatch } from "./hooks/useWatch"
 import { getFormAgent } from "./getFormAgent"
 import { useSave } from "./hooks/useSave"
+import { codeStore } from "./components/codeStore"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { templateId } = useParams<{ templateId: string }>()
-  const { templateType, templateTitle, templateDescription, promptTemplate } = location.state || {}
+  const { templateTitle, templateDescription, promptTemplate } = location.state || {}
   const isEditMode = !location.pathname.includes("/create/")
   const { updateBreadcrumbs } = useBreadcrumb()
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false)
@@ -35,7 +36,6 @@ const AIFormEditor: React.FC = () => {
   const {
     messages,
     selectedTab,
-    previewContent,
     isTitleModalOpen,
     isVersionSelectModalOpen,
     isSuccessModalOpen,
@@ -222,6 +222,7 @@ const AIFormEditor: React.FC = () => {
       setFormConfig(result.config)
       setRawConfig(result.rawConfig)
       setPreviewContent(result.rawConfig)
+      codeStore.code = result.rawConfig
     }
   }
 
@@ -278,7 +279,7 @@ const AIFormEditor: React.FC = () => {
               }
             }}
           >
-            <FormPreview previewMode code={version?.rawConfig} />
+            <FormPreview previewMode code={formState.rawConfig} />
           </ErrorBoundary>
         )}
         showCodeTab

@@ -34,7 +34,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
     }
   }
   useEffect(() => {
-    if (location.pathname === "/") {
+    if (location.pathname === "/" || location.pathname === "/external-login") {
       return setIsInit(true)
     }
     if (!location.pathname.includes("/login")) {

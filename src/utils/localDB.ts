@@ -1,7 +1,6 @@
 import { message } from "@/components/Message"
 import { blog, jsonParse, jsonStringify } from "."
 import EventEmitter from "eventemitter3"
-import { getCurrentAccountInfo } from "@/service/apis/user"
 
 let currentAppId = localStorage.getItem("@@appId")
 if (!currentAppId) {

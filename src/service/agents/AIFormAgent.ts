@@ -81,13 +81,9 @@ export class AIFormAgent {
         ),
       }
 
-      const enhancedCommand = `在这份代码上继续修改,生成修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码
-      ---
+      const enhancedCommand = `在这份代码"""
       ${this._rawConfig}
-      ---
-      """
-      这是我的需求或者问题: ${command}, 如果是需求你就生成代码, 如果是问题, 你就结合代码回答我的问题
-      """
+      """上继续修改实现我的需求或者回答我的问题"""${command}"""如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码
       [回复策略:
         * 对于表单直接相关问题：提供具体解决方案
         * 对于业务相关问题：进行分析并给出建议
@@ -101,7 +97,7 @@ export class AIFormAgent {
           代码
         </shata-ai-code>
         \`\`\` 
-        包裹, 严格按照<doc>中的配置来生成代码, 不要使用任何文档中没有的配置, 不要使用注释来省略任何代码或逻辑]`
+        包裹]`
 
       const currentUserMessage = {
         role: "user" as const,

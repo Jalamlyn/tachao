@@ -5,337 +5,429 @@
 ## 完整示例
 
 ```jsx
-import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
-
-const formConfig: DynamicFormConfig = {
-  metadata: {
-    title: "采购申请单",
-    description: "用于提交采购申请的电子表单",
-  },
-
-  renderConfig: {
-    basicFields: {
-      groups: [
-        {
-          key: "basic",
-          title: "基本信息",
-          icon: "mdi:information",
-          description: "请填写申请的基本信息",
-          fields: [
-            {
-              type: "orderNumber",
-              name: "orderNo",
-              label: "采购单号",
-              prefix: "PO",
-              disabled: true
-            },
-            {
-              name: "department",
-              label: "申请部门",
-              type: "resource",
-              required: true,
-              resourceConfig: {
-                resourceId: "departments",
-                displayField: "name",
-                displayFields: [
-                  { key: "name", label: "部门名称" },
-                  { key: "code", label: "部门代码" }
-                ],
-                displayFormat: (resource) =>
-                  `${resource.name} (${resource.code})`,
-                triggerConfig: {
-                  type: "button",
-                  text: "选择部门",
-                  icon: "mdi:office-building",
-                  className: "bg-blue-50 hover:bg-blue-100"
-                },
-                fieldMapping: {
-                  "departmentManager": {
-                    field: "manager",
-                    transform: (value) => ({
-                      dataid: value.id,
-                      displayValue: value.name
-                    })
-                  },
-                  "costCenter": "costCenter",
-                  "budgetInfo": {
-                    fields: ["budget", "currency"],
-                    transform: (values) => ({
-                      amount: values[0],
-                      currency: values[1]
-                    })
-                  }
-                }
-              }
-            },
-            {
-              name: "departmentManager",
-              label: "部门主管",
-              type: "resource",
-              required: true,
-              disabled: true,
-              resourceConfig: {
-                resourceId: "employees",
-                displayFields: [
-                  { key: "name", label: "姓名" },
-                  { key: "position", label: "职位" }
-                ]
-              }
-            },
-           {
-            name: "customRender",
-            label: "自定义渲染",
-            type: "custom",
-            render: ({ field, form, isEditable }) => (
-              <div
-              style={{
-                padding: "10px",
-                backgroundColor: "#f0f0f0",
-                border: "1px solid #ccc",
-                borderRadius: "5px",
-                textAlign: "center"
-              }}
-              >
-              <h3 style={{ margin: 0 }}>这是一个自定义渲染字段</h3>
-              <p style={{ fontSize: "14px", color: "#666" }}>
-                你可以在这里展示任何静态内容或动态内容
-              </p>
-              </div>
-            )
-            }
-          ]
-        }
-      ],
-      // 新增布局配置选项
-      layout: 'vertical' // 'tabs' | 'vertical'
+export default () => {
+  const formConfig = {
+    metadata: {
+      title: "成本分析报表 - 材料成本",
+      description: "采集材料成本的明细数据",
     },
-
-    tables: [
-      {
-        key: "items",
-        title: "采购明细",
-        icon: "mdi:table",
-        description: "请填写需要采购的物品明细",
-        config: {
-          columns: [
-            {
-              key: "table.items.orderNo",
-              title: "物料编号",
-              type: "orderNumber",
-              width: 200,
-              prefix: "MAT"
-            },
-            {
-              key: "table.items.material",
-              title: "物料",
-              type: "resource",
-              width: 300,
-              required: true,
-              resourceConfig: {
-                resourceId: "materials",
-                displayFields: [
-                  { key: "name", label: "名称" },
-                  { key: "code", label: "编号" },
-                  { key: "specification", label: "规格" }
-                ],
-                showTrigger: true,
-                triggerPosition: "right",
-                fieldMapping: {
-                  "table.items.unit": "unit",
-                  "table.items.unitPrice": {
-                    field: "price",
-                    transform: (value) => Number(value).toFixed(2)
-                  }
-                }
-              }
-            },
-            {
-              key: "table.items.quantity",
-              title: "数量",
-              type: "number",
-              width: 120,
-              required: true
-            },
-            {
-              key: "table.items.unitPrice",
-              title: "单价",
-              type: "number",
-              width: 120,
-              required: true
-            },
-            {
-              key: "table.items.amount",
-              title: "金额",
-              type: "number",
-              width: 120,
-              disabled: true,
-              formatConfig: {
-                type: "amount",
-                options: {
-                  precision: 2,
-                  currency: "CNY"
-                }
-              }
-            }
-          ],
-          summary: {
-            show: true,
-            firstColumnText: "合计",
-            onCompute: (data) => {
-              // 计算汇总数据
-              const total = data.reduce((sum, row) => 
-                sum + (Number(row.quantity) || 0) * (Number(row.unitPrice) || 0), 0)
-              
-              // 返回与列key对应的汇总数据
-              return {
-                "table.items.amount": total
-              }
-            }
-          }
-        }
-      }
-    ],
-
-    processSteps: [
-      {
-        key: "applicant",
-        title: "申请人确认",
-        icon: "mdi:account-check",
-        description: "申请人确认申请信息",
-        required: true,
-        fields: [
+    renderConfig: {
+      basicFields: {
+        groups: [
           {
-            name: "confirmDate",
-            label: "确认日期",
-            type: "date",
-            required: true
-          },
-          {
-            name: "signature",
-            label: "签名",
-            type: "signature",
-            required: true,
-            width: 300,
-            height: 150
-          },
-          {
-            name: "attachments",
-            label: "附件",
-            type: "upload",
-            uploadConfig: {
-              uploadType: "file",
-              multiple: true,
-              maxSize: 10 * 1024 * 1024,
-              maxCount: 5,
-              thumbnail: true,
-              uploadConfig: {
-                action: "/api/upload",
-                headers: {
-                  "X-Upload-Type": "form-attachment"
-                },
-                withCredentials: true
+            key: "customerInfo",
+            title: "客户信息",
+            fields: [
+              {
+                name: "customer",
+                label: "客户",
+                type: "text",
+                required: true,
               },
-              previewConfig: {
-                modalTitle: "附件预览",
-                modalWidth: "80%"
-              }
-            }
-          }
-        ]
-      },
-      {
-        key: "manager",
-        title: "部门主管审批",
-        icon: "mdi:account-supervisor",
-        description: "部门主管审核申请",
-        required: true,
-        dependencies: [
-          {
-            step: "applicant",
-            message: "需要先完成申请人确认"
-          }
-        ],
-        fields: [
-          {
-            name: "approved",
-            label: "审批结果",
-            type: "radio",
-            required: true,
-            options: [
-              { label: "同意", value: "approved" },
-              { label: "拒绝", value: "rejected" }
-            ]
+              {
+                name: "drawingNumber",
+                label: "图纸号",
+                type: "text",
+                required: true,
+                defaultValue: "1_spcz90007656_A2.stp",
+              },
+              {
+                name: "accountant",
+                label: "核算员",
+                type: "text",
+                required: true,
+                defaultValue: "HCB018",
+              },
+              {
+                name: "purchaseVolume",
+                label: "采购量",
+                type: "text",
+                required: true,
+                defaultValue: "模具寿命-30万模",
+              },
+              {
+                name: "date",
+                label: "日期",
+                type: "datetime",
+                required: true,
+                defaultValue: "2024-12-19 17:03:22",
+              },
+            ],
           },
           {
-            name: "comment",
-            label: "审批意见",
-            type: "textarea",
-            required: true
+            key: "productDimensions",
+            title: "产品基础尺寸",
+            fields: [
+              {
+                name: "length",
+                label: "长/直径（mm）",
+                type: "number",
+                required: true,
+                defaultValue: 38.4,
+              },
+              {
+                name: "width",
+                label: "宽（mm）",
+                type: "number",
+                required: true,
+                defaultValue: 27.7,
+              },
+              {
+                name: "height",
+                label: "高（mm）",
+                type: "number",
+                required: true,
+                defaultValue: 27.0,
+              },
+              {
+                name: "volume",
+                label: "体积（mm³）",
+                type: "number",
+                required: true,
+                defaultValue: 7474.32,
+              },
+              {
+                name: "surfaceArea",
+                label: "表面积（mm²）",
+                type: "number",
+                required: true,
+                defaultValue: 5423.26,
+              },
+            ],
+          },
+          {
+            key: "moldDimensions",
+            title: "模具基础尺寸",
+            fields: [
+              {
+                name: "moldLength",
+                label: "长/直径（mm）",
+                type: "number",
+                required: true,
+                defaultValue: 374.41,
+              },
+              {
+                name: "moldWidth",
+                label: "宽（mm）",
+                type: "number",
+                required: true,
+                defaultValue: 326.06,
+              },
+              {
+                name: "moldHeight",
+                label: "高（mm）",
+                type: "number",
+                required: true,
+                defaultValue: 229.18,
+              },
+              {
+                name: "moldWeight",
+                label: "模具重量（KG）",
+                type: "number",
+                required: true,
+                defaultValue: 111.1,
+              },
+            ],
+          },
+          {
+            key: "moldPerformance",
+            title: "模具性能参数",
+            fields: [
+              {
+                name: "moldLife",
+                label: "模具寿命（万次）",
+                type: "text",
+                required: true,
+                defaultValue: "模具寿命-30万模",
+              },
+              {
+                name: "cavities",
+                label: "一模几穴（穴）",
+                type: "number",
+                required: true,
+                defaultValue: 4.0,
+              },
+              {
+                name: "clampingTime",
+                label: "合模时间（秒）",
+                type: "number",
+                required: true,
+                defaultValue: 49.11,
+              },
+              {
+                name: "machineTonnage",
+                label: "机台吨位（T）",
+                type: "number",
+                required: true,
+                defaultValue: 185.51,
+              },
+              {
+                name: "capacity",
+                label: "产能（Pcs/天）",
+                type: "number",
+                required: true,
+                defaultValue: 1466.04,
+              },
+            ],
+          },
+        ],
+        layout: "vertical",
+      },
+      tables: [
+        {
+          key: "materialCost",
+          title: "材料成本明细表",
+          description: "记录材料成本的详细信息，并自动计算成本合计",
+          config: {
+            columns: [
+              {
+                key: "serialNumber",
+                title: "序号",
+                type: "number",
+                width: 80,
+                required: true,
+              },
+              {
+                key: "processName",
+                title: "工序名称",
+                type: "text",
+                width: 150,
+                required: true,
+              },
+              {
+                key: "material",
+                title: "材料",
+                type: "text",
+                width: 150,
+                required: true,
+              },
+              {
+                key: "length",
+                title: "长/直径(mm)",
+                type: "number",
+                width: 120,
+              },
+              {
+                key: "width",
+                title: "宽(mm)",
+                type: "number",
+                width: 120,
+              },
+              {
+                key: "height",
+                title: "高/厚(mm)",
+                type: "number",
+                width: 120,
+              },
+              {
+                key: "weight",
+                title: "重量(KG)",
+                type: "number",
+                width: 120,
+                required: true,
+              },
+              {
+                key: "materialCost",
+                title: "材料成本(RMB)",
+                type: "number",
+                width: 150,
+                required: true,
+                disabled: true, // 自动计算字段
+              },
+              {
+                key: "unitPrice",
+                title: "单价（元/kg）",
+                type: "number",
+                width: 150,
+                required: true,
+              },
+            ],
+            summary: {
+              show: true,
+              firstColumnText: "总计",
+              onCompute: (data) => {
+                const totalMaterialCost = data.reduce((sum, row) => {
+                  const materialCost = Number(row.materialCost) || 0
+                  return sum + materialCost
+                }, 0)
+
+                return {
+                  materialCost: totalMaterialCost,
+                }
+              },
+            },
+          },
+        },
+        {
+          key: "heatTreatmentCost",
+          title: "热处理成本明细表",
+          description: "记录热处理成本的详细信息，并自动计算成本合计",
+          config: {
+            columns: [
+              {
+                key: "serialNumber",
+                title: "序号",
+                type: "number",
+                width: 80,
+                required: true,
+              },
+              {
+                key: "processName",
+                title: "工序名称",
+                type: "text",
+                width: 150,
+                required: true,
+              },
+              {
+                key: "component",
+                title: "部件",
+                type: "text",
+                width: 150,
+              },
+              {
+                key: "weight",
+                title: "重量(KG)",
+                type: "number",
+                width: 120,
+                required: true,
+              },
+              {
+                key: "processCost",
+                title: "工序成本(RMB)",
+                type: "number",
+                width: 150,
+                required: true,
+                disabled: true, // 自动计算字段
+              },
+              {
+                key: "unitPrice",
+                title: "工序单价（元/H）",
+                type: "number",
+                width: 150,
+                required: true,
+              },
+            ],
+            summary: {
+              show: true,
+              firstColumnText: "总计",
+              onCompute: (data) => {
+                const totalProcessCost = data.reduce((sum, row) => {
+                  const processCost = Number(row.processCost) || 0
+                  return sum + processCost
+                }, 0)
+
+                return {
+                  processCost: totalProcessCost,
+                }
+              },
+            },
+          },
+        },
+        {
+          key: "hardwareStandardParts",
+          title: "五金/标准件成本明细表",
+          description: "记录五金/标准件的详细信息，并自动计算成本合计",
+          config: {
+            columns: [
+              {
+                key: "serialNumber",
+                title: "序号",
+                type: "number",
+                width: 80,
+                required: true,
+              },
+              {
+                key: "projectName",
+                title: "项目名称",
+                type: "text",
+                width: 150,
+                required: true,
+              },
+              {
+                key: "component",
+                title: "部件",
+                type: "text",
+                width: 150,
+              },
+              {
+                key: "quantity",
+                title: "数量（套）",
+                type: "number",
+                width: 120,
+                required: true,
+              },
+              {
+                key: "processCost",
+                title: "工序成本(RMB)",
+                type: "number",
+                width: 150,
+                required: true,
+                disabled: true, // 自动计算字段
+              },
+              {
+                key: "unitPrice",
+                title: "单价（元/个）",
+                type: "number",
+                width: 150,
+                required: true,
+              },
+            ],
+            summary: {
+              show: true,
+              firstColumnText: "总计",
+              onCompute: (data) => {
+                const totalProcessCost = data.reduce((sum, row) => {
+                  const processCost = Number(row.processCost) || 0
+                  return sum + processCost
+                }, 0)
+
+                return {
+                  processCost: totalProcessCost,
+                }
+              },
+            },
+          },
+        },
+      ],
+    },
+    watch: (form) => {
+      let isCalculating = false
+
+      const subscription = form.watch((value, { name }) => {
+        if (!isCalculating && (name.endsWith(".weight") || name.endsWith(".unitPrice") || name.endsWith(".quantity"))) {
+          isCalculating = true
+          try {
+            const materialRows = form.getValues("tableData.materialCost") || []
+            materialRows.forEach((row, index) => {
+              const weight = Number(row.weight) || 0
+              const unitPrice = Number(row.unitPrice) || 0
+              const materialCost = weight * unitPrice
+              form.setValue(`tableData.materialCost.${index}.materialCost`, materialCost)
+            })
+
+            const hardwareRows = form.getValues("tableData.hardwareStandardParts") || []
+            hardwareRows.forEach((row, index) => {
+              const quantity = Number(row.quantity) || 0
+              const unitPrice = Number(row.unitPrice) || 0
+              const processCost = quantity * unitPrice
+              form.setValue(`tableData.hardwareStandardParts.${index}.processCost`, processCost)
+            })
+          } finally {
+            isCalculating = false
           }
-        ]
-      }
-    ]
-  },
-
-  watch: (form) => {
-    let isCalculating = false;
-
-    const subscription = form.watch((value, { name }) => {
-      if (!isCalculating && (name.startsWith('table.items.') || name.startsWith(''))) {
-        isCalculating = true;
-        try {
-          const items = form.getValues('table.items') || []
-
-          items.forEach((item, index) => {
-            const quantity = Number(item.quantity) || 0
-            const price = Number(item.price) || 0
-            const newAmount = quantity * price
-
-            const currentAmount = Number(item.amount) || 0
-            if (currentAmount !== newAmount) {
-              form.setValue(`table.items.${index}.amount`, newAmount)
-            }
-          })
-        } finally {
-          isCalculating = false
         }
-      }
-    })
-    return () => subscription.unsubscribe()
-  },
-
-  validate: async (values) => {
-    const errors = {
-      fields: {},
-      categorizedErrors: {
-        required: [],
-        invalid: [],
-        other: []
-      }
-    }
-
-    const items = values.table?.items || []
-    const totalAmount = items.reduce((sum, item) =>
-      sum + (item.quantity || 0) * (item.unitPrice || 0), 0)
-
-    if (totalAmount > values.form?.basic?.budgetInfo?.amount) {
-      errors.fields['table.items'] = "采购总额超出预算"
-      errors.categorizedErrors.other.push({
-        field: 'table.items',
-        message: "采购总额超出预算"
       })
-    }
 
-    return {
-      valid: Object.keys(errors.fields).length === 0,
-      errors: Object.values(errors.fields),
-      fields: errors.fields,
-      categorizedErrors: errors.categorizedErrors
-    }
+      return () => subscription.unsubscribe()
+    },
   }
-}
 
-export default formConfig
+  return (
+    <div className='custom-form'>
+      <DynamicForm config={formConfig} />
+    </div>
+  )
+}
 ```
 
 ## 使用示例
@@ -393,9 +485,9 @@ export default PurchaseRequestForm
     onCompute: (data) => {
       // 计算汇总数据
       const quantity = data.reduce((sum, row) => sum + (Number(row.quantity) || 0), 0)
-      const amount = data.reduce((sum, row) => 
+      const amount = data.reduce((sum, row) =>
         sum + (Number(row.quantity) || 0) * (Number(row.price) || 0), 0)
-      
+
       // 返回与列key对应的汇总数据
       return {
         quantity,  // 数量合计
@@ -447,15 +539,15 @@ summary: {
   firstColumnText: "合计",
   onCompute: (data) => {
     // 处理空值和类型转换
-    const validData = data.filter(row => 
+    const validData = data.filter(row =>
       row.quantity != null && row.price != null)
-    
+
     // 计算汇总
     const result = validData.reduce((acc, row) => ({
       quantity: acc.quantity + Number(row.quantity),
       amount: acc.amount + (Number(row.quantity) * Number(row.price))
     }), { quantity: 0, amount: 0 })
-    
+
     // 只返回需要显示汇总的列
     return {
       quantity: result.quantity,
@@ -522,6 +614,7 @@ const formConfig = {
 ```
 
 垂直布局特点：
+
 - 所有分组同时可见
 - 每个分组使用卡片样式展示
 - 支持分组标题、图标和描述

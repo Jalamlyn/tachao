@@ -59,7 +59,7 @@ const fieldConfig = {
 
 ```typescript
 const columnConfig = {
-  key: "table.items.price",
+  key: "tableData.items.price",
   title: "单价",
   type: "number",
   formatConfig: {

@@ -16,6 +16,7 @@ import { Calendar } from "@/components/ui/calendar"
 // 导入 NextUI Button
 import { Button } from "@nextui-org/react"
 import { extractShataAIFormContent } from "./AIEditor"
+import { codeStore } from "@/pages/form-temp-manager/components/codeStore"
 
 // UI组件映射
 const uiComponents = {
@@ -53,7 +54,11 @@ export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> =
     const createComponent = async () => {
       try {
         setLoading(true)
-        const _code = extractShataAIFormContent(code)
+        let code_ = code
+        if (codeStore.code !== "") {
+          code_ = codeStore.code
+        }
+        const _code = extractShataAIFormContent(code_)
         // 1. 转换JSX
         const { code: transformedCode } = await transform(_code, {
           presets: ["react"],

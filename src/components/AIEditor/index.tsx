@@ -6,6 +6,7 @@ import AIFormAgent from "@/service/agents/AIFormAgent"
 import { renderLeftPanel } from "./render/renderLeftPanel"
 import { renderRightPanel } from "./render/renderRightPanel"
 import { AI_LEVELS, AIEditorProps } from "./type"
+import { codeStore } from "@/pages/form-temp-manager/components/codeStore"
 
 export const extractShataAIFormContent = (content: string): string => {
   const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
@@ -62,7 +63,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
   }
 
   const handleSaveEdit = async () => {
-    debugger
+    //debugger 手动保存按钮触发的逻辑
     try {
       const parser = parseConfig || AIFormAgent.parseConfig
       const wrappedCode = wrapWithShataAIForm(editedCode)
@@ -74,7 +75,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
       }
 
       versionControl.addVersion(newVersion)
-
+      codeStore.code = wrappedCode
       onCommandResult({
         success: true,
         config: parsedConfig.config,
