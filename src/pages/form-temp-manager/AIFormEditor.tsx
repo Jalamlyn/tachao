@@ -23,6 +23,7 @@ import { useWatch } from "./hooks/useWatch"
 import { getFormAgent } from "./getFormAgent"
 import { useSave } from "./hooks/useSave"
 import { codeStore } from "./components/codeStore"
+import templates from "../templates"
 
 const AIFormEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -85,10 +86,10 @@ const AIFormEditor: React.FC = () => {
     const loadTemplatePrompt = async () => {
       if (promptTemplate && !isEditMode) {
         try {
-          const templateModule = await import(`../templates/${promptTemplate}`)
+          const templateModule = templates[promptTemplate]
           addMessage({
             role: "assistant",
-            content: `我将帮您创建一个${templateTitle}。${templateModule.default}`,
+            content: `我将帮您创建一个${templateTitle}。${templateModule}`,
             id: Date.now().toString(),
             timestamp: new Date().toLocaleTimeString(),
           })
