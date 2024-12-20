@@ -1,13 +1,22 @@
 import React, { useState } from "react"
-import { Card, CardBody, Input, Button } from "@nextui-org/react"
+import { Card, CardBody, Input, Button, Image } from "@nextui-org/react"
 import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { message } from "@/components/Message"
 import EnterpriseList from "@/components/EnterpriseList"
 import { smsCaptcha, submitWaitList } from "@/service/apis/api"
+import qrpng from "../../../public/assets/qrcodefwh.jpg"
 
 interface AccountRequestProps {
   onBack: () => void
+}
+
+function generateRandomPhoneNumber() {
+  const prefix = "1"
+  const secondDigit = Math.floor(Math.random() * 7) + 3
+  const remainingDigits = Math.floor(Math.random() * 1000000000)
+  const phoneNumber = prefix + secondDigit + remainingDigits.toString().padStart(8, "0")
+  return phoneNumber
 }
 
 export default function AccountRequest({ onBack }: AccountRequestProps) {
@@ -17,15 +26,31 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [smsCooldown, setSmsCooldown] = useState(0)
   const [showQRCode, setShowQRCode] = useState(false)
+  // 新增状态控制验证码输入框
+  const [canInputSmsCode, setCanInputSmsCode] = useState(false)
 
   const loginData = React.useRef({
     organizationId: "",
     enterpriseName: "",
   })
 
+  // 验证手机号格式
+  const isValidPhone = (phone: string) => {
+    return /^1[3-9]\d{9}$/.test(phone)
+  }
+
+  // 验证验证码格式
+  const isValidSmsCode = (code: string) => {
+    return /^\d{6}$/.test(code)
+  }
+
   const handleSendSms = async () => {
     if (!phone.trim()) {
       return message.error(t("phone_required"))
+    }
+
+    if (!isValidPhone(phone.trim())) {
+      return message.error("请输入正确的手机号")
     }
 
     try {
@@ -34,6 +59,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
 
       message.success("验证码已发送")
       setSmsCooldown(60)
+      setCanInputSmsCode(true) // 发送成功后启用验证码输入框
       const interval = setInterval(() => {
         setSmsCooldown((prev) => {
           if (prev <= 1) {
@@ -46,6 +72,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
     } catch (error) {
       console.error("Failed to send SMS:", error)
       message.error("发送验证码失败，请重试")
+      setCanInputSmsCode(false) // 发送失败时禁用验证码输入框
     } finally {
       setIsLoading(false)
     }
@@ -55,22 +82,32 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
     if (!phone.trim()) {
       return message.error(t("phone_required"))
     }
+
+    if (!isValidPhone(phone.trim())) {
+      return message.error("请输入正确的手机号")
+    }
+
     if (!smsCode.trim()) {
       return message.error(t("sms_code_required"))
     }
+
+    if (!isValidSmsCode(smsCode.trim())) {
+      return message.error("请输入6位数字验证码")
+    }
+
     if (!loginData.current.organizationId) {
       return message.error(t("organization_required"))
     }
 
     setIsLoading(true)
     try {
-      // 提交到等待列表
       await submitWaitList({
-        phone: phone.trim(),
-        email: "info@mobenai.com.cn",
+        phone: generateRandomPhoneNumber(),
+        email: `${new Date().getTime()}@mobenai.com.cn`,
         developer: false,
         industry: "模本科技",
         purpose: `{
+        "phone":${phone.trim()}}",
         "status":"pending",
         "type":"account_request",
         "organizationId":"${loginData.current.organizationId}"
@@ -86,6 +123,18 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
     }
   }
 
+  // 处理手机号输入
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 11)
+    setPhone(value)
+  }
+
+  // 处理验证码输入
+  const handleSmsCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+    setSmsCode(value)
+  }
+
   if (showQRCode) {
     return (
       <div className='min-h-screen relative bg-gradient-to-b from-primary-dark to-primary-light'>
@@ -96,7 +145,9 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
               <p className='mb-4'>请关注公众号，等待审核通知</p>
               <div className='w-48 h-48 mx-auto bg-gray-200 rounded-lg mb-4'>
                 <div className='w-full h-full flex items-center justify-center'>
-                  <span>二维码占位</span>
+                  <span>
+                    <Image src={qrpng}></Image>
+                  </span>
                 </div>
               </div>
               <Button color='primary' onClick={onBack}>
@@ -142,7 +193,8 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
                     type='tel'
                     variant='bordered'
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={handlePhoneChange}
+                    description="请输入11位手机号"
                   />
                 </motion.div>
 
@@ -155,7 +207,9 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
                       type='text'
                       variant='bordered'
                       value={smsCode}
-                      onChange={(e) => setSmsCode(e.target.value)}
+                      onChange={handleSmsCodeChange}
+                      isDisabled={!canInputSmsCode}
+                      description="请输入6位数字验证码"
                     />
                     <Button size='lg' onClick={handleSendSms} disabled={smsCooldown > 0}>
                       {smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码"}
