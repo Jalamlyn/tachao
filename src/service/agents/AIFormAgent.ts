@@ -54,7 +54,6 @@ export class AIFormAgent {
       return parsedConfig
     } catch (error) {
       console.error("Error parsing form config:", error, rawConfig)
-      throw new Error("Failed to parse form config")
     }
   }
 
@@ -92,7 +91,14 @@ export class AIFormAgent {
       // ... 保持原有配置不变 ...
       watch: (form) => {
       """
-      都是错误的, 会导致代码无法运行, 不允许用注释省略代码, 如果修改很简单, 可以返回修改的片段指导用户手动修改`
+      都是错误的, 会导致代码无法运行, 不允许用注释省略代码, 如果修改很简单, 可以返回修改的片段指导用户手动修改, 生成的结果中只能包含一份<shata-ai-code>, 然后代码必须用
+      \`\`\`mo
+      <shata-ai-code>
+        ...你生成的代码
+      </shata-ai-code>
+      \`\`\`
+      包裹起来
+      `
 
       const currentUserMessage = {
         role: "user" as const,

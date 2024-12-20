@@ -160,7 +160,7 @@ export default async function chatChunkOpenAIOffice(
         outputCost,
         totalCost: inputCost + outputCost,
       }
-
+      debugger
       if (existingRecords.length > 0) {
         await setMetadata("ai-cost-records", [...existingRecords, newRecord])
       } else {
@@ -169,15 +169,11 @@ export default async function chatChunkOpenAIOffice(
     } catch (e) {
       console.error("Error storing cost records:", e)
     }
-
   } catch (error) {
     if (error.name === "AbortError") {
       console.log("Fetch aborted")
     } else {
       message.error(`An error occurred while fetching data: ${error.message}`)
-      if (error.message.includes("context_length_exceeded")) {
-        onChunk(`项目大小超过了最大上下文，无法使用自动检索模式，请切换到手动检索模式，手动勾选需要修改的文件`)
-      }
     }
     throw error
   }

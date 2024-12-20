@@ -9,7 +9,7 @@ export default () => {
   const formConfig = {
     metadata: {
       title: "HCB模具(注塑)成本分析报表",
-      description: "采集材料成本的明细"
+      description: "采集材料成本的明细",
     },
     renderConfig: {
       basicFields: {
@@ -21,8 +21,17 @@ export default () => {
               {
                 name: "customer",
                 label: "客户",
-                type: "text",
-                required: true
+                type: "resource",
+                required: true,
+                resourceConfig: {
+                  resourceId: "customerData", // 假设客户资料的资源ID为customerData
+                  displayField: "name", // 显示客户名称
+                  displayFields: [
+                    { key: "name", label: "名称" },
+                    { key: "id", label: "客户ID" },
+                  ],
+                  displayFormat: (resource) => `${resource.name} (${resource.id})`,
+                },
               },
               {
                 name: "drawingNumber",
@@ -34,31 +43,31 @@ export default () => {
                   multiple: false,
                   maxSize: 10485760, // 10MB
                   maxCount: 1,
-                  thumbnail: false
-                }
+                  thumbnail: false,
+                },
               },
               {
                 name: "accountant",
                 label: "核算员",
                 type: "text",
                 required: true,
-                defaultValue: "HCB018"
+                defaultValue: "HCB018",
               },
               {
                 name: "purchaseVolume",
                 label: "采购量",
                 type: "text",
                 required: true,
-                defaultValue: "模具寿命-30万模"
+                defaultValue: "模具寿命-30万模",
               },
               {
                 name: "date",
                 label: "日期",
                 type: "datetime",
                 required: true,
-                defaultValue: "2024-12-19 17:03:22"
-              }
-            ]
+                defaultValue: "2024-12-19 17:03:22",
+              },
+            ],
           },
           {
             key: "productDimensions",
@@ -69,37 +78,37 @@ export default () => {
                 label: "长/直径（mm）",
                 type: "number",
                 required: true,
-                defaultValue: 38.4
+                defaultValue: 38.4,
               },
               {
                 name: "width",
                 label: "宽（mm）",
                 type: "number",
                 required: true,
-                defaultValue: 27.7
+                defaultValue: 27.7,
               },
               {
                 name: "height",
                 label: "高（mm）",
                 type: "number",
                 required: true,
-                defaultValue: 27.0
+                defaultValue: 27.0,
               },
               {
                 name: "volume",
                 label: "体积（mm³）",
                 type: "number",
                 required: true,
-                defaultValue: 7474.32
+                defaultValue: 7474.32,
               },
               {
                 name: "surfaceArea",
                 label: "表面积（mm²）",
                 type: "number",
                 required: true,
-                defaultValue: 5423.26
-              }
-            ]
+                defaultValue: 5423.26,
+              },
+            ],
           },
           {
             key: "moldDimensions",
@@ -110,30 +119,30 @@ export default () => {
                 label: "长/直径（mm）",
                 type: "number",
                 required: true,
-                defaultValue: 374.41
+                defaultValue: 374.41,
               },
               {
                 name: "moldWidth",
                 label: "宽（mm）",
                 type: "number",
                 required: true,
-                defaultValue: 326.06
+                defaultValue: 326.06,
               },
               {
                 name: "moldHeight",
                 label: "高（mm）",
                 type: "number",
                 required: true,
-                defaultValue: 229.18
+                defaultValue: 229.18,
               },
               {
                 name: "moldWeight",
                 label: "模具重量（KG）",
                 type: "number",
                 required: true,
-                defaultValue: 111.1
-              }
-            ]
+                defaultValue: 111.1,
+              },
+            ],
           },
           {
             key: "moldPerformance",
@@ -144,40 +153,40 @@ export default () => {
                 label: "模具寿命（万次）",
                 type: "text",
                 required: true,
-                defaultValue: "模具寿命-30万模"
+                defaultValue: "模具寿命-30万模",
               },
               {
                 name: "cavities",
                 label: "一模几穴（穴）",
                 type: "number",
                 required: true,
-                defaultValue: 4.0
+                defaultValue: 4.0,
               },
               {
                 name: "clampingTime",
                 label: "合模时间（秒）",
                 type: "number",
                 required: true,
-                defaultValue: 49.11
+                defaultValue: 49.11,
               },
               {
                 name: "machineTonnage",
                 label: "机台吨位（T）",
                 type: "number",
                 required: true,
-                defaultValue: 185.51
+                defaultValue: 185.51,
               },
               {
                 name: "capacity",
                 label: "产能（Pcs/天）",
                 type: "number",
                 required: true,
-                defaultValue: 1466.04
-              }
-            ]
-          }
+                defaultValue: 1466.04,
+              },
+            ],
+          },
         ],
-        layout: "vertical"
+        layout: "vertical",
       },
       tables: [
         {
@@ -191,46 +200,46 @@ export default () => {
                 title: "序号",
                 type: "number",
                 width: 80,
-                required: true
+                required: true,
               },
               {
                 key: "processName",
                 title: "工序名称",
                 type: "text",
                 width: 150,
-                required: true
+                required: true,
               },
               {
                 key: "material",
                 title: "材料",
                 type: "text",
                 width: 150,
-                required: true
+                required: true,
               },
               {
                 key: "length",
                 title: "长/直径(mm)",
                 type: "number",
-                width: 120
+                width: 120,
               },
               {
                 key: "width",
                 title: "宽(mm)",
                 type: "number",
-                width: 120
+                width: 120,
               },
               {
                 key: "height",
                 title: "高/厚(mm)",
                 type: "number",
-                width: 120
+                width: 120,
               },
               {
                 key: "weight",
                 title: "重量(KG)",
                 type: "number",
                 width: 120,
-                required: true
+                required: true,
               },
               {
                 key: "materialCost",
@@ -238,31 +247,45 @@ export default () => {
                 type: "number",
                 width: 150,
                 required: true,
-                disabled: true // 自动计算字段
+                disabled: true, // 自动计算字段
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
               },
               {
                 key: "unitPrice",
                 title: "单价（元/kg）",
                 type: "number",
                 width: 150,
-                required: true
-              }
+                required: true,
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
+              },
             ],
             summary: {
               show: true,
               firstColumnText: "总计",
               onCompute: (data) => {
                 const totalMaterialCost = data.reduce((sum, row) => {
-                  const materialCost = Number(row.materialCost) || 0;
-                  return sum + materialCost;
-                }, 0);
+                  const materialCost = Number(row.materialCost) || 0
+                  return sum + materialCost
+                }, 0)
 
                 return {
-                  materialCost: totalMaterialCost
-                };
-              }
-            }
-          }
+                  materialCost: totalMaterialCost.toFixed(2),
+                }
+              },
+            },
+          },
         },
         {
           key: "heatTreatmentCost",
@@ -275,27 +298,27 @@ export default () => {
                 title: "序号",
                 type: "number",
                 width: 80,
-                required: true
+                required: true,
               },
               {
                 key: "processName",
                 title: "工序名称",
                 type: "text",
                 width: 150,
-                required: true
+                required: true,
               },
               {
                 key: "component",
                 title: "部件",
                 type: "text",
-                width: 150
+                width: 150,
               },
               {
                 key: "weight",
                 title: "重量(KG)",
                 type: "number",
                 width: 120,
-                required: true
+                required: true,
               },
               {
                 key: "processCost",
@@ -303,31 +326,45 @@ export default () => {
                 type: "number",
                 width: 150,
                 required: true,
-                disabled: true // 自动计算字段
+                disabled: true, // 自动计算字段
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
               },
               {
                 key: "unitPrice",
                 title: "工序单价（元/H）",
                 type: "number",
                 width: 150,
-                required: true
-              }
+                required: true,
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
+              },
             ],
             summary: {
               show: true,
               firstColumnText: "总计",
               onCompute: (data) => {
                 const totalProcessCost = data.reduce((sum, row) => {
-                  const processCost = Number(row.processCost) || 0;
-                  return sum + processCost;
-                }, 0);
+                  const processCost = Number(row.processCost) || 0
+                  return sum + processCost
+                }, 0)
 
                 return {
-                  processCost: totalProcessCost
-                };
-              }
-            }
-          }
+                  processCost: totalProcessCost.toFixed(2),
+                }
+              },
+            },
+          },
         },
         {
           key: "hardwareStandardParts",
@@ -340,27 +377,27 @@ export default () => {
                 title: "序号",
                 type: "number",
                 width: 80,
-                required: true
+                required: true,
               },
               {
                 key: "projectName",
                 title: "项目名称",
                 type: "text",
                 width: 150,
-                required: true
+                required: true,
               },
               {
                 key: "component",
                 title: "部件",
                 type: "text",
-                width: 150
+                width: 150,
               },
               {
                 key: "quantity",
                 title: "数量（套）",
                 type: "number",
                 width: 120,
-                required: true
+                required: true,
               },
               {
                 key: "processCost",
@@ -368,31 +405,45 @@ export default () => {
                 type: "number",
                 width: 150,
                 required: true,
-                disabled: true // 自动计算字段
+                disabled: true, // 自动计算字段
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
               },
               {
                 key: "unitPrice",
                 title: "单价（元/个）",
                 type: "number",
                 width: 150,
-                required: true
-              }
+                required: true,
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
+              },
             ],
             summary: {
               show: true,
               firstColumnText: "总计",
               onCompute: (data) => {
                 const totalProcessCost = data.reduce((sum, row) => {
-                  const processCost = Number(row.processCost) || 0;
-                  return sum + processCost;
-                }, 0);
+                  const processCost = Number(row.processCost) || 0
+                  return sum + processCost
+                }, 0)
 
                 return {
-                  processCost: totalProcessCost
-                };
-              }
-            }
-          }
+                  processCost: totalProcessCost.toFixed(2),
+                }
+              },
+            },
+          },
         },
         {
           key: "moldMachiningCost",
@@ -405,45 +456,45 @@ export default () => {
                 title: "序号",
                 type: "number",
                 width: 80,
-                required: true
+                required: true,
               },
               {
                 key: "processName",
                 title: "工序名称",
                 type: "text",
                 width: 150,
-                required: true
+                required: true,
               },
               {
                 key: "material",
                 title: "材料",
                 type: "text",
-                width: 150
+                width: 150,
               },
               {
                 key: "length",
                 title: "长/直径(mm)",
                 type: "number",
-                width: 120
+                width: 120,
               },
               {
                 key: "width",
                 title: "宽(mm)",
                 type: "number",
-                width: 120
+                width: 120,
               },
               {
                 key: "height",
                 title: "高/厚(mm)",
                 type: "number",
-                width: 120
+                width: 120,
               },
               {
                 key: "processingTime",
                 title: "加工时长(小时）",
                 type: "number",
                 width: 150,
-                required: true
+                required: true,
               },
               {
                 key: "processCost",
@@ -451,31 +502,45 @@ export default () => {
                 type: "number",
                 width: 150,
                 required: true,
-                disabled: true // 自动计算字段
+                disabled: true, // 自动计算字段
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
               },
               {
                 key: "unitPrice",
                 title: "工序单价（元/H）",
                 type: "number",
                 width: 150,
-                required: true
-              }
+                required: true,
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
+              },
             ],
             summary: {
               show: true,
               firstColumnText: "总计",
               onCompute: (data) => {
                 const totalProcessCost = data.reduce((sum, row) => {
-                  const processCost = Number(row.processCost) || 0;
-                  return sum + processCost;
-                }, 0);
+                  const processCost = Number(row.processCost) || 0
+                  return sum + processCost
+                }, 0)
 
                 return {
-                  processCost: totalProcessCost
-                };
-              }
-            }
-          }
+                  processCost: totalProcessCost.toFixed(2),
+                }
+              },
+            },
+          },
         },
         {
           key: "moldCoreMachiningCost",
@@ -488,45 +553,45 @@ export default () => {
                 title: "序号",
                 type: "number",
                 width: 80,
-                required: true
+                required: true,
               },
               {
                 key: "processName",
                 title: "工序名称",
                 type: "text",
                 width: 150,
-                required: true
+                required: true,
               },
               {
                 key: "material",
                 title: "材料",
                 type: "text",
-                width: 150
+                width: 150,
               },
               {
                 key: "length",
                 title: "长/直径(mm)",
                 type: "number",
-                width: 120
+                width: 120,
               },
               {
                 key: "width",
                 title: "宽(mm)",
                 type: "number",
-                width: 120
+                width: 120,
               },
               {
                 key: "height",
                 title: "高/厚(mm)",
                 type: "number",
-                width: 120
+                width: 120,
               },
               {
                 key: "processingTime",
                 title: "加工时长(小时）",
                 type: "number",
                 width: 150,
-                required: true
+                required: true,
               },
               {
                 key: "processCost",
@@ -534,31 +599,45 @@ export default () => {
                 type: "number",
                 width: 150,
                 required: true,
-                disabled: true // 自动计算字段
+                disabled: true, // 自动计算字段
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
               },
               {
                 key: "unitPrice",
                 title: "工序单价（元/H）",
                 type: "number",
                 width: 150,
-                required: true
-              }
+                required: true,
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
+              },
             ],
             summary: {
               show: true,
               firstColumnText: "总计",
               onCompute: (data) => {
                 const totalProcessCost = data.reduce((sum, row) => {
-                  const processCost = Number(row.processCost) || 0;
-                  return sum + processCost;
-                }, 0);
+                  const processCost = Number(row.processCost) || 0
+                  return sum + processCost
+                }, 0)
 
                 return {
-                  processCost: totalProcessCost
-                };
-              }
-            }
-          }
+                  processCost: totalProcessCost.toFixed(2),
+                }
+              },
+            },
+          },
         },
         {
           key: "designCost",
@@ -571,21 +650,21 @@ export default () => {
                 title: "序号",
                 type: "number",
                 width: 80,
-                required: true
+                required: true,
               },
               {
                 key: "processName",
                 title: "工序名称",
                 type: "text",
                 width: 150,
-                required: true
+                required: true,
               },
               {
                 key: "processingTime",
                 title: "加工时长(小时）",
                 type: "number",
                 width: 150,
-                required: true
+                required: true,
               },
               {
                 key: "processCost",
@@ -593,31 +672,45 @@ export default () => {
                 type: "number",
                 width: 150,
                 required: true,
-                disabled: true // 自动计算字段
+                disabled: true, // 自动计算字段
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
               },
               {
                 key: "unitPrice",
                 title: "工序单价（元/H）",
                 type: "number",
                 width: 150,
-                required: true
-              }
+                required: true,
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
+              },
             ],
             summary: {
               show: true,
               firstColumnText: "总计",
               onCompute: (data) => {
                 const totalProcessCost = data.reduce((sum, row) => {
-                  const processCost = Number(row.processCost) || 0;
-                  return sum + processCost;
-                }, 0);
+                  const processCost = Number(row.processCost) || 0
+                  return sum + processCost
+                }, 0)
 
                 return {
-                  processCost: totalProcessCost
-                };
-              }
-            }
-          }
+                  processCost: totalProcessCost.toFixed(2),
+                }
+              },
+            },
+          },
         },
         {
           key: "inspectionCost",
@@ -630,21 +723,21 @@ export default () => {
                 title: "序号",
                 type: "number",
                 width: 80,
-                required: true
+                required: true,
               },
               {
                 key: "processName",
                 title: "工序名称",
                 type: "text",
                 width: 150,
-                required: true
+                required: true,
               },
               {
                 key: "processingTime",
                 title: "加工时长(小时）",
                 type: "number",
                 width: 150,
-                required: true
+                required: true,
               },
               {
                 key: "processCost",
@@ -652,31 +745,45 @@ export default () => {
                 type: "number",
                 width: 150,
                 required: true,
-                disabled: true // 自动计算字段
+                disabled: true, // 自动计算字段
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
               },
               {
                 key: "unitPrice",
                 title: "工序单价（元/H）",
                 type: "number",
                 width: 150,
-                required: true
-              }
+                required: true,
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
+              },
             ],
             summary: {
               show: true,
               firstColumnText: "总计",
               onCompute: (data) => {
                 const totalProcessCost = data.reduce((sum, row) => {
-                  const processCost = Number(row.processCost) || 0;
-                  return sum + processCost;
-                }, 0);
+                  const processCost = Number(row.processCost) || 0
+                  return sum + processCost
+                }, 0)
 
                 return {
-                  processCost: totalProcessCost
-                };
-              }
-            }
-          }
+                  processCost: totalProcessCost.toFixed(2),
+                }
+              },
+            },
+          },
         },
         {
           key: "otherCosts",
@@ -689,20 +796,20 @@ export default () => {
                 title: "序号",
                 type: "number",
                 width: 80,
-                required: true
+                required: true,
               },
               {
                 key: "processName",
                 title: "工序名称",
                 type: "text",
                 width: 150,
-                required: true
+                required: true,
               },
               {
                 key: "processingTime",
                 title: "加工时长(小时）",
                 type: "number",
-                width: 150
+                width: 150,
               },
               {
                 key: "processCost",
@@ -710,156 +817,172 @@ export default () => {
                 type: "number",
                 width: 150,
                 required: true,
-                disabled: true // 自动计算字段
+                disabled: true, // 自动计算字段
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
               },
               {
                 key: "unitPrice",
                 title: "工序单价（元/H）",
                 type: "number",
-                width: 150
-              }
+                width: 150,
+                formatConfig: {
+                  type: "currency",
+                  options: {
+                    currency: "CNY",
+                    precision: 2,
+                  },
+                },
+              },
             ],
             summary: {
               show: true,
               firstColumnText: "总计",
               onCompute: (data) => {
                 const totalProcessCost = data.reduce((sum, row) => {
-                  const processCost = Number(row.processCost) || 0;
-                  return sum + processCost;
-                }, 0);
+                  const processCost = Number(row.processCost) || 0
+                  return sum + processCost
+                }, 0)
 
                 return {
-                  processCost: totalProcessCost
-                };
-              }
-            }
-          }
-        }
+                  processCost: totalProcessCost.toFixed(2),
+                }
+              },
+            },
+          },
+        },
       ],
-      summaryGroups: [{
-        key: "costSummary",
-        title: "成本汇总",
-        icon: "mdi:calculator", // 添加一个图标会更好看
-        description: "汇总所有成本信息",
-        layout: "grid", // 添加布局配置
-        columns: 3, // 添加列数配置
-        fields: [
-          {
-            name: "currency",
-            label: "币别",
-            type: "text",
-            defaultValue: "RMB",
-            disabled: true,
-            formatConfig: {
-              type: "text"
-            }
-          },
-          {
-            name: "totalMaterialCost",
-            label: "材料费(总计）",
-            type: "amount",
-            disabled: true,
-            formatConfig: {
-              type: "currency",
-              options: {
-                currency: "CNY",
-                precision: 2
-              }
-            }
-          },
-          {
-            name: "totalProcessingCost",
-            label: "加工费(总计）",
-            type: "amount",
-            disabled: true,
-            formatConfig: {
-              type: "currency",
-              options: {
-                currency: "CNY",
-                precision: 2
-              }
-            }
-          },
-          {
-            name: "managementFee",
-            label: "管销费（20%）",
-            type: "amount",
-            disabled: true,
-            formatConfig: {
-              type: "currency",
-              options: {
-                currency: "CNY",
-                precision: 2
-              }
-            }
-          },
-          {
-            name: "totalCost",
-            label: "总成本（元）",
-            type: "amount",
-            disabled: true,
-            formatConfig: {
-              type: "currency",
-              options: {
-                currency: "CNY",
-                precision: 2
-              }
-            }
-          },
-          {
-            name: "tax",
-            label: "税费（13%）",
-            type: "amount",
-            disabled: true,
-            formatConfig: {
-              type: "currency",
-              options: {
-                currency: "CNY",
-                precision: 2
-              }
-            }
-          },
-          {
-            name: "profit",
-            label: "利润（40%）",
-            type: "amount",
-            disabled: true,
-            formatConfig: {
-              type: "currency",
-              options: {
-                currency: "CNY",
-                precision: 2
-              }
-            }
-          },
-          {
-            name: "moldPriceExclTax",
-            label: "模具单价(元）-不含税",
-            type: "amount",
-            disabled: true,
-            formatConfig: {
-              type: "currency",
-              options: {
-                currency: "CNY",
-                precision: 2
-              }
-            }
-          },
-          {
-            name: "moldPriceInclTax",
-            label: "模具单价(元）--含税",
-            type: "amount",
-            disabled: true,
-            formatConfig: {
-              type: "currency",
-              options: {
-                currency: "CNY",
-                precision: 2
-              }
-            }
-          }
-        ]
-      }],
+      summaryGroups: [
+        {
+          key: "costSummary",
+          title: "成本汇总",
+          icon: "mdi:calculator", // 添加一个图标会更好看
+          description: "汇总所有成本信息",
+          layout: "grid", // 添加布局配置
+          columns: 3, // 添加列数配置
+          fields: [
+            {
+              name: "currency",
+              label: "币别",
+              type: "text",
+              defaultValue: "RMB",
+              disabled: true,
+              formatConfig: {
+                type: "text",
+              },
+            },
+            {
+              name: "totalMaterialCost",
+              label: "材料费(总计）",
+              type: "amount",
+              disabled: true,
+              formatConfig: {
+                type: "currency",
+                options: {
+                  currency: "CNY",
+                  precision: 2,
+                },
+              },
+            },
+            {
+              name: "totalProcessingCost",
+              label: "加工费(总计）",
+              type: "amount",
+              disabled: true,
+              formatConfig: {
+                type: "currency",
+                options: {
+                  currency: "CNY",
+                  precision: 2,
+                },
+              },
+            },
+            {
+              name: "managementFee",
+              label: "管销费（20%）",
+              type: "amount",
+              disabled: true,
+              formatConfig: {
+                type: "currency",
+                options: {
+                  currency: "CNY",
+                  precision: 2,
+                },
+              },
+            },
+            {
+              name: "totalCost",
+              label: "总成本（元）",
+              type: "amount",
+              disabled: true,
+              formatConfig: {
+                type: "currency",
+                options: {
+                  currency: "CNY",
+                  precision: 2,
+                },
+              },
+            },
+            {
+              name: "tax",
+              label: "税费（13%）",
+              type: "amount",
+              disabled: true,
+              formatConfig: {
+                type: "currency",
+                options: {
+                  currency: "CNY",
+                  precision: 2,
+                },
+              },
+            },
+            {
+              name: "profit",
+              label: "利润（40%）",
+              type: "amount",
+              disabled: true,
+              formatConfig: {
+                type: "currency",
+                options: {
+                  currency: "CNY",
+                  precision: 2,
+                },
+              },
+            },
+            {
+              name: "moldPriceExclTax",
+              label: "模具单价(元）-不含税",
+              type: "amount",
+              disabled: true,
+              formatConfig: {
+                type: "currency",
+                options: {
+                  currency: "CNY",
+                  precision: 2,
+                },
+              },
+            },
+            {
+              name: "moldPriceInclTax",
+              label: "模具单价(元）--含税",
+              type: "amount",
+              disabled: true,
+              formatConfig: {
+                type: "currency",
+                options: {
+                  currency: "CNY",
+                  precision: 2,
+                },
+              },
+            },
+          ],
+        },
+      ],
       processSteps: [
         {
           key: "production",
@@ -869,8 +992,8 @@ export default () => {
               name: "productionPerson",
               label: "制作人",
               type: "text",
-            }
-          ]
+            },
+          ],
         },
         {
           key: "review",
@@ -880,8 +1003,8 @@ export default () => {
               name: "reviewPerson",
               label: "审核人",
               type: "text",
-            }
-          ]
+            },
+          ],
         },
         {
           key: "approval",
@@ -891,75 +1014,83 @@ export default () => {
               name: "approvalPerson",
               label: "批准人",
               type: "text",
-            }
-          ]
-        }
-      ]
+            },
+          ],
+        },
+      ],
     },
     watch: (form) => {
-      let isCalculating = false;
+      let isCalculating = false
 
       const subscription = form.watch((value, { name }) => {
-        if (!isCalculating && (name?.endsWith(".weight") || name?.endsWith(".unitPrice") || name?.endsWith(".quantity") || name?.endsWith(".processingTime"))) {
-          isCalculating = true;
+        if (
+          !isCalculating &&
+          (name?.endsWith(".weight") ||
+            name?.endsWith(".unitPrice") ||
+            name?.endsWith(".quantity") ||
+            name?.endsWith(".processingTime"))
+        ) {
+          isCalculating = true
           try {
-            const materialRows = form.getValues("tableData.materialCost") || [];
+            const materialRows = form.getValues("tableData.materialCost") || []
             materialRows.forEach((row, index) => {
-              const weight = Number(row.weight) || 0;
-              const unitPrice = Number(row.unitPrice) || 0;
-              const materialCost = weight * unitPrice;
-              form.setValue(`tableData.materialCost.${index}.materialCost`, materialCost);
-            });
+              const weight = Number(row.weight) || 0
+              const unitPrice = Number(row.unitPrice) || 0
+              const materialCost = weight * unitPrice
+              form.setValue(`tableData.materialCost.${index}.materialCost`, materialCost.toFixed(2))
+            })
 
-            const hardwareRows = form.getValues("tableData.hardwareStandardParts") || [];
+            const hardwareRows = form.getValues("tableData.hardwareStandardParts") || []
             hardwareRows.forEach((row, index) => {
-              const quantity = Number(row.quantity) || 0;
-              const unitPrice = Number(row.unitPrice) || 0;
-              const processCost = quantity * unitPrice;
-              form.setValue(`tableData.hardwareStandardParts.${index}.processCost`, processCost);
-            });
+              const quantity = Number(row.quantity) || 0
+              const unitPrice = Number(row.unitPrice) || 0
+              const processCost = quantity * unitPrice
+              form.setValue(`tableData.hardwareStandardParts.${index}.processCost`, processCost.toFixed(2))
+            })
 
-            const machiningRows = form.getValues("tableData.moldMachiningCost") || [];
+            const machiningRows = form.getValues("tableData.moldMachiningCost") || []
             machiningRows.forEach((row, index) => {
-              const processingTime = Number(row.processingTime) || 0;
-              const unitPrice = Number(row.unitPrice) || 0;
-              const processCost = processingTime * unitPrice;
-              form.setValue(`tableData.moldMachiningCost.${index}.processCost`, processCost);
-            });
+              const processingTime = Number(row.processingTime) || 0
+              const unitPrice = Number(row.unitPrice) || 0
+              const processCost = processingTime * unitPrice
+              form.setValue(`tableData.moldMachiningCost.${index}.processCost`, processCost.toFixed(2))
+            })
 
-            const moldCoreRows = form.getValues("tableData.moldCoreMachiningCost") || [];
+            const moldCoreRows = form.getValues("tableData.moldCoreMachiningCost") || []
             moldCoreRows.forEach((row, index) => {
-              const processingTime = Number(row.processingTime) || 0;
-              const unitPrice = Number(row.unitPrice) || 0;
-              const processCost = processingTime * unitPrice;
-              form.setValue(`tableData.moldCoreMachiningCost.${index}.processCost`, processCost);
-            });
+              const processingTime = Number(row.processingTime) || 0
+              const unitPrice = Number(row.unitPrice) || 0
+              const processCost = processingTime * unitPrice
+              form.setValue(`tableData.moldCoreMachiningCost.${index}.processCost`, processCost.toFixed(2))
+            })
 
-            const designRows = form.getValues("tableData.designCost") || [];
+            const designRows = form.getValues("tableData.designCost") || []
             designRows.forEach((row, index) => {
-              const processingTime = Number(row.processingTime) || 0;
-              const unitPrice = Number(row.unitPrice) || 0;
-              const processCost = processingTime * unitPrice;
-              form.setValue(`tableData.designCost.${index}.processCost`, processCost);
-            });
+              const processingTime = Number(row.processingTime) || 0
+              const unitPrice = Number(row.unitPrice) || 0
+              const processCost = processingTime * unitPrice
+              form.setValue(`tableData.designCost.${index}.processCost`, processCost.toFixed(2))
+            })
 
-            const inspectionRows = form.getValues("tableData.inspectionCost") || [];
+            const inspectionRows = form.getValues("tableData.inspectionCost") || []
             inspectionRows.forEach((row, index) => {
-              const processingTime = Number(row.processingTime) || 0;
-              const unitPrice = Number(row.unitPrice) || 0;
-              const processCost = processingTime * unitPrice;
-              form.setValue(`tableData.inspectionCost.${index}.processCost`, processCost);
-            });
+              const processingTime = Number(row.processingTime) || 0
+              const unitPrice = Number(row.unitPrice) || 0
+              const processCost = processingTime * unitPrice
+              form.setValue(`tableData.inspectionCost.${index}.processCost`, processCost.toFixed(2))
+            })
 
-            const otherRows = form.getValues("tableData.otherCosts") || [];
+            const otherRows = form.getValues("tableData.otherCosts") || []
             otherRows.forEach((row, index) => {
-              const processingTime = Number(row.processingTime) || 0;
-              const unitPrice = Number(row.unitPrice) || 0;
-              const processCost = processingTime * unitPrice;
-              form.setValue(`tableData.otherCosts.${index}.processCost`, processCost);
-            });
-            const materialCostTotal = (form.getValues("tableData.materialCost") || [])
-              .reduce((sum, row) => sum + (Number(row.materialCost) || 0), 0);
+              const processingTime = Number(row.processingTime) || 0
+              const unitPrice = Number(row.unitPrice) || 0
+              const processCost = processingTime * unitPrice
+              form.setValue(`tableData.otherCosts.${index}.processCost`, processCost.toFixed(2))
+            })
+            const materialCostTotal = (form.getValues("tableData.materialCost") || []).reduce(
+              (sum, row) => sum + (Number(row.materialCost) || 0),
+              0
+            )
 
             const processingCostTotal = [
               "heatTreatmentCost",
@@ -968,51 +1099,49 @@ export default () => {
               "moldCoreMachiningCost",
               "designCost",
               "inspectionCost",
-              "otherCosts"
+              "otherCosts",
             ].reduce((sum, tableName) => {
-              const tableData = form.getValues(`tableData.${tableName}`) || [];
-              return sum + tableData.reduce((tableSum, row) =>
-                tableSum + (Number(row.processCost) || 0), 0);
-            }, 0);
+              const tableData = form.getValues(`tableData.${tableName}`) || []
+              return sum + tableData.reduce((tableSum, row) => tableSum + (Number(row.processCost) || 0), 0)
+            }, 0)
 
             // 设置汇总数据
-            form.setValue("totalMaterialCost", materialCostTotal);
-            form.setValue("totalProcessingCost", processingCostTotal);
+            form.setValue("totalMaterialCost", materialCostTotal.toFixed(2))
+            form.setValue("totalProcessingCost", processingCostTotal.toFixed(2))
 
-            const managementFee = (materialCostTotal + processingCostTotal) * 0.2;
-            form.setValue("managementFee", managementFee);
+            const managementFee = (materialCostTotal + processingCostTotal) * 0.2
+            form.setValue("managementFee", managementFee.toFixed(2))
 
-            const totalCost = materialCostTotal + processingCostTotal + managementFee;
-            form.setValue("totalCost", totalCost);
+            const totalCost = materialCostTotal + processingCostTotal + managementFee
+            form.setValue("totalCost", totalCost.toFixed(2))
 
-            const tax = totalCost * 0.13;
-            form.setValue("tax", tax);
+            const tax = totalCost * 0.13
+            form.setValue("tax", tax.toFixed(2))
 
-            const profit = totalCost * 0.4;
-            form.setValue("profit", profit);
+            const profit = totalCost * 0.4
+            form.setValue("profit", profit.toFixed(2))
 
-            const moldPriceExclTax = totalCost + profit;
-            form.setValue("moldPriceExclTax", moldPriceExclTax);
+            const moldPriceExclTax = totalCost + profit
+            form.setValue("moldPriceExclTax", moldPriceExclTax.toFixed(2))
 
-            const moldPriceInclTax = moldPriceExclTax + tax;
-            form.setValue("moldPriceInclTax", moldPriceInclTax);
-
+            const moldPriceInclTax = moldPriceExclTax + tax
+            form.setValue("moldPriceInclTax", moldPriceInclTax.toFixed(2))
           } finally {
-            isCalculating = false;
+            isCalculating = false
           }
         }
-      });
+      })
 
-      return () => subscription.unsubscribe();
-    }
-  };
+      return () => subscription.unsubscribe()
+    },
+  }
 
   return (
-    <div className="custom-form">
+    <div className='custom-form'>
       <DynamicForm config={formConfig} />
     </div>
-  );
-};
+  )
+}
 ```
 
 ## 使用示例
