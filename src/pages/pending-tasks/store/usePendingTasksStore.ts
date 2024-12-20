@@ -1,8 +1,12 @@
 import { create } from "zustand"
 import { queryWaitList, createRamAccount } from "@/service/apis/api"
+import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
-import { addPermission } from "@/permissions/utils/permissionUtils"
 import { setPhoneOrgMapping } from "@/service/apis/metadata"
+import { jsonParse } from "@/utils"
+import { addPermission } from "@/permissions/utils/permissionUtils"
+
+const PERMISSION_REQUESTS_KEY = 'permission_requests'
 
 // 资源类型映射
 const resourceTypeMap = {
@@ -18,7 +22,8 @@ const resourceTypeMap = {
 const roleMap = {
   viewer: "查看",
   editor: "编辑",
-  admin: "管理"
+  admin: "管理",
+  creator: "创建"
 }
 
 export interface Task {
@@ -64,36 +69,52 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
   loadTasks: async () => {
     set({ isLoading: true })
     try {
-      // 加载等待列表数据
-      const result = await queryWaitList({})
+      // 1. 加载权限申请数据
+      const permissionResult = await getMetadata([PERMISSION_REQUESTS_KEY])
+      const permissionRequests = JSON.parse(permissionResult.data?.[0]?.value || '{}')
       
-      const tasks = result.data.map((item: any) => {
-        const isAccountRequest = item.purpose?.startsWith('account_request:')
-        const organizationId = isAccountRequest ? item.purpose.split(':')[1] : null
-        
-        return {
-          id: item.id,
-          title: isAccountRequest 
-            ? `来自 ${item.phone} 的账号申请`
-            : `${item.type} 申请`,
-          description: isAccountRequest
-            ? `申请加入企业：${item.industry}`
-            : item.purpose,
-          type: isAccountRequest ? 'account_request' : 'permission_request',
-          status: item.status || 'pending',
+      const permissionTasks = Object.values(permissionRequests)
+        .map((request: any) => ({
+          id: request.id,
+          title: `${resourceTypeMap[request.resourceType] || request.resourceType}「${request.resourceTitle}」的${formatRoles(request.role)}权限申请`,
+          description: request.reason,
+          type: 'permission_request',
+          status: request.status,
           priority: 'medium',
           department: '系统',
+          user: request.requesterName,
+          time: new Date(request.createdAt).toLocaleString(),
+          avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d',
+          metadata: request
+        }))
+
+      // 2. 加载账号申请数据
+      const waitlistResult = await queryWaitList({})
+      const accountTasks = waitlistResult.data.map((item: any) => {
+        const requestInfo = jsonParse(item.purpose)
+        const isAccountRequest = requestInfo.type === "account_request"
+        const organizationId = isAccountRequest ? requestInfo.organizationId : null
+        const cachedLabel = localStorage.getItem("cachedLabel")
+        return {
+          id: item.id,
+          title: isAccountRequest ? `来自 ${item.phone} 的账号申请` : `${item.type} 申请`,
+          description: isAccountRequest ? `申请加入企业：${cachedLabel}` : "申请开通账号",
+          type: "account_request",
+          status: item.status || "pending",
+          priority: "medium",
+          department: "系统",
           user: item.phone || item.email,
           time: new Date(item.createdAt).toLocaleString(),
-          avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d',
+          avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
           metadata: {
             ...item,
-            organizationId
-          }
+            organizationId,
+          },
         }
       })
 
-      set({ tasks })
+      // 3. 合并两种任务
+      set({ tasks: [...permissionTasks, ...accountTasks] })
     } catch (error) {
       console.error("Error loading tasks:", error)
       message.error("加载任务失败")
@@ -103,37 +124,61 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
   },
   updateTaskStatus: async (taskId: string, status: Task["status"]) => {
     try {
-      // 更新等待列表状态
-      await queryWaitList({
-        id: taskId,
-        status
-      })
-      
-      set((state) => ({
-        tasks: state.tasks.map(task => 
-          task.id === taskId 
-            ? { ...task, status, time: new Date().toLocaleString() }
-            : task
-        )
-      }))
-
-      // 如果是账号申请且状态为已完成，则创建账号
+      // 获取当前任务
+      const state = usePendingTasksStore.getState()
       const task = state.tasks.find(t => t.id === taskId)
-      if (task?.type === 'account_request' && status === 'completed') {
-        const { phone, organizationId } = task.metadata
-        
-        // 创建账号
-        await createRamAccount({
-          name: phone,
-          account: phone,
-          password: phone
-        })
-        
-        // 设置手机号-组织映射
-        await setPhoneOrgMapping(phone, organizationId)
-      }
       
-      message.success(status === 'completed' ? '已批准申请' : '已拒绝申请')
+      if (!task) {
+        throw new Error("Task not found")
+      }
+
+      if (task.type === "permission_request") {
+        // 处理权限申请
+        const result = await getMetadata([PERMISSION_REQUESTS_KEY])
+        const requests = JSON.parse(result.data?.[0]?.value || '{}')
+        
+        if (requests[taskId]) {
+          const request = requests[taskId]
+          request.status = status
+          request.updatedAt = new Date().toISOString()
+          
+          if (status === 'completed') {
+            await addPermission(
+              request.resourceType,
+              request.resourceId,
+              request.requesterId,
+              request.role
+            )
+          }
+          
+          await setMetadata(PERMISSION_REQUESTS_KEY, JSON.stringify(requests))
+          message.success(status === 'completed' ? '已批准权限申请' : '已拒绝权限申请')
+        }
+      } else if (task.type === "account_request") {
+        // 处理账号申请
+        await queryWaitList({
+          id: taskId,
+          status,
+        })
+
+        if (status === "completed") {
+          const { phone, organizationId } = task.metadata
+          await createRamAccount({
+            name: phone,
+            account: phone,
+            password: phone,
+          })
+          await setPhoneOrgMapping(phone, organizationId)
+        }
+        message.success(status === 'completed' ? '已批准账号申请' : '已拒绝账号申请')
+      }
+
+      // 更新本地状态
+      set((state) => ({
+        tasks: state.tasks.map((task) =>
+          task.id === taskId ? { ...task, status, time: new Date().toLocaleString() } : task
+        ),
+      }))
     } catch (error) {
       console.error("Error updating task status:", error)
       message.error("更新任务状态失败")
