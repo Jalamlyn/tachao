@@ -45,7 +45,12 @@ interface DynamicComponentRendererProps {
   previewMode?: boolean
 }
 
-export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> = ({ code, formData, ...props }) => {
+export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> = ({
+  code,
+  formData,
+  formId,
+  ...props
+}) => {
   const [Component, setComponent] = useState<React.ComponentType<any> | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const [loading, setLoading] = useState(true)
@@ -72,7 +77,9 @@ export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> =
           ...Object.keys(uiComponents),
           `${transformedCode.replace(/export default/, "return")}`
         )
-        const DynamicFormWrapper = (props) => <DynamicForm {...props} formData={formData} templateId={templateId} />
+        const DynamicFormWrapper = (props) => (
+          <DynamicForm {...props} formData={formData} templateId={templateId} formId={formId} />
+        )
         // 3. 获取组件
         const CustomComponent = componentFn(React, DynamicFormWrapper, ...Object.values(uiComponents))
 

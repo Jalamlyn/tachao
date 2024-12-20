@@ -252,6 +252,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, formId, o
         const formData = prepareFormData(values, templateInfo)
 
         let savedFormId: string | undefined
+        debugger
         if (formId) {
           const result = await updateMetadata(formId, formData)
           if (result) {
