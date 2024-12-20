@@ -6,8 +6,7 @@ import AICommandInput from "@/components/AIEditor/components/AICommandInput"
 import { cn } from "@/lib/utils"
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
-import { ImageUploader } from "../components/ImageUpload"
-import { ExcelUploader } from "../components/ExcelUpload"
+import { ReferenceUpload } from "../components/ReferenceUpload"
 import { AI_LEVELS } from "../type"
 
 export const renderLeftPanel = (
@@ -86,10 +85,12 @@ export const renderLeftPanel = (
         </ScrollShadow>
 
         <div className='p-2'>
-          <div className='flex gap-1'>
-            {imageUpload && <ImageUploader agent={agent} aiLevel={selectedAILevel} />}
-            {excelUpload && <ExcelUploader agent={agent} aiLevel={selectedAILevel} />}
-          </div>
+          {(imageUpload || excelUpload) && (
+            <ReferenceUpload
+              agent={agent}
+              aiLevel={selectedAILevel}
+            />
+          )}
           <AICommandInput agent={agent} onResult={onCommandResult} aiLevel={selectedAILevel} />
         </div>
       </div>
