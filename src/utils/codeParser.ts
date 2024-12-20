@@ -1,7 +1,7 @@
 import { message } from "@/components/Message"
-import * as Babel from "@babel/standalone"
 import React from "react"
 import { aiLog } from "./AITraceLogger"
+import { transform } from "@/utils/moduleLoader"
 
 // 导入 shadcn UI 组件
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
@@ -67,7 +67,7 @@ export const parseAICode = async (content: string, tag: string): Promise<any> =>
  */
 export const jsxToJs = async (jsxCode: string): Promise<string> => {
   try {
-    const result = Babel.transform(jsxCode, {
+    const result = transform(jsxCode, {
       presets: ["react"],
     }).code
     return result

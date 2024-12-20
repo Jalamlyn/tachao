@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react"
-import { transform } from "@babel/standalone"
+import { transform } from "@/utils/moduleLoader"
 import ErrorBoundary from "./ErrorBoundary"
 import { Spinner } from "@nextui-org/react"
 import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
@@ -38,7 +38,7 @@ export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ co
 
         // 1. 转换代码
         const _code = code.replace("```", "")
-        const { code: transformedCode } = await transform(_code, {
+        const { code: transformedCode } = transform(_code, {
           presets: ["react"],
         })
         const __code = transformedCode.replace(/export default/, "return")

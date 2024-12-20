@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { transform } from "@babel/standalone"
+import { transform } from "@/utils/moduleLoader"
 import DynamicForm from "./common/DynamicForm"
 import ErrorBoundary from "./ErrorBoundary"
 import { Spinner } from "@nextui-org/react"
@@ -66,7 +66,7 @@ export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> =
         }
         const _code = extractShataAIFormContent(code_)
         // 1. 转换JSX
-        const { code: transformedCode } = await transform(_code, {
+        const { code: transformedCode } = transform(_code, {
           presets: ["react"],
         })
 
