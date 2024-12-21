@@ -6,6 +6,7 @@ import { message } from "@/components/Message"
 import EnterpriseList from "@/components/EnterpriseList"
 import { smsCaptcha, submitWaitList } from "@/service/apis/api"
 import qrpng from "../../../public/assets/qrcodefwh.jpg"
+import { auth } from "@/service/auth"
 
 interface AccountRequestProps {
   onBack: () => void
@@ -28,6 +29,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
   const [showQRCode, setShowQRCode] = useState(false)
   const [canInputSmsCode, setCanInputSmsCode] = useState(false)
   const [hasOidParam, setHasOidParam] = useState(false)
+  const [verificationInfo, setVerificationInfo] = useState(null)
 
   const loginData = React.useRef({
     organizationId: "",
@@ -35,7 +37,6 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
   })
 
   useEffect(() => {
-    // 检查 URL 中是否包含 oid 参数
     const urlParams = new URLSearchParams(window.location.search)
     const oid = urlParams.get('oid')
     if (oid) {
@@ -63,7 +64,14 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
 
     try {
       setIsLoading(true)
+      // 保留原有的 smsCaptcha 调用
       await smsCaptcha(phone.trim())
+      
+      // 添加新的验证逻辑
+      const verificationData = await auth.getVerification({
+        phone_number: phone.trim(),
+      })
+      setVerificationInfo(verificationData)
 
       message.success("验证码已发送")
       setSmsCooldown(60)
@@ -109,6 +117,15 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
 
     setIsLoading(true)
     try {
+      // 添加新的验证逻辑
+      if (verificationInfo) {
+        await auth.signInWithSms({
+          verificationInfo,
+          verificationCode: smsCode.trim(),
+          phoneNum: phone.trim(),
+        })
+      }
+
       await submitWaitList({
         phone: generateRandomPhoneNumber(),
         email: `${new Date().getTime()}@mobenai.com.cn`,

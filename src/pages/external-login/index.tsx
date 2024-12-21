@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next"
 import { motion } from "framer-motion"
 import AccountRequest from "./AccountRequest"
 import EnterpriseList from "@/components/EnterpriseList"
+import { auth } from "@/service/auth"
 
 export default function ExternalLoginPage() {
   const { t } = useTranslation()
@@ -34,6 +35,7 @@ export default function ExternalLoginPage() {
     try {
       const organizationId = loginData.current.organizationId
 
+      // 保留原有的登录逻辑
       const res = await login({
         account: `wb_${trimmedPhone}`,
         password: trimmedPhone,
