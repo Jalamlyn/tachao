@@ -122,7 +122,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, formId, title 
             <div className='flex items-center gap-2 bg-default-50 p-3 rounded-lg'>
               <Input
                 type='text'
-                value={link}
+                value={createShareUrl(link)}
                 readOnly
                 className='flex-1'
                 classNames={{
