@@ -212,74 +212,88 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
 
   // 渲染表格数据
   const renderTables = () => {
-    if (!renderConfig.table || !data?.tableData) return null
+    if (!renderConfig.tables || !data?.tableData) return null
 
-    // 处理单表格情况（向后兼容）
-    if (Array.isArray(data.tableData)) {
-      return renderSingleTable(data.tableData, renderConfig.table)
-    }
-
-    // 处理多表格情况
     return (
       <div className='space-y-6'>
-        {Object.entries(data.tableData).map(([tableKey, tableData]) => {
-          const tableConfig = renderConfig.table?.[tableKey] || renderConfig.table
-          if (!tableConfig || !Array.isArray(tableData)) return null
+        {renderConfig.tables.map((table) => {
+          const tableData = data.tableData[table.key]
+          if (!Array.isArray(tableData)) return null
 
           return (
-            <div key={tableKey} className='print:break-inside-avoid'>
-              {tableConfig.title && (
-                <div className='flex items-center gap-2 mb-3'>
-                  {tableConfig.icon && <Icon icon={tableConfig.icon} className='text-gray-500' />}
-                  <h4 className='text-base font-bold text-gray-800'>{tableConfig.title}</h4>
-                </div>
-              )}
-              {renderSingleTable(tableData, tableConfig)}
+            <div key={table.key} className='print:break-inside-avoid'>
+              {/* 表格标题和描述 */}
+              <div className='mb-3'>
+                <h4 className='text-base font-bold text-gray-800'>{table.title}</h4>
+                {table.description && <p className='text-sm text-gray-500 mt-1'>{table.description}</p>}
+              </div>
+
+              {/* 表格内容 */}
+              <table className='w-full border-collapse'>
+                <thead>
+                  <tr className='bg-gray-100'>
+                    {table.config.columns.map((column) => (
+                      <th
+                        key={column.key}
+                        className={cn(
+                          "border border-gray-300 p-2 text-sm font-bold text-gray-800",
+                          column.type === "number" && "text-right"
+                        )}
+                        style={{ width: column.width }}
+                      >
+                        {column.title}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {tableData.map((row, rowIndex) => (
+                    <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-50" : ""}>
+                      {table.config.columns.map((column) => (
+                        <td
+                          key={column.key}
+                          className={cn(
+                            "border border-gray-300 p-2 text-sm",
+                            column.type === "number" && "text-right font-mono"
+                          )}
+                        >
+                          {formatFieldValue(column.type, row[column.key], column)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                  {/* 汇总行 */}
+                  {table.config.summary?.show && (
+                    <tr className='bg-gray-100 font-medium'>
+                      {table.config.columns.map((column, colIndex) => {
+                        if (colIndex === 0) {
+                          return (
+                            <td key={column.key} className='border border-gray-300 p-2 text-sm'>
+                              {table.config.summary.firstColumnText || "合计"}
+                            </td>
+                          )
+                        }
+                        const summaryData = table.config.summary.onCompute?.(tableData) || {}
+                        return (
+                          <td
+                            key={column.key}
+                            className={cn(
+                              "border border-gray-300 p-2 text-sm",
+                              column.type === "number" && "text-right font-mono"
+                            )}
+                          >
+                            {formatFieldValue(column.type, summaryData[column.key], column)}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           )
         })}
       </div>
-    )
-  }
-
-  // 渲染单个表格
-  const renderSingleTable = (tableData: any[], tableConfig: any) => {
-    return (
-      <table className='w-full border-collapse'>
-        <thead>
-          <tr className='bg-gray-100'>
-            {tableConfig.columns.map((column: any) => (
-              <th
-                key={column.key}
-                className={cn(
-                  "border border-gray-300 p-2 text-sm font-bold text-gray-800",
-                  column.type === "number" && "text-right"
-                )}
-                style={{ width: column.width }}
-              >
-                {column.title}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {tableData.map((row: any, rowIndex: number) => (
-            <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-50" : ""}>
-              {tableConfig.columns.map((column: any) => (
-                <td
-                  key={column.key}
-                  className={cn(
-                    "border border-gray-300 p-2 text-sm",
-                    column.type === "number" && "text-right font-mono"
-                  )}
-                >
-                  {formatFieldValue(column.type, row[column.key], column)}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
     )
   }
 
@@ -379,7 +393,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
   }
 
   return (
-    <div ref={ref} className='p-8 bg-white max-w-[210mm] mx-auto'>
+    <div ref={ref} className='print-container p-8 bg-white max-w-[210mm] mx-auto'>
       {/* 页眉 */}
       <div className='text-center mb-8 pb-4 border-b-2 border-gray-300'>
         <h1 className='text-2xl font-bold text-gray-900 mb-2'>{metadata.title}</h1>
@@ -400,7 +414,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
       </div>
 
       {/* 表格数据 */}
-      {renderConfig.table && (
+      {renderConfig.tables && (
         <div className='mb-6'>
           <div className='flex items-center gap-2 mb-3'>
             <div className='w-1 h-6 bg-gray-800'></div>
@@ -439,6 +453,12 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
             print-color-adjust: exact;
             background: white !important;
           }
+          .print-container {
+            width: 210mm !important;
+            margin: 0 auto !important;
+            padding: 20mm !important;
+            box-sizing: border-box !important;
+          }
           .process-step {
             break-inside: avoid;
           }
@@ -449,6 +469,9 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
           th, td {
             border: 1px solid #000 !important;
             padding: 8px !important;
+            max-width: 170mm !important;
+            word-break: break-all !important;
+            overflow-wrap: break-word !important;
           }
           h1 {
             font-size: 24px !important;
