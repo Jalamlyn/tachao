@@ -9,12 +9,12 @@ import { setMetadata, getMetadata } from "@/service/apis/metadata"
 function calculateCost(tokenCount: number, isInput: boolean, model: string): number {
   const ratePerThousandTokens = {
     ADVANCED: {
-      input: 0.02,
-      output: 0.06,
+      input: 0.05,
+      output: 0.15,
     },
     EXPERT: {
-      input: 0.2,
-      output: 0.7,
+      input: 0.5,
+      output: 1.5,
     },
   }
 
@@ -139,8 +139,8 @@ export default async function chatChunkOpenAIOffice(
         id: Date.now(),
         timestamp: new Date().toISOString(),
         model: baseModel,
-        promptTokenCount: inputTokenCount * 5,
-        candidatesTokenCount: outputTokenCount * 5,
+        promptTokenCount: inputTokenCount * 2,
+        candidatesTokenCount: outputTokenCount * 2,
         inputCost,
         outputCost,
         totalCost: inputCost + outputCost,

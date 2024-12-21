@@ -150,7 +150,7 @@ export interface DynamicFormConfig {
   }
   renderConfig: {
     basicFields: FormField[] | FieldsWithGroups
-    table?: TableConfig
+    tables?: TableConfig
     processSteps?: ProcessStep[]
   }
 }
@@ -163,11 +163,7 @@ export interface FormField extends BaseField {
   step?: number
   accept?: string
   options?: SelectOption[] | ((form: UseFormReturn<any>) => SelectOption[])
-  render?: (props: {
-    field: any
-    form: UseFormReturn<any>
-    isEditable: boolean
-  }) => ReactNode
+  render?: (props: { field: any; form: UseFormReturn<any>; isEditable: boolean }) => ReactNode
   resourceConfig?: ResourceConfig
   uploadConfig?: UploadConfig
   width?: number
@@ -244,9 +240,12 @@ export interface ProcessProgress {
   completed: number
   current: number
   percentage: number
-  status: Record<string, {
-    isCompleted: boolean
-    isBlocked: boolean
-    blockReason?: string
-  }>
+  status: Record<
+    string,
+    {
+      isCompleted: boolean
+      isBlocked: boolean
+      blockReason?: string
+    }
+  >
 }
