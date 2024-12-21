@@ -1,4 +1,5 @@
 import assetTemplatePrompt from "./asset-template-prompt"
+import { customTemplatePrompt } from "./custom-template-prompt"
 import customerServiceTemplatePrompt from "./customer-service-template-prompt"
 import educationTemplatePrompt from "./education-template-prompt"
 import financeIndustryTemplatePrompt from "./finance-industry-template-prompt"
@@ -24,4 +25,5 @@ export default {
   "project-template-prompt": projectTemplatePrompt,
   "real-estate-template-prompt": realEstateTemplatePrompt,
   "retail-template-prompt": retailTemplatePrompt,
+  "custom-template-prompt": customTemplatePrompt,
 }

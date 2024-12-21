@@ -1,9 +1,9 @@
-import { doc } from "@/components/common/DynamicForm/docs"
-import { markdown as type } from "@/components/common/DynamicForm/docs/type.md"
+import { uiDoc } from "@/components/common/DynamicForm/ui-doc"
+import { type } from "@/components/common/DynamicForm/ui-doc/types"
 import { assetTemplatePrompt } from "@/pages/templates/asset-template-prompt"
+import { jsonStringify } from "@/utils"
 
 const generateFormAgentPrompt = (
-  rawConfig: string | null,
   hasImage: boolean = false,
   resources: Array<{ id: string; title: string }> = [],
   excelData?: {
@@ -119,17 +119,28 @@ const generateFormAgentPrompt = (
 3. 代码格式：
 \`\`\`jsx
 <shata-ai-code>
-export default () => {
+export default (props) => {
   // 1. 在组件内部定义配置
-  const formConfig = {}
-  /* formConfig 的类型说明 ${type}, 
+  /* 这是 formConfig 的类型定义 ${type}
   */
-  // 必须按照类型说明生成 formConfig 的代码
-  
+  const formConfig = {
+      metadata: {
+         title: ""
+      },
+      renderConfig:{
+         basicFields:{
+            groups:[]
+         },
+         tables:[],
+         summaryGroups:[],
+         processSteps:[]
+      },
+   }
   // 4. 渲染表单
   return (
     <div className="custom-form">
       <DynamicForm
+        config={formConfig}
          {...props}
       />
     </div>
@@ -235,9 +246,9 @@ ${resourceMappingPrompt}
 ${excelAnalysisGuide}
 ${imageAnalysisGuide}
 
-# 动态表单的源代码, 阅读源代码来生成配置
+# DynamicForm 配置文档
 <doc>
-${doc}
+${jsonStringify(uiDoc, null, 2)}
 </doc>
 
 # 用户需求思考过程

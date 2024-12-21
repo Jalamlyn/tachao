@@ -1,6 +1,7 @@
 # 自动计算表格
 
 ## 基础自动计算
+
 ```typescript
 {
   key: "computeTable",
@@ -36,9 +37,11 @@
   }
 }
 ```
+
 基础的表格计算功能。
 
 ## 复杂计算表格
+
 ```typescript
 {
   key: "complexComputeTable",
@@ -71,13 +74,15 @@
   }
 }
 ```
+
 支持复杂的计算逻辑。
 
 ## 完整示例
+
 ```typescript
 const formConfig = {
   metadata: {
-    title: "自动计算表格示例"
+    title: "自动计算表格示例",
   },
   renderConfig: {
     tables: [
@@ -92,7 +97,7 @@ const formConfig = {
               title: "产品",
               type: "text",
               width: 200,
-              required: true
+              required: true,
             },
             {
               key: "quantity",
@@ -100,7 +105,7 @@ const formConfig = {
               type: "number",
               width: 100,
               required: true,
-              min: 1
+              min: 1,
             },
             {
               key: "price",
@@ -112,9 +117,9 @@ const formConfig = {
                 type: "currency",
                 options: {
                   currency: "CNY",
-                  precision: 2
-                }
-              }
+                  precision: 2,
+                },
+              },
             },
             {
               key: "baseAmount",
@@ -126,9 +131,9 @@ const formConfig = {
                 type: "currency",
                 options: {
                   currency: "CNY",
-                  precision: 2
-                }
-              }
+                  precision: 2,
+                },
+              },
             },
             {
               key: "discountRate",
@@ -139,8 +144,8 @@ const formConfig = {
               max: 100,
               formatConfig: {
                 type: "percentage",
-                precision: 2
-              }
+                precision: 2,
+              },
             },
             {
               key: "discountAmount",
@@ -152,9 +157,9 @@ const formConfig = {
                 type: "currency",
                 options: {
                   currency: "CNY",
-                  precision: 2
-                }
-              }
+                  precision: 2,
+                },
+              },
             },
             {
               key: "taxRate",
@@ -163,8 +168,8 @@ const formConfig = {
               width: 100,
               formatConfig: {
                 type: "percentage",
-                precision: 2
-              }
+                precision: 2,
+              },
             },
             {
               key: "taxAmount",
@@ -176,9 +181,9 @@ const formConfig = {
                 type: "currency",
                 options: {
                   currency: "CNY",
-                  precision: 2
-                }
-              }
+                  precision: 2,
+                },
+              },
             },
             {
               key: "totalAmount",
@@ -190,35 +195,18 @@ const formConfig = {
                 type: "currency",
                 options: {
                   currency: "CNY",
-                  precision: 2
-                }
-              }
-            }
+                  precision: 2,
+                },
+              },
+            },
           ],
           summary: {
             show: true,
             firstColumnText: "合计",
-            onCompute: (data) => {
-              const total = data.reduce((sum, row) => {
-                return {
-                  baseAmount: sum.baseAmount + (Number(row.baseAmount) || 0),
-                  discountAmount: sum.discountAmount + (Number(row.discountAmount) || 0),
-                  taxAmount: sum.taxAmount + (Number(row.taxAmount) || 0),
-                  totalAmount: sum.totalAmount + (Number(row.totalAmount) || 0)
-                }
-              }, { baseAmount: 0, discountAmount: 0, taxAmount: 0, totalAmount: 0 })
-
-              return {
-                baseAmount: total.baseAmount.toFixed(2),
-                discountAmount: total.discountAmount.toFixed(2),
-                taxAmount: total.taxAmount.toFixed(2),
-                totalAmount: total.totalAmount.toFixed(2)
-              }
-            }
-          }
-        }
-      }
-    ]
+          },
+        },
+      },
+    ],
   },
   watch: (form) => {
     const subscription = form.watch((value, { name }) => {
@@ -250,6 +238,6 @@ const formConfig = {
     })
 
     return () => subscription.unsubscribe()
-  }
+  },
 }
 ```

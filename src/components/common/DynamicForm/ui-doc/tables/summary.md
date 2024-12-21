@@ -1,6 +1,7 @@
 # 汇总统计表格
 
 ## 基础汇总
+
 ```typescript
 {
   key: "summaryTable",
@@ -21,16 +22,15 @@
     summary: {
       show: true,
       firstColumnText: "合计",
-      onCompute: (data) => ({
-        amount: data.reduce((sum, row) => sum + (Number(row.amount) || 0), 0).toFixed(2)
-      })
     }
   }
 }
 ```
+
 基础的表格汇总功能。
 
 ## 多列汇总
+
 ```typescript
 {
   key: "multiSummaryTable",
@@ -61,21 +61,19 @@
     summary: {
       show: true,
       firstColumnText: "合计",
-      onCompute: (data) => ({
-        quantity: data.reduce((sum, row) => sum + (Number(row.quantity) || 0), 0),
-        amount: data.reduce((sum, row) => sum + (Number(row.amount) || 0), 0).toFixed(2)
-      })
     }
   }
 }
 ```
+
 支持多列数据汇总。
 
 ## 完整示例
+
 ```typescript
 const formConfig = {
   metadata: {
-    title: "汇总统计表格示例"
+    title: "汇总统计表格示例",
   },
   renderConfig: {
     tables: [
@@ -90,14 +88,14 @@ const formConfig = {
               title: "类别",
               type: "text",
               width: 150,
-              required: true
+              required: true,
             },
             {
               key: "product",
               title: "产品",
               type: "text",
               width: 200,
-              required: true
+              required: true,
             },
             {
               key: "quantity",
@@ -107,8 +105,8 @@ const formConfig = {
               required: true,
               formatConfig: {
                 type: "number",
-                precision: 0
-              }
+                precision: 0,
+              },
             },
             {
               key: "price",
@@ -120,9 +118,9 @@ const formConfig = {
                 type: "currency",
                 options: {
                   currency: "CNY",
-                  precision: 2
-                }
-              }
+                  precision: 2,
+                },
+              },
             },
             {
               key: "amount",
@@ -134,9 +132,9 @@ const formConfig = {
                 type: "currency",
                 options: {
                   currency: "CNY",
-                  precision: 2
-                }
-              }
+                  precision: 2,
+                },
+              },
             },
             {
               key: "cost",
@@ -148,9 +146,9 @@ const formConfig = {
                 type: "currency",
                 options: {
                   currency: "CNY",
-                  precision: 2
-                }
-              }
+                  precision: 2,
+                },
+              },
             },
             {
               key: "profit",
@@ -165,40 +163,25 @@ const formConfig = {
                   precision: 2,
                   conditions: [
                     {
-                      condition: value => value > 0,
-                      style: { color: "green" }
+                      condition: (value) => value > 0,
+                      style: { color: "green" },
                     },
                     {
-                      condition: value => value < 0,
-                      style: { color: "red" }
-                    }
-                  ]
-                }
-              }
-            }
+                      condition: (value) => value < 0,
+                      style: { color: "red" },
+                    },
+                  ],
+                },
+              },
+            },
           ],
           summary: {
             show: true,
             firstColumnText: "合计",
-            onCompute: (data) => {
-              const summary = data.reduce((sum, row) => ({
-                quantity: sum.quantity + (Number(row.quantity) || 0),
-                amount: sum.amount + (Number(row.amount) || 0),
-                cost: sum.cost + (Number(row.cost) || 0),
-                profit: sum.profit + (Number(row.profit) || 0)
-              }), { quantity: 0, amount: 0, cost: 0, profit: 0 })
-
-              return {
-                quantity: summary.quantity,
-                amount: summary.amount.toFixed(2),
-                cost: summary.cost.toFixed(2),
-                profit: summary.profit.toFixed(2)
-              }
-            }
-          }
-        }
-      }
-    ]
+          },
+        },
+      },
+    ],
   },
   watch: (form) => {
     const subscription = form.watch((value, { name }) => {
@@ -220,6 +203,6 @@ const formConfig = {
     })
 
     return () => subscription.unsubscribe()
-  }
+  },
 }
 ```

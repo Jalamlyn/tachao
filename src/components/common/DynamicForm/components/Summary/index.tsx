@@ -15,7 +15,6 @@ const Summary: React.FC<ExtendedSummaryProps> = ({
   style
 }) => {
   if (!groups?.length) return null
-
   return (
     <div 
       className={cn("space-y-8", className)}

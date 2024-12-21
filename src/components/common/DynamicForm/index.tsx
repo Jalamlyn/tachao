@@ -356,7 +356,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, formId, o
 
     return null
   }
-
   return (
     <Form {...form}>
       <form onSubmit={handleFormSubmit} className={cn(styles["dynamic-form"], "space-y-6 md:space-y-8 pb-2")}>

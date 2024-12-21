@@ -59,7 +59,6 @@ export interface TableConfig {
   summary?: {
     show?: boolean
     firstColumnText?: string
-    onCompute?: (data: any[]) => Record<string, any>
   }
 }
 

@@ -1,6 +1,7 @@
 # 表格联动
 
 ## 基础表格联动
+
 ```typescript
 {
   tables: [
@@ -42,9 +43,11 @@
   }
 }
 ```
+
 基础的表格计算联动。
 
 ## 跨表格联动
+
 ```typescript
 {
   tables: [
@@ -59,11 +62,11 @@
             type: "select",
             options: [
               { label: "类型A", value: "A" },
-              { label: "类型B", value: "B" }
-            ]
-          }
-        ]
-      }
+              { label: "类型B", value: "B" },
+            ],
+          },
+        ],
+      },
     },
     {
       key: "subTable",
@@ -76,24 +79,32 @@
             type: "select",
             options: (form) => {
               const mainType = form.getValues("tableData.mainTable[0].type")
-              return mainType === "A" 
-                ? [{ label: "A-1", value: "a1" }, { label: "A-2", value: "a2" }]
-                : [{ label: "B-1", value: "b1" }, { label: "B-2", value: "b2" }]
-            }
-          }
-        ]
-      }
-    }
+              return mainType === "A"
+                ? [
+                    { label: "A-1", value: "a1" },
+                    { label: "A-2", value: "a2" },
+                  ]
+                : [
+                    { label: "B-1", value: "b1" },
+                    { label: "B-2", value: "b2" },
+                  ]
+            },
+          },
+        ],
+      },
+    },
   ]
 }
 ```
+
 支持表格间的联动。
 
 ## 完整示例
+
 ```typescript
 const formConfig = {
   metadata: {
-    title: "表格联动示例"
+    title: "表格联动示例",
   },
   renderConfig: {
     tables: [
@@ -113,20 +124,20 @@ const formConfig = {
                 resourceId: "products",
                 displayFields: [
                   { key: "name", label: "产品名称" },
-                  { key: "code", label: "产品编码" }
+                  { key: "code", label: "产品编码" },
                 ],
                 fieldMapping: {
-                  "price": "price",
-                  "unit": "unit"
-                }
-              }
+                  price: "price",
+                  unit: "unit",
+                },
+              },
             },
             {
               key: "unit",
               title: "单位",
               type: "text",
               width: 100,
-              disabled: true
+              disabled: true,
             },
             {
               key: "quantity",
@@ -134,7 +145,7 @@ const formConfig = {
               type: "number",
               width: 100,
               required: true,
-              min: 1
+              min: 1,
             },
             {
               key: "price",
@@ -146,9 +157,9 @@ const formConfig = {
                 type: "currency",
                 options: {
                   currency: "CNY",
-                  precision: 2
-                }
-              }
+                  precision: 2,
+                },
+              },
             },
             {
               key: "discount",
@@ -159,8 +170,8 @@ const formConfig = {
               max: 100,
               formatConfig: {
                 type: "percentage",
-                precision: 0
-              }
+                precision: 0,
+              },
             },
             {
               key: "amount",
@@ -172,22 +183,16 @@ const formConfig = {
                 type: "currency",
                 options: {
                   currency: "CNY",
-                  precision: 2
-                }
-              }
-            }
+                  precision: 2,
+                },
+              },
+            },
           ],
           summary: {
             show: true,
             firstColumnText: "合计",
-            onCompute: (data) => {
-              const total = data.reduce((sum, row) => sum + (Number(row.amount) || 0), 0)
-              return {
-                amount: total.toFixed(2)
-              }
-            }
-          }
-        }
+          },
+        },
       },
       {
         key: "deliveryPlan",
@@ -200,28 +205,28 @@ const formConfig = {
               title: "产品",
               type: "text",
               width: 200,
-              disabled: true
+              disabled: true,
             },
             {
               key: "planQuantity",
               title: "计划数量",
               type: "number",
               width: 100,
-              required: true
+              required: true,
             },
             {
               key: "remainQuantity",
               title: "剩余数量",
               type: "number",
               width: 100,
-              disabled: true
+              disabled: true,
             },
             {
               key: "deliveryDate",
               title: "发货日期",
               type: "date",
               width: 150,
-              required: true
+              required: true,
             },
             {
               key: "status",
@@ -230,13 +235,13 @@ const formConfig = {
               width: 100,
               options: [
                 { label: "待发货", value: "pending" },
-                { label: "已发货", value: "shipped" }
-              ]
-            }
-          ]
-        }
-      }
-    ]
+                { label: "已发货", value: "shipped" },
+              ],
+            },
+          ],
+        },
+      },
+    ],
   },
   watch: (form) => {
     const subscription = form.watch((value, { name }) => {
@@ -245,27 +250,27 @@ const formConfig = {
         const productsData = form.getValues("tableData.products") || []
         productsData.forEach((row, index) => {
           if (!row) return
-          
+
           // 计算金额
           const quantity = Number(row.quantity) || 0
           const price = Number(row.price) || 0
           const discount = Number(row.discount) || 100
           const amount = quantity * price * (discount / 100)
           form.setValue(`tableData.products.${index}.amount`, amount.toFixed(2))
-          
+
           // 更新发货计划
           const deliveryPlanData = form.getValues("tableData.deliveryPlan") || []
-          const existingPlan = deliveryPlanData.find(plan => 
-            plan.product === row.product?.name && plan.status === "pending"
+          const existingPlan = deliveryPlanData.find(
+            (plan) => plan.product === row.product?.name && plan.status === "pending"
           )
-          
+
           if (!existingPlan && quantity > 0) {
             // 添加新的发货计划
             const newPlan = {
               product: row.product?.name,
               planQuantity: quantity,
               remainQuantity: quantity,
-              status: "pending"
+              status: "pending",
             }
             const newDeliveryPlanData = [...deliveryPlanData, newPlan]
             form.setValue("tableData.deliveryPlan", newDeliveryPlanData)
@@ -277,7 +282,7 @@ const formConfig = {
           }
         })
       }
-      
+
       // 发货计划状态联动
       if (name?.includes("deliveryPlan") && name?.includes("status")) {
         const deliveryPlanData = form.getValues("tableData.deliveryPlan") || []
@@ -290,6 +295,6 @@ const formConfig = {
     })
 
     return () => subscription.unsubscribe()
-  }
+  },
 }
 ```
