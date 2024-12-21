@@ -13,12 +13,8 @@ import { items } from "../component/items"
 import { BreadcrumbProvider } from "../../../contexts/BreadcrumbContext"
 import GlobalBreadcrumb from "../../../components/GlobalBreadcrumb"
 import ServiceSupportModal from "./ServiceSupportModal"
-import EnterpriseInitializer from "@/components/EnterpriseInitializer"
 import { localDB } from "@/utils/localDB"
-import { createModel, createModelProperty } from "@/service/apis/model"
 import message from "@/components/Message"
-import { queryMyProject } from "@/service/apis/project"
-import { queryApps } from "@/service/apis/app"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 
 export default function Component() {
@@ -29,72 +25,15 @@ export default function Component() {
   const navigate = useNavigate()
   const { userInfo, loading } = useGlobalUser()
   const { isOpen: isServiceModalOpen, onOpen: onServiceModalOpen, onClose: onServiceModalClose } = useDisclosure()
-  const [showInitializer, setShowInitializer] = useState(false)
   const { isOpen: isLogoutModalOpen, onOpen: onLogoutModalOpen, onClose: onLogoutModalClose } = useDisclosure()
-  const [isInitializing, setIsInitializing] = useState(true)
   const [enterpriseName, setEnterpriseName] = useState("")
 
   useEffect(() => {
-    checkInitialization()
     const cachedLabel = localStorage.getItem("cachedLabel")
     if (cachedLabel) {
       setEnterpriseName(cachedLabel || "")
     }
   }, [])
-
-  const checkInitialization = async () => {
-    try {
-      const appId = localDB.getAppId()
-      if (!appId) {
-        const projectResponse = await queryMyProject({
-          name: "默认企业项目",
-        })
-        if (projectResponse.data && projectResponse.data.length > 0) {
-          const appResponse = await queryApps({
-            projectId: projectResponse.data[0].id,
-            name: "企业管理平台",
-          })
-          if (appResponse.data && appResponse.data.length > 0) {
-            localDB.setAppId(appResponse.data[0])
-          } else {
-            setShowInitializer(true)
-          }
-        } else {
-          setShowInitializer(true)
-        }
-      }
-    } catch (error) {
-      console.error("Initialization check failed:", error)
-      message.error("初始化检查失败")
-    } finally {
-      setIsInitializing(false)
-    }
-  }
-
-  const handleInitializationSuccess = async () => {
-    try {
-      const modelResponse = await createModel({
-        namespace: "file",
-        name: "activities",
-        description: "企业网盘文件管理",
-      })
-
-      await createModelProperty({
-        modelId: modelResponse.id,
-        name: "files",
-        type: "file",
-        description: "文件列表",
-        isRequired: true,
-        allowMultipleFiles: true,
-      })
-
-      setShowInitializer(false)
-      message.success("初始化成功")
-    } catch (error) {
-      console.error("Initialization error:", error)
-      message.error("初始化失败")
-    }
-  }
 
   const onToggle = React.useCallback(() => {
     setIsCollapsed((prev) => !prev)
@@ -113,17 +52,6 @@ export default function Component() {
     sessionStorage.clear()
     onLogoutModalClose()
     window.location.href = "/login"
-  }
-
-  if (isInitializing) {
-    return (
-      <div className='h-screen w-full flex items-center justify-center'>
-        <div className='flex flex-col items-center gap-2'>
-          <Spinner size='lg' />
-          <div>正在初始化系统...</div>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -284,8 +212,6 @@ export default function Component() {
         </div>
 
         <ServiceSupportModal isOpen={isServiceModalOpen} onClose={onServiceModalClose} />
-
-        <EnterpriseInitializer isOpen={showInitializer} onClose={() => {}} onSuccess={handleInitializationSuccess} />
 
         <Modal isOpen={isLogoutModalOpen} onClose={onLogoutModalClose}>
           <ModalContent>

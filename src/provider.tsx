@@ -7,6 +7,7 @@ import { localDB } from "./utils/localDB"
 import { useEffect, useState } from "react"
 import { Spinner } from "@nextui-org/react"
 import { preloadBabel, preloadTokenizer } from "./utils/moduleLoader"
+import EnterpriseInitializer from "./components/EnterpriseInitializer"
 
 const preloadModules = async () => {
   let retryCount = 0
@@ -42,6 +43,12 @@ export function Provider({ children }: { children: React.ReactNode }) {
   const [isInit, setIsInit] = useState(false)
   const [modulesLoaded, setModulesLoaded] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(true)
+  const [showInitializer, setShowInitializer] = useState(false)
+
+  const handleInitializationSuccess = () => {
+    setShowInitializer(false)
+    setIsInit(true)
+  }
 
   const checkInitialization = async () => {
     try {
@@ -56,14 +63,20 @@ export function Provider({ children }: { children: React.ReactNode }) {
             name: "企业管理平台",
           })
           if (appResponse.data && appResponse.data.length > 0) {
-            // debugger
             localDB.setAppId(appResponse.data[0])
             setIsInit(true)
+          } else {
+            setShowInitializer(true)
           }
+        } else {
+          setShowInitializer(true)
         }
+      } else {
+        setIsInit(true)
       }
     } catch (error) {
       console.error("Initialization check failed:", error)
+      setShowInitializer(true)
     }
   }
 
@@ -83,10 +96,9 @@ export function Provider({ children }: { children: React.ReactNode }) {
       preloadModules()
         .then(() => {
           setModulesLoaded(true)
-          // 添加延迟以确保过渡动画完成
           setTimeout(() => {
             setIsTransitioning(false)
-          }, 300) // 与CSS过渡时间匹配
+          }, 300)
         })
         .catch((err) => console.error("Failed to preload modules:", err))
     }
@@ -141,6 +153,11 @@ export function Provider({ children }: { children: React.ReactNode }) {
         >
           {isInit && modulesLoaded && !isTransitioning && children}
         </div>
+        <EnterpriseInitializer
+          isOpen={showInitializer}
+          onClose={() => {}}
+          onSuccess={handleInitializationSuccess}
+        />
       </main>
     </NextUIProvider>
   )
