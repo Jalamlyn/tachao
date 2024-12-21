@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react"
-import { Card, CardBody, Input, Button, Image } from "@nextui-org/react"
+import React, { useState } from "react"
+import { Card, CardBody, Button, Image } from "@nextui-org/react"
 import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { message } from "@/components/Message"
 import EnterpriseList from "@/components/EnterpriseList"
-import { smsCaptcha, submitWaitList } from "@/service/apis/api"
+import { submitWaitList } from "@/service/apis/api"
 import qrpng from "../../../public/assets/qrcodefwh.jpg"
+import { useOid } from "./useOid"
+import { PhoneVerification } from "@/components/PhoneVerification"
 
 interface AccountRequestProps {
   onBack: () => void
@@ -21,130 +23,31 @@ function generateRandomPhoneNumber() {
 
 export default function AccountRequest({ onBack }: AccountRequestProps) {
   const { t } = useTranslation()
-  const [phone, setPhone] = useState("")
-  const [smsCode, setSmsCode] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [smsCooldown, setSmsCooldown] = useState(0)
   const [showQRCode, setShowQRCode] = useState(false)
-  const [canInputSmsCode, setCanInputSmsCode] = useState(false)
-  const [hasOidParam, setHasOidParam] = useState(false)
-  const [verificationInfo, setVerificationInfo] = useState(null)
+  const [phone, setPhone] = useState("")
 
   const loginData = React.useRef({
     organizationId: "",
     enterpriseName: "",
   })
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const oid = urlParams.get("oid")
-    const callback = urlParams.get("callback")
+  const { hasOidParam } = useOid(loginData)
 
-    if (oid) {
-      loginData.current.organizationId = oid
-      setHasOidParam(true)
-    } else if (callback) {
-      try {
-        // 解析 callback URL 中的 oid
-        const callbackUrl = new URL(decodeURIComponent(callback))
-        const callbackParams = new URLSearchParams(callbackUrl.search)
-        const callbackOid = callbackParams.get("oid")
-        
-        if (callbackOid) {
-          loginData.current.organizationId = callbackOid
-          setHasOidParam(true)
-        }
-      } catch (error) {
-        console.error("Failed to parse callback URL:", error)
-      }
-    }
-  }, [])
-
-  const isValidPhone = (phone: string) => {
-    return /^1[3-9]\d{9}$/.test(phone)
-  }
-
-  const isValidSmsCode = (code: string) => {
-    return /^\d{6}$/.test(code)
-  }
-
-  const handleSendSms = async () => {
-    if (!phone.trim()) {
-      return message.error(t("phone_required"))
-    }
-
-    if (!isValidPhone(phone.trim())) {
-      return message.error("请输入正确的手机号")
-    }
-
-    try {
-      setIsLoading(true)
-      // 添加新的验证逻辑
-      const verificationData = await auth.getVerification({
-        phone_number: phone.trim(),
-      })
-      setVerificationInfo(verificationData)
-
-      message.success("验证码已发送")
-      setSmsCooldown(60)
-      setCanInputSmsCode(true)
-      const interval = setInterval(() => {
-        setSmsCooldown((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-    } catch (error) {
-      console.error("Failed to send SMS:", error)
-      message.error("发送验证码失败，请重试")
-      setCanInputSmsCode(false)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleSubmit = async () => {
-    if (!phone.trim()) {
-      return message.error(t("phone_required"))
-    }
-
-    if (!isValidPhone(phone.trim())) {
-      return message.error("请输入正确的手机号")
-    }
-
-    if (!smsCode.trim()) {
-      return message.error(t("sms_code_required"))
-    }
-
-    if (!isValidSmsCode(smsCode.trim())) {
-      return message.error("请输入6位数字验证码")
-    }
-
+  const handleSubmitRequest = async () => {
     if (!loginData.current.organizationId) {
       return message.error(t("organization_required"))
     }
 
     setIsLoading(true)
     try {
-      // 添加新的验证逻辑
-      if (verificationInfo) {
-        await auth.signInWithSms({
-          verificationInfo,
-          verificationCode: smsCode.trim(),
-          phoneNum: phone.trim(),
-        })
-      }
-
       await submitWaitList({
         phone: generateRandomPhoneNumber(),
         email: `${new Date().getTime()}@mobenai.com.cn`,
         developer: false,
         industry: "模本科技",
         purpose: `{
-        "phone":"${phone.trim()}",
+        "phone":"${phone}",
         "status":"pending",
         "type":"account_request",
         "organizationId":"${loginData.current.organizationId}"
@@ -158,16 +61,6 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 11)
-    setPhone(value)
-  }
-
-  const handleSmsCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 6)
-    setSmsCode(value)
   }
 
   if (showQRCode) {
@@ -224,44 +117,21 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
-                  <Input
-                    isRequired
-                    label={t("phone_number")}
-                    placeholder={t("enter_phone_number")}
-                    type='tel'
-                    variant='bordered'
-                    value={phone}
-                    onChange={handlePhoneChange}
-                    description='请输入11位手机号'
+                  <PhoneVerification
+                    onSuccess={() => {
+                      handleSubmitRequest()
+                    }}
+                    onError={(error) => {
+                      console.error("Phone verification failed:", error)
+                      message.error("手机号验证失败，请重试")
+                    }}
                   />
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
-                  <div className='flex gap-2'>
-                    <Input
-                      isRequired
-                      label={t("verification_code")}
-                      placeholder={t("enter_verification_code")}
-                      type='text'
-                      variant='bordered'
-                      value={smsCode}
-                      onChange={handleSmsCodeChange}
-                      isDisabled={!canInputSmsCode}
-                      description='请输入6位数字验证码'
-                    />
-                    <Button size='lg' onClick={handleSendSms} disabled={smsCooldown > 0}>
-                      {smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码"}
-                    </Button>
-                  </div>
-                </motion.div>
-
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-                  <div className='flex gap-2'>
+                  <div className='flex gap-2 mt-4'>
                     <Button variant='light' className='flex-1' onClick={onBack}>
                       返回
-                    </Button>
-                    <Button color='primary' className='flex-1' onClick={handleSubmit} isLoading={isLoading}>
-                      提交申请
                     </Button>
                   </div>
                 </motion.div>
