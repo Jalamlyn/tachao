@@ -2,7 +2,7 @@ import { markdown as textInput } from "./basic-fields/text-input.md"
 import { markdown as numberInput } from "./basic-fields/number-input.md"
 import { markdown as dateInput } from "./basic-fields/date-input.md"
 import { markdown as select } from "./basic-fields/select.md"
-import { markdown as switch } from "./basic-fields/switch.md"
+import { markdown as switchdoc } from "./basic-fields/switch.md"
 import { markdown as slider } from "./basic-fields/slider.md"
 import { markdown as upload } from "./basic-fields/upload.md"
 import { markdown as resource } from "./basic-fields/resource.md"
@@ -17,13 +17,13 @@ export const uiDoc = {
     numberInput,
     dateInput,
     select,
-    switch,
+    switchdoc,
     slider,
     upload,
     resource,
     signature,
     location,
     clockIn,
-    customRender
-  }
+    customRender,
+  },
 }

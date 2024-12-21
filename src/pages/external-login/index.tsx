@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next"
 import { motion } from "framer-motion"
 import AccountRequest from "./AccountRequest"
 import EnterpriseList from "@/components/EnterpriseList"
-import { auth } from "@/service/auth"
+import { useOid } from "./useOid"
 
 export default function ExternalLoginPage() {
   const { t } = useTranslation()
@@ -20,6 +20,8 @@ export default function ExternalLoginPage() {
     organizationId: "",
     enterpriseName: "",
   })
+
+  const { hasOidParam } = useOid(loginData)
 
   const handleLogin = async () => {
     const trimmedPhone = phone.trim()
@@ -94,7 +96,7 @@ export default function ExternalLoginPage() {
 
               <form className='flex flex-col gap-4' onSubmit={(e) => e.preventDefault()}>
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-                  <EnterpriseList loginData={loginData} />
+                  {!hasOidParam && <EnterpriseList loginData={loginData} />}
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
@@ -125,24 +127,22 @@ export default function ExternalLoginPage() {
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
-                  <p className="text-sm text-gray-600 text-center mb-2">
-                    没有账号？向企业管理员申请开通后即可登录访问
-                  </p>
+                  <p className='text-sm text-gray-600 text-center mb-2'>没有账号？向企业管理员申请开通后即可登录访问</p>
                   <Button variant='light' className='w-full' onClick={() => setShowRequest(true)}>
                     申请账号
                   </Button>
                 </motion.div>
 
-                <motion.div 
-                  initial={{ opacity: 0 }} 
-                  animate={{ opacity: 1 }} 
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   transition={{ delay: 0.9 }}
-                  className="mt-2 text-center"
+                  className='mt-2 text-center'
                 >
                   <Button
-                    variant="light"
-                    className="text-sm opacity-80 hover:opacity-100 transition-opacity"
-                    onClick={() => navigate('/login')}
+                    variant='light'
+                    className='text-sm opacity-80 hover:opacity-100 transition-opacity'
+                    onClick={() => navigate("/login")}
                   >
                     管理员登录
                   </Button>
