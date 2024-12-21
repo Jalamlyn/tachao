@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Card, CardBody, Input, Button, Image } from "@nextui-org/react"
 import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
@@ -27,11 +27,22 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
   const [smsCooldown, setSmsCooldown] = useState(0)
   const [showQRCode, setShowQRCode] = useState(false)
   const [canInputSmsCode, setCanInputSmsCode] = useState(false)
+  const [hasOidParam, setHasOidParam] = useState(false)
 
   const loginData = React.useRef({
     organizationId: "",
     enterpriseName: "",
   })
+
+  useEffect(() => {
+    // 检查 URL 中是否包含 oid 参数
+    const urlParams = new URLSearchParams(window.location.search)
+    const oid = urlParams.get('oid')
+    if (oid) {
+      loginData.current.organizationId = oid
+      setHasOidParam(true)
+    }
+  }, [])
 
   const isValidPhone = (phone: string) => {
     return /^1[3-9]\d{9}$/.test(phone)
@@ -180,7 +191,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
 
               <form className='flex flex-col gap-4' onSubmit={(e) => e.preventDefault()}>
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-                  <EnterpriseList loginData={loginData} />
+                  {!hasOidParam && <EnterpriseList loginData={loginData} />}
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
