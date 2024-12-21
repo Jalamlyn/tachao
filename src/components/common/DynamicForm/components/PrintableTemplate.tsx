@@ -10,12 +10,6 @@ interface PrintableTemplateProps {
 }
 
 const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ config, data }, ref) => {
-  // 添加日志：监控传入的数据
-  useEffect(() => {
-    //console.log("[PrintableTemplate] Received config:", config)
-    //console.log("[PrintableTemplate] Received data:", data)
-  }, [config, data])
-
   // 标准化配置
   const normalizeConfig = (rawConfig: any): DynamicFormConfig => {
     if (!rawConfig) return rawConfig
@@ -217,52 +211,75 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
   }
 
   // 渲染表格数据
-  const renderTable = () => {
-    if (!renderConfig.table) return null
+  const renderTables = () => {
+    if (!renderConfig.table || !data?.tableData) return null
 
-    const tableData = data?.tableData || []
-    //console.log("[PrintableTemplate] Table data:", tableData)
+    // 处理单表格情况（向后兼容）
+    if (Array.isArray(data.tableData)) {
+      return renderSingleTable(data.tableData, renderConfig.table)
+    }
 
-    const displayData = tableData.length > 0 ? tableData : [{}]
-
+    // 处理多表格情况
     return (
-      <div className='mt-6'>
-        <table className='w-full border-collapse'>
-          <thead>
-            <tr className='bg-gray-100'>
-              {renderConfig.table.columns.map((column, index) => (
-                <th
+      <div className='space-y-6'>
+        {Object.entries(data.tableData).map(([tableKey, tableData]) => {
+          const tableConfig = renderConfig.table?.[tableKey] || renderConfig.table
+          if (!tableConfig || !Array.isArray(tableData)) return null
+
+          return (
+            <div key={tableKey} className='print:break-inside-avoid'>
+              {tableConfig.title && (
+                <div className='flex items-center gap-2 mb-3'>
+                  {tableConfig.icon && <Icon icon={tableConfig.icon} className='text-gray-500' />}
+                  <h4 className='text-base font-bold text-gray-800'>{tableConfig.title}</h4>
+                </div>
+              )}
+              {renderSingleTable(tableData, tableConfig)}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // 渲染单个表格
+  const renderSingleTable = (tableData: any[], tableConfig: any) => {
+    return (
+      <table className='w-full border-collapse'>
+        <thead>
+          <tr className='bg-gray-100'>
+            {tableConfig.columns.map((column: any) => (
+              <th
+                key={column.key}
+                className={cn(
+                  "border border-gray-300 p-2 text-sm font-bold text-gray-800",
+                  column.type === "number" && "text-right"
+                )}
+                style={{ width: column.width }}
+              >
+                {column.title}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {tableData.map((row: any, rowIndex: number) => (
+            <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-50" : ""}>
+              {tableConfig.columns.map((column: any) => (
+                <td
                   key={column.key}
                   className={cn(
-                    "border border-gray-300 p-2 text-sm font-bold text-gray-800",
-                    column.type === "number" && "text-right"
+                    "border border-gray-300 p-2 text-sm",
+                    column.type === "number" && "text-right font-mono"
                   )}
-                  style={{ width: column.width }}
                 >
-                  {column.title}
-                </th>
+                  {formatFieldValue(column.type, row[column.key], column)}
+                </td>
               ))}
             </tr>
-          </thead>
-          <tbody>
-            {displayData.map((row: any, rowIndex: number) => (
-              <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-gray-50" : ""}>
-                {renderConfig.table!.columns.map((column) => (
-                  <td
-                    key={column.key}
-                    className={cn(
-                      "border border-gray-300 p-2 text-sm",
-                      column.type === "number" && "text-right font-mono"
-                    )}
-                  >
-                    {formatFieldValue(column.type, row[column.key], column)}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     )
   }
 
@@ -271,7 +288,6 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
     if (!renderConfig.processSteps) return null
 
     const processConfirmations = data?.processConfirmations || {}
-    //console.log("[PrintableTemplate] Process confirmations:", processConfirmations)
 
     return (
       <div className='mt-6 space-y-6'>
@@ -390,7 +406,7 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
             <div className='w-1 h-6 bg-gray-800'></div>
             <h2 className='text-lg font-bold text-gray-800'>明细信息</h2>
           </div>
-          {renderTable()}
+          {renderTables()}
         </div>
       )}
 
@@ -483,6 +499,13 @@ const PrintableTemplate = forwardRef<HTMLDivElement, PrintableTemplateProps>(({ 
           }
           .border-gray-200 {
             border-color: #e5e7eb !important;
+          }
+          .print\:break-inside-avoid {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          .space-y-6 > * + * {
+            margin-top: 1.5rem !important;
           }
         }
       `}</style>
