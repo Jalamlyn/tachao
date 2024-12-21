@@ -33,7 +33,7 @@ export const FormHeader: React.FC<FormHeaderProps> = ({ title = "表单详情", 
   }, [shareContent.title])
 
   const generateShareLink = () => {
-    return `${window.location.origin}/form/${formId}`
+    return window.location.href
   }
 
   const getShareContent = () => {
