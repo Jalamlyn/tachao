@@ -6,7 +6,6 @@ import { message } from "@/components/Message"
 import EnterpriseList from "@/components/EnterpriseList"
 import { smsCaptcha, submitWaitList } from "@/service/apis/api"
 import qrpng from "../../../public/assets/qrcodefwh.jpg"
-import { auth } from "@/service/auth"
 
 interface AccountRequestProps {
   onBack: () => void
@@ -38,10 +37,26 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
-    const oid = urlParams.get('oid')
+    const oid = urlParams.get("oid")
+    const callback = urlParams.get("callback")
+
     if (oid) {
       loginData.current.organizationId = oid
       setHasOidParam(true)
+    } else if (callback) {
+      try {
+        // 解析 callback URL 中的 oid
+        const callbackUrl = new URL(decodeURIComponent(callback))
+        const callbackParams = new URLSearchParams(callbackUrl.search)
+        const callbackOid = callbackParams.get("oid")
+        
+        if (callbackOid) {
+          loginData.current.organizationId = callbackOid
+          setHasOidParam(true)
+        }
+      } catch (error) {
+        console.error("Failed to parse callback URL:", error)
+      }
     }
   }, [])
 
@@ -64,9 +79,6 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
 
     try {
       setIsLoading(true)
-      // 保留原有的 smsCaptcha 调用
-      await smsCaptcha(phone.trim())
-      
       // 添加新的验证逻辑
       const verificationData = await auth.getVerification({
         phone_number: phone.trim(),
