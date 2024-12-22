@@ -146,7 +146,7 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
           phone_number: `+86 ${formData.phone}`,
           verification_code: smsCode,
           verification_token: verificationTokenRes.verification_token,
-          name: "手机用户",
+          name: "官网申请用户",
           password: "admin_123",
           username: "admin_admin",
         })
