@@ -1,4 +1,4 @@
-import { uiDoc } from "@/components/common/DynamicForm/ui-doc"
+import { doc } from "@/components/common/DynamicForm/ui-doc"
 import { type } from "@/components/common/DynamicForm/ui-doc/types"
 import { assetTemplatePrompt } from "@/pages/templates/asset-template-prompt"
 import { jsonStringify } from "@/utils"
@@ -248,7 +248,7 @@ ${imageAnalysisGuide}
 
 # DynamicForm 配置文档
 <doc>
-${jsonStringify(uiDoc, null, 2)}
+${doc}
 </doc>
 
 # 用户需求思考过程

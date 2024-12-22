@@ -125,6 +125,9 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
 
     setLoading(true)
     try {
+      if (!verificationInfoRef.current) {
+        return message.error("请先进行手机号验证")
+      }
       // 先进行手机验证
       const auth = app.auth()
       const verificationTokenRes = await auth.verify({
@@ -155,8 +158,8 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
       onClose()
     } catch (error) {
       console.error("Failed to submit:", error)
-      if (error.code === "verification_invalid") {
-        message.error("验证码错误，请重新输入")
+      if (error.error_code === 3) {
+        message.error(error.error_description)
       } else {
         message.error("提交失败，请稍后重试")
       }

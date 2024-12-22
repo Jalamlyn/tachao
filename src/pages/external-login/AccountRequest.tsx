@@ -4,22 +4,12 @@ import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { message } from "@/components/Message"
 import EnterpriseList from "@/components/EnterpriseList"
-import { submitWaitList } from "@/service/apis/api"
 import qrpng from "../../../public/assets/qrcodefwh.jpg"
 import { useOid } from "./useOid"
 import { PhoneVerification } from "@/components/PhoneVerification"
-import { app } from "@/service/cloudbase"
 
 interface AccountRequestProps {
   onBack: () => void
-}
-
-function generateRandomPhoneNumber() {
-  const prefix = "1"
-  const secondDigit = Math.floor(Math.random() * 7) + 3
-  const remainingDigits = Math.floor(Math.random() * 1000000000)
-  const phoneNumber = prefix + secondDigit + remainingDigits.toString().padStart(8, "0")
-  return phoneNumber
 }
 
 export default function AccountRequest({ onBack }: AccountRequestProps) {
@@ -43,7 +33,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
     setIsLoading(true)
     try {
       // 使用新的权限消息模型
-      await app.models.qxmx.create({
+      await app.models["account_request"].create({
         data: {
           qxsqxxdx: {
             type: "account_request",
@@ -55,21 +45,6 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
           },
         },
       })
-
-      // 保持向后兼容
-      await submitWaitList({
-        phone: generateRandomPhoneNumber(),
-        email: `${new Date().getTime()}@mobenai.com.cn`,
-        developer: false,
-        industry: "模本科技",
-        purpose: `{
-        "phone":"${phone}",
-        "status":"pending",
-        "type":"account_request",
-        "organizationId":"${loginData.current.organizationId}"
-        }`,
-      })
-
       setShowQRCode(true)
     } catch (error) {
       console.error("Failed to submit request:", error)

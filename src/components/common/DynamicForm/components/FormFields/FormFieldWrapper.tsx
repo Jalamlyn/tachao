@@ -24,11 +24,6 @@ interface FormFieldWrapperProps {
   isEditable?: boolean
   disabled?: boolean
   required?: boolean
-  showWhen?: {
-    field: string
-    value: any
-    operator?: "eq" | "neq" | "gt" | "lt" | "contains"
-  }
   style?: FieldStyle
   layout?: "default" | "full-width" | "inline"
   className?: string
@@ -49,12 +44,12 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
   layout,
   className,
   customStyle,
-  description
+  description,
 }) => {
   // 处理样式配置
   const getStyles = () => {
     const baseStyles: React.CSSProperties = {}
-    
+
     if (style) {
       // 基础样式
       if (style.width) baseStyles.width = style.width
@@ -63,7 +58,7 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
       if (style.margin) baseStyles.margin = style.margin
       if (style.display) baseStyles.display = style.display
       if (style.textAlign) baseStyles.textAlign = style.textAlign
-      
+
       // 合并自定义样式
       if (style.custom) {
         Object.assign(baseStyles, style.custom)
@@ -81,16 +76,16 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
   // 处理className
   const getClassName = () => {
     const classes = [
-      'form-field-wrapper',
+      "form-field-wrapper",
       className,
-      layout === 'full-width' && 'col-span-full',
+      layout === "full-width" && "col-span-full",
       style?.colSpan && `col-span-${style.colSpan}`,
       // 响应式类名
       style?.sm && Object.entries(style.sm).map(([key, value]) => `sm:${key}-${value}`),
       style?.md && Object.entries(style.md).map(([key, value]) => `md:${key}-${value}`),
-      style?.lg && Object.entries(style.lg).map(([key, value]) => `lg:${key}-${value}`)
+      style?.lg && Object.entries(style.lg).map(([key, value]) => `lg:${key}-${value}`),
     ]
-    
+
     return cn(...classes.filter(Boolean))
   }
 
@@ -104,9 +99,7 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
             <div className='flex items-center gap-1'>
               <FormLabel className='text-sm font-medium text-primary-500'>
                 {label}
-                {required && (
-                  <span className="text-red-500 ml-1">*</span>
-                )}
+                {required && <span className='text-red-500 ml-1'>*</span>}
               </FormLabel>
               {tooltip && (
                 <Popover>
@@ -151,7 +144,7 @@ const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="text-sm text-gray-500 mt-1"
+                className='text-sm text-gray-500 mt-1'
               >
                 {description}
               </motion.p>

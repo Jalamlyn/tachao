@@ -16,7 +16,7 @@ export const useDynamicForm = (config: DynamicFormConfig, formData) => {
     })
 
     return () => subscription.unsubscribe()
-  }, [config.watch])
+  }, [])
 
   // 统一的验证函数
   const validateForm = useCallback(async (): Promise<ValidationResult> => {

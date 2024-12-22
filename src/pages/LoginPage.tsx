@@ -74,6 +74,13 @@ export default function WeChatLoginPage() {
 
     try {
       const res = await login(loginData.current)
+      const auth = app.auth()
+
+      // 执行 auth.signIn
+      // await auth.signIn({
+      //   username: `${trimmedAccount}_${trimmedAccount}`,
+      //   password: trimmedPassword,
+      // })
 
       if (res === "has token") {
         localStorage.setItem("loginData", jsonStringify(loginData.current))

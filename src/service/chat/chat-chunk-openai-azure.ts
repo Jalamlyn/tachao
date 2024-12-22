@@ -9,11 +9,11 @@ import { setMetadata, getMetadata } from "@/service/apis/metadata"
 function calculateCost(tokenCount: number, isInput: boolean, model: string): number {
   const ratePerThousandTokens = {
     ADVANCED: {
-      input: 0.05,
+      input: 0.002,
       output: 0.15,
     },
     EXPERT: {
-      input: 0.5,
+      input: 0.02,
       output: 1.5,
     },
   }

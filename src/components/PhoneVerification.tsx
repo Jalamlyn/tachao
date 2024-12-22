@@ -4,25 +4,11 @@ import { useTranslation } from "react-i18next"
 import { message } from "./Message"
 
 interface PhoneVerificationProps {
-  mode?: 'login' | 'verify';
-  onLoginSuccess?: () => void;
-  onLoginError?: (error: any) => void;
-  onVerifySuccess?: (phone: string) => void;
-  onVerifyError?: (error: any) => void;
-  // 保留原有属性用于向后兼容
-  onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onSuccess?: () => void
+  onError?: (error: any) => void
 }
 
-export const PhoneVerification: React.FC<PhoneVerificationProps> = ({ 
-  mode = 'login',
-  onLoginSuccess,
-  onLoginError,
-  onVerifySuccess,
-  onVerifyError,
-  onSuccess,
-  onError
-}) => {
+export const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess, onError }) => {
   const { t } = useTranslation()
   const [phone, setPhone] = useState("")
   const [smsCode, setSmsCode] = useState("")
@@ -83,19 +69,33 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({
       startCooldown()
       setCanInputSmsCode(true)
     } catch (error) {
+      debugger
       if (error.code === "captcha_required") {
+        // 继续使用当前验证码
         message.info("请继续使用当前验证码完成验证")
-        setCanInputSmsCode(true)
+        setCanInputSmsCode(true) // 保持验证码输入框可用
       } else if (error.code === "captcha_invalid") {
-        message.warning("验证码无效，请重新获取")
-        setCanInputSmsCode(true)
+        if (!hasRetried) {
+          // 首次遇到验证码无效
+          message.warning("验证码无效，请重新获取")
+          setHasRetried(true)
+          setCanInputSmsCode(true) // 保持验证码输入框可用
+        } else if (error.error_code === 8) {
+          // 处理频率限制错误
+          message.warning("发送太频繁，请等待1分钟后再试")
+          // 强制开始1分钟冷却时间
+          startCooldown()
+          setCanInputSmsCode(false) // 暂时禁用验证码输入
+        } else {
+          // 已经重试过
+          message.error("验证失败，请稍后重试")
+          setCanInputSmsCode(false)
+        }
       } else {
         console.error("Failed to send SMS:", error)
         message.error("发送验证码失败，请重试")
         setCanInputSmsCode(false)
         onError?.(error)
-        onLoginError?.(error)
-        onVerifyError?.(error)
       }
     } finally {
       setIsLoading(false)
@@ -127,34 +127,17 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({
       setIsLoading(true)
       if (verificationInfoRef.current) {
         const auth = app.auth()
-        
-        if (mode === 'login') {
-          // 登录模式：直接使用 signInWithSms
-          await auth.signInWithSms({
-            verificationInfo: verificationInfoRef.current,
-            verificationCode: smsCode.trim(),
-            phoneNum: `${phone.trim()}`,
-          })
-          onLoginSuccess?.()
-          onSuccess?.() // 向后兼容
-        } else {
-          // 验证模式：使用 verify
-          await auth.verify({
-            verification_id: verificationInfoRef.current.verification_id,
-            verification_code: smsCode.trim(),
-          })
-          onVerifySuccess?.(phone.trim())
-        }
+        await auth.signInWithSms({
+          verificationInfo: verificationInfoRef.current,
+          verificationCode: smsCode.trim(),
+          phoneNum: `${phone.trim()}`,
+        })
+        onSuccess?.()
       }
     } catch (error) {
-      console.error("Verification failed:", error)
-      message.error(mode === 'login' ? "登录失败，请重试" : "验证失败，请重试")
-      onError?.(error) // 向后兼容
-      if (mode === 'login') {
-        onLoginError?.(error)
-      } else {
-        onVerifyError?.(error)
-      }
+      console.error("Failed to verify SMS:", error)
+      message.error("验证失败，请重试")
+      onError?.(error)
     } finally {
       setIsLoading(false)
     }
@@ -194,7 +177,7 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({
       </div>
 
       <Button color='primary' onClick={handleVerify} isLoading={isLoading} className='w-full'>
-        {mode === 'login' ? '登录' : '验证'}
+        验证
       </Button>
     </div>
   )

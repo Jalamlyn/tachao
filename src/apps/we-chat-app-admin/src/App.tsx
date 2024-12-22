@@ -43,11 +43,12 @@ export default function Component() {
     onLogoutModalOpen()
   }
 
-  const confirmLogout = () => {
+  const confirmLogout = async () => {
     document.cookie.split(";").forEach((c) => {
       document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
     })
-
+    const auth = app.auth()
+    await auth.signOut()
     localStorage.clear()
     sessionStorage.clear()
     onLogoutModalClose()

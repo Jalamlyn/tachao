@@ -4,14 +4,14 @@ import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import QRCodeModal from "./QRCodeModal"
 import WaitListModal from "./WaitListModal"
-import { useRouter } from 'next/router' // 新增导入
+import { useNavigate } from "react-router-dom"
 
 interface HeroProps {
   onGetStarted: () => void
 }
 
 const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
-  const router = useRouter() // 新增 router
+  const navigate = useNavigate()
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 500], [0, 150])
   const opacity = useTransform(scrollY, [0, 300], [1, 0])
@@ -28,6 +28,10 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
 
   useEffect(() => {
     setMounted(true)
+    const auth = app.auth()
+    auth.queryUser({
+      phone_number:"+86 15384078477"
+    })
   }, [])
 
   const containerVariants = {
@@ -77,15 +81,15 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       onTouchMove={handleTouchMove}
     >
       {/* 新增登录按钮容器 */}
-      <div className="absolute top-4 right-4 md:top-8 md:right-8 z-20">
+      <div className='absolute top-4 right-4 md:top-8 md:right-8 z-20'>
         <Button
           size='sm'
           variant='ghost'
           className='text-white hover:bg-white/10 font-medium
             transform hover:scale-105 active:scale-95 transition-all duration-300'
-          onClick={() => router.push('/login')}
+          onClick={() => navigate("/login")}
         >
-          <Icon icon="mdi:user" className="mr-1" />
+          <Icon icon='mdi:user' className='mr-1' />
           登录
         </Button>
       </div>

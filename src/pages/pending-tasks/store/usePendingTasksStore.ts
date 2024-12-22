@@ -5,7 +5,6 @@ import message from "@/components/Message"
 import { jsonParse } from "@/utils"
 import { addPermission } from "@/permissions/utils/permissionUtils"
 import { queryMyProject, addProjectMember } from "@/service/apis/project"
-import { app } from "@/service/cloudbase"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
 
@@ -98,22 +97,13 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
         },
       })
 
-      // 保持向后兼容，同时也查询旧的waitlist数据
-      const waitlistResult = await queryWaitList({})
-      const _waitlistResult = waitlistResult.data.filter((item) => {
-        const requestInfo = jsonParse(item.purpose)
-        if (!requestInfo.phone) return false
-        const accountName = `wb_${requestInfo.phone}`
-        return !existingAccounts.includes(accountName)
-      })
-
       // 处理新的权限消息模型数据
       const newAccountTasks = accountRequests.data.records.map((item: any) => {
         const requestInfo = item.qxsqxxdx
         return {
           id: item._id,
           title: `来自 ${requestInfo.phone} 的账号申请`,
-          description: `申请加入企业：${requestInfo.organizationLabel || '未知企业'}`,
+          description: `申请加入企业：${requestInfo.organizationLabel || "未知企业"}`,
           type: "account_request",
           status: requestInfo.status || "pending",
           priority: "medium",
@@ -129,31 +119,9 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
       })
 
       // 处理旧的waitlist数据
-      const oldAccountTasks = _waitlistResult.map((item: any) => {
-        const requestInfo = jsonParse(item.purpose)
-        const isAccountRequest = requestInfo.type === "account_request"
-        const organizationId = isAccountRequest ? requestInfo.organizationId : null
-        const cachedLabel = localStorage.getItem("cachedLabel")
-        return {
-          id: item.id,
-          title: isAccountRequest ? `来自 ${requestInfo.phone} 的账号申请` : `${item.type} 申请`,
-          description: isAccountRequest ? `申请加入企业：${cachedLabel}` : "申请开通账号",
-          type: "account_request",
-          status: item.status || "pending",
-          priority: "medium",
-          department: "系统",
-          user: item.email,
-          time: new Date(item.createdAt).toLocaleString(),
-          avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-          metadata: {
-            ...item,
-            organizationId,
-          },
-        }
-      })
 
       // 合并所有任务
-      set({ tasks: [...permissionTasks, ...newAccountTasks, ...oldAccountTasks] })
+      set({ tasks: [...permissionTasks, ...newAccountTasks] })
     } catch (error) {
       console.error("Error loading tasks:", error)
       message.error("加载任务失败")
@@ -215,7 +183,7 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
         if (status === "completed") {
           const phone = task.metadata.qxsqxxdx?.phone || jsonParse(task.metadata.purpose)?.phone
           const accountName = `wb_${phone}`
-          
+
           // 创建账号
           const accountRes = await createRamAccount({
             name: accountName,
