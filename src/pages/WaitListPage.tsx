@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useMemo } from "react"
+import React, { useEffect, useState, useMemo, useCallback } from "react"
 import { queryWaitList, WaitListQueryParams } from "@/service/apis/api"
 import {
   Input,
-  Checkbox,
   Button,
   Table,
   TableHeader,
@@ -17,25 +16,32 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
 } from "@nextui-org/react"
+import { message } from "@/components/Message"
 
 // 添加 ChevronDownIcon 组件
 const ChevronDownIcon = ({ strokeWidth = 1.5, ...props }: { strokeWidth?: number } & React.SVGProps<SVGSVGElement>) => (
   <svg
-    aria-hidden="true"
-    fill="none"
-    focusable="false"
-    height="1em"
-    role="presentation"
-    viewBox="0 0 24 24"
-    width="1em"
+    aria-hidden='true'
+    fill='none'
+    focusable='false'
+    height='1em'
+    role='presentation'
+    viewBox='0 0 24 24'
+    width='1em'
     {...props}
   >
     <path
-      d="m19.92 8.95-6.52 6.52c-.77.77-2.03.77-2.8 0L4.08 8.95"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      d='m19.92 8.95-6.52 6.52c-.77.77-2.03.77-2.8 0L4.08 8.95'
+      stroke='currentColor'
+      strokeLinecap='round'
+      strokeLinejoin='round'
       strokeMiterlimit={10}
       strokeWidth={strokeWidth}
     />
@@ -64,6 +70,7 @@ const developerOptions = [
 ]
 
 const WaitListPage: React.FC = () => {
+  const { isOpen, onOpen, onClose } = useDisclosure()
   const [waitList, setWaitList] = useState<WaitListItem[]>([])
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
@@ -78,6 +85,13 @@ const WaitListPage: React.FC = () => {
     industry: "",
     purpose: "",
   })
+
+  // 手机验证相关状态
+  const [phone, setPhone] = useState("")
+  const [smsCode, setSmsCode] = useState("")
+  const [smsCooldown, setSmsCooldown] = useState(0)
+  const [verificationInfo, setVerificationInfo] = useState<any>(null)
+  const [verifying, setVerifying] = useState(false)
 
   const fetchWaitList = async () => {
     try {
@@ -94,6 +108,92 @@ const WaitListPage: React.FC = () => {
   useEffect(() => {
     fetchWaitList()
   }, [])
+
+  const startCooldown = useCallback(() => {
+    setSmsCooldown(60)
+    const interval = setInterval(() => {
+      setSmsCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }, [])
+
+  const handleSendSms = async () => {
+    if (!phone.trim()) {
+      message.error("请输入手机号")
+      return
+    }
+
+    if (!/^1[3-9]\d{9}$/.test(phone.trim())) {
+      message.error("请输入正确的手机号")
+      return
+    }
+
+    try {
+      setVerifying(true)
+      const auth = app.auth()
+      const verification = await auth.getVerification({
+        phone_number: `+86 ${phone.trim()}`,
+      })
+      setVerificationInfo(verification)
+      message.success("验证码已发送")
+      startCooldown()
+    } catch (error) {
+      console.error("Failed to send SMS:", error)
+      message.error("发送验证码失败，请重试")
+    } finally {
+      setVerifying(false)
+    }
+  }
+
+  const handleVerify = async () => {
+    if (!phone.trim() || !smsCode.trim()) {
+      message.error("请输入手机号和验证码")
+      return
+    }
+
+    if (!/^\d{6}$/.test(smsCode.trim())) {
+      message.error("请输入6位数字验证码")
+      return
+    }
+
+    try {
+      setVerifying(true)
+      const auth = app.auth()
+      const verificationTokenRes = await auth.verify({
+        verification_id: verificationInfo.verification_id,
+        verification_code: smsCode.trim(),
+      })
+
+      if (verificationInfo.is_user) {
+        await auth.signIn({
+          username: `+86 ${phone.trim()}`,
+          verification_token: verificationTokenRes.verification_token,
+        })
+      } else {
+        await auth.signUp({
+          phone_number: `+86 ${phone.trim()}`,
+          verification_code: smsCode.trim(),
+          verification_token: verificationTokenRes.verification_token,
+          password: "admin_123",
+          username: "admin_admin",
+        })
+      }
+
+      message.success("验证成功")
+      onClose()
+      // 这里可以添加后续的账号申请逻辑
+    } catch (error) {
+      console.error("Failed to verify:", error)
+      message.error("验证失败，请重试")
+    } finally {
+      setVerifying(false)
+    }
+  }
 
   const handleSearch = () => {
     setPage(1)
@@ -177,7 +277,6 @@ const WaitListPage: React.FC = () => {
     }
   }
 
-  // 模糊搜索和过滤逻辑
   const filteredItems = useMemo(() => {
     let filtered = [...waitList]
 
@@ -192,7 +291,6 @@ const WaitListPage: React.FC = () => {
       })
     }
 
-    // 开发者状态过滤
     const selectedDeveloper = Array.from(developerFilter)[0]
     if (selectedDeveloper !== "all") {
       filtered = filtered.filter((item) => {
@@ -203,7 +301,6 @@ const WaitListPage: React.FC = () => {
     return filtered
   }, [waitList, searchText, developerFilter])
 
-  // 排序逻辑
   const sortedItems = useMemo(() => {
     if (!sortDescriptor.column) return filteredItems
 
@@ -246,30 +343,27 @@ const WaitListPage: React.FC = () => {
         />
         <div className='flex gap-3'>
           <Dropdown>
-            <DropdownTrigger className="hidden sm:flex">
-              <Button 
-                endContent={<ChevronDownIcon className="text-small" />}
-                variant="flat" 
-                size="sm"
-              >
+            <DropdownTrigger className='hidden sm:flex'>
+              <Button endContent={<ChevronDownIcon className='text-small' />} variant='flat' size='sm'>
                 开发者状态
               </Button>
             </DropdownTrigger>
             <DropdownMenu
               disallowEmptySelection
-              aria-label="开发者状态过滤"
+              aria-label='开发者状态过滤'
               closeOnSelect={true}
               selectedKeys={developerFilter}
-              selectionMode="single"
+              selectionMode='single'
               onSelectionChange={setDeveloperFilter}
             >
               {developerOptions.map((option) => (
-                <DropdownItem key={option.uid} className="capitalize">
+                <DropdownItem key={option.uid} className='capitalize'>
                   {option.name}
                 </DropdownItem>
               ))}
             </DropdownMenu>
           </Dropdown>
+          <Button color="primary" onClick={onOpen}>申请开通账号</Button>
         </div>
       </div>
       <div className='flex justify-end'>
@@ -329,6 +423,46 @@ const WaitListPage: React.FC = () => {
           )}
         </TableBody>
       </Table>
+
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalContent>
+          <ModalHeader>手机号验证</ModalHeader>
+          <ModalBody>
+            <div className="flex flex-col gap-4">
+              <Input
+                label="手机号"
+                placeholder="请输入手机号"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 11))}
+              />
+              <div className="flex gap-2">
+                <Input
+                  className="flex-1"
+                  label="验证码"
+                  placeholder="请输入验证码"
+                  value={smsCode}
+                  onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                />
+                <Button
+                  className="self-end"
+                  isDisabled={smsCooldown > 0 || verifying}
+                  onClick={handleSendSms}
+                >
+                  {smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码"}
+                </Button>
+              </div>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="light" onPress={onClose}>
+              取消
+            </Button>
+            <Button color="primary" onPress={handleVerify} isLoading={verifying}>
+              验证并申请
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   )
 }
