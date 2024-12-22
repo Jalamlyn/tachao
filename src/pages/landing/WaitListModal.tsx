@@ -16,6 +16,7 @@ import { Icon } from "@iconify/react"
 import { motion } from "framer-motion"
 import { submitWaitList, WaitListRequest } from "@/service/apis/api"
 import { message } from "@/components/Message"
+import QRCodeModal from "./QRCodeModal"
 
 interface WaitListModalProps {
   isOpen: boolean
@@ -49,6 +50,7 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
   const [smsCode, setSmsCode] = useState("")
   const [smsCooldown, setSmsCooldown] = useState(0)
   const verificationInfoRef = useRef<any>(null)
+  const [showQRCode, setShowQRCode] = useState(false)
 
   const validatePhone = (phone: string) => {
     const phoneRegex = /^1[3-9]\d{9}$/
@@ -135,30 +137,18 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
         verification_code: smsCode,
       })
 
-      // 验证成功后进行注册或登录
-      if (verificationInfoRef.current.is_user) {
-        await auth.signIn({
-          username: `+86 ${formData.phone}`,
-          verification_token: verificationTokenRes.verification_token,
-        })
-      } else {
-        await auth.signUp({
-          phone_number: `+86 ${formData.phone}`,
-          verification_code: smsCode,
-          verification_token: verificationTokenRes.verification_token,
-          name: "官网申请用户",
-          password: "admin_123",
-          username: "admin_admin",
-        })
-      }
-
       // 提交申请
       await submitWaitList(formData)
       message.success("申请提交成功！我们会尽快审核并与您联系")
       onClose()
     } catch (error) {
       console.error("Failed to submit:", error)
-      if (error.error_code === 3) {
+      debugger
+      if (error.response.data.code === 400 && error.response.data.message === "手机已存在") {
+        message.info("您已提交过申请，请扫描二维码联系我们了解审核进度")
+        setShowQRCode(true)
+        onClose()
+      } else if (error.error_code === 3) {
         message.error(error.error_description)
       } else {
         message.error("提交失败，请稍后重试")
@@ -169,122 +159,125 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
   }
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size='2xl'
-      classNames={{
-        base: "max-w-2xl",
-        backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-20",
-      }}
-    >
-      <ModalContent>
-        <form onSubmit={handleSubmit}>
-          <ModalHeader className='flex flex-col gap-1'>
-            <h3 className='text-xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent'>
-              申请开通账号
-            </h3>
-            <p className='text-sm text-default-500'>填写以下信息，开启 ShaTa AI 数智化之旅</p>
-          </ModalHeader>
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size='2xl'
+        classNames={{
+          base: "max-w-2xl",
+          backdrop: "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-20",
+        }}
+      >
+        <ModalContent>
+          <form onSubmit={handleSubmit}>
+            <ModalHeader className='flex flex-col gap-1'>
+              <h3 className='text-xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent'>
+                申请开通账号
+              </h3>
+              <p className='text-sm text-default-500'>填写以下信息，开启 ShaTa AI 数智化之旅</p>
+            </ModalHeader>
 
-          <ModalBody>
-            <motion.div
-              className='space-y-6'
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {/* 手机验证部分 */}
-              <div className='space-y-4'>
-                <div className='flex gap-2'>
+            <ModalBody>
+              <motion.div
+                className='space-y-6'
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* 手机验证部分 */}
+                <div className='space-y-4'>
+                  <div className='flex gap-2'>
+                    <Input
+                      isRequired
+                      label='手机号码'
+                      placeholder='请输入您的手机号'
+                      value={formData.phone}
+                      onValueChange={(value) => setFormData({ ...formData, phone: value })}
+                      errorMessage={formData.phone && !validatePhone(formData.phone) ? "请输入有效的手机号码" : ""}
+                      className='flex-1'
+                    />
+                    <Button
+                      size='lg'
+                      onClick={handleSendSms}
+                      disabled={smsCooldown > 0 || loading}
+                      className='self-end mb-1'
+                    >
+                      {smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码"}
+                    </Button>
+                  </div>
+
                   <Input
                     isRequired
-                    label='手机号码'
-                    placeholder='请输入您的手机号'
-                    value={formData.phone}
-                    onValueChange={(value) => setFormData({ ...formData, phone: value })}
-                    errorMessage={formData.phone && !validatePhone(formData.phone) ? "请输入有效的手机号码" : ""}
+                    label='验证码'
+                    placeholder='请输入验证码'
+                    value={smsCode}
+                    onValueChange={setSmsCode}
                     className='flex-1'
                   />
-                  <Button
-                    size='lg'
-                    onClick={handleSendSms}
-                    disabled={smsCooldown > 0 || loading}
-                    className='self-end mb-1'
-                  >
-                    {smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码"}
-                  </Button>
                 </div>
 
+                {/* 其他表单字段 */}
                 <Input
                   isRequired
-                  label='验证码'
-                  placeholder='请输入验证码'
-                  value={smsCode}
-                  onValueChange={setSmsCode}
-                  className='flex-1'
+                  label='邮箱地址'
+                  placeholder='请输入您的邮箱'
+                  type='email'
+                  value={formData.email}
+                  onValueChange={(value) => setFormData({ ...formData, email: value })}
+                  errorMessage={formData.email && !validateEmail(formData.email) ? "请输入有效的邮箱地址" : ""}
                 />
-              </div>
 
-              {/* 其他表单字段 */}
-              <Input
-                isRequired
-                label='邮箱地址'
-                placeholder='请输入您的邮箱'
-                type='email'
-                value={formData.email}
-                onValueChange={(value) => setFormData({ ...formData, email: value })}
-                errorMessage={formData.email && !validateEmail(formData.email) ? "请输入有效的邮箱地址" : ""}
-              />
+                <Select
+                  isRequired
+                  label='所属行业'
+                  placeholder='请选择您所在的行业'
+                  selectedKeys={formData.industry ? [formData.industry] : []}
+                  onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                >
+                  {industries.map((industry) => (
+                    <SelectItem key={industry.value} value={industry.value}>
+                      {industry.label}
+                    </SelectItem>
+                  ))}
+                </Select>
 
-              <Select
-                isRequired
-                label='所属行业'
-                placeholder='请选择您所在的行业'
-                selectedKeys={formData.industry ? [formData.industry] : []}
-                onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                <Textarea
+                  isRequired
+                  label='使用目的'
+                  placeholder='请简要描述您计划如何使用 ShaTa AI'
+                  value={formData.purpose}
+                  onValueChange={(value) => setFormData({ ...formData, purpose: value })}
+                  minRows={3}
+                />
+
+                <Checkbox
+                  isSelected={formData.developer}
+                  onValueChange={(value) => setFormData({ ...formData, developer: value })}
+                >
+                  我是开发者
+                </Checkbox>
+              </motion.div>
+            </ModalBody>
+
+            <ModalFooter>
+              <Button color='danger' variant='light' onPress={onClose}>
+                取消
+              </Button>
+              <Button
+                color='primary'
+                type='submit'
+                isLoading={loading}
+                startContent={!loading && <Icon icon='mdi:rocket-launch' />}
               >
-                {industries.map((industry) => (
-                  <SelectItem key={industry.value} value={industry.value}>
-                    {industry.label}
-                  </SelectItem>
-                ))}
-              </Select>
-
-              <Textarea
-                isRequired
-                label='使用目的'
-                placeholder='请简要描述您计划如何使用 ShaTa AI'
-                value={formData.purpose}
-                onValueChange={(value) => setFormData({ ...formData, purpose: value })}
-                minRows={3}
-              />
-
-              <Checkbox
-                isSelected={formData.developer}
-                onValueChange={(value) => setFormData({ ...formData, developer: value })}
-              >
-                我是开发者
-              </Checkbox>
-            </motion.div>
-          </ModalBody>
-
-          <ModalFooter>
-            <Button color='danger' variant='light' onPress={onClose}>
-              取消
-            </Button>
-            <Button
-              color='primary'
-              type='submit'
-              isLoading={loading}
-              startContent={!loading && <Icon icon='mdi:rocket-launch' />}
-            >
-              提交申请
-            </Button>
-          </ModalFooter>
-        </form>
-      </ModalContent>
-    </Modal>
+                提交申请
+              </Button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
+      <QRCodeModal isOpen={showQRCode} onClose={() => setShowQRCode(false)} />
+    </>
   )
 }
 
