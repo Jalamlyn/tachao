@@ -3,13 +3,15 @@ import { motion, useScroll, useTransform, useSpring } from "framer-motion"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import QRCodeModal from "./QRCodeModal"
-import WaitListModal from "./WaitListModal" // 新增导入
+import WaitListModal from "./WaitListModal"
+import { useRouter } from 'next/router' // 新增导入
 
 interface HeroProps {
   onGetStarted: () => void
 }
 
 const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
+  const router = useRouter() // 新增 router
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 500], [0, 150])
   const opacity = useTransform(scrollY, [0, 300], [1, 0])
@@ -17,7 +19,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   const [mounted, setMounted] = useState(false)
   const [touchStart, setTouchStart] = useState(0)
   const [isQRCodeOpen, setIsQRCodeOpen] = useState(false)
-  const [isWaitListOpen, setIsWaitListOpen] = useState(false) // 新增状态
+  const [isWaitListOpen, setIsWaitListOpen] = useState(false)
 
   // 优化动画性能
   const springConfig = { mass: 1, stiffness: 100, damping: 30 }
@@ -74,6 +76,20 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
     >
+      {/* 新增登录按钮容器 */}
+      <div className="absolute top-4 right-4 md:top-8 md:right-8 z-20">
+        <Button
+          size='sm'
+          variant='ghost'
+          className='text-white hover:bg-white/10 font-medium
+            transform hover:scale-105 active:scale-95 transition-all duration-300'
+          onClick={() => router.push('/login')}
+        >
+          <Icon icon="mdi:user" className="mr-1" />
+          登录
+        </Button>
+      </div>
+
       <motion.div style={{ y, opacity }} className='absolute inset-0 pointer-events-none'>
         <div className='absolute inset-0 bg-gradient-to-b from-primary-dark/50 to-transparent' />
       </motion.div>
@@ -158,9 +174,9 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             size='lg'
             className='bg-white text-primary-dark hover:bg-white/90 font-medium px-8 w-full md:w-auto
               transform hover:scale-105 active:scale-95 transition-all duration-300'
-            onClick={() => setIsWaitListOpen(true)} // 修改点击事件
+            onClick={() => setIsWaitListOpen(true)}
           >
-            申请内测
+            申请开通账号
           </Button>
           <Button
             size='lg'
@@ -191,7 +207,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           </div>
         </motion.div>
       </motion.div>
-      <WaitListModal isOpen={isWaitListOpen} onClose={() => setIsWaitListOpen(false)} /> {/* 新增模态框 */}
+      <WaitListModal isOpen={isWaitListOpen} onClose={() => setIsWaitListOpen(false)} />
       <QRCodeModal isOpen={isQRCodeOpen} onClose={() => setIsQRCodeOpen(false)} />
     </section>
   )
