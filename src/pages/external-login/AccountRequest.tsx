@@ -8,6 +8,7 @@ import { submitWaitList } from "@/service/apis/api"
 import qrpng from "../../../public/assets/qrcodefwh.jpg"
 import { useOid } from "./useOid"
 import { PhoneVerification } from "@/components/PhoneVerification"
+import { app } from "@/service/cloudbase"
 
 interface AccountRequestProps {
   onBack: () => void
@@ -41,6 +42,21 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
 
     setIsLoading(true)
     try {
+      // 使用新的权限消息模型
+      await app.models.qxmx.create({
+        data: {
+          qxsqxxdx: {
+            type: "account_request",
+            phone: phone,
+            status: "pending",
+            organizationId: loginData.current.organizationId,
+            organizationLabel: loginData.current.enterpriseName,
+            createdAt: new Date().getTime(),
+          },
+        },
+      })
+
+      // 保持向后兼容
       await submitWaitList({
         phone: generateRandomPhoneNumber(),
         email: `${new Date().getTime()}@mobenai.com.cn`,

@@ -5,10 +5,10 @@ import message from "@/components/Message"
 import { jsonParse } from "@/utils"
 import { addPermission } from "@/permissions/utils/permissionUtils"
 import { queryMyProject, addProjectMember } from "@/service/apis/project"
+import { app } from "@/service/cloudbase"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
 
-// 资源类型映射
 const resourceTypeMap = {
   app: "应用",
   form: "表单",
@@ -18,7 +18,6 @@ const resourceTypeMap = {
   template: "表单模板",
 }
 
-// 角色映射
 const roleMap = {
   viewer: "查看",
   editor: "编辑",
@@ -51,7 +50,6 @@ interface PendingTasksStore {
   setActiveStatus: (status: string) => void
 }
 
-// 格式化权限角色显示
 const formatRoles = (roles: string | string[]): string => {
   if (Array.isArray(roles)) {
     return roles.map((role) => roleMap[role] || role).join("和")
@@ -91,18 +89,47 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
       const ramAccountsResult = await queryRamAccount()
       const existingAccounts = ramAccountsResult.data.map((acc) => acc.account)
 
-      // 3. 加载账号申请数据
+      // 3. 加载账号申请数据 - 使用新的权限消息模型
+      const accountRequests = await app.models.qxmx.list({
+        filter: {
+          where: {
+            "qxsqxxdx.type": "account_request",
+          },
+        },
+      })
+
+      // 保持向后兼容，同时也查询旧的waitlist数据
       const waitlistResult = await queryWaitList({})
       const _waitlistResult = waitlistResult.data.filter((item) => {
         const requestInfo = jsonParse(item.purpose)
         if (!requestInfo.phone) return false
-
-        // 检查 wb_手机号 是否已存在
         const accountName = `wb_${requestInfo.phone}`
         return !existingAccounts.includes(accountName)
       })
 
-      const accountTasks = _waitlistResult.map((item: any) => {
+      // 处理新的权限消息模型数据
+      const newAccountTasks = accountRequests.data.records.map((item: any) => {
+        const requestInfo = item.qxsqxxdx
+        return {
+          id: item._id,
+          title: `来自 ${requestInfo.phone} 的账号申请`,
+          description: `申请加入企业：${requestInfo.organizationLabel || '未知企业'}`,
+          type: "account_request",
+          status: requestInfo.status || "pending",
+          priority: "medium",
+          department: "系统",
+          user: requestInfo.phone,
+          time: new Date(item.createdAt).toLocaleString(),
+          avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
+          metadata: {
+            ...item,
+            organizationId: requestInfo.organizationId,
+          },
+        }
+      })
+
+      // 处理旧的waitlist数据
+      const oldAccountTasks = _waitlistResult.map((item: any) => {
         const requestInfo = jsonParse(item.purpose)
         const isAccountRequest = requestInfo.type === "account_request"
         const organizationId = isAccountRequest ? requestInfo.organizationId : null
@@ -125,8 +152,8 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
         }
       })
 
-      // 3. 合并两种任务
-      set({ tasks: [...permissionTasks, ...accountTasks] })
+      // 合并所有任务
+      set({ tasks: [...permissionTasks, ...newAccountTasks, ...oldAccountTasks] })
     } catch (error) {
       console.error("Error loading tasks:", error)
       message.error("加载任务失败")
@@ -136,7 +163,6 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
   },
   updateTaskStatus: async (taskId: string, status: Task["status"]) => {
     try {
-      // 获取当前任务
       const state = usePendingTasksStore.getState()
       const task = state.tasks.find((t) => t.id === taskId)
 
@@ -162,15 +188,32 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
           message.success(status === "completed" ? "已批准权限申请" : "已拒绝权限申请")
         }
       } else if (task.type === "account_request") {
-        // 处理账号申请
-        await queryWaitList({
-          id: taskId,
-          status,
-        })
+        // 检查是否是新的权限消息模型数据
+        if (task.metadata._id) {
+          // 更新权限消息模型数据
+          await app.models.qxmx.update({
+            data: {
+              qxsqxxdx: {
+                ...task.metadata.qxsqxxdx,
+                status,
+              },
+            },
+            filter: {
+              where: {
+                _id: task.metadata._id,
+              },
+            },
+          })
+        } else {
+          // 处理旧的waitlist数据
+          await queryWaitList({
+            id: taskId,
+            status,
+          })
+        }
 
         if (status === "completed") {
-          const { purpose } = task.metadata
-          const { phone } = jsonParse(purpose)
+          const phone = task.metadata.qxsqxxdx?.phone || jsonParse(task.metadata.purpose)?.phone
           const accountName = `wb_${phone}`
           
           // 创建账号
