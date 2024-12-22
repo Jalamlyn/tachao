@@ -35,7 +35,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
       // 使用新的权限消息模型
       await app.models["account_request"].create({
         data: {
-          qxsqxxdx: {
+          zhsqxx: {
             type: "account_request",
             phone: phone,
             status: "pending",

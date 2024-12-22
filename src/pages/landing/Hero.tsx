@@ -30,7 +30,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
     setMounted(true)
     const auth = app.auth()
     auth.queryUser({
-      phone_number:"+86 15384078477"
+      phone_number: "+86 15384078477",
     })
   }, [])
 
@@ -90,7 +90,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           onClick={() => navigate("/login")}
         >
           <Icon icon='mdi:user' className='mr-1' />
-          登录
+          企业管理员登录
         </Button>
       </div>
 

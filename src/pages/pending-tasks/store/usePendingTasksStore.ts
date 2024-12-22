@@ -5,6 +5,7 @@ import message from "@/components/Message"
 import { jsonParse } from "@/utils"
 import { addPermission } from "@/permissions/utils/permissionUtils"
 import { queryMyProject, addProjectMember } from "@/service/apis/project"
+import globalStore from "@/globalStore"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
 
@@ -89,17 +90,19 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
       const existingAccounts = ramAccountsResult.data.map((acc) => acc.account)
 
       // 3. 加载账号申请数据 - 使用新的权限消息模型
-      const accountRequests = await app.models.qxmx.list({
+      const auth = app.auth()
+      await auth.signInAnonymously()
+      const accountRequests = await app.models["account_request"].list({
         filter: {
           where: {
-            "qxsqxxdx.type": "account_request",
+            qyID: globalStore.organizationId,
           },
         },
       })
 
       // 处理新的权限消息模型数据
       const newAccountTasks = accountRequests.data.records.map((item: any) => {
-        const requestInfo = item.qxsqxxdx
+        const requestInfo = item.zhsqxx
         return {
           id: item._id,
           title: `来自 ${requestInfo.phone} 的账号申请`,
@@ -155,59 +158,6 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
           await setMetadata(PERMISSION_REQUESTS_KEY, JSON.stringify(requests))
           message.success(status === "completed" ? "已批准权限申请" : "已拒绝权限申请")
         }
-      } else if (task.type === "account_request") {
-        // 检查是否是新的权限消息模型数据
-        if (task.metadata._id) {
-          // 更新权限消息模型数据
-          await app.models.qxmx.update({
-            data: {
-              qxsqxxdx: {
-                ...task.metadata.qxsqxxdx,
-                status,
-              },
-            },
-            filter: {
-              where: {
-                _id: task.metadata._id,
-              },
-            },
-          })
-        } else {
-          // 处理旧的waitlist数据
-          await queryWaitList({
-            id: taskId,
-            status,
-          })
-        }
-
-        if (status === "completed") {
-          const phone = task.metadata.qxsqxxdx?.phone || jsonParse(task.metadata.purpose)?.phone
-          const accountName = `wb_${phone}`
-
-          // 创建账号
-          const accountRes = await createRamAccount({
-            name: accountName,
-            account: accountName,
-            password: phone,
-          })
-
-          // 查询默认企业项目并添加成员
-          try {
-            const projectRes = await queryMyProject({ name: "默认企业项目" })
-            if (projectRes.data && projectRes.data.length > 0) {
-              await addProjectMember({
-                projectId: projectRes.data[0].id,
-                ramUserId: accountRes.id,
-                role: "PROJECT_MANAGER",
-                name: accountRes.name,
-              })
-            }
-          } catch (error) {
-            console.error("Error adding account to project:", error)
-            message.warning("账号已创建，但添加到项目失败")
-          }
-        }
-        message.success(status === "completed" ? "已开通账号" : "已拒绝账号申请")
       }
 
       // 更新本地状态
