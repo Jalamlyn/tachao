@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useRef } from "react"
 import {
   Modal,
   ModalContent,
@@ -45,6 +45,11 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
     purpose: "",
   })
 
+  // 手机验证相关状态
+  const [smsCode, setSmsCode] = useState("")
+  const [smsCooldown, setSmsCooldown] = useState(0)
+  const verificationInfoRef = useRef<any>(null)
+
   const validatePhone = (phone: string) => {
     const phoneRegex = /^1[3-9]\d{9}$/
     return phoneRegex.test(phone)
@@ -55,16 +60,56 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
     return emailRegex.test(email)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const startCooldown = () => {
+    setSmsCooldown(60)
+    const interval = setInterval(() => {
+      setSmsCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
 
-    if (!validateEmail(formData.email)) {
-      message.error("请输入有效的邮箱地址")
+  const handleSendSms = async () => {
+    if (!validatePhone(formData.phone)) {
+      message.error("请输入有效的手机号码")
       return
     }
 
+    try {
+      setLoading(true)
+      const auth = app.auth()
+      verificationInfoRef.current = await auth.getVerification({
+        phone_number: `+86 ${formData.phone}`,
+      })
+      message.success("验证码已发送")
+      startCooldown()
+    } catch (error) {
+      console.error("Failed to send SMS:", error)
+      message.error("发送验证码失败，请重试")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
     if (!validatePhone(formData.phone)) {
       message.error("请输入有效的手机号码")
+      return
+    }
+
+    if (!smsCode || smsCode.length !== 6) {
+      message.error("请输入6位验证码")
+      return
+    }
+
+    if (!validateEmail(formData.email)) {
+      message.error("请输入有效的邮箱地址")
       return
     }
 
@@ -80,11 +125,41 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
 
     setLoading(true)
     try {
+      // 先进行手机验证
+      const auth = app.auth()
+      const verificationTokenRes = await auth.verify({
+        verification_id: verificationInfoRef.current.verification_id,
+        verification_code: smsCode,
+      })
+
+      // 验证成功后进行注册或登录
+      if (verificationInfoRef.current.is_user) {
+        await auth.signIn({
+          username: `+86 ${formData.phone}`,
+          verification_token: verificationTokenRes.verification_token,
+        })
+      } else {
+        await auth.signUp({
+          phone_number: `+86 ${formData.phone}`,
+          verification_code: smsCode,
+          verification_token: verificationTokenRes.verification_token,
+          name: "手机用户",
+          password: "admin_123",
+          username: "admin_admin",
+        })
+      }
+
+      // 提交申请
       await submitWaitList(formData)
       message.success("申请提交成功！我们会尽快审核并与您联系")
       onClose()
     } catch (error) {
-      message.error("提交失败，请稍后重试")
+      console.error("Failed to submit:", error)
+      if (error.code === "verification_invalid") {
+        message.error("验证码错误，请重新输入")
+      } else {
+        message.error("提交失败，请稍后重试")
+      }
     } finally {
       setLoading(false)
     }
@@ -104,9 +179,9 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
         <form onSubmit={handleSubmit}>
           <ModalHeader className='flex flex-col gap-1'>
             <h3 className='text-xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent'>
-              申请内测资格
+              申请开通账号
             </h3>
-            <p className='text-sm text-default-500'>填写以下信息，加入 ShaTa AI 内测计划</p>
+            <p className='text-sm text-default-500'>填写以下信息，开启 ShaTa AI 数智化之旅</p>
           </ModalHeader>
 
           <ModalBody>
@@ -116,6 +191,39 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
+              {/* 手机验证部分 */}
+              <div className='space-y-4'>
+                <div className='flex gap-2'>
+                  <Input
+                    isRequired
+                    label='手机号码'
+                    placeholder='请输入您的手机号'
+                    value={formData.phone}
+                    onValueChange={(value) => setFormData({ ...formData, phone: value })}
+                    errorMessage={formData.phone && !validatePhone(formData.phone) ? "请输入有效的手机号码" : ""}
+                    className='flex-1'
+                  />
+                  <Button
+                    size='lg'
+                    onClick={handleSendSms}
+                    disabled={smsCooldown > 0 || loading}
+                    className='self-end mb-1'
+                  >
+                    {smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码"}
+                  </Button>
+                </div>
+
+                <Input
+                  isRequired
+                  label='验证码'
+                  placeholder='请输入验证码'
+                  value={smsCode}
+                  onValueChange={setSmsCode}
+                  className='flex-1'
+                />
+              </div>
+
+              {/* 其他表单字段 */}
               <Input
                 isRequired
                 label='邮箱地址'
@@ -124,15 +232,6 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
                 value={formData.email}
                 onValueChange={(value) => setFormData({ ...formData, email: value })}
                 errorMessage={formData.email && !validateEmail(formData.email) ? "请输入有效的邮箱地址" : ""}
-              />
-
-              <Input
-                isRequired
-                label='手机号码'
-                placeholder='请输入您的手机号'
-                value={formData.phone}
-                onValueChange={(value) => setFormData({ ...formData, phone: value })}
-                errorMessage={formData.phone && !validatePhone(formData.phone) ? "请输入有效的手机号码" : ""}
               />
 
               <Select
