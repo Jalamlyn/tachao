@@ -22,12 +22,15 @@ const ResourceDetail: React.FC = () => {
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "资料管理", href: "/we-chat-app/admin/resources" },
     ])
+  }, [])
+
+  useEffect(() => {
     const loadResource = async () => {
       if (!resourceId) return
       try {
-        const resourceData = await getDetail(resourceId)
-        if (resourceData) {
-          setResource(resourceData)
+        const { data } = await getDetail(resourceId)
+        if (data) {
+          setResource(data)
         } else {
           setError("资源不存在")
           message.error("资源不存在")
@@ -67,44 +70,7 @@ const ResourceDetail: React.FC = () => {
     )
   }
 
-  const renderContent = () => {
-    const type = resource.indexFields?.type?.toLowerCase()
-
-    switch (type) {
-      case "excel":
-        return <ResourceDataTable id={resourceId} appId={resource.indexFields?.appId} />
-      default:
-        return (
-          <div className='flex flex-col items-center justify-center h-[400px]'>
-            <Icon icon='carbon:document-unknown' className='w-16 h-16 text-gray-400 mb-4' />
-            <p className='text-xl font-medium text-gray-600'>暂不支持该类型资源的预览</p>
-          </div>
-        )
-    }
-  }
-
-  return (
-    <PageLayout
-      title={resource.title}
-      titleIcon='mdi:file-document'
-      subtitle={`大小：${(resource.indexFields?.size / 1024 / 1024).toFixed(2)}MB · 类型：${
-        resource.indexFields?.type || "未知"
-      } · 文件名：${resource.indexFields?.fileName || "未知"}`}
-      headerContent={
-        <Button
-          color="primary"
-          variant="light"
-          startContent={<Icon icon="mdi:arrow-left" className="text-xl" />}
-          onClick={() => navigate("/we-chat-app/admin/resources")}
-          className="ml-auto"
-        >
-          返回资料列表
-        </Button>
-      }
-    >
-      <div className='bg-white rounded-lg shadow'>{renderContent()}</div>
-    </PageLayout>
-  )
+  return <ResourceDataTable id={resourceId} />
 }
 
 export default ResourceDetail

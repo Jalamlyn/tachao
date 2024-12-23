@@ -143,7 +143,6 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
       onClose()
     } catch (error) {
       console.error("Failed to submit:", error)
-      debugger
       if (error.response.data.code === 400 && error.response.data.message === "手机已存在") {
         message.info("您已提交过申请，请扫描二维码联系我们了解审核进度")
         setShowQRCode(true)

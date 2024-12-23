@@ -51,7 +51,7 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   return itemRank.passed
 }
 
-const ResourceDataTable: React.FC = ({ id, appId }) => {
+const ResourceDataTable: React.FC = ({ id }) => {
   const { getDetail, update, remove } = useMetadata("resource")
   const [resource, setResource] = useState<any>(null)
   const [columns, setColumns] = useState<ColumnDef<any>[]>([])
@@ -66,7 +66,7 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false)
 
   const fetchResources = useCallback(async () => {
-    if (!appId || !id) return
+    if (!id) return
     try {
       const resourceDetail = await getDetail(id)
       if (resourceDetail) {
@@ -76,10 +76,10 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
       console.error("Error fetching resource data:", error)
       message.error("获取资源数据失败")
     }
-  }, [appId, id, getDetail])
+  }, [id, getDetail])
 
   const handleSave = async (formData: any) => {
-    if (!resource || !appId) return
+    if (!resource) return
 
     setIsLoading(true)
     try {
@@ -87,7 +87,7 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
       let newData
       if (editingRow) {
         // 编辑现有记录
-        newData = resource.data.map((item: any) => 
+        newData = resource.data.map((item: any) =>
           item.dataid === editingRow.dataid ? { ...item, ...formData } : item
         )
       } else {
@@ -120,7 +120,7 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
   }
 
   const handleDelete = async (row: any) => {
-    if (!resource || !appId) return
+    if (!resource) return
 
     setIsLoading(true)
     try {
@@ -143,12 +143,12 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
   }
 
   const handleBatchDelete = async () => {
-    if (!resource || !appId) return
+    if (!resource) return
     setShowDeleteAlert(true)
   }
 
   const confirmBatchDelete = async () => {
-    if (!resource || !appId) return
+    if (!resource) return
 
     setIsLoading(true)
     try {
@@ -206,7 +206,7 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
   }
 
   useEffect(() => {
-    if (id && appId) {
+    if (id) {
       fetchResources()
     }
   }, [])
@@ -269,7 +269,7 @@ const ResourceDataTable: React.FC = ({ id, appId }) => {
   }
 
   return (
-    <div className='w-full p-6'>
+    <div className='w-full'>
       <div className='mb-6'>
         <h1 className='text-2xl font-bold text-gray-800'>{resource.name}</h1>
       </div>

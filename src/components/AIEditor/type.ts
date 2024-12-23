@@ -2,20 +2,20 @@ import React from "react"
 
 export const AI_LEVELS = {
   EXPERT: {
-    label: "专家",
+    label: "高级",
     value: "EXPERT",
     cost: 5,
     color: "warning",
     icon: "mdi:atom", // 使用SVG图标
-    description: "专家模型, 能够进行复杂的问题推理和思考, 速度较慢, 费用较贵",
+    description: "高级模型, 能够进行复杂的问题推理和思考, 速度较慢, 费用较贵",
   },
   ADVANCED: {
-    label: "高级",
+    label: "初级",
     value: "ADVANCED",
     cost: 0.5,
     color: "primary",
     icon: "mdi:rocket", // 使用SVG图标
-    description: "高级模型, 能够进行常规的快速推理和思考, 速度较快,费用较便宜",
+    description: "初级模型, 能够进行常规的快速推理和思考, 速度较快,费用较便宜",
   },
 } as const
 

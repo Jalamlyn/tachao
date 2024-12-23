@@ -84,7 +84,7 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
   }
 
   const handleUpload = async () => {
-    if (!file || !appId || !resourceName) {
+    if (!file || !resourceName) {
       setErrorMessage("请填写所有必要信息并选择文件。")
       return
     }
@@ -113,7 +113,7 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
           type: "excel",
           size: file.size,
           fileName: file.name,
-          rowData: excelResult.firstRowData // 添加示例行数据
+          rowData: excelResult.firstRowData, // 添加示例行数据
         },
       })
 

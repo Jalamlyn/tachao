@@ -1,7 +1,6 @@
 import { doc } from "@/components/common/DynamicForm/ui-doc"
 import { type } from "@/components/common/DynamicForm/ui-doc/types"
 import { assetTemplatePrompt } from "@/pages/templates/asset-template-prompt"
-import { jsonStringify } from "@/utils"
 
 const generateFormAgentPrompt = (
   hasImage: boolean = false,

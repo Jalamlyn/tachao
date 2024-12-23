@@ -13,7 +13,7 @@ function calculateCost(tokenCount: number, isInput: boolean, model: string): num
       output: 0.15,
     },
     EXPERT: {
-      input: 0.02,
+      input: 0.06,
       output: 1.5,
     },
   }

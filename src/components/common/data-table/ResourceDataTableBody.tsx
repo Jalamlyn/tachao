@@ -11,7 +11,7 @@ interface ResourceDataTableBodyProps<TData> {
 
 export function ResourceDataTableBody<TData>({ table, columns }: ResourceDataTableBodyProps<TData>) {
   return (
-    <div className='rounded-md border overflow-x-auto relative'>
+    <div className='rounded-md border overflow-x-auto relative max-h-[calc(100vh-300px)]'>
       <Table>
         <TableHeader className='sticky top-0 z-10 bg-gray-100'>
           {table.getHeaderGroups().map((headerGroup) => (

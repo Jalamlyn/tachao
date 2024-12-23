@@ -69,7 +69,6 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess,
       startCooldown()
       setCanInputSmsCode(true)
     } catch (error) {
-      debugger
       if (error.code === "captcha_required") {
         // 继续使用当前验证码
         message.info("请继续使用当前验证码完成验证")

@@ -55,7 +55,7 @@ const CostRecords = () => {
     { value: "20", label: "20 条/页" },
     { value: "50", label: "50 条/页" },
     { value: "100", label: "100 条/页" },
-    { value: "all", label: "显示全部" }
+    { value: "all", label: "显示全部" },
   ]
 
   return (
@@ -87,7 +87,7 @@ const CostRecords = () => {
             {currentRecords.map((record) => (
               <TableRow key={record.id}>
                 <TableCell>{new Date(record.timestamp).toLocaleString()}</TableCell>
-                <TableCell>{record.model === "ADVANCED" ? "高级模型" : "专家模型"}</TableCell>
+                <TableCell>{record.model === "ADVANCED" ? "初级模型" : "高级模型"}</TableCell>
                 <TableCell>{record.promptTokenCount}</TableCell>
                 <TableCell>{record.candidatesTokenCount}</TableCell>
                 <TableCell>{record.inputCost.toFixed(4)}</TableCell>
@@ -99,8 +99,7 @@ const CostRecords = () => {
         </Table>
         <div className='flex justify-between items-center px-4 py-3 bg-default-50 rounded-lg mt-4'>
           <div className='text-small text-default-600 flex items-center gap-1'>
-            <Icon icon='mdi:file-document-outline' className='w-4 h-4' />
-            共 {records.length} 条记录
+            <Icon icon='mdi:file-document-outline' className='w-4 h-4' />共 {records.length} 条记录
           </div>
           <div className='flex gap-4 items-center'>
             <Select
