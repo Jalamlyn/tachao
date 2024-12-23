@@ -111,8 +111,7 @@ export const useSave = (
         }
 
         if (!isEditMode) {
-          const initialTitle = title || formState.formConfig.metadata?.title || ""
-          setNewTitle(initialTitle)
+          setNewTitle("")
           setTitleModalOpen(true)
 
           return new Promise<void>((resolve, reject) => {

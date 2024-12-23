@@ -156,7 +156,7 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
             <DropdownItem
               key='excel'
               startContent={<Icon icon='mdi:file-excel' className='w-4 h-4' />}
-              description='上传数据表,配置表...'
+              description='上传明细表,汇总表...'
               onClick={() => handleUploadClick("excel")}
             >
               上传Excel

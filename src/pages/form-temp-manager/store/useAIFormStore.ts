@@ -117,7 +117,7 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
         ...messages[lastIndex],
         ...update,
       }
-
+      
       // 使用防抖更新状态
       debouncedStateUpdate(set, messages)
     }
@@ -129,7 +129,7 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
   setSuccessModalOpen: (isOpen) => set({ isSuccessModalOpen: isOpen }),
 
   // 表单 actions
-  setNewTitle: (title) => set({ newTitle: "" }),
+  setNewTitle: (title) => set({ newTitle: title }),
   setSavedTemplateId: (id) => set({ savedTemplateId: id }),
   setPendingSave: (state) => set({ pendingSave: state }),
   setPendingVersionSave: (state) => set({ pendingVersionSave: state }),

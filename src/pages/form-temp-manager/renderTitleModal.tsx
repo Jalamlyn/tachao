@@ -11,7 +11,9 @@ export const renderTitleModal = (isTitleModalOpen, handleTitleCancel, newTitle, 
             label='标题'
             placeholder='请输入表单模板标题'
             value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
+            onChange={(e) => {
+              setNewTitle(e.target.value)
+            }}
             onKeyPress={(e) => {
               if (e.key === "Enter" && newTitle.trim()) {
                 handleTitleConfirm()
