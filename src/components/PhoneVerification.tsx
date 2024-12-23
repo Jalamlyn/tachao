@@ -131,7 +131,7 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess,
           verificationCode: smsCode.trim(),
           phoneNum: `${phone.trim()}`,
         })
-        onSuccess?.()
+        onSuccess?.(phone)
       }
     } catch (error) {
       console.error("Failed to verify SMS:", error)
@@ -157,7 +157,7 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess,
         />
       </div>
 
-      <div className='flex gap-2'>
+      <div className='flex items-center gap-2'>
         <Input
           isRequired
           label={t("verification_code")}
@@ -170,7 +170,12 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess,
           description='请输入6位数字验证码'
           className='flex-1'
         />
-        <Button size='lg' onClick={handleSendSms} disabled={smsCooldown > 0 || isLoading} className='self-end mb-1'>
+        <Button
+          size='lg'
+          onClick={handleSendSms}
+          disabled={smsCooldown > 0 || isLoading}
+          className='self-end mb-1 -top-6'
+        >
           {smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码"}
         </Button>
       </div>

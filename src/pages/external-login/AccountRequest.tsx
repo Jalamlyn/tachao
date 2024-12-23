@@ -7,6 +7,7 @@ import EnterpriseList from "@/components/EnterpriseList"
 import qrpng from "../../../public/assets/qrcodefwh.jpg"
 import { useOid } from "./useOid"
 import { PhoneVerification } from "@/components/PhoneVerification"
+import globalStore from "@/globalStore"
 
 interface AccountRequestProps {
   onBack: () => void
@@ -16,7 +17,6 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
   const { t } = useTranslation()
   const [isLoading, setIsLoading] = useState(false)
   const [showQRCode, setShowQRCode] = useState(false)
-  const [phone, setPhone] = useState("")
 
   const loginData = React.useRef({
     organizationId: "",
@@ -25,7 +25,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
 
   const { hasOidParam } = useOid(loginData)
 
-  const handleSubmitRequest = async () => {
+  const handleSubmitRequest = async (phone) => {
     if (!loginData.current.organizationId) {
       return message.error(t("organization_required"))
     }
@@ -33,14 +33,14 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
     setIsLoading(true)
     try {
       // 使用新的权限消息模型
-      await app.models["account_request"].create({
+      await app.models.account_request.create({
         data: {
+          qyID: globalStore.organizationId,
           zhsqxx: {
             type: "account_request",
             phone: phone,
             status: "pending",
             organizationId: loginData.current.organizationId,
-            organizationLabel: loginData.current.enterpriseName,
             createdAt: new Date().getTime(),
           },
         },
@@ -63,7 +63,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
               <h2 className='text-2xl font-bold mb-4'>申请已提交</h2>
               <p className='mb-4'>请关注公众号，等待审核通知</p>
               <div className='w-48 h-48 mx-auto bg-gray-200 rounded-lg mb-4'>
-                <div className='w-full h-full flex items-center justify-center'>
+                <div className='w-full h-full p-2 flex items-center justify-center'>
                   <span>
                     <Image src={qrpng}></Image>
                   </span>
@@ -109,8 +109,8 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
 
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
                   <PhoneVerification
-                    onSuccess={() => {
-                      handleSubmitRequest()
+                    onSuccess={(phone) => {
+                      handleSubmitRequest(phone)
                     }}
                     onError={(error) => {
                       console.error("Phone verification failed:", error)

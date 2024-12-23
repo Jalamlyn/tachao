@@ -8,6 +8,8 @@ import { motion } from "framer-motion"
 import AccountRequest from "./AccountRequest"
 import EnterpriseList from "@/components/EnterpriseList"
 import { useOid } from "./useOid"
+import { LockIcon } from "lucide-react"
+import { Icon } from "@iconify/react"
 
 export default function ExternalLoginPage() {
   const { t } = useTranslation()
@@ -128,24 +130,25 @@ export default function ExternalLoginPage() {
 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
                   <p className='text-sm text-gray-600 text-center mb-2'>没有账号？向企业管理员申请开通后即可登录访问</p>
-                  <Button variant='light' className='w-full' onClick={() => setShowRequest(true)}>
-                    申请账号
-                  </Button>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.9 }}
-                  className='mt-2 text-center'
-                >
-                  <Button
-                    variant='light'
-                    className='text-sm opacity-80 hover:opacity-100 transition-opacity'
-                    onClick={() => navigate("/login")}
-                  >
-                    管理员登录
-                  </Button>
+                  <div className='mt-4 flex items-center justify-center gap-4'>
+                    <Button
+                      variant='bordered'
+                      startContent={<Icon icon='material-symbols:person-add-outline' width='20' height='20' />}
+                      className='flex-1 text-sm hover:bg-gray-50 transition-all duration-300'
+                      onClick={() => setShowRequest(true)}
+                    >
+                      申请账号
+                    </Button>
+                    <div className='h-6 w-px bg-gray-300' />
+                    <Button
+                      variant='bordered'
+                      startContent={<Icon icon='material-symbols:admin-panel-settings' width='20' height='20' />}
+                      className='flex-1 text-sm hover:bg-gray-50 transition-all duration-300'
+                      onClick={() => navigate("/login")}
+                    >
+                      管理员登录
+                    </Button>
+                  </div>
                 </motion.div>
               </form>
             </CardBody>

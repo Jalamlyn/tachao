@@ -92,19 +92,19 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
       // 3. 加载账号申请数据 - 使用新的权限消息模型
       const auth = app.auth()
       await auth.signInAnonymously()
-      const accountRequests = await app.models.account_request.get({
+      const accountRequests = await app.models.account_request.list({
         filter: {
           where: {
-            $and: [
-              {
-                _id: {
-                  $eq: globalStore.organizationId,
-                },
-              },
-            ],
+            qyID: {
+              $eq: globalStore.organizationId, // 推荐传入_id数据标识进行操作
+            },
           },
         },
+        pageSize: 10, // 分页大小，建议指定，如需设置为其它值，需要和 pageNumber 配合使用，两者同时指定才会生效
+        pageNumber: 1, // 第几页
+        getCount: true, // 开启用来获取总数
       })
+
       let newAccountTasks = []
       if (accountRequests?.data?.records) {
         // 处理新的权限消息模型数据

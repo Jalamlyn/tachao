@@ -1,3 +1,4 @@
+import globalStore from "@/globalStore"
 import React, { useState, useEffect } from "react"
 
 export const useOid = (loginData) => {
@@ -16,6 +17,7 @@ export const useOid = (loginData) => {
 
         if (callbackOid) {
           loginData.current.organizationId = callbackOid
+          globalStore.organizationId = callbackOid
           setHasOidParam(true)
         }
       } catch (error) {
