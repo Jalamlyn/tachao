@@ -48,8 +48,7 @@ export const useSave = (
                   }
 
                   if (!isEditMode) {
-                    sleep(1000)
-                    setNewTitle(title || versionToSave.formConfig.metadata?.title || "")
+                    setNewTitle("")
                     setTitleModalOpen(true)
                     setPendingSave({
                       resolve,
