@@ -23,6 +23,29 @@ function calculateCost(tokenCount: number, isInput: boolean, model: string): num
   return (tokenCount / 1000) * tokenRate
 }
 
+// 清理消息内容，移除图片以准确计算token
+function cleanMessagesForTokenCount(messages: any[]) {
+  return messages.map(msg => {
+    if (msg.role === "system") {
+      return msg;
+    }
+    
+    if (Array.isArray(msg.content)) {
+      // 只保留文本内容
+      return {
+        ...msg,
+        content: msg.content
+          .filter(item => item.type === "text")
+          .map(item => item.text)
+          .join("\n")
+      };
+    }
+    
+    // 如果是普通文本消息，直接返回
+    return msg;
+  });
+}
+
 export default async function chatChunkOpenAIOffice(
   messages,
   onChunk,
@@ -47,7 +70,7 @@ export default async function chatChunkOpenAIOffice(
               type: "text",
               text: msg.content,
             },
-            ...(msg.images?.map((img) => ({ type: "image_url", image_url: { url: img } })) || []),
+            ...(msg.images?.map((img) => ({ type: "image_url", image_url: { url: img, detail: "high" } })) || []),
           ],
         }
       }
@@ -61,8 +84,10 @@ export default async function chatChunkOpenAIOffice(
     model: baseModel,
   }
 
-  const inputTokenCount = countTokens(JSON.stringify(_messages))
-  console.log("[TokenStats] Input token count:", inputTokenCount)
+  // 使用清理后的消息计算token
+  const cleanedMessages = cleanMessagesForTokenCount(_messages);
+  const inputTokenCount = countTokens(JSON.stringify(cleanedMessages));
+  console.log("[TokenStats] Input token count (excluding images):", inputTokenCount)
 
   let controller = new AbortController()
   fetchController.current = controller
@@ -139,8 +164,8 @@ export default async function chatChunkOpenAIOffice(
         id: Date.now(),
         timestamp: new Date().toISOString(),
         model: baseModel,
-        promptTokenCount: inputTokenCount * 2,
-        candidatesTokenCount: outputTokenCount * 2,
+        promptTokenCount: inputTokenCount,
+        candidatesTokenCount: outputTokenCount,
         inputCost,
         outputCost,
         totalCost: inputCost + outputCost,
