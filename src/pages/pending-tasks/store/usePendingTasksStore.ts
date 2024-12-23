@@ -92,36 +92,42 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
       // 3. 加载账号申请数据 - 使用新的权限消息模型
       const auth = app.auth()
       await auth.signInAnonymously()
-      const accountRequests = await app.models["account_request"].list({
+      const accountRequests = await app.models.account_request.get({
         filter: {
           where: {
-            qyID: globalStore.organizationId,
+            $and: [
+              {
+                _id: {
+                  $eq: globalStore.organizationId,
+                },
+              },
+            ],
           },
         },
       })
-
-      // 处理新的权限消息模型数据
-      const newAccountTasks = accountRequests.data.records.map((item: any) => {
-        const requestInfo = item.zhsqxx
-        return {
-          id: item._id,
-          title: `来自 ${requestInfo.phone} 的账号申请`,
-          description: `申请加入企业：${requestInfo.organizationLabel || "未知企业"}`,
-          type: "account_request",
-          status: requestInfo.status || "pending",
-          priority: "medium",
-          department: "系统",
-          user: requestInfo.phone,
-          time: new Date(item.createdAt).toLocaleString(),
-          avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-          metadata: {
-            ...item,
-            organizationId: requestInfo.organizationId,
-          },
-        }
-      })
-
-      // 处理旧的waitlist数据
+      let newAccountTasks = []
+      if (accountRequests?.data?.records) {
+        // 处理新的权限消息模型数据
+        newAccountTasks = accountRequests?.data?.records?.map((item: any) => {
+          const requestInfo = item.zhsqxx
+          return {
+            id: item._id,
+            title: `来自 ${requestInfo.phone} 的账号申请`,
+            description: `申请加入企业：${requestInfo.organizationLabel || "未知企业"}`,
+            type: "account_request",
+            status: requestInfo.status || "pending",
+            priority: "medium",
+            department: "系统",
+            user: requestInfo.phone,
+            time: new Date(item.createdAt).toLocaleString(),
+            avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
+            metadata: {
+              ...item,
+              organizationId: requestInfo.organizationId,
+            },
+          }
+        })
+      }
 
       // 合并所有任务
       set({ tasks: [...permissionTasks, ...newAccountTasks] })
