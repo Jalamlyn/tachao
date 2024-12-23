@@ -15,6 +15,7 @@ import { Icon } from "@iconify/react"
 import { readExcel } from "@/utils/ExcelReader"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
+import { generateDetailTemplate, generateSummaryTemplate } from "./excelGenerator"
 
 interface CreateResourceButtonProps {
   appId: string | null
@@ -212,6 +213,36 @@ const CreateResourceButton: React.FC<CreateResourceButtonProps> = ({ appId, isDi
                     <span className='font-medium text-gray-600'>点击选择或拖拽文件到这里</span>
                   </span>
                 )}
+              </div>
+              <div className='text-sm text-gray-500 mt-2'>
+                <div className='flex items-center gap-2 mb-1'>
+                  <Icon icon='mdi:information-outline' className='text-primary' />
+                  <span>支持的Excel格式：普通明细表和汇总表</span>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <Icon icon='mdi:lightbulb-outline' className='text-warning' />
+                  <span>提示：请确保Excel内容符合标准格式要求</span>
+                </div>
+              </div>
+              <div className='flex gap-2 mt-4'>
+                <Button
+                  size='sm'
+                  color='primary'
+                  variant='flat'
+                  startContent={<Icon icon='mdi:file-download-outline' />}
+                  onPress={generateDetailTemplate}
+                >
+                  下载明细表模板
+                </Button>
+                <Button
+                  size='sm'
+                  color='primary'
+                  variant='flat'
+                  startContent={<Icon icon='mdi:file-download-outline' />}
+                  onPress={generateSummaryTemplate}
+                >
+                  下载汇总表模板
+                </Button>
               </div>
               <input
                 ref={fileInputRef}
