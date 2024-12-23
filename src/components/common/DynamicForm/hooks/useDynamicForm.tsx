@@ -8,26 +8,14 @@ export const useDynamicForm = (config: DynamicFormConfig, formData) => {
     defaultValues: formData,
   })
 
+  // 监听表单值变化
   useEffect(() => {
-    let triggerCount = 0 // 用于计数的变量
-
     const subscription = form.watch((value, { name, type }) => {
-      if (triggerCount >= 10) {
-        console.error(`触发次数超过限制（${triggerCount} 次），可能存在死循环！`)
-        throw new Error(`表单触发次数超过限制（${triggerCount} 次）`)
-      }
-
-      triggerCount++ // 每次触发计数加 1
-      console.log(`当前触发次数：${triggerCount}`)
-
-      // 执行触发操作
+      // 触发表单重新渲染
       form.trigger(name)
     })
 
-    return () => {
-      subscription.unsubscribe()
-      triggerCount = 0 // 清空计数
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   // 统一的验证函数

@@ -9,6 +9,7 @@ import { Message } from "./AIFormAgentTypes"
 import { getMetadata } from "../apis/metadata"
 import { imageStore } from "@/components/AIEditor/components/ImageStore"
 import { excelStore } from "@/components/AIEditor/components/excelStore"
+import { markdown as guide } from "@/components/common/DynamicForm/ui-doc/guide.md"
 
 export class AIFormAgent {
   private static instance: AIFormAgent
@@ -95,9 +96,9 @@ export class AIFormAgent {
       \`\`\`mo
       <shata-ai-code>
         ...你生成的代码
-      </shata-ai-code>
+      </shata-ai-code>s
       \`\`\`
-      包裹起来
+      包裹起来, 在 watch 中编写逻辑,必须遵循 ${guide} 的规则
       `
 
       const currentUserMessage = {

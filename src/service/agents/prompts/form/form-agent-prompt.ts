@@ -174,13 +174,13 @@ ${resources}`
     ? `
 这是用户上传的 Excel 文件信息:
 1. Excel文件信息：
-   - 文件名：${excelData.fileName}
-   - 字段数量：${excelData.headers.length}
-   - 字段列表：${excelData.headers.join(", ")}
+   - 文件名：${excelData?.fileName}
+   - 字段数量：${excelData?.headers?.length}
+   - 字段列表：${excelData?.headers?.join(", ")}
 
 2. 数据说明：
    第一行数据：
-   ${JSON.stringify(excelData.firstRow, null, 2)}
+   ${JSON.stringify(excelData?.firstRow, null, 2)}
 
 3. 分析重点：
    - 理解字段含义和类型
