@@ -7,6 +7,7 @@ import { Tabs, Tab, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { MultiSourceAnalysisResult } from "../types"
+import { useSwipeable } from "react-swipeable"
 
 // 空状态组件
 const EmptyState: React.FC = () => {
@@ -43,10 +44,13 @@ const EmptyState: React.FC = () => {
 
 interface AnalysisResultProps {
   analysis?: MultiSourceAnalysisResult["analysis"]
+  title?: string
+  reportId?: string
+  lastUpdated?: string
 }
 
 const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
-  const { analysis } = props.analysis
+  const { analysis, title, reportId, lastUpdated } = props
   const isMobile = useMemo(() => window.innerWidth < 768, [])
 
   if (!analysis) {
@@ -79,6 +83,27 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
     },
   }
 
+  // 移动端滑动处理
+  const [currentChartIndex, setCurrentChartIndex] = React.useState(0)
+  
+  const handleNextChart = () => {
+    if (currentChartIndex < charts.length - 1) {
+      setCurrentChartIndex(prev => prev + 1)
+    }
+  }
+
+  const handlePrevChart = () => {
+    if (currentChartIndex > 0) {
+      setCurrentChartIndex(prev => prev - 1)
+    }
+  }
+
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: handleNextChart,
+    onSwipedRight: handlePrevChart,
+    preventDefaultTouchmoveEvent: true,
+  })
+
   return (
     <motion.div
       variants={containerVariants}
@@ -86,6 +111,47 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
       animate='show'
       className='space-y-4 md:space-y-6 p-2 md:p-4'
     >
+      {/* 报表标题区域 */}
+      {title && (
+        <motion.div variants={itemVariants} className="mb-6">
+          <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-r from-primary/10 to-transparent">
+            <CardHeader className="p-4 md:p-6">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h1 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+                    {title}
+                  </h1>
+                  {reportId && (
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      className="bg-white/80 backdrop-blur-sm"
+                      startContent={<Icon icon="mdi:share" className="w-4 h-4" />}
+                    >
+                      分享
+                    </Button>
+                  )}
+                </div>
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  {lastUpdated && (
+                    <span className="flex items-center gap-1">
+                      <Icon icon="mdi:clock-outline" className="w-4 h-4" />
+                      最后更新：{lastUpdated}
+                    </span>
+                  )}
+                  {reportId && (
+                    <span className="flex items-center gap-1">
+                      <Icon icon="mdi:file-document-outline" className="w-4 h-4" />
+                      报表ID：{reportId}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+        </motion.div>
+      )}
+
       {/* 统计摘要卡片 */}
       <motion.div variants={itemVariants}>
         <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow duration-300'>
@@ -102,7 +168,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
                     hidden: { opacity: 0, y: 20 },
                     show: { opacity: 1, y: 0 },
                   }}
-                  className='relative overflow-hidden rounded-xl bg-gradient-to-br from-background to-muted p-4 md:p-6 shadow-lg hover:shadow-xl transition-shadow duration-300'
+                  className='relative overflow-hidden rounded-xl bg-gradient-to-br from-background to-muted p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1'
                 >
                   <div className='text-sm text-muted-foreground font-medium mb-2'>
                     {item.label}
@@ -130,17 +196,61 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
                 <CardDescription className='text-sm md:text-base'>图表分析</CardDescription>
               </CardHeader>
               <CardContent className='p-3 md:p-6'>
-                <Tabs>
-                  {charts.map((chart, index) => (
-                    <Tab key={index} title={chart.title}>
-                      <div className='w-full' style={{ minHeight: isMobile ? 360 : 460 }}>
-                        <ChartRenderer chart={chart} />
+                {isMobile ? (
+                  <div {...swipeHandlers}>
+                    <div className="relative">
+                      <div className="w-full" style={{ minHeight: 360 }}>
+                        <ChartRenderer chart={charts[currentChartIndex]} />
                       </div>
-                    </Tab>
-                  ))}
-                </Tabs>
-                {isMobile && charts.length > 1 && (
-                  <div className='text-xs text-center text-gray-500 mt-2'>左右滑动查看更多图表</div>
+                      <div className="absolute top-1/2 left-2 -translate-y-1/2">
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="flat"
+                          isDisabled={currentChartIndex === 0}
+                          onClick={handlePrevChart}
+                          className="bg-white/80 backdrop-blur-sm"
+                        >
+                          <Icon icon="mdi:chevron-left" />
+                        </Button>
+                      </div>
+                      <div className="absolute top-1/2 right-2 -translate-y-1/2">
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="flat"
+                          isDisabled={currentChartIndex === charts.length - 1}
+                          onClick={handleNextChart}
+                          className="bg-white/80 backdrop-blur-sm"
+                        >
+                          <Icon icon="mdi:chevron-right" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex justify-center items-center mt-4 gap-2">
+                      {charts.map((_, index) => (
+                        <div
+                          key={index}
+                          className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                            index === currentChartIndex ? 'bg-primary' : 'bg-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <div className='text-xs text-center text-gray-500 mt-2'>
+                      左右滑动或点击按钮切换图表
+                    </div>
+                  </div>
+                ) : (
+                  <Tabs>
+                    {charts.map((chart, index) => (
+                      <Tab key={index} title={chart.title}>
+                        <div className='w-full' style={{ minHeight: 460 }}>
+                          <ChartRenderer chart={chart} />
+                        </div>
+                      </Tab>
+                    ))}
+                  </Tabs>
                 )}
               </CardContent>
             </Card>
@@ -213,7 +323,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className='flex items-start gap-3 p-3 md:p-4 rounded-xl bg-gradient-to-r from-primary/5 to-transparent border border-border/50'
+                  className='flex items-start gap-3 p-3 md:p-4 rounded-xl bg-gradient-to-r from-primary/5 to-transparent border border-border/50 hover:shadow-md transition-shadow duration-300'
                 >
                   <span className='flex-shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center rounded-full bg-primary/10'>
                     💡
