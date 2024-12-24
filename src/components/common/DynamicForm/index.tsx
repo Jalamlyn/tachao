@@ -275,20 +275,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, formId, o
           await loadFormData(savedFormId)
           setIsEditing(false)
           message.success("保存成功")
-
-          // 如果是新创建的表单，显示确认对话框
-          if (!formId) {
-            message.confirm({
-              title: "表单创建成功",
-              content: "是否前往查看创建好的表单?",
-              onOk: () => {
-                window.location.href = `/form/${savedFormId}`
-              },
-              onCancel: () => {
-                setIsEditing(true)
-              },
-            })
-          }
+          setTimeout(() => {
+            window.close()
+          }, 500)
         }
 
         setIsUpdating(new Date().getTime())
