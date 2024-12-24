@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from "react"
-import {
-  Modal,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  Input,
-  ModalContent,
-  ButtonGroup,
-} from "@nextui-org/react"
+import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, ModalContent, ButtonGroup } from "@nextui-org/react"
 import { observer } from "mobx-react-lite"
 import { useStore } from "@/stores/StoreProvider"
 import { products, orders, pagePay } from "@/service/apis/pay"
@@ -122,13 +113,22 @@ const RechargeModal = observer(() => {
                   </div>
                 </div>
               </ModalBody>
-              <ModalFooter>
-                <Button color='danger' variant='light' onClick={onClose}>
-                  取消
-                </Button>
-                <Button color='primary' onClick={handlePay}>
-                  去支付
-                </Button>
+              <ModalFooter className="flex flex-col gap-4">
+                {/* 添加支付提示信息 */}
+                <div className="w-full p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm flex items-center">
+                    <span className="font-medium">温馨提示：</span>
+                    <span className="ml-1">支付完成后，请刷新页面查看最新余额</span>
+                  </p>
+                </div>
+                <div className="flex justify-end w-full gap-2">
+                  <Button color='danger' variant='light' onClick={onClose}>
+                    取消
+                  </Button>
+                  <Button color='primary' onClick={handlePay}>
+                    去支付
+                  </Button>
+                </div>
               </ModalFooter>
             </>
           )}
@@ -136,7 +136,7 @@ const RechargeModal = observer(() => {
       </Modal>
 
       {/* 支付弹窗 */}
-      <Modal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} size='xl'>
+      <Modal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} size='full'>
         <ModalContent>
           {(onClose) => (
             <>
@@ -144,6 +144,13 @@ const RechargeModal = observer(() => {
                 <h3 className='text-lg font-semibold'>支付</h3>
               </ModalHeader>
               <ModalBody>
+                {/* 添加支付iframe上方的提示 */}
+                <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 flex items-center">
+                    <span className="font-medium">重要提示：</span>
+                    <span className="ml-1">完成支付后，请刷新页面以查看最新的账户余额</span>
+                  </p>
+                </div>
                 <iframe
                   srcDoc={paymentForm}
                   style={{ width: "100%", height: "600px", border: "none" }}
