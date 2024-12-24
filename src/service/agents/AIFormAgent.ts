@@ -1,9 +1,4 @@
-// import chatChunk from "../chat/chat-chunk-openai-office"
 import chatChunk from "../chat/chat-chunk-claude-office"
-// import chatChunk from "../chat/chat-chunk-claude-wild"
-// import chatChunk from "../chat/chat-chunk-openai-azure"
-// import chatChunk from "../chat/chat-chunk-claude-horay"
-// import chatChunk from "../chat/chat-chunk-gemini-office"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import generateFormAgentPrompt from "./prompts/form/form-agent-prompt"
@@ -13,6 +8,8 @@ import { imageStore } from "@/components/AIEditor/components/ImageStore"
 import { excelStore } from "@/components/AIEditor/components/excelStore"
 import { markdown as guide } from "@/components/common/DynamicForm/ui-doc/guide.md"
 import { extractShataAIFormContent } from "@/components/AIEditor"
+import globalStore from "@/globalStore"
+import { balanceStore } from '@/stores/balanceStore'
 
 export class AIFormAgent {
   private static instance: AIFormAgent
@@ -67,8 +64,10 @@ export class AIFormAgent {
     onChunk?: (chunk: string) => void,
     rawConfig?: string
   ): Promise<{ success: boolean; config?: DynamicFormConfig; rawConfig?: string }> {
-    console.log("[AIFormAgent] processCommand started")
-
+    if (!balanceStore.checkBalance()) {
+      balanceStore.showRechargeModal();
+      throw new Error("余额不足, 请到企业设置-账户-充值")
+    }
     if (rawConfig) {
       this.setRawConfig(rawConfig)
     }

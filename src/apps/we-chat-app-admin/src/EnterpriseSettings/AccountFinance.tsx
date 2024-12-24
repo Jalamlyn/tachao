@@ -16,8 +16,10 @@ import { Icon } from "@iconify/react"
 import { getAccount, products, orders, pagePay } from "@/service/apis/pay"
 import CostRecords from "./CostRecords"
 import globalStore from "@/globalStore"
+import { observer } from 'mobx-react-lite'
+import { balanceStore } from '@/stores/balanceStore'
 
-const AccountFinance = () => {
+const AccountFinance = observer(() => {
   const [account, setAccount] = useState(null)
   const [productList, setProductList] = useState([])
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -37,11 +39,12 @@ const AccountFinance = () => {
     fetchProducts()
   }, [])
 
-  // 更新实际余额到 globalStore
+  // 更新实际余额到 globalStore 和 balanceStore
   useEffect(() => {
     if (account?.totalComputePower) {
       const actualBalance = account.totalComputePower / 100 - totalCost
       globalStore.actualBalance = actualBalance
+      balanceStore.setActualBalance(actualBalance)
       setActualBalance(actualBalance)
     }
   }, [account, totalCost])
@@ -141,8 +144,11 @@ const AccountFinance = () => {
 
       <CostRecords onTotalCostChange={handleTotalCostChange} />
 
-      {/* 充值弹窗 */}
-      <Modal isOpen={isModalOpen} onClose={onModalClose}>
+      {/* 充值弹窗 - 使用 MobX 控制的弹窗 */}
+      <Modal isOpen={balanceStore.isRechargeModalOpen || isModalOpen} onClose={() => {
+        balanceStore.hideRechargeModal()
+        onModalClose()
+      }}>
         <ModalContent>
           {(onClose) => (
             <>
@@ -228,6 +234,6 @@ const AccountFinance = () => {
       </Modal>
     </div>
   )
-}
+})
 
 export default AccountFinance
