@@ -213,6 +213,9 @@ const AIFormEditor: React.FC = () => {
       window.open(`/form-create/${savedTemplateId}?mode=create`, "_blank")
     }
   }
+  const handleConfigApp = () => {
+    navigate("/we-chat-app/admin/apps")
+  }
 
   const handleGoToTemplates = () => {
     navigate("/we-chat-app/admin/documents")
@@ -297,7 +300,14 @@ const AIFormEditor: React.FC = () => {
         latestVersionIndex={versionControl.versions.length - 1}
       />
 
-      {renderSaveModal(isSuccessModalOpen, setSuccessModalOpen, isEditMode, handleCreateDocument, handleGoToTemplates)}
+      {renderSaveModal(
+        isSuccessModalOpen,
+        setSuccessModalOpen,
+        isEditMode,
+        handleCreateDocument,
+        handleGoToTemplates,
+        handleConfigApp
+      )}
     </PageLayout>
   )
 }

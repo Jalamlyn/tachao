@@ -6,7 +6,8 @@ export const renderSaveModal = (
   setIsSuccessModalOpen,
   isEditMode,
   handleCreateDocument,
-  handleGoToTemplates
+  handleGoToTemplates,
+  handleConfigApp
 ) => {
   return (
     <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} size='lg' placement='center'>
@@ -32,7 +33,7 @@ export const renderSaveModal = (
                   >
                     创建表单
                   </Button>
-                  <Button color='secondary' onClick={handleCreateDocument}>
+                  <Button color='secondary' onClick={handleConfigApp}>
                     去应用中使用表单模板
                   </Button>
                 </div>

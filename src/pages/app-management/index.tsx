@@ -61,6 +61,7 @@ const AppManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!appToDelete) return
     await deleteApp(appToDelete.id)
+    setDeleteModalOpen(false)
   }
 
   const pageActions = (

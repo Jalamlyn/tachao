@@ -1,9 +1,9 @@
 import ErrorBoundary from "@/components/ErrorBoundary"
 import AIReportAgent from "@/service/agents/AIReportAgent"
 import { useEffect } from "react"
-import AnalysisResult from "../components/AnalysisResult"
 import message from "@/components/Message"
 import { useNavigate } from "react-router-dom"
+import DynamicReportRenderer from "@/components/DynamicReportRenderer"
 
 export const useLoadData = (
   reportId,
@@ -71,9 +71,9 @@ export const useLoadData = (
           const formDetails = await loadFormFilteredDetails((index) =>
             reportTemplateIds.includes(index.indexFields?.templateId)
           )
-
+          let formData
           if (formDetails.length > 0) {
-            const formData = formDetails.map((detail) => ({
+            formData = formDetails.map((detail) => ({
               id: detail.id,
               templateId: detail.indexFields?.templateId,
               ...detail.data,
@@ -92,27 +92,23 @@ export const useLoadData = (
               rawConfig: report.data.rawConfig,
             })
 
-            // 使用 rawConfig 重新分析数据
-            const analysis = await AIReportAgent.analyzeData(processedDataRef.current, report.data.rawConfig)
-
+            // 设置预览组件
             setPreviewComponent(
               <ErrorBoundary
                 onReset={() => {
                   const prevVersion = versionControl.rollback()
                   if (prevVersion) {
                     setPreviewContent(prevVersion.rawConfig || "")
-                    AIReportAgent.analyzeData(processedDataRef.current, prevVersion.rawConfig || "")
-                      .then((analysis) => {
-                        setPreviewComponent(<AnalysisResult analysis={analysis} />)
-                      })
-                      .catch((error) => {
-                        message.error("分析数据失败")
-                        console.error(error)
-                      })
                   }
                 }}
               >
-                <AnalysisResult analysis={analysis} />
+                <DynamicReportRenderer
+                  code={report.data.rawConfig}
+                  rawData={{
+                    formData,
+                    templateInfoMap: templateInfoMap,
+                  }}
+                />
               </ErrorBoundary>
             )
             setPreviewContent(report.data.rawConfig)

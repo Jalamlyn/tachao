@@ -5,7 +5,6 @@ import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import AIReportAgent from "@/service/agents/AIReportAgent"
-import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import { useVersionControl } from "@/hooks/useVersionControl"
 import AIEditor from "@/components/AIEditor"
@@ -15,7 +14,7 @@ import { processReportData } from "@/utils/processReportData"
 import { Message } from "@/pages/report-management/types"
 import SuccessModal from "@/pages/report-management/components/SuccessModal"
 import VersionSelectModal from "@/components/VersionSelectModal"
-import { EmptyAnalysisState, EmptyCodeState } from "./components/EmptyState"
+import { EmptyAnalysisState } from "./components/EmptyState"
 import { getRenderDataView } from "./renderDataView"
 import { useSave } from "./hooks/useSave"
 import { useLoadData } from "./hooks/useLoadData"
@@ -257,23 +256,6 @@ const AIReportEditor: React.FC = () => {
       setPendingVersionSave(null)
     }
     setIsVersionSelectModalOpen(false)
-  }
-
-  // 修复：在版本切换时处理 null 值
-  const handleVersionSwitch = (version) => {
-    if (version) {
-      setPreviewContent(version.rawConfig || "")
-      AIReportAgent.analyzeData(processedDataRef.current, version.rawConfig || "")
-        .then((analysis) => {
-          setPreviewComponent(<AnalysisResult analysis={analysis} />)
-        })
-        .catch((error) => {
-          message.error("分析数据失败")
-          console.error(error)
-        })
-    } else {
-      message.error("无法切换到指定版本")
-    }
   }
 
   const pageActions = (
