@@ -27,3 +27,39 @@ export interface UsePermissionsReturn {
   loading: boolean
   error: Error | null
 }
+
+// 订阅相关类型定义
+export type SubscriptionType = 'personal' | 'enterprise' | 'custom'
+export type SubscriptionStatus = 'active' | 'expired' | 'warning'
+
+export interface SubscriptionFeatures {
+  nbAccountLimit: number
+  tokenAmount: number
+}
+
+export interface Subscription {
+  organizationId: string
+  type: SubscriptionType
+  status: SubscriptionStatus
+  startDate: string
+  expireDate: string
+  features: SubscriptionFeatures
+  price: number
+}
+
+export interface SubscriptionHistory {
+  type: SubscriptionType
+  price: number
+  purchaseDate: string
+  expireDate: string
+}
+
+export interface AccountUsage {
+  organizationId: string
+  accounts: Array<{
+    accountId: string
+    name: string
+    type: 'admin' | 'nb' | 'wb'
+    createdAt: string
+  }>
+}

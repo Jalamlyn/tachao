@@ -1,8 +1,18 @@
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
-import { Permission, PermissionMetadata, ResourceType, TemplatePermissionRole } from "../types"
+import { Permission, PermissionMetadata, ResourceType, TemplatePermissionRole, Subscription, AccountUsage, SubscriptionHistory } from "../types"
 import { hasRequiredPermission } from "../config/constants"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
+
+// 元数据键值定义
+const METADATA_KEYS = {
+  // 原有权限相关键值
+  PERMISSIONS: (resourceType: ResourceType) => `permissions_${resourceType}`,
+  // 新增订阅相关键值
+  SUBSCRIPTION: (orgId: string) => `org_subscription_${orgId}`,
+  ACCOUNT_USAGE: (orgId: string) => `org_account_usage_${orgId}`,
+  SUBSCRIPTION_HISTORY: (orgId: string) => `org_subscription_history_${orgId}`
+}
 
 export const getPermissionMetadataKey = (resourceType: ResourceType) => `permissions_${resourceType}`
 
@@ -73,7 +83,6 @@ export const hasTemplatePermission = async (
   return hasRequiredPermission(userRoles, requiredRole)
 }
 
-// 新增：获取资源标题的函数
 export const getResourceTitle = async (resourceType: ResourceType, resourceId: string): Promise<string> => {
   try {
     switch (resourceType) {
@@ -84,7 +93,6 @@ export const getResourceTitle = async (resourceType: ResourceType, resourceId: s
         return result.data?.[0]?.title || resourceId
 
       case "app":
-        // 从元数据中获取应用信息
         const appsResult = await getMetadata(["app_index"])
         const apps = JSON.parse(appsResult.data?.[0]?.value || "[]")
         const app = apps.find((app) => app.id === resourceId)
@@ -119,7 +127,6 @@ export const addPermission = async (
   if (!existingPermission) {
     const roles = Array.isArray(role) ? role : [role]
 
-    // 处理权限包含关系
     if (roles.includes("creator")) {
       roles.push("editor", "viewer")
     } else if (roles.includes("editor")) {
@@ -149,14 +156,13 @@ export const createPermissionRequest = async (request: {
     const result = await getMetadata([PERMISSION_REQUESTS_KEY])
     const existingRequests = JSON.parse(result.data?.[0]?.value || "{}")
 
-    // 获取资源标题
     const resourceTitle = await getResourceTitle(request.resourceType, request.resourceId)
 
     const newRequest = {
       ...request,
       id: `pr_${Date.now()}`,
       status: "pending",
-      resourceTitle, // 添加资源标题
+      resourceTitle,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
@@ -192,4 +198,102 @@ export const checkPermissionRequestStatus = async (resourceType: string, resourc
     (request: any) =>
       request.resourceType === resourceType && request.resourceId === resourceId && request.requesterId === userId
   )
+}
+
+// 新增订阅相关方法
+export const subscriptionService = {
+  // 获取订阅信息
+  async getSubscription(orgId: string): Promise<Subscription | null> {
+    try {
+      const result = await getMetadata([METADATA_KEYS.SUBSCRIPTION(orgId)])
+      return result.data?.[0]?.value ? JSON.parse(result.data[0].value) : null
+    } catch (error) {
+      console.error("Error getting subscription:", error)
+      return null
+    }
+  },
+
+  // 更新订阅信息
+  async updateSubscription(orgId: string, subscription: Subscription): Promise<void> {
+    try {
+      await setMetadata(METADATA_KEYS.SUBSCRIPTION(orgId), JSON.stringify(subscription))
+    } catch (error) {
+      console.error("Error updating subscription:", error)
+      throw error
+    }
+  },
+
+  // 获取账号使用情况
+  async getAccountUsage(orgId: string): Promise<AccountUsage | null> {
+    try {
+      const result = await getMetadata([METADATA_KEYS.ACCOUNT_USAGE(orgId)])
+      return result.data?.[0]?.value ? JSON.parse(result.data[0].value) : null
+    } catch (error) {
+      console.error("Error getting account usage:", error)
+      return null
+    }
+  },
+
+  // 更新账号使用情况
+  async updateAccountUsage(orgId: string, usage: AccountUsage): Promise<void> {
+    try {
+      await setMetadata(METADATA_KEYS.ACCOUNT_USAGE(orgId), JSON.stringify(usage))
+    } catch (error) {
+      console.error("Error updating account usage:", error)
+      throw error
+    }
+  },
+
+  // 添加订阅历史记录
+  async addSubscriptionHistory(orgId: string, record: SubscriptionHistory): Promise<void> {
+    try {
+      const result = await getMetadata([METADATA_KEYS.SUBSCRIPTION_HISTORY(orgId)])
+      const history = result.data?.[0]?.value ? JSON.parse(result.data[0].value) : []
+      history.push(record)
+      await setMetadata(METADATA_KEYS.SUBSCRIPTION_HISTORY(orgId), JSON.stringify(history))
+    } catch (error) {
+      console.error("Error adding subscription history:", error)
+      throw error
+    }
+  },
+
+  // 检查订阅状态
+  async checkSubscriptionStatus(orgId: string): Promise<{
+    status: 'active' | 'expired' | 'warning'
+    message?: string
+    daysToExpire?: number
+  }> {
+    const subscription = await this.getSubscription(orgId)
+    
+    if (!subscription) {
+      return {
+        status: 'expired',
+        message: '未找到有效订阅'
+      }
+    }
+
+    const now = new Date()
+    const expireDate = new Date(subscription.expireDate)
+    const daysToExpire = Math.floor((expireDate.getTime() - now.getTime()) / (1000 * 3600 * 24))
+
+    if (daysToExpire <= 0) {
+      return {
+        status: 'expired',
+        message: '订阅已过期'
+      }
+    }
+
+    if (daysToExpire <= 7) {
+      return {
+        status: 'warning',
+        message: `订阅将在 ${daysToExpire} 天后过期`,
+        daysToExpire
+      }
+    }
+
+    return {
+      status: 'active',
+      daysToExpire
+    }
+  }
 }
