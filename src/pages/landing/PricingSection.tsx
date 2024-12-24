@@ -1,7 +1,9 @@
-import React from "react"
+import React, { useState } from "react"
 import { Card, Button, Chip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion } from "framer-motion"
+import QRCodeModal from "./QRCodeModal"
+import WaitListModal from "./WaitListModal"
 
 const SUBSCRIPTION_PLANS = {
   personal: {
@@ -106,6 +108,17 @@ const SUBSCRIPTION_PLANS = {
 }
 
 const PricingSection = () => {
+  const [isQRCodeOpen, setIsQRCodeOpen] = useState(false)
+  const [isWaitListOpen, setIsWaitListOpen] = useState(false)
+
+  const handleButtonClick = (planType: string) => {
+    if (planType === 'custom') {
+      setIsQRCodeOpen(true)
+    } else {
+      setIsWaitListOpen(true)
+    }
+  }
+
   return (
     <section className="py-20 bg-gradient-to-b from-white to-default-50">
       <div className="container mx-auto px-4">
@@ -187,16 +200,9 @@ const PricingSection = () => {
                       variant={plan.highlight ? 'shadow' : 'flat'}
                       className="w-full transition-transform duration-200 hover:scale-105"
                       size="lg"
-                      onPress={() => {
-                        if (plan.name === '定制版') {
-                          // 打开联系销售的二维码
-                        } else {
-                          // 跳转到注册/登录
-                          window.location.href = '/login'
-                        }
-                      }}
+                      onPress={() => handleButtonClick(plan.type)}
                     >
-                      {plan.name === '定制版' ? '联系销售' : '立即开始'}
+                      申请专属账号
                     </Button>
                   </div>
                 </div>
@@ -221,6 +227,9 @@ const PricingSection = () => {
           </div>
         </motion.div>
       </div>
+
+      <QRCodeModal isOpen={isQRCodeOpen} onClose={() => setIsQRCodeOpen(false)} />
+      <WaitListModal isOpen={isWaitListOpen} onClose={() => setIsWaitListOpen(false)} />
     </section>
   )
 }
