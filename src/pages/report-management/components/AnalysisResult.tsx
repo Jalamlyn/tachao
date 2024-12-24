@@ -5,14 +5,11 @@ import ChartRenderer from "./ChartRenderer"
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table"
 import { Tabs, Tab, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { useNavigate } from "react-router-dom"
 import { MultiSourceAnalysisResult } from "../types"
 import { useSwipeable } from "react-swipeable"
 
 // 空状态组件
 const EmptyState: React.FC = () => {
-  const navigate = useNavigate()
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -56,9 +53,8 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
   if (!analysis) {
     return <EmptyState />
   }
-
-  const { summary, charts = [], insights = [], tables = [] } = analysis
-
+  debugger
+  const { summary, charts = [], insights = [], tables = [] } = analysis.analysis
   // 动画变体配置
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -85,16 +81,16 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
 
   // 移动端滑动处理
   const [currentChartIndex, setCurrentChartIndex] = React.useState(0)
-  
+
   const handleNextChart = () => {
     if (currentChartIndex < charts.length - 1) {
-      setCurrentChartIndex(prev => prev + 1)
+      setCurrentChartIndex((prev) => prev + 1)
     }
   }
 
   const handlePrevChart = () => {
     if (currentChartIndex > 0) {
-      setCurrentChartIndex(prev => prev - 1)
+      setCurrentChartIndex((prev) => prev - 1)
     }
   }
 
@@ -113,35 +109,35 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
     >
       {/* 报表标题区域 */}
       {title && (
-        <motion.div variants={itemVariants} className="mb-6">
-          <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-r from-primary/10 to-transparent">
-            <CardHeader className="p-4 md:p-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h1 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+        <motion.div variants={itemVariants} className='mb-6'>
+          <Card className='overflow-hidden border-none shadow-lg bg-gradient-to-r from-primary/10 to-transparent'>
+            <CardHeader className='p-4 md:p-6'>
+              <div className='space-y-2'>
+                <div className='flex items-center justify-between'>
+                  <h1 className='text-xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent'>
                     {title}
                   </h1>
                   {reportId && (
                     <Button
-                      size="sm"
-                      variant="flat"
-                      className="bg-white/80 backdrop-blur-sm"
-                      startContent={<Icon icon="mdi:share" className="w-4 h-4" />}
+                      size='sm'
+                      variant='flat'
+                      className='bg-white/80 backdrop-blur-sm'
+                      startContent={<Icon icon='mdi:share' className='w-4 h-4' />}
                     >
                       分享
                     </Button>
                   )}
                 </div>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
+                <div className='flex items-center gap-4 text-sm text-gray-500'>
                   {lastUpdated && (
-                    <span className="flex items-center gap-1">
-                      <Icon icon="mdi:clock-outline" className="w-4 h-4" />
+                    <span className='flex items-center gap-1'>
+                      <Icon icon='mdi:clock-outline' className='w-4 h-4' />
                       最后更新：{lastUpdated}
                     </span>
                   )}
                   {reportId && (
-                    <span className="flex items-center gap-1">
-                      <Icon icon="mdi:file-document-outline" className="w-4 h-4" />
+                    <span className='flex items-center gap-1'>
+                      <Icon icon='mdi:file-document-outline' className='w-4 h-4' />
                       报表ID：{reportId}
                     </span>
                   )}
@@ -198,48 +194,46 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
               <CardContent className='p-3 md:p-6'>
                 {isMobile ? (
                   <div {...swipeHandlers}>
-                    <div className="relative">
-                      <div className="w-full" style={{ minHeight: 360 }}>
+                    <div className='relative'>
+                      <div className='w-full' style={{ minHeight: 360 }}>
                         <ChartRenderer chart={charts[currentChartIndex]} />
                       </div>
-                      <div className="absolute top-1/2 left-2 -translate-y-1/2">
+                      <div className='absolute top-1/2 left-2 -translate-y-1/2'>
                         <Button
                           isIconOnly
-                          size="sm"
-                          variant="flat"
+                          size='sm'
+                          variant='flat'
                           isDisabled={currentChartIndex === 0}
                           onClick={handlePrevChart}
-                          className="bg-white/80 backdrop-blur-sm"
+                          className='bg-white/80 backdrop-blur-sm'
                         >
-                          <Icon icon="mdi:chevron-left" />
+                          <Icon icon='mdi:chevron-left' />
                         </Button>
                       </div>
-                      <div className="absolute top-1/2 right-2 -translate-y-1/2">
+                      <div className='absolute top-1/2 right-2 -translate-y-1/2'>
                         <Button
                           isIconOnly
-                          size="sm"
-                          variant="flat"
+                          size='sm'
+                          variant='flat'
                           isDisabled={currentChartIndex === charts.length - 1}
                           onClick={handleNextChart}
-                          className="bg-white/80 backdrop-blur-sm"
+                          className='bg-white/80 backdrop-blur-sm'
                         >
-                          <Icon icon="mdi:chevron-right" />
+                          <Icon icon='mdi:chevron-right' />
                         </Button>
                       </div>
                     </div>
-                    <div className="flex justify-center items-center mt-4 gap-2">
+                    <div className='flex justify-center items-center mt-4 gap-2'>
                       {charts.map((_, index) => (
                         <div
                           key={index}
                           className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                            index === currentChartIndex ? 'bg-primary' : 'bg-gray-300'
+                            index === currentChartIndex ? "bg-primary" : "bg-gray-300"
                           }`}
                         />
                       ))}
                     </div>
-                    <div className='text-xs text-center text-gray-500 mt-2'>
-                      左右滑动或点击按钮切换图表
-                    </div>
+                    <div className='text-xs text-center text-gray-500 mt-2'>左右滑动或点击按钮切换图表</div>
                   </div>
                 ) : (
                   <Tabs>

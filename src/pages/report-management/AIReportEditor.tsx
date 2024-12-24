@@ -184,11 +184,10 @@ const AIReportEditor: React.FC = () => {
               />
             </ErrorBoundary>
           )
-
           // 更新消息状态
           setMessages((prev) => {
             const lastMessage = prev[prev.length - 1]
-            if (lastMessage.role === "assistant") {
+            if (lastMessage?.role === "assistant") {
               return [
                 ...prev.slice(0, -1),
                 {

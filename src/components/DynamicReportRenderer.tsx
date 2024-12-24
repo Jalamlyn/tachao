@@ -6,6 +6,7 @@ import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
 import { processReportData } from "@/utils/processReportData"
 
 interface DynamicReportRendererProps {
+  title: string
   code: string
   rawData: {
     formData: any[]
@@ -13,7 +14,7 @@ interface DynamicReportRendererProps {
   }
 }
 
-export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ code, rawData }) => {
+export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ title, code, rawData }) => {
   const [Component, setComponent] = useState<React.ComponentType<any> | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const [loading, setLoading] = useState(true)
@@ -90,7 +91,7 @@ export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ co
 
   return (
     <ErrorBoundary>
-      <Component />
+      <Component title={title} />
     </ErrorBoundary>
   )
 }

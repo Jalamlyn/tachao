@@ -12,6 +12,7 @@ const Report: React.FC = () => {
   const [reportConfig, setReportConfig] = useState<string | null>(null)
   const [formData, setFormData] = useState<any[]>([])
   const [templateInfoMap, setTemplateInfoMap] = useState<Record<string, string>>({})
+  const [reportTitle, setReportTitle] = useState<string>("")
 
   const { getDetail: getReportDetail } = useMetadata("report")
   const { loadFilteredDetails: loadFormFilteredDetails } = useMetadata("form")
@@ -31,6 +32,8 @@ const Report: React.FC = () => {
         if (!reportDetail?.data?.rawConfig) {
           throw new Error("报表配置不存在")
         }
+        debugger
+        setReportTitle(reportDetail.title)
         setReportConfig(reportDetail.data.rawConfig)
 
         // 2. 加载模板信息
@@ -100,6 +103,7 @@ const Report: React.FC = () => {
       <div className='max-w-[1200px] mx-auto'>
         <ScrollShadow className='h-screen pb-8'>
           <DynamicReportRenderer
+            title={reportTitle}
             code={reportConfig}
             rawData={{
               formData,
