@@ -10,12 +10,12 @@ import {
   Input,
   useDisclosure,
   ModalContent,
+  ButtonGroup,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { getAccount, products, orders, pagePay } from "@/service/apis/pay"
 import CostRecords from "./CostRecords"
 
-// 新增账户费用管理组件
 const AccountFinance = () => {
   const [account, setAccount] = useState(null)
   const [productList, setProductList] = useState([])
@@ -25,6 +25,9 @@ const AccountFinance = () => {
 
   const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure()
   const { isOpen: isPaymentModalOpen, onOpen: onPaymentModalOpen, onClose: onPaymentModalClose } = useDisclosure()
+
+  // 快速选择金额选项
+  const quickSelectAmounts = [10, 20, 50, 100]
 
   useEffect(() => {
     fetchAccountData()
@@ -76,6 +79,10 @@ const AccountFinance = () => {
     }
   }
 
+  const handleQuickSelect = (amount) => {
+    setQuantity(amount)
+  }
+
   const InfoItem = ({ label, value }) => (
     <div className='flex justify-between items-center py-2 border-b border-default-200 last:border-none'>
       <span className='text-default-600'>{label}</span>
@@ -94,14 +101,9 @@ const AccountFinance = () => {
           <div className='flex flex-col gap-4'>
             <div>
               <InfoItem
-                label='算力余额'
-                value={account?.totalComputePower ? `${account.totalComputePower} 算力` : "0 算力"}
-              />
-              <InfoItem
-                label='塔币额度'
+                label='塔币余额'
                 value={account?.totalComputePower ? `${(account.totalComputePower / 100).toFixed(2)} 塔币` : "0 塔币"}
               />
-              <div className='mt-2 text-sm text-default-500'>注: 100算力 = 1塔币</div>
             </div>
             <div className='flex justify-end gap-2'>
               <Button
@@ -125,7 +127,7 @@ const AccountFinance = () => {
           {(onClose) => (
             <>
               <ModalHeader>
-                <h3 className='text-lg font-semibold'>购买算力</h3>
+                <h3 className='text-lg font-semibold'>购买塔币</h3>
               </ModalHeader>
               <ModalBody>
                 <div className='space-y-4'>
@@ -138,21 +140,36 @@ const AccountFinance = () => {
                       onClick={() => setSelectedProduct(product)}
                     >
                       <span className='font-medium text-default-700'>
-                        每 100{product.name}/{product.price}元
+                        {product.name} / {product.price}元
                       </span>
                     </div>
                   ))}
-                  <div className='flex items-center gap-2'>
-                    <span className='font-medium'>购买数量: </span>
-                    <Input
-                      type='number'
-                      min={10}
-                      step={1}
-                      value={quantity}
-                      onChange={(e) => setQuantity(Number(e.target.value))}
-                      className='w-24'
-                    />
-                    <span className='text-sm text-default-500'>单位 （100算力/单位）</span>
+                  <div className='flex flex-col gap-4'>
+                    <div className='font-medium'>快速选择金额:</div>
+                    <ButtonGroup>
+                      {quickSelectAmounts.map((amount) => (
+                        <Button
+                          key={amount}
+                          variant={quantity === amount ? "solid" : "flat"}
+                          color={quantity === amount ? "primary" : "default"}
+                          onClick={() => handleQuickSelect(amount)}
+                        >
+                          {amount}塔币
+                        </Button>
+                      ))}
+                    </ButtonGroup>
+                    <div className='flex items-center gap-2'>
+                      <span className='font-medium'>自定义数量: </span>
+                      <Input
+                        type='number'
+                        min={10}
+                        step={1}
+                        value={quantity}
+                        onChange={(e) => setQuantity(Number(e.target.value))}
+                        className='w-24'
+                      />
+                      <span className='text-sm text-default-500'>塔币</span>
+                    </div>
                   </div>
                   <div className='text-right text-default-700 font-medium'>
                     总价: {selectedProduct ? (selectedProduct.price * quantity).toFixed(2) : "0.00"} 元
