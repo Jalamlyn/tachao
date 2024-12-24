@@ -25,7 +25,7 @@ const SUBSCRIPTION_PLANS = {
       },
       {
         text: "基础AI功能",
-        icon: "solar:robot-bold-duotone"
+        icon: "solar:robot-minimal"
       }
     ],
     highlight: false,
@@ -89,7 +89,7 @@ const SUBSCRIPTION_PLANS = {
       },
       {
         text: "专属AI模型",
-        icon: "solar:robot-bold-duotone"
+        icon: "solar:robot-add-bold-duotone"
       },
       {
         text: "专属技术支持",
@@ -131,11 +131,12 @@ const PricingSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
+              className={`flex ${plan.highlight ? 'md:-translate-y-2' : ''}`}
             >
               <Card 
-                className={`relative h-full ${
-                  plan.highlight ? 'border-primary shadow-lg' : ''
-                }`}
+                className={`relative flex flex-col w-full transition-all duration-300 hover:shadow-xl
+                  ${plan.highlight ? 'border-primary shadow-lg' : ''}
+                `}
               >
                 {plan.highlight && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -145,53 +146,59 @@ const PricingSection = () => {
                   </div>
                 )}
 
-                <div className="p-6">
-                  <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                  <div className="mb-4">
-                    <span className="text-3xl font-bold">
-                      {typeof plan.price === 'number' ? `￥${plan.price}` : plan.price}
-                    </span>
-                    {plan.period && (
-                      <span className="text-default-500">/{plan.period}</span>
-                    )}
+                <div className="flex flex-col flex-1 p-6">
+                  <div className="mb-6">
+                    <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                    <div className="mb-4">
+                      <span className="text-3xl font-bold">
+                        {typeof plan.price === 'number' ? `￥${plan.price}` : plan.price}
+                      </span>
+                      {plan.period && (
+                        <span className="text-default-500">/{plan.period}</span>
+                      )}
+                    </div>
+                    <p className="text-default-600">{plan.description}</p>
                   </div>
-                  <p className="text-default-600 mb-6">{plan.description}</p>
 
-                  <div className="space-y-4">
-                    {plan.features.map((feature, idx) => (
-                      <div 
-                        key={idx}
-                        className="flex items-center gap-3"
-                      >
-                        <Icon 
-                          icon={feature.icon}
-                          className={`w-5 h-5 ${
-                            feature.highlight ? 'text-primary' : 'text-default-500'
+                  <div className="flex-grow">
+                    <div className="space-y-4">
+                      {plan.features.map((feature, idx) => (
+                        <div 
+                          key={idx}
+                          className={`flex items-center gap-3 ${
+                            feature.highlight ? 'text-primary font-medium' : ''
                           }`}
-                        />
-                        <span className={feature.highlight ? 'font-medium' : ''}>
-                          {feature.text}
-                        </span>
-                      </div>
-                    ))}
+                        >
+                          <Icon 
+                            icon={feature.icon}
+                            className={`w-5 h-5 ${
+                              feature.highlight ? 'text-primary' : 'text-default-500'
+                            }`}
+                          />
+                          <span>{feature.text}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
-                  <Button
-                    color={plan.color}
-                    variant={plan.highlight ? 'shadow' : 'flat'}
-                    className="w-full mt-8"
-                    size="lg"
-                    onPress={() => {
-                      if (plan.name === '定制版') {
-                        // 打开联系销售的二维码
-                      } else {
-                        // 跳转到注册/登录
-                        window.location.href = '/login'
-                      }
-                    }}
-                  >
-                    {plan.name === '定制版' ? '联系销售' : '立即开始'}
-                  </Button>
+                  <div className="mt-8">
+                    <Button
+                      color={plan.color}
+                      variant={plan.highlight ? 'shadow' : 'flat'}
+                      className="w-full transition-transform duration-200 hover:scale-105"
+                      size="lg"
+                      onPress={() => {
+                        if (plan.name === '定制版') {
+                          // 打开联系销售的二维码
+                        } else {
+                          // 跳转到注册/登录
+                          window.location.href = '/login'
+                        }
+                      }}
+                    >
+                      {plan.name === '定制版' ? '联系销售' : '立即开始'}
+                    </Button>
+                  </div>
                 </div>
               </Card>
             </motion.div>
