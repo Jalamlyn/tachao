@@ -68,7 +68,7 @@ const AccountFinance = observer(() => {
                 color='primary'
                 variant='flat'
                 startContent={<Icon icon='solar:card-recive-bold-duotone' />}
-                onClick={() => balanceStore.showRechargeModal()}
+                onClick={() => balanceStore.showRechargeModal(false)} // 直接显示充值窗口
               >
                 充值
               </Button>

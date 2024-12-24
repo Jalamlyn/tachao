@@ -10,6 +10,7 @@ import { markdown as guide } from "@/components/common/DynamicForm/ui-doc/guide.
 import { extractShataAIFormContent } from "@/components/AIEditor"
 import globalStore from "@/globalStore"
 import { balanceStore } from '@/stores/balanceStore'
+import { message } from '@/components/Message'
 
 export class AIFormAgent {
   private static instance: AIFormAgent
@@ -65,9 +66,9 @@ export class AIFormAgent {
     rawConfig?: string
   ): Promise<{ success: boolean; config?: DynamicFormConfig; rawConfig?: string }> {
     if (!balanceStore.checkBalance()) {
-      balanceStore.showRechargeModal();
-      throw new Error("余额不足, 请到企业设置-账户-充值")
+      throw new Error("余额不足");
     }
+    
     if (rawConfig) {
       this.setRawConfig(rawConfig)
     }
