@@ -246,10 +246,10 @@ ${resourceMappingPrompt}
 ${excelAnalysisGuide}
 ${imageAnalysisGuide}
 
-# DynamicForm 配置文档
-<doc>
+<DynamicFormExample>
+# DynamicForm 组件配置的例子,代码仅供参考, 不要直接引用
 ${doc}
-</doc>
+</DynamicFormExample>
 
 # 用户需求思考过程
 在回复用户之前，我会按照以下步骤进行系统性思考，并输出思考过程：

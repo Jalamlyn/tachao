@@ -1,5 +1,6 @@
 // import chatChunk from "@/service/chat/chat-chunk-gemini-office"
-import chatChunk from "@/service/chat/chat-chunk-openai-azure"
+// import chatChunk from "@/service/chat/chat-chunk-openai-azure"
+import chatChunk from "@/service/chat/chat-chunk-claude-office"
 import { Message } from "@/service/agents/AIFormAgentTypes"
 import { markdown as doc } from "@/pages/report-management/components/AnalysisResult.md"
 import generateSystemPrompt from "@/service/agents/prompts/report/report-agent-prompt"

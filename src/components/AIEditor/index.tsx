@@ -9,6 +9,9 @@ import { AI_LEVELS, AIEditorProps } from "./type"
 import { codeStore } from "@/pages/form-temp-manager/components/codeStore"
 
 export const extractShataAIFormContent = (content: string): string => {
+  if (!content) {
+    return "尚未编写任何代码"
+  }
   const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
   const match = content?.match(regex)
   return match ? match[1].trim() : content

@@ -11,6 +11,8 @@ import { getMetadata } from "../apis/metadata"
 import { imageStore } from "@/components/AIEditor/components/ImageStore"
 import { excelStore } from "@/components/AIEditor/components/excelStore"
 import { markdown as guide } from "@/components/common/DynamicForm/ui-doc/guide.md"
+import { jsonParse } from "@/utils"
+import { extractShataAIFormContent } from "@/components/AIEditor"
 
 export class AIFormAgent {
   private static instance: AIFormAgent
@@ -74,18 +76,18 @@ export class AIFormAgent {
     try {
       const cachedImages = imageStore.images
       const cachedExcel = excelStore.cachedExcel
-
+      const resources = result.data?.[0]?.value
       const systemMessage = {
         role: "system" as const,
-        content: generateFormAgentPrompt(cachedImages.length > 0, result.data?.[0]?.value, cachedExcel),
+        content: generateFormAgentPrompt(cachedImages.length > 0, resources, cachedExcel),
       }
 
       const enhancedCommand = `在这份代码<code>
-      ${this._rawConfig}
-      </code>上继续修改实现我的需求或者回答我的问题<input>${command}</input>如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码, 不允许用注释省略代码, 如果修改很简单, 可以返回修改的片段指导用户手动修改, 生成的结果中只能包含一份<shata-ai-code>, 然后代码必须用
+      ${extractShataAIFormContent(this._rawConfig)}
+      </code>上继续修改实现我的需求或者回答我的问题<input>${command}</input>如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码, 不允许用注释省略代码, 生成的结果中只能包含一份<shata-ai-code>, 然后代码必须用
       \`\`\`mo
       <shata-ai-code>
-        ...你生成的代码
+        ...你生成的代码,代码必须完整,不能用注释省略原来的代码
       </shata-ai-code>s
       \`\`\`
       包裹起来, 在 watch 中编写逻辑,必须遵循 ${guide} 的规则
