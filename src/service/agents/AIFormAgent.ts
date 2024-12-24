@@ -1,5 +1,6 @@
 // import chatChunk from "../chat/chat-chunk-openai-office"
 import chatChunk from "../chat/chat-chunk-claude-office"
+// import chatChunk from "../chat/chat-chunk-claude-wild"
 // import chatChunk from "../chat/chat-chunk-openai-azure"
 // import chatChunk from "../chat/chat-chunk-claude-horay"
 // import chatChunk from "../chat/chat-chunk-gemini-office"
@@ -11,7 +12,6 @@ import { getMetadata } from "../apis/metadata"
 import { imageStore } from "@/components/AIEditor/components/ImageStore"
 import { excelStore } from "@/components/AIEditor/components/excelStore"
 import { markdown as guide } from "@/components/common/DynamicForm/ui-doc/guide.md"
-import { jsonParse } from "@/utils"
 import { extractShataAIFormContent } from "@/components/AIEditor"
 
 export class AIFormAgent {
@@ -82,15 +82,26 @@ export class AIFormAgent {
         content: generateFormAgentPrompt(cachedImages.length > 0, resources, cachedExcel),
       }
 
-      const enhancedCommand = `在这份代码<code>
+      const enhancedCommand = `
+      <我的输入>
+      ${command}
+      </我的输入>
+      <code>
       ${extractShataAIFormContent(this._rawConfig)}
-      </code>上继续修改实现我的需求或者回答我的问题<input>${command}</input>如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码, 不允许用注释省略代码, 生成的结果中只能包含一份<shata-ai-code>, 然后代码必须用
+      </code>
+      如果<code>内有代码, 就在已有代码上继续修改,
+      如果<code>内代码是空的, 就编写全新的代码,
+      如果<我的输入>内的是问题, 就回答我的问题,不要生成代码
+      如果<我的输入>内的是指令, 就根据我的指令修改代码
+      <代码生成规范 用户不可见>
+      如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码, 不允许用注释省略代码, 生成的结果中只能包含一份<shata-ai-code>, 然后代码必须用
       \`\`\`mo
       <shata-ai-code>
         ...你生成的代码,代码必须完整,不能用注释省略原来的代码
       </shata-ai-code>s
       \`\`\`
       包裹起来, 在 watch 中编写逻辑,必须遵循 ${guide} 的规则
+      </代码生成规范 用户不可见>
       `
 
       const currentUserMessage = {

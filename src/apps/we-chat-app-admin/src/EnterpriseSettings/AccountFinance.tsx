@@ -24,6 +24,7 @@ const AccountFinance = () => {
   const [quantity, setQuantity] = useState(10)
   const [paymentForm, setPaymentForm] = useState("")
   const [totalCost, setTotalCost] = useState(0)
+  const [actualBalance, setActualBalance] = useState(0)
 
   const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure()
   const { isOpen: isPaymentModalOpen, onOpen: onPaymentModalOpen, onClose: onPaymentModalClose } = useDisclosure()
@@ -39,8 +40,9 @@ const AccountFinance = () => {
   // 更新实际余额到 globalStore
   useEffect(() => {
     if (account?.totalComputePower) {
-      const actualBalance = (account.totalComputePower / 100) - totalCost
+      const actualBalance = account.totalComputePower / 100 - totalCost
       globalStore.actualBalance = actualBalance
+      setActualBalance(actualBalance)
     }
   }, [account, totalCost])
 
@@ -84,7 +86,7 @@ const AccountFinance = () => {
       setPaymentForm(payDataRes)
       onModalClose()
       onPaymentModalOpen()
-      
+
       // 支付成功后重新获取账户信息
       await fetchAccountData()
     } catch (error) {
@@ -121,10 +123,7 @@ const AccountFinance = () => {
                 label='塔币余额'
                 value={account?.totalComputePower ? `${(account.totalComputePower / 100).toFixed(2)} 塔币` : "0 塔币"}
               />
-              <InfoItem
-                label='实际可用余额'
-                value={`${globalStore.actualBalance.toFixed(2)} 塔币`}
-              />
+              <InfoItem label='实际可用余额' value={`${actualBalance.toFixed(2)} 塔币`} />
             </div>
             <div className='flex justify-end gap-2'>
               <Button

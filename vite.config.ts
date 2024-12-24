@@ -67,6 +67,7 @@ export default defineConfig({
   },
   server: {
     hmr: false,
+    port: 5174,
     proxy: {
       "/dev/": {
         target: "https://www.mobenai.com.cn/api/",

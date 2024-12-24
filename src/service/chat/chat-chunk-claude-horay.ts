@@ -151,9 +151,6 @@ export default async function chatChunkClaudeHoray(
     } else {
       console.error("Error:", error)
       message.error(`An error occurred while fetching data: ${error.message}`)
-      if (error.message.includes("context_length_exceeded")) {
-        onChunk(`项目大小超过了最大上下文，无法使用自动检索模式，请切换到手动检索模式，手动勾选需要修改的文件`)
-      }
     }
     throw error
   }

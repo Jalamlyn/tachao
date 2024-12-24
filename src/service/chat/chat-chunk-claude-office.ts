@@ -7,15 +7,16 @@ import { setMetadata, getMetadata } from "@/service/apis/metadata"
 let systemMsg
 
 // 计算 Claude 费用的函数
-function calculateClaudeCost(tokenCount: number, isInput: boolean, model: string): number {
+function calculateClaudeCost(fullContent, tokenCount: number, isInput: boolean, model: string): number {
+  const isCoding = fullContent.includes(`shata-ai-code`)
   const ratePerMillionTokens = {
     EXPERT: {
-      input: 219,
-      output: 1095,
+      input: isCoding ? 219 : 43.8,
+      output: isCoding ? 109 : 21.8,
     },
     ADVANCED: {
-      input: 73,
-      output: 292,
+      input: isCoding ? 73 : 14.6,
+      output: isCoding ? 292 : 58.4,
     },
   }
 
@@ -185,10 +186,10 @@ export default async function chatChunkClaudeOffice(
             const totalInputTokens = inputTokens + cacheCreationInputTokens + cacheReadInputTokens
 
             // 计算成本
-            const inputCost = calculateClaudeCost(totalInputTokens, true, model)
-            const outputCost = calculateClaudeCost(outputTokens, false, model)
+            const inputCost = calculateClaudeCost(fullContent, totalInputTokens, true, model)
+            const outputCost = calculateClaudeCost(fullContent, outputTokens, false, model)
 
-            // 记录成本 
+            // 记录成本
             try {
               const costRecords = await getMetadata(["ai-cost-records"])
               const existingRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
@@ -274,9 +275,6 @@ export default async function chatChunkClaudeOffice(
     } else {
       console.error("Error:", error)
       message.error(`An error occurred while fetching data: ${error.message}`)
-      if (error.message.includes("context_length_exceeded")) {
-        onChunk(`项目大小超过了最大上下文，无法使用自动检索模式，请切换到手动检索模式，手动勾选需要修改的文件`)
-      }
     }
     throw error
   }
