@@ -5,7 +5,7 @@ import { Icon } from "@iconify/react"
 import { getMetadata } from "@/service/apis/metadata"
 import { Select, SelectItem } from "@nextui-org/react"
 
-const CostRecords = () => {
+const CostRecords = ({ onTotalCostChange }) => {
   const [records, setRecords] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [recordsPerPage, setRecordsPerPage] = useState(10)
@@ -32,8 +32,11 @@ const CostRecords = () => {
   const totalPages = Math.ceil(records.length / recordsPerPage)
 
   const totalCost = useMemo(() => {
-    return records.reduce((sum, record) => sum + record.totalCost, 0).toFixed(4)
-  }, [records])
+    const cost = records.reduce((sum, record) => sum + record.totalCost, 0)
+    // 当总消费发生变化时，通知父组件
+    onTotalCostChange?.(cost)
+    return cost.toFixed(4)
+  }, [records, onTotalCostChange])
 
   const currentPageCost = useMemo(() => {
     return currentRecords.reduce((sum, record) => sum + record.totalCost, 0).toFixed(4)
@@ -90,9 +93,9 @@ const CostRecords = () => {
                 <TableCell>{record.model === "ADVANCED" ? "初级模型" : "高级模型"}</TableCell>
                 <TableCell>{record.promptTokenCount}</TableCell>
                 <TableCell>{record.candidatesTokenCount}</TableCell>
-                <TableCell>{record.inputCost.toFixed(4)}</TableCell>
-                <TableCell>{record.outputCost.toFixed(4)}</TableCell>
-                <TableCell>{record.totalCost.toFixed(4)}</TableCell>
+                <TableCell>{record.inputCost?.toFixed(4)}</TableCell>
+                <TableCell>{record.outputCost?.toFixed(4)}</TableCell>
+                <TableCell>{record.totalCost?.toFixed(4)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

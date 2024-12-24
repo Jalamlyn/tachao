@@ -15,6 +15,7 @@ import {
 import { Icon } from "@iconify/react"
 import { getAccount, products, orders, pagePay } from "@/service/apis/pay"
 import CostRecords from "./CostRecords"
+import globalStore from "@/globalStore"
 
 const AccountFinance = () => {
   const [account, setAccount] = useState(null)
@@ -22,6 +23,7 @@ const AccountFinance = () => {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [quantity, setQuantity] = useState(10)
   const [paymentForm, setPaymentForm] = useState("")
+  const [totalCost, setTotalCost] = useState(0)
 
   const { isOpen: isModalOpen, onOpen: onModalOpen, onClose: onModalClose } = useDisclosure()
   const { isOpen: isPaymentModalOpen, onOpen: onPaymentModalOpen, onClose: onPaymentModalClose } = useDisclosure()
@@ -33,6 +35,14 @@ const AccountFinance = () => {
     fetchAccountData()
     fetchProducts()
   }, [])
+
+  // 更新实际余额到 globalStore
+  useEffect(() => {
+    if (account?.totalComputePower) {
+      const actualBalance = (account.totalComputePower / 100) - totalCost
+      globalStore.actualBalance = actualBalance
+    }
+  }, [account, totalCost])
 
   const fetchAccountData = async () => {
     try {
@@ -74,6 +84,9 @@ const AccountFinance = () => {
       setPaymentForm(payDataRes)
       onModalClose()
       onPaymentModalOpen()
+      
+      // 支付成功后重新获取账户信息
+      await fetchAccountData()
     } catch (error) {
       console.error("创建订单或发起支付失败:", error)
     }
@@ -81,6 +94,10 @@ const AccountFinance = () => {
 
   const handleQuickSelect = (amount) => {
     setQuantity(amount)
+  }
+
+  const handleTotalCostChange = (cost) => {
+    setTotalCost(cost)
   }
 
   const InfoItem = ({ label, value }) => (
@@ -104,6 +121,10 @@ const AccountFinance = () => {
                 label='塔币余额'
                 value={account?.totalComputePower ? `${(account.totalComputePower / 100).toFixed(2)} 塔币` : "0 塔币"}
               />
+              <InfoItem
+                label='实际可用余额'
+                value={`${globalStore.actualBalance.toFixed(2)} 塔币`}
+              />
             </div>
             <div className='flex justify-end gap-2'>
               <Button
@@ -119,7 +140,7 @@ const AccountFinance = () => {
         </CardBody>
       </Card>
 
-      <CostRecords />
+      <CostRecords onTotalCostChange={handleTotalCostChange} />
 
       {/* 充值弹窗 */}
       <Modal isOpen={isModalOpen} onClose={onModalClose}>
