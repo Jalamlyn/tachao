@@ -185,3 +185,11 @@ export const getPermissionRequests = async () => {
     return {}
   }
 }
+
+export const checkPermissionRequestStatus = async (resourceType: string, resourceId: string, userId: string) => {
+  const requests = await getPermissionRequests()
+  return Object.values(requests).find(
+    (request: any) =>
+      request.resourceType === resourceType && request.resourceId === resourceId && request.requesterId === userId
+  )
+}

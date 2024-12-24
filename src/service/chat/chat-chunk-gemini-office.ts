@@ -26,12 +26,12 @@ function processTextContent(line: string): string | null {
 function calculateCost(tokenCount: number, isInput: boolean, model: string): number {
   const ratePerThousandTokens = {
     ADVANCED: {
-      input: 0.02,
-      output: 0.08,
+      input: 0.01,
+      output: 0.15,
     },
     EXPERT: {
-      input: 0.2,
-      output: 0.8,
+      input: 0.1,
+      output: 1.5,
     },
   }
 

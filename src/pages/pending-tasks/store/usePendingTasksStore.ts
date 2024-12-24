@@ -1,11 +1,11 @@
 import { create } from "zustand"
-import { queryWaitList, createRamAccount, queryRamAccount } from "@/service/apis/api"
+import { createRamAccount, queryRamAccount } from "@/service/apis/api"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
-import { jsonParse } from "@/utils"
 import { addPermission } from "@/permissions/utils/permissionUtils"
 import { queryMyProject, addProjectMember } from "@/service/apis/project"
 import globalStore from "@/globalStore"
+import { jsonParse } from "@/utils"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
 
@@ -70,20 +70,31 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
       // 1. 加载权限申请数据
       const permissionResult = await getMetadata([PERMISSION_REQUESTS_KEY])
       const permissionRequests = JSON.parse(permissionResult.data?.[0]?.value || "{}")
+      const templateIndex = await getMetadata(["template_index"])
+      const templateIndexData = jsonParse(templateIndex.data[0].value)
 
-      const permissionTasks = Object.values(permissionRequests).map((request: any) => ({
-        id: request.id,
-        title: `${resourceTypeMap[request.resourceType] || request.resourceType}「${request.resourceTitle}」的${formatRoles(request.role)}权限申请`,
-        description: request.reason,
-        type: "permission_request",
-        status: request.status,
-        priority: "medium",
-        department: "系统",
-        user: request.requesterName,
-        time: new Date(request.createdAt).toLocaleString(),
-        avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-        metadata: request,
-      }))
+      const permissionTasks = Object.values(permissionRequests).map((request: any) => {
+        let template = {}
+        if (request.resourceType === "template") {
+          template = templateIndexData.find((item: any) => item.id === request.resourceId)
+          if (!template) {
+            template = { title: "表单模板已删除" }
+          }
+        }
+        return {
+          id: request.id,
+          title: `${resourceTypeMap[request.resourceType] || request.resourceType}「${request.resourceType === "template" ? template?.title || request.resourceTitle : request.resourceTitle}」的${formatRoles(request.role)}权限申请`,
+          description: request.reason,
+          type: "permission_request",
+          status: request.status,
+          priority: "medium",
+          department: "系统",
+          user: request.requesterName,
+          time: new Date(request.createdAt).toLocaleString(),
+          avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
+          metadata: request,
+        }
+      })
 
       // 2. 获取所有现有RAM账号
       const ramAccountsResult = await queryRamAccount()
@@ -107,26 +118,33 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
 
       let newAccountTasks = []
       if (accountRequests?.data?.records) {
-        // 处理新的权限消息模型数据
-        newAccountTasks = accountRequests?.data?.records?.map((item: any) => {
-          const requestInfo = item.zhsqxx
-          return {
-            id: item._id,
-            title: `来自 ${requestInfo.phone} 的账号申请`,
-            description: `申请加入企业：${requestInfo.organizationLabel || "未知企业"}`,
-            type: "account_request",
-            status: requestInfo.status || "pending",
-            priority: "medium",
-            department: "系统",
-            user: requestInfo.phone,
-            time: new Date(item.createdAt).toLocaleString(),
-            avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-            metadata: {
-              ...item,
-              organizationId: requestInfo.organizationId,
-            },
-          }
-        })
+        // 3. 处理新的权限消息模型数据 - 添加过滤逻辑
+        newAccountTasks = accountRequests?.data?.records
+          .filter((item) => {
+            const phone = item.zhsqxx.phone
+            const ramAccount = `wb_${phone}`
+            // 过滤掉已经存在RAM账号的申请
+            return !existingAccounts.includes(ramAccount)
+          })
+          .map((item) => {
+            const requestInfo = item.zhsqxx
+            return {
+              id: item._id,
+              title: `来自 ${requestInfo.phone} 的账号申请`,
+              description: `申请加入企业：${requestInfo.organizationLabel || "未知企业"}`,
+              type: "account_request",
+              status: requestInfo.status || "pending",
+              priority: "medium",
+              department: "系统",
+              user: requestInfo.phone,
+              time: new Date(item.createdAt).toLocaleString(),
+              avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
+              metadata: {
+                ...item,
+                organizationId: requestInfo.organizationId,
+              },
+            }
+          })
       }
 
       // 合并所有任务
@@ -151,7 +169,7 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
         // 处理权限申请
         const result = await getMetadata([PERMISSION_REQUESTS_KEY])
         const requests = JSON.parse(result.data?.[0]?.value || "{}")
-
+        debugger
         if (requests[taskId]) {
           const request = requests[taskId]
           request.status = status
@@ -163,6 +181,28 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
 
           await setMetadata(PERMISSION_REQUESTS_KEY, JSON.stringify(requests))
           message.success(status === "completed" ? "已批准权限申请" : "已拒绝权限申请")
+        }
+      }
+      if (task.type === "account_request") {
+        const phone = task.metadata.zhsqxx.phone
+
+        // 1. 创建RAM账号
+        const accountRes = await createRamAccount({
+          account: `wb_${phone}`,
+          name: phone,
+          password: phone,
+        })
+
+        // 2. 查询默认项目
+        const projectRes = await queryMyProject({ name: "默认企业项目" })
+        if (projectRes.data && projectRes.data.length > 0) {
+          // 3. 添加到项目
+          await addProjectMember({
+            projectId: projectRes.data[0].id,
+            ramUserId: accountRes.id,
+            role: "PROJECT_MANAGER",
+            name: phone,
+          })
         }
       }
 

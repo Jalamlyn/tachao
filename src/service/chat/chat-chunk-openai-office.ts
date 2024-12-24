@@ -10,11 +10,11 @@ function calculateCost(tokenCount: number, isInput: boolean, model: string): num
   const ratePerThousandTokens = {
     ADVANCED: {
       input: 0.01,
-      output: 0.03,
+      output: 0.15,
     },
     EXPERT: {
       input: 0.1,
-      output: 0.3,
+      output: 1.5,
     },
   }
 
@@ -51,7 +51,7 @@ export default async function chatChunkOpenAIOffice(
               type: "text",
               text: msg.content,
             },
-            ...(msg.images?.map((img) => ({ type: "image_url", image_url: { url: img } })) || []),
+            ...(msg.images?.map((img) => ({ type: "image_url", image_url: { url: img, detail: "high" } })) || []),
           ],
         }
       }

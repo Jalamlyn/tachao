@@ -76,7 +76,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error("Initialization check failed:", error)
-      setShowInitializer(true)
+      // setShowInitializer(true)
     }
   }
 
@@ -153,11 +153,7 @@ export function Provider({ children }: { children: React.ReactNode }) {
         >
           {isInit && modulesLoaded && !isTransitioning && children}
         </div>
-        <EnterpriseInitializer
-          isOpen={showInitializer}
-          onClose={() => {}}
-          onSuccess={handleInitializationSuccess}
-        />
+        <EnterpriseInitializer isOpen={showInitializer} onClose={() => {}} onSuccess={handleInitializationSuccess} />
       </main>
     </NextUIProvider>
   )

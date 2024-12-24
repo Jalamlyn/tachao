@@ -2,8 +2,27 @@ import { message } from "@/components/Message"
 import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { inject } from "@wpm-js/core"
+import { setMetadata, getMetadata } from "@/service/apis/metadata"
 
 let systemMsg
+
+// 计算 Claude 费用的函数
+function calculateClaudeCost(tokenCount: number, isInput: boolean, model: string): number {
+  const ratePerMillionTokens = {
+    EXPERT: {
+      input: 219,
+      output: 1095,
+    },
+    ADVANCED: {
+      input: 73,
+      output: 292,
+    },
+  }
+
+  const rate = ratePerMillionTokens[model] || ratePerMillionTokens["ADVANCED"]
+  const tokenRate = isInput ? rate.input : rate.output
+  return (tokenCount / 1000000) * tokenRate // 转换为每百万 token 的价格
+}
 
 async function handleToolUse(toolUse, onChunk) {
   if (toolUse.name === "download_template") {
@@ -12,7 +31,6 @@ async function handleToolUse(toolUse, onChunk) {
       const res = await inject("Tools")["downloadTemplate"]()
       message.closeLoading(id, "success", "模版下载成功")
 
-      // 格式化返回结果
       const toolResult = {
         type: "tool_result",
         tool_use_id: toolUse.id,
@@ -30,7 +48,6 @@ async function handleToolUse(toolUse, onChunk) {
       }
     }
   } else {
-    // 处理其他类型的工具（如果有的话）
     console.warn(`Unhandled tool type: ${toolUse.name}`)
     return {
       type: "tool_result",
@@ -48,7 +65,6 @@ export default async function chatChunkClaudeOffice(
   isFirst = true,
   temperature = 0,
   overFlag = "YES",
-  // baseModel = "claude::claude-3-5-sonnet-20241022"
   baseModel = "claude::claude-3-5-haiku-20241022"
 ) {
   const [provider, model] = baseModel.split("::")
@@ -59,10 +75,6 @@ export default async function chatChunkClaudeOffice(
     throw new Error(`未找到服务商信息：${provider}`)
   }
 
-  const apiKey =
-    supplierInfo.apiKey ||
-    "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"
-  // const apiEndPoint = supplierInfo.endpoint || "https://api.anthropic.com/v1/messages"
   const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-claude-office"
 
   let _messages
@@ -114,19 +126,7 @@ export default async function chatChunkClaudeOffice(
     temperature,
     max_tokens: 8192,
     stream: true,
-    apiKey,
     cid: "Hx9Kp2Qm7Zf3Lw5Ry8Tj6",
-    // tools: [
-    //   {
-    //     name: "download_template",
-    //     description: "Download template",
-    //     input_schema: {
-    //       type: "object",
-    //       properties: {},
-    //     },
-    //   },
-    // ],
-    // tool_choice: { type: "auto" },
   }
 
   let controller = new AbortController()
@@ -137,7 +137,6 @@ export default async function chatChunkClaudeOffice(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
         "anthropic-version": "2023-06-01",
         "anthropic-beta": "prompt-caching-2024-07-31",
       },
@@ -154,6 +153,10 @@ export default async function chatChunkClaudeOffice(
     const decoder = new TextDecoder()
     let buffer = ""
     let fullContent = ""
+    let inputTokens = 0
+    let cacheCreationInputTokens = 0
+    let cacheReadInputTokens = 0
+    let outputTokens = 0
 
     while (true) {
       const { done, value } = await reader.read()
@@ -171,11 +174,54 @@ export default async function chatChunkClaudeOffice(
 
         try {
           const parsed = jsonParse(data)
+
+          // 捕获开始消息中的 token 信息
+          if (parsed.type === "message_start") {
+            inputTokens = parsed.message.usage.input_tokens
+            cacheCreationInputTokens = parsed.message.usage.cache_creation_input_tokens
+            cacheReadInputTokens = parsed.message.usage.cache_read_input_tokens
+          }
+
+          // 处理内容块
           if (parsed.type === "content_block_delta" && parsed.delta.type === "text_delta") {
             const content = parsed.delta.text
             fullContent += content
             onChunk(content)
-          } else if (parsed.type === "message_delta" && parsed.delta.stop_reason === "end_turn") {
+          }
+          // 捕获结束消息中的 token 信息并计算成本
+          else if (parsed.type === "message_delta" && parsed.delta.stop_reason === "end_turn") {
+            outputTokens = parsed.usage.output_tokens
+            const totalInputTokens = inputTokens + cacheCreationInputTokens + cacheReadInputTokens
+
+            // 计算成本
+            const inputCost = calculateClaudeCost(totalInputTokens, true, model)
+            const outputCost = calculateClaudeCost(outputTokens, false, model)
+
+            // 记录成本
+            try {
+              const costRecords = await getMetadata(["ai-cost-records"])
+              const existingRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
+
+              const newRecord = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                model,
+                promptTokenCount: totalInputTokens,
+                candidatesTokenCount: outputTokens,
+                inputCost,
+                outputCost,
+                totalCost: inputCost + outputCost,
+              }
+
+              if (existingRecords.length > 0) {
+                await setMetadata("ai-cost-records", [...existingRecords, newRecord])
+              } else {
+                await setMetadata("ai-cost-records", [newRecord])
+              }
+            } catch (e) {
+              console.error("Error storing cost records:", e)
+            }
+
             localDB.setItem("chat-chunk-over", overFlag)
             return
           } else if (parsed.type === "message_delta" && parsed.delta.stop_reason === "max_tokens") {
@@ -202,12 +248,9 @@ export default async function chatChunkClaudeOffice(
             )
             return
           } else if (parsed.type === "content_block_start" && parsed.content_block.type === "tool_use") {
-            // 处理工具使用请求
             const toolUse = parsed.content_block
             const toolResult = await handleToolUse(toolUse, onChunk)
 
-            // 将工具结果添加到消息中
-            // 继续对话
             await chatChunkClaudeOffice(
               [
                 ..._messages,

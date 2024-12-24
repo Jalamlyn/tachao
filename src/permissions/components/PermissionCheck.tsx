@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useCurrentUser } from "../hooks/useCurrentUser"
-import { hasPermission, hasTemplatePermission } from "../utils/permissionUtils"
+import { checkPermissionRequestStatus, hasPermission, hasTemplatePermission } from "../utils/permissionUtils"
 import { Spinner } from "@nextui-org/react"
 import { Navigate } from "react-router-dom"
 import { ResourceType, TemplatePermissionRole } from "../types"
@@ -8,7 +8,7 @@ import { ResourceType, TemplatePermissionRole } from "../types"
 interface PermissionCheckProps {
   resourceType: ResourceType
   resourceId: string
-  role?: TemplatePermissionRole  // 新增：用于模板权限检查
+  role?: TemplatePermissionRole // 用于模板权限检查
   children: React.ReactNode
   fallback?: React.ReactNode
 }
@@ -23,26 +23,51 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
   const { user, isLoading: userLoading } = useCurrentUser()
   const [hasAccess, setHasAccess] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [requestStatus, setRequestStatus] = useState<{
+    status: "none" | "pending" | "approved" | "rejected"
+    requestId?: string
+    createdAt?: string
+    updatedAt?: string
+  }>({
+    status: "none",
+  })
 
   useEffect(() => {
     const checkAccess = async () => {
-      if (!user) return
+      if (!user) {
+        setLoading(false)
+        return
+      }
 
       try {
+        // 1. 检查权限
         let result = false
-        
-        // 如果是模板资源且指定了角色，使用模板特定的权限检查
         if (resourceType === "template" && role) {
           result = await hasTemplatePermission(resourceId, role, user)
         } else {
-          // 其他资源使用通用权限检查
           result = await hasPermission(resourceType, resourceId, user)
         }
-        
+
+        if (!result) {
+          // 2. 如果没有权限，检查是否有申请在处理中
+          const request = await checkPermissionRequestStatus(resourceType, resourceId, user.id)
+          if (request) {
+            setRequestStatus({
+              status: request.status,
+              requestId: request.id,
+              createdAt: request.createdAt,
+              updatedAt: request.updatedAt,
+            })
+          } else {
+            setRequestStatus({ status: "none" })
+          }
+        }
+
         setHasAccess(result)
       } catch (error) {
         console.error("Permission check failed:", error)
         setHasAccess(false)
+        setRequestStatus({ status: "none" })
       } finally {
         setLoading(false)
       }
@@ -53,6 +78,7 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
     }
   }, [resourceId, user, userLoading, resourceType, role])
 
+  // 处理加载状态
   if (userLoading || loading) {
     return (
       <div className='flex items-center justify-center p-4'>
@@ -61,9 +87,32 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
     )
   }
 
+  // 处理未登录状态
   if (!user) {
     return <>{fallback}</>
   }
 
-  return hasAccess ? <>{children}</> : <>{fallback}</>
+  // 如果有权限，显示子组件
+  if (hasAccess) {
+    return <>{children}</>
+  }
+
+  // 如果没有权限，根据申请状态显示不同内容
+  if (requestStatus.status !== "none") {
+    // 将申请状态传递给 fallback 组件
+    const unauthorizedParams = new URLSearchParams({
+      type: resourceType,
+      id: resourceId,
+      ...(role && { role }),
+      requestStatus: requestStatus.status,
+      ...(requestStatus.requestId && { requestId: requestStatus.requestId }),
+      ...(requestStatus.createdAt && { createdAt: requestStatus.createdAt }),
+      ...(requestStatus.updatedAt && { updatedAt: requestStatus.updatedAt }),
+    })
+
+    return <Navigate to={`/unauthorized?${unauthorizedParams.toString()}`} />
+  }
+
+  // 默认显示未授权页面
+  return <>{fallback}</>
 }

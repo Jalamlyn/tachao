@@ -1,5 +1,6 @@
 // import chatChunk from "../chat/chat-chunk-openai-office"
-import chatChunk from "../chat/chat-chunk-openai-azure"
+import chatChunk from "../chat/chat-chunk-claude-office"
+// import chatChunk from "../chat/chat-chunk-openai-azure"
 // import chatChunk from "../chat/chat-chunk-claude-horay"
 // import chatChunk from "../chat/chat-chunk-gemini-office"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
