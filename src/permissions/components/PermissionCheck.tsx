@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react"
 import { useCurrentUser } from "../hooks/useCurrentUser"
-import { checkPermissionRequestStatus, hasPermission, hasTemplatePermission } from "../utils/permissionUtils"
+import { checkPermissionRequestStatus, hasPermission, hasTemplatePermission, subscriptionService } from "../utils/permissionUtils"
 import { Spinner } from "@nextui-org/react"
 import { Navigate } from "react-router-dom"
 import { ResourceType, TemplatePermissionRole } from "../types"
+import message from "@/components/Message"
 
 interface PermissionCheckProps {
   resourceType: ResourceType
@@ -40,7 +41,23 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
       }
 
       try {
-        // 1. 检查权限
+        // 1. 检查订阅状态
+        const subscriptionStatus = await subscriptionService.checkSubscriptionStatus(user.organizationId)
+        if (subscriptionStatus.status === 'expired') {
+          message.warning('组织订阅已过期，请续费')
+          setHasAccess(false)
+          setLoading(false)
+          return
+        }
+
+        // 2. 检查账号类型权限
+        if (user.name.startsWith('wb_') && resourceType === 'page') {
+          setHasAccess(false)
+          setLoading(false)
+          return
+        }
+
+        // 3. 检查具体权限
         let result = false
         if (resourceType === "template" && role) {
           result = await hasTemplatePermission(resourceId, role, user)
@@ -49,7 +66,7 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
         }
 
         if (!result) {
-          // 2. 如果没有权限，检查是否有申请在处理中
+          // 4. 如果没有权限，检查是否有申请在处理中
           const request = await checkPermissionRequestStatus(resourceType, resourceId, user.id)
           if (request) {
             setRequestStatus({
