@@ -24,13 +24,18 @@ export const renderSaveModal = (
               <div className='p-4 border rounded-lg bg-gray-50'>
                 <h3 className='font-medium mb-2'>创建新表单</h3>
                 <p className='text-sm text-gray-500 mb-4'>使用这个模板立即创建一个新的表单，开始记录您的业务数据。</p>
-                <Button
-                  color='primary'
-                  onClick={handleCreateDocument}
-                  startContent={<Icon icon='mdi:file-document-plus' className='w-4 h-4' />}
-                >
-                  创建表单
-                </Button>
+                <div className='flex gap-1'>
+                  <Button
+                    color='primary'
+                    onClick={handleCreateDocument}
+                    startContent={<Icon icon='mdi:file-document-plus' className='w-4 h-4' />}
+                  >
+                    创建表单
+                  </Button>
+                  <Button color='secondary' onClick={handleCreateDocument}>
+                    去应用中使用表单模板
+                  </Button>
+                </div>
               </div>
               <div className='p-4 border rounded-lg'>
                 <h3 className='font-medium mb-2'>返回模板管理</h3>
