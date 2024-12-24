@@ -140,5 +140,5 @@ export const extractShataAICode = (content: string) => {
   if (match) {
     return match[1].trim()
   }
-  return null
+  return content
 }

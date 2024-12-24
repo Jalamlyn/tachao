@@ -27,14 +27,19 @@ export default ({ data, React, AnalysisResult }) => {
 }
 
 ✅ 正确格式 - 必须使用这种格式：
-export default () => {
+export default (props) => {
   // 正确：这些依赖都是通过上下文注入的
   const analysis = {
     type: 'analyze',
     data: data,
-    analysis: {...}
+    analysis: {
+      summary (统计摘要)
+      charts (图表)
+      insights (洞察)
+      tables  (表格)
+    }
   }
-  return <AnalysisResult analysis={analysis} />
+  return <AnalysisResult {...props} analysis={analysis} />
 }
 
 4. 重要说明：
@@ -92,33 +97,6 @@ React.useEffect(() => {}, [])
   if (existingConfig) {
     promptParts.push(generateExistingConfigPrompt(existingConfig))
   }
-
-  promptParts.push(`
-请使用 <shata-ai-code> 标签包裹你生成的代码,直接返回可执行的 React 组件代码。
-注意: 
-1. 必须使用 export default () => {} 格式
-2. 必须返回 AnalysisResult 组件
-3. 确保分析配置包含必要的字段
-4. 统计结果必须包含数据源信息
-5. 不要使用注释省略任何代码
-6. 生成完整的可执行代码
-
-分析流程：
-1. 首先进行场景识别 <shata-ai-scene>
-2. 然后进行思考过程 <shata-ai-think>
-3. 必要时进行反思 <shata-ai-reflection>
-4. 最后返回下列结构的代码
-\`\`\`mo
-<shata-ai-code>
-export default () => {
-  // 组件实现
-  return <AnalysisResult analysis={...} />
-}
-</shata-ai-code>
-\`\`\`
-
-请确保完整执行以上流程，保证分析的质量和可靠性。
-`)
 
   return promptParts.join("\n\n")
 }

@@ -4,6 +4,7 @@ import ErrorBoundary from "./ErrorBoundary"
 import { Spinner } from "@nextui-org/react"
 import AnalysisResult from "@/pages/report-management/components/AnalysisResult"
 import { processReportData } from "@/utils/processReportData"
+import { extractShataAICode } from "@/utils/generateColumns"
 
 interface DynamicReportRendererProps {
   title: string
@@ -39,7 +40,8 @@ export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ ti
 
         // 1. 转换代码
         const _code = code.replace("```", "")
-        const { code: transformedCode } = transform(_code, {
+        const code_ = extractShataAICode(_code)!
+        const { code: transformedCode } = transform(code_, {
           presets: ["react"],
         })
         const __code = transformedCode.replace(/export default/, "return")

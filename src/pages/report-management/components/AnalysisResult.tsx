@@ -7,6 +7,7 @@ import { Tabs, Tab, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { MultiSourceAnalysisResult } from "../types"
 import { useSwipeable } from "react-swipeable"
+import FilterPanel from "./FilterPanel"
 
 // 空状态组件
 const EmptyState: React.FC = () => {
@@ -40,7 +41,13 @@ const EmptyState: React.FC = () => {
 }
 
 interface AnalysisResultProps {
-  analysis?: MultiSourceAnalysisResult["analysis"]
+  analysis?: MultiSourceAnalysisResult["analysis"] & {
+    filters?: {
+      options: FilterOptions
+      current: any
+      onFilterChange: (filters: any) => void
+    }
+  }
   title?: string
   reportId?: string
   lastUpdated?: string
@@ -53,8 +60,9 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
   if (!analysis) {
     return <EmptyState />
   }
-  debugger
+  const { filters } = analysis
   const { summary, charts = [], insights = [], tables = [] } = analysis.analysis
+
   // 动画变体配置
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -99,7 +107,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
     onSwipedRight: handlePrevChart,
     preventDefaultTouchmoveEvent: true,
   })
-
+  // debugger
   return (
     <motion.div
       variants={containerVariants}
@@ -145,6 +153,13 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
               </div>
             </CardHeader>
           </Card>
+        </motion.div>
+      )}
+
+      {/* 筛选器面板 */}
+      {filters && (
+        <motion.div variants={itemVariants}>
+          <FilterPanel options={filters.options} current={filters.current} onFilterChange={filters.onFilterChange} />
         </motion.div>
       )}
 

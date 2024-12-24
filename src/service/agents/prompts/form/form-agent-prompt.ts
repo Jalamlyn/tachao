@@ -161,7 +161,6 @@ export default (props) => {
    - 组件名必须是 CustomForm`
 
   // 资料映射提示词
-  debugger
   const resourceMappingPrompt =
     resources.length > 0
       ? `

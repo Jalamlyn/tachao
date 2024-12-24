@@ -176,6 +176,7 @@ const AIReportEditor: React.FC = () => {
               }}
             >
               <DynamicReportRenderer
+                title='AI 报表预览'
                 code={result.rawConfig}
                 rawData={{
                   formData: reportData,
@@ -268,7 +269,6 @@ const AIReportEditor: React.FC = () => {
       {reportId ? "更新报表" : "保存报表"}
     </Button>
   )
-
   return (
     <PageLayout title='AI 报表开发' titleIcon='mdi:form-select' className='p-0' actions={pageActions}>
       <AIEditor

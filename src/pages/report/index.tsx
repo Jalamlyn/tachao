@@ -32,7 +32,6 @@ const Report: React.FC = () => {
         if (!reportDetail?.data?.rawConfig) {
           throw new Error("报表配置不存在")
         }
-        debugger
         setReportTitle(reportDetail.title)
         setReportConfig(reportDetail.data.rawConfig)
 

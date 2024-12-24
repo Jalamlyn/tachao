@@ -84,7 +84,6 @@ const AIEditor: React.FC<AIEditorProps> = ({
         config: parsedConfig.config,
         rawConfig: wrappedCode,
       })
-
       setIsEditing(false)
       message.success("保存成功")
     } catch (error) {

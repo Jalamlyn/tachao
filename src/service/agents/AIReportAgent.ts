@@ -65,12 +65,11 @@ export class AIReportAgent {
       const systemPrompt = generateSystemPrompt({
         data: data.originalData,
         doc,
-        existingConfig: rawConfig,
         templateInfoMap: this._templateInfoMap,
       })
 
-      const enhancedCommand = `${command}
-      [回答策略:
+      // 在 processCommand 方法中
+      const basePrompt = `[回答策略:
         * 对于报表直接相关问题：提供具体解决方案
         * 对于业务相关问题：进行分析并给出建议
         * 对于间接相关问题：提供参考信息和最佳实践
@@ -84,6 +83,9 @@ export class AIReportAgent {
         \`\`\` 
         包裹, 必须返回完整代码, 不要使用注释来省略任何代码或逻辑]`
 
+      const enhancedCommand = rawConfig
+        ? `基于以下现有代码进行修改或优化：\n${rawConfig}\n\n用户指令：${command}\n${basePrompt}`
+        : `创建新的分析报表：\n${command}\n${basePrompt}`
       const messages: Message[] = [
         { role: "system", content: systemPrompt },
         { role: "user", content: enhancedCommand },
