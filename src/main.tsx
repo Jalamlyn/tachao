@@ -8,16 +8,17 @@ import "./styles/github-markdown.css"
 import { Toaster } from "sonner"
 import "./i18n"
 import "./tools"
-import { configure } from 'mobx'
-import { StoreProvider } from './stores/StoreProvider'
+import { configure } from "mobx"
+import { StoreProvider } from "./stores/StoreProvider"
+import RechargeModal from "./components/RechargeModal"
 
 // 配置 MobX
 configure({
-  enforceActions: 'observed',
+  enforceActions: "observed",
   computedRequiresReaction: true,
   reactionRequiresObservable: true,
-  observableRequiresReaction: true
-});
+  observableRequiresReaction: true,
+})
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   // <React.StrictMode>
@@ -26,6 +27,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <Provider>
         <App />
         <Toaster position='top-center' expand={true} richColors closeButton></Toaster>
+        <RechargeModal></RechargeModal>
       </Provider>
     </StoreProvider>
   </BrowserRouter>

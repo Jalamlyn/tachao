@@ -57,7 +57,6 @@ export const getFormAgent = (
         content: error.message || "生成过程中发生错误",
         status: "error",
       })
-      message.error("生成过程中发生错误")
       currentMessageIdRef.current = null
       throw error
     }

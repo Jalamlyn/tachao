@@ -71,7 +71,7 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
       const permissionResult = await getMetadata([PERMISSION_REQUESTS_KEY])
       const permissionRequests = JSON.parse(permissionResult.data?.[0]?.value || "{}")
       const templateIndex = await getMetadata(["template_index"])
-      const templateIndexData = jsonParse(templateIndex.data[0].value)
+      const templateIndexData = jsonParse(templateIndex.data?.[0]?.value || "[]")
 
       const permissionTasks = Object.values(permissionRequests).map((request: any) => {
         let template = {}

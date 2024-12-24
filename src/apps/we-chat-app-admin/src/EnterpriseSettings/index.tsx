@@ -6,21 +6,31 @@ import PageLayout from "@/components/PageLayout"
 import SystemInfo from "./SystemInfo"
 import AccountFinance from "./AccountFinance"
 import { useEffect } from "react"
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 
 const EnterpriseSettings = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const defaultTab = searchParams.get('tab') || 'accounts'
+  const defaultTab = searchParams.get("tab") || "accounts"
+  const { updateBreadcrumbs } = useBreadcrumb()
 
   // 处理 tab 变化
   const handleTabChange = (key: string) => {
-    navigate(`/enterprise-settings?tab=${key}`, { replace: true })
+    navigate(`/we-chat-app/admin/settings?tab=${key}`, { replace: true })
   }
+
+  useEffect(() => {
+    // 更新面包屑
+    updateBreadcrumbs([
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "企业设置", href: "/we-chat-app/admin/settings" },
+    ])
+  }, [])
 
   // 初始化时设置默认 tab
   useEffect(() => {
-    if (!searchParams.get('tab')) {
-      navigate(`/enterprise-settings?tab=accounts`, { replace: true })
+    if (!searchParams.get("tab")) {
+      navigate(`/we-chat-app/admin/settings?tab=accounts`, { replace: true })
     }
   }, [])
 
@@ -28,7 +38,7 @@ const EnterpriseSettings = () => {
     <PageLayout title='企业设置' titleIcon='solar:settings-outline'>
       <Card>
         <CardBody>
-          <Tabs 
+          <Tabs
             aria-label='企业设置选项'
             selectedKey={defaultTab}
             onSelectionChange={(key) => handleTabChange(key as string)}

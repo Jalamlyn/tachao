@@ -29,7 +29,6 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
       setInput("")
     } catch (error) {
       console.error("Error in AI command:", error)
-      message.error("处理指令时发生错误")
     } finally {
       setIsLoading(false)
     }

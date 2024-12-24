@@ -19,7 +19,6 @@ import {
   Chip,
   Tooltip,
   Spinner,
-  ScrollShadow,
 } from "@nextui-org/react"
 import { PlusIcon, EditIcon, DeleteIcon, UserPlusIcon, EyeIcon } from "lucide-react"
 import {
@@ -55,7 +54,6 @@ const AccountManagement: React.FC = () => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "企业设置", href: "/we-chat-app/admin/settings" },
-      { label: "账号管理", href: "/we-chat-app/admin/settings#accounts" },
     ])
   }, [])
 

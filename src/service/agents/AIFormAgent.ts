@@ -8,9 +8,7 @@ import { imageStore } from "@/components/AIEditor/components/ImageStore"
 import { excelStore } from "@/components/AIEditor/components/excelStore"
 import { markdown as guide } from "@/components/common/DynamicForm/ui-doc/guide.md"
 import { extractShataAIFormContent } from "@/components/AIEditor"
-import globalStore from "@/globalStore"
-import { balanceStore } from '@/stores/balanceStore'
-import { message } from '@/components/Message'
+import { balanceStore } from "@/stores/balanceStore"
 
 export class AIFormAgent {
   private static instance: AIFormAgent
@@ -66,9 +64,9 @@ export class AIFormAgent {
     rawConfig?: string
   ): Promise<{ success: boolean; config?: DynamicFormConfig; rawConfig?: string }> {
     if (!balanceStore.checkBalance()) {
-      throw new Error("余额不足，请前往企业设置-账户进行充值");
+      throw new Error("余额不足，请前往企业设置-账户进行充值")
     }
-    
+
     if (rawConfig) {
       this.setRawConfig(rawConfig)
     }

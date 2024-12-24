@@ -8,12 +8,12 @@ const RechargeModal = observer(() => {
   const { balanceStore } = useStore()
   const [productList, setProductList] = useState([])
   const [selectedProduct, setSelectedProduct] = useState(null)
-  const [quantity, setQuantity] = useState(10)
+  const [quantity, setQuantity] = useState(9.9)
   const [paymentForm, setPaymentForm] = useState("")
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
 
   // 快速选择金额选项
-  const quickSelectAmounts = [10, 20, 50, 100]
+  const quickSelectAmounts = [19.9, 49.9, 99.9]
 
   useEffect(() => {
     fetchProducts()
@@ -99,7 +99,7 @@ const RechargeModal = observer(() => {
                       <span className='font-medium'>自定义数量: </span>
                       <Input
                         type='number'
-                        min={10}
+                        min={9.9}
                         step={1}
                         value={quantity}
                         onChange={(e) => setQuantity(Number(e.target.value))}
@@ -113,15 +113,15 @@ const RechargeModal = observer(() => {
                   </div>
                 </div>
               </ModalBody>
-              <ModalFooter className="flex flex-col gap-4">
+              <ModalFooter className='flex flex-col gap-4'>
                 {/* 添加支付提示信息 */}
-                <div className="w-full p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-yellow-800 text-sm flex items-center">
-                    <span className="font-medium">温馨提示：</span>
-                    <span className="ml-1">支付完成后，请刷新页面查看最新余额</span>
+                <div className='w-full p-3 bg-yellow-50 border border-yellow-200 rounded-lg'>
+                  <p className='text-yellow-800 text-sm flex items-center'>
+                    <span className='font-medium'>温馨提示：</span>
+                    <span className='ml-1'>支付完成后，请刷新页面查看最新余额</span>
                   </p>
                 </div>
-                <div className="flex justify-end w-full gap-2">
+                <div className='flex justify-end w-full gap-2'>
                   <Button color='danger' variant='light' onClick={onClose}>
                     取消
                   </Button>
@@ -145,10 +145,10 @@ const RechargeModal = observer(() => {
               </ModalHeader>
               <ModalBody>
                 {/* 添加支付iframe上方的提示 */}
-                <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-yellow-800 flex items-center">
-                    <span className="font-medium">重要提示：</span>
-                    <span className="ml-1">完成支付后，请刷新页面以查看最新的账户余额</span>
+                <div className='mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg'>
+                  <p className='text-yellow-800 flex items-center'>
+                    <span className='font-medium'>重要提示：</span>
+                    <span className='ml-1'>完成支付后，请刷新页面以查看最新的账户余额</span>
                   </p>
                 </div>
                 <iframe

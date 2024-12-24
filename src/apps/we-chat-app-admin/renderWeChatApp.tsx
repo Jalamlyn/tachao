@@ -14,7 +14,6 @@ import AIReportEditor from "@/pages/report-management/AIReportEditor"
 import Dashboard from "@/apps/we-chat-app-admin/src/Dashboard"
 import AppManagement from "@/pages/app-management"
 import PendingTasks from "@/pages/pending-tasks"
-import FormTemplateSelect from "@/pages/form-temp-manager/components/FormTemplateSelect"
 import FileManager from "@/apps/we-chat-app-admin/src/FileManager"
 import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 
