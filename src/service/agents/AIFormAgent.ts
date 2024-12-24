@@ -66,7 +66,7 @@ export class AIFormAgent {
     rawConfig?: string
   ): Promise<{ success: boolean; config?: DynamicFormConfig; rawConfig?: string }> {
     if (!balanceStore.checkBalance()) {
-      throw new Error("余额不足");
+      throw new Error("余额不足，请前往企业设置-账户进行充值");
     }
     
     if (rawConfig) {

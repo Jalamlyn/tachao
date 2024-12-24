@@ -16,25 +16,21 @@ class BalanceStore {
     this.actualBalance = balance;
     // 同步到 globalStore，保持兼容性
     globalStore.actualBalance = balance;
-    
-    // 当余额小于 0.1 时自动显示充值弹窗
-    if (this.actualBalance < 0.1) {
-      this.showRechargeModal(true);
-    }
   }
 
   showRechargeModal(showConfirm = true) {
     if (showConfirm) {
+      // 保留原有的确认框逻辑，以保持兼容性
       message.confirm({
         title: '余额不足提醒',
         content: (
           <div className="space-y-2">
             <p>当前账户余额不足，无法继续使用。</p>
-            <p>是否立即充值？</p>
+            <p>是否前往充值页面？</p>
           </div>
         ),
         onOk: () => {
-          this.isRechargeModalOpen = true;
+          window.location.href = '/enterprise-settings?tab=finance';
         },
         okText: '去充值',
         cancelText: '取消'
@@ -53,10 +49,10 @@ class BalanceStore {
   checkBalance(): boolean {
     const hasEnoughBalance = this.actualBalance >= 0.1;
     if (!hasEnoughBalance) {
-      message.error('余额不足，请充值后继续使用');
+      message.error('余额不足，请前往企业设置-账户进行充值');
       setTimeout(() => {
-        this.showRechargeModal(true);
-      }, 100);
+        window.location.href = '/enterprise-settings?tab=finance';
+      }, 1500); // 延迟跳转，让用户能看到提示消息
     }
     return hasEnoughBalance;
   }
