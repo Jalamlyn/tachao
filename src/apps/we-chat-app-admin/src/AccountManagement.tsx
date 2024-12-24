@@ -19,6 +19,8 @@ import {
   Chip,
   Tooltip,
   Spinner,
+  Radio,
+  RadioGroup,
 } from "@nextui-org/react"
 import { PlusIcon, EditIcon, DeleteIcon, UserPlusIcon, EyeIcon } from "lucide-react"
 import {
@@ -32,13 +34,18 @@ import {
 } from "@/service/apis/api"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { queryMyProject, addProjectMember } from "@/service/apis/project"
+import { subscriptionService } from "@/permissions/utils/permissionUtils"
+import message from "@/components/Message"
+import { useStore } from "@/stores/StoreProvider"
 
 const AccountManagement: React.FC = () => {
+  const { balanceStore } = useStore()
   const [accounts, setAccounts] = useState([])
   const [roles, setRoles] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedAccount, setSelectedAccount] = useState(null)
   const [accountDetail, setAccountDetail] = useState(null)
+  const [subscription, setSubscription] = useState(null)
   const { isOpen: isCreateModalOpen, onOpen: onCreateModalOpen, onClose: onCreateModalClose } = useDisclosure()
   const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure()
   const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
@@ -49,6 +56,7 @@ const AccountManagement: React.FC = () => {
   useEffect(() => {
     fetchAccounts()
     fetchRoles()
+    fetchSubscription()
 
     // 更新面包屑
     updateBreadcrumbs([
@@ -56,6 +64,15 @@ const AccountManagement: React.FC = () => {
       { label: "企业设置", href: "/we-chat-app/admin/settings" },
     ])
   }, [])
+
+  const fetchSubscription = async () => {
+    try {
+      const data = await subscriptionService.getSubscription(balanceStore.organizationId)
+      setSubscription(data)
+    } catch (error) {
+      console.error("Failed to fetch subscription", error)
+    }
+  }
 
   const fetchAccounts = async () => {
     setIsLoading(true)
@@ -80,8 +97,28 @@ const AccountManagement: React.FC = () => {
 
   const handleCreateAccount = async (values) => {
     try {
+      // 检查账号类型和限制
+      if (values.type === 'nb') {
+        if (!subscription || subscription.type === 'personal') {
+          message.error('个人版不能创建内部账号，请升级到企业版')
+          return
+        }
+
+        const nbAccounts = accounts.filter(acc => acc.name.startsWith('nb_'))
+        if (nbAccounts.length >= subscription.features.nbAccountLimit) {
+          message.error(`已达到内部账号数量限制(${subscription.features.nbAccountLimit}个)`)
+          return
+        }
+      }
+
+      // 设置账号名称前缀
+      const accountName = values.type === 'nb' ? `nb_${values.name}` : `wb_${values.name}`
+
       // 创建账号
-      const accountRes = await createRamAccount(values)
+      const accountRes = await createRamAccount({
+        ...values,
+        name: accountName
+      })
 
       // 查询默认企业项目
       const projectRes = await queryMyProject({ name: "默认企业项目" })
@@ -95,10 +132,26 @@ const AccountManagement: React.FC = () => {
         })
       }
 
+      // 更新账号使用记录
+      await subscriptionService.updateAccountUsage(balanceStore.organizationId, {
+        organizationId: balanceStore.organizationId,
+        accounts: [
+          ...accounts,
+          {
+            accountId: accountRes.id,
+            name: accountName,
+            type: values.type,
+            createdAt: new Date().toISOString()
+          }
+        ]
+      })
+
       onCreateModalClose()
       fetchAccounts()
+      message.success('账号创建成功')
     } catch (error) {
       console.error("Failed to create account or add to project", error)
+      message.error('创建账号失败')
     }
   }
 
@@ -142,14 +195,30 @@ const AccountManagement: React.FC = () => {
     }
   }
 
+  const getAccountTypeChip = (name: string) => {
+    if (name === '管理员') {
+      return <Chip color="primary" variant="flat">管理员</Chip>
+    }
+    if (name.startsWith('nb_')) {
+      return <Chip color="secondary" variant="flat">内部账号</Chip>
+    }
+    if (name.startsWith('wb_')) {
+      return <Chip variant="flat">外部账号</Chip>
+    }
+    return null
+  }
+
   const columns = [
     { name: "名称", uid: "name" },
     { name: "账号", uid: "account" },
+    { name: "类型", uid: "type" },
     { name: "操作", uid: "actions" },
   ]
 
   const renderCell = (account, columnKey) => {
     switch (columnKey) {
+      case "type":
+        return getAccountTypeChip(account.name)
       case "actions":
         return (
           <div className='flex justify-center gap-2'>
@@ -251,6 +320,25 @@ const AccountManagement: React.FC = () => {
             >
               <ModalHeader className='flex flex-col gap-1'>创建账号</ModalHeader>
               <ModalBody>
+                <RadioGroup
+                  label="账号类型"
+                  name="type"
+                  orientation="horizontal"
+                  defaultValue="wb"
+                >
+                  <Radio value="nb">
+                    内部账号
+                    <span className="text-tiny text-default-400 ml-1">
+                      (企业员工)
+                    </span>
+                  </Radio>
+                  <Radio value="wb">
+                    外部账号
+                    <span className="text-tiny text-default-400 ml-1">
+                      (供应商/客户)
+                    </span>
+                  </Radio>
+                </RadioGroup>
                 <Input name='name' label='名称' required />
                 <Input name='account' label='账号' required />
                 <Input name='password' label='密码' type='password' required />
