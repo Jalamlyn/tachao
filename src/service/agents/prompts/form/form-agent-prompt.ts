@@ -161,6 +161,7 @@ export default (props) => {
    - 组件名必须是 CustomForm`
 
   // 资料映射提示词
+  debugger
   const resourceMappingPrompt =
     resources.length > 0
       ? `
@@ -305,9 +306,9 @@ ${doc}
 """
 
 我将按照以下格式的例子输出的方案：
-"""
+<分析模板>
 ${assetTemplatePrompt}
-"""
+</分析模板>
 只有在用户确认需求分析准确后，我才会进入代码生成阶段。如果分析过程中发现问题或需要澄清的地方，我会优先提出问题，等待用户反馈。`
 }
 

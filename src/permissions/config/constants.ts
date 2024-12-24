@@ -13,7 +13,7 @@ export const PERMISSION_LABELS = {
 } as const
 
 export const PERMISSION_DESCRIPTIONS = {
-  [PERMISSION_ROLES.CREATOR]: "创建权限（包含编辑和查看权限）",
+  [PERMISSION_ROLES.CREATOR]: "填写新表单权限（包含编辑和查看权限）",
   [PERMISSION_ROLES.EDITOR]: "编辑权限（包含查看权限）",
   [PERMISSION_ROLES.VIEWER]: "查看权限"
 } as const

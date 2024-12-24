@@ -139,9 +139,7 @@ const AccountFinance = () => {
                       }`}
                       onClick={() => setSelectedProduct(product)}
                     >
-                      <span className='font-medium text-default-700'>
-                        {product.name} / {product.price}元
-                      </span>
+                      <span className='font-medium text-default-700'>塔币 / 1元</span>
                     </div>
                   ))}
                   <div className='flex flex-col gap-4'>

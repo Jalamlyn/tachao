@@ -24,6 +24,13 @@ const formConfig = {
           icon: "mdi:account",
           fields: [
             {
+              name: "id",
+              label: "员工ID",
+              type: "orderNumber",
+              placeholder: "自动生成",
+              disabled: true,
+            },
+            {
               name: "name",
               label: "姓名",
               type: "text",

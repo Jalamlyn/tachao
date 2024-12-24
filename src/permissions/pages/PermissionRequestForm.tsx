@@ -73,7 +73,6 @@ const PermissionRequestForm = ({
           finalRole = [selectedRole]
         }
       }
-      debugger
       await createPermissionRequest({
         resourceType: resourceType as ResourceType,
         resourceId,

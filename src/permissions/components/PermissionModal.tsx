@@ -168,14 +168,14 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
         <div className='text-small font-medium'>选择权限：</div>
         <div className='gap-2'>
           <Checkbox isSelected={selectedRoles.includes("creator")} onValueChange={() => handleRoleChange("creator")}>
-            创建权限（包含编辑和查看权限）
+            完整权限（包含填写新表单和编辑/查看已填写表单的权限）
           </Checkbox>
           <Checkbox
             isSelected={selectedRoles.includes("editor")}
             onValueChange={() => handleRoleChange("editor")}
             isDisabled={selectedRoles.includes("creator")}
           >
-            编辑权限（包含查看权限）
+            填写已有表单的权限（包含查看已有表单的权限）
           </Checkbox>
           <Checkbox
             isSelected={selectedRoles.includes("viewer")}

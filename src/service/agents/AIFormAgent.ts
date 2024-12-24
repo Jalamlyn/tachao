@@ -77,23 +77,12 @@ export class AIFormAgent {
 
       const systemMessage = {
         role: "system" as const,
-        content: generateFormAgentPrompt(
-          this._rawConfig,
-          cachedImages.length > 0,
-          result.data?.[0]?.value,
-          cachedExcel
-        ),
+        content: generateFormAgentPrompt(cachedImages.length > 0, result.data?.[0]?.value, cachedExcel),
       }
 
-      const enhancedCommand = `在这份代码"""
+      const enhancedCommand = `在这份代码<code>
       ${this._rawConfig}
-      """上继续修改实现我的需求或者回答我的问题"""${command}"""如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码,类似这种返回
-      """
-      const formConfig = {
-      // ... 保持原有配置不变 ...
-      watch: (form) => {
-      """
-      都是错误的, 会导致代码无法运行, 不允许用注释省略代码, 如果修改很简单, 可以返回修改的片段指导用户手动修改, 生成的结果中只能包含一份<shata-ai-code>, 然后代码必须用
+      </code>上继续修改实现我的需求或者回答我的问题<input>${command}</input>如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码, 不允许用注释省略代码, 如果修改很简单, 可以返回修改的片段指导用户手动修改, 生成的结果中只能包含一份<shata-ai-code>, 然后代码必须用
       \`\`\`mo
       <shata-ai-code>
         ...你生成的代码

@@ -169,7 +169,6 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
         // 处理权限申请
         const result = await getMetadata([PERMISSION_REQUESTS_KEY])
         const requests = JSON.parse(result.data?.[0]?.value || "{}")
-        debugger
         if (requests[taskId]) {
           const request = requests[taskId]
           request.status = status

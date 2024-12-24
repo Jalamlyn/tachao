@@ -30,7 +30,7 @@ const AIFormEditor: React.FC = () => {
   const location = useLocation()
   const { templateId } = useParams<{ templateId: string }>()
   const { templateTitle, templateDescription, promptTemplate } = location.state || {}
-  const isEditMode = !location.pathname.includes("/create/")
+  const isEditMode = !location.pathname.includes("/create")
   const { updateBreadcrumbs } = useBreadcrumb()
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(false)
 

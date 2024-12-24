@@ -64,19 +64,10 @@ export default async function chatChunkClaudeOffice(
   onCancel,
   isFirst = true,
   temperature = 0,
-  overFlag = "YES",
-  baseModel = "claude::claude-3-5-haiku-20241022"
+  overFlag = "YES"
 ) {
-  const [provider, model] = baseModel.split("::")
-  const modelSupplierData = localDB.getItem("model-supplier-data") || []
-  const supplierInfo = modelSupplierData.find((supplier) => supplier.id === provider) || "claude"
-
-  if (!supplierInfo) {
-    throw new Error(`未找到服务商信息：${provider}`)
-  }
-
+  const model = sessionStorage.getItem("aiLevel") || "ADVANCED"
   const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-claude-office"
-
   let _messages
   if (isFirst) {
     _messages = messages.map((msg, index) => {
@@ -197,7 +188,7 @@ export default async function chatChunkClaudeOffice(
             const inputCost = calculateClaudeCost(totalInputTokens, true, model)
             const outputCost = calculateClaudeCost(outputTokens, false, model)
 
-            // 记录成本
+            // 记录成本 
             try {
               const costRecords = await getMetadata(["ai-cost-records"])
               const existingRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []

@@ -32,8 +32,7 @@ export default function renderWeChatApp() {
       <Route path='settings' element={<EnterpriseSettings />} />
       <Route path='documents' element={<FormTempManager />} />
       <Route path='forms' element={<FormManager />} />
-      <Route path='documents/create' element={<FormTemplateSelect />} />
-      <Route path='documents/create/:templateId' element={<AIFormEditor />} />
+      <Route path='documents/create' element={<AIFormEditor />} />
       <Route path='documents/edit/:templateId' element={<AIFormEditor />} />
       <Route path='documents/data/:templateId' element={<FormDataManager />} />
       <Route path='form-preview/:templateId' element={<FormPreview />} />

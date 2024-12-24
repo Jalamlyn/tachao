@@ -1,4 +1,4 @@
-```ts
+````ts
 /**
  * @fileoverview 基础类型定义
  * @description 定义了DynamicForm支持的所有基础类型
@@ -65,6 +65,7 @@ export type FormFieldType =
   | "upload"
   | "clockIn"
   | "location"
+  | "orderNumber"
 
 /**
  * 手动输入字段类型
@@ -109,4 +110,4 @@ export interface FormMetadata {
     print?: boolean
   }
 }
-```
+````
