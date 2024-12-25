@@ -8,6 +8,11 @@ import { useEffect, useState } from "react"
 import { Spinner } from "@nextui-org/react"
 import { preloadBabel, preloadTokenizer } from "./utils/moduleLoader"
 import EnterpriseInitializer from "./components/EnterpriseInitializer"
+import { getAccount } from "./service/apis/pay"
+import { getMetadata } from "./service/apis/metadata"
+import { useStore } from "./stores/StoreProvider"
+import globalStore from "./globalStore"
+import { observer } from "mobx-react-lite"
 
 const preloadModules = async () => {
   let retryCount = 0
@@ -37,18 +42,58 @@ const preloadModules = async () => {
   })
 }
 
-export function Provider({ children }: { children: React.ReactNode }) {
+// 计算实际可用余额
+const calculateActualBalance = async () => {
+  try {
+    // 获取账户信息
+    const accountRes = await getAccount()
+    if (!accountRes?.totalComputePower) {
+      return 0
+    }
+
+    // 获取费用记录
+    const costRecords = await getMetadata(["ai-cost-records"])
+    const records = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
+    
+    // 计算总费用
+    const totalCost = records.reduce((sum, record) => sum + (record.totalCost || 0), 0)
+    
+    // 计算实际余额
+    const actualBalance = accountRes.totalComputePower / 100 - totalCost
+    
+    return Math.max(0, actualBalance)
+  } catch (error) {
+    console.error("Error calculating actual balance:", error)
+    return 0
+  }
+}
+
+export const Provider = observer(({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate()
   const darkMode = useDarkMode(false)
   const [isInit, setIsInit] = useState(false)
   const [modulesLoaded, setModulesLoaded] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(true)
   const [showInitializer, setShowInitializer] = useState(false)
+  const { balanceStore } = useStore()
 
   const handleInitializationSuccess = () => {
     setShowInitializer(false)
     setIsInit(true)
   }
+
+  // 初始化余额
+  useEffect(() => {
+    const initBalance = async () => {
+      const actualBalance = await calculateActualBalance()
+      balanceStore.setActualBalance(actualBalance)
+      globalStore.actualBalance = actualBalance
+    }
+
+    if (isInit && !location.pathname.includes("/login")) {
+      initBalance()
+    }
+  }, [isInit])
 
   const checkInitialization = async () => {
     try {
@@ -76,7 +121,6 @@ export function Provider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error("Initialization check failed:", error)
-      // setShowInitializer(true)
     }
   }
 
@@ -157,4 +201,4 @@ export function Provider({ children }: { children: React.ReactNode }) {
       </main>
     </NextUIProvider>
   )
-}
+})

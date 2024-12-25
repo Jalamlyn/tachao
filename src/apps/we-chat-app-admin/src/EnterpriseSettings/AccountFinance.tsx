@@ -6,26 +6,27 @@ import CostRecords from "./CostRecords"
 import globalStore from "@/globalStore"
 import { observer } from 'mobx-react-lite'
 import { useStore } from '@/stores/StoreProvider'
+import { reaction } from 'mobx'
 
 const AccountFinance = observer(() => {
   const { balanceStore } = useStore()
   const [account, setAccount] = useState(null)
-  const [totalCost, setTotalCost] = useState(0)
-  const [actualBalance, setActualBalance] = useState(0)
+  const [actualBalance, setActualBalance] = useState(balanceStore.actualBalance)
 
   useEffect(() => {
     fetchAccountData()
-  }, [])
 
-  // 更新实际余额到 globalStore 和 balanceStore
-  useEffect(() => {
-    if (account?.totalComputePower) {
-      const actualBalance = account.totalComputePower / 100 - totalCost
-      globalStore.actualBalance = actualBalance
-      balanceStore.setActualBalance(actualBalance)
-      setActualBalance(actualBalance)
-    }
-  }, [account, totalCost])
+    // 监听余额变化
+    const disposer = reaction(
+      () => balanceStore.actualBalance,
+      (newBalance) => {
+        setActualBalance(newBalance)
+        globalStore.actualBalance = newBalance
+      }
+    )
+
+    return () => disposer()
+  }, [])
 
   const fetchAccountData = async () => {
     try {
@@ -37,7 +38,10 @@ const AccountFinance = observer(() => {
   }
 
   const handleTotalCostChange = (cost) => {
-    setTotalCost(cost)
+    const newBalance = account?.totalComputePower ? account.totalComputePower / 100 - cost : 0
+    balanceStore.setActualBalance(newBalance)
+    globalStore.actualBalance = newBalance
+    setActualBalance(newBalance)
   }
 
   const InfoItem = ({ label, value }) => (
@@ -68,7 +72,7 @@ const AccountFinance = observer(() => {
                 color='primary'
                 variant='flat'
                 startContent={<Icon icon='solar:card-recive-bold-duotone' />}
-                onClick={() => balanceStore.showRechargeModal(false)} // 直接显示充值窗口
+                onClick={() => balanceStore.showRechargeModal(false)}
               >
                 充值
               </Button>
