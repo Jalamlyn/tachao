@@ -1,27 +1,39 @@
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, forwardRef, useImperativeHandle } from "react"
 import { Card, CardBody, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@nextui-org/react"
 import { Pagination } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { getMetadata } from "@/service/apis/metadata"
 import { Select, SelectItem } from "@nextui-org/react"
+import { Chip } from "@nextui-org/react"
+import { Tooltip } from "@nextui-org/react"
 
-const CostRecords = ({ onTotalCostChange }) => {
+const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
   const [records, setRecords] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [recordsPerPage, setRecordsPerPage] = useState(10)
   const [showAll, setShowAll] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     fetchCostRecords()
   }, [])
 
+  useImperativeHandle(ref, () => ({
+    refresh: fetchCostRecords
+  }))
+
   const fetchCostRecords = async () => {
+    setIsLoading(true)
     try {
       const costRecords = await getMetadata(["ai-cost-records"])
       const parsedRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
       setRecords(parsedRecords)
+      return true
     } catch (error) {
       console.error("Error fetching cost records:", error)
+      return false
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -33,7 +45,6 @@ const CostRecords = ({ onTotalCostChange }) => {
 
   const totalCost = useMemo(() => {
     const cost = records.reduce((sum, record) => sum + record.totalCost, 0)
-    // 当总消费发生变化时，通知父组件
     onTotalCostChange?.(cost)
     return cost.toFixed(4)
   }, [records, onTotalCostChange])
@@ -61,6 +72,80 @@ const CostRecords = ({ onTotalCostChange }) => {
     { value: "all", label: "显示全部" },
   ]
 
+  const getRecordTypeChip = (type: string) => {
+    const typeConfig = {
+      token_usage: {
+        label: "Token 消费",
+        color: "secondary",
+        icon: "solar:chat-square-code-bold-duotone",
+      },
+      subscription: {
+        label: "套餐购买",
+        color: "primary",
+        icon: "solar:shield-star-bold-duotone",
+      },
+    }
+
+    const config = typeConfig[type] || {
+      label: "其他",
+      color: "default",
+      icon: "solar:card-transfer-bold-duotone",
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        <Icon icon={config.icon} className="text-lg" />
+        <Chip color={config.color} variant="flat">
+          {config.label}
+        </Chip>
+      </div>
+    )
+  }
+
+  const renderCostDetails = (record) => {
+    if (record.type === 'token_usage' && record.detail?.tokenUsage) {
+      const { tokenUsage } = record.detail
+      return (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-default-500">输入 Token:</span>
+            <span>{tokenUsage.promptTokenCount}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-default-500">输出 Token:</span>
+            <span>{tokenUsage.candidatesTokenCount}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-default-500">输入费用:</span>
+            <span>{tokenUsage.inputCost?.toFixed(4)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-default-500">输出费用:</span>
+            <span>{tokenUsage.outputCost?.toFixed(4)}</span>
+          </div>
+        </div>
+      )
+    }
+
+    if (record.type === 'subscription' && record.detail?.subscription) {
+      const { subscription } = record.detail
+      return (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-default-500">套餐:</span>
+            <span>{subscription.plan}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-default-500">时长:</span>
+            <span>{subscription.duration} 个月</span>
+          </div>
+        </div>
+      )
+    }
+
+    return <span className="text-default-400">-</span>
+  }
+
   return (
     <Card className='w-full'>
       <CardBody>
@@ -76,28 +161,40 @@ const CostRecords = ({ onTotalCostChange }) => {
             当前显示费用: <span className='font-medium text-default-800'>{currentPageCost} 塔币</span>
           </p>
         </div>
-        <Table aria-label='费用明细表'>
+        <Table 
+          aria-label='费用明细表'
+          isHeaderSticky
+          classNames={{
+            base: "max-h-[600px]",
+            table: "min-h-[400px]",
+          }}
+          isStriped
+        >
           <TableHeader>
             <TableColumn>时间</TableColumn>
-            <TableColumn>模型</TableColumn>
-            <TableColumn>输入Token</TableColumn>
-            <TableColumn>输出Token</TableColumn>
-            <TableColumn>输入费用(塔币)</TableColumn>
-            <TableColumn>输出费用(塔币)</TableColumn>
+            <TableColumn>类型</TableColumn>
+            <TableColumn>详情</TableColumn>
             <TableColumn>总费用(塔币)</TableColumn>
           </TableHeader>
-          <TableBody>
-            {currentRecords.map((record) => (
+          <TableBody 
+            items={currentRecords}
+            isLoading={isLoading}
+            loadingContent={
+              <div className="w-full h-[400px] flex items-center justify-center">
+                <Icon icon="line-md:loading-twotone-loop" className="w-8 h-8 text-primary" />
+              </div>
+            }
+          >
+            {(record) => (
               <TableRow key={record.id}>
                 <TableCell>{new Date(record.timestamp).toLocaleString()}</TableCell>
-                <TableCell>{record.model === "ADVANCED" ? "初级模型" : "高级模型"}</TableCell>
-                <TableCell>{record.promptTokenCount}</TableCell>
-                <TableCell>{record.candidatesTokenCount}</TableCell>
-                <TableCell>{record.inputCost?.toFixed(4)}</TableCell>
-                <TableCell>{record.outputCost?.toFixed(4)}</TableCell>
-                <TableCell>{record.totalCost?.toFixed(4)}</TableCell>
+                <TableCell>{getRecordTypeChip(record.type)}</TableCell>
+                <TableCell>{renderCostDetails(record)}</TableCell>
+                <TableCell>
+                  <span className="font-medium">{record.totalCost?.toFixed(4)}</span>
+                </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
         <div className='flex justify-between items-center px-4 py-3 bg-default-50 rounded-lg mt-4'>
@@ -140,6 +237,6 @@ const CostRecords = ({ onTotalCostChange }) => {
       </CardBody>
     </Card>
   )
-}
+})
 
 export default CostRecords

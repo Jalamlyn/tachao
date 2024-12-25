@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react"
-import { Card, CardBody, Button, Chip, Spinner } from "@nextui-org/react"
+import {
+  Card,
+  CardBody,
+  Button,
+  Chip,
+  Spinner,
+  Tooltip,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { getAccount } from "@/service/apis/pay"
 import CostRecords from "./CostRecords"
@@ -8,6 +15,7 @@ import { observer } from "mobx-react-lite"
 import { useStore } from "@/stores/StoreProvider"
 import { reaction } from "mobx"
 import { subscriptionService } from "@/permissions/utils/permissionUtils"
+import message from "@/components/Message"
 
 const AccountFinance = observer(() => {
   const { balanceStore } = useStore()
@@ -17,6 +25,8 @@ const AccountFinance = observer(() => {
   const [subscriptionStatus, setSubscriptionStatus] = useState(null)
   const [totalCost, setTotalCost] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const costRecordsRef = React.useRef(null)
 
   useEffect(() => {
     fetchAccountData()
@@ -58,9 +68,30 @@ const AccountFinance = observer(() => {
     }
   }
 
+  const handleRefresh = async () => {
+    if (isRefreshing) return
+    
+    setIsRefreshing(true)
+    const loadingId = message.loading("正在刷新数据...")
+    
+    try {
+      await Promise.all([
+        fetchAccountData(),
+        fetchSubscriptionData(),
+        costRecordsRef.current?.refresh(),
+      ])
+      message.closeLoading(loadingId, "success", "数据刷新成功")
+    } catch (error) {
+      console.error("Error refreshing data:", error)
+      message.closeLoading(loadingId, "error", "数据刷新失败")
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
   const handleSubscriptionAction = () => {
     // 处理购买/续费操作
-    balanceStore.showRechargeModal(true)
+    balanceStore.showRechargeModal(false)
   }
 
   const handleTotalCostChange = (cost: number) => {
@@ -93,14 +124,28 @@ const AccountFinance = observer(() => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-300px)]">
-        <Spinner size="lg" label="加载中..." />
+      <div className='flex items-center justify-center h-[calc(100vh-300px)]'>
+        <Spinner size='lg' label='加载中...' />
       </div>
     )
   }
 
   return (
     <div className='grid gap-6 p-4'>
+      <div className='flex justify-between items-center mb-4'>
+        <h2 className='text-xl font-bold'>账户费用</h2>
+        <Tooltip content="刷新数据">
+          <Button
+            isIconOnly
+            variant="light"
+            onPress={handleRefresh}
+            isLoading={isRefreshing}
+          >
+            <Icon icon="solar:refresh-circle-bold-duotone" className="w-6 h-6 text-default-600" />
+          </Button>
+        </Tooltip>
+      </div>
+
       <Card className='w-full'>
         <CardBody>
           <div className='flex items-center gap-2 mb-4'>
@@ -122,7 +167,7 @@ const AccountFinance = observer(() => {
                 startContent={<Icon icon='solar:card-recive-bold-duotone' />}
                 onClick={() => balanceStore.showRechargeModal(false)}
               >
-                充值
+                充值购买套餐
               </Button>
             </div>
           </div>
@@ -152,7 +197,6 @@ const AccountFinance = observer(() => {
             </div>
           ) : (
             <div className='text-center py-6'>
-              <Icon icon='solar:shield-warning-bold-duotone' className='w-12 h-12 text-warning mb-4' />
               <p className='text-lg mb-4'>您当前没有激活的套餐</p>
               <p className='text-default-500 mb-6'>
                 购买套餐以使用更多功能，包括：
@@ -175,7 +219,7 @@ const AccountFinance = observer(() => {
         </CardBody>
       </Card>
 
-      <CostRecords onTotalCostChange={handleTotalCostChange} />
+      <CostRecords ref={costRecordsRef} onTotalCostChange={handleTotalCostChange} />
     </div>
   )
 })
