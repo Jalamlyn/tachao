@@ -421,7 +421,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
                 <div className="flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center
                     border border-accent/30 shadow-lg">
-                    <Icon icon="mdi:robot" className="w-5 h-5 text-accent" />
+                    <Icon icon="solar:robot-lineart" className="w-5 h-5 text-accent" />
                   </div>
                   <div className="flex-1">
                     <div className="bg-accent/5 backdrop-blur-sm rounded-2xl p-4 inline-block max-w-[90%]
