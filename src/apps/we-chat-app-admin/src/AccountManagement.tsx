@@ -37,6 +37,26 @@ import { queryMyProject, addProjectMember } from "@/service/apis/project"
 import { subscriptionService } from "@/permissions/utils/permissionUtils"
 import message from "@/components/Message"
 import { useStore } from "@/stores/StoreProvider"
+import globalStore from "@/globalStore"
+
+// 添加账号格式验证函数
+const validateAccount = (account: string): { isValid: boolean; message?: string } => {
+  // 英文字母开头，后面可以是字母、数字或下划线
+  const accountRegex = /^[a-zA-Z][a-zA-Z0-9_]*$/
+  
+  if (!account) {
+    return { isValid: false, message: '账号不能为空' }
+  }
+  
+  if (!accountRegex.test(account)) {
+    return { 
+      isValid: false, 
+      message: '账号必须以英文字母开头，只能包含英文字母、数字和下划线' 
+    }
+  }
+  
+  return { isValid: true }
+}
 
 const AccountManagement: React.FC = () => {
   const { balanceStore } = useStore()
@@ -52,6 +72,8 @@ const AccountManagement: React.FC = () => {
   const { isOpen: isRoleModalOpen, onOpen: onRoleModalOpen, onClose: onRoleModalClose } = useDisclosure()
   const { isOpen: isDetailModalOpen, onOpen: onDetailModalOpen, onClose: onDetailModalClose } = useDisclosure()
   const { updateBreadcrumbs } = useBreadcrumb()
+  // 添加账号验证状态
+  const [accountError, setAccountError] = useState("")
 
   useEffect(() => {
     fetchAccounts()
@@ -67,7 +89,7 @@ const AccountManagement: React.FC = () => {
 
   const fetchSubscription = async () => {
     try {
-      const data = await subscriptionService.getSubscription(balanceStore.organizationId)
+      const data = await subscriptionService.getSubscription(globalStore.organizationId)
       setSubscription(data)
     } catch (error) {
       console.error("Failed to fetch subscription", error)
@@ -97,6 +119,13 @@ const AccountManagement: React.FC = () => {
 
   const handleCreateAccount = async (values) => {
     try {
+      // 验证账号格式
+      const accountValidation = validateAccount(values.account)
+      if (!accountValidation.isValid) {
+        message.error(accountValidation.message)
+        return
+      }
+
       // 检查账号类型和限制
       if (values.type === 'nb') {
         if (!subscription || subscription.type === 'personal') {
@@ -133,8 +162,8 @@ const AccountManagement: React.FC = () => {
       }
 
       // 更新账号使用记录
-      await subscriptionService.updateAccountUsage(balanceStore.organizationId, {
-        organizationId: balanceStore.organizationId,
+      await subscriptionService.updateAccountUsage(globalStore.organizationId, {
+        organizationId: globalStore.organizationId,
         accounts: [
           ...accounts,
           {
@@ -157,6 +186,13 @@ const AccountManagement: React.FC = () => {
 
   const handleEditAccount = async (values) => {
     try {
+      // 验证账号格式
+      const accountValidation = validateAccount(values.account)
+      if (!accountValidation.isValid) {
+        message.error(accountValidation.message)
+        return
+      }
+
       await updateRamAccount(selectedAccount.id, values)
       onEditModalClose()
       fetchAccounts()
@@ -206,6 +242,15 @@ const AccountManagement: React.FC = () => {
       return <Chip variant="flat">外部账号</Chip>
     }
     return null
+  }
+
+  const handleAccountChange = (value: string) => {
+    const validation = validateAccount(value)
+    if (!validation.isValid) {
+      setAccountError(validation.message)
+    } else {
+      setAccountError("")
+    }
   }
 
   const columns = [
@@ -340,7 +385,14 @@ const AccountManagement: React.FC = () => {
                   </Radio>
                 </RadioGroup>
                 <Input name='name' label='名称' required />
-                <Input name='account' label='账号' required />
+                <Input 
+                  name='account' 
+                  label='账号' 
+                  required 
+                  onValueChange={handleAccountChange}
+                  errorMessage={accountError}
+                  description="账号必须以英文字母开头，只能包含英文字母、数字和下划线"
+                />
                 <Input name='password' label='密码' type='password' required />
               </ModalBody>
               <ModalFooter>
@@ -370,7 +422,15 @@ const AccountManagement: React.FC = () => {
               <ModalHeader className='flex flex-col gap-1'>编辑账号</ModalHeader>
               <ModalBody>
                 <Input name='name' label='名称' defaultValue={selectedAccount?.name} required />
-                <Input name='account' label='账号' defaultValue={selectedAccount?.account} required />
+                <Input 
+                  name='account' 
+                  label='账号' 
+                  defaultValue={selectedAccount?.account} 
+                  required 
+                  onValueChange={handleAccountChange}
+                  errorMessage={accountError}
+                  description="账号必须以英文字母开头，只能包含英文字母、数字和下划线"
+                />
                 <Input name='password' label='密码' type='password' placeholder='留空则不修改密码' />
               </ModalBody>
               <ModalFooter>
