@@ -5,6 +5,7 @@ import { Icon } from "@iconify/react"
 import QRCodeModal from "./QRCodeModal"
 import WaitListModal from "./WaitListModal"
 import { useNavigate } from "react-router-dom"
+import IndustryBubbles from "./IndustryBubbles"
 
 interface HeroProps {
   onGetStarted: () => void
@@ -20,8 +21,8 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   const [touchStart, setTouchStart] = useState(0)
   const [isQRCodeOpen, setIsQRCodeOpen] = useState(false)
   const [isWaitListOpen, setIsWaitListOpen] = useState(false)
+  const [currentStep, setCurrentStep] = useState(0)
 
-  // 优化动画性能
   const springConfig = { mass: 1, stiffness: 100, damping: 30 }
   const scaleSpring = useSpring(1, springConfig)
   const rotateSpring = useSpring(0, springConfig)
@@ -32,7 +33,20 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
     auth.queryUser({
       phone_number: "+86 15384078477",
     })
+
+    // 启动部署时间轴动画
+    const timer = setInterval(() => {
+      setCurrentStep(prev => (prev < 3 ? prev + 1 : 0))
+    }, 3000)
+
+    return () => clearInterval(timer)
   }, [])
+
+  const timelineSteps = [
+    { time: "1分钟", action: "完成部署", icon: "mdi:rocket-launch" },
+    { time: "5分钟", action: "快速开发", icon: "mdi:code-braces" },
+    { time: "10分钟", action: "系统上线", icon: "mdi:check-circle" }
+  ]
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -80,7 +94,6 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
     >
-      {/* 新增登录按钮容器 */}
       <div className='absolute top-4 right-4 md:top-8 md:right-8 z-20'>
         <Button
           size='sm'
@@ -97,6 +110,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       <motion.div style={{ y, opacity }} className='absolute inset-0 pointer-events-none'>
         <div className='absolute inset-0 bg-gradient-to-b from-primary-dark/50 to-transparent' />
       </motion.div>
+
       <motion.div
         variants={containerVariants}
         initial='hidden'
@@ -156,6 +170,37 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           <p className='text-lg md:text-2xl text-white/80'>AI 赋能企业管理 · 智能化一站式解决方案</p>
         </motion.div>
 
+        {/* 新增时间轴部分 */}
+        <motion.div 
+          variants={itemVariants}
+          className="flex justify-center gap-4 md:gap-8 my-8"
+        >
+          {timelineSteps.map((step, index) => (
+            <motion.div
+              key={step.action}
+              className={`flex flex-col items-center p-4 rounded-lg
+                ${currentStep === index ? 'bg-white/10' : 'bg-white/5'}
+                transition-all duration-300`}
+              animate={{
+                scale: currentStep === index ? 1.1 : 1,
+                opacity: currentStep === index ? 1 : 0.7
+              }}
+            >
+              <Icon 
+                icon={step.icon}
+                className={`text-2xl md:text-3xl mb-2
+                  ${currentStep === index ? 'text-accent' : 'text-white/70'}`}
+              />
+              <div className="text-sm md:text-base font-medium text-white">
+                {step.time}
+              </div>
+              <div className="text-xs md:text-sm text-white/70">
+                {step.action}
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
         <motion.div variants={itemVariants} className='space-y-4'>
           <div className='flex flex-wrap justify-center gap-4 text-white/80'>
             <div className='flex items-center space-x-2'>
@@ -210,7 +255,19 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             </div>
           </div>
         </motion.div>
+
+        {/* 添加行业气泡展示 */}
+        <motion.div
+          variants={itemVariants}
+          className="mt-12"
+        >
+          <h3 className="text-xl md:text-2xl font-bold text-white mb-6">
+            支持多行业定制化解决方案
+          </h3>
+          <IndustryBubbles />
+        </motion.div>
       </motion.div>
+
       <WaitListModal isOpen={isWaitListOpen} onClose={() => setIsWaitListOpen(false)} />
       <QRCodeModal isOpen={isQRCodeOpen} onClose={() => setIsQRCodeOpen(false)} />
     </section>
