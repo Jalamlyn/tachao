@@ -25,6 +25,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   const [aiResponse, setAiResponse] = useState<any>(null)
   const [isTyping, setIsTyping] = useState(false)
   const [currentDemoIndex, setCurrentDemoIndex] = useState(0)
+  const [showDemo, setShowDemo] = useState(false)
 
   const springConfig = { mass: 1, stiffness: 100, damping: 30 }
   const scaleSpring = useSpring(1, springConfig)
@@ -87,7 +88,19 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       setCurrentStep((prev) => (prev < 3 ? prev + 1 : 0))
     }, 3000)
 
-    // 启动演示对话动画
+    // 延迟1秒后开始演示
+    setTimeout(() => {
+      setShowDemo(true)
+    }, 1000)
+
+    return () => {
+      clearInterval(timer)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!showDemo) return
+
     const startDemo = () => {
       const demo = demoMessages[currentDemoIndex]
       setIsTyping(true)
@@ -109,20 +122,18 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             // 延迟后开始下一个演示
             setTimeout(() => {
               setCurrentDemoIndex((prev) => (prev + 1) % demoMessages.length)
-            }, 5000)
-          }, 500)
+            }, 3000) // 缩短到3秒
+          }, 300) // 缩短到300ms
         }
-      }, 100)
+      }, 50) // 加快打字速度
     }
 
-    // 启动演示循环
-    const demoInterval = setInterval(startDemo, 12000)
+    startDemo()
+    // 缩短循环间隔到8秒
+    const demoInterval = setInterval(startDemo, 8000)
 
-    return () => {
-      clearInterval(timer)
-      clearInterval(demoInterval)
-    }
-  }, [currentDemoIndex])
+    return () => clearInterval(demoInterval)
+  }, [currentDemoIndex, showDemo])
 
   const timelineSteps = [
     { time: "1分钟", action: "完成部署", icon: "mdi:rocket-launch" },
@@ -177,14 +188,15 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         {response.features && (
           <motion.div 
             className="grid grid-cols-2 gap-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
           >
             {response.features.map((feature: string, index: number) => (
               <motion.div
                 key={index}
-                className="bg-white/10 backdrop-blur-sm rounded-lg p-3"
+                className="bg-white/10 backdrop-blur-sm rounded-lg p-3 hover:bg-white/20 transition-all duration-300
+                  border border-white/5 hover:border-white/10"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -197,14 +209,15 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         {response.data && (
           <motion.div 
             className="grid grid-cols-2 gap-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
           >
             {response.data.map((item: string, index: number) => (
               <motion.div
                 key={index}
-                className="bg-accent/10 backdrop-blur-sm rounded-lg p-3"
+                className="bg-accent/10 backdrop-blur-sm rounded-lg p-3 hover:bg-accent/20 transition-all duration-300
+                  border border-accent/5 hover:border-accent/10"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -224,7 +237,8 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             {response.insights.map((insight: string, index: number) => (
               <motion.div
                 key={index}
-                className="bg-primary/10 backdrop-blur-sm rounded-lg p-3"
+                className="bg-primary/10 backdrop-blur-sm rounded-lg p-3 hover:bg-primary/20 transition-all duration-300
+                  border border-primary/5 hover:border-primary/10"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -236,7 +250,8 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         )}
         {response.stats && (
           <motion.div 
-            className="flex justify-between mt-4"
+            className="flex justify-between mt-4 bg-white/5 rounded-xl p-4 backdrop-blur-sm
+              border border-white/10 hover:border-white/20 transition-all duration-300"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
@@ -348,11 +363,13 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           variants={itemVariants}
           className="max-w-3xl mx-auto"
         >
-          <div className="relative bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 overflow-hidden">
+          <div className="relative bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 overflow-hidden
+            shadow-xl shadow-black/5 hover:shadow-2xl hover:shadow-black/10 transition-all duration-500">
             <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-accent/5"></div>
             
             {/* 顶部栏 */}
-            <div className="relative flex items-center justify-between px-6 py-4 border-b border-white/10">
+            <div className="relative flex items-center justify-between px-6 py-4 border-b border-white/10
+              bg-gradient-to-r from-white/5 to-transparent">
               <div className="flex items-center gap-3">
                 <div className="flex space-x-2">
                   <div className="w-3 h-3 rounded-full bg-red-400"></div>
@@ -371,11 +388,13 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             <div className="relative p-6 space-y-6">
               {/* 用户输入 */}
               <div className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center
+                  border border-white/20 shadow-lg">
                   <Icon icon="mdi:user" className="w-5 h-5 text-white/80" />
                 </div>
                 <div className="flex-1">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 inline-block max-w-[80%]">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 inline-block max-w-[80%]
+                    border border-white/10 shadow-lg">
                     <motion.span
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -400,11 +419,13 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
               {/* AI响应 */}
               {aiResponse && (
                 <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center
+                    border border-accent/30 shadow-lg">
                     <Icon icon="mdi:robot" className="w-5 h-5 text-accent" />
                   </div>
                   <div className="flex-1">
-                    <div className="bg-accent/5 backdrop-blur-sm rounded-2xl p-4 inline-block max-w-[90%]">
+                    <div className="bg-accent/5 backdrop-blur-sm rounded-2xl p-4 inline-block max-w-[90%]
+                      border border-accent/10 shadow-lg">
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -420,16 +441,19 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             </div>
 
             {/* 底部输入栏 */}
-            <div className="relative px-6 py-4 border-t border-white/10">
+            <div className="relative px-6 py-4 border-t border-white/10
+              bg-gradient-to-r from-transparent to-white/5">
               <div className="flex items-center gap-4">
-                <div className="flex-1 bg-white/5 rounded-xl backdrop-blur-sm border border-white/10 px-4 py-2">
+                <div className="flex-1 bg-white/5 rounded-xl backdrop-blur-sm border border-white/10 px-4 py-2
+                  shadow-inner hover:bg-white/10 transition-all duration-300">
                   <div className="flex items-center gap-2 text-white/40">
                     <Icon icon="mdi:message-text-outline" className="w-4 h-4" />
                     <span className="text-sm">输入您的需求...</span>
                   </div>
                 </div>
                 <Button
-                  className="bg-accent/20 text-accent hover:bg-accent/30"
+                  className="bg-accent/20 text-accent hover:bg-accent/30 shadow-lg
+                    hover:shadow-accent/20 transition-all duration-300"
                   isIconOnly
                 >
                   <Icon icon="mdi:send" className="w-4 h-4" />
@@ -446,7 +470,8 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
               key={step.action}
               className={`flex flex-col items-center p-4 rounded-lg
                 ${currentStep === index ? "bg-white/10" : "bg-white/5"}
-                transition-all duration-300`}
+                transition-all duration-300 border border-white/10 hover:border-white/20
+                shadow-lg hover:shadow-xl`}
               animate={{
                 scale: currentStep === index ? 1.1 : 1,
                 opacity: currentStep === index ? 1 : 0.7,
@@ -484,7 +509,8 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           <Button
             size='lg'
             className='bg-white text-primary-dark hover:bg-white/90 font-medium px-8 w-full md:w-auto
-              transform hover:scale-105 active:scale-95 transition-all duration-300'
+              transform hover:scale-105 active:scale-95 transition-all duration-300
+              shadow-lg hover:shadow-xl'
             onClick={() => setIsWaitListOpen(true)}
           >
             申请开通账号
@@ -493,7 +519,8 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             size='lg'
             variant='bordered'
             className='text-white border-white hover:bg-white/10 font-medium px-8 w-full md:w-auto
-              transform hover:scale-105 active:scale-95 transition-all duration-300'
+              transform hover:scale-105 active:scale-95 transition-all duration-300
+              shadow-lg hover:shadow-xl'
             onClick={() => setIsQRCodeOpen(true)}
           >
             预约企业演示
