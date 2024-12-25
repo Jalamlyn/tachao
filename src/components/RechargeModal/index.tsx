@@ -46,13 +46,8 @@ const SUBSCRIPTION_PLANS = {
       wbAccountLimit: -1,
       tokenAmount: 10,
     },
-    description: [
-      "1个管理员账号",
-      "不限数量外部账号",
-      "10个塔币",
-      "基础AI功能",
-    ],
-    costInTokens: 19.9,
+    description: ["1个管理员账号", "不限数量外部账号", "10个塔币", "基础AI功能"],
+    costInTokens: 9.9, // 实际扣除的塔币数量
   },
   enterprise: {
     type: "enterprise",
@@ -64,14 +59,8 @@ const SUBSCRIPTION_PLANS = {
       wbAccountLimit: -1,
       tokenAmount: 100,
     },
-    description: [
-      "1个管理员账号",
-      "4个内部账号",
-      "不限数量外部账号",
-      "100个塔币",
-      "完整AI功能",
-    ],
-    costInTokens: 199,
+    description: ["1个管理员账号", "4个内部账号", "不限数量外部账号", "100个塔币", "完整AI功能"],
+    costInTokens: 99, // 实际扣除的塔币数量
   },
 }
 
@@ -80,18 +69,9 @@ const PriceCard = ({ amount, isPopular, onSelect, isSelected }) => (
   <Card
     isPressable
     isHoverable
-    className={`transition-all duration-300 ${
-      isSelected ? "border-primary shadow-lg scale-105" : ""
-    }`}
+    className={`transition-all duration-300 ${isSelected ? "border-primary shadow-lg scale-105" : ""}`}
     onClick={() => onSelect(amount)}
   >
-    {isPopular && (
-      <div className='absolute -top-2 left-1/2 -translate-x-1/2'>
-        <Chip color='primary' variant='shadow'>
-          最受欢迎
-        </Chip>
-      </div>
-    )}
     <CardBody className='text-center p-6'>
       <div className='text-3xl font-bold mb-2'>¥{amount}</div>
       <Button
@@ -116,17 +96,28 @@ const RechargeModal = observer(() => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [selectedTab, setSelectedTab] = useState("token")
   const [selectedPlan, setSelectedPlan] = useState(null)
+  const [currentSubscription, setCurrentSubscription] = useState(null)
 
   // 价格选项配置
   const priceOptions = [
     { amount: 19.9, isPopular: false },
     { amount: 49.9, isPopular: true },
-    { amount: 99.9, isPopular: false },
+    { amount: 199.9, isPopular: false },
   ]
 
   useEffect(() => {
     fetchProducts()
+    fetchCurrentSubscription()
   }, [])
+
+  const fetchCurrentSubscription = async () => {
+    try {
+      const subscription = await subscriptionService.getSubscription(globalStore.organizationId)
+      setCurrentSubscription(subscription)
+    } catch (error) {
+      console.error("Error fetching current subscription:", error)
+    }
+  }
 
   const fetchProducts = async () => {
     try {
@@ -178,6 +169,12 @@ const RechargeModal = observer(() => {
       return
     }
 
+    // 检查套餐降级
+    if (currentSubscription?.type === "enterprise" && selectedPlan.type === "personal") {
+      message.error("不允许从企业版降级到个人版")
+      return
+    }
+
     try {
       const requiredTokens = selectedPlan.costInTokens
       const currentBalance = balanceStore.actualBalance
@@ -199,12 +196,17 @@ const RechargeModal = observer(() => {
         startDate: startDate.toISOString(),
         expireDate: expireDate.toISOString(),
         features: selectedPlan.features,
-        price: selectedPlan.price,
+        price: selectedPlan.price, // 记录完整价格
       })
 
+      // 更新余额
       balanceStore.setActualBalance(currentBalance - requiredTokens)
 
-      message.success(`已成功订阅${selectedPlan.name}，扣除${requiredTokens}塔币`)
+      message.success(
+        `已成功订阅${selectedPlan.name}，扣除${requiredTokens}塔币，赠送${
+          selectedPlan.type === "personal" ? "10" : "100"
+        }塔币`
+      )
       balanceStore.hideRechargeModal()
     } catch (error) {
       console.error("订阅失败:", error)
@@ -379,7 +381,11 @@ const RechargeModal = observer(() => {
                   <Button
                     color='primary'
                     onClick={handlePay}
-                    startContent={<Icon icon={selectedTab === "token" ? "solar:card-bold-duotone" : "solar:shield-check-bold-duotone"} />}
+                    startContent={
+                      <Icon
+                        icon={selectedTab === "token" ? "solar:card-bold-duotone" : "solar:shield-check-bold-duotone"}
+                      />
+                    }
                   >
                     {selectedTab === "token" ? "去支付" : "确认订阅"}
                   </Button>
