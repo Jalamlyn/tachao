@@ -39,32 +39,65 @@ const AnimatedBackground: React.FC = () => {
         }}
       />
 
-      {/* 添加动态粒子效果 */}
+      {/* 增强的动态粒子效果 */}
+      <motion.div
+        className="absolute inset-0"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.15 }}
+        transition={{ duration: 1 }}
+      >
+        {Array.from({ length: 100 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className={`absolute rounded-full ${i % 3 === 0 ? 'bg-blue-400' : i % 3 === 1 ? 'bg-purple-400' : 'bg-white'}`}
+            style={{
+              width: Math.random() * 3 + 1 + 'px',
+              height: Math.random() * 3 + 1 + 'px',
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              filter: 'blur(1px)',
+            }}
+            animate={{
+              y: [0, Math.random() * 100 - 50],
+              x: [0, Math.random() * 50 - 25],
+              opacity: [0.8, 0],
+              scale: [1, 0],
+            }}
+            transition={{
+              duration: Math.random() * 3 + 2,
+              repeat: Infinity,
+              repeatType: "reverse",
+              ease: "easeInOut",
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+      </motion.div>
+
+      {/* 新增的光效波浪 */}
       <motion.div
         className="absolute inset-0"
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.1 }}
         transition={{ duration: 1 }}
       >
-        {Array.from({ length: 50 }).map((_, i) => (
+        {Array.from({ length: 3 }).map((_, i) => (
           <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
+            key={`wave-${i}`}
+            className="absolute inset-0 bg-gradient-to-t from-primary-light/30 to-transparent"
             animate={{
-              y: [0, Math.random() * 100 - 50],
-              opacity: [0.5, 0],
-              scale: [1, 0],
+              y: [0, 20, 0],
+              opacity: [0.1, 0.2, 0.1],
             }}
             transition={{
-              duration: Math.random() * 2 + 1,
+              duration: 5 + i * 2,
               repeat: Infinity,
               repeatType: "reverse",
               ease: "easeInOut",
-              delay: Math.random() * 2,
+              delay: i * 1.5,
+            }}
+            style={{
+              transform: `scale(${1 + i * 0.1})`,
             }}
           />
         ))}

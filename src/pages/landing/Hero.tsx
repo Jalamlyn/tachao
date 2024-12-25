@@ -22,10 +22,19 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   const [isQRCodeOpen, setIsQRCodeOpen] = useState(false)
   const [isWaitListOpen, setIsWaitListOpen] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
+  const [demoText, setDemoText] = useState("")
+  const [aiResponse, setAiResponse] = useState("")
+  const [isTyping, setIsTyping] = useState(false)
 
   const springConfig = { mass: 1, stiffness: 100, damping: 30 }
   const scaleSpring = useSpring(1, springConfig)
   const rotateSpring = useSpring(0, springConfig)
+
+  const demoMessages = [
+    { input: "帮我分析销售数据", response: "正在分析本月销售数据...销售额增长15%，客户满意度提升20%" },
+    { input: "生成周报", response: "已为您生成本周工作报告，包含关键指标和团队进展..." },
+    { input: "安排会议", response: "已为您安排下周一上午10点的团队会议，并发送邮件通知..." }
+  ]
 
   useEffect(() => {
     setMounted(true)
@@ -39,7 +48,45 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       setCurrentStep((prev) => (prev < 3 ? prev + 1 : 0))
     }, 3000)
 
-    return () => clearInterval(timer)
+    // 启动演示对话动画
+    let currentDemo = 0
+    const demoTimer = setInterval(() => {
+      const demo = demoMessages[currentDemo]
+      setIsTyping(true)
+      setDemoText("")
+      setAiResponse("")
+      
+      // 模拟用户输入
+      let charIndex = 0
+      const typeTimer = setInterval(() => {
+        if (charIndex < demo.input.length) {
+          setDemoText(prev => prev + demo.input[charIndex])
+          charIndex++
+        } else {
+          clearInterval(typeTimer)
+          // 模拟AI响应
+          setTimeout(() => {
+            let responseIndex = 0
+            const responseTimer = setInterval(() => {
+              if (responseIndex < demo.response.length) {
+                setAiResponse(prev => prev + demo.response[responseIndex])
+                responseIndex++
+              } else {
+                clearInterval(responseTimer)
+                setIsTyping(false)
+              }
+            }, 30)
+          }, 500)
+        }
+      }, 100)
+
+      currentDemo = (currentDemo + 1) % demoMessages.length
+    }, 8000)
+
+    return () => {
+      clearInterval(timer)
+      clearInterval(demoTimer)
+    }
   }, [])
 
   const timelineSteps = [
@@ -170,7 +217,58 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           <p className='text-lg md:text-2xl text-white/80'>AI 赋能企业管理 · 智能化一站式解决方案</p>
         </motion.div>
 
-        {/* 新增时间轴部分 */}
+        {/* AI对话演示界面 */}
+        <motion.div
+          variants={itemVariants}
+          className="max-w-2xl mx-auto bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20"
+        >
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center space-x-2 text-white/80">
+              <Icon icon="mdi:user-circle" className="text-2xl" />
+              <div className="flex-1 bg-white/10 rounded-lg p-3">
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {demoText}
+                  {isTyping && demoText.length > 0 && (
+                    <motion.span
+                      animate={{ opacity: [0, 1] }}
+                      transition={{ duration: 0.5, repeat: Infinity }}
+                    >
+                      |
+                    </motion.span>
+                  )}
+                </motion.span>
+              </div>
+            </div>
+            {aiResponse && (
+              <div className="flex items-center space-x-2 text-white/80">
+                <Icon icon="mdi:robot" className="text-2xl text-accent" />
+                <div className="flex-1 bg-accent/10 rounded-lg p-3">
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {aiResponse}
+                    {isTyping && aiResponse.length > 0 && (
+                      <motion.span
+                        animate={{ opacity: [0, 1] }}
+                        transition={{ duration: 0.5, repeat: Infinity }}
+                      >
+                        |
+                      </motion.span>
+                    )}
+                  </motion.span>
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* 时间轴部分 */}
         <motion.div variants={itemVariants} className='flex justify-center gap-4 md:gap-8 my-8'>
           {timelineSteps.map((step, index) => (
             <motion.div
@@ -249,7 +347,6 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           </div>
         </motion.div>
 
-        {/* 添加行业气泡展示 */}
         <motion.div variants={itemVariants} className='mt-12'>
           <h3 className='text-xl md:text-2xl font-bold text-white mb-6'>支持多行业定制化解决方案</h3>
         </motion.div>
