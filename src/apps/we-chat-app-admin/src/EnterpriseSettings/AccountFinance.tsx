@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react"
-import { Card, CardBody, Button, Chip } from "@nextui-org/react"
+import { Card, CardBody, Button, Chip, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { getAccount } from "@/service/apis/pay"
 import CostRecords from "./CostRecords"
 import globalStore from "@/globalStore"
-import { observer } from 'mobx-react-lite'
-import { useStore } from '@/stores/StoreProvider'
-import { reaction } from 'mobx'
+import { observer } from "mobx-react-lite"
+import { useStore } from "@/stores/StoreProvider"
+import { reaction } from "mobx"
 import { subscriptionService } from "@/permissions/utils/permissionUtils"
-import message from "@/components/Message"
 
 const AccountFinance = observer(() => {
   const { balanceStore } = useStore()
@@ -17,6 +16,7 @@ const AccountFinance = observer(() => {
   const [subscription, setSubscription] = useState(null)
   const [subscriptionStatus, setSubscriptionStatus] = useState(null)
   const [totalCost, setTotalCost] = useState(0)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchAccountData()
@@ -53,6 +53,8 @@ const AccountFinance = observer(() => {
       }
     } catch (error) {
       console.error("Error fetching subscription data:", error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -78,11 +80,23 @@ const AccountFinance = observer(() => {
     const statusConfig = {
       active: { color: "success", label: "正常" },
       warning: { color: "warning", label: "即将到期" },
-      expired: { color: "danger", label: "已过期" }
+      expired: { color: "danger", label: "已过期" },
     }
 
     const config = statusConfig[subscriptionStatus.status]
-    return <Chip color={config.color} variant="flat" size="sm">{config.label}</Chip>
+    return (
+      <Chip color={config.color} variant='flat' size='sm'>
+        {config.label}
+      </Chip>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-300px)]">
+        <Spinner size="lg" label="加载中..." />
+      </div>
+    )
   }
 
   return (
@@ -124,45 +138,21 @@ const AccountFinance = observer(() => {
           {subscription ? (
             <div className='space-y-4'>
               <div className='flex justify-between items-center mb-4'>
-                <span className='text-xl font-semibold'>
-                  {subscription.type === 'personal' ? '个人版' : '企业版'}
-                </span>
+                <span className='text-xl font-semibold'>{subscription.type === "personal" ? "个人版" : "企业版"}</span>
                 {getSubscriptionStatusChip()}
               </div>
-              <InfoItem 
-                label='到期时间' 
-                value={new Date(subscription.expireDate).toLocaleDateString()} 
-              />
-              <InfoItem 
-                label='内部账号限制' 
-                value={`${subscription.features.nbAccountLimit}个`} 
-              />
-              <InfoItem 
-                label='Token额度' 
-                value={`${subscription.features.tokenAmount.toLocaleString()}个`} 
-              />
-              {subscriptionStatus?.status === 'warning' && (
+              <InfoItem label='到期时间' value={new Date(subscription.expireDate).toLocaleDateString()} />
+              <InfoItem label='内部账号限制' value={`${subscription.features.nbAccountLimit}个`} />
+              {subscriptionStatus?.status === "warning" && (
                 <div className='text-warning text-sm mt-2'>
                   <Icon icon='solar:alarm-bold-duotone' className='inline-block mr-1' />
                   {subscriptionStatus.message}
                 </div>
               )}
-              <Button 
-                color='primary' 
-                variant='flat' 
-                startContent={<Icon icon='solar:card-recive-bold-duotone' />}
-                onClick={handleSubscriptionAction}
-                className='w-full'
-              >
-                续费套餐
-              </Button>
             </div>
           ) : (
             <div className='text-center py-6'>
-              <Icon 
-                icon='solar:shield-warning-bold-duotone' 
-                className='w-12 h-12 text-warning mb-4' 
-              />
+              <Icon icon='solar:shield-warning-bold-duotone' className='w-12 h-12 text-warning mb-4' />
               <p className='text-lg mb-4'>您当前没有激活的套餐</p>
               <p className='text-default-500 mb-6'>
                 购买套餐以使用更多功能，包括：
@@ -172,8 +162,8 @@ const AccountFinance = observer(() => {
                   <li>高级功能访问权限</li>
                 </ul>
               </p>
-              <Button 
-                color='primary' 
+              <Button
+                color='primary'
                 startContent={<Icon icon='solar:shield-star-bold-duotone' />}
                 onClick={handleSubscriptionAction}
                 className='w-full'
