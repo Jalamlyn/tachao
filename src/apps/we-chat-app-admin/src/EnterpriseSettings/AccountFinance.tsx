@@ -16,6 +16,7 @@ const AccountFinance = observer(() => {
   const [actualBalance, setActualBalance] = useState(balanceStore.actualBalance)
   const [subscription, setSubscription] = useState(null)
   const [subscriptionStatus, setSubscriptionStatus] = useState(null)
+  const [totalCost, setTotalCost] = useState(0)
 
   useEffect(() => {
     fetchAccountData()
@@ -58,6 +59,10 @@ const AccountFinance = observer(() => {
   const handleSubscriptionAction = () => {
     // 处理购买/续费操作
     balanceStore.showRechargeModal(true)
+  }
+
+  const handleTotalCostChange = (cost: number) => {
+    setTotalCost(cost)
   }
 
   const InfoItem = ({ label, value }) => (
