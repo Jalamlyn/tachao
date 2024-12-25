@@ -20,6 +20,7 @@ import { products, orders, pagePay } from "@/service/apis/pay"
 import { Icon } from "@iconify/react"
 import { subscriptionService } from "@/permissions/utils/permissionUtils"
 import message from "@/components/Message"
+import globalStore from "@/globalStore"
 
 const SUBSCRIPTION_PLANS = {
   personal: {
@@ -38,6 +39,7 @@ const SUBSCRIPTION_PLANS = {
       "10个塔币",
       "基础AI功能",
     ],
+    costInTokens: 19.9, // 订阅所需塔币数量
   },
   enterprise: {
     type: "enterprise",
@@ -56,6 +58,7 @@ const SUBSCRIPTION_PLANS = {
       "100个塔币",
       "完整AI功能",
     ],
+    costInTokens: 199, // 订阅所需塔币数量
   },
 }
 
@@ -127,30 +130,23 @@ const RechargeModal = observer(() => {
     }
 
     try {
-      // 创建订阅订单
-      const orderDataRes = await orders({
-        productId: selectedPlan.type,
-        quantity: 1,
-        paymentMethod: "ALIPAY",
-        metadata: {
-          type: "subscription",
-          plan: selectedPlan.type,
-        },
-      })
+      // 检查塔币余额是否足够
+      const requiredTokens = selectedPlan.costInTokens
+      const currentBalance = balanceStore.actualBalance
 
-      // 获取支付表单
-      const payDataRes = await pagePay({
-        orderId: orderDataRes.id,
-        returnUrl: window.location.href,
-      })
+      if (currentBalance < requiredTokens) {
+        message.info(`塔币余额不足，订阅${selectedPlan.name}需要${requiredTokens}塔币，请先充值`)
+        setSelectedTab("token")
+        return
+      }
 
-      // 更新订阅信息
+      // 创建订阅记录
       const startDate = new Date()
       const expireDate = new Date()
       expireDate.setMonth(expireDate.getMonth() + 1)
 
-      await subscriptionService.updateSubscription(balanceStore.organizationId, {
-        organizationId: balanceStore.organizationId,
+      await subscriptionService.updateSubscription(globalStore.organizationId, {
+        organizationId: globalStore.organizationId,
         type: selectedPlan.type,
         status: "active",
         startDate: startDate.toISOString(),
@@ -159,12 +155,14 @@ const RechargeModal = observer(() => {
         price: selectedPlan.price,
       })
 
-      setPaymentForm(payDataRes)
+      // 更新余额
+      balanceStore.setActualBalance(currentBalance - requiredTokens)
+
+      message.success(`已成功订阅${selectedPlan.name}，扣除${requiredTokens}塔币`)
       balanceStore.hideRechargeModal()
-      setIsPaymentModalOpen(true)
     } catch (error) {
-      console.error("创建订阅订单失败:", error)
-      message.error("创建订阅失败")
+      console.error("订阅失败:", error)
+      message.error("订阅失败，请稍后重试")
     }
   }
 
@@ -231,9 +229,14 @@ const RechargeModal = observer(() => {
           <CardBody className="p-4">
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-lg font-bold">{plan.name}</h3>
-              <Chip color="primary" variant="flat">
-                ¥{plan.price}/月
-              </Chip>
+              <div className="flex flex-col items-end gap-1">
+                <Chip color="primary" variant="flat">
+                  ¥{plan.price}/月
+                </Chip>
+                <span className="text-sm text-default-500">
+                  需要{plan.costInTokens}塔币
+                </span>
+              </div>
             </div>
             <div className="space-y-2">
               {plan.description.map((feature, index) => (
@@ -271,7 +274,7 @@ const RechargeModal = observer(() => {
                     <span className="ml-1">
                       {selectedTab === "token"
                         ? "支付完成后，请刷新页面查看最新余额"
-                        : "套餐购买后立即生效，请刷新页面"}
+                        : `订阅套餐将使用塔币支付，当前余额：${balanceStore.actualBalance.toFixed(2)}塔币`}
                     </span>
                   </p>
                 </div>
@@ -280,7 +283,7 @@ const RechargeModal = observer(() => {
                     取消
                   </Button>
                   <Button color="primary" onClick={handlePay}>
-                    去支付
+                    {selectedTab === "token" ? "去支付" : "确认订阅"}
                   </Button>
                 </div>
               </ModalFooter>
