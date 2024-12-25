@@ -36,7 +36,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
 
     // 启动部署时间轴动画
     const timer = setInterval(() => {
-      setCurrentStep(prev => (prev < 3 ? prev + 1 : 0))
+      setCurrentStep((prev) => (prev < 3 ? prev + 1 : 0))
     }, 3000)
 
     return () => clearInterval(timer)
@@ -45,7 +45,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   const timelineSteps = [
     { time: "1分钟", action: "完成部署", icon: "mdi:rocket-launch" },
     { time: "5分钟", action: "快速开发", icon: "mdi:code-braces" },
-    { time: "10分钟", action: "系统上线", icon: "mdi:check-circle" }
+    { time: "10分钟", action: "系统上线", icon: "mdi:check-circle" },
   ]
 
   const containerVariants = {
@@ -171,32 +171,25 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         </motion.div>
 
         {/* 新增时间轴部分 */}
-        <motion.div 
-          variants={itemVariants}
-          className="flex justify-center gap-4 md:gap-8 my-8"
-        >
+        <motion.div variants={itemVariants} className='flex justify-center gap-4 md:gap-8 my-8'>
           {timelineSteps.map((step, index) => (
             <motion.div
               key={step.action}
               className={`flex flex-col items-center p-4 rounded-lg
-                ${currentStep === index ? 'bg-white/10' : 'bg-white/5'}
+                ${currentStep === index ? "bg-white/10" : "bg-white/5"}
                 transition-all duration-300`}
               animate={{
                 scale: currentStep === index ? 1.1 : 1,
-                opacity: currentStep === index ? 1 : 0.7
+                opacity: currentStep === index ? 1 : 0.7,
               }}
             >
-              <Icon 
+              <Icon
                 icon={step.icon}
                 className={`text-2xl md:text-3xl mb-2
-                  ${currentStep === index ? 'text-accent' : 'text-white/70'}`}
+                  ${currentStep === index ? "text-accent" : "text-white/70"}`}
               />
-              <div className="text-sm md:text-base font-medium text-white">
-                {step.time}
-              </div>
-              <div className="text-xs md:text-sm text-white/70">
-                {step.action}
-              </div>
+              <div className='text-sm md:text-base font-medium text-white'>{step.time}</div>
+              <div className='text-xs md:text-sm text-white/70'>{step.action}</div>
             </motion.div>
           ))}
         </motion.div>
@@ -213,7 +206,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             </div>
             <div className='flex items-center space-x-2'>
               <Icon icon='mdi:rocket-launch' className='text-purple-400' />
-              <span>10分钟部署</span>
+              <span>10分钟上线</span>
             </div>
           </div>
         </motion.div>
@@ -257,14 +250,8 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         </motion.div>
 
         {/* 添加行业气泡展示 */}
-        <motion.div
-          variants={itemVariants}
-          className="mt-12"
-        >
-          <h3 className="text-xl md:text-2xl font-bold text-white mb-6">
-            支持多行业定制化解决方案
-          </h3>
-          <IndustryBubbles />
+        <motion.div variants={itemVariants} className='mt-12'>
+          <h3 className='text-xl md:text-2xl font-bold text-white mb-6'>支持多行业定制化解决方案</h3>
         </motion.div>
       </motion.div>
 
