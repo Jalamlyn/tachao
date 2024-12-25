@@ -1,5 +1,13 @@
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
-import { Permission, PermissionMetadata, ResourceType, TemplatePermissionRole, Subscription, AccountUsage, SubscriptionHistory } from "../types"
+import {
+  Permission,
+  PermissionMetadata,
+  ResourceType,
+  TemplatePermissionRole,
+  Subscription,
+  AccountUsage,
+  SubscriptionHistory,
+} from "../types"
 import { hasRequiredPermission } from "../config/constants"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
@@ -11,7 +19,7 @@ const METADATA_KEYS = {
   // 新增订阅相关键值
   SUBSCRIPTION: (orgId: string) => `org_subscription_${orgId}`,
   ACCOUNT_USAGE: (orgId: string) => `org_account_usage_${orgId}`,
-  SUBSCRIPTION_HISTORY: (orgId: string) => `org_subscription_history_${orgId}`
+  SUBSCRIPTION_HISTORY: (orgId: string) => `org_subscription_history_${orgId}`,
 }
 
 export const getPermissionMetadataKey = (resourceType: ResourceType) => `permissions_${resourceType}`
@@ -214,9 +222,49 @@ export const subscriptionService = {
   },
 
   // 更新订阅信息
+  // 在 updateSubscription 方法中修改费用记录部分
   async updateSubscription(orgId: string, subscription: Subscription): Promise<void> {
     try {
+      // 获取当前订阅信息
+      const currentSubscription = await this.getSubscription(orgId)
+
+      // 如果存在当前订阅且未过期，则累加时间
+      if (currentSubscription && new Date(currentSubscription.expireDate) > new Date()) {
+        const currentExpireDate = new Date(currentSubscription.expireDate)
+        const oneMonth = 30 * 24 * 60 * 60 * 1000 // 30天的毫秒数
+        subscription.expireDate = new Date(currentExpireDate.getTime() + oneMonth).toISOString()
+      }
+
+      // 记录订阅历史
+      await this.addSubscriptionHistory(orgId, {
+        type: subscription.type,
+        price: subscription.price,
+        purchaseDate: new Date().toISOString(),
+        expireDate: subscription.expireDate,
+      })
+
+      // 更新订阅信息
       await setMetadata(METADATA_KEYS.SUBSCRIPTION(orgId), JSON.stringify(subscription))
+
+      // 记录购买费用
+      const costRecords = await getMetadata(["ai-cost-records"])
+      const existingRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
+
+      const newRecord = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        type: "subscription",
+        totalCost: subscription.price,
+        detail: {
+          subscription: {
+            plan: subscription.type === "personal" ? "个人版" : "企业版",
+            duration: 1, // 月数
+            features: subscription.features,
+          },
+        },
+      }
+
+      await setMetadata("ai-cost-records", [...existingRecords, newRecord])
     } catch (error) {
       console.error("Error updating subscription:", error)
       throw error
@@ -259,16 +307,16 @@ export const subscriptionService = {
 
   // 检查订阅状态
   async checkSubscriptionStatus(orgId: string): Promise<{
-    status: 'active' | 'expired' | 'warning'
+    status: "active" | "expired" | "warning"
     message?: string
     daysToExpire?: number
   }> {
     const subscription = await this.getSubscription(orgId)
-    
+
     if (!subscription) {
       return {
-        status: 'expired',
-        message: '未找到有效订阅'
+        status: "expired",
+        message: "未找到有效订阅",
       }
     }
 
@@ -278,22 +326,22 @@ export const subscriptionService = {
 
     if (daysToExpire <= 0) {
       return {
-        status: 'expired',
-        message: '订阅已过期'
+        status: "expired",
+        message: "订阅已过期",
       }
     }
 
     if (daysToExpire <= 7) {
       return {
-        status: 'warning',
+        status: "warning",
         message: `订阅将在 ${daysToExpire} 天后过期`,
-        daysToExpire
+        daysToExpire,
       }
     }
 
     return {
-      status: 'active',
-      daysToExpire
+      status: "active",
+      daysToExpire,
     }
-  }
+  },
 }

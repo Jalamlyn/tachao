@@ -6,14 +6,11 @@
 export const financeTemplatePrompt = `
 
 返回的结构要包含
-"""
 ### 基本信息
 ### 明细信息[表格]
 ### 汇总信息
 ### 表单流程
-"""
 下面是一个示例
-"""
 这是一个用于财务报销和预算申请的综合性表单。
 
 具体需求如下：
@@ -97,7 +94,6 @@ export const financeTemplatePrompt = `
      * 大写金额（text，自动转换）
 
 上述需求是否满足您的需求？如果不满足您可以告诉我您需要什么功能，我随时调整模板内容
-"""
 `
 
 export default financeTemplatePrompt

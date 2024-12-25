@@ -2,27 +2,9 @@ import { message } from "@/components/Message"
 import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { inject } from "@wpm-js/core"
-import { setMetadata, getMetadata } from "@/service/apis/metadata"
+import { costService } from "@/utils/costService"
 
 let systemMsg
-
-// 计算 Claude 费用的函数
-function calculateClaudeCost(fullContent, tokenCount: number, isInput: boolean, model: string): number {
-  const ratePerMillionTokens = {
-    EXPERT: {
-      input: fullContent.includes(`shata-ai-code`) ? 262.8 : 26.28,
-      output: fullContent.includes(`shata-ai-code`) ? 1314 : 131.4,
-    },
-    ADVANCED: {
-      input: fullContent.includes(`shata-ai-code`) ? 87.6 : 8.76,
-      output: fullContent.includes(`shata-ai-code`) ? 292 : 29.2,
-    },
-  }
-
-  const rate = ratePerMillionTokens[model] || ratePerMillionTokens["ADVANCED"]
-  const tokenRate = isInput ? rate.input : rate.output
-  return (tokenCount / 1000000) * tokenRate // 转换为每百万 token 的价格
-}
 
 async function handleToolUse(toolUse, onChunk) {
   if (toolUse.name === "download_template") {
@@ -79,23 +61,14 @@ export default async function chatChunkClaudeOffice(
       } else {
         return {
           role: msg.role,
-          content: msg.content,
-          // content: [
-          //   {
-          //     type: "text",
-          //     text: msg.content,
-          //   },
-          //   ...msg.images.map((image) => {
-          //     return {
-          //       type: "image",
-          //       source: {
-          //         type: "base64",
-          //         media_type: image.split(";base64,")[0].split(":")[1],
-          //         data: image.split(";base64,")[1],
-          //       },
-          //     }
-          //   }),
-          // ],
+          // content: msg.content,
+          content: [
+            {
+              type: "text",
+              text: msg.content,
+            },
+            ...(msg.images?.map((img) => ({ type: "image_url", image_url: { url: img, detail: "high" } })) || []),
+          ],
         }
       }
     })
@@ -103,17 +76,9 @@ export default async function chatChunkClaudeOffice(
   } else {
     _messages = messages
   }
-  // _messages[_messages.length - 1].content[0].cache_control = { type: "ephemeral" }
 
   const payload = {
     model: model,
-    // system: [
-    //   {
-    //     type: "text",
-    //     text: systemMsg.content,
-    //     cache_control: { type: "ephemeral" },
-    //   },
-    // ],
     system: systemMsg.content,
     messages: _messages,
     temperature,
@@ -147,8 +112,6 @@ export default async function chatChunkClaudeOffice(
     let buffer = ""
     let fullContent = ""
     let inputTokens = 0
-    let cacheCreationInputTokens = 0
-    let cacheReadInputTokens = 0
     let outputTokens = 0
 
     while (true) {
@@ -168,52 +131,28 @@ export default async function chatChunkClaudeOffice(
         try {
           const parsed = jsonParse(data)
 
-          // 捕获开始消息中的 token 信息
           if (parsed.type === "message_start") {
             inputTokens = parsed.message.usage.input_tokens
-            cacheCreationInputTokens = parsed.message.usage.cache_creation_input_tokens
-            cacheReadInputTokens = parsed.message.usage.cache_read_input_tokens
           }
 
-          // 处理内容块
           if (parsed.type === "content_block_delta" && parsed.delta.type === "text_delta") {
             const content = parsed.delta.text
             fullContent += content
             onChunk(content)
-          }
-          // 捕获结束消息中的 token 信息并计算成本
-          else if (parsed.type === "message_delta" && parsed.delta.stop_reason === "end_turn") {
+          } else if (parsed.type === "message_delta" && parsed.delta.stop_reason === "end_turn") {
             outputTokens = parsed.usage.output_tokens
             const totalInputTokens = inputTokens
 
-            // 计算成本
-            const inputCost = calculateClaudeCost(fullContent, totalInputTokens, true, model)
-            const outputCost = calculateClaudeCost(fullContent, outputTokens, false, model)
-
-            // 记录成本
-            try {
-              const costRecords = await getMetadata(["ai-cost-records"])
-              const existingRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
-
-              const newRecord = {
-                id: Date.now(),
-                timestamp: new Date().toISOString(),
-                model,
+            // 使用 costService 记录 token 使用情况
+            await costService.recordTokenUsage(
+              {
                 promptTokenCount: totalInputTokens,
                 candidatesTokenCount: outputTokens,
-                inputCost,
-                outputCost,
-                totalCost: inputCost + outputCost,
-              }
-
-              if (existingRecords.length > 0) {
-                await setMetadata("ai-cost-records", [...existingRecords, newRecord])
-              } else {
-                await setMetadata("ai-cost-records", [newRecord])
-              }
-            } catch (e) {
-              console.error("Error storing cost records:", e)
-            }
+                model: model,
+                content: fullContent,
+              },
+              true
+            ) // true 表示使用 wild 模式的计费
 
             localDB.setItem("chat-chunk-over", overFlag)
             return

@@ -22,7 +22,7 @@ function calculateClaudeCost(fullContent, tokenCount: number, isInput: boolean, 
 
   const rate = ratePerMillionTokens[model] || ratePerMillionTokens["ADVANCED"]
   const tokenRate = isInput ? rate.input : rate.output
-  return (tokenCount / 1000000) * tokenRate // 转换为每百万 token 的价格
+  return (tokenCount / 1000000) * tokenRate
 }
 
 async function handleToolUse(toolUse, onChunk) {
@@ -197,12 +197,17 @@ export default async function chatChunkClaudeOffice(
               const newRecord = {
                 id: Date.now(),
                 timestamp: new Date().toISOString(),
-                model,
-                promptTokenCount: totalInputTokens,
-                candidatesTokenCount: outputTokens,
-                inputCost,
-                outputCost,
+                type: 'token_usage',
                 totalCost: inputCost + outputCost,
+                detail: {
+                  tokenUsage: {
+                    promptTokenCount: totalInputTokens,
+                    candidatesTokenCount: outputTokens,
+                    inputCost,
+                    outputCost,
+                    model,
+                  }
+                }
               }
 
               if (existingRecords.length > 0) {
@@ -235,8 +240,7 @@ export default async function chatChunkClaudeOffice(
               onCancel,
               false,
               temperature,
-              overFlag,
-              baseModel
+              overFlag
             )
             return
           } else if (parsed.type === "content_block_start" && parsed.content_block.type === "tool_use") {
@@ -259,8 +263,7 @@ export default async function chatChunkClaudeOffice(
               onCancel,
               false,
               temperature,
-              overFlag,
-              baseModel
+              overFlag
             )
             return
           }

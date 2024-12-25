@@ -140,8 +140,8 @@ const EnterpriseInitializer: React.FC<EnterpriseInitializerProps> = ({ isOpen, o
 
       // 4. 完成初始化
       updateProgress(3, "初始化完成!")
+      setProgress(100) // 直接设置为 100%
       message.success("企业初始化成功")
-
       setTimeout(() => {
         onSuccess()
       }, 1500)

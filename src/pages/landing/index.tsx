@@ -6,6 +6,7 @@ import Hero from "@/pages/landing/Hero"
 import Footer from "@/pages/landing/Footer"
 import AnimatedBackground from "@/pages/landing/AnimatedBackground"
 import ScrollProgress from "@/pages/landing/ScrollProgress"
+import PricingSection from "@/pages/landing/PricingSection"
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate()
@@ -40,6 +41,7 @@ const LandingPage: React.FC = () => {
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={controls} className='relative'>
         <Hero onGetStarted={handleGetStarted} />
+        <PricingSection></PricingSection>
         <Footer />
       </motion.div>
     </div>

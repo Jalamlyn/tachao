@@ -205,7 +205,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
               持续创新
             </div>
             <div className='text-white/70 text-sm flex items-center gap-2'>
-              <Icon icon='mdi:24-hours' className='text-purple-400' />
+              <Icon icon='tabler:24-hours' className='text-purple-400' />
               专业支持
             </div>
           </div>

@@ -41,7 +41,14 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
       }
 
       try {
-        // 1. 检查订阅状态
+        // 1. 如果是管理员账号,直接授予访问权限
+        if (user.name === '管理员') {
+          setHasAccess(true)
+          setLoading(false)
+          return
+        }
+
+        // 2. 检查订阅状态
         const subscriptionStatus = await subscriptionService.checkSubscriptionStatus(user.organizationId)
         if (subscriptionStatus.status === 'expired') {
           message.warning('组织订阅已过期，请续费')
@@ -50,14 +57,14 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
           return
         }
 
-        // 2. 检查账号类型权限
+        // 3. 检查账号类型权限
         if (user.name.startsWith('wb_') && resourceType === 'page') {
           setHasAccess(false)
           setLoading(false)
           return
         }
 
-        // 3. 检查具体权限
+        // 4. 检查具体权限
         let result = false
         if (resourceType === "template" && role) {
           result = await hasTemplatePermission(resourceId, role, user)
@@ -66,7 +73,7 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
         }
 
         if (!result) {
-          // 4. 如果没有权限，检查是否有申请在处理中
+          // 5. 如果没有权限，检查是否有申请在处理中
           const request = await checkPermissionRequestStatus(resourceType, resourceId, user.id)
           if (request) {
             setRequestStatus({

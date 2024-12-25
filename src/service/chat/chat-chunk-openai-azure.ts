@@ -25,25 +25,25 @@ function calculateCost(tokenCount: number, isInput: boolean, model: string): num
 
 // 清理消息内容，移除图片以准确计算token
 function cleanMessagesForTokenCount(messages: any[]) {
-  return messages.map(msg => {
+  return messages.map((msg) => {
     if (msg.role === "system") {
-      return msg;
+      return msg
     }
-    
+
     if (Array.isArray(msg.content)) {
       // 只保留文本内容
       return {
         ...msg,
         content: msg.content
-          .filter(item => item.type === "text")
-          .map(item => item.text)
-          .join("\n")
-      };
+          .filter((item) => item.type === "text")
+          .map((item) => item.text)
+          .join("\n"),
+      }
     }
-    
+
     // 如果是普通文本消息，直接返回
-    return msg;
-  });
+    return msg
+  })
 }
 
 export default async function chatChunkOpenAIOffice(
@@ -85,8 +85,8 @@ export default async function chatChunkOpenAIOffice(
   }
 
   // 使用清理后的消息计算token
-  const cleanedMessages = cleanMessagesForTokenCount(_messages);
-  const inputTokenCount = countTokens(JSON.stringify(cleanedMessages));
+  const cleanedMessages = cleanMessagesForTokenCount(_messages)
+  const inputTokenCount = countTokens(JSON.stringify(cleanedMessages))
   console.log("[TokenStats] Input token count (excluding images):", inputTokenCount)
 
   let controller = new AbortController()
@@ -163,12 +163,17 @@ export default async function chatChunkOpenAIOffice(
       const newRecord = {
         id: Date.now(),
         timestamp: new Date().toISOString(),
-        model: baseModel,
-        promptTokenCount: inputTokenCount,
-        candidatesTokenCount: outputTokenCount,
-        inputCost,
-        outputCost,
+        type: "token_usage",
         totalCost: inputCost + outputCost,
+        detail: {
+          tokenUsage: {
+            promptTokenCount: inputTokenCount,
+            candidatesTokenCount: outputTokenCount,
+            inputCost,
+            outputCost,
+            model: baseModel,
+          },
+        },
       }
       if (existingRecords.length > 0) {
         await setMetadata("ai-cost-records", [...existingRecords, newRecord])
