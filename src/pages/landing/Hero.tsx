@@ -5,7 +5,6 @@ import { Icon } from "@iconify/react"
 import QRCodeModal from "./QRCodeModal"
 import WaitListModal from "./WaitListModal"
 import { useNavigate } from "react-router-dom"
-import IndustryBubbles from "./IndustryBubbles"
 
 interface HeroProps {
   onGetStarted: () => void
@@ -23,7 +22,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   const [isWaitListOpen, setIsWaitListOpen] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [demoText, setDemoText] = useState("")
-  const [aiResponse, setAiResponse] = useState("")
+  const [aiResponse, setAiResponse] = useState<any>(null)
   const [isTyping, setIsTyping] = useState(false)
   const [currentDemoIndex, setCurrentDemoIndex] = useState(0)
 
@@ -93,7 +92,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       const demo = demoMessages[currentDemoIndex]
       setIsTyping(true)
       setDemoText("")
-      setAiResponse("")
+      setAiResponse(null)
       
       // 模拟用户输入
       let charIndex = 0
@@ -105,27 +104,12 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           clearInterval(typeTimer)
           // 模拟AI响应
           setTimeout(() => {
-            let responseContent = ""
-            if (typeof demo.response === 'string') {
-              responseContent = demo.response
-            } else {
-              responseContent = JSON.stringify(demo.response, null, 2)
-            }
-            
-            let responseIndex = 0
-            const responseTimer = setInterval(() => {
-              if (responseIndex < responseContent.length) {
-                setAiResponse(prev => prev + responseContent[responseIndex])
-                responseIndex++
-              } else {
-                clearInterval(responseTimer)
-                setIsTyping(false)
-                // 延迟后开始下一个演示
-                setTimeout(() => {
-                  setCurrentDemoIndex((prev) => (prev + 1) % demoMessages.length)
-                }, 5000)
-              }
-            }, 30)
+            setAiResponse(demo.response)
+            setIsTyping(false)
+            // 延迟后开始下一个演示
+            setTimeout(() => {
+              setCurrentDemoIndex((prev) => (prev + 1) % demoMessages.length)
+            }, 5000)
           }, 500)
         }
       }, 100)
@@ -185,9 +169,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   }
 
   const renderAIResponse = (response: any) => {
-    if (typeof response === 'string') {
-      return response
-    }
+    if (!response) return null;
 
     return (
       <div className="space-y-4">
@@ -429,7 +411,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
                         transition={{ duration: 0.3 }}
                         className="text-white/90"
                       >
-                        {renderAIResponse(JSON.parse(aiResponse))}
+                        {renderAIResponse(aiResponse)}
                       </motion.div>
                     </div>
                   </div>
