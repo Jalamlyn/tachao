@@ -19,7 +19,7 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
   }, [])
 
   useImperativeHandle(ref, () => ({
-    refresh: fetchCostRecords
+    refresh: fetchCostRecords,
   }))
 
   const fetchCostRecords = async () => {
@@ -44,13 +44,19 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
   const totalPages = Math.ceil(records.length / recordsPerPage)
 
   const totalCost = useMemo(() => {
-    const cost = records.reduce((sum, record) => sum + record.totalCost, 0)
+    const cost = records.reduce((sum, record) => {
+      const recordCost = typeof record.totalCost === 'number' ? record.totalCost : 0
+      return sum + recordCost
+    }, 0)
     onTotalCostChange?.(cost)
     return cost.toFixed(4)
   }, [records, onTotalCostChange])
 
   const currentPageCost = useMemo(() => {
-    return currentRecords.reduce((sum, record) => sum + record.totalCost, 0).toFixed(4)
+    return currentRecords.reduce((sum, record) => {
+      const recordCost = typeof record.totalCost === 'number' ? record.totalCost : 0
+      return sum + recordCost
+    }, 0).toFixed(4)
   }, [currentRecords])
 
   const handlePageSizeChange = (value: string) => {
@@ -80,7 +86,7 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
         icon: "solar:chat-square-code-bold-duotone",
       },
       subscription: {
-        label: "套餐购买",
+        label: "套餐账号开通",
         color: "primary",
         icon: "solar:shield-star-bold-duotone",
       },
@@ -93,9 +99,9 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
     }
 
     return (
-      <div className="flex items-center gap-2">
-        <Icon icon={config.icon} className="text-lg" />
-        <Chip color={config.color} variant="flat">
+      <div className='flex items-center gap-2'>
+        <Icon icon={config.icon} className='text-lg' />
+        <Chip color={config.color} variant='flat'>
           {config.label}
         </Chip>
       </div>
@@ -103,47 +109,47 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
   }
 
   const renderCostDetails = (record) => {
-    if (record.type === 'token_usage' && record.detail?.tokenUsage) {
+    if (record.type === "token_usage" && record.detail?.tokenUsage) {
       const { tokenUsage } = record.detail
       return (
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-default-500">输入 Token:</span>
+        <div className='space-y-1'>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-default-500'>输入 Token:</span>
             <span>{tokenUsage.promptTokenCount}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-default-500">输出 Token:</span>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-default-500'>输出 Token:</span>
             <span>{tokenUsage.candidatesTokenCount}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-default-500">输入费用:</span>
-            <span>{tokenUsage.inputCost?.toFixed(4)}</span>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-default-500'>输入费用:</span>
+            <span>{tokenUsage.inputCost?.toFixed(4)} 塔币</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-default-500">输出费用:</span>
-            <span>{tokenUsage.outputCost?.toFixed(4)}</span>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-default-500'>输出费用:</span>
+            <span>{tokenUsage.outputCost?.toFixed(4)} 塔币</span>
           </div>
         </div>
       )
     }
 
-    if (record.type === 'subscription' && record.detail?.subscription) {
+    if (record.type === "subscription" && record.detail?.subscription) {
       const { subscription } = record.detail
       return (
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-default-500">套餐:</span>
+        <div className='space-y-1'>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-default-500'>套餐:</span>
             <span>{subscription.plan}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-default-500">时长:</span>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-default-500'>时长:</span>
             <span>{subscription.duration} 个月</span>
           </div>
         </div>
       )
     }
 
-    return <span className="text-default-400">-</span>
+    return <span className='text-default-400'>-</span>
   }
 
   return (
@@ -161,7 +167,7 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
             当前显示费用: <span className='font-medium text-default-800'>{currentPageCost} 塔币</span>
           </p>
         </div>
-        <Table 
+        <Table
           aria-label='费用明细表'
           isHeaderSticky
           classNames={{
@@ -174,14 +180,14 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
             <TableColumn>时间</TableColumn>
             <TableColumn>类型</TableColumn>
             <TableColumn>详情</TableColumn>
-            <TableColumn>总费用(塔币)</TableColumn>
+            <TableColumn>费用(塔币)</TableColumn>
           </TableHeader>
-          <TableBody 
+          <TableBody
             items={currentRecords}
             isLoading={isLoading}
             loadingContent={
-              <div className="w-full h-[400px] flex items-center justify-center">
-                <Icon icon="line-md:loading-twotone-loop" className="w-8 h-8 text-primary" />
+              <div className='w-full h-[400px] flex items-center justify-center'>
+                <Icon icon='line-md:loading-twotone-loop' className='w-8 h-8 text-primary' />
               </div>
             }
           >
@@ -191,7 +197,7 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
                 <TableCell>{getRecordTypeChip(record.type)}</TableCell>
                 <TableCell>{renderCostDetails(record)}</TableCell>
                 <TableCell>
-                  <span className="font-medium">{record.totalCost?.toFixed(4)}</span>
+                  <span className='font-medium'>{record.totalCost?.toFixed(4)} 塔币</span>
                 </TableCell>
               </TableRow>
             )}

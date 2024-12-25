@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from "react"
-import {
-  Card,
-  CardBody,
-  Button,
-  Chip,
-  Spinner,
-  Tooltip,
-} from "@nextui-org/react"
+import { Card, CardBody, Button, Chip, Spinner, Tooltip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { getAccount } from "@/service/apis/pay"
 import CostRecords from "./CostRecords"
@@ -16,6 +9,7 @@ import { useStore } from "@/stores/StoreProvider"
 import { reaction } from "mobx"
 import { subscriptionService } from "@/permissions/utils/permissionUtils"
 import message from "@/components/Message"
+import { getMetadata } from "@/service/apis/metadata"
 
 const AccountFinance = observer(() => {
   const { balanceStore } = useStore()
@@ -26,11 +20,13 @@ const AccountFinance = observer(() => {
   const [totalCost, setTotalCost] = useState(0)
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [balanceLogs, setBalanceLogs] = useState([])
   const costRecordsRef = React.useRef(null)
 
   useEffect(() => {
     fetchAccountData()
     fetchSubscriptionData()
+    fetchBalanceLogs()
 
     // 监听余额变化
     const disposer = reaction(
@@ -43,6 +39,16 @@ const AccountFinance = observer(() => {
 
     return () => disposer()
   }, [])
+
+  const fetchBalanceLogs = async () => {
+    try {
+      const logs = await getMetadata(["balance-logs"])
+      const parsedLogs = logs?.data[0]?.value ? JSON.parse(logs.data[0].value) : []
+      setBalanceLogs(parsedLogs)
+    } catch (error) {
+      console.error("Error fetching balance logs:", error)
+    }
+  }
 
   const fetchAccountData = async () => {
     try {
@@ -70,16 +76,12 @@ const AccountFinance = observer(() => {
 
   const handleRefresh = async () => {
     if (isRefreshing) return
-    
+
     setIsRefreshing(true)
     const loadingId = message.loading("正在刷新数据...")
-    
+
     try {
-      await Promise.all([
-        fetchAccountData(),
-        fetchSubscriptionData(),
-        costRecordsRef.current?.refresh(),
-      ])
+      await Promise.all([fetchAccountData(), fetchSubscriptionData(), fetchBalanceLogs(), costRecordsRef.current?.refresh()])
       message.closeLoading(loadingId, "success", "数据刷新成功")
     } catch (error) {
       console.error("Error refreshing data:", error)
@@ -90,7 +92,6 @@ const AccountFinance = observer(() => {
   }
 
   const handleSubscriptionAction = () => {
-    // 处理购买/续费操作
     balanceStore.showRechargeModal(false)
   }
 
@@ -98,10 +99,16 @@ const AccountFinance = observer(() => {
     setTotalCost(cost)
   }
 
-  const InfoItem = ({ label, value }) => (
+  const InfoItem = ({ label, value, tooltip = null }) => (
     <div className='flex justify-between items-center py-2 border-b border-default-200 last:border-none'>
       <span className='text-default-600'>{label}</span>
-      <span className='font-medium'>{value}</span>
+      {tooltip ? (
+        <Tooltip content={tooltip}>
+          <span className='font-medium cursor-help'>{value}</span>
+        </Tooltip>
+      ) : (
+        <span className='font-medium'>{value}</span>
+      )}
     </div>
   )
 
@@ -134,14 +141,9 @@ const AccountFinance = observer(() => {
     <div className='grid gap-6 p-4'>
       <div className='flex justify-between items-center mb-4'>
         <h2 className='text-xl font-bold'>账户费用</h2>
-        <Tooltip content="刷新数据">
-          <Button
-            isIconOnly
-            variant="light"
-            onPress={handleRefresh}
-            isLoading={isRefreshing}
-          >
-            <Icon icon="solar:refresh-circle-bold-duotone" className="w-6 h-6 text-default-600" />
+        <Tooltip content='刷新数据'>
+          <Button isIconOnly variant='light' onPress={handleRefresh} isLoading={isRefreshing}>
+            <Icon icon='solar:refresh-circle-bold-duotone' className='w-6 h-6 text-default-600' />
           </Button>
         </Tooltip>
       </div>
@@ -155,10 +157,20 @@ const AccountFinance = observer(() => {
           <div className='flex flex-col gap-4'>
             <div>
               <InfoItem
-                label='塔币余额'
+                label='塔币总额'
                 value={account?.totalComputePower ? `${(account.totalComputePower / 100).toFixed(2)} 塔币` : "0 塔币"}
+                tooltip='账户充值的总塔币数量'
               />
-              <InfoItem label='实际可用余额' value={`${actualBalance.toFixed(2)} 塔币`} />
+              <InfoItem
+                label='已消费'
+                value={`${totalCost.toFixed(2)} 塔币`}
+                tooltip='所有已使用的塔币总和'
+              />
+              <InfoItem
+                label='实际可用余额'
+                value={`${actualBalance.toFixed(2)} 塔币`}
+                tooltip='总额减去已消费后的实际可用余额'
+              />
             </div>
             <div className='flex justify-end gap-2'>
               <Button

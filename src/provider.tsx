@@ -13,6 +13,7 @@ import { getMetadata } from "./service/apis/metadata"
 import { useStore } from "./stores/StoreProvider"
 import globalStore from "./globalStore"
 import { observer } from "mobx-react-lite"
+import { subscriptionService } from "./permissions/utils/permissionUtils"
 
 const preloadModules = async () => {
   let retryCount = 0
@@ -51,20 +52,84 @@ const calculateActualBalance = async () => {
       return 0
     }
 
+    // 先将总额转换为塔币单位
+    const totalBalance = accountRes.totalComputePower / 100
+
     // 获取费用记录
     const costRecords = await getMetadata(["ai-cost-records"])
     const records = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
-    
-    // 计算总费用
-    const totalCost = records.reduce((sum, record) => sum + (record.totalCost || 0), 0)
-    
+
+    // 计算总费用(费用记录中已经是塔币单位)
+    const totalCost = records.reduce((sum, record) => {
+      // 确保 totalCost 存在且为数字
+      const cost = typeof record.totalCost === 'number' ? record.totalCost : 0
+      return sum + cost
+    }, 0)
+
     // 计算实际余额
-    const actualBalance = accountRes.totalComputePower / 100 - totalCost
-    
+    const actualBalance = totalBalance - totalCost
+
+    // 记录余额变动日志
+    try {
+      const balanceLogs = await getMetadata(["balance-logs"])
+      const existingLogs = balanceLogs?.data[0]?.value ? JSON.parse(balanceLogs.data[0].value) : []
+      
+      const newLog = {
+        timestamp: new Date().toISOString(),
+        totalBalance,
+        totalCost,
+        actualBalance: Math.max(0, actualBalance),
+      }
+
+      if (existingLogs.length > 0) {
+        const lastLog = existingLogs[existingLogs.length - 1]
+        if (lastLog.actualBalance !== newLog.actualBalance) {
+          existingLogs.push(newLog)
+          await setMetadata("balance-logs", existingLogs)
+        }
+      } else {
+        await setMetadata("balance-logs", [newLog])
+      }
+    } catch (error) {
+      console.error("Error storing balance logs:", error)
+    }
+
     return Math.max(0, actualBalance)
   } catch (error) {
     console.error("Error calculating actual balance:", error)
     return 0
+  }
+}
+
+// 新增：初始化订阅信息
+const initializeSubscription = async () => {
+  try {
+    const subscription = await subscriptionService.getSubscription(globalStore.organizationId)
+    if (subscription) {
+      const status = await subscriptionService.checkSubscriptionStatus(globalStore.organizationId)
+      globalStore.subscription = {
+        status: status.status,
+        type: subscription.type,
+        expireDate: subscription.expireDate,
+        features: subscription.features,
+      }
+    } else {
+      globalStore.subscription = {
+        status: null,
+        type: null,
+        expireDate: null,
+        features: null,
+      }
+    }
+  } catch (error) {
+    console.error("Error initializing subscription:", error)
+    // 设置默认值
+    globalStore.subscription = {
+      status: null,
+      type: null,
+      expireDate: null,
+      features: null,
+    }
   }
 }
 
@@ -82,17 +147,20 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
     setIsInit(true)
   }
 
-  // 初始化余额
+  // 初始化余额和订阅信息
   useEffect(() => {
-    const initBalance = async () => {
-      const actualBalance = await calculateActualBalance()
-      balanceStore.setActualBalance(actualBalance)
-      globalStore.actualBalance = actualBalance
+    const initializeData = async () => {
+      if (isInit && !location.pathname.includes("/login")) {
+        const actualBalance = await calculateActualBalance()
+        balanceStore.setActualBalance(actualBalance)
+        globalStore.actualBalance = actualBalance
+
+        // 初始化订阅信息
+        await initializeSubscription()
+      }
     }
 
-    if (isInit && !location.pathname.includes("/login")) {
-      initBalance()
-    }
+    initializeData()
   }, [isInit])
 
   const checkInitialization = async () => {
@@ -121,6 +189,13 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
       }
     } catch (error) {
       console.error("Initialization check failed:", error)
+      // 设置默认值
+      globalStore.subscription = {
+        status: null,
+        type: null,
+        expireDate: null,
+        features: null,
+      }
     }
   }
 
