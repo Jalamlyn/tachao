@@ -16,6 +16,7 @@ import { cn } from "@nextui-org/react"
 import { subscriptionService } from "@/permissions/utils/permissionUtils"
 import { useStore } from "@/stores/StoreProvider"
 import message from "@/components/Message"
+import globalStore from "@/globalStore"
 
 export enum SidebarItemType {
   Nest = "nest",
@@ -64,26 +65,6 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
   ) => {
     const [selected, setSelected] = React.useState<React.Key>(defaultSelectedKey)
     const { balanceStore } = useStore()
-    const [subscriptionInfo, setSubscriptionInfo] = useState(null)
-
-    useEffect(() => {
-      const loadSubscriptionInfo = async () => {
-        try {
-          const subscription = await subscriptionService.getSubscription(balanceStore.organizationId)
-          if (subscription) {
-            setSubscriptionInfo(subscription)
-            // 检查订阅状态
-            const status = await subscriptionService.checkSubscriptionStatus(balanceStore.organizationId)
-            if (status.status === 'warning') {
-              message.warning(`您的订阅将在 ${status.daysToExpire} 天后到期，请及时续费`)
-            }
-          }
-        } catch (error) {
-          console.error("Failed to load subscription info:", error)
-        }
-      }
-      loadSubscriptionInfo()
-    }, [balanceStore.organizationId])
 
     const sectionClasses = {
       ...sectionClassesProp,
@@ -256,56 +237,8 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
       [isCompact, hideEndContent, iconClassName, itemClasses?.base]
     )
 
-    // 订阅状态标识组件
-    const SubscriptionBadge = () => {
-      if (!subscriptionInfo) return null;
-
-      const badgeConfig = {
-        personal: {
-          label: "个人版",
-          color: "warning" as const
-        },
-        enterprise: {
-          label: "企业版",
-          color: "primary" as const
-        },
-        custom: {
-          label: "定制版",
-          color: "secondary" as const
-        }
-      };
-
-      const config = badgeConfig[subscriptionInfo.type];
-
-      return (
-        <div className="px-4 py-2">
-          <Chip
-            size="sm"
-            color={config.color}
-            variant="flat"
-            classNames={{
-              base: "w-full justify-center"
-            }}
-          >
-            {config.label}
-          </Chip>
-          {subscriptionInfo.status === 'warning' && (
-            <div className="mt-1 text-tiny text-warning text-center">
-              {subscriptionInfo.daysToExpire}天后到期
-            </div>
-          )}
-        </div>
-      );
-    };
-
     return (
-      <div className="flex flex-col h-full">
-        {/* 订阅状态标识 */}
-        <SubscriptionBadge />
-        
-        {/* 分割线 */}
-        <div className="my-2 border-t border-divider" />
-        
+      <div className='flex flex-col h-full'>
         {/* 菜单列表 */}
         <Listbox
           key={isCompact ? "compact" : "default"}
@@ -349,22 +282,6 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
             )
           }}
         </Listbox>
-
-        {/* 升级按钮 */}
-        {subscriptionInfo?.type === 'personal' && (
-          <div className="px-4 py-2">
-            <Button
-              size="sm"
-              color="primary"
-              variant="flat"
-              className="w-full"
-              startContent={<Icon icon="solar:rocket-bold-duotone" />}
-              onClick={() => balanceStore.showRechargeModal(true)}
-            >
-              升级企业版
-            </Button>
-          </div>
-        )}
       </div>
     )
   }
