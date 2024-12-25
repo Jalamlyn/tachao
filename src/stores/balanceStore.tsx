@@ -8,35 +8,36 @@ class BalanceStore {
 
   constructor() {
     makeAutoObservable(this)
-    // 初始化时从 globalStore 同步数据，保持兼容性
     this.actualBalance = globalStore.actualBalance
   }
 
   setActualBalance(balance: number) {
     this.actualBalance = balance
-    // 同步到 globalStore，保持兼容性
     globalStore.actualBalance = balance
   }
 
   showRechargeModal(showConfirm = true) {
     if (showConfirm) {
-      // 保留原有的确认框逻辑，以保持兼容性
+      const isNegative = this.actualBalance < 0
       message.confirm({
-        title: "余额不足提醒",
+        title: isNegative ? "账户欠费提醒" : "余额不足提醒",
         content: (
           <div className='space-y-2'>
-            <p>当前账户余额不足，无法继续使用。</p>
+            <p>
+              {isNegative
+                ? `当前账户已欠费 ${Math.abs(this.actualBalance).toFixed(2)} 塔币`
+                : "当前账户余额不足，无法继续使用。"}
+            </p>
             <p>是否前往充值页面？</p>
           </div>
         ),
         onOk: () => {
           window.open("/we-chat-app/admin/settings?tab=finance", "_blank")
         },
-        okText: "去充值",
+        okText: isNegative ? "去补缴" : "去充值",
         cancelText: "取消",
       })
     } else {
-      // 直接显示充值窗口（用于充值按钮点击等场景）
       this.isRechargeModalOpen = true
     }
   }
@@ -45,16 +46,48 @@ class BalanceStore {
     this.isRechargeModalOpen = false
   }
 
-  // 检查余额是否充足
+  // 同步检查余额和订阅状态
   checkBalance(): boolean {
+    // 1. 检查订阅状态
+    const subscription = globalStore.subscription
+    if (!subscription.status || subscription.status === "expired") {
+      message.confirm({
+        title: subscription.status === "expired" ? "套餐已过期提醒" : "未开通套餐提醒",
+        content: (
+          <div className='space-y-2'>
+            <p>
+              {subscription.status === "expired"
+                ? "您的套餐已过期，无法继续使用该功能。"
+                : "您当前没有开通套餐，无法使用该功能。"}
+            </p>
+            <p>是否前往{subscription.status === "expired" ? "续费" : "购买套餐"}？</p>
+          </div>
+        ),
+        onOk: () => {
+          window.open("/we-chat-app/admin/settings?tab=finance", "_blank")
+        },
+        okText: subscription.status === "expired" ? "去续费" : "去购买套餐",
+        cancelText: "取消",
+      })
+      return false
+    }
+
+    // 2. 检查余额
     const hasEnoughBalance = this.actualBalance >= 0.1
     if (!hasEnoughBalance) {
-      message.error("余额不足，请前往企业设置-账户进行充值")
+      const isNegative = this.actualBalance < 0
+      message.error(
+        isNegative
+          ? `账户已欠费 ${Math.abs(this.actualBalance).toFixed(2)} 塔币，请及时补缴`
+          : "余额不足，请前往企业设置-账户进行充值"
+      )
       setTimeout(() => {
         this.showRechargeModal(true)
-      }, 500) // 延迟跳转，让用户能看到提示消息
+      }, 500)
+      return false
     }
-    return hasEnoughBalance
+
+    return true
   }
 }
 
