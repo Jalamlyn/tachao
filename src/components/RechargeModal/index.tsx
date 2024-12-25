@@ -76,7 +76,7 @@ const SUBSCRIPTION_PLANS = {
 }
 
 // 价格选择卡片组件
-const PriceCard = ({ amount, bonus, isPopular, onSelect, isSelected }) => (
+const PriceCard = ({ amount, isPopular, onSelect, isSelected }) => (
   <Card
     isPressable
     isHoverable
@@ -94,7 +94,6 @@ const PriceCard = ({ amount, bonus, isPopular, onSelect, isSelected }) => (
     )}
     <CardBody className='text-center p-6'>
       <div className='text-3xl font-bold mb-2'>¥{amount}</div>
-      {bonus > 0 && <div className='text-success text-sm'>额外赠送 {bonus} 塔币</div>}
       <Button
         className='mt-4'
         color={isSelected ? "primary" : "default"}
@@ -120,9 +119,9 @@ const RechargeModal = observer(() => {
 
   // 价格选项配置
   const priceOptions = [
-    { amount: 19.9, bonus: 2, isPopular: false },
-    { amount: 49.9, bonus: 5, isPopular: true },
-    { amount: 99.9, bonus: 15, isPopular: false },
+    { amount: 19.9, isPopular: false },
+    { amount: 49.9, isPopular: true },
+    { amount: 99.9, isPopular: false },
   ]
 
   useEffect(() => {
@@ -220,7 +219,6 @@ const RechargeModal = observer(() => {
           <PriceCard
             key={option.amount}
             amount={option.amount}
-            bonus={option.bonus}
             isPopular={option.isPopular}
             isSelected={quantity === option.amount}
             onSelect={setQuantity}
@@ -250,9 +248,6 @@ const RechargeModal = observer(() => {
           onChange={(value) => setQuantity(Number(value))}
           className='max-w-md'
         />
-        <div className='text-sm text-default-500'>
-          提示：充值金额越多，赠送比例越高
-        </div>
       </div>
 
       <div className='flex items-center justify-between p-4 bg-primary-50 rounded-lg'>
@@ -280,7 +275,7 @@ const RechargeModal = observer(() => {
             }`}
             onPress={() => setSelectedPlan(plan)}
           >
-            <CardBody className='p-6'>
+            <CardBody className='p-6 flex flex-col'>
               <div className='flex justify-between items-center mb-4'>
                 <div>
                   <h3 className='text-xl font-bold'>{plan.name}</h3>
@@ -293,7 +288,7 @@ const RechargeModal = observer(() => {
                   {plan.costInTokens} 塔币
                 </Chip>
               </div>
-              <div className='space-y-3'>
+              <div className='space-y-3 flex-grow'>
                 {plan.description.map((feature, index) => (
                   <div key={index} className='flex items-center gap-2'>
                     <Icon icon='solar:check-circle-bold-duotone' className='text-success' />
