@@ -204,11 +204,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             if (value !== undefined) {
               if (column.formatConfig) {
                 const formatted = FormatterService.format(value, column.formatConfig)
-                content = (
-                  <span style={formatted.style}>
-                    {formatted.formattedValue}
-                  </span>
-                )
+                content = <span style={formatted.style}>{formatted.formattedValue}</span>
               } else {
                 content = value
               }
@@ -218,10 +214,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
           return (
             <TableCell
               key={column.key}
-              className={cn(
-                "border border-gray-200",
-                column.type === "number" && "text-right font-mono"
-              )}
+              className={cn("border border-gray-200", column.type === "number" && "text-right font-mono")}
             >
               {content}
             </TableCell>
@@ -254,7 +247,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
                         className='border border-gray-200 whitespace-nowrap'
                       >
                         <div className='flex items-center gap-1'>
-                          {column.title}
+                          {column.title ? column.title : column.label}
                           {column.isMappedField && (
                             <Icon icon='mdi:link-variant' className='text-gray-400' title='自动填充字段' />
                           )}
@@ -312,13 +305,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
               ))}
               {isEditable && (
                 <div className='flex justify-end pt-2 border-t'>
-                  <Button
-                    isIconOnly
-                    color='danger'
-                    variant='light'
-                    size='sm'
-                    onClick={() => handleDeleteRow(rowIndex)}
-                  >
+                  <Button isIconOnly color='danger' variant='light' size='sm' onClick={() => handleDeleteRow(rowIndex)}>
                     <Icon icon='mdi:delete' className='w-4 h-4' />
                   </Button>
                 </div>

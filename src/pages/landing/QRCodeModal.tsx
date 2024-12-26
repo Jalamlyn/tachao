@@ -47,7 +47,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose }) => {
                 </li>
                 <li className='flex items-center gap-2'>
                   <Icon icon='mdi:trending-up' className='text-primary' />
-                  效率提升75%
+                  10X效率提升
                 </li>
                 <li className='flex items-center gap-2'>
                   <Icon icon='tabler:24-hours' className='text-primary' />

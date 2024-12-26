@@ -1,4 +1,5 @@
-import chatChunk from "../chat/chat-chunk-claude-wild"
+// import chatChunk from "../chat/chat-chunk-claude-wild"
+import chatChunk from "../chat/chat-deepseek"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import generateFormAgentPrompt from "./prompts/form/form-agent-prompt"

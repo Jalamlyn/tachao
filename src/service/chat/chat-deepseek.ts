@@ -2,6 +2,7 @@ import { message } from "@/components/Message"
 import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { events } from "fetch-event-stream"
+import { costService } from "@/utils/costService"
 
 export default async function chatChunkDeepseek(
   messages,
@@ -18,7 +19,7 @@ export default async function chatChunkDeepseek(
       id: "deepseek",
       name: "DeepSeek",
       apiKey: "sk-2ef828934e1f422d8ae5c4f71770cef1",
-      endpoint: "https://api.deepseek.com/chat/completions",
+      endpoint: "https://api.deepseek.com/beta/chat/completions",
       isDefault: false,
     },
   ]
@@ -45,7 +46,7 @@ export default async function chatChunkDeepseek(
     model: model,
     messages: _messages,
     temperature,
-    max_tokens: 4096,
+    max_tokens: 8192,
     stream: true,
   }
 
@@ -71,6 +72,8 @@ export default async function chatChunkDeepseek(
 
     const eventStream = events(response, controller.signal)
     let fullContent = ""
+    let inputTokens = 0
+    let outputTokens = 0
 
     for await (let event of eventStream) {
       if (event.data !== "[DONE]") {
@@ -79,6 +82,11 @@ export default async function chatChunkDeepseek(
           const content = parsed?.choices[0]?.delta?.content || ""
           fullContent += content
           onChunk(content)
+
+          if (parsed?.usage) {
+            inputTokens = parsed.usage.prompt_tokens || inputTokens
+            outputTokens = parsed.usage.completion_tokens || outputTokens
+          }
 
           if (parsed?.choices[0]?.finish_reason === "length") {
             const lastTenChars = fullContent.slice(-10)
@@ -102,23 +110,24 @@ export default async function chatChunkDeepseek(
             )
             return
           }
-
-          if (parsed?.usage) {
-            const usageData = {
-              usage: parsed.usage
-            }
-          }
         } catch (error) {
           console.error("Error parsing JSON:", error)
         }
       } else {
+        // 记录 token 使用情况
+        await costService.recordTokenUsage({
+          promptTokenCount: inputTokens,
+          candidatesTokenCount: outputTokens,
+          model: baseModel,
+          content: fullContent,
+        })
         localDB.setItem("chat-chunk-over", overFlag)
       }
     }
   } catch (error) {
     if (error.name === "AbortError") {
       console.log("Fetch aborted")
-    }else {
+    } else {
       console.error("Error:", error)
       message.error(`An error occurred while fetching data: ${error.message}`)
       if (error.message.includes("context_length_exceeded")) {

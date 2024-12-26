@@ -207,7 +207,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             </div>
             <div className='flex items-center space-x-2'>
               <Icon icon='mdi:trending-up' className='text-green-400' />
-              <span>效率提升75%</span>
+              <span>10X效率提升</span>
             </div>
             <div className='flex items-center space-x-2'>
               <Icon icon='mdi:rocket-launch' className='text-purple-400' />

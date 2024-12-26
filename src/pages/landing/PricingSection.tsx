@@ -187,14 +187,6 @@ const PricingSection = () => {
                   hover:scale-[1.02] hover:border-primary/50
                 `}
               >
-                {plan.highlight && (
-                  <div className='absolute left1/2 -translate-x-1/2'>
-                    <Chip color='primary' variant='shadow'>
-                      推荐方案
-                    </Chip>
-                  </div>
-                )}
-
                 <div className='flex flex-col flex-1 p-6'>
                   <div className='mb-6'>
                     <h3 className='text-2xl font-bold mb-2'>{plan.name}</h3>

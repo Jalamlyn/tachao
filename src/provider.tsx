@@ -9,7 +9,7 @@ import { Spinner } from "@nextui-org/react"
 import { preloadBabel, preloadTokenizer } from "./utils/moduleLoader"
 import EnterpriseInitializer from "./components/EnterpriseInitializer"
 import { getAccount } from "./service/apis/pay"
-import { getMetadata } from "./service/apis/metadata"
+import { getMetadata, setMetadata } from "./service/apis/metadata"
 import { useStore } from "./stores/StoreProvider"
 import globalStore from "./globalStore"
 import { observer } from "mobx-react-lite"
@@ -62,7 +62,7 @@ const calculateActualBalance = async () => {
     // 计算总费用(费用记录中已经是塔币单位)
     const totalCost = records.reduce((sum, record) => {
       // 确保 totalCost 存在且为数字
-      const cost = typeof record.totalCost === 'number' ? record.totalCost : 0
+      const cost = typeof record.totalCost === "number" ? record.totalCost : 0
       return sum + cost
     }, 0)
 
@@ -73,7 +73,7 @@ const calculateActualBalance = async () => {
     try {
       const balanceLogs = await getMetadata(["balance-logs"])
       const existingLogs = balanceLogs?.data[0]?.value ? JSON.parse(balanceLogs.data[0].value) : []
-      
+
       const newLog = {
         timestamp: new Date().toISOString(),
         totalBalance,

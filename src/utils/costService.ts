@@ -67,10 +67,28 @@ export const costService = {
     return (tokenCount / 1000000) * tokenRate
   },
 
+  // 计算 DeepSeek 费用
+  calculateDeepSeekCost(content: string, tokenCount: number, isInput: boolean, model: string): number {
+    const ratePerMillionTokens = {
+      input: 10,
+      output: 20,
+    }
+    const tokenRate = isInput ? ratePerMillionTokens.input : ratePerMillionTokens.output
+    return (tokenCount / 1000000) * tokenRate
+  },
+
   // 记录 token 使用成本
   async recordTokenUsage(usage: TokenUsage, isWild: boolean = false): Promise<void> {
     try {
-      const costCalculator = isWild ? this.calculateClaudeWildCost : this.calculateClaudeCost
+      let costCalculator
+      if (usage.model.startsWith("deepseek")) {
+        costCalculator = this.calculateDeepSeekCost
+      } else if (isWild) {
+        costCalculator = this.calculateClaudeWildCost
+      } else {
+        costCalculator = this.calculateClaudeCost
+      }
+
       const inputCost = costCalculator(usage.content || "", usage.promptTokenCount, true, usage.model)
       const outputCost = costCalculator(usage.content || "", usage.candidatesTokenCount, false, usage.model)
 
