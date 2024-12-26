@@ -41,6 +41,32 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     }
   }, [config.columns])
 
+  // 格式化资源显示值
+  const formatResourceDisplayValue = (resource: any, resourceConfig: any): string => {
+    if (!resource) return '';
+
+    const { displayField, displayFormat, displayFields } = resourceConfig;
+
+    if (displayFormat) {
+      return displayFormat(resource);
+    }
+
+    if (displayField) {
+      return resource[displayField] || '';
+    }
+
+    if (displayFields?.length) {
+      return displayFields
+        .map(df => `${df.label}: ${resource[df.key]}`)
+        .join(' | ');
+    }
+
+    return resource.name || 
+           resource.title || 
+           resource.code || 
+           '';
+  }
+
   const handleResourceSelect = useCallback(
     (rowIndex: number, columnKey: string, selected: any) => {
       if (!selected || !selected[0]) return
@@ -48,38 +74,50 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       const resource = selected[0]
       const column = config.columns.find((col) => col.key === columnKey)
 
-      if (column?.resourceConfig?.fieldMapping) {
-        Object.entries(column.resourceConfig.fieldMapping).forEach(([targetField, mapping]) => {
-          const targetColumn = config.columns.find((col) => col.key === targetField)
-          if (!targetColumn) return
+      if (column?.resourceConfig) {
+        // 格式化显示值
+        const displayValue = formatResourceDisplayValue(resource, column.resourceConfig);
 
-          targetColumn.isMappedField = true
-          targetColumn.mappedFrom = `${columnKey}.${typeof mapping === "string" ? mapping : mapping.field}`
-          targetColumn.editable = false
+        // 设置表单值，包含显示值
+        form.setValue(`${fieldName}.${rowIndex}.${columnKey}`, {
+          ...resource,
+          _displayValue: displayValue
+        });
 
-          if (typeof mapping === "string") {
-            const value = resource[mapping]
-            if (value !== undefined) {
-              form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value)
-            }
-          } else {
-            if (mapping.condition && !mapping.condition(resource)) {
-              return
-            }
+        // 处理字段映射
+        if (column.resourceConfig?.fieldMapping) {
+          Object.entries(column.resourceConfig.fieldMapping).forEach(([targetField, mapping]) => {
+            const targetColumn = config.columns.find((col) => col.key === targetField)
+            if (!targetColumn) return
 
-            if (mapping.fields) {
-              const values = mapping.fields.map((field) => resource[field])
-              const value = mapping.transform ? mapping.transform(values) : values.join(" ")
-              form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value)
+            targetColumn.isMappedField = true
+            targetColumn.mappedFrom = `${columnKey}.${typeof mapping === "string" ? mapping : mapping.field}`
+            targetColumn.editable = false
+
+            if (typeof mapping === "string") {
+              const value = resource[mapping]
+              if (value !== undefined) {
+                form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value)
+              }
             } else {
-              const value = resource[mapping.field]
-              const transformedValue = mapping.transform ? mapping.transform(value) : value
-              if (transformedValue !== undefined) {
-                form.setValue(`${fieldName}.${rowIndex}.${targetField}`, transformedValue)
+              if (mapping.condition && !mapping.condition(resource)) {
+                return
+              }
+
+              if (mapping.fields) {
+                const values = mapping.fields.map((field) => resource[field])
+                const value = mapping.transform ? mapping.transform(values) : values.join(" ")
+                form.setValue(`${fieldName}.${rowIndex}.${targetField}`, value)
+              } else {
+                const value = resource[mapping.field]
+                const transformedValue = mapping.transform ? mapping.transform(value) : value
+                if (transformedValue !== undefined) {
+                  form.setValue(`${fieldName}.${rowIndex}.${targetField}`, transformedValue)
+                }
               }
             }
-          }
-        })
+          })
+        }
       }
     },
     [config.columns, fieldName, form]
@@ -110,7 +148,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       {} as Record<string, any>
     )
 
-    // 直接append,不触发其他操作
     append(newRow)
   }, [config.columns, append])
 
@@ -139,7 +176,12 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
             render={({ field }) => (
               <FormItem className='flex-1'>
                 <FormControl>
-                  <Input {...field} readOnly className={cn("min-w-[120px] border-0 focus:ring-0 bg-transparent")} />
+                  <Input 
+                    {...field} 
+                    value={field.value?._displayValue || ''} 
+                    readOnly 
+                    className={cn("min-w-[120px] border-0 focus:ring-0 bg-transparent")} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -151,7 +193,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
               selectionMode='single'
               onSelect={(selected) => {
                 if (selected.length > 0) {
-                  form.setValue(cellFieldName, selected[0])
                   handleResourceSelect(rowIndex, column.key, selected)
                 }
               }}
