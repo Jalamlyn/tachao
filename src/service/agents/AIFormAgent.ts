@@ -17,6 +17,7 @@ export class AIFormAgent {
   private _rawConfig: string | null = null
   private _versionIndex: number = 0
   private _imageAnalysisCache: Map<string, string> = new Map()
+  private _analysisInProgress: Set<string> = new Set()
 
   private constructor() {}
 
@@ -46,6 +47,41 @@ export class AIFormAgent {
     this._versionIndex = index
   }
 
+  public clearImageAnalysis(imageUrl?: string) {
+    if (imageUrl) {
+      this._imageAnalysisCache.delete(imageUrl)
+      this._analysisInProgress.delete(imageUrl)
+    } else {
+      this._imageAnalysisCache.clear()
+      this._analysisInProgress.clear()
+    }
+  }
+
+  public syncImageAnalysisCache() {
+    const currentImages = new Set(imageStore.images)
+    for (const [imageUrl] of this._imageAnalysisCache) {
+      if (!currentImages.has(imageUrl)) {
+        this.clearImageAnalysis(imageUrl)
+      }
+    }
+  }
+
+  public async getImageAnalysis(imageUrl: string): Promise<{
+    result: string
+    inProgress: boolean
+  }> {
+    if (this._imageAnalysisCache.has(imageUrl)) {
+      return {
+        result: this._imageAnalysisCache.get(imageUrl)!,
+        inProgress: false,
+      }
+    }
+    return {
+      result: "",
+      inProgress: this._analysisInProgress.has(imageUrl),
+    }
+  }
+
   private async analyzeImages(images: string[]): Promise<string> {
     if (images.length === 0) return ""
 
@@ -57,11 +93,15 @@ export class AIFormAgent {
         continue
       }
 
-      // 使用Azure模型分析图片
-      const messages = [
-        {
-          role: "system",
-          content: `你是一个专业的表单设计分析师。请分析图片中的表单内容，并按以下格式返回分析结果：
+      // 标记分析开始
+      this._analysisInProgress.add(imageUrl)
+
+      try {
+        // 使用Azure模型分析图片
+        const messages = [
+          {
+            role: "system",
+            content: `你是一个专业的表单设计分析师。请分析图片中的表单内容，并按以下格式返回分析结果：
 1. 表单目的：[描述表单的主要用途]
 2. 字段列表：
    - 字段名称：[字段类型] - [字段描述]
@@ -70,40 +110,46 @@ export class AIFormAgent {
    - [描述发现的业务规则和验证逻辑]
 4. 建议的表单结构：
    [描述推荐的表单结构和组织方式]`
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: "请分析这张图片中的表单内容，给出详细的分析结果。"
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: imageUrl,
-                detail: "high"
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "请分析这张图片中的表单内容，给出详细的分析结果。"
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: imageUrl,
+                  detail: "high"
+                }
               }
-            }
-          ]
-        }
-      ]
+            ]
+          }
+        ]
 
-      let response = ""
-      await chatChunkOpenAIOffice(
-        messages,
-        (chunk: string) => {
-          response += chunk
-        },
-        () => {},
-        true,
-        0,
-        "YES"
-      )
+        let response = ""
+        await chatChunkOpenAIOffice(
+          messages,
+          (chunk: string) => {
+            response += chunk
+          },
+          () => {},
+          true,
+          0,
+          "YES"
+        )
 
-      // 缓存分析结果
-      this._imageAnalysisCache.set(imageUrl, response)
-      allAnalysis.push(response)
+        // 缓存分析结果
+        this._imageAnalysisCache.set(imageUrl, response)
+        allAnalysis.push(response)
+      } catch (error) {
+        console.error("Error analyzing image:", error)
+      } finally {
+        // 标记分析完成
+        this._analysisInProgress.delete(imageUrl)
+      }
     }
 
     return allAnalysis.join("\n\n")
@@ -141,6 +187,9 @@ export class AIFormAgent {
       const cachedImages = imageStore.images
       const cachedExcel = excelStore.cachedExcel
       const resources = result.data?.[0]?.value
+
+      // 同步图片分析缓存
+      this.syncImageAnalysisCache()
 
       // 如果有图片，先进行图片分析
       let imageAnalysis = ""
