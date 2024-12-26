@@ -219,6 +219,33 @@ ${imageAnalysis}
       \`\`\`
       """
       包裹起来, 在 watch 中编写逻辑,必须遵循 ${guide} 的规则, 除了上下文中的依赖, 代码中不允许使用任何外部代码, 使用的任何函数方法必须先声明, 不能省略任何逻辑, 必须完整返回所有代码
+      <表单字段支持的类型>
+      | "text"
+      | "password"
+      | "number"
+      | "email"
+      | "tel"
+      | "url"
+      | "textarea"
+      | "select"
+      | "date"
+      | "datetime"
+      | "custom"
+      | "resource"
+      | "signature"
+      | "radio"
+      | "checkbox"
+      | "switch"
+      | "slider"
+      | "upload"
+      | "clockIn"
+      | "location"
+      | "imageUpload"
+      | "custom"
+      </表单支持的字段类型>
+      所有不支持的字段类型, 都用 custom + 自定义组件实现
+      生成代码之前先思考哪些需要 custom 实现
+      自定义组件只能使用 NextUI 的组件, 不能使用其他库的组件, 用 NextUI.Button 这种方式来使用
       </代码生成规范 用户不可见>
       `
 

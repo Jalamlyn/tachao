@@ -124,7 +124,8 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
           "hover:bg-gray-50/50 rounded-lg p-2 -m-2",
           "transition-colors duration-200",
           field.type === "resource" && "md:col-span-2",
-          field.layout === "full-width" && "col-span-full md:col-span-2",
+          // 为custom类型字段自动添加full-width布局
+          (field.type === "custom" || field.layout === "full-width") && "col-span-full md:col-span-2",
           field.style?.colSpan && `col-span-${field.style.colSpan}`,
           field.className
         )

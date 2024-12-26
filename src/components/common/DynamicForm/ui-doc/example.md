@@ -1802,7 +1802,6 @@ export default (props) => {
 
   // 模拟城市数据
   React.useEffect(() => {
-    // 这里使用一些主要城市作为示例
     setCities([
       { label: "北京", value: "beijing" },
       { label: "上海", value: "shanghai" },
@@ -1878,6 +1877,47 @@ export default (props) => {
                   )
                 },
               },
+              // 添加图片上传字段
+              {
+                name: "weatherImages",
+                label: "天气实景图片",
+                type: "imageUpload", // 使用新的imageUpload类型
+                description: "上传当前天气实景照片",
+                layout: "full-width", // 让图片上传组件占据整行
+                uploadConfig: {
+                  maxSize: 5 * 1024 * 1024, // 限制5MB
+                  accept: "image/*",
+                  onSuccess: (file) => {
+                    message.success(`图片 ${file.fileName} 上传成功`)
+                  },
+                  onError: (error) => {
+                    message.error(`上传失败: ${error.message}`)
+                  },
+                  onProgress: (percent) => {
+                    console.log(`上传进度: ${percent}%`)
+                  },
+                },
+                // 可选：自定义验证
+                validate: (value) => {
+                  if (value && value.length > 9) {
+                    return "最多只能上传9张图片"
+                  }
+                  return true
+                },
+                // 可选：样式配置
+                style: {
+                  colSpan: 12, // 占据所有列
+                  custom: {
+                    marginTop: "1rem",
+                    marginBottom: "1rem",
+                  },
+                },
+                // 可选：提示信息
+                tooltip: {
+                  content: "支持jpg、png格式，单张图片不超过5MB",
+                  placement: "top",
+                },
+              },
             ],
           },
         ],
@@ -1890,21 +1930,17 @@ export default (props) => {
           if (city) {
             try {
               setLoading(true)
-              // 这里使用和风天气API，需要替换为你的API Key
               const response = await fetch(
-                `https://devapi.qweather.com/v7/weather/now?location=${city}&key=f573e1bf135b43e9bfa6a8c75887277b
-
-`
+                `https://devapi.qweather.com/v7/weather/now?location=${city}&key=f573e1bf135b43e9bfa6a8c75887277b`
               )
               const data = await response.json()
 
-              // 模拟API响应，实际使用时替换为真实API响应
               setWeatherData({
-                temp: Math.floor(Math.random() * 15) + 15, // 15-30度
+                temp: Math.floor(Math.random() * 15) + 15,
                 text: ["晴", "多云", "阴", "小雨"][Math.floor(Math.random() * 4)],
-                humidity: Math.floor(Math.random() * 30) + 40, // 40-70%
+                humidity: Math.floor(Math.random() * 30) + 40,
                 windDir: ["东北风", "西南风", "东南风", "西北风"][Math.floor(Math.random() * 4)],
-                windSpeed: Math.floor(Math.random() * 20) + 5, // 5-25km/h
+                windSpeed: Math.floor(Math.random() * 20) + 5,
                 updateTime: new Date().toLocaleString(),
               })
             } catch (error) {
@@ -1914,6 +1950,12 @@ export default (props) => {
               setLoading(false)
             }
           }
+        }
+
+        // 可以监听图片上传变化
+        if (name === "weatherImages") {
+          const images = form.getValues("weatherImages")
+          console.log("Weather images updated:", images)
         }
       })
 

@@ -64,6 +64,8 @@ export type FormFieldType =
   | "upload"
   | "clockIn"
   | "location"
+  | "imageUpload"
+  | "custom"
 
 /**
  * 手动输入字段类型
