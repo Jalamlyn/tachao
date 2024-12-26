@@ -2,7 +2,7 @@ import React from "react"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Image } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion } from "framer-motion"
-import wecomqr from "../../../../public/assets/wechat.jpg"
+import wecomqr from "../../../../public/assets/wechat.png"
 
 interface ServiceConsultModalProps {
   isOpen: boolean

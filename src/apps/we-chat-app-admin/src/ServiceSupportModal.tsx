@@ -12,7 +12,7 @@ import {
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion } from "framer-motion"
-import wecomqr from "../../../../public/wechat.jpg"
+import wecomqr from "../../../../public/wechat.png"
 
 interface ServiceSupportModalProps {
   isOpen: boolean

@@ -17,7 +17,7 @@ import { Icon } from "@iconify/react"
 import { useMetadata } from "@/hooks/useMetadata"
 import { AppIndex } from "../store/useAppStore"
 import message from "@/components/Message"
-import wecomqr from "../../../../public/wechat.jpg"
+import wecomqr from "../../../../public/wechat.png"
 
 interface DevelopModalProps {
   isOpen: boolean
