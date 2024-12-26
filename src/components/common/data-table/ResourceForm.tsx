@@ -65,10 +65,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({
       return z.object(schemaFields)
     }
 
-    return z.object({
-      name: z.string().min(1, "名称不能为空"),
-      description: z.string().optional(),
-    })
+    return z.object({})
   }
 
   const createDefaultValues = () => {
@@ -99,10 +96,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({
       }, {})
     }
 
-    return {
-      name: "",
-      description: "",
-    }
+    return {}
   }
 
   const form = useForm<z.infer<ReturnType<typeof createFormSchema>>>({
@@ -153,16 +147,20 @@ const ResourceForm: React.FC<ResourceFormProps> = ({
         }))
     }
 
-    return [
-      { name: "name", label: "名称" },
-      { name: "description", label: "描述" },
-    ]
+    return []
   }
 
   const fields = getFormFields()
   const groupedFields = {
-    basic: fields.filter((field) => ["name", "description", "title"].includes(field.name)),
-    details: fields.filter((field) => !["name", "description", "title"].includes(field.name)),
+    details: fields.filter((field) => !["dataid"].includes(field.name)),
+  }
+
+  if (fields.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8">
+        <p className="text-gray-500 mb-4">请先添加数据列</p>
+      </div>
+    )
   }
 
   return (
@@ -170,35 +168,6 @@ const ResourceForm: React.FC<ResourceFormProps> = ({
       <div className='flex-1 overflow-y-auto px-6 py-4 max-h-[70vh]'>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-6'>
-            {groupedFields.basic.length > 0 && (
-              <div className='space-y-4'>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  {groupedFields.basic.map((field) => (
-                    <FormField
-                      key={field.name}
-                      control={form.control}
-                      name={field.name}
-                      render={({ field: formField }) => (
-                        <FormItem>
-                          <FormLabel className='capitalize text-gray-700'>
-                            {field.label.replace(/([A-Z])/g, " $1").trim()}
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...formField}
-                              disabled={field.name === "dataid"}
-                              className='w-full focus:ring-indigo-500 focus:border-indigo-500'
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
             {groupedFields.details.length > 0 && (
               <div className='space-y-4'>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>

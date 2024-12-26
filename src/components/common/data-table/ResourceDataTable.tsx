@@ -26,6 +26,8 @@ import { ResourceDataTableToolbar } from "./ResourceDataTableToolbar"
 import { ResourceDataTableBody } from "./ResourceDataTableBody"
 import { ResourceDataTablePagination } from "./ResourceDataTablePagination"
 import AddColumnsModal from "./AddColumnsModal"
+import { Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +39,22 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Checkbox } from "@/components/ui/checkbox"
+
+// 新增空状态组件
+const EmptyStatePrompt = ({ onAddColumns }: { onAddColumns: () => void }) => (
+  <div className="flex flex-col items-center justify-center py-12">
+    <div className="text-4xl mb-4">📊</div>
+    <h3 className="text-lg font-medium mb-2">还没有定义数据列</h3>
+    <p className="text-gray-500 mb-4">请先添加数据列以开始管理您的数据</p>
+    <Button 
+      onClick={onAddColumns}
+      className="bg-primary hover:bg-primary/90"
+    >
+      <Plus className="mr-2 h-4 w-4" />
+      添加数据列
+    </Button>
+  </div>
+)
 
 declare module "@tanstack/table-core" {
   interface FilterFns {
@@ -69,6 +87,14 @@ const ResourceDataTable: React.FC = ({ id }) => {
   const [showDeleteColumnAlert, setShowDeleteColumnAlert] = useState<string | null>(null)
   const [isAddColumnsModalOpen, setIsAddColumnsModalOpen] = useState(false)
 
+  const hasColumns = React.useMemo(() => {
+    if (!resource?.indexFields) return false
+    return (
+      (resource.indexFields.displayFields?.length > 0) ||
+      (Object.keys(resource.indexFields?.rawData || {}).length > 0)
+    )
+  }, [resource])
+
   const fetchResources = useCallback(async () => {
     if (!id) return
     try {
@@ -83,7 +109,7 @@ const ResourceDataTable: React.FC = ({ id }) => {
   }, [id, getDetail])
 
   const handleSave = async (formData: any) => {
-    if (!resource) return
+    if (!resource || !hasColumns) return
 
     setIsLoading(true)
     try {
@@ -115,6 +141,7 @@ const ResourceDataTable: React.FC = ({ id }) => {
     }
   }
 
+  // 其他现有方法保持不变...
   const handleEdit = (row: any) => {
     setEditingRow(row)
     setIsModalOpen(true)
@@ -274,7 +301,6 @@ const ResourceDataTable: React.FC = ({ id }) => {
     if (resource) {
       let dynamicColumns = []
 
-      // 如果有 indexFields.displayFields，使用它来生成列
       if (resource.indexFields?.displayFields) {
         dynamicColumns = resource.indexFields.displayFields.map((field) => ({
           accessorKey: field.key,
@@ -285,12 +311,10 @@ const ResourceDataTable: React.FC = ({ id }) => {
           enableSorting: true,
         }))
       }
-      // 如果没有 displayFields 但有数据，从数据中生成列
       else if (resource.data && resource.data.length > 0) {
         const keys = Object.keys(resource.data[0])
         dynamicColumns = processMultiLevelHeaders(keys, handleEdit)
       }
-      // 如果都没有但有 rawData，从 rawData 生成列
       else if (resource.indexFields?.rawData) {
         const keys = Object.keys(resource.indexFields.rawData)
         dynamicColumns = keys.map((key) => ({
@@ -387,22 +411,29 @@ const ResourceDataTable: React.FC = ({ id }) => {
         <h1 className='text-2xl font-bold text-gray-800'>{resource.name}</h1>
       </div>
 
-      <ResourceDataTableToolbar
-        table={table}
-        globalFilter={globalFilter}
-        setGlobalFilter={setGlobalFilter}
-        onAddNew={() => {
-          setEditingRow(null)
-          setIsModalOpen(true)
-        }}
-        onExport={handleExportExcel}
-        onBatchDelete={handleBatchDelete}
-        hasSelection={Object.keys(rowSelection).length > 0}
-        onAddColumns={() => setIsAddColumnsModalOpen(true)}
-        onDeleteColumn={handleDeleteColumn}
-      />
-      <ResourceDataTableBody table={table} columns={columns} />
-      <ResourceDataTablePagination table={table} />
+      {!hasColumns ? (
+        <EmptyStatePrompt onAddColumns={() => setIsAddColumnsModalOpen(true)} />
+      ) : (
+        <>
+          <ResourceDataTableToolbar
+            table={table}
+            globalFilter={globalFilter}
+            setGlobalFilter={setGlobalFilter}
+            onAddNew={() => {
+              setEditingRow(null)
+              setIsModalOpen(true)
+            }}
+            onExport={handleExportExcel}
+            onBatchDelete={handleBatchDelete}
+            hasSelection={Object.keys(rowSelection).length > 0}
+            onAddColumns={() => setIsAddColumnsModalOpen(true)}
+            onDeleteColumn={handleDeleteColumn}
+            showAddNew={hasColumns}
+          />
+          <ResourceDataTableBody table={table} columns={columns} />
+          <ResourceDataTablePagination table={table} />
+        </>
+      )}
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className='w-full max-w-4xl p-0'>

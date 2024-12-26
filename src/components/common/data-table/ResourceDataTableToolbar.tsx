@@ -23,6 +23,7 @@ interface ResourceDataTableToolbarProps<TData> {
   hasSelection: boolean
   onAddColumns: () => void
   onDeleteColumn: (columnId: string) => void
+  showAddNew?: boolean
 }
 
 export function ResourceDataTableToolbar<TData>({
@@ -35,6 +36,7 @@ export function ResourceDataTableToolbar<TData>({
   hasSelection,
   onAddColumns,
   onDeleteColumn,
+  showAddNew = true,
 }: ResourceDataTableToolbarProps<TData>) {
   return (
     <div className='flex items-center justify-between py-4 gap-4'>
@@ -45,10 +47,12 @@ export function ResourceDataTableToolbar<TData>({
         useButton={true}
       />
       <div className='flex justify-center items-center gap-4'>
-        <Button onClick={onAddNew}>
-          <Plus className='mr-2 h-4 w-4' />
-          新增数据
-        </Button>
+        {showAddNew && (
+          <Button onClick={onAddNew}>
+            <Plus className='mr-2 h-4 w-4' />
+            新增数据
+          </Button>
+        )}
 
         {hasSelection && (
           <Button
