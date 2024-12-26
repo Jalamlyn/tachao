@@ -42,15 +42,12 @@ import { Checkbox } from "@/components/ui/checkbox"
 
 // 新增空状态组件
 const EmptyStatePrompt = ({ onAddColumns }: { onAddColumns: () => void }) => (
-  <div className="flex flex-col items-center justify-center py-12">
-    <div className="text-4xl mb-4">📊</div>
-    <h3 className="text-lg font-medium mb-2">还没有定义数据列</h3>
-    <p className="text-gray-500 mb-4">请先添加数据列以开始管理您的数据</p>
-    <Button 
-      onClick={onAddColumns}
-      className="bg-primary hover:bg-primary/90"
-    >
-      <Plus className="mr-2 h-4 w-4" />
+  <div className='flex flex-col items-center justify-center py-12'>
+    <div className='text-4xl mb-4'>📊</div>
+    <h3 className='text-lg font-medium mb-2'>还没有定义数据列</h3>
+    <p className='text-gray-500 mb-4'>请先添加数据列以开始管理您的数据</p>
+    <Button onClick={onAddColumns} className='bg-primary hover:bg-primary/90'>
+      <Plus className='mr-2 h-4 w-4' />
       添加数据列
     </Button>
   </div>
@@ -89,10 +86,7 @@ const ResourceDataTable: React.FC = ({ id }) => {
 
   const hasColumns = React.useMemo(() => {
     if (!resource?.indexFields) return false
-    return (
-      (resource.indexFields.displayFields?.length > 0) ||
-      (Object.keys(resource.indexFields?.rawData || {}).length > 0)
-    )
+    return resource.indexFields.displayFields?.length > 0 || Object.keys(resource.indexFields?.rawData || {}).length > 0
   }, [resource])
 
   const fetchResources = useCallback(async () => {
@@ -207,6 +201,22 @@ const ResourceDataTable: React.FC = ({ id }) => {
     if (!resource) return
 
     try {
+      // 准备新的rawData
+      const newRawData = {
+        ...(resource.indexFields?.rawData || {}),
+        ...newColumns.reduce(
+          (acc, col) => ({
+            ...acc,
+            [col]: {
+              type: "string", // 默认类型
+              required: false, // 默认不必填
+            },
+          }),
+          {}
+        ),
+      }
+
+      // 准备新的data
       const newData = resource.data.map((item: any) => {
         const newItem = { ...item }
         newColumns.forEach((col) => {
@@ -215,9 +225,14 @@ const ResourceDataTable: React.FC = ({ id }) => {
         return newItem
       })
 
+      // 更新resource，同时更新rawData和data
       const updatedResource = await update(resource.id, {
         ...resource,
         data: newData,
+        indexFields: {
+          ...resource.indexFields,
+          rawData: newRawData,
+        },
       })
 
       if (updatedResource) {
@@ -310,12 +325,10 @@ const ResourceDataTable: React.FC = ({ id }) => {
           enablePinning: true,
           enableSorting: true,
         }))
-      }
-      else if (resource.data && resource.data.length > 0) {
+      } else if (resource.data && resource.data.length > 0) {
         const keys = Object.keys(resource.data[0])
         dynamicColumns = processMultiLevelHeaders(keys, handleEdit)
-      }
-      else if (resource.indexFields?.rawData) {
+      } else if (resource.indexFields?.rawData) {
         const keys = Object.keys(resource.indexFields.rawData)
         dynamicColumns = keys.map((key) => ({
           accessorKey: key,
