@@ -104,11 +104,11 @@ const ResourceDataTable: React.FC = ({ id }) => {
         setResource(updatedResource)
         setIsModalOpen(false)
         setEditingRow(null)
-        message.success(editingRow ? "更新成功" : "添加成功")
+        message.success(editingRow ? "更新成功" : "新增数据成功")
       }
     } catch (error) {
       console.error("Error saving data:", error)
-      message.error(editingRow ? "更新失败" : "添加失败")
+      message.error(editingRow ? "更新失败" : "新增数据失败")
     } finally {
       setIsLoading(false)
     }
@@ -267,16 +267,70 @@ const ResourceDataTable: React.FC = ({ id }) => {
     if (id) {
       fetchResources()
     }
-  }, [])
+  }, [id, fetchResources])
 
   useEffect(() => {
-    if (resource?.data && resource.data.length > 0) {
-      const keys = Object.keys(resource.data[0])
-      const dynamicColumns = [
-        ...processMultiLevelHeaders(keys, handleEdit),
+    if (resource) {
+      let dynamicColumns = []
+      
+      // 如果有 indexFields.displayFields，使用它来生成列
+      if (resource.indexFields?.displayFields) {
+        dynamicColumns = resource.indexFields.displayFields.map(field => ({
+          accessorKey: field.key,
+          header: field.label,
+          cell: (info: any) => info.getValue(),
+          size: 180,
+          enablePinning: true,
+          enableSorting: true,
+        }))
+      }
+      // 如果没有 displayFields 但有数据，从数据中生成列
+      else if (resource.data && resource.data.length > 0) {
+        const keys = Object.keys(resource.data[0])
+        dynamicColumns = processMultiLevelHeaders(keys, handleEdit)
+      }
+      // 如果都没有但有 rawData，从 rawData 生成列
+      else if (resource.indexFields?.rawData) {
+        const keys = Object.keys(resource.indexFields.rawData)
+        dynamicColumns = keys.map(key => ({
+          accessorKey: key,
+          header: key,
+          cell: (info: any) => info.getValue(),
+          size: 180,
+          enablePinning: true,
+          enableSorting: true,
+        }))
+      }
+
+      setColumns([
+        {
+          id: "select",
+          header: ({ table }) => (
+            <div className='flex justify-center items-center pr-3'>
+              <Checkbox
+                checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                aria-label='Select all'
+              />
+            </div>
+          ),
+          cell: ({ row }) => (
+            <div className='flex justify-center items-center pr-3'>
+              <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                aria-label='Select row'
+              />
+            </div>
+          ),
+          enableSorting: false,
+          enableHiding: false,
+          size: 40,
+          enablePinning: true,
+        },
+        ...dynamicColumns,
         createActionsColumn(handleEdit, handleDelete),
-      ]
-      setColumns(dynamicColumns)
+      ])
     }
   }, [resource])
 
@@ -357,6 +411,7 @@ const ResourceDataTable: React.FC = ({ id }) => {
           <div className='flex-1 overflow-hidden'>
             <ResourceForm
               initialData={editingRow}
+              resource={resource}
               columns={columns.filter((col) => col.id !== "select" && col.id !== "actions")}
               onSubmit={handleSave}
               isLoading={isLoading}
