@@ -1,6 +1,8 @@
 // import chatChunk from "@/service/chat/chat-chunk-gemini-office"
 // import chatChunk from "@/service/chat/chat-chunk-openai-azure"
-import chatChunk from "@/service/chat/chat-chunk-claude-wild"
+// import chatChunk from "@/service/chat/chat-chunk-claude-wild"
+import chatChunkExpert from "@/service/chat/chat-chunk-claude-horay"
+import chatChunk from "@/service/chat/chat-deepseek"
 import { Message } from "@/service/agents/AIFormAgentTypes"
 import { markdown as doc } from "@/pages/report-management/components/AnalysisResult.md"
 import generateSystemPrompt from "@/service/agents/prompts/report/report-agent-prompt"
@@ -92,19 +94,31 @@ export class AIReportAgent {
       ]
 
       this.lastResponseRef = ""
-      await chatChunk(
-        messages,
-        (chunk: string) => {
-          this.lastResponseRef += chunk
-          onChunk?.(chunk)
-        },
-        () => {},
-        true,
-        0
-      )
-
-      console.log("[AIReportAgent] AI response received")
-
+      const model = sessionStorage.getItem("aiLevel") || "ADVANCED"
+      if (model === "ADVANCED") {
+        await chatChunk(
+          messages,
+          (chunk: string) => {
+            this.lastResponseRef += chunk
+            onChunk?.(chunk)
+          },
+          () => {},
+          true,
+          0
+        )
+      }
+      if (model === "EXPERT") {
+        await chatChunkExpert(
+          messages,
+          (chunk: string) => {
+            this.lastResponseRef += chunk
+            onChunk?.(chunk)
+          },
+          () => {},
+          true,
+          0
+        )
+      }
       const componentCode = await this.parseComponentCode(this.lastResponseRef)
       if (!componentCode) {
         throw new Error("Invalid component code format")

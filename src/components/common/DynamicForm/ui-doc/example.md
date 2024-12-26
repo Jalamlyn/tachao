@@ -1509,6 +1509,22 @@ export default () => {
           columns: 3, // 添加列数配置
           fields: [
             {
+              label: "固定说明",
+              name: "staticNote",
+              type: "text",
+              static: true,
+              defaultValue: "这是一段固定的说明文本",
+            },
+
+            // 示例2: 带默认值的动态字段
+            {
+              label: "预计收入",
+              name: "expectedIncome",
+              type: "amount",
+              defaultValue: 10000,
+              precision: 2,
+            },
+            {
               name: "currency",
               label: "币别",
               type: "text",

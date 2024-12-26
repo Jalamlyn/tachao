@@ -10,23 +10,23 @@ class ImageStore {
   set images(newImages: string[]) {
     this._images = newImages
     // 当图片列表改变时，同步分析缓存
-    AIFormAgent.getInstance().syncImageAnalysisCache()
+    AIFormAgent.syncImageAnalysisCache()
   }
 
   addImage(image: string) {
     this._images.push(image)
-    AIFormAgent.getInstance().syncImageAnalysisCache()
+    AIFormAgent.syncImageAnalysisCache()
   }
 
   removeImage(image: string) {
-    this._images = this._images.filter(img => img !== image)
-    AIFormAgent.getInstance().clearImageAnalysis(image)
-    AIFormAgent.getInstance().syncImageAnalysisCache()
+    this._images = this._images.filter((img) => img !== image)
+    AIFormAgent.clearImageAnalysis(image)
+    AIFormAgent.syncImageAnalysisCache()
   }
 
   clear() {
     this._images = []
-    AIFormAgent.getInstance().clearImageAnalysis()
+    AIFormAgent.clearImageAnalysis()
   }
 }
 

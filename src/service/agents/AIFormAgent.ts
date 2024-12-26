@@ -109,24 +109,13 @@ export class AIFormAgent {
 3. 业务规则：
    - [描述发现的业务规则和验证逻辑]
 4. 建议的表单结构：
-   [描述推荐的表单结构和组织方式]`
+   [描述推荐的表单结构和组织方式]`,
           },
           {
             role: "user",
-            content: [
-              {
-                type: "text",
-                text: "请分析这张图片中的表单内容，给出详细的分析结果。"
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: imageUrl,
-                  detail: "high"
-                }
-              }
-            ]
-          }
+            content: "请分析这张图片中的表单内容，给出详细的分析结果。",
+            images: [imageUrl],
+          },
         ]
 
         let response = ""
@@ -199,10 +188,19 @@ export class AIFormAgent {
 
       const systemMessage = {
         role: "system" as const,
-        content: generateFormAgentPrompt(cachedImages.length > 0, resources, cachedExcel, imageAnalysis),
+        content: generateFormAgentPrompt(cachedImages.length > 0, resources, cachedExcel),
       }
 
       const enhancedCommand = `
+      ${
+        imageAnalysis
+          ? `我上传了一张图片, 这是图片的分析结果
+<图片分析结果>
+${imageAnalysis}
+</图片分析结果>
+`
+          : ""
+      }
       <我的输入>
       ${command}
       </我的输入>

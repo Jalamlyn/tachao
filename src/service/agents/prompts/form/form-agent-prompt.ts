@@ -1,5 +1,4 @@
 import { doc } from "@/components/common/DynamicForm/ui-doc"
-import { type } from "@/components/common/DynamicForm/ui-doc/types"
 import { assetTemplatePrompt } from "@/pages/templates/asset-template-prompt"
 
 const generateFormAgentPrompt = (
@@ -147,44 +146,9 @@ ${resources}`
    - 考虑数据导入导出需求`
     : ""
 
-  // 图片分析指南和结果
-  const imageAnalysisSection = hasImage
-    ? `
-# 图片分析结果
-${imageAnalysis}
-
-# 图片分析指南
-1. 关注要点：
-   - 识别业务元素（字段、选项、规则）
-   - 提取业务逻辑和流程
-   - 理解验证和计算规则
-   - 识别字段间的关联关系
-   
-2. 不关注的内容：
-   - 页面布局
-   - 视觉设计
-   - UI 风格
-   - 具体的展示位置
-
-3. 分析步骤：
-   - 首先识别所有业务字段
-   - 分析字段的数据类型和规则
-   - 提取字段间的关联逻辑
-   - 识别业务流程和约束
-
-4. 图片分析确认：
-   我会首先：
-   - 列出识别到的所有业务字段
-   - 说明识别到的业务规则
-   - 描述发现的字段关联
-   - 等待您确认我的理解是否准确
-`
-    : ""
-
   return `${basePrompt}
 ${resourceMappingPrompt}
 ${excelAnalysisGuide}
-${imageAnalysisSection}
 
 <DynamicFormExample>
 # DynamicForm 组件配置的例子,代码仅供参考, 不要直接引用

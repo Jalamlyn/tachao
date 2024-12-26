@@ -27,6 +27,7 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
   static: isStatic,
 }) => {
   // 保留原有的格式化器以保持向后兼容
+  debugger
   const legacyFormatter = format || getDefaultFormatter(type)
 
   const renderTrend = () => {

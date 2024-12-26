@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { Button, Tooltip, Modal, Progress } from "@nextui-org/react"
 import { Button as SButton } from "@/components/ui/button"
 import { Icon } from "@iconify/react"
@@ -9,6 +9,7 @@ import { AI_LEVELS, AIEditorProps } from "../type"
 interface ImageUploaderProps {
   agent: AIEditorProps["agent"]
   aiLevel?: keyof typeof AI_LEVELS
+  onAnalysisStatusChange?: (isAnalyzing: boolean) => void
 }
 
 interface AnalysisStatus {
@@ -16,7 +17,11 @@ interface AnalysisStatus {
   inProgress: boolean
 }
 
-export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "ADVANCED" }) => {
+export const ImageUploader: React.FC<ImageUploaderProps> = ({ 
+  agent, 
+  aiLevel = "ADVANCED",
+  onAnalysisStatusChange 
+}) => {
   const [preview, setPreview] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
   const [showAnalysisResult, setShowAnalysisResult] = useState(false)
@@ -31,11 +36,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "
       const checkAnalysis = async () => {
         const status = await agent.getImageAnalysis(preview)
         setAnalysisStatus(status)
+        onAnalysisStatusChange?.(status.inProgress)
         
         if (status.inProgress) {
           timerRef.current = setTimeout(checkAnalysis, 1000)
         } else if (status.result) {
           setShowAnalysisResult(true)
+          onAnalysisStatusChange?.(false)
         }
       }
       
@@ -48,7 +55,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "
         timerRef.current = undefined
       }
     }
-  }, [preview, agent])
+  }, [preview, agent, onAnalysisStatusChange])
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -83,6 +90,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "
         agent.syncImageAnalysisCache()
         
         setIsLoading(false)
+        message.success("图片上传成功，正在进行分析...")
       }
       reader.onerror = () => {
         message.error("图片读取失败")
@@ -112,6 +120,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ agent, aiLevel = "
     setPreview("")
     setAnalysisStatus({ result: "", inProgress: false })
     setShowAnalysisResult(false)
+    onAnalysisStatusChange?.(false)
     if (inputRef.current) {
       inputRef.current.value = ""
     }
