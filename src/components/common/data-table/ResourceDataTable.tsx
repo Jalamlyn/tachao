@@ -25,6 +25,7 @@ import { RankingInfo, rankItem } from "@tanstack/match-sorter-utils"
 import { ResourceDataTableToolbar } from "./ResourceDataTableToolbar"
 import { ResourceDataTableBody } from "./ResourceDataTableBody"
 import { ResourceDataTablePagination } from "./ResourceDataTablePagination"
+import AddColumnsModal from "./AddColumnsModal"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,6 +65,8 @@ const ResourceDataTable: React.FC = ({ id }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [globalFilter, setGlobalFilter] = useState("")
   const [showDeleteAlert, setShowDeleteAlert] = useState(false)
+  const [showDeleteColumnAlert, setShowDeleteColumnAlert] = useState<string | null>(null)
+  const [isAddColumnsModalOpen, setIsAddColumnsModalOpen] = useState(false)
 
   const fetchResources = useCallback(async () => {
     if (!id) return
@@ -83,15 +86,12 @@ const ResourceDataTable: React.FC = ({ id }) => {
 
     setIsLoading(true)
     try {
-      // 修改: 更新单条记录而不是整个数据
       let newData
       if (editingRow) {
-        // 编辑现有记录
         newData = resource.data.map((item: any) =>
           item.dataid === editingRow.dataid ? { ...item, ...formData } : item
         )
       } else {
-        // 添加新记录
         newData = [...resource.data, { ...formData, dataid: `${Date.now()}` }]
       }
 
@@ -172,6 +172,64 @@ const ResourceDataTable: React.FC = ({ id }) => {
     } finally {
       setIsLoading(false)
       setShowDeleteAlert(false)
+    }
+  }
+
+  const handleAddColumns = async (newColumns: string[]) => {
+    if (!resource) return
+
+    try {
+      const newData = resource.data.map((item: any) => {
+        const newItem = { ...item }
+        newColumns.forEach(col => {
+          newItem[col] = ''
+        })
+        return newItem
+      })
+
+      const updatedResource = await update(resource.id, {
+        ...resource,
+        data: newData,
+      })
+
+      if (updatedResource) {
+        setResource(updatedResource)
+        message.success("添加列成功")
+      }
+    } catch (error) {
+      console.error("Error adding columns:", error)
+      message.error("添加列失败")
+    }
+  }
+
+  const handleDeleteColumn = (columnId: string) => {
+    setShowDeleteColumnAlert(columnId)
+  }
+
+  const confirmDeleteColumn = async () => {
+    if (!resource || !showDeleteColumnAlert) return
+
+    try {
+      const newData = resource.data.map((item: any) => {
+        const newItem = { ...item }
+        delete newItem[showDeleteColumnAlert]
+        return newItem
+      })
+
+      const updatedResource = await update(resource.id, {
+        ...resource,
+        data: newData,
+      })
+
+      if (updatedResource) {
+        setResource(updatedResource)
+        message.success("删除列成功")
+      }
+    } catch (error) {
+      console.error("Error deleting column:", error)
+      message.error("删除列失败")
+    } finally {
+      setShowDeleteColumnAlert(null)
     }
   }
 
@@ -285,6 +343,8 @@ const ResourceDataTable: React.FC = ({ id }) => {
         onExport={handleExportExcel}
         onBatchDelete={handleBatchDelete}
         hasSelection={Object.keys(rowSelection).length > 0}
+        onAddColumns={() => setIsAddColumnsModalOpen(true)}
+        onDeleteColumn={handleDeleteColumn}
       />
       <ResourceDataTableBody table={table} columns={columns} />
       <ResourceDataTablePagination table={table} />
@@ -321,6 +381,35 @@ const ResourceDataTable: React.FC = ({ id }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog 
+        open={!!showDeleteColumnAlert} 
+        onOpenChange={(open) => !open && setShowDeleteColumnAlert(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除列</AlertDialogTitle>
+            <AlertDialogDescription>
+              删除列 "{showDeleteColumnAlert}" 将会删除所有数据中的相关信息，此操作不可恢复。确定要继续吗？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className='hover:bg-gray-100 transition-colors'>取消</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteColumn} 
+              className='bg-red-600 hover:bg-red-700 transition-colors'
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AddColumnsModal
+        isOpen={isAddColumnsModalOpen}
+        onClose={() => setIsAddColumnsModalOpen(false)}
+        onConfirm={handleAddColumns}
+      />
     </div>
   )
 }

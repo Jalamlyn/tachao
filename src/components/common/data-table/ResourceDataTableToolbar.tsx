@@ -1,6 +1,6 @@
 import React from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, Download, ChevronDown, Trash2 } from "lucide-react"
+import { Plus, Download, ChevronDown, Trash2, Columns } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -21,6 +21,8 @@ interface ResourceDataTableToolbarProps<TData> {
   onExport: (type: "all" | "selected") => void
   onBatchDelete: () => void
   hasSelection: boolean
+  onAddColumns: () => void
+  onDeleteColumn: (columnId: string) => void
 }
 
 export function ResourceDataTableToolbar<TData>({
@@ -31,6 +33,8 @@ export function ResourceDataTableToolbar<TData>({
   onExport,
   onBatchDelete,
   hasSelection,
+  onAddColumns,
+  onDeleteColumn,
 }: ResourceDataTableToolbarProps<TData>) {
   return (
     <div className='flex items-center justify-between py-4 gap-4'>
@@ -83,24 +87,46 @@ export function ResourceDataTableToolbar<TData>({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant='secondary'>
-              列设置 <ChevronDown className='ml-2 h-4 w-4' />
+              <Columns className='mr-2 h-4 w-4' />
+              列管理
+              <ChevronDown className='ml-2 h-4 w-4' />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end' className='min-w-[200px]'>
+            <DropdownMenuItem
+              onClick={onAddColumns}
+              className="cursor-pointer hover:bg-indigo-50 text-primary"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              添加新列
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <ScrollArea className='h-[300px] rounded-md'>
               {table
                 .getAllLeafColumns()
-                .filter((column) => column.getCanHide())
+                .filter((column) => column.getCanHide() && column.id !== 'select' && column.id !== 'actions')
                 .map((column) => {
                   return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className='capitalize px-2 pl-8 py-2 hover:bg-gray-50'
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
+                    <div key={column.id} className="flex items-center justify-between px-2 py-2 hover:bg-gray-50">
+                      <DropdownMenuCheckboxItem
+                        className="flex-1 capitalize pl-8"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteColumn(column.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )
                 })}
             </ScrollArea>
