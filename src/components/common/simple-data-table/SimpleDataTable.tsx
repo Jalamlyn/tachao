@@ -305,16 +305,27 @@ export function SimpleDataTable<T>({
           </p>
         </div>
         <div className='flex gap-2 mt-4'>
-          <Button 
-            size='sm'
-            variant='outline'
-            onClick={handleCreateResource}
-            className='flex items-center gap-2'
-            disabled={resourceExists}
-          >
-            <Icon icon='mdi:plus' className='w-4 h-4' />
-            创建资料
-          </Button>
+          {resourceExists ? (
+            <Button 
+              size='sm'
+              variant='outline'
+              onClick={handleConfirmNavigation}
+              className='flex items-center gap-2'
+            >
+              <Icon icon='mdi:plus' className='w-4 h-4' />
+              添加数据
+            </Button>
+          ) : (
+            <Button 
+              size='sm'
+              variant='outline'
+              onClick={handleCreateResource}
+              className='flex items-center gap-2'
+            >
+              <Icon icon='mdi:plus' className='w-4 h-4' />
+              创建资料
+            </Button>
+          )}
           <Button 
             size='sm'
             variant='outline'
@@ -340,11 +351,33 @@ export function SimpleDataTable<T>({
         
         {resourceId && data.length === 0 && (
           <div className='flex gap-2'>
-            <Button size='sm' variant='outline' onClick={handleCreateResource} className='flex items-center gap-2'>
-              <Icon icon='mdi:plus' className='w-4 h-4' />
-              创建资料
-            </Button>
-            <Button size='sm' variant='outline' onClick={handleExportTemplate} className='flex items-center gap-2'>
+            {resourceExists ? (
+              <Button 
+                size='sm' 
+                variant='outline' 
+                onClick={handleConfirmNavigation} 
+                className='flex items-center gap-2'
+              >
+                <Icon icon='mdi:plus' className='w-4 h-4' />
+                添加数据
+              </Button>
+            ) : (
+              <Button 
+                size='sm' 
+                variant='outline' 
+                onClick={handleCreateResource} 
+                className='flex items-center gap-2'
+              >
+                <Icon icon='mdi:plus' className='w-4 h-4' />
+                创建资料
+              </Button>
+            )}
+            <Button 
+              size='sm' 
+              variant='outline' 
+              onClick={handleExportTemplate} 
+              className='flex items-center gap-2'
+            >
               <Icon icon='mdi:file-download-outline' className='w-4 h-4' />
               导出模板
             </Button>
