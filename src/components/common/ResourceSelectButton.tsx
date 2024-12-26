@@ -114,6 +114,7 @@ const ResourceSelectButton: React.FC<ResourceSelectButtonProps> = ({
             <div className='max-w-4xl overflow-x-scroll'>
               <SimpleDataTable
                 {...tableProps}
+                resourceId={resourceName}
                 data={resourceData}
                 columns={generateColumns(resourceData)}
                 onSelectionChange={handleSelectionChange}

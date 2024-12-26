@@ -79,6 +79,7 @@ const ResourceSelectModal: React.FC<ResourceSelectModalProps> = ({
           ) : (
             <div className='px-6 py-4'>
               <SimpleDataTable
+                resourceId={resourceTitle}
                 data={data}
                 columns={fields.map((field) => ({
                   header: field.label,
