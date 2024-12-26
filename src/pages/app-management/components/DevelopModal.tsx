@@ -63,6 +63,7 @@ export const DevelopModal: React.FC<DevelopModalProps> = ({ isOpen, onClose, app
 
     try {
       await onSubmit(selectedTemplateIds, selectedReportIds, selectedTemplate)
+      onClose()
     } catch (error) {
       console.error("Error submitting app config:", error)
       message.error(error instanceof Error ? error.message : "更新应用配置失败")
