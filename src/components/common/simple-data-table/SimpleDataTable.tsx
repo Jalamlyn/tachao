@@ -96,7 +96,25 @@ export function SimpleDataTable<T>({
   const [globalFilter, setGlobalFilter] = useState("")
   const [tableHeight, setTableHeight] = useState("400px")
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [resourceExists, setResourceExists] = useState<boolean | null>(null)
   const { create, getDetail } = useMetadata("resource")
+
+  useEffect(() => {
+    if (resourceId) {
+      checkResourceExists()
+    }
+  }, [resourceId])
+
+  const checkResourceExists = async () => {
+    if (!resourceId) return
+    try {
+      const resource = await getDetail(resourceId)
+      setResourceExists(!!resource)
+    } catch (error) {
+      console.error("Check resource error:", error)
+      setResourceExists(false)
+    }
+  }
 
   useEffect(() => {
     if (onSelectionChange) {
@@ -142,6 +160,7 @@ export function SimpleDataTable<T>({
 
       await create(resourceData)
       message.success("创建成功")
+      setResourceExists(true)
 
       // 触发成功回调以刷新数据
       onSuccess?.()
@@ -256,6 +275,60 @@ export function SimpleDataTable<T>({
     row.toggleSelected(!row.getIsSelected())
   }
 
+  const renderEmptyState = () => {
+    if (!resourceId) {
+      return (
+        <div className='flex flex-col items-center justify-center h-full space-y-4'>
+          <Icon icon="mdi:table-empty" className='w-16 h-16 text-gray-300' />
+          <div className='text-center space-y-2'>
+            <h3 className='text-lg font-medium text-gray-900'>暂无数据记录</h3>
+            <p className='text-sm text-gray-500 max-w-sm'>该表格暂时没有任何数据记录</p>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className='flex flex-col items-center justify-center h-full space-y-4'>
+        <Icon 
+          icon={resourceExists ? "mdi:file-document-plus" : "mdi:file-plus"} 
+          className='w-16 h-16 text-gray-300' 
+        />
+        <div className='text-center space-y-2'>
+          <h3 className='text-lg font-medium text-gray-900'>
+            {resourceExists ? '暂无数据记录' : '创建资料'}
+          </h3>
+          <p className='text-sm text-gray-500 max-w-sm'>
+            {resourceExists 
+              ? '您可以通过导入Excel文件或手动添加的方式创建新的数据记录'
+              : '该资料尚未创建，请先创建资料后再添加数据'}
+          </p>
+        </div>
+        <div className='flex gap-2 mt-4'>
+          <Button 
+            size='sm'
+            variant='outline'
+            onClick={handleCreateResource}
+            className='flex items-center gap-2'
+            disabled={resourceExists}
+          >
+            <Icon icon='mdi:plus' className='w-4 h-4' />
+            创建资料
+          </Button>
+          <Button 
+            size='sm'
+            variant='outline'
+            onClick={handleExportTemplate}
+            className='flex items-center gap-2'
+          >
+            <Icon icon='mdi:file-download-outline' className='w-4 h-4' />
+            导出模板
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={`flex flex-col ${className}`}>
       <div className='flex items-center justify-between p-2'>
@@ -264,7 +337,7 @@ export function SimpleDataTable<T>({
           onChange={(value) => setGlobalFilter(String(value))}
           className='max-w-sm'
         />
-
+        
         {resourceId && data.length === 0 && (
           <div className='flex gap-2'>
             <Button size='sm' variant='outline' onClick={handleCreateResource} className='flex items-center gap-2'>
@@ -315,8 +388,8 @@ export function SimpleDataTable<T>({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length + 1} className='h-24 text-center text-gray-500'>
-                    暂无数据
+                  <TableCell colSpan={columns.length + 1} className='h-[400px]'>
+                    {renderEmptyState()}
                   </TableCell>
                 </TableRow>
               )}
