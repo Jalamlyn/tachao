@@ -72,11 +72,7 @@ export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ ti
   }, [code, processedData])
 
   if (loading) {
-    return (
-      <div className='flex items-center justify-center min-h-[200px]'>
-        <Spinner label='加载组件...' />
-      </div>
-    )
+    return <div className='flex items-center justify-center min-h-[200px]'></div>
   }
 
   if (error) {

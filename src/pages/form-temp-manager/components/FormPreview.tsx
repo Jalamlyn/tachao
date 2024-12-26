@@ -25,7 +25,6 @@ const FormPreview: React.FC<FormPreviewProps> = ({ code, previewMode = true }) =
   useEffect(() => {
     const loadFormConfig = async () => {
       if (code) {
-        debugger
         const _code = extractShataAIFormContent(code)
         setComponentCode(_code)
       }

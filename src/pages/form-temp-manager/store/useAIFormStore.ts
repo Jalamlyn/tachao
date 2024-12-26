@@ -68,7 +68,7 @@ interface AIFormState {
 // 创建防抖的状态更新函数
 const debouncedStateUpdate = debounce((set, messages) => {
   set({ messages })
-}, 1000)
+}, 16.6)
 
 export const useAIFormStore = create<AIFormState>((set, get) => ({
   // 初始状态
@@ -117,7 +117,9 @@ export const useAIFormStore = create<AIFormState>((set, get) => ({
         ...messages[lastIndex],
         ...update,
       }
-      set({ messages })
+      
+      // 使用防抖更新状态
+      debouncedStateUpdate(set, messages)
     }
   },
 

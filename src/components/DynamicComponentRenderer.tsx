@@ -61,9 +61,9 @@ export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> =
       try {
         setLoading(true)
         let code_ = code
-        // if (codeStore.code !== "") {
-        //   code_ = codeStore.code
-        // }
+        if (codeStore.code !== "") {
+          code_ = codeStore.code
+        }
         const _code = extractShataAIFormContent(code_)
         // 1. 转换JSX
         const { code: transformedCode } = transform(_code, {
@@ -98,11 +98,7 @@ export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> =
   }, [code])
 
   if (loading) {
-    return (
-      <div className='flex items-center justify-center min-h-[200px]'>
-        <Spinner label='加载组件...' />
-      </div>
-    )
+    return <div className='flex items-center justify-center min-h-[200px]'></div>
   }
 
   if (error) {

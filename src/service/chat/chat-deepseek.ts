@@ -25,12 +25,8 @@ export default async function chatChunkDeepseek(
   ]
   const supplierInfo = modelSupplierData.find((supplier) => supplier.id === provider)
 
-  if (!supplierInfo) {
-    throw new Error(`未找到服务商信息：${provider}`)
-  }
-
   const apiKey = supplierInfo.apiKey
-  const apiEndPoint = supplierInfo.endpoint || "https://api.deepseek.com/chat/completions"
+  const apiEndPoint = supplierInfo.endpoint || "https://api.deepseek.com/beta/chat/completions"
 
   let _messages
   if (isFirst) {

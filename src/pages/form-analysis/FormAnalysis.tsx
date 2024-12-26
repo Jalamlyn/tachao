@@ -19,8 +19,10 @@ import { useFormMetadata } from "@/components/from-templates/hook/useFormMetadat
 import message from "@/components/Message"
 import MessageCard from "@/components/MessageCard"
 // import chatChunk from "@/service/chat/chat-chunk-openai-office"
-import chatChunk from "@/service/chat/chat-chunk-openai-azure"
+// import chatChunk from "@/service/chat/chat-chunk-openai-azure"
 // import chatChunk from "@/service/chat/chat-chunk-gemini-office"
+import chatChunkHoray from "@/service/chat/chat-chunk-claude-horay"
+import chatChunk from "@/service/chat/chat-deepseek"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import PageLayout from "@/components/PageLayout"
 import { useAsyncButton } from "@/hooks/useAsyncButton"
@@ -220,33 +222,57 @@ const FormAnalysis: React.FC = () => {
         }
         setMessages((prev) => [...prev, assistantMessage])
 
-        await chatChunk(
-          [
-            {
-              role: "system",
-              content: generateSystemPrompt(selectedForms),
+        if (selectedAILevel === "EXPERT") {
+          await chatChunkHoray(
+            [
+              {
+                role: "system",
+                content: generateSystemPrompt(selectedForms),
+              },
+              ...messages,
+              userMessage,
+            ],
+            (chunk) => {
+              setMessages((prev) => {
+                const newMessages = [...prev]
+                const lastMessage = newMessages[newMessages.length - 1]
+                if (lastMessage.role === "assistant") {
+                  lastMessage.content += chunk
+                }
+                return [...newMessages]
+              })
             },
-            ...messages,
-            userMessage,
-          ],
-          (chunk) => {
-            setMessages((prev) => {
-              const newMessages = [...prev]
-              const lastMessage = newMessages[newMessages.length - 1]
-              if (lastMessage.role === "assistant") {
-                lastMessage.content += chunk
-              }
-              return [...newMessages]
-            })
-          },
-          () => {},
-          true,
-          0.3,
-          "YES",
-          selectedAILevel // 将AI级别传递给chatChunk
-        )
-
-        setChatCount((prev) => prev + 1)
+            () => {},
+            true,
+            0.3,
+            "YES"
+          )
+        } else {
+          await chatChunk(
+            [
+              {
+                role: "system",
+                content: generateSystemPrompt(selectedForms),
+              },
+              ...messages,
+              userMessage,
+            ],
+            (chunk) => {
+              setMessages((prev) => {
+                const newMessages = [...prev]
+                const lastMessage = newMessages[newMessages.length - 1]
+                if (lastMessage.role === "assistant") {
+                  lastMessage.content += chunk
+                }
+                return [...newMessages]
+              })
+            },
+            () => {},
+            true,
+            0.3,
+            "YES"
+          )
+        }
       } catch (error) {
         console.error("Error in chat:", error)
         message.error("分析过程中发生错误")

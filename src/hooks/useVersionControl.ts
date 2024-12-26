@@ -1,3 +1,4 @@
+import { codeStore } from "@/pages/form-temp-manager/components/codeStore"
 import { useState, useCallback } from "react"
 
 export interface Version<T> {
@@ -44,6 +45,7 @@ export function useVersionControl<T>() {
   const rollback = useCallback(() => {
     if (currentIndex > 0) {
       setCurrentIndex((prev) => prev - 1)
+      codeStore.code = versions[currentIndex - 1].data.rawConfig
       return versions[currentIndex - 1].data
     }
     return null
@@ -52,21 +54,11 @@ export function useVersionControl<T>() {
   const forward = useCallback(() => {
     if (currentIndex < versions.length - 1) {
       setCurrentIndex((prev) => prev + 1)
+      codeStore.code = versions[currentIndex - 1].data.rawConfig
       return versions[currentIndex + 1].data
     }
     return null
   }, [versions, currentIndex])
-
-  const switchVersion = useCallback(
-    (index: number) => {
-      if (index >= 0 && index < versions.length) {
-        setCurrentIndex(index)
-        return versions[index].data
-      }
-      return null
-    },
-    [versions]
-  )
 
   const getVersionInfo = useCallback(
     (index: number) => {
@@ -96,7 +88,6 @@ export function useVersionControl<T>() {
     getVersion,
     rollback,
     forward,
-    switchVersion,
     getVersionInfo,
     clear,
     canRollback,
