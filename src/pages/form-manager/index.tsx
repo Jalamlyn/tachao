@@ -100,32 +100,6 @@ const FormManager: React.FC = () => {
     ])
   }, [])
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "submitted":
-        return "success"
-      case "draft":
-        return "warning"
-      case "rejected":
-        return "danger"
-      default:
-        return "default"
-    }
-  }
-
-  const getStatusText = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "submitted":
-        return "已提交"
-      case "draft":
-        return "草稿"
-      case "rejected":
-        return "已拒绝"
-      default:
-        return status
-    }
-  }
-
   const formatDate = (dateString: string) => {
     if (!dateString) return ""
     return new Date(dateString).toLocaleString("zh-CN", {
@@ -164,15 +138,6 @@ const FormManager: React.FC = () => {
             </Chip>
           </div>
         </Tooltip>
-      ),
-    },
-    {
-      key: "status",
-      title: "状态",
-      render: (record) => (
-        <Chip color={getStatusColor(record.status)} variant='flat' className='capitalize'>
-          {getStatusText(record.status)}
-        </Chip>
       ),
     },
     {

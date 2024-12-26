@@ -48,7 +48,6 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
           id: normalizedId,
           type,
           title: data.title || "", // 使用统一的title
-          status: data.status || "draft",
           data: data.data as T,
           versionCode: 1,
           modifiedBy: currentUser.name || currentUser.email || "Unknown",

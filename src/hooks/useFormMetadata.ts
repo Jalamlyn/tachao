@@ -211,7 +211,6 @@ export const useFormMetadata = () => {
           orderNumber: generateOrderNumber(),
           title: `${originalForm.title}${suffix}`,
           createdAt: new Date().toISOString(),
-          status: resetStatus ? "draft" : originalForm.status,
           data: {
             ...originalForm.data,
             basicInfo: {
@@ -294,7 +293,6 @@ const getStatusesByTemplateId = (templateId) => {
   switch (templateId) {
     case "salesOrder":
       return [
-        { value: "draft", label: "草稿", color: "default" },
         { value: "pending_approval", label: "待审批", color: "warning" },
         { value: "approved", label: "审批通过", color: "success" },
         { value: "rejected", label: "审批不通过", color: "danger" },

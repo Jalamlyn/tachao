@@ -48,32 +48,6 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({ forms, page, pageS
     })
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "submitted":
-        return "success"
-      case "draft":
-        return "warning"
-      case "rejected":
-        return "danger"
-      default:
-        return "default"
-    }
-  }
-
-  const getStatusText = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "submitted":
-        return "已提交"
-      case "draft":
-        return "草稿"
-      case "rejected":
-        return "已拒绝"
-      default:
-        return status
-    }
-  }
-
   // 处理删除
   const handleDelete = (formId: string) => {
     setFormToDelete(formId)
@@ -99,9 +73,7 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({ forms, page, pageS
 
   return (
     <>
-      <Table
-        aria-label='表单列表'
-      >
+      <Table aria-label='表单列表'>
         <TableHeader>
           <TableColumn>标题</TableColumn>
           <TableColumn>订单号</TableColumn>
@@ -118,11 +90,6 @@ export const FormTypeTable: React.FC<FormTypeTableProps> = ({ forms, page, pageS
                 </Tooltip>
               </TableCell>
               <TableCell>{form.indexFields?.orderNumber}</TableCell>
-              <TableCell>
-                <Chip color={getStatusColor(form.status)} variant='flat' className='capitalize'>
-                  {getStatusText(form.status)}
-                </Chip>
-              </TableCell>
               <TableCell>
                 <div className='flex flex-col'>
                   <span className='text-tiny text-default-500'>创建: {formatDate(form.indexFields?.createdAt)}</span>

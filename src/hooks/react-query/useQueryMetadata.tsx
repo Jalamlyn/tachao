@@ -110,7 +110,6 @@ export function useQueryMetadata<T = any>(type: string, options: QueryMetadataOp
           id: normalizedId,
           type,
           title: data.title || "",
-          status: data.status || "draft",
           data: data.data as T,
           versionCode: 1,
           modifiedBy: currentUser.name || currentUser.email || "Unknown",
