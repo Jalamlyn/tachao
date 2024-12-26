@@ -1977,3 +1977,174 @@ export default (props) => {
   )
 }
 ```
+```jsx
+export default (props) => {
+  const {Input, Button, Checkbox} = NextUI
+  const formConfig = {
+    metadata: {
+      title: "旅游贴士",
+      description: "创建和管理您的旅游贴士",
+    },
+    renderConfig: {
+      basicFields: {
+        groups: [
+          {
+            key: "tripTips",
+            title: "旅游贴士",
+            icon: "mdi:map-marker",
+            description: "创建您的旅游贴士",
+            fields: [
+              {
+                name: "title",
+                label: "标题",
+                type: "text",
+                required: true,
+                placeholder: "请输入贴士标题",
+              },
+              {
+                name: "description",
+                label: "描述",
+                type: "textarea",
+                placeholder: "请输入贴士描述",
+                rows: 3,
+              },
+              {
+                name: "images",
+                label: "风景图片",
+                type: "imageUpload",
+                description: "上传您的风景图片",
+                uploadConfig: {
+                  maxSize: 5 * 1024 * 1024,
+                  accept: "image/*",
+                  maxCount: 9,
+                },
+              },
+              {
+                name: "checklist",
+                label: "待办事项",
+                type: "custom",
+                defaultValue: [], // 设置默认值为空数组
+                render: ({ field, form, isEditable }) => {
+                  const [newItem, setNewItem] = React.useState("");
+
+                  // 直接使用field.value，不再使用本地state
+                  const items = field.value || [];
+
+                  const handleAddItem = () => {
+                    if (newItem.trim()) {
+                      const newItems = [...items, {
+                        id: Date.now(),
+                        text: newItem.trim(),
+                        checked: false,
+                        createdAt: new Date().toISOString()
+                      }];
+                      field.onChange(newItems);
+                      setNewItem("");
+                    }
+                  };
+
+                  const handleCheckItem = (index) => {
+                    const newItems = [...items];
+                    newItems[index] = {
+                      ...newItems[index],
+                      checked: !newItems[index].checked,
+                      updatedAt: new Date().toISOString()
+                    };
+                    field.onChange(newItems);
+                  };
+
+                  const handleRemoveItem = (index) => {
+                    const newItems = items.filter((_, i) => i !== index);
+                    field.onChange(newItems);
+                  };
+
+                  const handleKeyPress = (e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddItem();
+                    }
+                  };
+
+                  return (
+                    <div className="space-y-4">
+                      {isEditable && (
+                        <div className="flex gap-2">
+                          <Input
+                            value={newItem}
+                            onChange={(e) => setNewItem(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                            placeholder="添加新事项"
+                            className="flex-1"
+                          />
+                          <Button
+                            color="primary"
+                            onClick={handleAddItem}
+                            disabled={!newItem.trim()}
+                          >
+                            添加
+                          </Button>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {items.map((item, index) => (
+                          <div
+                            key={item.id || index}
+                            className={`p-4 bg-white rounded-lg shadow-sm flex items-center gap-2 transition-all duration-200 ${item.checked ? 'bg-gray-50' : ''
+                              }`}
+                          >
+                            <Checkbox
+                              isSelected={item.checked}
+                              onValueChange={() => handleCheckItem(index)}
+                              isDisabled={!isEditable}
+                            />
+                            <span
+                              className={`flex-1 ${item.checked ? "line-through text-gray-400" : ""
+                                }`}
+                            >
+                              {item.text}
+                            </span>
+                            {isEditable && (
+                              <Button
+                                isIconOnly
+                                color="danger"
+                                variant="light"
+                                onClick={() => handleRemoveItem(index)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <i className="mdi mdi-delete" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      {items.length === 0 && (
+                        <div className="text-center text-gray-500 py-8">
+                          暂无待办事项
+                        </div>
+                      )}
+                    </div>
+                  );
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+    watch: (form) => {
+      const subscription = form.watch((value, { name, type }) => {
+        if (name === "checklist") {
+          console.log("Checklist updated:", value.checklist);
+        }
+      });
+      return () => subscription.unsubscribe();
+    },
+  };
+
+  return (
+    <div className="trip-tips-form">
+      <DynamicForm config={formConfig} />
+    </div>
+  );
+};
+```
