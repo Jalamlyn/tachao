@@ -70,8 +70,8 @@ export const costService = {
   // 计算 DeepSeek 费用
   calculateDeepSeekCost(content: string, tokenCount: number, isInput: boolean, model: string): number {
     const ratePerMillionTokens = {
-      input: 10,
-      output: 20,
+      input: 20,
+      output: 80,
     }
     const tokenRate = isInput ? ratePerMillionTokens.input : ratePerMillionTokens.output
     return (tokenCount / 1000000) * tokenRate
