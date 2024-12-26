@@ -181,6 +181,25 @@ const RechargeModal = observer(() => {
     }
   }
 
+  const handlePaymentModalClose = () => {
+    setIsPaymentModalOpen(false)
+    // 添加刷新提示
+    message.info({
+      content: (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <Icon icon="solar:refresh-circle-bold-duotone" className="text-lg" />
+            <span>支付完成后，请刷新页面查看最新余额</span>
+          </div>
+          <div className="text-xs text-default-500">
+            提示：刷新页面后即可看到充值的塔币
+          </div>
+        </div>
+      ),
+      duration: 10000, // 显示10秒
+    })
+  }
+
   const renderTokenTab = () => (
     <div className='space-y-6'>
       <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
@@ -362,7 +381,7 @@ const RechargeModal = observer(() => {
         </ModalContent>
       </Modal>
 
-      <Modal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} size='full'>
+      <Modal isOpen={isPaymentModalOpen} onClose={handlePaymentModalClose} size='full'>
         <ModalContent>
           {(onClose) => (
             <>
