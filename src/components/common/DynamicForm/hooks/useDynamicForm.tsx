@@ -8,22 +8,48 @@ export const useDynamicForm = (config: DynamicFormConfig, formData) => {
     defaultValues: formData,
   })
 
-  // 监听表单值变化
-  useEffect(() => {
-    const subscription = form.watch((value, { name, type }) => {
-      // 触发表单重新渲染
-      form.trigger(name)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
   // 统一的验证函数
   const validateForm = useCallback(async (): Promise<ValidationResult> => {
     try {
       const values = form.getValues()
-      // 直接使用ValidationManager进行统一校验
-      return await ValidationManager.validateForm(values, config)
+      
+      // 先触发 react-hook-form 的内置验证
+      const triggerResult = await form.trigger()
+      const formErrors = form.formState.errors
+
+      // 如果内置验证失败，收集错误信息
+      if (!triggerResult) {
+        const fields: Record<string, string> = {}
+        Object.entries(formErrors).forEach(([field, error]) => {
+          fields[field] = error.message || String(error)
+        })
+
+        return {
+          valid: false,
+          errors: ["表单验证失败"],
+          fields,
+        }
+      }
+
+      // 进行自定义验证
+      const customValidationResult = await ValidationManager.validateForm(values, config)
+
+      // 如果自定义验证失败，合并错误信息
+      if (!customValidationResult.valid) {
+        return {
+          valid: false,
+          errors: [...(customValidationResult.errors || [])],
+          fields: {
+            ...(customValidationResult.fields || {}),
+          },
+        }
+      }
+
+      return {
+        valid: true,
+        errors: [],
+        fields: {},
+      }
     } catch (error) {
       console.error("[useDynamicForm] Validation error:", error)
       return {
