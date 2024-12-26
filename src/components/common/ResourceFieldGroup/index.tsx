@@ -33,13 +33,12 @@ const ResourceFieldGroup: React.FC<ResourceFieldGroupProps> = ({
         const resources = await loadResources()
         const resource = resources.find((r) => r.title === resourceTitle)
         if (!resource) {
-          // message.error(`未找到资料: ${resourceTitle}`)
           return
         }
 
         const detail = await getResourceDetail(resource.id)
         if (!detail?.data?.length) {
-          message.error(`资料数据为空: ${resourceTitle}`)
+          message.error(`资料表格数据为空: ${resourceTitle}`)
           return
         }
 

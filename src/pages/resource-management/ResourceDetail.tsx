@@ -20,7 +20,7 @@ const ResourceDetail: React.FC = () => {
   useEffect(() => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
-      { label: "资料管理", href: "/we-chat-app/admin/resources" },
+      { label: "资料表格管理", href: "/we-chat-app/admin/resources" },
     ])
   }, [])
 
@@ -64,7 +64,7 @@ const ResourceDetail: React.FC = () => {
           onClick={() => navigate("/we-chat-app/admin/resources")}
           className='mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors'
         >
-          返回资料列表
+          返回资料表格列表
         </button>
       </div>
     )

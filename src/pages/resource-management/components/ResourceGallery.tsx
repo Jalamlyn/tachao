@@ -53,8 +53,8 @@ const ResourceGallery = forwardRef<ResourceGalleryRef, ResourceGalleryProps>(
           setInternalResources(result)
         }
       } catch (error) {
-        console.error("加载资料列表失败:", error)
-        message.error("加载资料列表失败")
+        console.error("加载资料表格列表失败:", error)
+        message.error("加载资料表格列表失败")
       } finally {
         setIsLoading(false)
       }
@@ -76,8 +76,8 @@ const ResourceGallery = forwardRef<ResourceGalleryRef, ResourceGalleryProps>(
           onClose()
           await loadResources()
         } catch (error) {
-          console.error("删除资料失败:", error)
-          message.error("删除资料失败")
+          console.error("删除资料表格失败:", error)
+          message.error("删除资料表格失败")
         }
       }
     }
@@ -99,7 +99,7 @@ const ResourceGallery = forwardRef<ResourceGalleryRef, ResourceGalleryProps>(
     const handleCopyId = async (resource: Resource, e: React.MouseEvent) => {
       try {
         await navigator.clipboard.writeText(resource.id)
-        message.success("资料ID已复制到剪贴板")
+        message.success("资料表格ID已复制到剪贴板")
       } catch (error) {
         console.error("复制失败:", error)
         message.error("复制失败")
@@ -177,7 +177,7 @@ const ResourceGallery = forwardRef<ResourceGalleryRef, ResourceGalleryProps>(
           className={className}
           searchable
           searchFields={["title", "indexFields.fileName"]}
-          searchPlaceholder='搜索资料名称...'
+          searchPlaceholder='搜索资料表格名称...'
           onSearch={setSearchValue}
           customSearch={(resource, value) =>
             resource.title.toLowerCase().includes(value.toLowerCase()) ||

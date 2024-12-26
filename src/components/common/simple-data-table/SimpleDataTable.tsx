@@ -292,11 +292,11 @@ export function SimpleDataTable<T>({
       <div className='flex flex-col items-center justify-center h-full space-y-4'>
         <Icon icon={resourceExists ? "mdi:file-document-plus" : "mdi:file-plus"} className='w-16 h-16 text-gray-300' />
         <div className='text-center space-y-2'>
-          <h3 className='text-lg font-medium text-gray-900'>{resourceExists ? "暂无数据记录" : "创建资料"}</h3>
+          <h3 className='text-lg font-medium text-gray-900'>{resourceExists ? "暂无数据记录" : "创建资料表格"}</h3>
           <p className='text-sm text-gray-500 max-w-sm'>
             {resourceExists
               ? "您可以通过导入Excel文件或手动添加的方式创建新的数据记录"
-              : "该资料尚未创建，请先创建资料后再添加数据"}
+              : "该资料表格尚未创建，请先创建资料表格后再添加数据"}
           </p>
         </div>
         <div className='flex gap-2 mt-4'>
@@ -308,7 +308,7 @@ export function SimpleDataTable<T>({
           ) : (
             <Button size='sm' variant='outline' onClick={handleCreateResource} className='flex items-center gap-2'>
               <Icon icon='mdi:plus' className='w-4 h-4' />
-              创建资料
+              创建资料表格
             </Button>
           )}
           <Button size='sm' variant='outline' onClick={handleExportTemplate} className='flex items-center gap-2'>
@@ -386,7 +386,7 @@ export function SimpleDataTable<T>({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>创建成功</DialogTitle>
-            <DialogDescription>是否立即前往新增资料数据？</DialogDescription>
+            <DialogDescription>是否立即前往新增资料表格数据？</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant='outline' onClick={() => setIsConfirmOpen(false)}>
