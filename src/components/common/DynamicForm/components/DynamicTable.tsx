@@ -4,7 +4,7 @@ import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/f
 import { Input } from "@/components/ui/input"
 import ResourceSelectButton from "../../ResourceSelectButton"
 import { TableConfig } from "../types"
-import { UseFormReturn, useFieldArray, useWatch } from "react-hook-form"
+import { UseFormReturn, useFieldArray } from "react-hook-form"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { cn } from "@/theme/cn"
@@ -40,12 +40,6 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       return () => window.removeEventListener("resize", checkScroll)
     }
   }, [config.columns])
-
-  const tableData = useWatch({
-    control: form.control,
-    name: fieldName,
-    defaultValue: [],
-  })
 
   const handleResourceSelect = useCallback(
     (rowIndex: number, columnKey: string, selected: any) => {
@@ -116,6 +110,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       {} as Record<string, any>
     )
 
+    // 直接append,不触发其他操作
     append(newRow)
   }, [config.columns, append])
 
@@ -131,7 +126,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
     const isFieldEditable = isEditable && column.editable !== false && !column.isMappedField
 
     if (column.render) {
-      const record = tableData[rowIndex] || {}
+      const record = form.getValues(`${fieldName}.${rowIndex}`) || {}
       return column.render(form.getValues(cellFieldName), record, rowIndex)
     }
 
@@ -179,7 +174,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
         form,
         isEditable,
         onChange: (field, value) => {
-          //console.log(`[DynamicTable] Cell value changed - field: ${field}, value:`, value)
+          form.setValue(field, value)
         },
         fieldName,
       },
@@ -189,14 +184,14 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
   const renderSummaryRow = () => {
     if (!config.summary?.show) return null
 
-    const summaryData = config.summary.onCompute?.(tableData) || {}
+    const currentData = form.getValues(fieldName) || []
+    const summaryData = config.summary.onCompute?.(currentData) || {}
 
     return (
       <TableRow className='bg-gray-50 font-medium'>
         {config.columns.map((column, index) => {
           let content: React.ReactNode = null
 
-          // 处理第一列显示"合计"文本
           if (index === 0) {
             content = config.summary?.firstColumnText || "合计"
           } else {
