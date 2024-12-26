@@ -36,6 +36,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Checkbox } from "@/components/ui/checkbox"
 
 declare module "@tanstack/table-core" {
   interface FilterFns {
@@ -181,8 +182,8 @@ const ResourceDataTable: React.FC = ({ id }) => {
     try {
       const newData = resource.data.map((item: any) => {
         const newItem = { ...item }
-        newColumns.forEach(col => {
-          newItem[col] = ''
+        newColumns.forEach((col) => {
+          newItem[col] = ""
         })
         return newItem
       })
@@ -272,10 +273,10 @@ const ResourceDataTable: React.FC = ({ id }) => {
   useEffect(() => {
     if (resource) {
       let dynamicColumns = []
-      
+
       // 如果有 indexFields.displayFields，使用它来生成列
       if (resource.indexFields?.displayFields) {
-        dynamicColumns = resource.indexFields.displayFields.map(field => ({
+        dynamicColumns = resource.indexFields.displayFields.map((field) => ({
           accessorKey: field.key,
           header: field.label,
           cell: (info: any) => info.getValue(),
@@ -292,7 +293,7 @@ const ResourceDataTable: React.FC = ({ id }) => {
       // 如果都没有但有 rawData，从 rawData 生成列
       else if (resource.indexFields?.rawData) {
         const keys = Object.keys(resource.indexFields.rawData)
-        dynamicColumns = keys.map(key => ({
+        dynamicColumns = keys.map((key) => ({
           accessorKey: key,
           header: key,
           cell: (info: any) => info.getValue(),
@@ -437,10 +438,7 @@ const ResourceDataTable: React.FC = ({ id }) => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog 
-        open={!!showDeleteColumnAlert} 
-        onOpenChange={(open) => !open && setShowDeleteColumnAlert(null)}
-      >
+      <AlertDialog open={!!showDeleteColumnAlert} onOpenChange={(open) => !open && setShowDeleteColumnAlert(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>确认删除列</AlertDialogTitle>
@@ -450,10 +448,7 @@ const ResourceDataTable: React.FC = ({ id }) => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className='hover:bg-gray-100 transition-colors'>取消</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDeleteColumn} 
-              className='bg-red-600 hover:bg-red-700 transition-colors'
-            >
+            <AlertDialogAction onClick={confirmDeleteColumn} className='bg-red-600 hover:bg-red-700 transition-colors'>
               删除
             </AlertDialogAction>
           </AlertDialogFooter>

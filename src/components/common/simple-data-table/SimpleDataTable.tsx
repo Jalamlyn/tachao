@@ -14,10 +14,18 @@ import {
 import { RankingInfo, rankItem } from "@tanstack/match-sorter-utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import SimpleDataTableSearch from "./SimpleDataTableSearch"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import * as XLSX from 'xlsx'
-import { Button } from "@nextui-org/react"
+import * as XLSX from "xlsx"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
 import { useMetadata } from "@/hooks/useMetadata"
@@ -44,8 +52,8 @@ interface SimpleDataTableProps<T> {
   className?: string
   selectionMode?: "single" | "multiple"
   resourceId?: string
-  displayFields?: Array<{ key: string, label: string }>
-  onSuccess?: () => void // 新增: 成功回调
+  displayFields?: Array<{ key: string; label: string }>
+  onSuccess?: () => void
 }
 
 function IndeterminateCheckbox({
@@ -87,7 +95,8 @@ export function SimpleDataTable<T>({
   const [rowSelection, setRowSelection] = useState({})
   const [globalFilter, setGlobalFilter] = useState("")
   const [tableHeight, setTableHeight] = useState("400px")
-  const { create } = useMetadata("resource") // 新增: 使用metadata hook
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const { create, getDetail } = useMetadata("resource")
 
   useEffect(() => {
     if (onSelectionChange) {
@@ -96,75 +105,84 @@ export function SimpleDataTable<T>({
     }
   }, [rowSelection])
 
-  // 新增: 创建资料方法
   const handleCreateResource = async () => {
     if (!resourceId) {
       message.error("资源ID不能为空")
       return
     }
+    const existingResource = await getDetail(resourceId)
+    if (existingResource) {
+      message.error(`资源 ${resourceId} 已存在，请前往修改或使用其他ID`)
+      return
+    }
 
     try {
-      // 构建资源数据
       const resourceData = {
-        id: resourceId, // 使用传入的resourceId
-        title: `New Resource ${new Date().toISOString()}`,
-        data: [], // 空数据数组
+        id: resourceId,
+        title: resourceId,
+        data: [],
         status: "active",
         indexFields: {
           type: "excel",
+          rawData: displayFields?.reduce(
+            (acc, field) => {
+              acc[field.label] = "-"
+              return acc
+            },
+            {} as Record<string, string>
+          ),
           ...(displayFields && {
-            displayFields: displayFields.map(field => ({
+            displayFields: displayFields.map((field) => ({
               key: field.key,
-              label: field.label
-            }))
-          })
-        }
+              label: field.label,
+            })),
+          }),
+        },
       }
 
-      // 创建资源
       await create(resourceData)
       message.success("创建成功")
-      
-      // 触发成功回调
+
+      // 触发成功回调以刷新数据
       onSuccess?.()
+
+      // 打开确认对话框
+      setIsConfirmOpen(true)
     } catch (error) {
       console.error("Create resource error:", error)
       message.error("创建失败")
     }
   }
 
-  // 导出Excel模板功能
+  const handleConfirmNavigation = () => {
+    window.open(`/we-chat-app/admin/resources/${resourceId}`, "_blank")
+    setIsConfirmOpen(false)
+  }
+
   const handleExportTemplate = () => {
     try {
-      // 使用displayFields或columns生成表头
-      const headers = displayFields 
-        ? displayFields.map(field => field.label)
-        : columns.map(col => col.header || col.title)
+      const headers = displayFields
+        ? displayFields.map((field) => field.label)
+        : columns.map((col) => col.header || col.title)
 
-      // 创建工作簿
       const wb = XLSX.utils.book_new()
       const ws = XLSX.utils.aoa_to_sheet([headers])
 
-      // 设置列宽
       const colWidth = headers.map(() => ({ wch: 15 }))
-      ws['!cols'] = colWidth
+      ws["!cols"] = colWidth
 
-      // 添加工作表
       XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
 
-      // 生成文件名
-      const fileName = `template_${resourceId || 'data'}.xlsx`
+      const fileName = `template_${resourceId || "data"}.xlsx`
 
-      // 下载文件
       XLSX.writeFile(wb, fileName)
-      message.success('模板导出成功')
+      message.success("模板导出成功")
     } catch (error) {
-      console.error('Export template error:', error)
-      message.error('模板导出失败')
+      console.error("Export template error:", error)
+      message.error("模板导出失败")
     }
   }
 
-  // 添加选择列
   const selectionColumn = {
     id: "select",
     header: ({ table }: any) =>
@@ -227,7 +245,6 @@ export function SimpleDataTable<T>({
     enableMultiRowSelection: selectionMode === "multiple",
   })
 
-  // 处理行点击事件
   const handleRowClick = (e: React.MouseEvent, row: any) => {
     if ((e.target as HTMLElement).closest('[aria-label="Select row"]')) {
       return
@@ -241,43 +258,29 @@ export function SimpleDataTable<T>({
 
   return (
     <div className={`flex flex-col ${className}`}>
-      {/* 搜索框和工具栏 */}
       <div className='flex items-center justify-between p-2'>
         <SimpleDataTableSearch
           value={globalFilter ?? ""}
           onChange={(value) => setGlobalFilter(String(value))}
           className='max-w-sm'
         />
-        {/* 工具栏按钮 */}
-        {resourceId && (
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="flat"
-              color="primary"
-              onClick={handleCreateResource}
-              startContent={<Icon icon="mdi:plus" className="w-4 h-4" />}
-            >
+
+        {resourceId && data.length === 0 && (
+          <div className='flex gap-2'>
+            <Button size='sm' variant='outline' onClick={handleCreateResource} className='flex items-center gap-2'>
+              <Icon icon='mdi:plus' className='w-4 h-4' />
               创建资料
             </Button>
-            <Button
-              size="sm"
-              variant="flat"
-              color="primary"
-              onClick={handleExportTemplate}
-              startContent={<Icon icon="mdi:file-download-outline" className="w-4 h-4" />}
-            >
+            <Button size='sm' variant='outline' onClick={handleExportTemplate} className='flex items-center gap-2'>
+              <Icon icon='mdi:file-download-outline' className='w-4 h-4' />
               导出模板
             </Button>
           </div>
         )}
       </div>
 
-      {/* 表格区域 */}
       <div className='flex-1 border rounded-md shadow-sm overflow-hidden'>
         <ScrollArea className='h-[400px]'>
-          {" "}
-          {/* 固定高度的滚动区域 */}
           <Table>
             <TableHeader className='sticky top-0 z-10 bg-white'>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -287,8 +290,8 @@ export function SimpleDataTable<T>({
                       {header.isPlaceholder
                         ? null
                         : typeof header.column.columnDef.header === "function"
-                        ? header.column.columnDef.header(header.getContext())
-                        : header.column.columnDef.header}
+                          ? header.column.columnDef.header(header.getContext())
+                          : header.column.columnDef.header}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -322,12 +325,26 @@ export function SimpleDataTable<T>({
         </ScrollArea>
       </div>
 
-      {/* 分页信息 */}
       <div className='flex items-center justify-between p-2 bg-white'>
         <div className='flex-1 text-sm text-gray-500'>
           {table.getFilteredSelectedRowModel().rows.length} 条已选择 / 共 {table.getFilteredRowModel().rows.length} 条
         </div>
       </div>
+
+      <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>创建成功</DialogTitle>
+            <DialogDescription>是否立即前往新增资料数据？</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant='outline' onClick={() => setIsConfirmOpen(false)}>
+              取消
+            </Button>
+            <Button onClick={handleConfirmNavigation}>确认</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

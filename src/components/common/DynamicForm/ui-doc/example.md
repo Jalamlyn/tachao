@@ -149,7 +149,7 @@ const formConfig = {
               type: "resource",
               required: true,
               resourceConfig: {
-                resourceId: "departments",
+                resourceId: "resource_departments",
                 displayFields: [
                   { key: "name", label: "部门名称" },
                   { key: "code", label: "部门代码" },
@@ -179,7 +179,7 @@ const formConfig = {
                 operator: "exists",
               },
               resourceConfig: {
-                resourceId: "employees",
+                resourceId: "resource_employees",
                 displayFields: [
                   { key: "name", label: "姓名" },
                   { key: "title", label: "职位" },
@@ -666,7 +666,7 @@ export default () => {
                 type: "resource",
                 required: true,
                 resourceConfig: {
-                  resourceId: "customerData", // 假设客户资料的资源ID为customerData
+                  resourceId: "resource_customerData", // 假设客户资料的资源ID为customerData
                   displayField: "name", // 显示客户名称
                   displayFields: [
                     { key: "name", label: "名称" },

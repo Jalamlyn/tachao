@@ -47,7 +47,7 @@ export function ResourceDataTableToolbar<TData>({
       <div className='flex justify-center items-center gap-4'>
         <Button onClick={onAddNew}>
           <Plus className='mr-2 h-4 w-4' />
-          新增
+          新增数据
         </Button>
 
         {hasSelection && (
@@ -63,7 +63,7 @@ export function ResourceDataTableToolbar<TData>({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="secondary">
+            <Button variant='secondary'>
               <Download className='mr-2 h-4 w-4' />
               导出Excel
               <ChevronDown className='ml-2 h-4 w-4' />
@@ -93,38 +93,35 @@ export function ResourceDataTableToolbar<TData>({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end' className='min-w-[200px]'>
-            <DropdownMenuItem
-              onClick={onAddColumns}
-              className="cursor-pointer hover:bg-indigo-50 text-primary"
-            >
-              <Plus className="mr-2 h-4 w-4" />
+            <DropdownMenuItem onClick={onAddColumns} className='cursor-pointer hover:bg-indigo-50 text-primary'>
+              <Plus className='mr-2 h-4 w-4' />
               添加新列
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <ScrollArea className='h-[300px] rounded-md'>
               {table
                 .getAllLeafColumns()
-                .filter((column) => column.getCanHide() && column.id !== 'select' && column.id !== 'actions')
+                .filter((column) => column.getCanHide() && column.id !== "select" && column.id !== "actions")
                 .map((column) => {
                   return (
-                    <div key={column.id} className="flex items-center justify-between px-2 py-2 hover:bg-gray-50">
+                    <div key={column.id} className='flex items-center justify-between px-2 py-2 hover:bg-gray-50'>
                       <DropdownMenuCheckboxItem
-                        className="flex-1 capitalize pl-8"
+                        className='flex-1 capitalize pl-8'
                         checked={column.getIsVisible()}
                         onCheckedChange={(value) => column.toggleVisibility(!!value)}
                       >
                         {column.id}
                       </DropdownMenuCheckboxItem>
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        variant='ghost'
+                        size='sm'
+                        className='h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50'
                         onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteColumn(column.id);
+                          e.stopPropagation()
+                          onDeleteColumn(column.id)
                         }}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className='h-4 w-4' />
                       </Button>
                     </div>
                   )

@@ -13,6 +13,7 @@ interface ResourceSelectButtonProps {
   buttonProps?: React.ComponentProps<typeof Button>
   loading?: boolean
   selectionMode?: "single" | "multiple"
+  tableProps?: React.ComponentProps<typeof SimpleDataTable>
 }
 
 const ResourceSelectButton: React.FC<ResourceSelectButtonProps> = ({
@@ -22,6 +23,7 @@ const ResourceSelectButton: React.FC<ResourceSelectButtonProps> = ({
   buttonProps,
   loading = false,
   selectionMode = "multiple",
+  tableProps,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [resourceData, setResourceData] = useState<any[]>([])
@@ -111,6 +113,7 @@ const ResourceSelectButton: React.FC<ResourceSelectButtonProps> = ({
           ) : (
             <div className='max-w-4xl overflow-x-scroll'>
               <SimpleDataTable
+                {...tableProps}
                 data={resourceData}
                 columns={generateColumns(resourceData)}
                 onSelectionChange={handleSelectionChange}
