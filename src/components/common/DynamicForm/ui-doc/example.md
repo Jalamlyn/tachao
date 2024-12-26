@@ -92,16 +92,6 @@ const formConfig = {
           icon: "mdi:card-account-details",
           fields: [
             {
-              name: "idType",
-              label: "证件类型",
-              type: "select",
-              required: true,
-              options: [
-                { label: "身份证", value: "id" },
-                { label: "护照", value: "passport" },
-              ],
-            },
-            {
               name: "idNumber",
               label: "证件号码",
               type: "text",
@@ -163,10 +153,10 @@ const formConfig = {
               type: "select",
               required: true,
               options: [
-                { label: "初级工程师", value: "junior" },
-                { label: "中级工程师", value: "middle" },
-                { label: "高级工程师", value: "senior" },
-                { label: "技术专家", value: "expert" },
+                { label: "初级工程师", value: "初级工程师" },
+                { label: "中级工程师", value: "中级工程师" },
+                { label: "高级工程师", value: "高级工程师" },
+                { label: "技术专家", value: "技术专家" },
               ],
             },
             {

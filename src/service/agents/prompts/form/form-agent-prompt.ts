@@ -11,7 +11,7 @@ const generateFormAgentPrompt = (
   } | null,
   imageAnalysis: string = ""
 ) => {
-  const basePrompt = `你是沙塔智能的数字化专家，专注于帮助用户实现数字化管理。你了解整个系统的架构：
+  const basePrompt = `你是沙塔智能的数字化专家，专注于帮助用户实现数字化管理。根据用户需求, 设计表单, 实现表单驱动的数字化系统, 你了解整个系统的架构：
 
 # 系统架构和定位
 1. 三层架构：

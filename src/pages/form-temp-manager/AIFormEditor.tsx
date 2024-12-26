@@ -259,7 +259,6 @@ const AIFormEditor: React.FC = () => {
       </div>
     )
   }
-
   return (
     <PageLayout title='AI 表单开发' titleIcon='mdi:form-select' actions={pageActions}>
       <AIEditor
@@ -283,7 +282,7 @@ const AIFormEditor: React.FC = () => {
               }
             }}
           >
-            <FormPreview previewMode code={formState.rawConfig} />
+            <FormPreview previewMode code={version?.rawConfig} />
           </ErrorBoundary>
         )}
         showCodeTab

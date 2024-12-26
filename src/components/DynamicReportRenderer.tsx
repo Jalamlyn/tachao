@@ -39,7 +39,7 @@ export const DynamicReportRenderer: React.FC<DynamicReportRendererProps> = ({ ti
         setError(null)
 
         // 1. 转换代码
-        const _code = code.replace("```", "")
+        const _code = code.replace("```mo", "").replace("```", "")
         const code_ = extractShataAICode(_code)!
         const { code: transformedCode } = transform(code_, {
           presets: ["react"],

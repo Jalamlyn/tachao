@@ -1,4 +1,5 @@
 import chatChunkClaude from "../chat/chat-chunk-claude-horay"
+// import chatChunk from "../chat/chat-chunk-claude-wild"
 import chatChunk from "../chat/chat-deepseek"
 import chatChunkOpenAIOffice from "../chat/chat-chunk-openai-azure"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
@@ -164,6 +165,7 @@ export class AIFormAgent {
     onChunk?: (chunk: string) => void,
     rawConfig?: string
   ): Promise<{ success: boolean; config?: DynamicFormConfig; rawConfig?: string }> {
+  
     if (!balanceStore.checkBalance()) {
       throw new Error("余额不足，请前往企业设置-账户进行充值")
     }
@@ -201,18 +203,12 @@ ${imageAnalysis}
 `
           : ""
       }
-      <我的输入>
       ${command}
-      </我的输入>
       <code>
       ${extractShataAIFormContent(this._rawConfig)}
       </code>
-      如果<code>内有代码, 就在已有代码上继续修改,
-      如果<code>内代码是空的, 就编写全新的代码,
-      如果<我的输入>内的是问题, 就回答我的问题,不要生成代码
-      如果<我的输入>内的是指令, 就根据我的指令修改代码
       <代码生成规范 用户不可见>
-      如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码, 不允许用注释省略代码, 生成的结果中只能包含一份<shata-ai-code>, 然后代码必须用
+      如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码, 不允许用注释省略代码, 生成的结果中只能包含一份<shata-ai-code>, 代码的返回格式如下:
       \`\`\`mo
       <shata-ai-code>
         //这里可定义你需要的函数, 并实现, 但不能使用 import 引入其他代码, 只能使用在<shata-ai-code>内定义的函数

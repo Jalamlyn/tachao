@@ -78,11 +78,9 @@ export class AIReportAgent {
         * 对于完全无关问题：礼貌建议咨询其他专业助手
         * 一次只生成一份 <shata-ai-code></shata-ai-code>
         * [格式要求:所有代码必须使用 
-        \`\`\`mo 
         <shata-ai-code>
         代码
         </shata-ai-code>
-        \`\`\` 
         包裹, 必须返回完整代码, 不要使用注释来省略任何代码或逻辑]`
 
       const enhancedCommand = rawConfig
