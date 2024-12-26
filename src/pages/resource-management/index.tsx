@@ -23,12 +23,11 @@ const ResourceManagement: React.FC = () => {
   useEffect(() => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
-      { label: "资料管理", href: "/we-chat-app/admin/resources" },
+      { label: "资料表格管理", href: "/we-chat-app/admin/resources" },
     ])
   }, [])
 
   const handleSuccess = (data: any) => {
-    // 调用ResourceGallery的刷新方法
     galleryRef.current?.loadResources()
   }
 
@@ -44,12 +43,6 @@ const ResourceManagement: React.FC = () => {
     switch (type) {
       case "excel":
         return <CreateResourceButton isDisabled={false} onSuccess={handleSuccess} />
-      case "word":
-        return <WordUploadButton onSuccess={handleSuccess} onError={handleError} />
-      case "pdf":
-        return <PDFUploadButton onSuccess={handleSuccess} onError={handleError} />
-      case "image":
-        return <ImageUploadButton onSuccess={handleSuccess} onError={handleError} />
       default:
         return null
     }
@@ -79,8 +72,10 @@ const ResourceManagement: React.FC = () => {
     </motion.div>
   )
 
+  const visibleResourceTypes = Object.entries(resourceTypes).filter(([_, type]) => !type.hidden)
+
   return (
-    <PageLayout title='资料管理' titleIcon='mdi:file-document'>
+    <PageLayout title='资料表格管理' titleIcon='mdi:file-document'>
       <div className='flex flex-col gap-4'>
         <Tabs
           selectedKey={selectedType}
@@ -93,7 +88,7 @@ const ResourceManagement: React.FC = () => {
             tabContent: "group-data-[selected=true]:text-primary",
           }}
         >
-          {Object.entries(resourceTypes).map(([id, type]) => (
+          {visibleResourceTypes.map(([id, type]) => (
             <Tab
               key={id}
               isDisabled={type.disabled}
