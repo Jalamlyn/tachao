@@ -6,6 +6,7 @@ import { getDefaultFormatter } from "../utils/formatters"
 import { FormField, FormItem, FormControl } from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
 import { FormatterService } from "../../../utils/formatters"
+import { Tooltip } from "@nextui-org/react"
 
 interface SummaryFieldProps extends SummaryFieldType {
   form: UseFormReturn<any>
@@ -27,7 +28,6 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
   static: isStatic,
 }) => {
   // 保留原有的格式化器以保持向后兼容
-  debugger
   const legacyFormatter = format || getDefaultFormatter(type)
 
   const renderTrend = () => {
@@ -40,23 +40,42 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
     )
   }
 
+  const renderValue = (value: any) => {
+    const formattedValue = formatConfig
+      ? FormatterService.format(value, formatConfig).formattedValue
+      : legacyFormatter(value, precision)
+    
+    return (
+      <Tooltip content={formattedValue}>
+        <span
+          className={cn(
+            "text-xl font-bold",
+            type === "amount" && "font-mono",
+            "max-w-full overflow-hidden text-ellipsis whitespace-nowrap block"
+          )}
+          style={{
+            ...style,
+            ...(formatConfig && FormatterService.format(value, formatConfig).style),
+          }}
+        >
+          {formattedValue}
+        </span>
+      </Tooltip>
+    )
+  }
+
   // 静态显示模式
   if (isStatic) {
     return (
-      <div className={cn("p-4 bg-gray-50 rounded-lg", "transition-all duration-200", "hover:bg-gray-100")}>
-        <div className='text-sm text-gray-500'>{label}</div>
-        <div className='mt-1 flex items-center'>
-          <span
-            className={cn("text-xl font-bold", type === "amount" && "font-mono")}
-            style={{
-              ...style,
-              ...(formatConfig && FormatterService.format(defaultValue, formatConfig).style),
-            }}
-          >
-            {formatConfig
-              ? FormatterService.format(defaultValue, formatConfig).formattedValue
-              : legacyFormatter(defaultValue, precision)}
-          </span>
+      <div className={cn(
+        "p-4 bg-gray-50 rounded-lg",
+        "transition-all duration-200",
+        "hover:bg-gray-100",
+        "min-w-0" // 确保flex子项可以正确收缩
+      )}>
+        <div className='text-sm text-gray-500 overflow-hidden text-ellipsis whitespace-nowrap'>{label}</div>
+        <div className='mt-1 flex items-center min-w-0'> {/* 添加 min-w-0 确保子元素可以正确收缩 */}
+          {renderValue(defaultValue)}
           {renderTrend()}
         </div>
       </div>
@@ -70,20 +89,15 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
       render={({ field }) => (
         <FormItem>
           <FormControl>
-            <div className={cn("p-4 bg-gray-50 rounded-lg", "transition-all duration-200", "hover:bg-gray-100")}>
-              <div className='text-sm text-gray-500'>{label}</div>
-              <div className='mt-1 flex items-center'>
-                <span
-                  className={cn("text-xl font-bold", type === "amount" && "font-mono")}
-                  style={{
-                    ...style,
-                    ...(formatConfig && FormatterService.format(field.value ?? defaultValue, formatConfig).style),
-                  }}
-                >
-                  {formatConfig
-                    ? FormatterService.format(field.value ?? defaultValue, formatConfig).formattedValue
-                    : legacyFormatter(field.value ?? defaultValue, precision)}
-                </span>
+            <div className={cn(
+              "p-4 bg-gray-50 rounded-lg",
+              "transition-all duration-200",
+              "hover:bg-gray-100",
+              "min-w-0"
+            )}>
+              <div className='text-sm text-gray-500 overflow-hidden text-ellipsis whitespace-nowrap'>{label}</div>
+              <div className='mt-1 flex items-center min-w-0'>
+                {renderValue(field.value ?? defaultValue)}
                 {renderTrend()}
               </div>
             </div>
