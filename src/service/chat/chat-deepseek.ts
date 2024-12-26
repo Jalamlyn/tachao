@@ -10,24 +10,8 @@ export default async function chatChunkDeepseek(
   onCancel,
   isFirst = true,
   temperature = 0,
-  overFlag = "YES",
-  baseModel = "deepseek::deepseek-chat"
+  overFlag = "YES"
 ) {
-  const [provider, model] = baseModel.split("::")
-  const modelSupplierData = localDB.getItem("model-supplier-data") || [
-    {
-      id: "deepseek",
-      name: "DeepSeek",
-      apiKey: "sk-2ef828934e1f422d8ae5c4f71770cef1",
-      endpoint: "https://api.deepseek.com/beta/chat/completions",
-      isDefault: false,
-    },
-  ]
-  const supplierInfo = modelSupplierData.find((supplier) => supplier.id === provider)
-
-  const apiKey = supplierInfo.apiKey
-  const apiEndPoint = supplierInfo.endpoint || "https://api.deepseek.com/beta/chat/completions"
-
   let _messages
   if (isFirst) {
     _messages = messages.map((msg) => ({
@@ -39,11 +23,9 @@ export default async function chatChunkDeepseek(
   }
 
   const payload = {
-    model: model,
     messages: _messages,
     temperature,
     max_tokens: 8192,
-    stream: true,
   }
 
   let controller = new AbortController()
@@ -51,11 +33,10 @@ export default async function chatChunkDeepseek(
   onCancel(() => controller.abort())
 
   try {
-    const response = await fetch(apiEndPoint, {
+    const response = await fetch("https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-a", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
       },
       body: jsonStringify(payload),
       signal: controller.signal,
@@ -101,8 +82,7 @@ export default async function chatChunkDeepseek(
               onCancel,
               false,
               temperature,
-              overFlag,
-              baseModel
+              overFlag
             )
             return
           }
@@ -110,11 +90,11 @@ export default async function chatChunkDeepseek(
           console.error("Error parsing JSON:", error)
         }
       } else {
-        // 记录 token 使用情况
+        // 记录 token 使用情况```mo
         await costService.recordTokenUsage({
           promptTokenCount: inputTokens,
           candidatesTokenCount: outputTokens,
-          model: baseModel,
+          model: "advanced",
           content: fullContent,
         })
         localDB.setItem("chat-chunk-over", overFlag)
@@ -126,9 +106,6 @@ export default async function chatChunkDeepseek(
     } else {
       console.error("Error:", error)
       message.error(`An error occurred while fetching data: ${error.message}`)
-      if (error.message.includes("context_length_exceeded")) {
-        onChunk(`项目大小超过了最大上下文，无法使用自动检索模式，请切换到手动检索模式，手动勾选需要修改的文件`)
-      }
     }
     throw error
   }

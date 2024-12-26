@@ -29,29 +29,8 @@ export default async function chatChunkClaudeHoray(
   onCancel,
   isFirst = true,
   temperature = 0,
-  overFlag = "YES",
-  baseModel = "hooray::claude-3-5-sonnet-v2@20241022"
+  overFlag = "YES"
 ) {
-  const [provider, model] = baseModel.split("::")
-  console.log("chatChunkClaudeHoray", baseModel)
-  const modelSupplierData = localDB.getItem("model-supplier-data") || [
-    {
-      id: "hooray",
-      name: "Hooray AI",
-      apiKey: "",
-      endpoint: "https://api.horay.ai/v1/messages",
-      isDefault: true,
-    },
-  ]
-  const supplierInfo = modelSupplierData.find((supplier) => supplier.id === provider)
-
-  if (!supplierInfo) {
-    throw new Error(`未找到服务商信息：${provider}`)
-  }
-
-  const apiKey = "sk-eqoxibfuslwmxpnmlvjzwleeqdaltstzwmnavydsayujhvnj"
-  const apiEndPoint = supplierInfo.endpoint || "https://api.horay.ai/v1/messages"
-
   let _messages
   if (isFirst) {
     _messages = messages.map((msg) => ({
@@ -62,25 +41,22 @@ export default async function chatChunkClaudeHoray(
   } else {
     _messages = mergeAdjacentRoles(messages)
   }
+
   const payload = {
-    model: model,
     system: systemMsg.content,
     messages: _messages,
     temperature,
     max_tokens: 8192,
-    stream: true,
-    apiKey,
   }
 
   let controller = new AbortController()
   fetchController.current = controller
 
   try {
-    const response = await fetch(apiEndPoint, {
+    const response = await fetch("https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-e", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
       },
       body: jsonStringify(payload),
       signal: controller.signal,
@@ -134,7 +110,7 @@ export default async function chatChunkClaudeHoray(
               false,
               temperature,
               overFlag,
-              baseModel
+              "expert"
             )
             return
           }
