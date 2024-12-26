@@ -20,6 +20,7 @@ import * as XLSX from 'xlsx'
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
+import { useMetadata } from "@/hooks/useMetadata"
 
 declare module "@tanstack/table-core" {
   interface FilterFns {
@@ -42,8 +43,9 @@ interface SimpleDataTableProps<T> {
   onSelectionChange?: (selectedRows: T[]) => void
   className?: string
   selectionMode?: "single" | "multiple"
-  resourceId?: string // 新增: 资源ID
-  displayFields?: Array<{ key: string, label: string }> // 新增: 展示字段配置
+  resourceId?: string
+  displayFields?: Array<{ key: string, label: string }>
+  onSuccess?: () => void // 新增: 成功回调
 }
 
 function IndeterminateCheckbox({
@@ -78,12 +80,14 @@ export function SimpleDataTable<T>({
   selectionMode = "multiple",
   resourceId,
   displayFields,
+  onSuccess,
 }: SimpleDataTableProps<T>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
   const [globalFilter, setGlobalFilter] = useState("")
   const [tableHeight, setTableHeight] = useState("400px")
+  const { create } = useMetadata("resource") // 新增: 使用metadata hook
 
   useEffect(() => {
     if (onSelectionChange) {
@@ -92,7 +96,44 @@ export function SimpleDataTable<T>({
     }
   }, [rowSelection])
 
-  // 新增: 导出Excel模板功能
+  // 新增: 创建资料方法
+  const handleCreateResource = async () => {
+    if (!resourceId) {
+      message.error("资源ID不能为空")
+      return
+    }
+
+    try {
+      // 构建资源数据
+      const resourceData = {
+        id: resourceId, // 使用传入的resourceId
+        title: `New Resource ${new Date().toISOString()}`,
+        data: [], // 空数据数组
+        status: "active",
+        indexFields: {
+          type: "excel",
+          ...(displayFields && {
+            displayFields: displayFields.map(field => ({
+              key: field.key,
+              label: field.label
+            }))
+          })
+        }
+      }
+
+      // 创建资源
+      await create(resourceData)
+      message.success("创建成功")
+      
+      // 触发成功回调
+      onSuccess?.()
+    } catch (error) {
+      console.error("Create resource error:", error)
+      message.error("创建失败")
+    }
+  }
+
+  // 导出Excel模板功能
   const handleExportTemplate = () => {
     try {
       // 使用displayFields或columns生成表头
@@ -207,17 +248,28 @@ export function SimpleDataTable<T>({
           onChange={(value) => setGlobalFilter(String(value))}
           className='max-w-sm'
         />
-        {/* 新增: 导出模板按钮 */}
+        {/* 工具栏按钮 */}
         {resourceId && (
-          <Button
-            size="sm"
-            variant="flat"
-            color="primary"
-            onClick={handleExportTemplate}
-            startContent={<Icon icon="mdi:file-download-outline" className="w-4 h-4" />}
-          >
-            导出模板
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="flat"
+              color="primary"
+              onClick={handleCreateResource}
+              startContent={<Icon icon="mdi:plus" className="w-4 h-4" />}
+            >
+              创建资料
+            </Button>
+            <Button
+              size="sm"
+              variant="flat"
+              color="primary"
+              onClick={handleExportTemplate}
+              startContent={<Icon icon="mdi:file-download-outline" className="w-4 h-4" />}
+            >
+              导出模板
+            </Button>
+          </div>
         )}
       </div>
 
