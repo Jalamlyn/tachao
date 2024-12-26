@@ -9,6 +9,8 @@ import { FormatterService } from "../../../utils/formatters"
 
 interface SummaryFieldProps extends SummaryFieldType {
   form: UseFormReturn<any>
+  defaultValue?: any
+  static?: boolean
 }
 
 const SummaryField: React.FC<SummaryFieldProps> = ({
@@ -21,6 +23,8 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
   format,
   formatConfig,
   form,
+  defaultValue,
+  static: isStatic,
 }) => {
   // 保留原有的格式化器以保持向后兼容
   const legacyFormatter = format || getDefaultFormatter(type)
@@ -34,6 +38,30 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
       />
     )
   }
+
+  // 静态显示模式
+  if (isStatic) {
+    return (
+      <div className={cn("p-4 bg-gray-50 rounded-lg", "transition-all duration-200", "hover:bg-gray-100")}>
+        <div className='text-sm text-gray-500'>{label}</div>
+        <div className='mt-1 flex items-center'>
+          <span
+            className={cn("text-xl font-bold", type === "amount" && "font-mono")}
+            style={{
+              ...style,
+              ...(formatConfig && FormatterService.format(defaultValue, formatConfig).style),
+            }}
+          >
+            {formatConfig
+              ? FormatterService.format(defaultValue, formatConfig).formattedValue
+              : legacyFormatter(defaultValue, precision)}
+          </span>
+          {renderTrend()}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <FormField
       control={form.control}
@@ -48,12 +76,12 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
                   className={cn("text-xl font-bold", type === "amount" && "font-mono")}
                   style={{
                     ...style,
-                    ...(formatConfig && FormatterService.format(field.value, formatConfig).style),
+                    ...(formatConfig && FormatterService.format(field.value ?? defaultValue, formatConfig).style),
                   }}
                 >
                   {formatConfig
-                    ? FormatterService.format(field.value, formatConfig).formattedValue
-                    : legacyFormatter(field.value, precision)}
+                    ? FormatterService.format(field.value ?? defaultValue, formatConfig).formattedValue
+                    : legacyFormatter(field.value ?? defaultValue, precision)}
                 </span>
                 {renderTrend()}
               </div>
