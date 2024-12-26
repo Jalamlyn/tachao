@@ -152,12 +152,17 @@ export default async function chatChunkOpenAIOffice(
       const newRecord = {
         id: Date.now(),
         timestamp: new Date().toISOString(),
-        model: baseModel,
-        promptTokenCount: inputTokenCount,
-        candidatesTokenCount: outputTokenCount,
-        inputCost,
-        outputCost,
+        type: "token_usage",
         totalCost: inputCost + outputCost,
+        detail: {
+          tokenUsage: {
+            promptTokenCount: inputTokenCount,
+            candidatesTokenCount: outputTokenCount,
+            inputCost,
+            outputCost,
+            model,
+          },
+        },
       }
 
       // 判断是否已有数据
