@@ -5,7 +5,6 @@ import { Icon } from "@iconify/react"
 import QRCodeModal from "./QRCodeModal"
 import WaitListModal from "./WaitListModal"
 import { useNavigate } from "react-router-dom"
-import AIChatDemo from "./components/AIChatDemo"
 
 interface HeroProps {
   onGetStarted: () => void
@@ -34,7 +33,6 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       phone_number: "+86 15384078477",
     })
 
-    // 启动部署时间轴动画
     const timer = setInterval(() => {
       setCurrentStep((prev) => (prev < 3 ? prev + 1 : 0))
     }, 3000)
@@ -168,13 +166,12 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         </motion.div>
 
         <motion.div variants={itemVariants} className='space-y-4'>
-          <h1 className='text-3xl md:text-5xl lg:text-6xl font-bold text-white leading-tight'>让天下没有难管的企业</h1>
-          <p className='text-lg md:text-2xl text-white/80'>AI 赋能企业管理 · 智能化一站式解决方案</p>
-        </motion.div>
-
-        {/* AI对话演示界面 */}
-        <motion.div variants={itemVariants} className="max-w-3xl mx-auto">
-          <AIChatDemo />
+          <h1 className='text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight'>
+            让天下没有难管的企业
+            <span className='block mt-4 text-xl md:text-2xl text-white/80'>
+              AI 赋能企业管理 · 智能化一站式解决方案
+            </span>
+          </h1>
         </motion.div>
 
         {/* 时间轴部分 */}
@@ -224,20 +221,20 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             size='lg'
             className='bg-white text-primary-dark hover:bg-white/90 font-medium px-8 w-full md:w-auto
               transform hover:scale-105 active:scale-95 transition-all duration-300
-              shadow-lg hover:shadow-xl'
+              shadow-lg hover:shadow-xl text-lg'
             onClick={() => setIsWaitListOpen(true)}
           >
-            申请开通账号
+            立即体验
           </Button>
           <Button
             size='lg'
             variant='bordered'
             className='text-white border-white hover:bg-white/10 font-medium px-8 w-full md:w-auto
               transform hover:scale-105 active:scale-95 transition-all duration-300
-              shadow-lg hover:shadow-xl'
+              shadow-lg hover:shadow-xl text-lg'
             onClick={() => setIsQRCodeOpen(true)}
           >
-            预约企业演示
+            预约演示
           </Button>
         </motion.div>
 

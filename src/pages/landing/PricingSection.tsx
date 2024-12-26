@@ -183,11 +183,12 @@ const PricingSection = () => {
             >
               <Card
                 className={`relative flex flex-col w-full transition-all duration-300 hover:shadow-xl
-                  ${plan.highlight ? "border-primary shadow-lg" : ""}
+                  ${plan.highlight ? "border-primary shadow-lg" : "shadow-md"}
+                  hover:scale-[1.02] hover:border-primary/50
                 `}
               >
                 {plan.highlight && (
-                  <div className='absolute left-1/2 -translate-x-1/2'>
+                  <div className='absolute left1/2 -translate-x-1/2'>
                     <Chip color='primary' variant='shadow'>
                       推荐方案
                     </Chip>
