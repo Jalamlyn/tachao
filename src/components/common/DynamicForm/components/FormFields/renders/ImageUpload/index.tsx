@@ -45,6 +45,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const [previewVisible, setPreviewVisible] = useState(false)
   const [previewImage, setPreviewImage] = useState<string>("")
   const [isProcessing, setIsProcessing] = useState(false)
+  const [currentFileIndex, setCurrentFileIndex] = useState(0)
+  const [totalFiles, setTotalFiles] = useState(0)
 
   // 获取签名URL
   const getSignedUrl = async (fileName: string) => {
@@ -93,6 +95,28 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const handlePreview = (imageUrl: string) => {
     setPreviewImage(imageUrl)
     setPreviewVisible(true)
+  }
+
+  // 处理单个文件上传
+  const handleSingleFileUpload = async (file: File): Promise<ImageValue | null> => {
+    setProgress(0)
+    
+    try {
+      const result = await handleUpload(file)
+      if (result) {
+        return {
+          url: result.downloadUrl,
+          thumbnailUrl: result.downloadUrl,
+          name: result.fileName,
+          size: result.size,
+          type: result.type,
+        }
+      }
+      return null
+    } catch (error) {
+      console.error("Single file upload error:", error)
+      throw error
+    }
   }
 
   // 处理图片上传
@@ -251,33 +275,32 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                     }
 
                     setUploading(true)
-                    setProgress(0)
+                    setTotalFiles(files.length)
+                    const uploadedFiles = []
 
                     try {
-                      const uploadedFiles = []
                       for (let i = 0; i < files.length; i++) {
-                        const result = await handleUpload(files[i])
+                        setCurrentFileIndex(i + 1)
+                        const result = await handleSingleFileUpload(files[i])
                         if (result) {
-                          uploadedFiles.push({
-                            url: result.downloadUrl,
-                            thumbnailUrl: result.downloadUrl,
-                            name: result.fileName,
-                            size: result.size,
-                            type: result.type,
-                          })
+                          uploadedFiles.push(result)
                         }
                       }
 
-                      const newImages = [...images, ...uploadedFiles]
-                      formField.onChange(newImages)
-                      onChange?.(name, newImages)
-                      message.success("上传成功")
+                      if (uploadedFiles.length > 0) {
+                        const newImages = [...images, ...uploadedFiles]
+                        formField.onChange(newImages)
+                        onChange?.(name, newImages)
+                        message.success("上传成功")
+                      }
                     } catch (error) {
                       console.error("Upload error:", error)
                       message.error("上传失败")
                     } finally {
                       setUploading(false)
                       setProgress(0)
+                      setCurrentFileIndex(0)
+                      setTotalFiles(0)
                     }
                   }}
                   disabled={!isEditable || disabled}
@@ -303,7 +326,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                     "transition-colors duration-200"
                   )}
                 >
-                  {uploading ? "上传中..." : 
+                  {uploading ? `上传中 (${currentFileIndex}/${totalFiles})` : 
                    isProcessing ? "处理中..." : 
                    isWeixinBrowser() ? 
                    "微信暂不支持" : 
@@ -316,7 +339,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
             {uploading && (
               <div className='space-y-2'>
                 <Progress value={progress} className='w-full' />
-                <p className='text-sm text-gray-500'>上传进度: {progress}%</p>
+                <p className='text-sm text-gray-500'>
+                  正在上传第 {currentFileIndex} 张，共 {totalFiles} 张 ({progress}%)
+                </p>
               </div>
             )}
 
