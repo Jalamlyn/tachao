@@ -16,6 +16,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import SimpleDataTableSearch from "./SimpleDataTableSearch"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import * as XLSX from 'xlsx'
+import { Button } from "@nextui-org/react"
+import { Icon } from "@iconify/react"
+import message from "@/components/Message"
 
 declare module "@tanstack/table-core" {
   interface FilterFns {
@@ -38,6 +42,8 @@ interface SimpleDataTableProps<T> {
   onSelectionChange?: (selectedRows: T[]) => void
   className?: string
   selectionMode?: "single" | "multiple"
+  resourceId?: string // 新增: 资源ID
+  displayFields?: Array<{ key: string, label: string }> // 新增: 展示字段配置
 }
 
 function IndeterminateCheckbox({
@@ -70,12 +76,14 @@ export function SimpleDataTable<T>({
   onSelectionChange,
   className = "",
   selectionMode = "multiple",
+  resourceId,
+  displayFields,
 }: SimpleDataTableProps<T>) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
   const [globalFilter, setGlobalFilter] = useState("")
-  const [tableHeight, setTableHeight] = useState("400px") // 设置固定高度
+  const [tableHeight, setTableHeight] = useState("400px")
 
   useEffect(() => {
     if (onSelectionChange) {
@@ -83,6 +91,37 @@ export function SimpleDataTable<T>({
       onSelectionChange(selectedRows)
     }
   }, [rowSelection])
+
+  // 新增: 导出Excel模板功能
+  const handleExportTemplate = () => {
+    try {
+      // 使用displayFields或columns生成表头
+      const headers = displayFields 
+        ? displayFields.map(field => field.label)
+        : columns.map(col => col.header || col.title)
+
+      // 创建工作簿
+      const wb = XLSX.utils.book_new()
+      const ws = XLSX.utils.aoa_to_sheet([headers])
+
+      // 设置列宽
+      const colWidth = headers.map(() => ({ wch: 15 }))
+      ws['!cols'] = colWidth
+
+      // 添加工作表
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
+
+      // 生成文件名
+      const fileName = `template_${resourceId || 'data'}.xlsx`
+
+      // 下载文件
+      XLSX.writeFile(wb, fileName)
+      message.success('模板导出成功')
+    } catch (error) {
+      console.error('Export template error:', error)
+      message.error('模板导出失败')
+    }
+  }
 
   // 添加选择列
   const selectionColumn = {
@@ -161,13 +200,25 @@ export function SimpleDataTable<T>({
 
   return (
     <div className={`flex flex-col ${className}`}>
-      {/* 搜索框 */}
+      {/* 搜索框和工具栏 */}
       <div className='flex items-center justify-between p-2'>
         <SimpleDataTableSearch
           value={globalFilter ?? ""}
           onChange={(value) => setGlobalFilter(String(value))}
           className='max-w-sm'
         />
+        {/* 新增: 导出模板按钮 */}
+        {resourceId && (
+          <Button
+            size="sm"
+            variant="flat"
+            color="primary"
+            onClick={handleExportTemplate}
+            startContent={<Icon icon="mdi:file-download-outline" className="w-4 h-4" />}
+          >
+            导出模板
+          </Button>
+        )}
       </div>
 
       {/* 表格区域 */}

@@ -9,7 +9,6 @@ import ResourceSelectButton from "@/components/common/ResourceSelectButton"
 import { Spinner } from "@nextui-org/react"
 import { useMetadata } from "@/hooks/metadata"
 import message from "@/components/Message"
-// import { Input } from "@/components/ui/input"
 import { cn } from "@/theme/cn"
 
 export const renderResource = (
@@ -196,6 +195,11 @@ export const renderResource = (
                         isDisabled: !isEditable,
                         className: "min-w-[80px]",
                       }}
+                      // 新增: 传递resourceId和displayFields
+                      tableProps={{
+                        resourceId: field.resourceConfig?.resourceId,
+                        displayFields: field.resourceConfig?.displayFields,
+                      }}
                     >
                       {renderTrigger()}
                     </ResourceSelectButton>
@@ -251,6 +255,11 @@ export const renderResource = (
                               isDisabled: !isEditable,
                               className: "min-w-[80px]",
                               startContent: <Icon icon='material-symbols:sync' className='text-lg' />,
+                            }}
+                            // 新增: 传递resourceId和displayFields
+                            tableProps={{
+                              resourceId: field.resourceConfig?.resourceId,
+                              displayFields: field.resourceConfig?.displayFields,
                             }}
                           />
                           <Button
