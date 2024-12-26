@@ -98,6 +98,7 @@ export function SimpleDataTable<T>({
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const [resourceExists, setResourceExists] = useState<boolean | null>(null)
   const { create, getDetail } = useMetadata("resource")
+  const [isLoading, setIsLoaded] = useState(true)
 
   useEffect(() => {
     if (resourceId) {
@@ -110,6 +111,7 @@ export function SimpleDataTable<T>({
     try {
       const resource = await getDetail(resourceId)
       setResourceExists(!!resource)
+      setIsLoaded(false)
     } catch (error) {
       console.error("Check resource error:", error)
       setResourceExists(false)
@@ -287,7 +289,14 @@ export function SimpleDataTable<T>({
         </div>
       )
     }
-
+    if (isLoading) {
+      return (
+        <div className='flex flex-col items-center justify-center h-full space-y-4'>
+          <Icon icon='mdi:loading' className='w-16 h-16 text-gray-300 animate-spin' />
+          <p className='text-sm text-gray-500'>正在加载数据...</p>
+        </div>
+      )
+    }
     return (
       <div className='flex flex-col items-center justify-center h-full space-y-4'>
         <Icon icon={resourceExists ? "mdi:file-document-plus" : "mdi:file-plus"} className='w-16 h-16 text-gray-300' />
@@ -306,10 +315,12 @@ export function SimpleDataTable<T>({
               添加数据
             </Button>
           ) : (
-            <Button size='sm' variant='outline' onClick={handleCreateResource} className='flex items-center gap-2'>
-              <Icon icon='mdi:plus' className='w-4 h-4' />
-              创建资料表格
-            </Button>
+            resourceExists !== null && (
+              <Button size='sm' variant='outline' onClick={handleCreateResource} className='flex items-center gap-2'>
+                <Icon icon='mdi:plus' className='w-4 h-4' />
+                创建资料表格
+              </Button>
+            )
           )}
           <Button size='sm' variant='outline' onClick={handleExportTemplate} className='flex items-center gap-2'>
             <Icon icon='mdi:file-download-outline' className='w-4 h-4' />

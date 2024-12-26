@@ -86,7 +86,11 @@ const ResourceDataTable: React.FC = ({ id }) => {
 
   const hasColumns = React.useMemo(() => {
     if (!resource?.indexFields) return false
-    return resource.indexFields.displayFields?.length > 0 || Object.keys(resource.indexFields?.rawData || {}).length > 0
+    return (
+      resource.indexFields.displayFields?.length > 0 ||
+      Object.keys(resource.indexFields?.rawData || {}).length > 0 ||
+      Object.keys(resource.indexFields?.rowData || {}).length > 0
+    )
   }, [resource])
 
   const fetchResources = useCallback(async () => {
