@@ -129,7 +129,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({ config, form, isEditable = 
       if (column?.resourceConfig) {
         // 格式化显示值
         const displayValue = formatResourceDisplayValue(resource, column.resourceConfig);
-
+        
         // 设置表单值，包含显示值
         form.setValue(`${fieldName}.${rowIndex}.${columnKey}`, {
           ...resource,
