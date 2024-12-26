@@ -1,5 +1,6 @@
-import chatChunk from "../chat/chat-chunk-claude-wild"
-// import chatChunk from "../chat/chat-deepseek"
+import chatChunkClaude from "../chat/chat-chunk-claude-horay"
+import chatChunk from "../chat/chat-deepseek"
+import chatChunkOpenAIOffice from "../chat/chat-chunk-openai-azure"
 import { DynamicFormConfig } from "@/components/common/DynamicForm/types"
 import { parseFormConfig } from "@/utils/codeParser"
 import generateFormAgentPrompt from "./prompts/form/form-agent-prompt"
@@ -15,6 +16,7 @@ export class AIFormAgent {
   private static instance: AIFormAgent
   private _rawConfig: string | null = null
   private _versionIndex: number = 0
+  private _imageAnalysisCache: Map<string, string> = new Map()
 
   private constructor() {}
 
@@ -42,6 +44,69 @@ export class AIFormAgent {
 
   public setVersionIndex(index: number): void {
     this._versionIndex = index
+  }
+
+  private async analyzeImages(images: string[]): Promise<string> {
+    if (images.length === 0) return ""
+
+    let allAnalysis = []
+    for (const imageUrl of images) {
+      // 检查缓存
+      if (this._imageAnalysisCache.has(imageUrl)) {
+        allAnalysis.push(this._imageAnalysisCache.get(imageUrl))
+        continue
+      }
+
+      // 使用Azure模型分析图片
+      const messages = [
+        {
+          role: "system",
+          content: `你是一个专业的表单设计分析师。请分析图片中的表单内容，并按以下格式返回分析结果：
+1. 表单目的：[描述表单的主要用途]
+2. 字段列表：
+   - 字段名称：[字段类型] - [字段描述]
+   - ...
+3. 业务规则：
+   - [描述发现的业务规则和验证逻辑]
+4. 建议的表单结构：
+   [描述推荐的表单结构和组织方式]`
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "请分析这张图片中的表单内容，给出详细的分析结果。"
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageUrl,
+                detail: "high"
+              }
+            }
+          ]
+        }
+      ]
+
+      let response = ""
+      await chatChunkOpenAIOffice(
+        messages,
+        (chunk: string) => {
+          response += chunk
+        },
+        () => {},
+        true,
+        0,
+        "YES"
+      )
+
+      // 缓存分析结果
+      this._imageAnalysisCache.set(imageUrl, response)
+      allAnalysis.push(response)
+    }
+
+    return allAnalysis.join("\n\n")
   }
 
   public async parseConfig(rawConfig: string) {
@@ -76,9 +141,16 @@ export class AIFormAgent {
       const cachedImages = imageStore.images
       const cachedExcel = excelStore.cachedExcel
       const resources = result.data?.[0]?.value
+
+      // 如果有图片，先进行图片分析
+      let imageAnalysis = ""
+      if (cachedImages.length > 0) {
+        imageAnalysis = await this.analyzeImages(cachedImages)
+      }
+
       const systemMessage = {
         role: "system" as const,
-        content: generateFormAgentPrompt(cachedImages.length > 0, resources, cachedExcel),
+        content: generateFormAgentPrompt(cachedImages.length > 0, resources, cachedExcel, imageAnalysis),
       }
 
       const enhancedCommand = `
@@ -100,7 +172,7 @@ export class AIFormAgent {
         export default (props)=>{
           ...你生成的代码,代码必须完整, 不能使用 //其他... 之类的注释省略原来的代码, 必须返回所有的完整代码
         }
-      </shata-ai-code>s
+      </shata-ai-code>
       \`\`\`
       包裹起来, 在 watch 中编写逻辑,必须遵循 ${guide} 的规则, 除了上下文中的依赖, 代码中不允许使用任何外部代码, 使用的任何函数方法必须先声明, 不能省略任何逻辑, 必须完整返回所有代码
       </代码生成规范 用户不可见>
@@ -116,17 +188,34 @@ export class AIFormAgent {
       const allMessages = [systemMessage, ...messages, currentUserMessage]
 
       let response = ""
-      await chatChunk(
-        allMessages,
-        (chunk: string) => {
-          response += chunk
-          onChunk?.(chunk)
-        },
-        () => {},
-        true,
-        0,
-        "YES"
-      )
+      const model = sessionStorage.getItem("aiLevel") || "ADVANCED"
+      if (model === "ADVANCED") {
+        await chatChunk(
+          allMessages,
+          (chunk: string) => {
+            response += chunk
+            onChunk?.(chunk)
+          },
+          () => {},
+          true,
+          0,
+          "YES"
+        )
+      }
+      if (model === "EXPERT") {
+        await chatChunkClaude(
+          allMessages,
+          (chunk: string) => {
+            response += chunk
+            onChunk?.(chunk)
+          },
+          () => {},
+          true,
+          0,
+          "YES"
+        )
+      }
+
       imageStore.images = []
       excelStore.cachedExcel = null
 

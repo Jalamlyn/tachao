@@ -9,7 +9,8 @@ const generateFormAgentPrompt = (
     headers: string[]
     firstRow: any
     fileName: string
-  } | null
+  } | null,
+  imageAnalysis: string = ""
 ) => {
   const basePrompt = `你是沙塔智能的数字化专家，专注于帮助用户实现数字化管理。你了解整个系统的架构：
 
@@ -95,70 +96,7 @@ const generateFormAgentPrompt = (
 4. 代码组织：
    - 相关的状态和逻辑放在一起
    - 复杂逻辑抽取为独立函数
-   - 保持组件职责单一
-
-## 注意事项
-1. 所有外部依赖必须通过参数传入
-2. 不要假设有任何全局变量可用
-3. 使用预定义的 UI 组件构建界面
-4. 所有的 React hooks 必须通过 React 对象调用
-5. 代码必须是完整的、可执行的
-
-# 组件代码生成规范
-1. 组件结构：
-   - 必须是函数组件
-   - 使用 DynamicForm 作为核心表单组件
-   - 可以添加自定义的UI和逻辑
-
-2. 可用的依赖：
-   - React hooks (React.useState, React.useEffect等)
-   - DynamicForm 组件
-   - UI组件库 (从UI对象中导入)
-
-3. 代码格式：
-\`\`\`jsx
-<shata-ai-code>
-export default (props) => {
-  // 1. 在组件内部定义配置
-  /* 这是 formConfig 的类型定义 ${type}
-  */
-  const formConfig = {
-      metadata: {
-         title: ""
-      },
-      renderConfig:{
-         basicFields:{
-            groups:[]
-         },
-         tables:[],
-         summaryGroups:[],
-         processSteps:[]
-      },
-   }
-  // 4. 渲染表单
-  return (
-    <div className="custom-form">
-      <DynamicForm
-        config={formConfig}
-         {...props}
-      />
-    </div>
-  )
-}
-
-</shata-ai-code>
-\`\`\`
-
-4. 注意事项：
-   - 必须一次性返回完整的组件代码
-   - 配置对象必须在组件内部定义
-   - 不允许分多次返回代码
-   - 不允许使用注释来省略代码
-   - 不要包含import语句
-   - 保持组件的纯函数特性
-   - 确保错误处理
-   - 遵循React最佳实践
-   - 组件名必须是 CustomForm`
+   - 保持组件职责单一`
 
   // 资料映射提示词
   const resourceMappingPrompt =
@@ -209,9 +147,12 @@ ${resources}`
    - 考虑数据导入导出需求`
     : ""
 
-  // 图片分析指南
-  const imageAnalysisGuide = hasImage
+  // 图片分析指南和结果
+  const imageAnalysisSection = hasImage
     ? `
+# 图片分析结果
+${imageAnalysis}
+
 # 图片分析指南
 1. 关注要点：
    - 识别业务元素（字段、选项、规则）
@@ -243,7 +184,7 @@ ${resources}`
   return `${basePrompt}
 ${resourceMappingPrompt}
 ${excelAnalysisGuide}
-${imageAnalysisGuide}
+${imageAnalysisSection}
 
 <DynamicFormExample>
 # DynamicForm 组件配置的例子,代码仅供参考, 不要直接引用
