@@ -23,9 +23,7 @@ export const renderImageUpload = (
   isEditable: boolean,
   onChange?: (fieldName: string, value: any) => void
 ) => {
-  return (
-    <ImageUpload {...field} form={form} isEditable={isEditable} onChange={onChange} />
-  )
+  return <ImageUpload {...field} form={form} isEditable={isEditable} onChange={onChange} />
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -67,6 +65,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         activityType: "test",
         files: [fileInfo],
       })
+      setUploading(false)
       return response.data
     } catch (error) {
       console.error("Create activity error:", error)
@@ -100,7 +99,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   // 处理单个文件上传
   const handleSingleFileUpload = async (file: File): Promise<ImageValue | null> => {
     setProgress(0)
-    
+
     try {
       const result = await handleUpload(file)
       if (result) {
@@ -123,7 +122,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const handleUpload = async (file: File) => {
     // 检查是否是微信环境
     if (isWeixinBrowser()) {
-      message.info('微信环境暂不支持上传功能，我们正在努力开发中，请稍后再试或使用其他浏览器~')
+      message.info("微信环境暂不支持上传功能，我们正在努力开发中，请稍后再试或使用其他浏览器~")
       return null
     }
 
@@ -253,7 +252,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     >
       {(formField) => {
         const images: ImageValue[] = formField.value || []
-        
+
         return (
           <div className='space-y-4'>
             {/* 上传按钮 */}
@@ -326,11 +325,13 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                     "transition-colors duration-200"
                   )}
                 >
-                  {uploading ? `上传中 (${currentFileIndex}/${totalFiles})` : 
-                   isProcessing ? "处理中..." : 
-                   isWeixinBrowser() ? 
-                   "微信暂不支持" : 
-                   `上传图片 (${images.length}/${maxCount})`}
+                  {uploading
+                    ? `上传中 (${currentFileIndex}/${totalFiles})`
+                    : isProcessing
+                      ? "处理中..."
+                      : isWeixinBrowser()
+                        ? "微信暂不支持"
+                        : `上传图片 (${images.length}/${maxCount})`}
                 </Button>
               </div>
             )}
@@ -347,7 +348,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
             {/* 图片网格 */}
             {images.length > 0 && (
-              <div className='grid grid-cols-3 gap-4'>
+              <div className='flex flex-wrap gap-3'>
                 <AnimatePresence>
                   {images.map((image, index) => (
                     <motion.div
@@ -355,7 +356,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.8 }}
-                      className='relative aspect-square rounded-lg overflow-hidden group'
+                      className='w-[100px] h-[100px] relative aspect-square rounded-lg overflow-hidden'
                     >
                       <img
                         src={image.thumbnailUrl || image.url}

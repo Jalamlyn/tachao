@@ -15,8 +15,10 @@ import { Calendar } from "@/components/ui/calendar"
 
 // 导入 NextUI Button
 import { Button } from "@nextui-org/react"
+import * as NextUI from "@nextui-org/react"
 import { extractShataAIFormContent } from "./AIEditor"
 import { codeStore } from "@/pages/form-temp-manager/components/codeStore"
+import { message } from "antd"
 
 // UI组件映射
 const uiComponents = {
@@ -74,6 +76,8 @@ export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> =
         const componentFn = new Function(
           "React",
           "DynamicForm",
+          "NextUI",
+          "message",
           ...Object.keys(uiComponents),
           `${transformedCode.replace(/export default/, "return")}`
         )
@@ -81,7 +85,7 @@ export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> =
           <DynamicForm {...props} formData={formData} templateId={templateId} formId={formId} />
         )
         // 3. 获取组件
-        const CustomComponent = componentFn(React, DynamicFormWrapper, ...Object.values(uiComponents))
+        const CustomComponent = componentFn(React, DynamicFormWrapper, NextUI, message, ...Object.values(uiComponents))
 
         setComponent(() => CustomComponent)
       } catch (err) {

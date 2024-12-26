@@ -17,6 +17,7 @@ import { renderCustom } from "./renders/renderCustom"
 import { renderClockIn } from "./renders/ClockIn"
 import { renderLocation } from "./renders/Location"
 import { renderOrderNumber } from "./renders/renderOrderNumber"
+import { renderImageUpload } from "./renders/ImageUpload"
 
 interface DynamicFormFieldsProps {
   fields: DynamicFormField[]
@@ -105,6 +106,9 @@ const DynamicFormFields: React.FC<DynamicFormFieldsProps> = ({ fields, form, isE
     // 订单编号
     if (field.type === "orderNumber") {
       return renderOrderNumber(field, form, isEditable, onChange)
+    }
+    if (field.type === "imageUpload") {
+      return renderImageUpload(field, form, isEditable, onChange)
     }
 
     return null

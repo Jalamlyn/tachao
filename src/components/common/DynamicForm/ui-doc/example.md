@@ -141,8 +141,8 @@ const formConfig = {
               resourceConfig: {
                 resourceId: "resource_departments",
                 displayFields: [
-                  { key: "name", label: "部门名称" },
-                  { key: "code", label: "部门代码" },
+                  { key: "部门名称", label: "部门名称" },
+                  { key: "部门代码", label: "部门代码" },
                 ],
                 displayFormat: (resource) => `${resource.name} (${resource.code})`,
               },
@@ -171,8 +171,8 @@ const formConfig = {
               resourceConfig: {
                 resourceId: "resource_employees",
                 displayFields: [
-                  { key: "name", label: "姓名" },
-                  { key: "title", label: "职位" },
+                  { key: "姓名", label: "姓名" },
+                  { key: "职位", label: "职位" },
                 ],
                 params: (form) => ({
                   departmentId: form.getValues("department")?.id,
@@ -659,8 +659,8 @@ export default () => {
                   resourceId: "resource_customerData", // 假设客户资料的资源ID为customerData
                   displayField: "name", // 显示客户名称
                   displayFields: [
-                    { key: "name", label: "名称" },
-                    { key: "id", label: "客户ID" },
+                    { key: "名称", label: "名称" },
+                    { key: "客户ID", label: "客户ID" },
                   ],
                   displayFormat: (resource) => `${resource.name} (${resource.id})`,
                 },
@@ -1787,6 +1787,150 @@ export default () => {
   return (
     <div className='custom-form'>
       <DynamicForm config={formConfig} />
+    </div>
+  )
+}
+```
+
+# 自定义表单配置示例
+
+```jsx
+export default (props) => {
+  const [cities, setCities] = React.useState([])
+  const [weatherData, setWeatherData] = React.useState(null)
+  const [loading, setLoading] = React.useState(false)
+
+  // 模拟城市数据
+  React.useEffect(() => {
+    // 这里使用一些主要城市作为示例
+    setCities([
+      { label: "北京", value: "beijing" },
+      { label: "上海", value: "shanghai" },
+      { label: "广州", value: "guangzhou" },
+      { label: "深圳", value: "shenzhen" },
+      { label: "杭州", value: "hangzhou" },
+      { label: "成都", value: "chengdu" },
+      { label: "武汉", value: "wuhan" },
+      { label: "西安", value: "xian" },
+      { label: "南京", value: "nanjing" },
+      { label: "重庆", value: "chongqing" },
+    ])
+  }, [])
+
+  const formConfig = {
+    metadata: {
+      title: "城市天气查询",
+      description: "查询城市实时天气信息",
+    },
+    renderConfig: {
+      basicFields: {
+        groups: [
+          {
+            key: "weatherQuery",
+            title: "天气查询",
+            icon: "mdi:weather-partly-cloudy",
+            description: "选择城市查询当前天气状况",
+            fields: [
+              {
+                name: "city",
+                label: "城市",
+                type: "select",
+                required: true,
+                placeholder: "请选择城市",
+                options: cities,
+              },
+              {
+                name: "weather",
+                label: "天气状况",
+                type: "custom",
+                render: ({ field }) => {
+                  if (!weatherData) return null
+
+                  return (
+                    <div className='p-4 bg-white rounded-lg shadow-sm'>
+                      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                        <div className='space-y-2'>
+                          <div className='text-sm text-gray-500'>温度</div>
+                          <div className='text-2xl font-bold text-blue-600'>{weatherData.temp}°C</div>
+                        </div>
+                        <div className='space-y-2'>
+                          <div className='text-sm text-gray-500'>天气</div>
+                          <div className='text-2xl font-bold text-blue-600'>{weatherData.text}</div>
+                        </div>
+                        <div className='space-y-2'>
+                          <div className='text-sm text-gray-500'>湿度</div>
+                          <div className='text-2xl font-bold text-blue-600'>{weatherData.humidity}%</div>
+                        </div>
+                        <div className='space-y-2'>
+                          <div className='text-sm text-gray-500'>风向</div>
+                          <div className='text-2xl font-bold text-blue-600'>{weatherData.windDir}</div>
+                        </div>
+                        <div className='space-y-2'>
+                          <div className='text-sm text-gray-500'>风速</div>
+                          <div className='text-2xl font-bold text-blue-600'>{weatherData.windSpeed} km/h</div>
+                        </div>
+                        <div className='space-y-2'>
+                          <div className='text-sm text-gray-500'>更新时间</div>
+                          <div className='text-lg font-medium text-gray-600'>{weatherData.updateTime}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+    watch: (form) => {
+      const subscription = form.watch(async (value, { name }) => {
+        if (name === "city") {
+          const city = form.getValues("city")
+          if (city) {
+            try {
+              setLoading(true)
+              // 这里使用和风天气API，需要替换为你的API Key
+              const response = await fetch(
+                `https://devapi.qweather.com/v7/weather/now?location=${city}&key=f573e1bf135b43e9bfa6a8c75887277b
+
+`
+              )
+              const data = await response.json()
+
+              // 模拟API响应，实际使用时替换为真实API响应
+              setWeatherData({
+                temp: Math.floor(Math.random() * 15) + 15, // 15-30度
+                text: ["晴", "多云", "阴", "小雨"][Math.floor(Math.random() * 4)],
+                humidity: Math.floor(Math.random() * 30) + 40, // 40-70%
+                windDir: ["东北风", "西南风", "东南风", "西北风"][Math.floor(Math.random() * 4)],
+                windSpeed: Math.floor(Math.random() * 20) + 5, // 5-25km/h
+                updateTime: new Date().toLocaleString(),
+              })
+            } catch (error) {
+              console.error("Failed to fetch weather data:", error)
+              message.error("获取天气数据失败")
+            } finally {
+              setLoading(false)
+            }
+          }
+        }
+      })
+
+      return () => subscription.unsubscribe()
+    },
+  }
+
+  return (
+    <div className='weather-form'>
+      <DynamicForm config={formConfig} />
+      {loading && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center'>
+          <div className='bg-white p-4 rounded-lg'>
+            <NextUI.Spinner label='获取天气数据...' />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
