@@ -12,6 +12,75 @@ import { cn } from "@/theme/cn"
 import { TableColumn, TableRenderProps } from "../../../types"
 import { FormatterService } from "../../../utils/formatters"
 
+// 添加简单对象渲染器组件
+const SimpleObjectRenderer = ({ data }: { data: any }) => {
+  const MAX_DISPLAY_FIELDS = 3;
+  
+  const getValidFields = (obj: any) => {
+    return Object.entries(obj)
+      .filter(([_, value]) => value !== null && value !== undefined)
+      .slice(0, MAX_DISPLAY_FIELDS);
+  };
+
+  const formatValue = (value: any): string => {
+    if (value === null || value === undefined) return '-';
+    if (typeof value === 'boolean') return value ? '是' : '否';
+    if (typeof value === 'number') return value.toLocaleString();
+    if (value instanceof Date) return format(value, 'yyyy-MM-dd');
+    if (Array.isArray(value)) return `${value.length}项`;
+    if (typeof value === 'object') return '...';
+    return String(value);
+  };
+
+  const validFields = getValidFields(data);
+  const totalFields = Object.keys(data).length;
+  const hasMore = totalFields > MAX_DISPLAY_FIELDS;
+
+  return (
+    <Popover>
+      <PopoverTrigger>
+        <div className="cursor-pointer hover:bg-gray-50 p-2 rounded group">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 truncate">
+              {validFields.map(([_, value], index) => (
+                <React.Fragment key={index}>
+                  {index > 0 && (
+                    <span className="mx-1 text-gray-300">·</span>
+                  )}
+                  <span className="text-gray-700">
+                    {formatValue(value)}
+                  </span>
+                </React.Fragment>
+              ))}
+            </div>
+            {hasMore && (
+              <span className="text-xs text-gray-400 group-hover:text-gray-600">
+                更多
+              </span>
+            )}
+          </div>
+        </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-80">
+        <div className="p-4">
+          <div className="space-y-2">
+            {Object.entries(data).map(([key, value]) => (
+              <div key={key} className="flex items-center justify-between py-1">
+                <span className="text-sm text-gray-500">
+                  {key}
+                </span>
+                <span className="text-sm font-medium text-gray-900">
+                  {formatValue(value)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 interface TableCellProps {
   column: TableColumn
   rowIndex: number
@@ -131,7 +200,12 @@ const renderTableInput = ({ column, rowIndex, tableProps }: TableCellProps) => {
       control={form.control}
       name={cellFieldName}
       render={({ field }) => {
-        // 使用新的格式化系统
+        // 处理对象类型的值
+        if (typeof field.value === 'object' && field.value !== null) {
+          return <SimpleObjectRenderer data={field.value} />;
+        }
+
+        // 使用格式化系统
         const formattedValue = column.formatConfig
           ? FormatterService.format(field.value, column.formatConfig)
           : { formattedValue: field.value, style: undefined }
