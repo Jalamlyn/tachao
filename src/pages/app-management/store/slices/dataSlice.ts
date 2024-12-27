@@ -35,7 +35,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
 
   useCreateApp: () => {
     const queryClient = useQueryClient()
-    const mutation = useMutation<void, Error, { title: string; template?: string }>({
+    const mutation = useMutation<string, Error, { title: string; template?: string }>({
       mutationFn: async (input) => {
         const newApp: AppIndex = {
           id: `app_${Date.now()}`,
@@ -48,6 +48,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
             templateIds: [],
             reportIds: [],
           },
+          pages: [],
         }
 
         const result = await getMetadata(["app_index"])
@@ -59,6 +60,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
           const updatedData = [...currentData, newApp]
           await setMetadata("app_index", JSON.stringify(updatedData))
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.apps })
+          return newApp.id // 返回新创建的应用ID
         } catch (error) {
           queryClient.setQueryData(QUERY_KEYS.apps, currentData)
           throw error
@@ -110,6 +112,8 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
                 templateIds: input.templateIds,
                 reportIds: input.reportIds,
               },
+              pages: input.pages || app.pages || [],
+              homePageId: input.homePageId || app.homePageId,
               updatedAt: new Date().toISOString(),
             }
           }

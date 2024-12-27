@@ -6,7 +6,7 @@ import { CreateAppInput } from "../store/useAppStore"
 interface CreateAppModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (data: CreateAppInput) => Promise<void>
+  onSubmit: (data: CreateAppInput) => Promise<string> // 修改返回类型为 Promise<string>
   isLoading?: boolean
 }
 
@@ -18,24 +18,20 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   const handleSubmit = async () => {
     if (!title.trim()) return
     try {
-      await onSubmit({ title: title.trim(), template })
+      const newAppId = await onSubmit({ title: title.trim(), template })
       setTitle("")
       setTemplate("enterprise")
       onClose()
-      // 创建完应用后，如果是企业级应用，跳转到创建首页
+      
+      // 根据模板类型决定跳转逻辑
       if (template === "enterprise") {
-        // 这里需要获取新创建的应用ID
-        const result = await getMetadata(["app_index"])
-        if (result.data?.[0]?.value) {
-          const apps = JSON.parse(result.data[0].value)
-          const newApp = apps[apps.length - 1]
-          if (newApp) {
-            navigate(`/apps/${newApp.id}/pages/create`, {
-              state: { isHome: true }
-            })
-            return
-          }
-        }
+        navigate(`/apps/${newAppId}/pages/create`, {
+          state: { isHome: true }
+        })
+      } else if (template === "dashboard") {
+        navigate(`/apps/${newAppId}/dashboard`)
+      } else {
+        navigate(`/apps/${newAppId}`)
       }
     } catch (error) {
       console.error("Error creating app:", error)

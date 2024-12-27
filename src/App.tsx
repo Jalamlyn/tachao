@@ -20,9 +20,10 @@ import EnterpriseLayout from "./pages/app-management/components/layouts/Enterpri
 import WaitListPage from "./pages/WaitListPage"
 import FormCreate from "./pages/form/components/FormCreate"
 import { PermissionCheck } from "./permissions/components/PermissionCheck"
+import PageEditor from "./pages/app-management/components/PageEditor"
+import UnauthorizedPage from "./permissions/pages/UnauthorizedPage"
 
 import { loadBMapScript } from "@/components/reports/MapComponent"
-import UnauthorizedPage from "./permissions/pages/UnauthorizedPage"
 
 setTimeout(() => {
   loadBMapScript()
@@ -102,6 +103,18 @@ function App() {
                 }
               />
             </Route>
+            {/* 新增页面编辑器路由 */}
+            <Route
+              path="/apps/:appId/pages/create"
+              element={
+                <PermissionCheck
+                  resourceType="app"
+                  resourceId={location.pathname.split("/")[2]}
+                >
+                  <PageEditor />
+                </PermissionCheck>
+              }
+            />
             <Route
               path='/forms/analysis'
               element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <AnalysisPage />}
