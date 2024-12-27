@@ -13,16 +13,18 @@ import { PageRenderer } from "@/components/PageRenderer"
 import AIPageAgent from "@/service/agents/AIPageAgent"
 import { useAppStore } from "../store/useAppStore"
 import { getPageAgent } from "./getPageAgent"
+import { getMetadata, setMetadata } from "@/service/apis/metadata"
 
 const PageEditor: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { appId } = useParams<{ appId: string }>()
+  const { appId, pageId } = useParams<{ appId: string; pageId?: string }>()
   const { isHome } = location.state || {}
   const { updateBreadcrumbs } = useBreadcrumb()
   const [isLoading, setIsLoading] = useState(false)
   const [messages, setMessages] = useState<any[]>([])
   const [selectedTab, setSelectedTab] = useState("preview")
+  const [pageTitle, setPageTitle] = useState("")
   const { update: updateApp } = useMetadata("app")
   const { useApps } = useAppStore()
   const { apps } = useApps()
@@ -37,6 +39,31 @@ const PageEditor: React.FC = () => {
     rawCode: null as string | null,
     previewContent: "",
   })
+
+  // 加载页面详情
+  useEffect(() => {
+    const loadPageDetail = async () => {
+      if (!pageId) return
+
+      try {
+        const result = await getMetadata([`page_${pageId}`])
+        if (result.data?.[0]?.value) {
+          const pageData = JSON.parse(result.data[0].value)
+          setPageTitle(pageData.title)
+          setPageState(prev => ({
+            ...prev,
+            rawCode: pageData.code,
+            previewContent: pageData.code
+          }))
+        }
+      } catch (error) {
+        console.error("Error loading page detail:", error)
+        message.error("加载页面详情失败")
+      }
+    }
+
+    loadPageDetail()
+  }, [pageId])
 
   // 设置预览内容
   const setPreviewContent = useCallback((content: string) => {
@@ -62,7 +89,7 @@ const PageEditor: React.FC = () => {
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "应用管理", href: "/we-chat-app/admin/apps" },
       { label: app?.title || "应用", href: `/we-chat-app/admin/apps/${appId}` },
-      { label: isHome ? "创建首页" : "创建页面", href: "" },
+      { label: isHome ? "创建首页" : pageId ? "编辑页面" : "创建页面", href: "" },
     ])
   }, [])
 
@@ -106,15 +133,6 @@ const PageEditor: React.FC = () => {
     maxVersions: 10,
   })
 
-  useEffect(() => {
-    updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "应用管理", href: "/we-chat-app/admin/apps" },
-      { label: app?.title || "应用", href: `/we-chat-app/admin/apps/${appId}` },
-      { label: isHome ? "创建首页" : "创建页面", href: "" },
-    ])
-  }, [])
-
   const handleSave = async () => {
     if (!appId) return
 
@@ -126,18 +144,53 @@ const PageEditor: React.FC = () => {
         return
       }
 
-      await updateApp(appId, {
-        pages: [
-          {
-            id: `page_${Date.now()}`,
-            code: currentVersion.code,
-            isHome: isHome || false,
-          },
-        ],
-      })
+      // 1. 保存页面详情
+      const newPageId = pageId || `page_${Date.now()}`
+      const pageData = {
+        id: newPageId,
+        title: pageTitle || "未命名页面",
+        code: currentVersion.code,
+        isHome: isHome || false,
+        updatedAt: new Date().toISOString(),
+        appId
+      }
+      
+      // 使用metadata API保存页面详情
+      await setMetadata(`page_${newPageId}`, JSON.stringify(pageData))
 
+      // 2. 更新应用中的页面索引
+      const currentApp = apps.find(a => a.id === appId)
+      if (!currentApp) {
+        message.error("应用不存在")
+        return
+      }
+
+      // 只存储页面的索引信息
+      const pageIndex = {
+        id: newPageId,
+        title: pageTitle || "未命名页面",
+        updatedAt: pageData.updatedAt,
+        isHome: isHome || false
+      }
+
+      const updatedPages = pageId
+        ? (currentApp.pages || []).map(p => 
+            p.id === pageId ? pageIndex : p
+          )
+        : [...(currentApp.pages || []), pageIndex]
+
+      // 更新应用信息
+      const updates = {
+        pages: updatedPages,
+        ...(isHome ? { homePageId: newPageId } : {})
+      }
+
+      await updateApp(appId, updates)
       message.success("保存成功")
-      navigate(`/apps/${appId}`)
+      
+      if (!pageId) {
+        navigate(`/apps/${appId}/pages/${newPageId}/edit`)
+      }
     } catch (error) {
       console.error("Save error:", error)
       message.error("保存失败")
@@ -148,22 +201,18 @@ const PageEditor: React.FC = () => {
 
   const handleClearMessages = () => {
     setMessages([])
-    // 可以同时重置其他相关状态
     accumulatedTextRef.current = ""
     currentMessageIdRef.current = null
   }
 
-  // 修改: 更新 handleCommandResult，添加 pageState 更新
   const handleCommandResult = (result: any) => {
     if (result.success && result.code) {
-      // 更新 pageState
       setPageState((prev) => ({
         ...prev,
         rawCode: result.code,
         previewContent: result.code,
       }))
 
-      // 更新版本控制
       versionControl.addVersion({
         rawConfig: result.code,
       })
@@ -194,7 +243,7 @@ const PageEditor: React.FC = () => {
   }
 
   return (
-    <PageLayout title={isHome ? "创建首页" : "创建页面"} titleIcon='mdi:file-document-edit' actions={pageActions}>
+    <PageLayout title={isHome ? "创建首页" : pageId ? "编辑页面" : "创建页面"} titleIcon='mdi:file-document-edit' actions={pageActions}>
       <div className='h-[calc(100vh-140px)] overflow-auto'>
         <AIEditor
           parseConfig={AIPageAgent.parseCode}
