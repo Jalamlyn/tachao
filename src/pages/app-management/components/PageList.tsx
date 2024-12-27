@@ -42,7 +42,7 @@ export const PageList: React.FC<PageListProps> = ({ app, isOpen, onClose }) => {
   }
 
   const handleCreateHome = () => {
-    navigate(`/apps/${app.id}/pages/create`, {
+    navigate(`/we-chat-app/admin/apps/${app.id}/pages/create`, {
       state: { isHome: true },
     })
     onClose?.()

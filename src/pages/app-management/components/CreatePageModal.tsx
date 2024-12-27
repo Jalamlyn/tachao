@@ -33,15 +33,9 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
       setTemplate("enterprise")
       onClose()
       // 根据模板类型决定跳转逻辑
-      if (template === "enterprise") {
-        navigate(`/apps/${newAppId}/pages/create`, {
-          state: { isHome: true },
-        })
-      } else if (template === "dashboard") {
-        navigate(`/apps/${newAppId}/dashboard`)
-      } else {
-        navigate(`/apps/${newAppId}`)
-      }
+      navigate(`/we-chat-app/admin/apps/${newAppId}/pages/create`, {
+        state: { isHome: true },
+      })
     } catch (error) {
       console.error("Error creating app:", error)
     }
@@ -69,23 +63,6 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
             variant='bordered'
             isRequired
           />
-          <Select
-            label='应用模板'
-            value={template}
-            onChange={(e) => setTemplate(e.target.value as "default" | "dashboard" | "enterprise")}
-            variant='bordered'
-            isRequired
-          >
-            <SelectItem key='enterprise' value='enterprise'>
-              企业级应用
-            </SelectItem>
-            <SelectItem key='default' value='default'>
-              默认模板
-            </SelectItem>
-            <SelectItem key='dashboard' value='dashboard'>
-              仪表盘模板
-            </SelectItem>
-          </Select>
         </ModalBody>
         <ModalFooter>
           <Button variant='light' onPress={onClose}>

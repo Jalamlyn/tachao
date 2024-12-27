@@ -78,15 +78,7 @@ ${command},从设计师角度
 
 <代码生成规范>
 1. NextUI组件使用规范：
-   - 只能使用以下NextUI 2.6.0版本中实际存在的组件：
-     * Layout: Container, Spacer
-     * Display: Avatar, Image, Tooltip
-     * Feedback: Spinner, Progress
-     * Forms: Button, Checkbox, Input, Radio, Select, Textarea
-     * Navigation: Link, Navbar, Pagination, Tab
-     * Overlay: Modal, Popover
-     * Typography: Code
-     * Data Display: Table, Card, Accordion
+   - 只能使用以下NextUI 2.6.0版本中实际存在的组件
    - 所有组件使用前必须从NextUI中解构：
      const {Button, Input, Card} = NextUI
   样式使用 tailwind css 实现

@@ -25,7 +25,7 @@ export async function getSystemStatus(): Promise<SystemStatus> {
     // 获取所有索引数据
     const [appIndexResult, formIndexResult, reportIndexResult] = await Promise.all([
       getMetadata(["app_index"]),
-      getMetadata(["form_index"]),
+      getMetadata(["template_index"]),
       getMetadata(["report_index"]),
     ])
 
@@ -42,6 +42,7 @@ export async function getSystemStatus(): Promise<SystemStatus> {
 }
 
 export function generateSystemStatusPrompt(status: SystemStatus): string {
+  debugger
   return `
 系统当前状态：
 
