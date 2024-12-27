@@ -22,6 +22,8 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
 
   const getTemplateIcon = (template?: string) => {
     switch (template) {
+      case "enterprise":
+        return "mdi:building"
       case "dashboard":
         return "mdi:view-dashboard-outline"
       default:
@@ -31,6 +33,8 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
 
   const getTemplateColor = (template?: string) => {
     switch (template) {
+      case "enterprise":
+        return "text-blue-500"
       case "dashboard":
         return "text-secondary"
       default:
@@ -40,6 +44,8 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
 
   const getTemplateLabel = (template?: string) => {
     switch (template) {
+      case "enterprise":
+        return "企业级应用"
       case "dashboard":
         return "仪表盘模板"
       default:
@@ -67,7 +73,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
                 <Chip 
                   size='sm' 
                   variant='flat' 
-                  color={app.template === "dashboard" ? "secondary" : "primary"}
+                  color={app.template === "enterprise" ? "primary" : app.template === "dashboard" ? "secondary" : "default"}
                 >
                   {getTemplateLabel(app.template)}
                 </Chip>

@@ -1,5 +1,5 @@
 import React from "react"
-import { Card, CardBody, Button, Spinner } from "@nextui-org/react"
+import { Card, CardBody, Button, Spinner, Navigate } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
@@ -29,6 +29,11 @@ export const AppEntry: React.FC = () => {
         <Spinner label='加载中...' />
       </div>
     )
+  }
+
+  // 根据模板类型选择不同的渲染方式
+  if (app.template === "enterprise") {
+    return <Navigate to={`/apps/${appId}/enterprise`} replace />
   }
 
   // 使用PermissionCheck包装主要内容

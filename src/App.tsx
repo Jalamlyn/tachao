@@ -16,6 +16,7 @@ import Form from "@/pages/form"
 import Report from "@/pages/report"
 import ResourceDataTable from "./components/common/data-table/ResourceDataTable"
 import AppEntry from "./pages/app-management/components/AppEntry"
+import EnterpriseLayout from "./pages/app-management/components/layouts/EnterpriseLayout"
 import WaitListPage from "./pages/WaitListPage"
 import FormCreate from "./pages/form/components/FormCreate"
 import { PermissionCheck } from "./permissions/components/PermissionCheck"
@@ -88,7 +89,19 @@ function App() {
               }
             />
             <Route path='/report/:reportId' element={<Report />} />
-            <Route path='/apps/:appId' element={<AppEntry />} />
+            <Route path='/apps/:appId' element={<AppEntry />}>
+              <Route
+                path="enterprise/*"
+                element={
+                  <PermissionCheck
+                    resourceType="app"
+                    resourceId={location.pathname.split("/")[2]}
+                  >
+                    <EnterpriseLayout />
+                  </PermissionCheck>
+                }
+              />
+            </Route>
             <Route
               path='/forms/analysis'
               element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <AnalysisPage />}

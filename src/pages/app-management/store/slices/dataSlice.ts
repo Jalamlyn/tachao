@@ -35,7 +35,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
 
   useCreateApp: () => {
     const queryClient = useQueryClient()
-    const mutation = useMutation<void, Error, { title: string }>({
+    const mutation = useMutation<void, Error, { title: string; template?: string }>({
       mutationFn: async (input) => {
         const newApp: AppIndex = {
           id: `app_${Date.now()}`,
@@ -43,7 +43,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
           status: "active",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-          template: "default",
+          template: input.template || "enterprise",
           indexFields: {
             templateIds: [],
             reportIds: [],
