@@ -53,6 +53,7 @@ export class ValidationManager {
     label: string
     type: string
     required?: boolean
+    validation?: any
     validators?: Array<(value: any, allValues?: any) => string | undefined>
   }> {
     const fields: any[] = []
@@ -64,19 +65,33 @@ export class ValidationManager {
         // 处理分组字段
         basicFields.groups.forEach((group) => {
           group.fields.forEach((field) => {
-            fields.push({
+            const fieldConfig = {
               ...field,
               path: field.name,
-            })
+            }
+            
+            // 处理custom类型字段的validation
+            if (field.type === 'custom' && field.validation) {
+              fieldConfig.validation = field.validation
+            }
+            
+            fields.push(fieldConfig)
           })
         })
       } else if (Array.isArray(basicFields)) {
         // 处理字段数组
         basicFields.forEach((field) => {
-          fields.push({
+          const fieldConfig = {
             ...field,
             path: field.name,
-          })
+          }
+          
+          // 处理custom类型字段的validation
+          if (field.type === 'custom' && field.validation) {
+            fieldConfig.validation = field.validation
+          }
+          
+          fields.push(fieldConfig)
         })
       }
     }
@@ -119,12 +134,44 @@ export class ValidationManager {
       label: string
       type: string
       required?: boolean
+      validation?: any
       validators?: Array<(value: any, allValues?: any) => string | undefined>
     },
     value: any,
     allValues: any
   ): Promise<string | undefined> {
     try {
+      // 处理custom类型字段的validation
+      if (field.type === 'custom' && field.validation) {
+        // 处理required验证
+        if (field.validation.required && (!value || (Array.isArray(value) && value.length === 0))) {
+          return typeof field.validation.required === 'string' 
+            ? field.validation.required 
+            : `${field.label}不能为空`
+        }
+
+        // 处理validate对象
+        if (field.validation.validate) {
+          const validateObj = field.validation.validate
+          
+          // 如果validate是函数
+          if (typeof validateObj === 'function') {
+            const result = await validateObj(value, allValues)
+            if (typeof result === 'string') return result
+          }
+          
+          // 如果validate是对象
+          if (typeof validateObj === 'object') {
+            for (const [key, validator] of Object.entries(validateObj)) {
+              if (typeof validator === 'function') {
+                const result = await validator(value, allValues)
+                if (typeof result === 'string') return result
+              }
+            }
+          }
+        }
+      }
+
       // 必填校验
       if (field.required) {
         if (field.type === "resource") {
