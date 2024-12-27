@@ -1,27 +1,57 @@
 import React from "react"
 import { Card, CardBody, Button, Spinner } from "@nextui-org/react"
-import { Icon } from "@iconify/react"
+import { Navigate, useNavigate } from "react-router-dom"
 import { useParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
-import { FormTypeTabs } from "./FormTypeTabs"
 import { PermissionCheck } from "@/permissions/components/PermissionCheck"
+import { PageRenderer } from "@/components/PageRenderer"
+import { getMetadata } from "@/service/apis/metadata"
+import message from "@/components/Message"
+import { Icon } from "@iconify/react"
+import EmptyState from "@/components/EmptyState"
 
 export const AppEntry: React.FC = () => {
   const { appId } = useParams<{ appId: string }>()
-  const { items: apps = [], load: loadApps, isLoading } = useMetadata("app")
-  const { items: templates = [], load: loadTemplates } = useMetadata("template")
-  const { items: reports = [], load: loadReports } = useMetadata("report")
-  const { items: forms = [], load: loadForms } = useMetadata("form")
+  const navigate = useNavigate()
+  const [isLoading, setIsLoading] = React.useState(true)
+  const [pageData, setPageData] = React.useState<any>(null)
+  const { items: apps = [], load: loadApps } = useMetadata("app")
 
   React.useEffect(() => {
     const loadData = async () => {
-      await Promise.all([loadApps(), loadTemplates(), loadReports(), loadForms()])
+      try {
+        setIsLoading(true)
+        await loadApps()
+        
+        // 获取应用信息
+        const app = apps.find((app) => app.id === appId)
+        if (!app) {
+          message.error("应用不存在")
+          return
+        }
+
+        // 检查是否有首页配置
+        if (!app.homePageId) {
+          setIsLoading(false)
+          return
+        }
+
+        // 获取首页内容
+        const result = await getMetadata([`${app.homePageId}`])
+        if (result.data?.[0]?.value) {
+          setPageData(JSON.parse(result.data[0].value))
+        }
+      } catch (error) {
+        console.error("Error loading app:", error)
+        message.error("加载应用失败")
+      } finally {
+        setIsLoading(false)
+      }
     }
     loadData()
-  }, [])
+  }, [appId])
 
-  const app = apps.find((app) => app.id === appId)
-  if (!app) {
+  if (isLoading) {
     return (
       <div className='flex items-center justify-center min-h-screen'>
         <Spinner label='加载中...' />
@@ -29,113 +59,51 @@ export const AppEntry: React.FC = () => {
     )
   }
 
-  // 使用PermissionCheck包装主要内容
-  const AppContent = () => {
-    const appTemplates = templates.filter((template) => app.indexFields?.templateIds?.includes(template.id))
-    const appReports = reports.filter((report) => app.indexFields?.reportIds?.includes(report.id))
-    const appForms = forms.filter((form) => app.indexFields?.templateIds?.includes(form.template?.id))
-
+  // 如果没有找到应用
+  const app = apps.find((app) => app.id === appId)
+  if (!app) {
     return (
-      <div className='min-h-screen bg-gradient-to-b from-primary-50 to-background p-4 md:p-8'>
-        <div className='max-w-7xl mx-auto space-y-8'>
-          {/* 应用信息 */}
-          <div className='text-center space-y-4'>
-            <h1 className='text-4xl font-bold text-foreground'>{app.title}</h1>
-            <p className='text-xl text-default-600'>欢迎使用{app.title}</p>
-          </div>
+      <div className='flex items-center justify-center min-h-screen'>
+        <EmptyState
+          type='error'
+          title='应用不存在'
+          description='请检查应用ID是否正确'
+          icon={<Icon icon='mdi:alert' className='w-20 h-20 text-danger' />}
+        />
+      </div>
+    )
+  }
 
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-            {/* 表单模板区域 */}
-            <Card className='p-4'>
-              <CardBody className='space-y-6'>
-                <div className='flex items-center gap-2'>
-                  <Icon icon='mdi:form-select' className='w-6 h-6 text-primary' />
-                  <h2 className='text-xl font-semibold'>填写表单</h2>
-                </div>
-
-                <div className='space-y-4'>
-                  {appTemplates.map((template) => (
-                    <div
-                      key={template.id}
-                      className='p-4 rounded-lg border border-default-200 hover:border-primary transition-colors'
-                    >
-                      <div className='flex justify-between items-center'>
-                        <div>
-                          <h3 className='font-medium'>{template.title}</h3>
-                          <p className='text-small text-default-500'>{template.description || "点击开始填写表单"}</p>
-                        </div>
-                        <Button
-                          color='primary'
-                          variant='flat'
-                          onPress={() => window.open(`/form-create/${template.id}`, "_blank")}
-                        >
-                          开始填写
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  {appTemplates.length === 0 && (
-                    <div className='text-center py-8 text-default-500'>暂无可用的表单模板</div>
-                  )}
-                </div>
-              </CardBody>
-            </Card>
-
-            {/* 报表区域 */}
-            <Card className='p-4'>
-              <CardBody className='space-y-6'>
-                <div className='flex items-center gap-2'>
-                  <Icon icon='mdi:chart-box' className='w-6 h-6 text-primary' />
-                  <h2 className='text-xl font-semibold'>查看报表</h2>
-                </div>
-
-                <div className='space-y-4'>
-                  {appReports.map((report) => (
-                    <div
-                      key={report.id}
-                      className='p-4 rounded-lg border border-default-200 hover:border-primary transition-colors'
-                    >
-                      <div className='flex justify-between items-center'>
-                        <div>
-                          <h3 className='font-medium'>{report.title}</h3>
-                          <p className='text-small text-default-500'>{report.description || "点击查看报表详情"}</p>
-                        </div>
-                        <Button
-                          color='primary'
-                          variant='flat'
-                          onPress={() => window.open(`/report/${report.id}`, "_blank")}
-                        >
-                          查看报表
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  {appReports.length === 0 && (
-                    <div className='text-center py-8 text-default-500'>暂无可用的数据报表</div>
-                  )}
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-
-          {/* 表单类型分类区域 */}
-          <Card className='p-4'>
-            <CardBody className='space-y-6'>
-              <div className='flex items-center gap-2'>
-                <Icon icon='mdi:file-document-multiple' className='w-6 h-6 text-primary' />
-                <h2 className='text-xl font-semibold'>表单管理</h2>
-              </div>
-              <FormTypeTabs forms={appForms} isLoading={isLoading} />
-            </CardBody>
-          </Card>
-        </div>
+  // 如果没有配置首页
+  if (!app.homePageId || !pageData) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <Card className='w-[600px]'>
+          <CardBody className='text-center py-8'>
+            <div className='mb-6'>
+              <Icon icon='mdi:home-plus' className='w-20 h-20 text-primary mx-auto' />
+            </div>
+            <h3 className='text-xl font-semibold mb-2'>应用首页未配置</h3>
+            <p className='text-default-500 mb-6'>
+              这个应用还没有配置首页，请先创建并设置应用首页。
+            </p>
+            <Button
+              color='primary'
+              onPress={() => navigate(`/we-chat-app/admin/apps/${appId}/pages/create`, {
+                state: { isHome: true },
+              })}
+            >
+              创建首页
+            </Button>
+          </CardBody>
+        </Card>
       </div>
     )
   }
 
   return (
     <PermissionCheck resourceType='app' resourceId={appId}>
-      <AppContent />
+      <PageRenderer code={pageData.code} />
     </PermissionCheck>
   )
 }
