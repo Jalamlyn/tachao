@@ -174,12 +174,16 @@ const PageEditor: React.FC = () => {
       // 使用metadata API保存页面详情
       await setMetadata(`${newPageId}`, JSON.stringify(pageData))
 
-      // 2. 更新应用中的页面索引
-      const currentApp = apps.find((a) => a.id === appId)
-      if (!currentApp) {
-        message.error("应用不存在")
-        return
+      // 2. 获取并更新应用索引
+      const appIndexResult = await getMetadata(["app_index"])
+      const appList = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
+      
+      const currentAppIndex = appList.findIndex((a: any) => a.id === appId)
+      if (currentAppIndex === -1) {
+        throw new Error("应用不存在")
       }
+
+      const currentApp = appList[currentAppIndex]
 
       // 只存储页面的索引信息
       const pageIndex = {
@@ -196,18 +200,24 @@ const PageEditor: React.FC = () => {
       }
 
       const updatedPages = pageId
-        ? (currentApp.pages || []).map((p) => (p.id === pageId ? pageIndex : p))
+        ? (currentApp.pages || []).map((p: any) => (p.id === pageId ? pageIndex : p))
         : [...(currentApp.pages || []), pageIndex]
 
-      // 更新应用信息，如果是第一个页面或指定为首页，则设置homePageId
-      const updates = {
+      // 更新应用信息
+      const updatedApp = {
+        ...currentApp,
         pages: updatedPages,
         ...(isFirstPage || isHome ? { homePageId: newPageId } : {}),
+        updatedAt: new Date().toISOString(),
       }
 
-      await updateApp(appId, updates)
-      message.success("保存成功")
+      // 更新应用列表
+      appList[currentAppIndex] = updatedApp
 
+      // 直接使用 setMetadata 更新应用索引
+      await setMetadata("app_index", JSON.stringify(appList))
+
+      message.success("保存成功")
       setIsTitleModalOpen(false)
       setSavedPageId(newPageId)
       setIsConfirmModalOpen(true)
