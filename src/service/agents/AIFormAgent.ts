@@ -255,8 +255,9 @@ ${imageAnalysis}
       const jsonData = JSON.parse(res.data?.[0]?.value)
       
       await setMetadata(name, data) // data 不需要序列化
-
+      生成代码必须用 javascript 语言, 禁止使用 typescript 和 类型, 生成的代码必须完整, 不能省略任何逻辑
       </代码生成规范 用户不可见>
+      
       `
 
       const currentUserMessage = {

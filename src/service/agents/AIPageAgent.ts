@@ -79,6 +79,7 @@ ${command},从设计师角度
 <代码生成规范>
 1. NextUI组件使用规范：
    - 只能使用以下NextUI 2.6.0版本中实际存在的组件
+   禁止使用 Container Gird Text 这些 NextUI V1 版本中的组件
    - 所有组件使用前必须从NextUI中解构：
      const {Button, Input, Card} = NextUI
   样式使用 tailwind css 实现
@@ -126,6 +127,7 @@ export default (props) => {
 </shata-ai-code>
 \`\`\`
 """
+生成代码只能是 js 不能是 ts, 禁止使用类型
 </代码生成规范>
       `
 

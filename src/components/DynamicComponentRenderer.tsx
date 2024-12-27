@@ -64,8 +64,10 @@ export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> =
       try {
         setLoading(true)
         let code_ = code
-        if (codeStore.code !== "") {
-          code_ = codeStore.code
+        if (!code_) {
+          if (codeStore.code !== "") {
+            code_ = codeStore.code
+          }
         }
         const _code = extractShataAIFormContent(code_)
         // 1. 转换JSX

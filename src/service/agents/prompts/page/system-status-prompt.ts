@@ -42,7 +42,6 @@ export async function getSystemStatus(): Promise<SystemStatus> {
 }
 
 export function generateSystemStatusPrompt(status: SystemStatus): string {
-  debugger
   return `
 系统当前状态：
 
