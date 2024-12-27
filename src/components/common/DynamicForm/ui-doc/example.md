@@ -630,7 +630,7 @@ const formConfig = {
 }
 return (
     <div className='custom-form'>
-      <DynamicForm config={formConfig} />
+      <DynamicForm {...props} config={formConfig} />
     </div>
   )
 }
@@ -1786,7 +1786,7 @@ export default () => {
 
   return (
     <div className='custom-form'>
-      <DynamicForm config={formConfig} />
+      <DynamicForm {...props} config={formConfig} />
     </div>
   )
 }
@@ -1965,7 +1965,7 @@ export default (props) => {
 
   return (
     <div className='weather-form'>
-      <DynamicForm config={formConfig} />
+      <DynamicForm {...props} config={formConfig} />
       {loading && (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center'>
           <div className='bg-white p-4 rounded-lg'>
@@ -1977,9 +1977,10 @@ export default (props) => {
   )
 }
 ```
+
 ```jsx
 export default (props) => {
-  const {Input, Button, Checkbox} = NextUI
+  const { Input, Button, Checkbox } = NextUI
   const formConfig = {
     metadata: {
       title: "旅游贴士",
@@ -2025,105 +2026,98 @@ export default (props) => {
                 type: "custom",
                 defaultValue: [], // 设置默认值为空数组
                 render: ({ field, form, isEditable }) => {
-                  const [newItem, setNewItem] = React.useState("");
+                  const [newItem, setNewItem] = React.useState("")
 
                   // 直接使用field.value，不再使用本地state
-                  const items = field.value || [];
+                  const items = field.value || []
 
                   const handleAddItem = () => {
                     if (newItem.trim()) {
-                      const newItems = [...items, {
-                        id: Date.now(),
-                        text: newItem.trim(),
-                        checked: false,
-                        createdAt: new Date().toISOString()
-                      }];
-                      field.onChange(newItems);
-                      setNewItem("");
+                      const newItems = [
+                        ...items,
+                        {
+                          id: Date.now(),
+                          text: newItem.trim(),
+                          checked: false,
+                          createdAt: new Date().toISOString(),
+                        },
+                      ]
+                      field.onChange(newItems)
+                      setNewItem("")
                     }
-                  };
+                  }
 
                   const handleCheckItem = (index) => {
-                    const newItems = [...items];
+                    const newItems = [...items]
                     newItems[index] = {
                       ...newItems[index],
                       checked: !newItems[index].checked,
-                      updatedAt: new Date().toISOString()
-                    };
-                    field.onChange(newItems);
-                  };
+                      updatedAt: new Date().toISOString(),
+                    }
+                    field.onChange(newItems)
+                  }
 
                   const handleRemoveItem = (index) => {
-                    const newItems = items.filter((_, i) => i !== index);
-                    field.onChange(newItems);
-                  };
+                    const newItems = items.filter((_, i) => i !== index)
+                    field.onChange(newItems)
+                  }
 
                   const handleKeyPress = (e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddItem();
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      handleAddItem()
                     }
-                  };
+                  }
 
                   return (
-                    <div className="space-y-4">
+                    <div className='space-y-4'>
                       {isEditable && (
-                        <div className="flex gap-2">
+                        <div className='flex gap-2'>
                           <Input
                             value={newItem}
                             onChange={(e) => setNewItem(e.target.value)}
                             onKeyPress={handleKeyPress}
-                            placeholder="添加新事项"
-                            className="flex-1"
+                            placeholder='添加新事项'
+                            className='flex-1'
                           />
-                          <Button
-                            color="primary"
-                            onClick={handleAddItem}
-                            disabled={!newItem.trim()}
-                          >
+                          <Button color='primary' onClick={handleAddItem} disabled={!newItem.trim()}>
                             添加
                           </Button>
                         </div>
                       )}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                         {items.map((item, index) => (
                           <div
                             key={item.id || index}
-                            className={`p-4 bg-white rounded-lg shadow-sm flex items-center gap-2 transition-all duration-200 ${item.checked ? 'bg-gray-50' : ''
-                              }`}
+                            className={`p-4 bg-white rounded-lg shadow-sm flex items-center gap-2 transition-all duration-200 ${
+                              item.checked ? "bg-gray-50" : ""
+                            }`}
                           >
                             <Checkbox
                               isSelected={item.checked}
                               onValueChange={() => handleCheckItem(index)}
                               isDisabled={!isEditable}
                             />
-                            <span
-                              className={`flex-1 ${item.checked ? "line-through text-gray-400" : ""
-                                }`}
-                            >
+                            <span className={`flex-1 ${item.checked ? "line-through text-gray-400" : ""}`}>
                               {item.text}
                             </span>
                             {isEditable && (
                               <Button
                                 isIconOnly
-                                color="danger"
-                                variant="light"
+                                color='danger'
+                                variant='light'
                                 onClick={() => handleRemoveItem(index)}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                className='opacity-0 group-hover:opacity-100 transition-opacity'
                               >
-                                <i className="mdi mdi-delete" />
+                                <i className='mdi mdi-delete' />
                               </Button>
                             )}
                           </div>
                         ))}
                       </div>
-                      {items.length === 0 && (
-                        <div className="text-center text-gray-500 py-8">
-                          暂无待办事项
-                        </div>
-                      )}
+                      {items.length === 0 && <div className='text-center text-gray-500 py-8'>暂无待办事项</div>}
                     </div>
-                  );
+                  )
                 },
               },
             ],
@@ -2134,17 +2128,17 @@ export default (props) => {
     watch: (form) => {
       const subscription = form.watch((value, { name, type }) => {
         if (name === "checklist") {
-          console.log("Checklist updated:", value.checklist);
+          console.log("Checklist updated:", value.checklist)
         }
-      });
-      return () => subscription.unsubscribe();
+      })
+      return () => subscription.unsubscribe()
     },
-  };
+  }
 
   return (
-    <div className="trip-tips-form">
-      <DynamicForm config={formConfig} />
+    <div className='trip-tips-form'>
+      <DynamicForm {...props} config={formConfig} />
     </div>
-  );
-};
+  )
+}
 ```
