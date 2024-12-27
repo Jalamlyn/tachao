@@ -54,7 +54,7 @@ export function useVersionControl<T>() {
   const forward = useCallback(() => {
     if (currentIndex < versions.length - 1) {
       setCurrentIndex((prev) => prev + 1)
-      codeStore.code = versions[currentIndex - 1].data.rawConfig
+      codeStore.code = versions[currentIndex + 1].data.rawConfig
       return versions[currentIndex + 1].data
     }
     return null

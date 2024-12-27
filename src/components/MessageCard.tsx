@@ -161,7 +161,7 @@ const MessageCard = React.memo(
                       </>
                     )
                   }
-                  if (match && match[1] == "mo1") {
+                  if (match && match[1] == "jsx") {
                     if (children && children.toString().includes("</shata-ai-reflection>")) {
                       return "✔️ 深度思考完成"
                     }
@@ -192,12 +192,12 @@ const MessageCard = React.memo(
                     if (children && children.toString().startsWith("<shata-ai-response>")) {
                       return "正在生成响应..."
                     }
-                    if (children && children.toString().includes("</shata-ai-code>")) {
-                      return "✔️ 代码生成完成"
-                    }
-                    if (children && children.toString().startsWith("<shata-ai-code>")) {
-                      return "正在生成代码..."
-                    }
+                    // if (children && children.toString().includes("</shata-ai-code>")) {
+                    //   return "✔️ 代码生成完成"
+                    // }
+                    // if (children && children.toString().startsWith("<shata-ai-code>")) {
+                    //   return "正在生成代码..."
+                    // }
                     if (children && children.toString().includes("</shata-ai-intent>")) {
                       return "✔️ 理解用户意图完成"
                     }

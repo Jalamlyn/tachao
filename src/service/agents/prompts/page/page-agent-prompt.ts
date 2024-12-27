@@ -1,3 +1,5 @@
+import { markdown as code } from "@/code.md"
+
 export const generateSystemPrompt = () => {
   return `你是一个专业的React页面开发专家，负责生成高质量的页面代码。
 
@@ -71,5 +73,11 @@ export const generateSystemPrompt = () => {
     - 包含所有必要的功能实现
     - 确保代码可以直接运行
 
-请根据用户需求生成符合以上规范的页面代码。代码必须完整，不能使用注释省略，必须包含所有必要的功能实现。生成的代码需要包含在 <shata-ai-code></shata-ai-code> 标签中。`
+请根据用户需求生成符合以上规范的页面代码。代码必须完整，不能使用注释省略，必须包含所有必要的功能实现。生成的代码需要包含在 <shata-ai-code></shata-ai-code> 标签中。
+
+使用 NextUI 参考下列代码
+<example-code-file>
+${code}
+</example-code-file>
+`
 }

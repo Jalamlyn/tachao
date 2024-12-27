@@ -28,7 +28,6 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   const handleSubmit = async () => {
     if (!title.trim()) return
     try {
-      debugger
       const newAppId = await onSubmit({ title: title.trim(), template })
       setTitle("")
       setTemplate("enterprise")

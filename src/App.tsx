@@ -20,11 +20,9 @@ import EnterpriseLayout from "./pages/app-management/components/layouts/Enterpri
 import WaitListPage from "./pages/WaitListPage"
 import FormCreate from "./pages/form/components/FormCreate"
 import { PermissionCheck } from "./permissions/components/PermissionCheck"
-import PageEditor from "./pages/app-management/components/PageEditor"
 import UnauthorizedPage from "./permissions/pages/UnauthorizedPage"
 
 import { loadBMapScript } from "@/components/reports/MapComponent"
-import { BreadcrumbProvider } from "./contexts/BreadcrumbContext"
 
 setTimeout(() => {
   loadBMapScript()
@@ -61,74 +59,63 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <NextUIProvider navigate={navigate}>
-        <BreadcrumbProvider>
-          <div className='min-h-screen'>
-            <Routes>
-              <Route path='/' element={<LandingPage />} />
-              <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to='/external-login' /> : <AIHomePage />}>
-                <Route index element={<Navigate to='management' replace />} />
-              </Route>
-              <Route path='/login' element={<WeChatLoginPage />} />
-              <Route path='/external-login' element={<ExternalLoginPage />} />
+        <div className='min-h-screen'>
+          <Routes>
+            <Route path='/' element={<LandingPage />} />
+            <Route path='/ai' element={shouldRedirectToLogin() ? <Navigate to='/external-login' /> : <AIHomePage />}>
+              <Route index element={<Navigate to='management' replace />} />
+            </Route>
+            <Route path='/login' element={<WeChatLoginPage />} />
+            <Route path='/external-login' element={<ExternalLoginPage />} />
+            <Route
+              path='/form-preview/:templateId'
+              element={
+                <div className='h-screen overflow-auto'>
+                  <FormPreview />
+                </div>
+              }
+            />
+            <Route path='/form/:formId' element={<Form />} />
+            <Route
+              path='/form-create/:templateId'
+              element={
+                <PermissionCheck
+                  resourceType='template'
+                  resourceId={location.pathname.split("/").pop() || ""}
+                  role='creator'
+                >
+                  <FormCreate />
+                </PermissionCheck>
+              }
+            />
+            <Route path='/report/:reportId' element={<Report />} />
+            <Route path='/apps/:appId' element={<AppEntry />}>
               <Route
-                path='/form-preview/:templateId'
-                element={
-                  <div className='h-screen overflow-auto'>
-                    <FormPreview />
-                  </div>
-                }
-              />
-              <Route path='/form/:formId' element={<Form />} />
-              <Route
-                path='/form-create/:templateId'
-                element={
-                  <PermissionCheck
-                    resourceType='template'
-                    resourceId={location.pathname.split("/").pop() || ""}
-                    role='creator'
-                  >
-                    <FormCreate />
-                  </PermissionCheck>
-                }
-              />
-              <Route path='/report/:reportId' element={<Report />} />
-              <Route path='/apps/:appId' element={<AppEntry />}>
-                <Route
-                  path='enterprise/*'
-                  element={
-                    <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
-                      <EnterpriseLayout />
-                    </PermissionCheck>
-                  }
-                />
-              </Route>
-              {/* 新增页面编辑器路由 */}
-              <Route
-                path='/apps/:appId/pages/create'
+                path='enterprise/*'
                 element={
                   <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
-                    <PageEditor />
+                    <EnterpriseLayout />
                   </PermissionCheck>
                 }
               />
-              <Route
-                path='/forms/analysis'
-                element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <AnalysisPage />}
-              />
-              <Route
-                path='/resources/view/:id'
-                element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <ResourceDataTable />}
-              />
-              <Route path='/unauthorized' element={<UnauthorizedPage />} />
-              <Route
-                path='/operations/wait-list'
-                element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <WaitListPage />}
-              />
-              {renderWeChatApp()}
-            </Routes>
-            <Toaster />
-          </div>
-        </BreadcrumbProvider>
+            </Route>
+            <Route
+              path='/forms/analysis'
+              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <AnalysisPage />}
+            />
+            <Route
+              path='/resources/view/:id'
+              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <ResourceDataTable />}
+            />
+            <Route path='/unauthorized' element={<UnauthorizedPage />} />
+            <Route
+              path='/operations/wait-list'
+              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <WaitListPage />}
+            />
+            {renderWeChatApp()}
+          </Routes>
+          <Toaster />
+        </div>
       </NextUIProvider>
     </QueryClientProvider>
   )

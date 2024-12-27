@@ -56,7 +56,6 @@ const AIEditor: React.FC<AIEditorProps> = ({
       // 同步更新 AIFormAgent 的状态
       AIFormAgent.setRawConfig(rawConfig, versionControl.currentIndex)
     }
-
     updateVersionState()
   }, [versionControl.currentIndex])
 

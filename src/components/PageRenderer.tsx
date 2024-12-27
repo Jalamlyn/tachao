@@ -6,6 +6,7 @@ import * as ReactRouterDom from "react-router-dom"
 import * as FramerMotion from "framer-motion"
 import { Icon } from "@iconify/react"
 import message from "./Message"
+import { getMetadata, setMetadata } from "@/service/apis/metadata"
 
 interface PageRendererProps {
   code?: string
@@ -41,6 +42,7 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ code }) => {
           FramerMotion,
           Icon,
           message,
+          api: { getMetadata, setMetadata },
         }
 
         // 创建组件

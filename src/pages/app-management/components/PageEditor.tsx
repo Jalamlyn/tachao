@@ -188,7 +188,7 @@ const PageEditor: React.FC = () => {
 
   return (
     <PageLayout title={isHome ? "创建首页" : "创建页面"} titleIcon='mdi:file-document-edit' actions={pageActions}>
-      <div className='h-[calc(100vh-200px)] overflow-auto'>
+      <div className='h-[calc(100vh-140px)] overflow-auto'>
         <AIEditor
           parseConfig={AIPageAgent.parseCode}
           messages={messages}
@@ -203,6 +203,7 @@ const PageEditor: React.FC = () => {
             </ErrorBoundary>
           )}
           showCodeTab
+          excelUpload={false}
           previewTabName='页面预览'
         />
       </div>
