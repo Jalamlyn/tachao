@@ -57,7 +57,7 @@ export class AIPageAgent {
     }
 
     try {
-      const systemPrompt = generateSystemPrompt()
+      const systemPrompt = await generateSystemPrompt()
 
       // 获取现有代码
       const existingCode = codeStore.code || rawCode
@@ -90,15 +90,15 @@ ${command},从设计师角度
    - 所有组件使用前必须从NextUI中解构：
      const {Button, Input, Card} = NextUI
   样式使用 tailwind css 实现
-  所有的 icon 都使用 @iconify/react 的 Icon 组件, 直接使用 <Icon icon={...}>
-  请求数据只使用 fetch, 
-  动画库只使用 framer-motion, 通过 const { motion } = FramerMotion 来使用
+  所有的 icon 都使用 @iconify/react 的 Icon 组件
+  请求数据只使用 fetch
+  动画库只使用 framer-motion
   数据存储只使用 const {getMetadata, setMetadata} = api
   const res = await getMetadata([name])
   const jsonData = JSON.parse(res.data?.[0]?.value)
   
   await setMetadata(name, data) // data 不需要序列化
-2. 代码必须完整，不能省略, 生成 javascript 不要生成 typescript
+2. 代码必须完整，不能省略
 3. 生成的代码必须包按照下列结构返回:
 """
 下面是完整代码实现:
@@ -134,10 +134,6 @@ export default (props) => {
 </shata-ai-code>
 \`\`\`
 """
-5. 生成的代码必须是一个完整的 React 组件
-6. 所有依赖都从 context 中解构获取
-7. 不能使用 import/export 语句
-8. 禁止导出和使用 Container, Gird, Text, NavbarBrand 等 NextUI V1 才有的组件
 </代码生成规范>
       `
 
