@@ -7,6 +7,8 @@ import * as FramerMotion from "framer-motion"
 import { Icon } from "@iconify/react"
 import message from "./Message"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { DynamicComponentRenderer as FormRenderer } from "./DynamicComponentRenderer"
+import { DynamicReportRenderer as ReportRenderer } from "./DynamicReportRenderer"
 
 interface PageRendererProps {
   code?: string
@@ -43,6 +45,8 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ code }) => {
           Icon,
           message,
           api: { getMetadata, setMetadata },
+          FormRenderer,
+          ReportRenderer,
         }
 
         // 创建组件
