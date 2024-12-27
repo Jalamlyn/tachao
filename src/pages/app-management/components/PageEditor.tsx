@@ -165,7 +165,7 @@ const PageEditor: React.FC = () => {
 
       // 更新版本控制
       versionControl.addVersion({
-        code: result.code,
+        rawConfig: result.code,
       })
     }
   }

@@ -10,7 +10,7 @@ import { codeStore } from "@/pages/form-temp-manager/components/codeStore"
 
 export const extractShataAIFormContent = (content: string): string => {
   if (!content) {
-    return "尚未编写任何代码"
+    return ""
   }
   const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
   const match = content?.match(regex)
@@ -50,7 +50,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
       const version = versionControl.getCurrentVersion()
       setCurrentVersion(version)
       setIsEditing(false)
-      const rawConfig = version?.rawConfig || ""
+      const rawConfig = version?.rawConfig || version?.code
       setEditedCode(extractShataAIFormContent(rawConfig))
 
       // 同步更新 AIFormAgent 的状态

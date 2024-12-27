@@ -97,7 +97,7 @@ ${command},从设计师角度
   const res = await getMetadata([name])
   const jsonData = JSON.parse(res.data?.[0]?.value)
   
-  await setMetadata([name], data) // data 不需要序列化
+  await setMetadata(name, data) // data 不需要序列化
 2. 代码必须完整，不能省略, 生成 javascript 不要生成 typescript
 3. 生成的代码必须包按照下列结构返回:
 """

@@ -254,7 +254,7 @@ ${imageAnalysis}
       const res = await getMetadata([name])
       const jsonData = JSON.parse(res.data?.[0]?.value)
       
-      await setMetadata([name], data) // data 不需要序列化
+      await setMetadata(name, data) // data 不需要序列化
 
       </代码生成规范 用户不可见>
       `
