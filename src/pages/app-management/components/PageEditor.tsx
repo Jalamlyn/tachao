@@ -146,6 +146,13 @@ const PageEditor: React.FC = () => {
     }
   }
 
+  const handleClearMessages = () => {
+    setMessages([])
+    // 可以同时重置其他相关状态
+    accumulatedTextRef.current = ""
+    currentMessageIdRef.current = null
+  }
+
   // 修改: 更新 handleCommandResult，添加 pageState 更新
   const handleCommandResult = (result: any) => {
     if (result.success && result.code) {
@@ -203,7 +210,7 @@ const PageEditor: React.FC = () => {
             </ErrorBoundary>
           )}
           showCodeTab
-          excelUpload={false}
+          onClearMessages={handleClearMessages}
           previewTabName='页面预览'
         />
       </div>
