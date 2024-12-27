@@ -72,9 +72,9 @@ export class AIPageAgent {
       `
 
       const allMessages = [
-        { role: "system" as const, content: systemPrompt },
+        { role: "system", content: systemPrompt },
         ...messages,
-        { role: "user" as const, content: enhancedCommand }
+        { role: "user", content: enhancedCommand }
       ]
 
       let response = ""
