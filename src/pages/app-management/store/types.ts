@@ -12,8 +12,10 @@ export interface AppIndex {
   // 新增页面相关字段
   pages?: Array<{
     id: string
+    title?: string
     code: string
     isHome?: boolean
+    updatedAt?: string
   }>
   homePageId?: string
 }
@@ -33,8 +35,10 @@ export interface UpdateAppConfigInput {
   // 新增页面相关配置
   pages?: Array<{
     id: string
+    title?: string
     code: string
     isHome?: boolean
+    updatedAt?: string
   }>
   homePageId?: string
 }
@@ -58,6 +62,8 @@ export interface AppPage {
   id: string
   title: string
   code: string
+  isHome?: boolean
+  updatedAt?: string
 }
 
 export interface AppUISlice {
