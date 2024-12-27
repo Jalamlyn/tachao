@@ -10,6 +10,15 @@ export async function generateSystemPrompt(): Promise<string> {
 
 ${systemStatusPrompt}
 
+系统导航规则：
+1. 页面间导航：
+   - 使用路由跳转，不要嵌入渲染其他页面
+   - 使用 navigate 或 window.open 进行跳转
+   
+2. 可嵌入组件：
+   - 表单(FormRenderer)：可以嵌入到页面中
+   - 报表(ReportRenderer)：可以嵌入到页面中
+
 代码生成规范：
 1. NextUI组件使用规范：
    - 只能使用以下NextUI 2.6.0版本中实际存在的组件：
@@ -37,16 +46,16 @@ ${systemStatusPrompt}
    - 必须是一个完整的 React 组件
    - 所有依赖都从 context 中解构获取
    - 不能使用 import/export 语句
-   - 禁止使用已废弃的 NextUI V1 组件
 
-4. 渲染器使用示例：
+示例代码：
 """
 <shata-ai-code>
 export default (props) => {
-  const {React, NextUI, FramerMotion, Icon, api, ReactRouterDom, PageRenderer, FormRenderer, ReportRenderer} = context
+  const {React, NextUI, FramerMotion, Icon, api, ReactRouterDom, FormRenderer, ReportRenderer} = context
   const {useNavigate} = ReactRouterDom
-  const {Container, Spacer, Button, Card, Modal, ModalContent, ModalHeader, ModalBody, Input} = NextUI
+  const {Container, Spacer, Button, Card, Modal, ModalContent, ModalHeader, ModalBody} = NextUI
   const {motion} = FramerMotion
+  const navigate = useNavigate()
 
   // 1. 状态管理
   const [isFormOpen, setIsFormOpen] = React.useState(false)
@@ -60,6 +69,17 @@ export default (props) => {
     setIsFormOpen(false)
   }, [])
 
+  // 页面导航处理
+  const handleNavigateToPage = React.useCallback((appId: string, pageId: string) => {
+    // 同应用内跳转
+    navigate(\`/apps/\${appId}/pages/\${pageId}\`)
+  }, [navigate])
+
+  const handleOpenInNewTab = React.useCallback((appId: string, pageId: string) => {
+    // 新标签页打开
+    window.open(\`/apps/\${appId}/pages/\${pageId}\`, '_blank')
+  }, [])
+
   // 3. 渲染逻辑
   return (
     <Container className="p-4">
@@ -68,17 +88,29 @@ export default (props) => {
           <h1 className="text-2xl font-bold mb-4">CRM 首页</h1>
           <p className="text-gray-600 mb-6">欢迎使用CRM系统，您可以在这里管理客户信息。</p>
           
-          {/* 使用表单渲染器 - 使用表单ID */}
-          <Button color="primary" onClick={handleOpenForm}>
-            填写客户信息登记表
-          </Button>
-
-          {/* 使用页面渲染器 - 使用页面ID */}
-          <div className="mt-4">
-            <PageRenderer pageId="page_123456" />
+          {/* 页面导航示例 */}
+          <div className="flex gap-2 mb-4">
+            <Button 
+              color="primary"
+              onPress={() => handleNavigateToPage('app_123', 'page_456')}
+            >
+              跳转到客户列表
+            </Button>
+            
+            <Button 
+              color="secondary"
+              onPress={() => handleOpenInNewTab('app_123', 'page_789')}
+            >
+              新窗口打开统计页面
+            </Button>
           </div>
 
-          {/* 使用报表渲染器 - 使用报表ID */}
+          {/* 嵌入表单示例 */}
+          <Button color="primary" onClick={handleOpenForm}>
+            填写客户信息
+          </Button>
+
+          {/* 嵌入报表示例 */}
           <div className="mt-4">
             <ReportRenderer reportId="report_789012" />
           </div>
@@ -89,7 +121,6 @@ export default (props) => {
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">客户信息登记表</ModalHeader>
           <ModalBody>
-            {/* 使用表单ID而不是标题 */}
             <FormRenderer formId="form_345678" />
           </ModalBody>
         </ModalContent>
@@ -101,12 +132,21 @@ export default (props) => {
 """
 
 注意事项：
-1. 渲染器组件必须使用ID而不是标题：
-   - PageRenderer: pageId="page_123456"
-   - FormRenderer: formId="form_345678"
-   - ReportRenderer: reportId="report_789012"
-2. ID可以从系统状态中查看
-3. 确保ID真实存在再使用
-4. 建议使用新窗口打开其他应用的页面
-5. 注意权限控制`
+1. 页面跳转：
+   - 同应用内使用 navigate(\`/apps/\${appId}/pages/\${pageId}\`)
+   - 跨应用使用新窗口打开 window.open()
+   - 不要使用 PageRenderer 组件嵌入其他页面
+
+2. 可嵌入组件：
+   - FormRenderer: 用于嵌入表单，使用 formId
+   - ReportRenderer: 用于嵌入报表，使用 reportId
+
+3. ID使用规范：
+   - 使用实际的ID而不是标题
+   - 确保ID在系统中存在
+   - 可以从系统状态中查找对应的ID
+
+4. 权限控制：
+   - 跨应用跳转注意权限问题
+   - 表单和报表的权限继承自当前页面`
 }
