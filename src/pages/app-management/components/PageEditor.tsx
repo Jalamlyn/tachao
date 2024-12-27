@@ -14,6 +14,7 @@ import AIPageAgent from "@/service/agents/AIPageAgent"
 import { useAppStore } from "../store/useAppStore"
 import { getPageAgent } from "./getPageAgent"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { codeStore } from "@/pages/form-temp-manager/components/codeStore"
 
 const PageEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -171,7 +172,7 @@ const PageEditor: React.FC = () => {
       }
 
       // 使用metadata API保存页面详情
-      await setMetadata(`page_${newPageId}`, JSON.stringify(pageData))
+      await setMetadata(`${newPageId}`, JSON.stringify(pageData))
 
       // 2. 更新应用中的页面索引
       const currentApp = apps.find((a) => a.id === appId)
@@ -188,23 +189,28 @@ const PageEditor: React.FC = () => {
         isHome: isHome || false,
       }
 
+      // 检查是否是第一个页面，如果是则自动设置为首页
+      const isFirstPage = !currentApp.pages || currentApp.pages.length === 0
+      if (isFirstPage) {
+        pageIndex.isHome = true
+      }
+
       const updatedPages = pageId
         ? (currentApp.pages || []).map((p) => (p.id === pageId ? pageIndex : p))
         : [...(currentApp.pages || []), pageIndex]
 
-      // 更新应用信息
+      // 更新应用信息，如果是第一个页面或指定为首页，则设置homePageId
       const updates = {
         pages: updatedPages,
-        ...(isHome ? { homePageId: newPageId } : {}),
+        ...(isFirstPage || isHome ? { homePageId: newPageId } : {}),
       }
 
       await updateApp(appId, updates)
       message.success("保存成功")
-      
+
       setIsTitleModalOpen(false)
       setSavedPageId(newPageId)
       setIsConfirmModalOpen(true)
-
     } catch (error) {
       console.error("Save error:", error)
       message.error("保存失败")
@@ -237,6 +243,7 @@ const PageEditor: React.FC = () => {
       versionControl.addVersion({
         rawConfig: result.code,
       })
+      codeStore.code = result.code
     }
   }
 
@@ -292,21 +299,21 @@ const PageEditor: React.FC = () => {
       {/* 标题编辑 Modal */}
       <Modal isOpen={isTitleModalOpen} onClose={() => setIsTitleModalOpen(false)}>
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">编辑页面标题</ModalHeader>
+          <ModalHeader className='flex flex-col gap-1'>编辑页面标题</ModalHeader>
           <ModalBody>
             <Input
               autoFocus
-              label="页面标题"
-              placeholder="请输入页面标题"
+              label='页面标题'
+              placeholder='请输入页面标题'
               value={tempTitle}
               onChange={(e) => setTempTitle(e.target.value)}
             />
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" onPress={() => setIsTitleModalOpen(false)}>
+            <Button variant='light' onPress={() => setIsTitleModalOpen(false)}>
               取消
             </Button>
-            <Button color="primary" onPress={handleTitleConfirm} isLoading={isLoading}>
+            <Button color='primary' onPress={handleTitleConfirm} isLoading={isLoading}>
               确认
             </Button>
           </ModalFooter>
@@ -316,15 +323,15 @@ const PageEditor: React.FC = () => {
       {/* 确认编辑 Modal */}
       <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)}>
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">保存成功</ModalHeader>
+          <ModalHeader className='flex flex-col gap-1'>保存成功</ModalHeader>
           <ModalBody>
             <p>是否进入编辑页面继续编辑？</p>
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" onPress={() => handleEditConfirm(false)}>
+            <Button variant='light' onPress={() => handleEditConfirm(false)}>
               否
             </Button>
-            <Button color="primary" onPress={() => handleEditConfirm(true)}>
+            <Button color='primary' onPress={() => handleEditConfirm(true)}>
               是
             </Button>
           </ModalFooter>
