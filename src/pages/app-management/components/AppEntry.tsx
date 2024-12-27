@@ -1,11 +1,9 @@
 import React from "react"
 import { Card, CardBody, Button, Spinner } from "@nextui-org/react"
-import { Navigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
 import { useParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
 import { FormTypeTabs } from "./FormTypeTabs"
-import AppEntryDashboard from "./AppEntryDashboard"
 import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 
 export const AppEntry: React.FC = () => {
@@ -31,18 +29,8 @@ export const AppEntry: React.FC = () => {
     )
   }
 
-  // 根据模板类型选择不同的渲染方式
-  if (app.template === "enterprise") {
-    return <Navigate to={`/apps/${appId}/enterprise`} replace />
-  }
-
   // 使用PermissionCheck包装主要内容
   const AppContent = () => {
-    // 根据应用的模板类型选择渲染不同的界面
-    if (app.template === "dashboard") {
-      return <AppEntryDashboard />
-    }
-
     const appTemplates = templates.filter((template) => app.indexFields?.templateIds?.includes(template.id))
     const appReports = reports.filter((report) => app.indexFields?.reportIds?.includes(report.id))
     const appForms = forms.filter((form) => app.indexFields?.templateIds?.includes(form.template?.id))

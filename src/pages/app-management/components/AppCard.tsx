@@ -13,7 +13,11 @@ interface AppCardProps {
 export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
   const navigate = useNavigate()
   const { setDeleteModalOpen, setAppToDelete } = useAppStore()
-  const { isOpen: isPermissionModalOpen, onOpen: onPermissionModalOpen, onClose: onPermissionModalClose } = useDisclosure()
+  const {
+    isOpen: isPermissionModalOpen,
+    onOpen: onPermissionModalOpen,
+    onClose: onPermissionModalClose,
+  } = useDisclosure()
 
   const handleDelete = () => {
     setAppToDelete(app)
@@ -59,10 +63,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
         <CardBody className='p-4'>
           <div className='flex items-center gap-4'>
             <div className='p-3 rounded-lg bg-primary/10'>
-              <Icon 
-                icon={getTemplateIcon(app.template)} 
-                className={`w-6 h-6 ${getTemplateColor(app.template)}`} 
-              />
+              <Icon icon={getTemplateIcon(app.template)} className={`w-6 h-6 ${getTemplateColor(app.template)}`} />
             </div>
             <div className='flex-1 min-w-0'>
               <div className='flex items-center gap-2'>
@@ -70,10 +71,12 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
                 <Chip size='sm' variant='flat' color={app.status === "active" ? "success" : "default"}>
                   {app.status === "active" ? "运行中" : "已停用"}
                 </Chip>
-                <Chip 
-                  size='sm' 
-                  variant='flat' 
-                  color={app.template === "enterprise" ? "primary" : app.template === "dashboard" ? "secondary" : "default"}
+                <Chip
+                  size='sm'
+                  variant='flat'
+                  color={
+                    app.template === "enterprise" ? "primary" : app.template === "dashboard" ? "secondary" : "default"
+                  }
                 >
                   {getTemplateLabel(app.template)}
                 </Chip>
@@ -101,12 +104,11 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
           </Button>
           <Button
             size='sm'
-            variant='light'
             color='primary'
             startContent={<Icon icon='mdi:code' className='w-4 h-4' />}
             onPress={() => onDevelopClick(app)}
           >
-            配置应用
+            开发应用
           </Button>
           <Button
             size='sm'
@@ -132,7 +134,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
       <PermissionModal
         isOpen={isPermissionModalOpen}
         onClose={onPermissionModalClose}
-        resourceType="app"
+        resourceType='app'
         resourceId={app.id}
         resourceTitle={app.title}
       />
