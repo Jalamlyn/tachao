@@ -105,7 +105,8 @@ ${command},从设计师角度
 \`\`\`jsx
 <shata-ai-code>
 export default (props) => {
-  const {React, NextUI, FramerMotion, Icon, api} = context
+  const {React, NextUI, FramerMotion, Icon, api, ReactRouterDom} = context
+  const {useNavigate} = ReactRouterDom
   const {Card, CardBody, CardHeader,TableBody,TableHeader,Modal, ModalContent,ModalBody,ModalHeader,Form,Navbar, 
   NavbarBrand, 
   NavbarContent, 
