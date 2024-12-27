@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { Button, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
@@ -12,6 +12,7 @@ import AIEditor from "@/components/AIEditor"
 import { PageRenderer } from "@/components/PageRenderer"
 import AIPageAgent from "@/service/agents/AIPageAgent"
 import { useAppStore } from "../store/useAppStore"
+import { getPageAgent } from "@/service/agents/getPageAgent"
 
 const PageEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -25,26 +26,82 @@ const PageEditor: React.FC = () => {
   const { update: updateApp } = useMetadata("app")
   const { useApps } = useAppStore()
   const { apps } = useApps()
-  const app = apps.find(a => a.id === appId)
+  const app = apps.find((a) => a.id === appId)
+
+  // 新增: refs 用于跟踪消息状态
+  const accumulatedTextRef = useRef("")
+  const currentMessageIdRef = useRef<string | null>(null)
+
+  // 新增: 页面状态管理
+  const [pageState, setPageState] = useState({
+    rawCode: null as string | null,
+    previewContent: "",
+  })
+
+  // 新增: 设置预览内容
+  const setPreviewContent = useCallback((content: string) => {
+    setPageState(prev => ({
+      ...prev,
+      previewContent: content
+    }))
+  }, [])
+
+  // 新增: 处理数据块
+  const handleChunk = useCallback((chunk: string) => {
+    accumulatedTextRef.current += chunk
+    if (accumulatedTextRef.current !== "") {
+      updateLastMessage({
+        content: accumulatedTextRef.current,
+        status: "streaming",
+      })
+    }
+  }, [])
+
+  // 新增: 更新最后一条消息
+  const updateLastMessage = useCallback((update: Partial<any>) => {
+    setMessages(prev => {
+      const messages = [...prev]
+      const lastIndex = messages.length - 1
+      if (lastIndex >= 0) {
+        messages[lastIndex] = {
+          ...messages[lastIndex],
+          ...update,
+        }
+      }
+      return messages
+    })
+  }, [])
+
+  // 新增: 添加消息
+  const addMessage = useCallback((message: any) => {
+    setMessages(prev => [...prev, message])
+  }, [])
+
+  // 新增: 创建 pageAgent
+  const pageAgent = useMemo(() => {
+    return getPageAgent(
+      addMessage,
+      setPreviewContent,
+      accumulatedTextRef,
+      currentMessageIdRef,
+      messages,
+      handleChunk,
+      pageState,
+      updateLastMessage
+    )
+  }, [messages, pageState, addMessage, setPreviewContent, handleChunk, updateLastMessage])
 
   // 初始化 versionControl
   const versionControl = useVersionControl({
     initialVersions: [],
-    maxVersions: 10
+    maxVersions: 10,
   })
 
-  useEffect(() => {
-    updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "应用管理", href: "/we-chat-app/admin/apps" },
-      { label: app?.title || "应用", href: `/we-chat-app/admin/apps/${appId}` },
-      { label: isHome ? "创建首页" : "创建页面", href: "" },
-    ])
-  }, [appId, app, isHome])
+  // ... 保持原有的 useEffect 和其他函数不变 ...
 
   const handleSave = async () => {
     if (!appId) return
-    
+
     try {
       setIsLoading(true)
       const currentVersion = versionControl.getCurrentVersion()
@@ -53,13 +110,14 @@ const PageEditor: React.FC = () => {
         return
       }
 
-      // 更新应用配置
       await updateApp(appId, {
-        pages: [{
-          id: `page_${Date.now()}`,
-          code: currentVersion.code,
-          isHome: isHome || false
-        }]
+        pages: [
+          {
+            id: `page_${Date.now()}`,
+            code: currentVersion.code,
+            isHome: isHome || false,
+          },
+        ],
       })
 
       message.success("保存成功")
@@ -75,7 +133,7 @@ const PageEditor: React.FC = () => {
   const handleCommandResult = (result: any) => {
     if (result.success && result.code) {
       versionControl.addVersion({
-        code: result.code
+        code: result.code,
       })
     }
   }
@@ -94,28 +152,24 @@ const PageEditor: React.FC = () => {
 
   if (!appId) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <Icon icon="mdi:alert" className="w-12 h-12 text-danger mb-2" />
-          <p className="text-danger">无效的应用ID</p>
+      <div className='flex items-center justify-center h-screen'>
+        <div className='text-center'>
+          <Icon icon='mdi:alert' className='w-12 h-12 text-danger mb-2' />
+          <p className='text-danger'>无效的应用ID</p>
         </div>
       </div>
     )
   }
 
   return (
-    <PageLayout 
-      title={isHome ? '创建首页' : '创建页面'} 
-      titleIcon='mdi:file-document-edit' 
-      actions={pageActions}
-    >
+    <PageLayout title={isHome ? "创建首页" : "创建页面"} titleIcon='mdi:file-document-edit' actions={pageActions}>
       <div className='h-[calc(100vh-200px)] overflow-auto'>
         <AIEditor
           parseConfig={AIPageAgent.parseCode}
           messages={messages}
           selectedTab={selectedTab}
           onTabChange={setSelectedTab}
-          agent={AIPageAgent}
+          agent={pageAgent}
           versionControl={versionControl}
           onCommandResult={handleCommandResult}
           renderPreview={(version) => (
