@@ -15,29 +15,32 @@ export const AppEntry: React.FC = () => {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = React.useState(true)
   const [pageData, setPageData] = React.useState<any>(null)
+  const [app, setApp] = React.useState<any>(null)
   const { items: apps = [], load: loadApps } = useMetadata("app")
 
   React.useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true)
+        // 等待应用数据加载完成
         await loadApps()
         
-        // 获取应用信息
-        const app = apps.find((app) => app.id === appId)
-        if (!app) {
+        // 查找应用并更新状态
+        const foundApp = apps.find((a) => a.id === appId)
+        setApp(foundApp)
+
+        if (!foundApp) {
           message.error("应用不存在")
           return
         }
 
         // 检查是否有首页配置
-        if (!app.homePageId) {
-          setIsLoading(false)
+        if (!foundApp.homePageId) {
           return
         }
 
         // 获取首页内容
-        const result = await getMetadata([`${app.homePageId}`])
+        const result = await getMetadata([`${foundApp.homePageId}`])
         if (result.data?.[0]?.value) {
           setPageData(JSON.parse(result.data[0].value))
         }
@@ -49,7 +52,7 @@ export const AppEntry: React.FC = () => {
       }
     }
     loadData()
-  }, [appId])
+  }, [appId, apps, loadApps])
 
   if (isLoading) {
     return (
@@ -60,7 +63,6 @@ export const AppEntry: React.FC = () => {
   }
 
   // 如果没有找到应用
-  const app = apps.find((app) => app.id === appId)
   if (!app) {
     return (
       <div className='flex items-center justify-center min-h-screen'>
