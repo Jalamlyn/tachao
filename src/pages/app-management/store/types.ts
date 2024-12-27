@@ -4,22 +4,60 @@ export interface AppIndex {
   status: "active" | "inactive"
   createdAt: string
   updatedAt: string
-  template?: "default" | "dashboard"
+  template?: "default" | "dashboard" | "enterprise"
   indexFields?: {
     templateIds: string[]
     reportIds: string[]
   }
+  // 新增页面相关字段
+  pages?: Array<{
+    id: string
+    code: string
+    isHome?: boolean
+  }>
+  homePageId?: string
 }
 
 export interface CreateAppInput {
   title: string
   description?: string
+  template?: "default" | "dashboard" | "enterprise"
 }
 
 export interface UpdateAppConfigInput {
   templateIds: string[]
   reportIds: string[]
-  template?: "default" | "dashboard"
+  template?: "default" | "dashboard" | "enterprise"
+  layout?: AppLayout
+  navigation?: AppNavigation
+  // 新增页面相关配置
+  pages?: Array<{
+    id: string
+    code: string
+    isHome?: boolean
+  }>
+  homePageId?: string
+}
+
+export interface AppLayout {
+  type: 'side'
+  title: string
+  theme?: 'light' | 'dark'
+}
+
+export interface AppNavigation {
+  items: Array<{
+    key: string
+    title: string
+    icon: string
+    pageId: string
+  }>
+}
+
+export interface AppPage {
+  id: string
+  title: string
+  code: string
 }
 
 export interface AppUISlice {

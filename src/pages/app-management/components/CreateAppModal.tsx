@@ -1,5 +1,6 @@
-import React from "react"
+import React, { useState } from "react"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Select, SelectItem } from "@nextui-org/react"
+import { useNavigate } from "react-router-dom"
 import { CreateAppInput } from "../store/useAppStore"
 
 interface CreateAppModalProps {
@@ -10,15 +11,35 @@ interface CreateAppModalProps {
 }
 
 export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose, onSubmit, isLoading }) => {
-  const [title, setTitle] = React.useState("")
-  const [template, setTemplate] = React.useState<"default" | "dashboard" | "enterprise">("enterprise")
+  const [title, setTitle] = useState("")
+  const [template, setTemplate] = useState<"default" | "dashboard" | "enterprise">("enterprise")
+  const navigate = useNavigate()
 
   const handleSubmit = async () => {
     if (!title.trim()) return
-    await onSubmit({ title: title.trim(), template })
-    setTitle("")
-    setTemplate("enterprise")
-    onClose()
+    try {
+      await onSubmit({ title: title.trim(), template })
+      setTitle("")
+      setTemplate("enterprise")
+      onClose()
+      // 创建完应用后，如果是企业级应用，跳转到创建首页
+      if (template === "enterprise") {
+        // 这里需要获取新创建的应用ID
+        const result = await getMetadata(["app_index"])
+        if (result.data?.[0]?.value) {
+          const apps = JSON.parse(result.data[0].value)
+          const newApp = apps[apps.length - 1]
+          if (newApp) {
+            navigate(`/apps/${newApp.id}/pages/create`, {
+              state: { isHome: true }
+            })
+            return
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error creating app:", error)
+    }
   }
 
   return (
