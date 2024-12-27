@@ -45,9 +45,18 @@ export default function renderWeChatApp() {
       <Route path='apps' element={<AppManagement />} />
       <Route path='pending-tasks' element={<PendingTasks />} />
       <Route path='file-manager' element={<FileManager />} />
-      {/* 新增页面编辑器路由 */}
+      {/* 页面编辑器路由 */}
       <Route
         path='apps/:appId/pages/create'
+        element={
+          <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
+            <PageEditor />
+          </PermissionCheck>
+        }
+      />
+      {/* 新增编辑页面路由 */}
+      <Route
+        path='apps/:appId/pages/:pageId/edit'
         element={
           <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
             <PageEditor />

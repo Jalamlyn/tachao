@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
-import { Button, Spinner } from "@nextui-org/react"
+import { Button, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
@@ -30,6 +30,12 @@ const PageEditor: React.FC = () => {
   const { apps } = useApps()
   const app = apps.find((a) => a.id === appId)
 
+  // 新增状态
+  const [isTitleModalOpen, setIsTitleModalOpen] = useState(false)
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
+  const [tempTitle, setTempTitle] = useState("")
+  const [savedPageId, setSavedPageId] = useState<string>("")
+
   // refs 用于跟踪消息状态
   const accumulatedTextRef = useRef("")
   const currentMessageIdRef = useRef<string | null>(null)
@@ -50,10 +56,10 @@ const PageEditor: React.FC = () => {
         if (result.data?.[0]?.value) {
           const pageData = JSON.parse(result.data[0].value)
           setPageTitle(pageData.title)
-          setPageState(prev => ({
+          setPageState((prev) => ({
             ...prev,
             rawCode: pageData.code,
-            previewContent: pageData.code
+            previewContent: pageData.code,
           }))
         }
       } catch (error) {
@@ -88,7 +94,7 @@ const PageEditor: React.FC = () => {
     updateBreadcrumbs([
       { label: "首页", href: "/we-chat-app/admin" },
       { label: "应用管理", href: "/we-chat-app/admin/apps" },
-      { label: app?.title || "应用", href: `/we-chat-app/admin/apps/${appId}` },
+      { label: app?.title || "应用", href: "" },
       { label: isHome ? "创建首页" : pageId ? "编辑页面" : "创建页面", href: "" },
     ])
   }, [])
@@ -135,11 +141,20 @@ const PageEditor: React.FC = () => {
 
   const handleSave = async () => {
     if (!appId) return
+    setIsTitleModalOpen(true)
+    setTempTitle(pageTitle || "")
+  }
+
+  const handleTitleConfirm = async () => {
+    if (!tempTitle.trim()) {
+      message.error("请输入页面标题")
+      return
+    }
 
     try {
       setIsLoading(true)
       const currentVersion = versionControl.getCurrentVersion()
-      if (!currentVersion?.code) {
+      if (!currentVersion?.rawConfig) {
         message.error("请先生成页面代码")
         return
       }
@@ -148,18 +163,18 @@ const PageEditor: React.FC = () => {
       const newPageId = pageId || `page_${Date.now()}`
       const pageData = {
         id: newPageId,
-        title: pageTitle || "未命名页面",
-        code: currentVersion.code,
+        title: tempTitle.trim(),
+        code: currentVersion.rawConfig,
         isHome: isHome || false,
         updatedAt: new Date().toISOString(),
-        appId
+        appId,
       }
-      
+
       // 使用metadata API保存页面详情
       await setMetadata(`page_${newPageId}`, JSON.stringify(pageData))
 
       // 2. 更新应用中的页面索引
-      const currentApp = apps.find(a => a.id === appId)
+      const currentApp = apps.find((a) => a.id === appId)
       if (!currentApp) {
         message.error("应用不存在")
         return
@@ -168,34 +183,40 @@ const PageEditor: React.FC = () => {
       // 只存储页面的索引信息
       const pageIndex = {
         id: newPageId,
-        title: pageTitle || "未命名页面",
+        title: tempTitle.trim(),
         updatedAt: pageData.updatedAt,
-        isHome: isHome || false
+        isHome: isHome || false,
       }
 
       const updatedPages = pageId
-        ? (currentApp.pages || []).map(p => 
-            p.id === pageId ? pageIndex : p
-          )
+        ? (currentApp.pages || []).map((p) => (p.id === pageId ? pageIndex : p))
         : [...(currentApp.pages || []), pageIndex]
 
       // 更新应用信息
       const updates = {
         pages: updatedPages,
-        ...(isHome ? { homePageId: newPageId } : {})
+        ...(isHome ? { homePageId: newPageId } : {}),
       }
 
       await updateApp(appId, updates)
       message.success("保存成功")
       
-      if (!pageId) {
-        navigate(`/apps/${appId}/pages/${newPageId}/edit`)
-      }
+      setIsTitleModalOpen(false)
+      setSavedPageId(newPageId)
+      setIsConfirmModalOpen(true)
+
     } catch (error) {
       console.error("Save error:", error)
       message.error("保存失败")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleEditConfirm = (confirmed: boolean) => {
+    setIsConfirmModalOpen(false)
+    if (confirmed && savedPageId) {
+      navigate(`/we-chat-app/admin/apps/${appId}/pages/${savedPageId}/edit`)
     }
   }
 
@@ -243,7 +264,11 @@ const PageEditor: React.FC = () => {
   }
 
   return (
-    <PageLayout title={isHome ? "创建首页" : pageId ? "编辑页面" : "创建页面"} titleIcon='mdi:file-document-edit' actions={pageActions}>
+    <PageLayout
+      title={isHome ? "创建首页" : pageId ? "编辑页面" : "创建页面"}
+      titleIcon='mdi:file-document-edit'
+      actions={pageActions}
+    >
       <div className='h-[calc(100vh-140px)] overflow-auto'>
         <AIEditor
           parseConfig={AIPageAgent.parseCode}
@@ -255,7 +280,7 @@ const PageEditor: React.FC = () => {
           onCommandResult={handleCommandResult}
           renderPreview={(version) => (
             <ErrorBoundary>
-              <PageRenderer code={version?.code} />
+              <PageRenderer code={version?.rawConfig} />
             </ErrorBoundary>
           )}
           showCodeTab
@@ -263,6 +288,48 @@ const PageEditor: React.FC = () => {
           previewTabName='页面预览'
         />
       </div>
+
+      {/* 标题编辑 Modal */}
+      <Modal isOpen={isTitleModalOpen} onClose={() => setIsTitleModalOpen(false)}>
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">编辑页面标题</ModalHeader>
+          <ModalBody>
+            <Input
+              autoFocus
+              label="页面标题"
+              placeholder="请输入页面标题"
+              value={tempTitle}
+              onChange={(e) => setTempTitle(e.target.value)}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="light" onPress={() => setIsTitleModalOpen(false)}>
+              取消
+            </Button>
+            <Button color="primary" onPress={handleTitleConfirm} isLoading={isLoading}>
+              确认
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* 确认编辑 Modal */}
+      <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)}>
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">保存成功</ModalHeader>
+          <ModalBody>
+            <p>是否进入编辑页面继续编辑？</p>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="light" onPress={() => handleEditConfirm(false)}>
+              否
+            </Button>
+            <Button color="primary" onPress={() => handleEditConfirm(true)}>
+              是
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </PageLayout>
   )
 }
