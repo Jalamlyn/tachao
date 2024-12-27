@@ -1,6 +1,5 @@
 import React from "react"
 import { Link } from "@nextui-org/react"
-import { motion } from "framer-motion"
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear()
@@ -11,7 +10,7 @@ const Footer: React.FC = () => {
         <div className='grid grid-cols-1 md:grid-cols-4 gap-8'>
           <div className='space-y-4'>
             <img src='/assets/logo.jpg' alt='ShaTa AI' className='w-[100px] h-auto rounded-lg' />
-            <p className='text-white/70'>AI驱动的企业级低代码开发平台</p>
+            <p className='text-white/70'>企业应用开发成本直降80%</p>
           </div>
 
           <div>

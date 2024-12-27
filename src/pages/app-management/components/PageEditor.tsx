@@ -53,7 +53,7 @@ const PageEditor: React.FC = () => {
       if (!pageId) return
 
       try {
-        const result = await getMetadata([`page_${pageId}`])
+        const result = await getMetadata([`${pageId}`])
         if (result.data?.[0]?.value) {
           const pageData = JSON.parse(result.data[0].value)
           setPageTitle(pageData.title)
@@ -62,6 +62,10 @@ const PageEditor: React.FC = () => {
             rawCode: pageData.code,
             previewContent: pageData.code,
           }))
+          // 添加初始版本
+          versionControl.addVersion({
+            rawConfig: pageData.code,
+          })
         }
       } catch (error) {
         console.error("Error loading page detail:", error)
@@ -177,7 +181,7 @@ const PageEditor: React.FC = () => {
       // 2. 获取并更新应用索引
       const appIndexResult = await getMetadata(["app_index"])
       const appList = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
-      
+
       const currentAppIndex = appList.findIndex((a: any) => a.id === appId)
       if (currentAppIndex === -1) {
         throw new Error("应用不存在")
@@ -265,7 +269,7 @@ const PageEditor: React.FC = () => {
       isLoading={isLoading}
       startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
     >
-      保存页面
+      {pageId ? "编辑页面" : "创建页面"}
     </Button>
   )
 

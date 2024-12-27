@@ -13,7 +13,7 @@ const PagePreview: React.FC = () => {
   useEffect(() => {
     const loadPageData = async () => {
       try {
-        const result = await getMetadata([`page_${pageId}`])
+        const result = await getMetadata([`${pageId}`])
         if (result.data?.[0]?.value) {
           setPageData(JSON.parse(result.data[0].value))
         }
@@ -30,16 +30,16 @@ const PagePreview: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner label="加载中..." />
+      <div className='flex items-center justify-center min-h-screen'>
+        <Spinner label='加载中...' />
       </div>
     )
   }
 
   if (!pageData) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-danger">页面不存在</p>
+      <div className='flex items-center justify-center min-h-screen'>
+        <p className='text-danger'>页面不存在</p>
       </div>
     )
   }

@@ -46,7 +46,7 @@ export default function renderWeChatApp() {
       <Route path='apps' element={<AppManagement />} />
       <Route path='pending-tasks' element={<PendingTasks />} />
       <Route path='file-manager' element={<FileManager />} />
-      
+
       {/* 页面创建路由 */}
       <Route
         path='apps/:appId/pages/create'
@@ -56,23 +56,13 @@ export default function renderWeChatApp() {
           </PermissionCheck>
         }
       />
-      
+
       {/* 页面编辑路由 */}
       <Route
         path='apps/:appId/pages/:pageId/edit'
         element={
           <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
             <PageEditor />
-          </PermissionCheck>
-        }
-      />
-      
-      {/* 页面预览路由 */}
-      <Route
-        path='apps/:appId/pages/:pageId'
-        element={
-          <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
-            <PagePreview />
           </PermissionCheck>
         }
       />

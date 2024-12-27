@@ -23,6 +23,7 @@ import { PermissionCheck } from "./permissions/components/PermissionCheck"
 import UnauthorizedPage from "./permissions/pages/UnauthorizedPage"
 
 import { loadBMapScript } from "@/components/reports/MapComponent"
+import PagePreview from "./pages/app-management/components/PagePreview"
 
 setTimeout(() => {
   loadBMapScript()
@@ -113,6 +114,15 @@ function App() {
               element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <WaitListPage />}
             />
             {renderWeChatApp()}
+            {/* 页面预览路由 */}
+            <Route
+              path='/apps/:appId/pages/:pageId'
+              element={
+                <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
+                  <PagePreview />
+                </PermissionCheck>
+              }
+            />
           </Routes>
           <Toaster />
         </div>

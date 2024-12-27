@@ -167,9 +167,9 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
 
         <motion.div variants={itemVariants} className='space-y-4'>
           <h1 className='text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight'>
-            AI驱动的企业级低代码开发平台
+            将你的创意转化为现实代码
             <span className='block mt-4 text-xl md:text-2xl text-white/80'>
-              AI 赋能企业管理 · 智能化一站式解决方案
+              像聊天一样开发应用 · 无需编程经验 · 即刻开始创造
             </span>
           </h1>
         </motion.div>
