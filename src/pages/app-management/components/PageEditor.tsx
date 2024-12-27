@@ -22,11 +22,16 @@ const PageEditor: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [messages, setMessages] = useState<any[]>([])
   const [selectedTab, setSelectedTab] = useState("preview")
-  const versionControl = useVersionControl()
   const { update: updateApp } = useMetadata("app")
   const { useApps } = useAppStore()
   const { apps } = useApps()
   const app = apps.find(a => a.id === appId)
+
+  // 初始化 versionControl
+  const versionControl = useVersionControl({
+    initialVersions: [],
+    maxVersions: 10
+  })
 
   useEffect(() => {
     updateBreadcrumbs([
@@ -86,6 +91,17 @@ const PageEditor: React.FC = () => {
       保存页面
     </Button>
   )
+
+  if (!appId) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <Icon icon="mdi:alert" className="w-12 h-12 text-danger mb-2" />
+          <p className="text-danger">无效的应用ID</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <PageLayout 
