@@ -16,8 +16,11 @@ ${systemStatusPrompt}
    - 使用 navigate 或 window.open 进行跳转
    
 2. 可嵌入组件：
-   - 表单(FormRenderer)：可以嵌入到页面中
-   - 报表(ReportRenderer)：可以嵌入到页面中
+   - 表单(FormRenderer)：使用模板ID渲染表单
+     * 新建表单：<FormRenderer templateId="template_123" />
+     * 查看/编辑表单：<FormRenderer templateId="template_123" formId="form_456" />
+   - 报表(ReportRenderer)：使用报表ID渲染报表
+     * <ReportRenderer reportId="report_789" />
 
 代码生成规范：
 1. NextUI组件使用规范：
@@ -41,12 +44,6 @@ ${systemStatusPrompt}
    - 数据存储使用 getMetadata 和 setMetadata
    - 权限控制使用 PermissionCheck 组件
 
-3. 代码结构规范：
-   - 代码必须完整，不能省略
-   - 必须是一个完整的 React 组件
-   - 所有依赖都从 context 中解构获取
-   - 不能使用 import/export 语句
-
 示例代码：
 """
 <shata-ai-code>
@@ -59,14 +56,17 @@ export default (props) => {
 
   // 1. 状态管理
   const [isFormOpen, setIsFormOpen] = React.useState(false)
+  const [selectedFormId, setSelectedFormId] = React.useState<string | null>(null)
 
   // 2. 事件处理函数
-  const handleOpenForm = React.useCallback(() => {
+  const handleOpenForm = React.useCallback((formId?: string) => {
+    setSelectedFormId(formId || null)
     setIsFormOpen(true)
   }, [])
 
   const handleCloseForm = React.useCallback(() => {
     setIsFormOpen(false)
+    setSelectedFormId(null)
   }, [])
 
   // 页面导航处理
@@ -105,10 +105,15 @@ export default (props) => {
             </Button>
           </div>
 
-          {/* 嵌入表单示例 */}
-          <Button color="primary" onClick={handleOpenForm}>
-            填写客户信息
-          </Button>
+          {/* 表单操作示例 */}
+          <div className="flex gap-2 mb-4">
+            <Button color="primary" onClick={() => handleOpenForm()}>
+              新建客户信息
+            </Button>
+            <Button color="secondary" onClick={() => handleOpenForm('form_123')}>
+              查看已有表单
+            </Button>
+          </div>
 
           {/* 嵌入报表示例 */}
           <div className="mt-4">
@@ -117,11 +122,17 @@ export default (props) => {
         </div>
       </Card>
 
-      <Modal isOpen={isFormOpen} onClose={handleCloseForm}>
+      <Modal isOpen={isFormOpen} onClose={handleCloseForm} size="2xl">
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">客户信息登记表</ModalHeader>
+          <ModalHeader className="flex flex-col gap-1">
+            {selectedFormId ? '查看客户信息' : '新建客户信息'}
+          </ModalHeader>
           <ModalBody>
-            <FormRenderer formId="form_345678" />
+            {/* 使用模板ID渲染表单，可选传入formId查看已有表单 */}
+            <FormRenderer 
+              templateId="template_customer_info" 
+              formId={selectedFormId}
+            />
           </ModalBody>
         </ModalContent>
       </Modal>
@@ -132,21 +143,26 @@ export default (props) => {
 """
 
 注意事项：
-1. 页面跳转：
-   - 同应用内使用 navigate(\`/apps/\${appId}/pages/\${pageId}\`)
-   - 跨应用使用新窗口打开 window.open()
-   - 不要使用 PageRenderer 组件嵌入其他页面
+1. 表单渲染：
+   - templateId 是必需的，用于指定表单模板
+   - formId 是可选的，用于查看或编辑已有表单
+   - 不提供 formId 时渲染空白表单用于新建
 
-2. 可嵌入组件：
-   - FormRenderer: 用于嵌入表单，使用 formId
-   - ReportRenderer: 用于嵌入报表，使用 reportId
+2. 报表渲染：
+   - 只需要提供 reportId
+   - 报表会自动加载相关的数据
 
-3. ID使用规范：
+3. 页面导航：
+   - 使用 navigate 进行应用内跳转
+   - 使用 window.open 在新窗口打开页面
+   - 不要使用渲染器嵌入其他页面
+
+4. ID使用规范：
    - 使用实际的ID而不是标题
    - 确保ID在系统中存在
    - 可以从系统状态中查找对应的ID
 
-4. 权限控制：
+5. 权限控制：
    - 跨应用跳转注意权限问题
    - 表单和报表的权限继承自当前页面`
 }
