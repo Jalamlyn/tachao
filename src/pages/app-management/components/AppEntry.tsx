@@ -1,8 +1,7 @@
 import React from "react"
 import { Card, CardBody, Button, Spinner } from "@nextui-org/react"
-import { Navigate, useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { useParams } from "react-router-dom"
-import { useMetadata } from "@/hooks/useMetadata"
 import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 import { PageRenderer } from "@/components/PageRenderer"
 import { getMetadata } from "@/service/apis/metadata"
@@ -16,17 +15,17 @@ export const AppEntry: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState(true)
   const [pageData, setPageData] = React.useState<any>(null)
   const [app, setApp] = React.useState<any>(null)
-  const { items: apps = [], load: loadApps } = useMetadata("app")
 
   React.useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true)
-        // 等待应用数据加载完成
-        await loadApps()
+        // 直接获取应用索引数据
+        const result = await getMetadata(["app_index"])
+        const apps = result.data?.[0]?.value ? JSON.parse(result.data[0].value) : []
         
         // 查找应用并更新状态
-        const foundApp = apps.find((a) => a.id === appId)
+        const foundApp = apps.find((a: any) => a.id === appId)
         setApp(foundApp)
 
         if (!foundApp) {
@@ -40,9 +39,9 @@ export const AppEntry: React.FC = () => {
         }
 
         // 获取首页内容
-        const result = await getMetadata([`${foundApp.homePageId}`])
-        if (result.data?.[0]?.value) {
-          setPageData(JSON.parse(result.data[0].value))
+        const pageResult = await getMetadata([`${foundApp.homePageId}`])
+        if (pageResult.data?.[0]?.value) {
+          setPageData(JSON.parse(pageResult.data[0].value))
         }
       } catch (error) {
         console.error("Error loading app:", error)
@@ -52,7 +51,7 @@ export const AppEntry: React.FC = () => {
       }
     }
     loadData()
-  }, [appId, apps, loadApps])
+  }, [appId])
 
   if (isLoading) {
     return (
