@@ -17,6 +17,7 @@ import PendingTasks from "@/pages/pending-tasks"
 import FileManager from "@/apps/we-chat-app-admin/src/FileManager"
 import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 import PageEditor from "@/pages/app-management/components/PageEditor"
+import PagePreview from "@/pages/app-management/components/PagePreview"
 
 export default function renderWeChatApp() {
   return (
@@ -45,7 +46,8 @@ export default function renderWeChatApp() {
       <Route path='apps' element={<AppManagement />} />
       <Route path='pending-tasks' element={<PendingTasks />} />
       <Route path='file-manager' element={<FileManager />} />
-      {/* 页面编辑器路由 */}
+      
+      {/* 页面创建路由 */}
       <Route
         path='apps/:appId/pages/create'
         element={
@@ -54,12 +56,23 @@ export default function renderWeChatApp() {
           </PermissionCheck>
         }
       />
-      {/* 新增编辑页面路由 */}
+      
+      {/* 页面编辑路由 */}
       <Route
         path='apps/:appId/pages/:pageId/edit'
         element={
           <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
             <PageEditor />
+          </PermissionCheck>
+        }
+      />
+      
+      {/* 页面预览路由 */}
+      <Route
+        path='apps/:appId/pages/:pageId'
+        element={
+          <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
+            <PagePreview />
           </PermissionCheck>
         }
       />
