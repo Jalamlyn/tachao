@@ -1,5 +1,6 @@
 import React from "react"
-import { Card, CardBody, Button, Spinner, Navigate } from "@nextui-org/react"
+import { Card, CardBody, Button, Spinner } from "@nextui-org/react"
+import { Navigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
 import { useParams } from "react-router-dom"
 import { useMetadata } from "@/hooks/useMetadata"
