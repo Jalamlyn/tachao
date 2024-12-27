@@ -13,8 +13,6 @@ import { items } from "../component/items"
 import { BreadcrumbProvider } from "../../../contexts/BreadcrumbContext"
 import GlobalBreadcrumb from "../../../components/GlobalBreadcrumb"
 import ServiceSupportModal from "./ServiceSupportModal"
-import { localDB } from "@/utils/localDB"
-import message from "@/components/Message"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 
 export default function Component() {

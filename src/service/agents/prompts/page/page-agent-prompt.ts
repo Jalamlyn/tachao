@@ -41,25 +41,6 @@ export const generateSystemPrompt = () => {
    - 保持一致的缩进
    - 避免代码重复
 
-7. 组件结构：
-   export default () => {
-     // 1. 状态管理
-     const [state, setState] = React.useState()
-     
-     // 2. 副作用处理
-     React.useEffect(() => {}, [])
-     
-     // 3. 事件处理函数
-     const handleEvent = React.useCallback(() => {}, [])
-     
-     // 4. 渲染逻辑
-     return (
-       <div>
-         // 组件内容
-       </div>
-     )
-   }
-
 8. 性能优化：
    - 使用 React.memo 优化渲染
    - 使用 useCallback 和 useMemo

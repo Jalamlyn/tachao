@@ -23,6 +23,7 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
 
     try {
       setIsLoading(true)
+      debugger
       const result = await agent.processCommand(input)
 
       onResult?.(result)

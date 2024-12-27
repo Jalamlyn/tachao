@@ -1,4 +1,3 @@
-import message from "@/components/Message"
 import AIPageAgent from "@/service/agents/AIPageAgent"
 
 export const getPageAgent = (
@@ -19,7 +18,7 @@ export const getPageAgent = (
       timestamp: new Date().toLocaleTimeString(),
     }
     addMessage(userMessage)
-    
+
     // 立即添加一个"正在思考"的 assistant 消息
     const assistantMessage = {
       role: "assistant",
@@ -60,5 +59,5 @@ export const getPageAgent = (
       currentMessageIdRef.current = null
       throw error
     }
-  }
+  },
 })

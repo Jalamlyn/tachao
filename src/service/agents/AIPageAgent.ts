@@ -164,19 +164,27 @@ export class AIPageAgent {
       const existingCode = codeStore.code || rawCode
 
       const enhancedCommand = `
-      ${imageAnalysis ? `
+      ${
+        imageAnalysis
+          ? `
 我上传了一张图片, 这是图片的分析结果:
 <图片分析结果>
 ${imageAnalysis}
 </图片分析结果>
-` : ''}
+`
+          : ""
+      }
 
-${existingCode ? `
+${
+  existingCode
+    ? `
 这是现有的代码,请基于它进行优化或修改:
 <existing-code>
 ${existingCode}
 </existing-code>
-` : ''}
+`
+    : ""
+}
 
 ${command}
 
@@ -184,7 +192,27 @@ ${command}
 1. 必须使用 NextUI 组件库
 2. 必须使用 Framer Motion 做动画
 3. 代码必须完整，不能省略
-4. 必须包含在 <shata-ai-code></shata-ai-code> 标签中
+4. 必须包含在 <shata-ai-code>
+export default (props) => {
+  const {React, NextUI} = context
+  const {Card, CardBody, CardHeader} = NextUI
+     // 1. 状态管理
+     const [state, setState] = React.useState()
+     
+     // 2. 副作用处理
+     React.useEffect(() => {}, [])
+     
+     // 3. 事件处理函数
+     const handleEvent = React.useCallback(() => {}, [])
+     
+     // 4. 渲染逻辑
+     return (
+       <div>
+         // 组件内容
+       </div>
+     )
+   }
+</shata-ai-code> 标签中
 5. 生成的代码必须是一个完整的 React 组件
 6. 所有依赖都从 context 中解构获取
 7. 不能使用 import/export 语句

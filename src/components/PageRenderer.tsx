@@ -30,40 +30,22 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ code }) => {
 
         // 转换代码
         const { code: transformedCode } = transform(actualCode, {
-          presets: ["react"]
+          presets: ["react"],
         })
 
         // 创建上下文对象
         const context = {
           React,
-          ReactDOM: React,
           NextUI,
-          Router: ReactRouterDom,
-          Motion: FramerMotion,
+          ReactRouterDom,
+          FramerMotion,
           Icon,
           message,
-          // 解构所有 hooks
-          useState: React.useState,
-          useEffect: React.useEffect,
-          useCallback: React.useCallback,
-          useMemo: React.useMemo,
-          useRef: React.useRef,
-          // 解构路由 hooks
-          useNavigate: ReactRouterDom.useNavigate,
-          useParams: ReactRouterDom.useParams,
-          useLocation: ReactRouterDom.useLocation,
-          // 动画相关
-          motion: FramerMotion.motion,
-          AnimatePresence: FramerMotion.AnimatePresence
         }
 
         // 创建组件
-        const componentFn = new Function(
-          'context',
-          `with (context) {
-            ${transformedCode.replace(/export default/, 'return')}
-          }`
-        )
+        console.log(transformedCode)
+        const componentFn = new Function("context", `${transformedCode.replace(/export default/, "return")}`)
 
         setComponent(() => componentFn(context))
         setError(null)

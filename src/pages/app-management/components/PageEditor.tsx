@@ -12,7 +12,7 @@ import AIEditor from "@/components/AIEditor"
 import { PageRenderer } from "@/components/PageRenderer"
 import AIPageAgent from "@/service/agents/AIPageAgent"
 import { useAppStore } from "../store/useAppStore"
-import { getPageAgent } from "@/service/agents/getPageAgent"
+import { getPageAgent } from "./getPageAgent"
 
 const PageEditor: React.FC = () => {
   const navigate = useNavigate()
@@ -40,9 +40,9 @@ const PageEditor: React.FC = () => {
 
   // 设置预览内容
   const setPreviewContent = useCallback((content: string) => {
-    setPageState(prev => ({
+    setPageState((prev) => ({
       ...prev,
-      previewContent: content
+      previewContent: content,
     }))
   }, [])
 
@@ -57,9 +57,18 @@ const PageEditor: React.FC = () => {
     }
   }, [])
 
+  useEffect(() => {
+    updateBreadcrumbs([
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "应用管理", href: "/we-chat-app/admin/apps" },
+      { label: app?.title || "应用", href: `/we-chat-app/admin/apps/${appId}` },
+      { label: isHome ? "创建首页" : "创建页面", href: "" },
+    ])
+  }, [])
+
   // 更新最后一条消息
   const updateLastMessage = useCallback((update: Partial<any>) => {
-    setMessages(prev => {
+    setMessages((prev) => {
       const messages = [...prev]
       const lastIndex = messages.length - 1
       if (lastIndex >= 0) {
@@ -74,7 +83,7 @@ const PageEditor: React.FC = () => {
 
   // 添加消息
   const addMessage = useCallback((message: any) => {
-    setMessages(prev => [...prev, message])
+    setMessages((prev) => [...prev, message])
   }, [])
 
   // 创建 pageAgent
@@ -141,12 +150,12 @@ const PageEditor: React.FC = () => {
   const handleCommandResult = (result: any) => {
     if (result.success && result.code) {
       // 更新 pageState
-      setPageState(prev => ({
+      setPageState((prev) => ({
         ...prev,
         rawCode: result.code,
-        previewContent: result.code
+        previewContent: result.code,
       }))
-      
+
       // 更新版本控制
       versionControl.addVersion({
         code: result.code,
