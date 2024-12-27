@@ -13,6 +13,9 @@ interface PageListProps {
 export const PageList: React.FC<PageListProps> = ({ app, isOpen, onClose }) => {
   const navigate = useNavigate()
 
+  // 如果app为null，不渲染任何内容
+  if (!app) return null
+
   const handleCreatePage = () => {
     navigate(`/apps/${app.id}/pages/create`)
     onClose?.()
