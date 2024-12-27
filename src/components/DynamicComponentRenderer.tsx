@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react"
 import { transform } from "@/utils/moduleLoader"
 import DynamicForm from "./common/DynamicForm"
 import ErrorBoundary from "./ErrorBoundary"
-import { Spinner } from "@nextui-org/react"
 
 // 导入 shadcn UI 组件
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
@@ -12,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
+import * as FramerMotion from "framer-motion"
 
 // 导入 NextUI Button
 import { Button } from "@nextui-org/react"
@@ -19,6 +19,7 @@ import * as NextUI from "@nextui-org/react"
 import { extractShataAIFormContent } from "./AIEditor"
 import { codeStore } from "@/pages/form-temp-manager/components/codeStore"
 import { message } from "antd"
+import { Icon } from "@iconify/react"
 
 // UI组件映射
 const uiComponents = {
@@ -78,6 +79,8 @@ export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> =
           "DynamicForm",
           "NextUI",
           "message",
+          "Icon",
+          "FramerMotion",
           ...Object.keys(uiComponents),
           `${transformedCode.replace(/export default/, "return")}`
         )
@@ -85,7 +88,15 @@ export const DynamicComponentRenderer: React.FC<DynamicComponentRendererProps> =
           <DynamicForm {...props} formData={formData} templateId={templateId} formId={formId} />
         )
         // 3. 获取组件
-        const CustomComponent = componentFn(React, DynamicFormWrapper, NextUI, message, ...Object.values(uiComponents))
+        const CustomComponent = componentFn(
+          React,
+          DynamicFormWrapper,
+          NextUI,
+          message,
+          Icon,
+          FramerMotion,
+          ...Object.values(uiComponents)
+        )
 
         setComponent(() => CustomComponent)
       } catch (err) {

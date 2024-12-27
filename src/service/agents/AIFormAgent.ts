@@ -1,4 +1,4 @@
-import chatChunkClaude from "../chat/chat-chunk-claude-horay"
+import chatChunkClaude from "../chat/chat-chunk-openrouter"
 // import chatChunk from "../chat/chat-chunk-claude-wild"
 import chatChunk from "../chat/chat-deepseek"
 import chatChunkOpenAIOffice from "../chat/chat-chunk-openai-azure"
@@ -12,6 +12,7 @@ import { excelStore } from "@/components/AIEditor/components/excelStore"
 import { markdown as guide } from "@/components/common/DynamicForm/ui-doc/guide.md"
 import { extractShataAIFormContent } from "@/components/AIEditor"
 import { balanceStore } from "@/stores/balanceStore"
+import { codeStore } from "@/pages/form-temp-manager/components/codeStore"
 
 export class AIFormAgent {
   private static instance: AIFormAgent
@@ -204,7 +205,7 @@ ${imageAnalysis}
       }
       ${command}
       <code>
-      ${extractShataAIFormContent(this._rawConfig)}
+      ${extractShataAIFormContent(codeStore.code)}
       </code>
       <代码生成规范 用户不可见>
       如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码, 不允许用注释省略代码, 生成的结果中只能包含一份<shata-ai-code>, 代码的返回格式如下:
@@ -246,6 +247,9 @@ ${imageAnalysis}
       所有不支持的字段类型, 都用 custom + 自定义组件实现
       生成代码之前先思考哪些需要 custom 实现
       自定义组件只能使用 NextUI 的组件, 不能使用其他库的组件, 用 NextUI.Button 这种方式来使用
+      所有的 icon 都使用 @iconify/react 的 Icon 组件, 直接使用 <Icon icon={...}>
+      请求数据只使用 fetch, 
+      动画库只使用 framer-motion, 通过 const { motion } = FramerMotion 来使用
       </代码生成规范 用户不可见>
       `
 

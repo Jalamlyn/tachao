@@ -1,7 +1,7 @@
 // import chatChunk from "@/service/chat/chat-chunk-gemini-office"
 // import chatChunk from "@/service/chat/chat-chunk-openai-azure"
 // import chatChunk from "@/service/chat/chat-chunk-claude-wild"
-import chatChunkExpert from "@/service/chat/chat-chunk-claude-horay"
+import chatChunkExpert from "@/service/chat/chat-chunk-openrouter"
 import chatChunk from "@/service/chat/chat-deepseek"
 import { Message } from "@/service/agents/AIFormAgentTypes"
 import { markdown as doc } from "@/pages/report-management/components/AnalysisResult.md"
