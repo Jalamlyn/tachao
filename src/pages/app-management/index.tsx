@@ -5,33 +5,28 @@ import PageLayout from "@/components/PageLayout"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { AppGallery } from "./components/AppGallery"
 import { CreateAppModal } from "./components/CreatePageModal"
-import { DevelopModal } from "./components/DevelopModal"
+import { PageList } from "./components/PageList"
 import { AppIndex, useAppStore } from "./store/useAppStore"
 
 const AppManagement: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()
+  const [selectedApp, setSelectedApp] = useState<AppIndex | null>(null)
 
   const {
     isCreateModalOpen,
-    isDevelopModalOpen,
     isDeleteModalOpen,
-    selectedApp,
     appToDelete,
     setCreateModalOpen,
-    setDevelopModalOpen,
     setDeleteModalOpen,
-    setSelectedApp,
     setAppToDelete,
     useApps,
     useCreateApp,
-    useUpdateAppConfig,
     useDeleteApp,
     reset,
   } = useAppStore()
 
   const { apps, isLoading } = useApps()
   const { createApp, isCreating } = useCreateApp()
-  const { updateAppConfig, isUpdating } = useUpdateAppConfig()
   const { deleteApp, isDeleting } = useDeleteApp()
 
   useEffect(() => {
@@ -47,15 +42,6 @@ const AppManagement: React.FC = () => {
 
   const handleDevelopClick = (app: AppIndex) => {
     setSelectedApp(app)
-    setDevelopModalOpen(true)
-  }
-
-  const handleDevelopSubmit = async (templateIds: string[], reportIds: string[], template: "default" | "dashboard") => {
-    if (!selectedApp) return
-    await updateAppConfig({
-      appId: selectedApp.id,
-      input: { templateIds, reportIds, template },
-    })
   }
 
   const handleDeleteConfirm = async () => {
@@ -83,15 +69,10 @@ const AppManagement: React.FC = () => {
         isLoading={isCreating}
       />
 
-      <DevelopModal
-        isOpen={isDevelopModalOpen}
-        onClose={() => {
-          setDevelopModalOpen(false)
-          setSelectedApp(null)
-        }}
-        app={selectedApp}
-        onSubmit={handleDevelopSubmit}
-        isLoading={isUpdating}
+      <PageList
+        isOpen={!!selectedApp}
+        onClose={() => setSelectedApp(null)}
+        app={selectedApp!}
       />
 
       <Modal

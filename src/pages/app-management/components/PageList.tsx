@@ -1,23 +1,28 @@
 import React from "react"
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Button, Chip } from "@nextui-org/react"
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Button, Chip, Modal, ModalContent, ModalHeader, ModalBody } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { AppIndex } from "../store/useAppStore"
 
 interface PageListProps {
   app: AppIndex
-  onAIEdit?: (pageId: string) => void
-  onSetHome?: (pageId: string) => void
+  isOpen?: boolean
+  onClose?: () => void
 }
 
-export const PageList: React.FC<PageListProps> = ({ app, onAIEdit, onSetHome }) => {
+export const PageList: React.FC<PageListProps> = ({ app, isOpen, onClose }) => {
   const navigate = useNavigate()
 
   const handleCreatePage = () => {
     navigate(`/apps/${app.id}/pages/create`)
+    onClose?.()
   }
 
-  return (
+  const handleEditPage = (pageId: string) => {
+    window.open(`/apps/${app.id}/pages/${pageId}/edit`, "_blank")
+  }
+
+  const content = (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">页面管理</h2>
@@ -69,17 +74,19 @@ export const PageList: React.FC<PageListProps> = ({ app, onAIEdit, onSetHome }) 
                     size="sm"
                     variant="flat"
                     color="secondary"
-                    startContent={<Icon icon="mdi:robot" className="w-4 h-4" />}
-                    onPress={() => onAIEdit?.(page.id)}
+                    startContent={<Icon icon="mdi:code" className="w-4 h-4" />}
+                    onPress={() => handleEditPage(page.id)}
                   >
-                    AI编辑
+                    编辑
                   </Button>
                   {!page.isHome && (
                     <Button
                       size="sm"
                       variant="flat"
                       startContent={<Icon icon="mdi:home" className="w-4 h-4" />}
-                      onPress={() => onSetHome?.(page.id)}
+                      onPress={() => {
+                        // TODO: 实现设置首页功能
+                      }}
                     >
                       设为首页
                     </Button>
@@ -108,5 +115,27 @@ export const PageList: React.FC<PageListProps> = ({ app, onAIEdit, onSetHome }) 
         </div>
       )}
     </div>
+  )
+
+  if (!isOpen) {
+    return content
+  }
+
+  return (
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose}
+      size="3xl"
+      scrollBehavior="inside"
+    >
+      <ModalContent>
+        <ModalHeader className="flex flex-col gap-1">
+          开发应用 - {app.title}
+        </ModalHeader>
+        <ModalBody>
+          {content}
+        </ModalBody>
+      </ModalContent>
+    </Modal>
   )
 }
