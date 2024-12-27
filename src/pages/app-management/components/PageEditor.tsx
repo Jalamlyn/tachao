@@ -28,17 +28,17 @@ const PageEditor: React.FC = () => {
   const { apps } = useApps()
   const app = apps.find((a) => a.id === appId)
 
-  // 新增: refs 用于跟踪消息状态
+  // refs 用于跟踪消息状态
   const accumulatedTextRef = useRef("")
   const currentMessageIdRef = useRef<string | null>(null)
 
-  // 新增: 页面状态管理
+  // 页面状态管理
   const [pageState, setPageState] = useState({
     rawCode: null as string | null,
     previewContent: "",
   })
 
-  // 新增: 设置预览内容
+  // 设置预览内容
   const setPreviewContent = useCallback((content: string) => {
     setPageState(prev => ({
       ...prev,
@@ -46,7 +46,7 @@ const PageEditor: React.FC = () => {
     }))
   }, [])
 
-  // 新增: 处理数据块
+  // 处理数据块
   const handleChunk = useCallback((chunk: string) => {
     accumulatedTextRef.current += chunk
     if (accumulatedTextRef.current !== "") {
@@ -57,7 +57,7 @@ const PageEditor: React.FC = () => {
     }
   }, [])
 
-  // 新增: 更新最后一条消息
+  // 更新最后一条消息
   const updateLastMessage = useCallback((update: Partial<any>) => {
     setMessages(prev => {
       const messages = [...prev]
@@ -72,12 +72,12 @@ const PageEditor: React.FC = () => {
     })
   }, [])
 
-  // 新增: 添加消息
+  // 添加消息
   const addMessage = useCallback((message: any) => {
     setMessages(prev => [...prev, message])
   }, [])
 
-  // 新增: 创建 pageAgent
+  // 创建 pageAgent
   const pageAgent = useMemo(() => {
     return getPageAgent(
       addMessage,
@@ -97,7 +97,14 @@ const PageEditor: React.FC = () => {
     maxVersions: 10,
   })
 
-  // ... 保持原有的 useEffect 和其他函数不变 ...
+  useEffect(() => {
+    updateBreadcrumbs([
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "应用管理", href: "/we-chat-app/admin/apps" },
+      { label: app?.title || "应用", href: `/we-chat-app/admin/apps/${appId}` },
+      { label: isHome ? "创建首页" : "创建页面", href: "" },
+    ])
+  }, [])
 
   const handleSave = async () => {
     if (!appId) return
@@ -130,8 +137,17 @@ const PageEditor: React.FC = () => {
     }
   }
 
+  // 修改: 更新 handleCommandResult，添加 pageState 更新
   const handleCommandResult = (result: any) => {
     if (result.success && result.code) {
+      // 更新 pageState
+      setPageState(prev => ({
+        ...prev,
+        rawCode: result.code,
+        previewContent: result.code
+      }))
+      
+      // 更新版本控制
       versionControl.addVersion({
         code: result.code,
       })
