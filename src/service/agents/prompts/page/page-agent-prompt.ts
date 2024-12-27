@@ -15,12 +15,12 @@ ${systemStatusPrompt}
    - 使用路由跳转，不要嵌入渲染其他页面
    - 使用 navigate 或 window.open 进行跳转
    
-2. 可嵌入组件：
-   - 表单(FormRenderer)：使用模板ID渲染表单
-     * 新建表单：<FormRenderer templateId="template_123" />
-     * 查看/编辑表单：<FormRenderer templateId="template_123" formId="form_456" />
-   - 报表(ReportRenderer)：使用报表ID渲染报表
-     * <ReportRenderer reportId="report_789" />
+2. 表单和报表访问：
+   - 表单：使用新窗口打开表单页面
+     * 新建表单：window.open(\`/forms/new?templateId=template_123\`, '_blank')
+     * 查看/编辑表单：window.open(\`/forms/template_123/form_456\`, '_blank')
+   - 报表：使用新窗口打开报表页面
+     * window.open(\`/reports/report_789\`, '_blank')
 
 代码生成规范：
 1. NextUI组件使用规范：
@@ -48,25 +48,26 @@ ${systemStatusPrompt}
 """
 <shata-ai-code>
 export default (props) => {
-  const {React, NextUI, FramerMotion, Icon, api, ReactRouterDom, FormRenderer, ReportRenderer} = context
+  const {React, NextUI, FramerMotion, Icon, api, ReactRouterDom} = context
   const {useNavigate} = ReactRouterDom
-  const {Container, Spacer, Button, Card, Modal, ModalContent, ModalHeader, ModalBody} = NextUI
+  const {Container, Spacer, Button, Card} = NextUI
   const {motion} = FramerMotion
   const navigate = useNavigate()
 
   // 1. 状态管理
-  const [isFormOpen, setIsFormOpen] = React.useState(false)
-  const [selectedFormId, setSelectedFormId] = React.useState<string | null>(null)
+  const [selectedTemplateId] = React.useState('template_customer_info')
 
   // 2. 事件处理函数
-  const handleOpenForm = React.useCallback((formId?: string) => {
-    setSelectedFormId(formId || null)
-    setIsFormOpen(true)
-  }, [])
+  const handleOpenNewForm = React.useCallback(() => {
+    window.open(\`/forms/new?templateId=\${selectedTemplateId}\`, '_blank')
+  }, [selectedTemplateId])
 
-  const handleCloseForm = React.useCallback(() => {
-    setIsFormOpen(false)
-    setSelectedFormId(null)
+  const handleOpenExistingForm = React.useCallback((formId: string) => {
+    window.open(\`/forms/\${selectedTemplateId}/\${formId}\`, '_blank')
+  }, [selectedTemplateId])
+
+  const handleOpenReport = React.useCallback((reportId: string) => {
+    window.open(\`/reports/\${reportId}\`, '_blank')
   }, [])
 
   // 页面导航处理
@@ -107,35 +108,22 @@ export default (props) => {
 
           {/* 表单操作示例 */}
           <div className="flex gap-2 mb-4">
-            <Button color="primary" onClick={() => handleOpenForm()}>
+            <Button color="primary" onClick={handleOpenNewForm}>
               新建客户信息
             </Button>
-            <Button color="secondary" onClick={() => handleOpenForm('form_123')}>
+            <Button color="secondary" onClick={() => handleOpenExistingForm('form_123')}>
               查看已有表单
             </Button>
           </div>
 
-          {/* 嵌入报表示例 */}
+          {/* 报表操作示例 */}
           <div className="mt-4">
-            <ReportRenderer reportId="report_789012" />
+            <Button color="primary" onClick={() => handleOpenReport('report_789012')}>
+              打开销售报表
+            </Button>
           </div>
         </div>
       </Card>
-
-      <Modal isOpen={isFormOpen} onClose={handleCloseForm} size="2xl">
-        <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            {selectedFormId ? '查看客户信息' : '新建客户信息'}
-          </ModalHeader>
-          <ModalBody>
-            {/* 使用模板ID渲染表单，可选传入formId查看已有表单 */}
-            <FormRenderer 
-              templateId="template_customer_info" 
-              formId={selectedFormId}
-            />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
     </Container>
   )
 }
@@ -143,14 +131,14 @@ export default (props) => {
 """
 
 注意事项：
-1. 表单渲染：
-   - templateId 是必需的，用于指定表单模板
-   - formId 是可选的，用于查看或编辑已有表单
-   - 不提供 formId 时渲染空白表单用于新建
+1. 表单访问：
+   - 新建表单：使用 /forms/new?templateId={templateId} 路径
+   - 查看/编辑表单：使用 /forms/{templateId}/{formId} 路径
+   - 必须在新窗口打开表单页面
 
-2. 报表渲染：
-   - 只需要提供 reportId
-   - 报表会自动加载相关的数据
+2. 报表访问：
+   - 使用 /reports/{reportId} 路径
+   - 必须在新窗口打开报表页面
 
 3. 页面导航：
    - 使用 navigate 进行应用内跳转
