@@ -250,6 +250,12 @@ ${imageAnalysis}
       所有的 icon 都使用 @iconify/react 的 Icon 组件, 直接使用 <Icon icon={...}>
       请求数据只使用 fetch, 
       动画库只使用 framer-motion, 通过 const { motion } = FramerMotion 来使用
+      数据存储只使用 const {getMetadata, setMetadata} = api
+      const res = await getMetadata([name])
+      const jsonData = JSON.parse(res.data?.[0]?.value)
+      
+      await setMetadata([name], data) // data 不需要序列化
+
       </代码生成规范 用户不可见>
       `
 

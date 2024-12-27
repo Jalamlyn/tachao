@@ -2,6 +2,7 @@ import { message } from "@/components/Message"
 import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { events } from "fetch-event-stream"
+import { costService } from "@/utils/costService"
 
 export default async function chatChunkOpenAIOffice(
   messages,
@@ -68,6 +69,20 @@ export default async function chatChunkOpenAIOffice(
           const content = parsed?.choices[0]?.delta?.content || ""
           fullContent += content
           onChunk(content)
+
+          // 检查是否有 usage 数据并计算费用
+          if (parsed?.usage) {
+            const model = sessionStorage.getItem("aiLevel") || "ADVANCED"
+            await costService.recordTokenUsage(
+              {
+                promptTokenCount: parsed.usage.prompt_tokens,
+                candidatesTokenCount: parsed.usage.completion_tokens,
+                model: model,
+                content: fullContent,
+              },
+              true // 使用 wild 模式的计费标准
+            )
+          }
 
           // 检查停止原因
           if (parsed?.choices[0]?.finish_reason === "length") {
