@@ -2,22 +2,26 @@ import React, { useContext, useEffect, useState } from "react"
 import { Spinner } from "@nextui-org/react"
 import { PageRenderer } from "@/components/PageRenderer"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
-import { AppContext } from "./PreviewPage"
+import { AppContext } from "@/contexts/AppContext"
 
 interface PageWrapperProps {
   pageId: string
-  appId: string
 }
 
 export const PageWrapper: React.FC<PageWrapperProps> = ({ pageId }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { appId } = useContext(AppContext)
+
   useEffect(() => {
     const initializePage = async () => {
       try {
         setIsLoading(true)
         setError(null)
+
+        if (!appId) {
+          throw new Error("应用ID未定义")
+        }
 
         // 尝试从缓存获取页面代码
         const cached = localStorage.getItem(`app_cache_${appId}`)
@@ -96,6 +100,14 @@ export default (props) => {
     return (
       <div className='p-4 bg-danger-50 rounded-lg'>
         <p className='text-danger'>{error}</p>
+      </div>
+    )
+  }
+
+  if (!appId) {
+    return (
+      <div className='p-4 bg-danger-50 rounded-lg'>
+        <p className='text-danger'>应用ID未定义</p>
       </div>
     )
   }

@@ -3,8 +3,7 @@ import { AppRender } from "@/components/AppRender"
 import { Spinner } from "@nextui-org/react"
 import message from "@/components/Message"
 import { Provider } from "@/provider"
-
-export const AppContext = React.createContext<{ appId: string | null }>({ appId: null })
+import { AppContext } from "@/contexts/AppContext"
 
 interface PreviewPageProps {
   appId: string
@@ -53,7 +52,7 @@ const PreviewPage: React.FC<PreviewPageProps> = ({ appId }) => {
 
   return (
     <Provider>
-      <AppContext.Provider value={{ appId }}>
+      <AppContext.Provider value={{ appId, runtimeContext: previewContext }}>
         <AppRender
           appId={appId}
           basename={`/app-preview/${appId}`}
