@@ -46,7 +46,7 @@ const AppSelector: React.FC = () => {
   if (pathname.startsWith("/app-preview/")) {
     const appId = getAppIdFromUrl("app-preview")
     if (!appId) {
-      return <div className="text-danger p-4">无效的应用ID</div>
+      return <div className='text-danger p-4'>无效的应用ID</div>
     }
     return (
       <StoreProvider>
@@ -59,16 +59,14 @@ const AppSelector: React.FC = () => {
   if (pathname.startsWith("/app-run/")) {
     const appId = getAppIdFromUrl("app-run")
     if (!appId) {
-      return <div className="text-danger p-4">无效的应用ID</div>
+      return <div className='text-danger p-4'>无效的应用ID</div>
     }
 
     return (
       <StoreProvider>
-        <BrowserRouter basename={`/app-run/${appId}`}>
-          <Provider>
-            <AppRuntime appId={appId} />
-          </Provider>
-        </BrowserRouter>
+        <Provider>
+          <AppRuntime appId={appId} />
+        </Provider>
       </StoreProvider>
     )
   }

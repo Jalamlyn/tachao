@@ -33,9 +33,11 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
       setTemplate("enterprise")
       onClose()
       // 根据模板类型决定跳转逻辑
-      navigate(`/we-chat-app/admin/apps/${newAppId}/pages/create`, {
-        state: { isHome: true },
-      })
+      setTimeout(() => {
+        navigate(`/we-chat-app/admin/apps/${newAppId}/pages/create`, {
+          state: { isHome: true },
+        })
+      }, 300)
     } catch (error) {
       console.error("Error creating app:", error)
     }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import { useParams } from "react-router-dom"
-import { Button, Spinner } from "@nextui-org/react"
+import { Button, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import PageLayout from "@/components/PageLayout"
 import AIEditor from "./AIEditor"
@@ -20,6 +20,7 @@ const AppBuilder: React.FC = () => {
   const [appTitle, setAppTitle] = useState("")
   const { updateBreadcrumbs } = useBreadcrumb()
   const versionControl = useVersionControl()
+  const [showPublishModal, setShowPublishModal] = useState(false)
 
   // 添加 refs 用于跟踪消息状态
   const accumulatedTextRef = useRef("")
@@ -55,7 +56,7 @@ const AppBuilder: React.FC = () => {
           versionStore.addVersion(appCache.appCode, {
             pages: appCache.pages,
             version: appCache.version,
-            updatedAt: appCache.updatedAt
+            updatedAt: appCache.updatedAt,
           })
         }
       } catch (error) {
@@ -138,14 +139,11 @@ const AppBuilder: React.FC = () => {
       }
 
       // 添加新版本，包含完整的应用状态
-      versionStore.addVersion(
-        newAppCache.appCode || versionStore.getCurrentContent(),
-        {
-          pages: newAppCache.pages,
-          version: newAppCache.version,
-          updatedAt: newAppCache.updatedAt
-        }
-      )
+      versionStore.addVersion(newAppCache.appCode || versionStore.getCurrentContent(), {
+        pages: newAppCache.pages,
+        version: newAppCache.version,
+        updatedAt: newAppCache.updatedAt,
+      })
 
       // 更新缓存
       AppAgent.setAppCache(appId!, newAppCache)
@@ -156,7 +154,7 @@ const AppBuilder: React.FC = () => {
     [appId, updateLastMessage]
   )
 
-  const handleSave = async () => {
+  const handlePublish = async () => {
     if (!appId) return
     try {
       setIsLoading(true)
@@ -179,7 +177,17 @@ const AppBuilder: React.FC = () => {
         )
       }
 
-      // 2. 更新应用索引
+      // 2. 更新应用代码
+      await setMetadata(
+        `app_${appId}`,
+        JSON.stringify({
+          code: appCache.appCode,
+          updatedAt: new Date().toISOString(),
+          version: appCache.version,
+        })
+      )
+
+      // 3. 更新应用索引
       const appIndexResult = await getMetadata(["app_index"])
       const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
       const appIndex = apps.findIndex((a: any) => a.id === appId)
@@ -189,13 +197,17 @@ const AppBuilder: React.FC = () => {
       updatedApps[appIndex] = {
         ...updatedApps[appIndex],
         updatedAt: new Date().toISOString(),
+        status: "active",
+        version: appCache.version, // 添加版本信息
+        lastPublishedAt: new Date().toISOString(), // 添加最后发布时间
       }
 
       await setMetadata("app_index", JSON.stringify(updatedApps))
-      message.success("保存成功")
+      message.success("发布成功")
+      setShowPublishModal(true)
     } catch (error) {
-      console.error("Error saving app:", error)
-      message.error("保存失败")
+      console.error("Error publishing app:", error)
+      message.error("发布失败")
     } finally {
       setIsLoading(false)
     }
@@ -286,12 +298,12 @@ const AppBuilder: React.FC = () => {
   const pageActions = (
     <Button
       color='primary'
-      onClick={handleSave}
+      onClick={handlePublish}
       isDisabled={isLoading}
       isLoading={isLoading}
-      startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
+      startContent={<Icon icon='mdi:rocket-launch' className='w-4 h-4' />}
     >
-      保存应用
+      发布应用
     </Button>
   )
 
@@ -314,6 +326,31 @@ const AppBuilder: React.FC = () => {
           previewTabName='应用预览'
         />
       </div>
+
+      <Modal isOpen={showPublishModal} onClose={() => setShowPublishModal(false)}>
+        <ModalContent>
+          <ModalHeader className='flex flex-col gap-1'>发布成功</ModalHeader>
+          <ModalBody>
+            <p>应用已成功发布！您可以通过以下链接访问：</p>
+            <div className='flex items-center gap-2 p-2 bg-default-100 rounded'>
+              <code className='text-sm'>/app-run/{appId}</code>
+              <Button
+                size='sm'
+                variant='flat'
+                onClick={() => window.open(`/app-run/${appId}`, "_blank")}
+                startContent={<Icon icon='mdi:open-in-new' className='w-4 h-4' />}
+              >
+                查看应用
+              </Button>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button color='primary' onPress={() => setShowPublishModal(false)}>
+              关闭
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </PageLayout>
   )
 }

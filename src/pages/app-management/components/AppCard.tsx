@@ -74,7 +74,9 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
                 <Chip
                   size='sm'
                   variant='flat'
-                  color={app.template === "enterprise" ? "primary" : app.template === "dashboard" ? "secondary" : "default"}
+                  color={
+                    app.template === "enterprise" ? "primary" : app.template === "dashboard" ? "secondary" : "default"
+                  }
                 >
                   {getTemplateLabel(app.template)}
                 </Chip>
@@ -103,8 +105,8 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
           <Button
             size='sm'
             color='primary'
-            startContent={<Icon icon='mdi:code' className='w-4 h-4' />}
-            onPress={() => onDevelopClick(app)}
+            startContent={<Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />}
+            onPress={() => navigate(`/we-chat-app/admin/apps/${app.id}/builder`)}
           >
             开发应用
           </Button>
@@ -117,15 +119,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
           >
             权限管理
           </Button>
-          <Button
-            size='sm'
-            variant='light'
-            color='warning'
-            startContent={<Icon icon='mdi:tools' className='w-4 h-4' />}
-            onPress={() => navigate(`/we-chat-app/admin/apps/${app.id}/builder`)}
-          >
-            构建应用
-          </Button>
+
           <Button
             size='sm'
             variant='light'
