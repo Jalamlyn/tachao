@@ -2,11 +2,10 @@ import { ScrollShadow, Button, ButtonGroup, Tooltip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { ResizablePanel } from "@/components/ui/resizable"
 import MessageCard from "@/components/MessageCard"
-import AICommandInput from "@/components/AIEditor/components/AICommandInput"
+import AICommandInput from "../components/AICommandInput"
 import { cn } from "@/lib/utils"
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
-import { ReferenceUpload } from "../components/ReferenceUpload"
 import { AI_LEVELS } from "../type"
 import { VersionControl } from "../../types"
 
@@ -54,7 +53,6 @@ export const renderLeftPanel = (
         </ScrollShadow>
 
         <div className='p-2'>
-          {(imageUpload || excelUpload) && <ReferenceUpload agent={agent} aiLevel={selectedAILevel} />}
           <AICommandInput agent={agent} onResult={onCommandResult} aiLevel={selectedAILevel} />
         </div>
       </div>
