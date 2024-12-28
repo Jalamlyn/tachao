@@ -139,11 +139,13 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
   const [modulesLoaded, setModulesLoaded] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(true)
   const [showInitializer, setShowInitializer] = useState(false)
+  const [appIdReady, setAppIdReady] = useState(false)
   const { balanceStore } = useStore()
 
   const handleInitializationSuccess = () => {
     setShowInitializer(false)
     setIsInit(true)
+    setAppIdReady(true)
   }
 
   // 初始化余额和订阅信息
@@ -176,6 +178,7 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
           })
           if (appResponse.data && appResponse.data.length > 0) {
             localDB.setAppId(appResponse.data[0])
+            setAppIdReady(true)
             setIsInit(true)
           } else {
             setShowInitializer(true)
@@ -184,6 +187,7 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
           setShowInitializer(true)
         }
       } else {
+        setAppIdReady(true)
         setIsInit(true)
       }
     } catch (error) {
@@ -200,12 +204,15 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
 
   useEffect(() => {
     if (location.pathname === "/" || location.pathname === "/external-login") {
-      return setIsInit(true)
+      setIsInit(true)
+      setAppIdReady(true)
+      return
     }
     if (!location.pathname.includes("/login")) {
       checkInitialization()
     } else {
       setIsInit(true)
+      setAppIdReady(true)
     }
   }, [])
 
@@ -222,12 +229,24 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
     }
   }, [isInit])
 
+  const shouldRenderChildren = () => {
+    const isLoginPage = location.pathname.includes('/login')
+    const isExternalLoginPage = location.pathname === '/external-login'
+    const isRootPath = location.pathname === '/'
+    
+    if (isLoginPage || isExternalLoginPage || isRootPath) {
+      return isInit && modulesLoaded && !isTransitioning
+    }
+    
+    return isInit && modulesLoaded && !isTransitioning && appIdReady
+  }
+
   return (
     <NextUIProvider>
       <main className={`${darkMode.value ? "light" : "light"} text-foreground bg-background relative`}>
         <div
           className={`fixed inset-0 bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col justify-center items-center transition-opacity duration-600 ease-in-out z-50 ${
-            isInit && modulesLoaded && !isTransitioning ? "opacity-0 pointer-events-none" : "opacity-100"
+            shouldRenderChildren() ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}
         >
           <div className='relative flex flex-col items-center'>
@@ -266,10 +285,10 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
         </div>
         <div
           className={`transition-opacity duration-300 ease-in-out ${
-            isInit && modulesLoaded && !isTransitioning ? "opacity-100" : "opacity-0"
+            shouldRenderChildren() ? "opacity-100" : "opacity-0"
           }`}
         >
-          {isInit && modulesLoaded && !isTransitioning && children}
+          {shouldRenderChildren() && children}
         </div>
         <EnterpriseInitializer isOpen={showInitializer} onClose={() => {}} onSuccess={handleInitializationSuccess} />
       </main>
