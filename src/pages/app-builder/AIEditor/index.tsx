@@ -40,19 +40,14 @@ const AIEditor: React.FC<AIEditorProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editedCode, setEditedCode] = useState("")
-  const [selectedAILevel, setSelectedAILevel] = useState<keyof typeof AI_LEVELS>(
-    (sessionStorage.getItem("aiLevel") as keyof typeof AI_LEVELS) || "ADVANCED"
-  )
+
+  // 在应用开发场景中，始终使用专家模型
+  const selectedAILevel: keyof typeof AI_LEVELS = "EXPERT"
 
   useEffect(() => {
     const currentContent = versionStore.getCurrentContent()
     setEditedCode(extractShataAIFormContent(currentContent))
   }, [versionControl.currentIndex])
-
-  const handleAILevelChange = (level: keyof typeof AI_LEVELS) => {
-    setSelectedAILevel(level)
-    sessionStorage.setItem("aiLevel", AI_LEVELS[level].value)
-  }
 
   const handleSaveEdit = async () => {
     try {
@@ -112,7 +107,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
       <ResizablePanelGroup direction='horizontal' className='h-full p-2'>
         {renderLeftPanel(
           selectedAILevel,
-          handleAILevelChange,
+          () => {}, // 移除模型选择功能
           handleClearMessages,
           messages,
           imageUpload,

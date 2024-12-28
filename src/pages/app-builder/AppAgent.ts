@@ -399,33 +399,18 @@ export default (props) => {
       ]
 
       let response = ""
-      const model = sessionStorage.getItem("aiLevel") || "ADVANCED"
 
-      if (model === "ADVANCED") {
-        await chatChunk(
-          allMessages,
-          (chunk: string) => {
-            response += chunk
-            onChunk?.(chunk)
-          },
-          () => {},
-          true,
-          0
-        )
-      }
-
-      if (model === "EXPERT") {
-        await chatChunkExpert(
-          allMessages,
-          (chunk: string) => {
-            response += chunk
-            onChunk?.(chunk)
-          },
-          () => {},
-          true,
-          0
-        )
-      }
+      // 始终使用专家模型
+      await chatChunkExpert(
+        allMessages,
+        (chunk: string) => {
+          response += chunk
+          onChunk?.(chunk)
+        },
+        () => {},
+        true,
+        0
+      )
 
       // 解析响应
       const pageCodeMatches = response.match(
