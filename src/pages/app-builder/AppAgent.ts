@@ -182,11 +182,12 @@ ${page.code}
 代码生成规范：
 
 1. 代码生成顺序：
-   - 如果应用入口代码不存在，必须先生成入口代码, 入口代码只负责路由的控制,不负责生成具体的 UI
+   - 如果应用入口代码不存在，必须先生成入口代码
    - 入口代码生成后，才能生成或修改页面代码
    - 每次修改都要确保路由配置与页面一致
 - 只能使用以下NextUI 2.6.0版本中实际存在的组件
    禁止使用 Container Gird Text 这些 NextUI V1 版本中的组件
+   使用 tailwind css 编写样式代码
 2. 应用入口组件必须使用 <shata-ai-app-code></shata-ai-app-code> 包裹，且必须使用 useRoutes 进行路由配置。
    注意：应用已经在 Router 环境中运行，不要生成任何形式的 Router 组件或 Routes 组件。
 
@@ -300,7 +301,7 @@ ${page.code}
 8. 路由路径使用相对路径，不要以"/"开头`
 
       const enhancedCommand = `
-${command}
+${command},从设计师的角度
 
 请按照以下步骤处理：
 
@@ -364,7 +365,9 @@ ${command}
       }
 
       // 解析响应
-      const pageCodeMatches = response.match(/<shata-ai-page-code pageid="([^"]+)" title="([^"]+)">([\s\S]*?)<\/shata-ai-page-code>/g)
+      const pageCodeMatches = response.match(
+        /<shata-ai-page-code pageid="([^"]+)" title="([^"]+)">([\s\S]*?)<\/shata-ai-page-code>/g
+      )
       const appCodeMatch = response.match(/<shata-ai-app-code>([\s\S]*?)<\/shata-ai-app-code>/)
 
       const updatedPages: { [pageId: string]: string } = {}

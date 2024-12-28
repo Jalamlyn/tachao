@@ -17,9 +17,11 @@ export default defineConfig({
     tsconfigPaths(),
     mdPlugin.default({ mode: [Mode.MARKDOWN] }),
     visualizer({
-      open: true,
-      gzipSize: true,
-      brotliSize: true,
+      // emitFile: true,
+      // filename: "stats.html",
+      open: true, // 打包后自动打开页面
+      gzipSize: true, // 查看 gzip 压缩大小
+      brotliSize: true, // 查看 brotli 压缩大小
     }),
   ],
   resolve: {
@@ -29,10 +31,6 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, "index.html"),
-        preview: path.resolve(__dirname, "preview.html")
-      },
       output: {
         entryFileNames: "[name].[hash].js",
         assetFileNames: "[name].[extname]",
@@ -54,6 +52,15 @@ export default defineConfig({
           dateFns: ["date-fns"],
           parse5: ["parse5"],
         },
+        // manualChunks(id) {
+        //   // 打包依赖
+        //   if (id.includes("monaco")) {
+        //     return "monaco"
+        //   }
+        //   if (id.includes("node_modules")) {
+        //     return "vendor"
+        //   }
+        // },
         chunkFileNames: "[name].[hash].js",
       },
     },
@@ -64,6 +71,7 @@ export default defineConfig({
     proxy: {
       "/dev/": {
         target: "https://www.mobenai.com.cn/api/",
+        // target: "http://106.14.47.161/api/",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/dev/, ""),
         autoRewrite: true,

@@ -115,16 +115,14 @@ const AppBuilder: React.FC = () => {
       const appCache = AppAgent.getAppCache(appId!)
       if (!appCache) return
 
-      // 更新页面代码
       const updatedPages = { ...appCache.pages }
       if (result.pages) {
-        Object.entries(result.pages).forEach(([pageId, code]) => {
-          if (updatedPages[pageId]) {
-            updatedPages[pageId] = {
-              ...updatedPages[pageId],
-              code: code as string,
-              updatedAt: new Date().toISOString(),
-            }
+        Object.entries(result.pages).forEach(([pageId, pageData]) => {
+          // 直接添加/更新页面，不需要检查是否存在
+          updatedPages[pageId] = {
+            code: pageData.code,
+            title: pageData.title,
+            updatedAt: new Date().toISOString(),
           }
         })
       }
@@ -256,12 +254,12 @@ const AppBuilder: React.FC = () => {
       <iframe
         src={`/preview/${appId}`}
         style={{
-          width: '100%',
-          height: '500px',
-          border: 'none',
-          borderRadius: '8px',
+          width: "100%",
+          height: "500px",
+          border: "none",
+          borderRadius: "8px",
         }}
-        title="App Preview"
+        title='App Preview'
       />
     )
   }, [versionControl, appId])

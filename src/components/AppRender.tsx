@@ -27,16 +27,8 @@ export const AppRender: React.FC<AppRenderProps> = ({ code, context: extraContex
       if (!code) return
 
       try {
-        // 提取实际代码
-        const codeMatch = code.match(/<shata-ai-app-code>([\s\S]*?)<\/shata-ai-app-code>/)
-        if (!codeMatch) {
-          throw new Error("Invalid app code format")
-        }
-
-        const actualCode = codeMatch[1].trim()
-
         // 转换代码
-        const { code: transformedCode } = transform(actualCode, {
+        const { code: transformedCode } = transform(code, {
           presets: ["react"],
         })
 
@@ -46,9 +38,7 @@ export const AppRender: React.FC<AppRenderProps> = ({ code, context: extraContex
           NextUI,
           ReactRouterDom: {
             ...ReactRouterDom,
-            Routes: (props: any) => (
-              <ReactRouterDom.Routes {...props} basename={basename} />
-            ),
+            Routes: (props: any) => <ReactRouterDom.Routes {...props} basename={basename} />,
             useNavigate: () => {
               const navigate = ReactRouterDom.useNavigate()
               return (path: string, options?: any) => {
@@ -61,7 +51,7 @@ export const AppRender: React.FC<AppRenderProps> = ({ code, context: extraContex
               const { to, ...rest } = props
               const finalTo = to.startsWith("/") ? to : `${basename}/${to}`
               return <ReactRouterDom.Link {...rest} to={finalTo} />
-            }
+            },
           },
           FramerMotion,
           Icon,
