@@ -9,7 +9,8 @@ import { AppBuilderMessage } from "./types"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
-import { useVersionControl } from "./useVersionControl"
+import { useVersionControl } from "./hooks/useVersionControl"
+import { versionStore } from "./store/versionStore"
 
 const AppBuilder: React.FC = () => {
   const { appId } = useParams<{ appId: string }>()
@@ -18,12 +19,7 @@ const AppBuilder: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState("preview")
   const [appTitle, setAppTitle] = useState("")
   const { updateBreadcrumbs } = useBreadcrumb()
-
-  // 添加版本控制
-  const versionControl = useVersionControl({
-    initialVersions: [],
-    maxVersions: 10,
-  })
+  const versionControl = useVersionControl()
 
   // 添加 refs 用于跟踪消息状态
   const accumulatedTextRef = useRef("")
@@ -56,14 +52,8 @@ const AppBuilder: React.FC = () => {
         // 加载初始版本
         const appCache = AppAgent.getAppCache(appId)
         if (appCache?.appCode && appCache.appCode !== "") {
-          versionControl.addVersion({
-            rawConfig: appCache.appCode,
-          })
+          versionStore.addVersion(appCache.appCode)
         }
-        console.log("App cache state:", {
-          appCache,
-          appCode: appCache?.appCode,
-        })
       } catch (error) {
         console.error("Error loading app data:", error)
         message.error("加载应用数据失败")
@@ -74,15 +64,6 @@ const AppBuilder: React.FC = () => {
 
     loadAppData()
   }, [appId])
-
-  // 添加状态跟踪
-  useEffect(() => {
-    console.log("Version control state:", {
-      currentVersion: versionControl.getCurrentVersion(),
-      versions: versionControl.versions,
-      currentIndex: versionControl.currentIndex,
-    })
-  }, [versionControl.currentIndex])
 
   // 添加消息处理函数
   const addMessage = useCallback((message: AppBuilderMessage) => {
@@ -131,7 +112,6 @@ const AppBuilder: React.FC = () => {
       const updatedPages = { ...appCache.pages }
       if (result.pages) {
         Object.entries(result.pages).forEach(([pageId, pageData]) => {
-          // 直接添加/更新页面，不需要检查是否存在
           updatedPages[pageId] = {
             code: pageData.code,
             title: pageData.title,
@@ -139,12 +119,9 @@ const AppBuilder: React.FC = () => {
           }
         })
       }
-      versionControl.addVersion({
-        rawConfig: result.appCode,
-      })
 
-      // 更新缓存
       if (result?.appCode && result.appCode !== "") {
+        versionStore.addVersion(result.appCode)
         AppAgent.setAppCache(appId!, {
           ...appCache,
           pages: updatedPages,
@@ -164,7 +141,7 @@ const AppBuilder: React.FC = () => {
       // 更新最后一条消息状态为成功
       updateLastMessage({ status: "success" })
     },
-    [appId, updateLastMessage, versionControl]
+    [appId, updateLastMessage]
   )
 
   const handleSave = async () => {
@@ -259,9 +236,8 @@ const AppBuilder: React.FC = () => {
   }
 
   const renderPreview = useCallback(() => {
-    const currentVersion = versionControl.getCurrentVersion()
-    console.log("currentVersion", currentVersion)
-    if (!currentVersion?.rawConfig) {
+    const currentContent = versionStore.getCurrentContent()
+    if (!currentContent) {
       return (
         <div className='flex flex-col items-center justify-center min-h-[400px] bg-default-50'>
           <Icon icon='mdi:apps' className='w-16 h-16 text-default-300' />

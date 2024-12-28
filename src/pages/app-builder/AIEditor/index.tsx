@@ -6,6 +6,7 @@ import AIFormAgent from "@/service/agents/AIFormAgent"
 import { renderLeftPanel } from "./render/renderLeftPanel"
 import { renderRightPanel } from "./render/renderRightPanel"
 import { AI_LEVELS, AIEditorProps } from "./type"
+import { versionStore } from "../store/versionStore"
 
 export const extractShataAIFormContent = (content: string): string => {
   if (!content) {
@@ -37,7 +38,6 @@ const AIEditor: React.FC<AIEditorProps> = ({
   showCodeTab = false,
   previewTabName = "预览",
 }) => {
-  const [currentVersion, setCurrentVersion] = useState(versionControl.getCurrentVersion())
   const [isEditing, setIsEditing] = useState(false)
   const [editedCode, setEditedCode] = useState("")
   const [selectedAILevel, setSelectedAILevel] = useState<keyof typeof AI_LEVELS>(
@@ -45,17 +45,8 @@ const AIEditor: React.FC<AIEditorProps> = ({
   )
 
   useEffect(() => {
-    const updateVersionState = () => {
-      const version = versionControl.getCurrentVersion()
-      setCurrentVersion(version)
-      setIsEditing(false)
-      const rawConfig = version?.rawConfig || version?.code
-      setEditedCode(extractShataAIFormContent(rawConfig))
-
-      // 同步更新 AIFormAgent 的状态
-      AIFormAgent.setRawConfig(rawConfig, versionControl.currentIndex)
-    }
-    updateVersionState()
+    const currentContent = versionStore.getCurrentContent()
+    setEditedCode(extractShataAIFormContent(currentContent))
   }, [versionControl.currentIndex])
 
   const handleAILevelChange = (level: keyof typeof AI_LEVELS) => {
@@ -64,16 +55,10 @@ const AIEditor: React.FC<AIEditorProps> = ({
   }
 
   const handleSaveEdit = async () => {
-    //手动保存按钮触发的逻辑
-    debugger
     try {
-      const parser = parseConfig || AIFormAgent.parseConfig
       const wrappedCode = wrapWithShataAIForm(editedCode)
-      const parsedConfig = await parser(wrappedCode)
-
       onCommandResult({
         success: true,
-        config: parsedConfig.config,
         rawConfig: wrappedCode,
         appCode: extractShataAIFormContent(wrappedCode),
       })
@@ -86,8 +71,8 @@ const AIEditor: React.FC<AIEditorProps> = ({
   }
 
   const handleCancelEdit = () => {
-    const rawConfig = currentVersion?.rawConfig || ""
-    setEditedCode(extractShataAIFormContent(rawConfig))
+    const currentContent = versionStore.getCurrentContent()
+    setEditedCode(extractShataAIFormContent(currentContent))
     setIsEditing(false)
   }
 
@@ -98,27 +83,29 @@ const AIEditor: React.FC<AIEditorProps> = ({
     }
   }
 
-  const renderCodeEditor = (content: string, isEditing: boolean) => (
-    <Editor
-      height='100%'
-      language='javascript'
-      value={extractShataAIFormContent(content)}
-      options={{
-        readOnly: !isEditing,
-        minimap: { enabled: false },
-        fontSize: "14",
-        lineNumbers: "on",
-        wordWrap: "on",
-      }}
-      theme='vs-dark'
-      onChange={(value) => {
-        if (isEditing) {
-          setEditedCode(value || "")
-          setIsEditing(true)
-        }
-      }}
-    />
-  )
+  const renderCodeEditor = (content: string, isEditing: boolean) => {
+    return (
+      <Editor
+        height='100%'
+        language='javascript'
+        value={extractShataAIFormContent(content)}
+        options={{
+          readOnly: !isEditing,
+          minimap: { enabled: false },
+          fontSize: "14",
+          lineNumbers: "on",
+          wordWrap: "on",
+        }}
+        theme='vs-dark'
+        onChange={(value) => {
+          if (isEditing) {
+            setEditedCode(value || "")
+            setIsEditing(true)
+          }
+        }}
+      />
+    )
+  }
 
   return (
     <div className='h-[calc(100vh-140px)] overflow-hidden'>
@@ -142,7 +129,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
           showDataTab,
           previewTabName,
           renderCodeEditor,
-          currentVersion,
+          versionStore.getCurrentVersion(),
           showCodeTab,
           renderDataView,
           isEditing,
