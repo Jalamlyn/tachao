@@ -313,6 +313,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ config: userConfig, formId, o
           <Tabs value={selectedTable} onValueChange={setSelectedTable}>
             <div className={styles["tabs-scroll-container"]}>
               <TabsList
+                style={{ background: "#edf0f3" }}
                 className={cn(
                   styles["tabs-list-scroll"],
                   "w-full flex justify-start",
