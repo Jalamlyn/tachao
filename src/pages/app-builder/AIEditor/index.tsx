@@ -6,7 +6,6 @@ import AIFormAgent from "@/service/agents/AIFormAgent"
 import { renderLeftPanel } from "./render/renderLeftPanel"
 import { renderRightPanel } from "./render/renderRightPanel"
 import { AI_LEVELS, AIEditorProps } from "./type"
-import { codeStore } from "@/pages/form-temp-manager/components/codeStore"
 
 export const extractShataAIFormContent = (content: string): string => {
   if (!content) {
@@ -72,18 +71,11 @@ const AIEditor: React.FC<AIEditorProps> = ({
       const wrappedCode = wrapWithShataAIForm(editedCode)
       const parsedConfig = await parser(wrappedCode)
 
-      const newVersion = {
-        formConfig: parsedConfig.config,
-        rawConfig: extractShataAIFormContent(wrappedCode),
-      }
-
-      versionControl.addVersion(newVersion)
-      codeStore.code = wrappedCode
       onCommandResult({
         success: true,
         config: parsedConfig.config,
         rawConfig: wrappedCode,
-        appCode: wrappedCode,
+        appCode: extractShataAIFormContent(wrappedCode),
       })
       setIsEditing(false)
       message.success("保存成功")

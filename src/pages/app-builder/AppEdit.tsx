@@ -3,13 +3,13 @@ import { useParams } from "react-router-dom"
 import { Button, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import PageLayout from "@/components/PageLayout"
-import AIEditor from "@/components/AIEditor"
+import AIEditor from "./AIEditor"
 import AppAgent from "./AppAgent"
 import { AppBuilderMessage } from "./types"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
-import { useVersionControl } from "@/hooks/useVersionControl"
+import { useVersionControl } from "./useVersionControl"
 
 const AppBuilder: React.FC = () => {
   const { appId } = useParams<{ appId: string }>()
