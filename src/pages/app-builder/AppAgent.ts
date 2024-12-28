@@ -4,6 +4,53 @@ import { AppBuilderMessage, AppPages } from "./types"
 import { getMetadata } from "@/service/apis/metadata"
 import { balanceStore } from "@/stores/balanceStore"
 
+// 添加提示词模块
+const promptModules = {
+  thoughtChain: `作为一个专业的需求分析专家，请按照以下步骤分析用户需求：
+
+1. 需求理解
+   - 仔细阅读用户的需求描述
+   - 识别关键词和核心诉求
+   - 提取功能性和非功能性需求
+
+2. 上下文分析
+   - 考虑当前应用的状态和结构
+   - 评估需求与现有功能的关系
+   - 识别潜在的依赖和约束
+
+3. 可行性评估
+   - 技术可行性
+   - 时间可行性
+   - 资源需求
+
+4. 实现建议
+   - 推荐的实现方案
+   - 可能的替代方案
+   - 优先级建议
+
+请将分析结果输出在 <shata-ai-think> 标签中。`,
+
+  reflection: `现在请对之前的分析进行反思和评估：
+
+1. 完整性检查
+   - 是否遗漏了重要的需求点？
+   - 是否考虑了所有相关因素？
+
+2. 合理性评估
+   - 分析是否符合逻辑？
+   - 建议是否切实可行？
+
+3. 风险评估
+   - 是否存在潜在风险？
+   - 是否需要额外的预防措施？
+
+4. 改进建议
+   - 需要补充的方面
+   - 可以优化的部分
+
+请将反思结果输出在 <shata-ai-reflection> 标签中。`,
+}
+
 class AppAgent {
   private static instance: AppAgent
   private _appCache: Map<
@@ -40,6 +87,7 @@ class AppAgent {
   ) {
     this._appCache.set(appId, data)
     // 同步到 localStorage
+    debugger
     localStorage.setItem(`app_cache_${appId}`, JSON.stringify(data))
   }
 
@@ -110,6 +158,10 @@ class AppAgent {
       const systemPrompt = `你是一个专业的前端开发专家，负责帮助用户开发和优化应用。
 你需要理解用户的需求，生成符合要求的React组件代码。
 
+${promptModules.thoughtChain}
+
+${promptModules.reflection}
+
 当前应用结构：
 
 1. 应用入口代码：
@@ -133,35 +185,53 @@ ${page.code}
    - 如果应用入口代码不存在，必须先生成入口代码, 入口代码只负责路由的控制,不负责生成具体的 UI
    - 入口代码生成后，才能生成或修改页面代码
    - 每次修改都要确保路由配置与页面一致
-
-2. 应用入口组件必须使用 <shata-ai-app-code></shata-ai-app-code> 包裹，且必须包含路由配置。
-   注意：应用已经在 Router 环境中运行，不要生成任何形式的 Router 组件。
+- 只能使用以下NextUI 2.6.0版本中实际存在的组件
+   禁止使用 Container Gird Text 这些 NextUI V1 版本中的组件
+2. 应用入口组件必须使用 <shata-ai-app-code></shata-ai-app-code> 包裹，且必须使用 useRoutes 进行路由配置。
+   注意：应用已经在 Router 环境中运行，不要生成任何形式的 Router 组件或 Routes 组件。
 
    正确示例：
+   """
     \`\`\`jsx
    <shata-ai-app-code>
    export default (props) => {
      const {React, NextUI, ReactRouterDom, PageWrapper} = context
-     const {Routes, Route, Navigate, useNavigate, Link} = ReactRouterDom
+     const {useRoutes, Navigate, useNavigate, Link} = ReactRouterDom
+     
+     const routes = [
+       {
+         path: "",
+         element: <Navigate to="home" replace />
+       },
+       {
+         path: "home",
+         element: <PageWrapper pageId="page_xxx" />
+       },
+       {
+         path: "about",
+         element: <PageWrapper pageId="page_yyy" />
+       },
+       {
+         path: "*",
+         element: <div>页面不存在</div>
+       }
+     ]
+     
+     const element = useRoutes(routes)
      
      return (
        <div>
-         <Routes>
-           {/* 使用相对路径，不要以"/"开头 */}
-           <Route path="" element={<Navigate to="home" replace />} />
-           <Route path="home" element={<PageWrapper pageId="page_xxx" />} />
-           <Route path="about" element={<PageWrapper pageId="page_yyy" />} />
-           <Route path="*" element={<div>页面不存在</div>} />
-         </Routes>
+         {element}
        </div>
      )
    }
    </shata-ai-app-code>
    \`\`\`
-
-3. 页面组件使用 <shata-ai-page-code pageid="xxx"></shata-ai-page-code> 包裹：
+  """
+3. 页面组件使用 <shata-ai-page-code pageid="xxx" title="xxx"></shata-ai-page-code> 包裹：
+"""
    \`\`\`jsx
-   <shata-ai-page-code pageid="page_xxx">
+   <shata-ai-page-code pageid="page_xxx" title="页面标题">
    export default (props) => {
      const {React, NextUI} = context
      return (
@@ -170,9 +240,13 @@ ${page.code}
    }
    </shata-ai-page-code>
    \`\`\`
-
+"""
 4. 技术要求：
-   - 所有组件必须使用 NextUI 2.0 组件
+必须使用 useRoutes hook 进行路由配置
+严禁使用 Routes 和 Route 组件
+路由配置必须使用对象数组形式
+   - 只能使用以下NextUI 2.6.0版本中实际存在的组件
+   禁止使用 Container Gird Text 这些 NextUI V1 版本中的组件
    - 直接使用 Routes 和 Route 进行路由配置
    - 使用 useNavigate 和 Link 进行导航
    - 动画使用 FramerMotion
@@ -187,6 +261,9 @@ ${page.code}
    - 必须处理 404 路由
    - 路由路径必须使用小写字母
    - 路由参数使用 kebab-case 命名
+   避免使用 Routes 组件以防止路由嵌套
+统一使用 useRoutes 进行路由配置
+保持与主应用路由系统的兼容性
 
 6. 页面导航：
    - 使用 useNavigate 进行编程式导航
@@ -225,16 +302,30 @@ ${page.code}
       const enhancedCommand = `
 ${command}
 
-请按照以下格式返回代码：
-1. 如果需要创建或修改应用入口：
-<shata-ai-app-code>
-入口组件代码
-</shata-ai-app-code>
+请按照以下步骤处理：
 
-2. 如果需要修改某个页面（仅在应用入口存在时）：
-<shata-ai-page-code pageid="页面ID">
-页面代码
+1. 首先，分析用户需求并输出在 <shata-ai-think> 标签中
+2. 对分析结果进行反思，输出在 <shata-ai-reflection> 标签中
+3. 最后，按照以下格式返回代码：
+
+1. 如果需要创建或修改应用入口：
+---
+我开始编写应用入口组件的代码:
+\`\`\`jsx
+<shata-ai-app-code>
+入口组件代码,必须是完整代码, 不能省略任何逻辑和代码
+</shata-ai-app-code>
+\`\`\`
+---
+2. 如果需要修改一个或者多个页面（仅在应用入口存在时）：
+---
+我开始编写 xxx页面的代码:
+\`\`\`jsx
+<shata-ai-page-code pageid="页面ID" title="页面标题">
+页面代码,必须是完整代码, 不能省略任何逻辑和代码
 </shata-ai-page-code>
+\`\`\`
+---
 `
 
       const allMessages = [
@@ -273,16 +364,21 @@ ${command}
       }
 
       // 解析响应
-      const pageCodeMatches = response.match(/<shata-ai-page-code pageid="([^"]+)">([\s\S]*?)<\/shata-ai-page-code>/g)
+      const pageCodeMatches = response.match(/<shata-ai-page-code pageid="([^"]+)" title="([^"]+)">([\s\S]*?)<\/shata-ai-page-code>/g)
       const appCodeMatch = response.match(/<shata-ai-app-code>([\s\S]*?)<\/shata-ai-app-code>/)
 
       const updatedPages: { [pageId: string]: string } = {}
       if (pageCodeMatches) {
         pageCodeMatches.forEach((match) => {
           const pageId = match.match(/pageid="([^"]+)"/)?.[1]
+          const title = match.match(/title="([^"]+)"/)?.[1]
           const code = match.match(/<shata-ai-page-code[^>]*>([\s\S]*?)<\/shata-ai-page-code>/)?.[1]
-          if (pageId && code) {
-            updatedPages[pageId] = code.trim()
+          if (pageId && code && title) {
+            updatedPages[pageId] = {
+              code: code.trim(),
+              title: title,
+              updatedAt: new Date().toISOString(),
+            }
           }
         })
       }
