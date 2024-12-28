@@ -15,9 +15,10 @@ interface AppRenderProps {
   code: string
   context?: Record<string, any>
   onError?: (error: Error) => void
+  basename?: string
 }
 
-export const AppRender: React.FC<AppRenderProps> = ({ code, context: extraContext, onError }) => {
+export const AppRender: React.FC<AppRenderProps> = ({ code, context: extraContext, onError, basename = "" }) => {
   const [Component, setComponent] = useState<React.ComponentType<any> | null>(null)
   const [error, setError] = useState<Error | null>(null)
 
@@ -43,7 +44,25 @@ export const AppRender: React.FC<AppRenderProps> = ({ code, context: extraContex
         const baseContext = {
           React,
           NextUI,
-          ReactRouterDom,
+          ReactRouterDom: {
+            ...ReactRouterDom,
+            Routes: (props: any) => (
+              <ReactRouterDom.Routes {...props} basename={basename} />
+            ),
+            useNavigate: () => {
+              const navigate = ReactRouterDom.useNavigate()
+              return (path: string, options?: any) => {
+                // 处理相对路径
+                const finalPath = path.startsWith("/") ? path : `${basename}/${path}`
+                navigate(finalPath, options)
+              }
+            },
+            Link: (props: any) => {
+              const { to, ...rest } = props
+              const finalTo = to.startsWith("/") ? to : `${basename}/${to}`
+              return <ReactRouterDom.Link {...rest} to={finalTo} />
+            }
+          },
           FramerMotion,
           Icon,
           message,
@@ -74,7 +93,7 @@ export const AppRender: React.FC<AppRenderProps> = ({ code, context: extraContex
     }
 
     createComponent()
-  }, [code, extraContext, onError])
+  }, [code, extraContext, onError, basename])
 
   if (!code) {
     return (

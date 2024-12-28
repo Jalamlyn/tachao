@@ -46,6 +46,7 @@ export const AppPreview: React.FC<AppPreviewProps> = ({ code, onUpdate, previewC
           code={code}
           context={previewSpecificContext}
           onError={handleError}
+          basename="/preview"
         />
       </MemoryRouter>
     </div>
