@@ -16,12 +16,13 @@ interface AppRenderProps {
   context?: Record<string, any>
   onError?: (error: Error) => void
   basename: string
+  appId: string
 }
 
-export const AppRender: React.FC<AppRenderProps> = ({ basename, code, context: extraContext, onError }) => {
+export const AppRender: React.FC<AppRenderProps> = (props) => {
+  const { code, context: extraContext, onError } = props
   const [Component, setComponent] = useState<React.ComponentType<any> | null>(null)
   const [error, setError] = useState<Error | null>(null)
-  debugger
   useEffect(() => {
     const createComponent = async () => {
       if (!code) return
@@ -93,10 +94,9 @@ export const AppRender: React.FC<AppRenderProps> = ({ basename, code, context: e
       </div>
     )
   }
-
   return (
     <ErrorBoundary>
-      <Component basename={basename} />
+      <Component {...props} />
     </ErrorBoundary>
   )
 }

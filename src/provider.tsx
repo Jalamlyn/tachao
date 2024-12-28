@@ -134,7 +134,6 @@ const initializeSubscription = async () => {
 }
 
 export const Provider = observer(({ children }: { children: React.ReactNode }) => {
-  const navigate = useNavigate()
   const darkMode = useDarkMode(false)
   const [isInit, setIsInit] = useState(false)
   const [modulesLoaded, setModulesLoaded] = useState(false)
@@ -224,7 +223,7 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
   }, [isInit])
 
   return (
-    <NextUIProvider navigate={navigate}>
+    <NextUIProvider>
       <main className={`${darkMode.value ? "light" : "light"} text-foreground bg-background relative`}>
         <div
           className={`fixed inset-0 bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col justify-center items-center transition-opacity duration-600 ease-in-out z-50 ${

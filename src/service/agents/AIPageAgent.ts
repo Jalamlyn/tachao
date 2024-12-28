@@ -96,7 +96,7 @@ ${command},从设计师角度
 """
 下面是完整代码实现:
 \`\`\`jsx
-<shata-ai-code>
+<shata-ai-code type="page">
 export default (props) => {
   const {React, NextUI, FramerMotion, Icon, api, ReactRouterDom} = context
   const {useNavigate} = ReactRouterDom

@@ -13,7 +13,7 @@ import { ReportRendererWrapper } from "./renderers/ReportRendererWrapper"
 interface PageRendererProps {
   code?: string
   pageId?: string // 新增：页面ID
-  appId?: string  // 新增：应用ID
+  appId?: string // 新增：应用ID
 }
 
 export const PageRenderer: React.FC<PageRendererProps> = ({ code, pageId, appId }) => {
@@ -51,16 +51,8 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ code, pageId, appId 
       if (!code) return
 
       try {
-        // 提取实际代码
-        const codeMatch = code.match(/<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/)
-        if (!codeMatch) {
-          throw new Error("Invalid code format")
-        }
-
-        const actualCode = codeMatch[1].trim()
-
         // 转换代码
-        const { code: transformedCode } = transform(actualCode, {
+        const { code: transformedCode } = transform(code, {
           presets: ["react"],
         })
 

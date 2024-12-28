@@ -10,7 +10,6 @@ import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { useVersionControl } from "@/hooks/useVersionControl"
-import { codeStore } from "../form-temp-manager/components/codeStore"
 
 const AppBuilder: React.FC = () => {
   const { appId } = useParams<{ appId: string }>()
@@ -56,11 +55,15 @@ const AppBuilder: React.FC = () => {
 
         // 加载初始版本
         const appCache = AppAgent.getAppCache(appId)
-        if (appCache) {
+        if (appCache?.appCode && appCache.appCode !== "") {
           versionControl.addVersion({
             rawConfig: appCache.appCode,
           })
         }
+        console.log("App cache state:", {
+          appCache,
+          appCode: appCache?.appCode,
+        })
       } catch (error) {
         console.error("Error loading app data:", error)
         message.error("加载应用数据失败")
@@ -71,6 +74,15 @@ const AppBuilder: React.FC = () => {
 
     loadAppData()
   }, [appId])
+
+  // 添加状态跟踪
+  useEffect(() => {
+    console.log("Version control state:", {
+      currentVersion: versionControl.getCurrentVersion(),
+      versions: versionControl.versions,
+      currentIndex: versionControl.currentIndex,
+    })
+  }, [versionControl.currentIndex])
 
   // 添加消息处理函数
   const addMessage = useCallback((message: AppBuilderMessage) => {
@@ -127,19 +139,27 @@ const AppBuilder: React.FC = () => {
           }
         })
       }
-      // 添加新版本
       versionControl.addVersion({
-        rawConfig: result.appCode || appCache.appCode,
+        rawConfig: result.appCode,
       })
 
       // 更新缓存
-      AppAgent.setAppCache(appId!, {
-        ...appCache,
-        pages: updatedPages,
-        appCode: result.appCode || appCache.appCode,
-        version: appCache.version + 1,
-        updatedAt: new Date().toISOString(),
-      })
+      if (result?.appCode && result.appCode !== "") {
+        AppAgent.setAppCache(appId!, {
+          ...appCache,
+          pages: updatedPages,
+          appCode: result.appCode,
+          version: appCache.version + 1,
+          updatedAt: new Date().toISOString(),
+        })
+      } else {
+        AppAgent.setAppCache(appId!, {
+          ...appCache,
+          pages: updatedPages,
+          version: appCache.version + 1,
+          updatedAt: new Date().toISOString(),
+        })
+      }
 
       // 更新最后一条消息状态为成功
       updateLastMessage({ status: "success" })
@@ -240,7 +260,8 @@ const AppBuilder: React.FC = () => {
 
   const renderPreview = useCallback(() => {
     const currentVersion = versionControl.getCurrentVersion()
-    if (!currentVersion?.appCode) {
+    console.log("currentVersion", currentVersion)
+    if (!currentVersion?.rawConfig) {
       return (
         <div className='flex flex-col items-center justify-center min-h-[400px] bg-default-50'>
           <Icon icon='mdi:apps' className='w-16 h-16 text-default-300' />
@@ -261,7 +282,7 @@ const AppBuilder: React.FC = () => {
         title='App Preview'
       />
     )
-  }, [versionControl, appId])
+  }, [])
 
   if (!appId) {
     return (
