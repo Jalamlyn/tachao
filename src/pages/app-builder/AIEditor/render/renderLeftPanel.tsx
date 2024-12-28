@@ -25,39 +25,7 @@ export const renderLeftPanel = (
     <ResizablePanel defaultSize={50} className='resizable-panel'>
       <div className='h-full flex flex-col'>
         <div className='flex justify-between items-center p-2 border-b mb-2'>
-          <div className='flex items-center gap-4'>
-            <h3 className='text-lg font-medium'>对话</h3>
-            <ButtonGroup variant='flat' className='gap-2 p-1 bg-default-100 rounded-lg'>
-              {Object.entries(AI_LEVELS).map(([key, level]) => (
-                <Tooltip content={level.description} key={key}>
-                  <Button
-                    className={cn(
-                      "min-w-[140px] h-12 px-4",
-                      "transition-all duration-200",
-                      selectedAILevel === key
-                        ? "bg-primary text-white shadow-lg scale-105"
-                        : "bg-white hover:bg-primary/10"
-                    )}
-                    onClick={() => handleAILevelChange(key as keyof typeof AI_LEVELS)}
-                  >
-                    <div className='flex items-center gap-2'>
-                      <div
-                        className={cn("p-1.5 rounded-full", selectedAILevel === key ? "bg-white/20" : "bg-primary/10")}
-                      >
-                        <Icon
-                          icon={level.icon}
-                          className={cn("w-4 h-4", selectedAILevel === key ? "text-white" : "text-primary")}
-                        />
-                      </div>
-                      <div className='flex flex-col items-start'>
-                        <span className='font-medium'>{level.label}工程师</span>
-                      </div>
-                    </div>
-                  </Button>
-                </Tooltip>
-              ))}
-            </ButtonGroup>
-          </div>
+          <div className='flex items-center gap-4'></div>
           <Button
             size='sm'
             variant='light'

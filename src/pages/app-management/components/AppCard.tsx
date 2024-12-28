@@ -68,28 +68,8 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
             <div className='flex-1 min-w-0'>
               <div className='flex items-center gap-2'>
                 <h3 className='text-lg font-semibold whitespace-nowrap overflow-hidden text-ellipsis'>{app.title}</h3>
-                <Chip size='sm' variant='flat' color={app.status === "active" ? "success" : "default"}>
-                  {app.status === "active" ? "运行中" : "已停用"}
-                </Chip>
-                <Chip
-                  size='sm'
-                  variant='flat'
-                  color={
-                    app.template === "enterprise" ? "primary" : app.template === "dashboard" ? "secondary" : "default"
-                  }
-                >
-                  {getTemplateLabel(app.template)}
-                </Chip>
               </div>
               <p className='text-small text-default-500'>创建于 {new Date(app.createdAt).toLocaleDateString()}</p>
-              <div className='flex gap-2 mt-2'>
-                <Chip size='sm' variant='flat' color='primary'>
-                  {app.indexFields?.templateIds?.length || 0} 个表单
-                </Chip>
-                <Chip size='sm' variant='flat' color='secondary'>
-                  {app.indexFields?.reportIds?.length || 0} 个报表
-                </Chip>
-              </div>
             </div>
           </div>
         </CardBody>

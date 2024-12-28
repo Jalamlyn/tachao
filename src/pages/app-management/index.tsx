@@ -4,7 +4,7 @@ import { Icon } from "@iconify/react"
 import PageLayout from "@/components/PageLayout"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { AppGallery } from "./components/AppGallery"
-import { CreateAppModal } from "./components/CreatePageModal"
+import { CreateAppModal } from "./components/CreateAppModal"
 import { PageList } from "./components/PageList"
 import { AppIndex, useAppStore } from "./store/useAppStore"
 
