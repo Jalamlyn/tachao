@@ -18,7 +18,7 @@ import FileManager from "@/apps/we-chat-app-admin/src/FileManager"
 import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 import PageEditor from "@/pages/app-management/components/PageEditor"
 import PagePreview from "@/pages/app-management/components/PagePreview"
-import AppBuilder from "@/pages/app-builder/AppEdit" // 新增
+import AppBuilder from "@/pages/app-builder/AppEdit" // 修改导入路径
 
 export default function renderWeChatApp() {
   return (
