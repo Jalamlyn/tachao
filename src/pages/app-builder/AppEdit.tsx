@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import { useParams } from "react-router-dom"
 import { Button, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
@@ -7,6 +7,7 @@ import AIEditor from "@/components/AIEditor"
 import AppAgent from "./AppAgent"
 import { AppBuilderMessage } from "./types"
 import message from "@/components/Message"
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 
 const AppBuilder: React.FC = () => {
@@ -15,6 +16,19 @@ const AppBuilder: React.FC = () => {
   const [messages, setMessages] = useState<AppBuilderMessage[]>([])
   const [selectedTab, setSelectedTab] = useState("preview")
   const [appTitle, setAppTitle] = useState("")
+  const { updateBreadcrumbs } = useBreadcrumb()
+
+  // 添加 refs 用于跟踪消息状态
+  const accumulatedTextRef = useRef("")
+  const currentMessageIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    updateBreadcrumbs([
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "应用管理", href: "/we-chat-app/admin/apps" },
+      { label: "应用开发", href: "" },
+    ])
+  }, [])
 
   // 加载应用数据
   useEffect(() => {
@@ -23,7 +37,7 @@ const AppBuilder: React.FC = () => {
       try {
         setIsLoading(true)
         await AppAgent.loadAppCache(appId)
-        
+
         // 获取应用标题
         const result = await getMetadata(["app_index"])
         const apps = result.data?.[0]?.value ? JSON.parse(result.data[0].value) : []
@@ -42,40 +56,78 @@ const AppBuilder: React.FC = () => {
     loadAppData()
   }, [appId])
 
-  const handleCommandResult = useCallback((result: any) => {
-    if (!result.success) {
-      message.error(result.error || "操作失败")
-      return
-    }
+  // 添加消息处理函数
+  const addMessage = useCallback((message: AppBuilderMessage) => {
+    setMessages((prev) => [...prev, message])
+  }, [])
 
-    const appCache = AppAgent.getAppCache(appId!)
-    if (!appCache) return
-
-    // 更新页面代码
-    if (result.pages) {
-      const updatedPages = { ...appCache.pages }
-      Object.entries(result.pages).forEach(([pageId, code]) => {
-        if (updatedPages[pageId]) {
-          updatedPages[pageId] = {
-            ...updatedPages[pageId],
-            code: code as string,
-            updatedAt: new Date().toISOString(),
-          }
+  // 更新最后一条消息
+  const updateLastMessage = useCallback((update: Partial<AppBuilderMessage>) => {
+    setMessages((prev) => {
+      const messages = [...prev]
+      const lastIndex = messages.length - 1
+      if (lastIndex >= 0) {
+        messages[lastIndex] = {
+          ...messages[lastIndex],
+          ...update,
         }
-      })
+      }
+      return messages
+    })
+  }, [])
 
-      // 更新缓存
-      AppAgent.setAppCache(appId!, {
-        ...appCache,
-        pages: updatedPages,
-        appCode: result.appCode || appCache.appCode,
-        version: appCache.version + 1,
-        updatedAt: new Date().toISOString(),
-      })
-    }
+  // 处理数据块
+  const handleChunk = useCallback(
+    (chunk: string) => {
+      accumulatedTextRef.current += chunk
+      if (accumulatedTextRef.current !== "") {
+        updateLastMessage({
+          content: accumulatedTextRef.current,
+          status: "streaming",
+        })
+      }
+    },
+    [updateLastMessage]
+  )
 
-    message.success("更新成功")
-  }, [appId])
+  const handleCommandResult = useCallback(
+    (result: any) => {
+      if (!result.success) {
+        message.error(result.error || "操作失败")
+        return
+      }
+
+      const appCache = AppAgent.getAppCache(appId!)
+      if (!appCache) return
+
+      // 更新页面代码
+      if (result.pages) {
+        const updatedPages = { ...appCache.pages }
+        Object.entries(result.pages).forEach(([pageId, code]) => {
+          if (updatedPages[pageId]) {
+            updatedPages[pageId] = {
+              ...updatedPages[pageId],
+              code: code as string,
+              updatedAt: new Date().toISOString(),
+            }
+          }
+        })
+
+        // 更新缓存
+        AppAgent.setAppCache(appId!, {
+          ...appCache,
+          pages: updatedPages,
+          appCode: result.appCode || appCache.appCode,
+          version: appCache.version + 1,
+          updatedAt: new Date().toISOString(),
+        })
+      }
+
+      // 更新最后一条消息状态为成功
+      updateLastMessage({ status: "success" })
+    },
+    [appId, updateLastMessage]
+  )
 
   const handleSave = async () => {
     if (!appId) return
@@ -88,13 +140,16 @@ const AppBuilder: React.FC = () => {
 
       // 1. 更新所有页面
       for (const [pageId, page] of Object.entries(appCache.pages)) {
-        await setMetadata(pageId, JSON.stringify({
-          id: pageId,
-          title: page.title,
-          code: page.code,
-          appId,
-          updatedAt: page.updatedAt,
-        }))
+        await setMetadata(
+          pageId,
+          JSON.stringify({
+            id: pageId,
+            title: page.title,
+            code: page.code,
+            appId,
+            updatedAt: page.updatedAt,
+          })
+        )
       }
 
       // 2. 更新应用索引
@@ -121,14 +176,56 @@ const AppBuilder: React.FC = () => {
 
   const handleClearMessages = () => {
     setMessages([])
+    accumulatedTextRef.current = ""
+    currentMessageIdRef.current = null
+  }
+
+  // 处理 AI 命令
+  const processCommand = async (command: string) => {
+    // 添加用户消息
+    const userMessage: AppBuilderMessage = {
+      role: "user",
+      content: command,
+      id: Date.now().toString(),
+      timestamp: new Date().toLocaleTimeString(),
+    }
+    addMessage(userMessage)
+
+    // 添加 AI 思考消息
+    const assistantMessage: AppBuilderMessage = {
+      role: "assistant",
+      content: "",
+      id: (Date.now() + 1).toString(),
+      timestamp: new Date().toLocaleTimeString(),
+      status: "thinking",
+    }
+    addMessage(assistantMessage)
+
+    // 重置累积文本
+    accumulatedTextRef.current = ""
+    currentMessageIdRef.current = assistantMessage.id
+
+    try {
+      const result = await AppAgent.processCommand(appId!, messages, command, handleChunk)
+      return result
+    } catch (error) {
+      console.error("Error in chat:", error)
+      updateLastMessage({
+        content: error instanceof Error ? error.message : "处理过程中发生错误",
+        status: "error",
+      })
+      throw error
+    } finally {
+      currentMessageIdRef.current = null
+    }
   }
 
   if (!appId) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <Icon icon="mdi:alert" className="w-12 h-12 text-danger mb-2" />
-          <p className="text-danger">无效的应用ID</p>
+      <div className='flex items-center justify-center h-screen'>
+        <div className='text-center'>
+          <Icon icon='mdi:alert' className='w-12 h-12 text-danger mb-2' />
+          <p className='text-danger'>无效的应用ID</p>
         </div>
       </div>
     )
@@ -136,31 +233,26 @@ const AppBuilder: React.FC = () => {
 
   const pageActions = (
     <Button
-      color="primary"
+      color='primary'
       onClick={handleSave}
       isDisabled={isLoading}
       isLoading={isLoading}
-      startContent={<Icon icon="mdi:content-save" className="w-4 h-4" />}
+      startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
     >
       保存应用
     </Button>
   )
 
   return (
-    <PageLayout
-      title={`构建应用 - ${appTitle}`}
-      titleIcon="mdi:tools"
-      actions={pageActions}
-    >
-      <div className="h-[calc(100vh-140px)] overflow-auto">
+    <PageLayout title={`构建应用 - ${appTitle}`} titleIcon='mdi:tools' actions={pageActions}>
+      <div className='h-[calc(100vh-140px)] overflow-auto'>
         <AIEditor
           parseConfig={async (code: string) => ({ code })}
           messages={messages}
           selectedTab={selectedTab}
           onTabChange={setSelectedTab}
           agent={{
-            processCommand: (command: string) =>
-              AppAgent.processCommand(appId, messages, command),
+            processCommand,
           }}
           versionControl={{
             versions: [],
@@ -176,7 +268,7 @@ const AppBuilder: React.FC = () => {
           onCommandResult={handleCommandResult}
           onClearMessages={handleClearMessages}
           showCodeTab
-          previewTabName="应用预览"
+          previewTabName='应用预览'
         />
       </div>
     </PageLayout>

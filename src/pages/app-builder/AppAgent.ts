@@ -6,12 +6,15 @@ import { balanceStore } from "@/stores/balanceStore"
 
 class AppAgent {
   private static instance: AppAgent
-  private _appCache: Map<string, {
-    pages: AppPages
-    appCode: string
-    version: number
-    updatedAt: string
-  }> = new Map()
+  private _appCache: Map<
+    string,
+    {
+      pages: AppPages
+      appCode: string
+      version: number
+      updatedAt: string
+    }
+  > = new Map()
 
   private constructor() {}
 
@@ -103,12 +106,11 @@ class AppAgent {
       if (!appCache) {
         throw new Error("App cache not found")
       }
-
+      debugger
       const systemPrompt = `你是一个专业的前端开发专家，负责帮助用户开发和优化应用。
 你需要理解用户的需求，生成符合要求的React组件代码。
-
 当前应用的页面代码：
-${JSON.stringify(appCache.pages, null, 2)}
+${JSON.stringify(appCache, null, 2)}
 
 代码生成规范：
 1. 应用入口组件使用 <shata-ai-app-code></shata-ai-app-code> 包裹
