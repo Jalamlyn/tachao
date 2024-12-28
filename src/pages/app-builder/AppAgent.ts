@@ -86,8 +86,6 @@ class AppAgent {
     }
   ) {
     this._appCache.set(appId, data)
-    // 同步到 localStorage
-    debugger
     localStorage.setItem(`app_cache_${appId}`, JSON.stringify(data))
   }
 
@@ -195,7 +193,7 @@ ${page.code}
 
 方式一（推荐）：使用 Routes 和 Route
 \`\`\`jsx
-<shata-ai-app-code>
+<shata-ai-code type="app">
 export default (props) => {
   const {React, NextUI, ReactRouterDom} = context
   const {Routes, Route, Navigate, BrowserRouter} = ReactRouterDom
@@ -213,19 +211,19 @@ export default (props) => {
     </BrowserRouter>
   )
 }
-</shata-ai-app-code>
+</shata-ai-code>
 \`\`\`
 
-4. 页面组件使用 <shata-ai-page-code pageid="xxx" title="xxx"></shata-ai-page-code> 包裹：
+4. 页面组件使用 <shata-ai-code type="page" pageid="xxx" title="xxx"></shata-ai-code> 包裹：
 \`\`\`jsx
-<shata-ai-page-code pageid="page_xxx" title="页面标题">
+<shata-ai-code type="page" pageid="page_xxx" title="页面标题">
 export default (props) => {
   const {React, NextUI} = context
   return (
     <div>页面内容</div>
   )
 }
-</shata-ai-page-code>
+</shata-ai-code>
 \`\`\`
 
 5. 技术要求：
@@ -285,18 +283,18 @@ ${command},从设计师的角度
 ---
 我开始编写应用入口组件的代码:
 \`\`\`jsx
-<shata-ai-app-code>
+<shata-ai-code type="app">
 入口组件代码,必须是完整代码, 不能省略任何逻辑和代码
-</shata-ai-app-code>
+</shata-ai-code>
 \`\`\`
 ---
 2. 如果需要修改一个或者多个页面（仅在应用入口存在时）：
 ---
 我开始编写 xxx页面的代码:
 \`\`\`jsx
-<shata-ai-page-code pageid="页面ID" title="页面标题">
+<shata-ai-code type="page" pageid="页面ID" title="页面标题">
 页面代码,必须是完整代码, 不能省略任何逻辑和代码
-</shata-ai-page-code>
+</shata-ai-code>
 \`\`\`
 ---
 `
@@ -338,16 +336,16 @@ ${command},从设计师的角度
 
       // 解析响应
       const pageCodeMatches = response.match(
-        /<shata-ai-page-code pageid="([^"]+)" title="([^"]+)">([\s\S]*?)<\/shata-ai-page-code>/g
+        /<shata-ai-code type="page" pageid="([^"]+)" title="([^"]+)">([\s\S]*?)<\/shata-ai-code>/g
       )
-      const appCodeMatch = response.match(/<shata-ai-app-code>([\s\S]*?)<\/shata-ai-app-code>/)
+      const appCodeMatch = response.match(/<shata-ai-code type="app">([\s\S]*?)<\/shata-ai-code>/)
 
       const updatedPages: { [pageId: string]: string } = {}
       if (pageCodeMatches) {
         pageCodeMatches.forEach((match) => {
           const pageId = match.match(/pageid="([^"]+)"/)?.[1]
           const title = match.match(/title="([^"]+)"/)?.[1]
-          const code = match.match(/<shata-ai-page-code[^>]*>([\s\S]*?)<\/shata-ai-page-code>/)?.[1]
+          const code = match.match(/<shata-ai-code[^>]*>([\s\S]*?)<\/shata-ai-code>/)?.[1]
           if (pageId && code && title) {
             updatedPages[pageId] = {
               code: code.trim(),
