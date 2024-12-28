@@ -12,14 +12,42 @@ import { ReportRendererWrapper } from "./renderers/ReportRendererWrapper"
 
 interface PageRendererProps {
   code?: string
+  pageId?: string // 新增：页面ID
+  appId?: string  // 新增：应用ID
 }
 
-export const PageRenderer: React.FC<PageRendererProps> = ({ code }) => {
+export const PageRenderer: React.FC<PageRendererProps> = ({ code, pageId, appId }) => {
   const [Component, setComponent] = useState<React.ComponentType<any> | null>(null)
   const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
     const createComponent = async () => {
+      if (!code && pageId && appId) {
+        // 如果没有直接提供代码，但有pageId和appId，尝试从缓存或服务器获取
+        try {
+          const cached = localStorage.getItem(`app_cache_${appId}`)
+          if (cached) {
+            const appCache = JSON.parse(cached)
+            if (appCache.pages[pageId]) {
+              code = appCache.pages[pageId].code
+            }
+          }
+
+          if (!code) {
+            // 如果缓存中没有，从服务器获取
+            const pageResult = await getMetadata([pageId])
+            if (pageResult.data?.[0]?.value) {
+              const pageData = JSON.parse(pageResult.data[0].value)
+              code = pageData.code
+            }
+          }
+        } catch (error) {
+          console.error("Error loading page code:", error)
+          setError(error as Error)
+          return
+        }
+      }
+
       if (!code) return
 
       try {
@@ -50,7 +78,6 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ code }) => {
         }
 
         // 创建组件
-        console.log(transformedCode)
         const componentFn = new Function("context", `${transformedCode.replace(/export default/, "return")}`)
 
         setComponent(() => componentFn(context))
@@ -63,9 +90,9 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ code }) => {
     }
 
     createComponent()
-  }, [code])
+  }, [code, pageId, appId])
 
-  if (!code) {
+  if (!code && !pageId) {
     return (
       <div className='flex flex-col items-center justify-center min-h-[400px] bg-default-50'>
         <Icon icon='mdi:file-document-plus' className='w-16 h-16 text-default-300' />
