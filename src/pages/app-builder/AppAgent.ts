@@ -194,6 +194,18 @@ ${page.code}
    - 不需要也不允许创建新的 Router 上下文
    - Routes 组件已配置了正确的 basename
    - 所有路由路径都是相对于应用根路径的
+   - 路由路径始终使用相对路径（不要以"/"开头）
+   - 系统会自动处理基础路径的拼接
+   - Link 和 useNavigate 会自动添加基础路径
+   - 不需要手动处理基础路径，只需使用相对路径
+   - 这是应用的实际运行环境，与开发环境完全分开
+
+8. 路由路径示例：
+   配置的路径    =>    实际访问路径
+   ""           =>    /apps/{appId}/
+   "home"       =>    /apps/{appId}/home
+   "about"      =>    /apps/{appId}/about
+   "users/list" =>    /apps/{appId}/users/list
 
 注意事项：
 1. 生成的代码必须完整，不能省略
