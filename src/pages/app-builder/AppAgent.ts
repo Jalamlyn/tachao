@@ -3,10 +3,11 @@ import chatChunk from "@/service/chat/chat-deepseek"
 import { AppBuilderMessage, AppPages } from "./types"
 import { getMetadata } from "@/service/apis/metadata"
 import { balanceStore } from "@/stores/balanceStore"
+import { versionStore } from "./store/versionStore"
 
 // 添加提示词模块
 const promptModules = {
-  thoughtChain: `作为一个专业的需求分析专家，请按照以下步骤分析用户需求：
+  thoughtChain: `作为一个专业的需求分析专家，请按照以下步骤分析用户需求并提供完整实现：
 
 1. 需求理解
    - 仔细阅读用户的需求描述
@@ -19,14 +20,20 @@ const promptModules = {
    - 识别潜在的依赖和约束
 
 3. 可行性评估
-   - 技术可行性
-   - 时间可行性
-   - 资源需求
+   - 技术可行性分析
+   - 时间可行性评估
+   
+4. 输出要求
+   - 必须提供完整的代码实现，不允许使用省略符号
+   - 保持代码结构的完整性，不使用注释替代实际代码
+   - 确保所有配置和依赖都明确声明
+   - 每个功能模块都需要完整实现，包含所有必要的导入语句
 
-4. 实现建议
-   - 推荐的实现方案
-   - 可能的替代方案
-   - 优先级建议
+5. 实现规范
+   - 遵循项目既定的代码风格
+   - 使用TypeScript类型声明
+   - 保持错误处理的完整性
+   - 确保代码可测试性
 
 请将分析结果输出在 
 ---
@@ -70,7 +77,6 @@ class AppAgent {
     string,
     {
       pages: AppPages
-      appCode: string
       version: number
       updatedAt: string
     }
@@ -93,7 +99,6 @@ class AppAgent {
     appId: string,
     data: {
       pages: AppPages
-      appCode: string
       version: number
       updatedAt: string
     }
@@ -134,7 +139,6 @@ class AppAgent {
       // 设置缓存
       this.setAppCache(appId, {
         pages,
-        appCode: "",
         version: 1,
         updatedAt: new Date().toISOString(),
       })
@@ -175,7 +179,7 @@ ${promptModules.reflection}
 当前应用结构：
 
 1. 应用入口代码：
-${appCache?.appCode ? appCache.appCode : "需要先创建应用入口代码，包含基础路由配置"}
+${versionStore.getCurrentContent() || "需要先创建应用入口代码，包含基础路由配置"}
 
 2. 页面代码：
 ${Object.entries(appCache?.pages)
@@ -200,6 +204,7 @@ ${page.code}
    现在支持完整的 React Router 路由系统
    - 使用 Routes 和 Route 组件进行路由配置
    - 实现路由嵌套和布局
+   - 如果需要模拟图片数据, 使用 https://picsum.photos/300 的服务
 
 3. 应用入口组件示例：
 

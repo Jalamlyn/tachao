@@ -8,16 +8,18 @@ import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
 import { ReferenceUpload } from "../components/ReferenceUpload"
 import { AI_LEVELS } from "../type"
+import { VersionControl } from "../../types"
 
 export const renderLeftPanel = (
-  selectedAILevel,
-  handleAILevelChange,
-  handleClearMessages,
-  messages,
-  imageUpload,
-  excelUpload,
-  agent,
-  onCommandResult
+  selectedAILevel: keyof typeof AI_LEVELS,
+  handleAILevelChange: (level: keyof typeof AI_LEVELS) => void,
+  handleClearMessages: () => void,
+  messages: any[],
+  imageUpload: boolean,
+  excelUpload: boolean,
+  agent: any,
+  onCommandResult: (result: any) => void,
+  versionControl?: VersionControl
 ) => {
   return (
     <ResizablePanel defaultSize={50} className='resizable-panel'>
@@ -27,9 +29,8 @@ export const renderLeftPanel = (
             <h3 className='text-lg font-medium'>对话</h3>
             <ButtonGroup variant='flat' className='gap-2 p-1 bg-default-100 rounded-lg'>
               {Object.entries(AI_LEVELS).map(([key, level]) => (
-                <Tooltip content={level.description}>
+                <Tooltip content={level.description} key={key}>
                   <Button
-                    key={key}
                     className={cn(
                       "min-w-[140px] h-12 px-4",
                       "transition-all duration-200",
@@ -37,7 +38,7 @@ export const renderLeftPanel = (
                         ? "bg-primary text-white shadow-lg scale-105"
                         : "bg-white hover:bg-primary/10"
                     )}
-                    onClick={() => handleAILevelChange(key)}
+                    onClick={() => handleAILevelChange(key as keyof typeof AI_LEVELS)}
                   >
                     <div className='flex items-center gap-2'>
                       <div
@@ -85,12 +86,7 @@ export const renderLeftPanel = (
         </ScrollShadow>
 
         <div className='p-2'>
-          {(imageUpload || excelUpload) && (
-            <ReferenceUpload
-              agent={agent}
-              aiLevel={selectedAILevel}
-            />
-          )}
+          {(imageUpload || excelUpload) && <ReferenceUpload agent={agent} aiLevel={selectedAILevel} />}
           <AICommandInput agent={agent} onResult={onCommandResult} aiLevel={selectedAILevel} />
         </div>
       </div>

@@ -2,23 +2,24 @@ import { Tabs, Tab, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { ResizablePanel } from "@/components/ui/resizable"
 import { cn } from "@/lib/utils"
+import { VersionControl, Version } from "../../types"
 
 export const renderRightPanel = (
-  versionControl,
-  selectedTab,
-  onTabChange,
-  renderPreview,
-  showDataTab,
-  previewTabName,
-  renderCodeEditor,
-  currentVersion,
-  showCodeTab,
-  renderDataView,
-  isEditing,
-  editedCode,
-  setIsEditing,
-  handleSaveEdit,
-  handleCancelEdit
+  versionControl: VersionControl,
+  selectedTab: string,
+  onTabChange: (key: string) => void,
+  renderPreview: () => React.ReactNode,
+  showDataTab: boolean,
+  previewTabName: string,
+  renderCodeEditor: (content: string, isEditing: boolean) => React.ReactNode,
+  currentVersion: Version | null,
+  showCodeTab: boolean,
+  renderDataView?: () => React.ReactNode,
+  isEditing?: boolean,
+  editedCode?: string,
+  setIsEditing?: (editing: boolean) => void,
+  handleSaveEdit?: () => void,
+  handleCancelEdit?: () => void
 ) => {
   return (
     <ResizablePanel defaultSize={50} className='resizable-panel bg-slate-50'>
@@ -65,7 +66,7 @@ export const renderRightPanel = (
         <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => onTabChange(key.toString())}>
           {showDataTab && <Tab key='data' title='数据源' />}
           <Tab key='preview' title={previewTabName}>
-            <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderPreview(currentVersion)}</div>
+            <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderPreview()}</div>
           </Tab>
           {showCodeTab && <Tab key='code' title='代码视图' />}
         </Tabs>
@@ -76,7 +77,7 @@ export const renderRightPanel = (
         {selectedTab === "code" && showCodeTab && (
           <div className='relative h-[calc(100vh-260px)] rounded-lg overflow-auto mt-2'>
             <>
-              {renderCodeEditor(isEditing ? editedCode : currentVersion?.rawConfig || "", isEditing)}
+              {renderCodeEditor(isEditing ? editedCode || "" : currentVersion?.content || "", isEditing || false)}
               {isEditing ? (
                 <div className='absolute top-2 right-2 space-x-2'>
                   <Button
@@ -101,7 +102,7 @@ export const renderRightPanel = (
                   <Button
                     size='sm'
                     color='primary'
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => setIsEditing?.(true)}
                     startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
                   >
                     编辑

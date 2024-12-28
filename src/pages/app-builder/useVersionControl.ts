@@ -28,8 +28,8 @@ export function useVersionControl<T>() {
   }, [])
 
   const getCurrentVersion = useCallback(() => {
-    if (currentIndexRef.current >= 0 && currentIndexRef.current < versionsRef.current.length) {
-      return versionsRef.current[currentIndexRef.current].data
+    if (currentIndex >= 0 && currentIndex < versions.length) {
+      return versions[currentIndex].data
     }
     return null
   }, [])
