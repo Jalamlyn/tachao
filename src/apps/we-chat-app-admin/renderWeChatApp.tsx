@@ -18,6 +18,7 @@ import FileManager from "@/apps/we-chat-app-admin/src/FileManager"
 import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 import PageEditor from "@/pages/app-management/components/PageEditor"
 import PagePreview from "@/pages/app-management/components/PagePreview"
+import AppBuilder from "@/pages/app-builder/AppEdit" // 新增
 
 export default function renderWeChatApp() {
   return (
@@ -63,6 +64,16 @@ export default function renderWeChatApp() {
         element={
           <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
             <PageEditor />
+          </PermissionCheck>
+        }
+      />
+
+      {/* 应用构建器路由 */}
+      <Route
+        path='apps/:appId/builder'
+        element={
+          <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
+            <AppBuilder />
           </PermissionCheck>
         }
       />
