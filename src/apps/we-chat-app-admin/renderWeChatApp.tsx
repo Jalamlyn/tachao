@@ -16,7 +16,6 @@ import PendingTasks from "@/pages/pending-tasks"
 import FileManager from "@/apps/we-chat-app-admin/src/FileManager"
 import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 import PageEditor from "@/pages/app-management/components/PageEditor"
-import PagePreview from "@/pages/app-management/components/PagePreview"
 import AppBuilder from "@/pages/app-builder/AppEdit"
 
 export default function renderWeChatApp() {
@@ -52,7 +51,7 @@ export default function renderWeChatApp() {
             <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
               <PageEditor />
             </PermissionCheck>
-          )
+          ),
         },
         {
           path: "apps/:appId/pages/:pageId/edit",
@@ -60,7 +59,7 @@ export default function renderWeChatApp() {
             <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
               <PageEditor />
             </PermissionCheck>
-          )
+          ),
         },
         {
           path: "apps/:appId/builder",
@@ -68,9 +67,9 @@ export default function renderWeChatApp() {
             <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
               <AppBuilder />
             </PermissionCheck>
-          )
-        }
-      ]
-    }
+          ),
+        },
+      ],
+    },
   ]
 }

@@ -10,6 +10,7 @@ import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { useVersionControl } from "@/hooks/useVersionControl"
+import { codeStore } from "../form-temp-manager/components/codeStore"
 
 const AppBuilder: React.FC = () => {
   const { appId } = useParams<{ appId: string }>()
@@ -126,11 +127,9 @@ const AppBuilder: React.FC = () => {
           }
         })
       }
-
       // 添加新版本
       versionControl.addVersion({
-        appCode: result.appCode || appCache.appCode,
-        pages: updatedPages,
+        rawConfig: result.appCode || appCache.appCode,
       })
 
       // 更新缓存
@@ -252,7 +251,7 @@ const AppBuilder: React.FC = () => {
 
     return (
       <iframe
-        src={`/preview/${appId}`}
+        src={`/app-preview/${appId}`}
         style={{
           width: "100%",
           height: "500px",

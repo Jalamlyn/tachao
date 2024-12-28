@@ -187,13 +187,9 @@ ${page.code}
    - 每次修改都要确保路由配置与页面一致
 
 2. 路由系统说明：
-   现在支持完整的 React Router 路由系统，你可以：
-   - 使用 BrowserRouter 作为路由容器
+   现在支持完整的 React Router 路由系统
    - 使用 Routes 和 Route 组件进行路由配置
    - 实现路由嵌套和布局
-   - 使用所有 React Router 的功能
-   
-   同时也支持使用 useRoutes hook 进行路由配置（向后兼容）
 
 3. 应用入口组件示例：
 
@@ -202,46 +198,20 @@ ${page.code}
 <shata-ai-app-code>
 export default (props) => {
   const {React, NextUI, ReactRouterDom} = context
-  const {Routes, Route, Navigate} = ReactRouterDom
+  const {Routes, Route, Navigate, BrowserRouter} = ReactRouterDom
   
   return (
-    <Routes>
-      <Route path="" element={<Navigate to="home" replace />} />
-      <Route path="home" element={<PageWrapper pageId="page_xxx" />} />
-      <Route path="about" element={<PageWrapper pageId="page_yyy" />}>
-        <Route path="team" element={<TeamPage />} />
-      </Route>
-      <Route path="*" element={<div>页面不存在</div>} />
-    </Routes>
+    <BrowserRouter basename={props.basename}>
+      <Routes>
+        <Route path="/" element={<Navigate to="home" replace />} />
+        <Route path="/home" element={<PageWrapper pageId="page_xxx" />} />
+        <Route path="/about" element={<PageWrapper pageId="page_yyy" />}>
+          <Route path="/team" element={<TeamPage />} />
+        </Route>
+        <Route path="*" element={<div>页面不存在</div>} />
+      </Routes>
+    </BrowserRouter>
   )
-}
-</shata-ai-app-code>
-\`\`\`
-
-方式二（兼容模式）：使用 useRoutes
-\`\`\`jsx
-<shata-ai-app-code>
-export default (props) => {
-  const {React, NextUI, ReactRouterDom} = context
-  const {useRoutes, Navigate} = ReactRouterDom
-  
-  const routes = [
-    {
-      path: "",
-      element: <Navigate to="home" replace />
-    },
-    {
-      path: "home",
-      element: <PageWrapper pageId="page_xxx" />
-    },
-    {
-      path: "*",
-      element: <div>页面不存在</div>
-    }
-  ]
-  
-  const element = useRoutes(routes)
-  return element
 }
 </shata-ai-app-code>
 \`\`\`

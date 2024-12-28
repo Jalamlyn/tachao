@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom"
 import { Spinner } from "@nextui-org/react"
 import { PageRenderer } from "@/components/PageRenderer"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
-import message from "@/components/Message"
 
 interface PageWrapperProps {
   pageId: string
@@ -37,7 +36,7 @@ export const PageWrapper: React.FC<PageWrapperProps> = ({ pageId }) => {
           const appIndexResult = await getMetadata(["app_index"])
           const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
           const app = apps.find((a: any) => a.id === appId)
-          
+
           if (!app) {
             throw new Error("应用不存在")
           }
@@ -87,16 +86,16 @@ export default (props) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner label="加载中..." />
+      <div className='flex items-center justify-center min-h-screen'>
+        <Spinner label='加载中...' />
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="p-4 bg-danger-50 rounded-lg">
-        <p className="text-danger">{error}</p>
+      <div className='p-4 bg-danger-50 rounded-lg'>
+        <p className='text-danger'>{error}</p>
       </div>
     )
   }

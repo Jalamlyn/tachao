@@ -3,7 +3,8 @@ import { AppRender } from "@/components/AppRender"
 import { Spinner } from "@nextui-org/react"
 import { getMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
-import { useLocation } from "react-router-dom"
+import { BrowserRouter } from "react-router-dom"
+import { Provider } from "@/provider"
 
 interface AppRuntimeProps {
   appId: string
@@ -18,7 +19,6 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
   const [appCode, setAppCode] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const location = useLocation()
 
   useEffect(() => {
     const loadAppCode = async () => {
@@ -58,16 +58,16 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner label="加载中..." />
+      <div className='flex items-center justify-center min-h-screen'>
+        <Spinner label='加载中...' />
       </div>
     )
   }
 
   if (error || !appCode) {
     return (
-      <div className="p-4 bg-danger-50 rounded-lg">
-        <p className="text-danger">{error || "应用加载失败"}</p>
+      <div className='p-4 bg-danger-50 rounded-lg'>
+        <p className='text-danger'>{error || "应用加载失败"}</p>
       </div>
     )
   }
@@ -83,16 +83,12 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
     },
   }
 
-  // 计算基础路径
-  const basePath = location.pathname.split('/apps/')[0] + '/apps/' + appId
-
   return (
-    <AppRender
-      code={appCode}
-      context={runtimeSpecificContext}
-      onError={handleError}
-      basename={basePath}
-    />
+    <BrowserRouter basename='/app-run'>
+      <Provider>
+        <AppRender code={appCode} context={runtimeSpecificContext} onError={handleError} />
+      </Provider>
+    </BrowserRouter>
   )
 }
 

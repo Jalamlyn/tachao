@@ -15,13 +15,13 @@ interface AppRenderProps {
   code: string
   context?: Record<string, any>
   onError?: (error: Error) => void
-  basename?: string
+  basename: string
 }
 
-export const AppRender: React.FC<AppRenderProps> = ({ code, context: extraContext, onError, basename = "" }) => {
+export const AppRender: React.FC<AppRenderProps> = ({ basename, code, context: extraContext, onError }) => {
   const [Component, setComponent] = useState<React.ComponentType<any> | null>(null)
   const [error, setError] = useState<Error | null>(null)
-
+  debugger
   useEffect(() => {
     const createComponent = async () => {
       if (!code) return
@@ -36,23 +36,7 @@ export const AppRender: React.FC<AppRenderProps> = ({ code, context: extraContex
         const baseContext = {
           React,
           NextUI,
-          ReactRouterDom: {
-            ...ReactRouterDom,
-            Routes: (props: any) => <ReactRouterDom.Routes {...props} basename={basename} />,
-            useNavigate: () => {
-              const navigate = ReactRouterDom.useNavigate()
-              return (path: string, options?: any) => {
-                // 处理相对路径
-                const finalPath = path.startsWith("/") ? path : `${basename}/${path}`
-                navigate(finalPath, options)
-              }
-            },
-            Link: (props: any) => {
-              const { to, ...rest } = props
-              const finalTo = to.startsWith("/") ? to : `${basename}/${to}`
-              return <ReactRouterDom.Link {...rest} to={finalTo} />
-            },
-          },
+          ReactRouterDom,
           FramerMotion,
           Icon,
           message,
@@ -83,7 +67,7 @@ export const AppRender: React.FC<AppRenderProps> = ({ code, context: extraContex
     }
 
     createComponent()
-  }, [code, extraContext, onError, basename])
+  }, [code, extraContext, onError])
 
   if (!code) {
     return (
@@ -112,7 +96,7 @@ export const AppRender: React.FC<AppRenderProps> = ({ code, context: extraContex
 
   return (
     <ErrorBoundary>
-      <Component />
+      <Component basename={basename} />
     </ErrorBoundary>
   )
 }

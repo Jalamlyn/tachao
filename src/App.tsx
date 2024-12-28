@@ -63,9 +63,7 @@ function App() {
     {
       path: "/ai",
       element: shouldRedirectToLogin() ? <Navigate to='/external-login' /> : <AIHomePage />,
-      children: [
-        { index: true, element: <Navigate to='management' replace /> }
-      ]
+      children: [{ index: true, element: <Navigate to='management' replace /> }],
     },
     { path: "/login", element: <WeChatLoginPage /> },
     { path: "/external-login", element: <ExternalLoginPage /> },
@@ -75,20 +73,16 @@ function App() {
         <div className='h-screen overflow-auto'>
           <FormPreview />
         </div>
-      )
+      ),
     },
     { path: "/form/:formId", element: <Form /> },
     {
       path: "/form-create/:templateId",
       element: (
-        <PermissionCheck
-          resourceType='template'
-          resourceId={location.pathname.split("/").pop() || ""}
-          role='creator'
-        >
+        <PermissionCheck resourceType='template' resourceId={location.pathname.split("/").pop() || ""} role='creator'>
           <FormCreate />
         </PermissionCheck>
-      )
+      ),
     },
     { path: "/report/:reportId", element: <Report /> },
     {
@@ -101,22 +95,22 @@ function App() {
             <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
               <EnterpriseLayout />
             </PermissionCheck>
-          )
-        }
-      ]
+          ),
+        },
+      ],
     },
     {
       path: "/forms/analysis",
-      element: shouldRedirectToLogin() ? <Navigate to='/login' /> : <AnalysisPage />
+      element: shouldRedirectToLogin() ? <Navigate to='/login' /> : <AnalysisPage />,
     },
     {
       path: "/resources/view/:id",
-      element: shouldRedirectToLogin() ? <Navigate to='/login' /> : <ResourceDataTable />
+      element: shouldRedirectToLogin() ? <Navigate to='/login' /> : <ResourceDataTable />,
     },
     { path: "/unauthorized", element: <UnauthorizedPage /> },
     {
       path: "/operations/wait-list",
-      element: shouldRedirectToLogin() ? <Navigate to='/login' /> : <WaitListPage />
+      element: shouldRedirectToLogin() ? <Navigate to='/login' /> : <WaitListPage />,
     },
     ...renderWeChatApp(),
     {
@@ -125,12 +119,8 @@ function App() {
         <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
           <PagePreview />
         </PermissionCheck>
-      )
+      ),
     },
-    {
-      path: "/preview/:appId",
-      element: <PreviewPage />
-    }
   ])
 
   return (

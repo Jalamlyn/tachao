@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react"
-import { useParams } from "react-router-dom"
+import { BrowserRouter, Route, Routes, useParams } from "react-router-dom"
 import { AppRender } from "@/components/AppRender"
 import { Spinner } from "@nextui-org/react"
 import message from "@/components/Message"
+import { Provider } from "@/provider"
 
 const PreviewPage: React.FC = () => {
   const [appCode, setAppCode] = useState<string | null>(null)
@@ -41,12 +42,9 @@ const PreviewPage: React.FC = () => {
   }
 
   return (
-    <AppRender 
-      code={appCode} 
-      context={previewContext} 
-      onError={handleError}
-      basename={`/preview/${appId}`}
-    />
+    <Provider>
+      <AppRender baseanme='/app-preview' code={appCode} context={previewContext} onError={handleError} />
+    </Provider>
   )
 }
 
