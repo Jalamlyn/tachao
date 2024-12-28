@@ -22,6 +22,7 @@ import FormCreate from "./pages/form/components/FormCreate"
 import { PermissionCheck } from "./permissions/components/PermissionCheck"
 import UnauthorizedPage from "./permissions/pages/UnauthorizedPage"
 import PagePreview from "./pages/app-management/components/PagePreview"
+import PreviewPage from "./pages/app-builder/components/PreviewPage"
 
 import { loadBMapScript } from "@/components/reports/MapComponent"
 
@@ -125,6 +126,10 @@ function App() {
           <PagePreview />
         </PermissionCheck>
       )
+    },
+    {
+      path: "/preview/:appId",
+      element: <PreviewPage />
     }
   ])
 
