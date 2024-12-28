@@ -4,28 +4,14 @@ import { Spinner } from "@nextui-org/react"
 import message from "@/components/Message"
 import { Provider } from "@/provider"
 
-export const AppContext = React.createContext(null)
+export const AppContext = React.createContext<{ appId: string | null }>({ appId: null })
 
-const PreviewPage: React.FC = () => {
+interface PreviewPageProps {
+  appId: string
+}
+
+const PreviewPage: React.FC<PreviewPageProps> = ({ appId }) => {
   const [appCode, setAppCode] = useState<string | null>(null)
-
-  // 从 URL 获取 appId
-  const getAppIdFromUrl = () => {
-    try {
-      const url = new URL(window.location.href)
-      const pathSegments = url.pathname.split("/")
-      const previewIndex = pathSegments.indexOf("app-preview")
-      if (previewIndex !== -1 && pathSegments[previewIndex + 1]) {
-        return pathSegments[previewIndex + 1]
-      }
-      return null
-    } catch (error) {
-      console.error("Error parsing URL:", error)
-      return null
-    }
-  }
-
-  const appId = getAppIdFromUrl()
 
   useEffect(() => {
     if (!appId) {

@@ -1,4 +1,3 @@
-// main.tsx
 import React from "react"
 import ReactDOM from "react-dom/client"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
@@ -24,35 +23,62 @@ configure({
   observableRequiresReaction: true,
 })
 
+// 通用的 URL 解析函数
+const getAppIdFromUrl = (prefix: string): string | null => {
+  try {
+    const url = new URL(window.location.href)
+    const pathSegments = url.pathname.split("/")
+    const prefixIndex = pathSegments.indexOf(prefix)
+    if (prefixIndex !== -1 && pathSegments[prefixIndex + 1]) {
+      return pathSegments[prefixIndex + 1]
+    }
+    return null
+  } catch (error) {
+    console.error("Error parsing URL:", error)
+    return null
+  }
+}
+
 const AppSelector: React.FC = () => {
   const pathname = window.location.pathname
 
-  // 如果路径以 /app 开头，渲染应用构建器
-  // 预览模式
+  // 预览模式 - /app-preview/:appId
   if (pathname.startsWith("/app-preview/")) {
+    const appId = getAppIdFromUrl("app-preview")
+    if (!appId) {
+      return <div className="text-danger p-4">无效的应用ID</div>
+    }
     return (
       <StoreProvider>
-        <PreviewPage />
+        <PreviewPage appId={appId} />
       </StoreProvider>
     )
   }
 
-  // 运行时模式
+  // 运行时模式 - /app-run/:appId
   if (pathname.startsWith("/app-run/")) {
+    const appId = getAppIdFromUrl("app-run")
+    if (!appId) {
+      return <div className="text-danger p-4">无效的应用ID</div>
+    }
+
     return (
       <StoreProvider>
-        <AppRuntime />
+        <BrowserRouter basename={`/app-run/${appId}`}>
+          <Provider>
+            <AppRuntime appId={appId} />
+          </Provider>
+        </BrowserRouter>
       </StoreProvider>
     )
   }
 
-  // 主应用，包含根路径重定向
+  // 主应用
   return (
     <BrowserRouter>
       <StoreProvider>
         <Provider>
           <Routes>
-            {/* 其他路由 */}
             <Route path='/*' element={<App />} />
           </Routes>
           <Toaster position='top-center' expand={true} richColors closeButton />
