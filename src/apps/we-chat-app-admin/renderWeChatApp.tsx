@@ -1,4 +1,3 @@
-import { Route, Routes } from "react-router-dom"
 import AdminPage from "@/apps/we-chat-app-admin/src/App"
 import EnterpriseSettings from "@/apps/we-chat-app-admin/src/EnterpriseSettings"
 import FormTempManager from "@/pages/form-temp-manager"
@@ -18,65 +17,60 @@ import FileManager from "@/apps/we-chat-app-admin/src/FileManager"
 import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 import PageEditor from "@/pages/app-management/components/PageEditor"
 import PagePreview from "@/pages/app-management/components/PagePreview"
-import AppBuilder from "@/pages/app-builder/AppEdit" // 修改导入路径
+import AppBuilder from "@/pages/app-builder/AppEdit"
 
 export default function renderWeChatApp() {
-  return (
-    <Route
-      path='/we-chat-app/admin'
-      element={
+  return [
+    {
+      path: "/we-chat-app/admin",
+      element: (
         <PermissionCheck resourceType='page' resourceId='/we-chat-app/admin'>
           <AdminPage />
         </PermissionCheck>
-      }
-    >
-      <Route index element={<Dashboard />} />
-      <Route path='settings' element={<EnterpriseSettings />} />
-      <Route path='documents' element={<FormTempManager />} />
-      <Route path='forms' element={<FormManager />} />
-      <Route path='documents/create' element={<AIFormEditor />} />
-      <Route path='documents/edit/:templateId' element={<AIFormEditor />} />
-      <Route path='documents/data/:templateId' element={<FormDataManager />} />
-      <Route path='form-preview/:templateId' element={<FormPreview />} />
-      <Route path='resources' element={<ResourceManagement />} />
-      <Route path='resources/:resourceId' element={<ResourceDetail />} />
-      <Route path='reports' element={<ReportManagement />} />
-      <Route path='reports/ai/create/:templateId' element={<AIReportEditor />} />
-      <Route path='reports/ai/:reportId' element={<AIReportEditor />} />
-      <Route path='ai-assistant' element={<FormAnalysis />} />
-      <Route path='apps' element={<AppManagement />} />
-      <Route path='pending-tasks' element={<PendingTasks />} />
-      <Route path='file-manager' element={<FileManager />} />
-
-      {/* 页面创建路由 */}
-      <Route
-        path='apps/:appId/pages/create'
-        element={
-          <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
-            <PageEditor />
-          </PermissionCheck>
+      ),
+      children: [
+        { index: true, element: <Dashboard /> },
+        { path: "settings", element: <EnterpriseSettings /> },
+        { path: "documents", element: <FormTempManager /> },
+        { path: "forms", element: <FormManager /> },
+        { path: "documents/create", element: <AIFormEditor /> },
+        { path: "documents/edit/:templateId", element: <AIFormEditor /> },
+        { path: "documents/data/:templateId", element: <FormDataManager /> },
+        { path: "form-preview/:templateId", element: <FormPreview /> },
+        { path: "resources", element: <ResourceManagement /> },
+        { path: "resources/:resourceId", element: <ResourceDetail /> },
+        { path: "reports", element: <ReportManagement /> },
+        { path: "reports/ai/create/:templateId", element: <AIReportEditor /> },
+        { path: "reports/ai/:reportId", element: <AIReportEditor /> },
+        { path: "ai-assistant", element: <FormAnalysis /> },
+        { path: "apps", element: <AppManagement /> },
+        { path: "pending-tasks", element: <PendingTasks /> },
+        { path: "file-manager", element: <FileManager /> },
+        {
+          path: "apps/:appId/pages/create",
+          element: (
+            <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
+              <PageEditor />
+            </PermissionCheck>
+          )
+        },
+        {
+          path: "apps/:appId/pages/:pageId/edit",
+          element: (
+            <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
+              <PageEditor />
+            </PermissionCheck>
+          )
+        },
+        {
+          path: "apps/:appId/builder",
+          element: (
+            <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
+              <AppBuilder />
+            </PermissionCheck>
+          )
         }
-      />
-
-      {/* 页面编辑路由 */}
-      <Route
-        path='apps/:appId/pages/:pageId/edit'
-        element={
-          <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
-            <PageEditor />
-          </PermissionCheck>
-        }
-      />
-
-      {/* 应用构建器路由 */}
-      <Route
-        path='apps/:appId/builder'
-        element={
-          <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
-            <AppBuilder />
-          </PermissionCheck>
-        }
-      />
-    </Route>
-  )
+      ]
+    }
+  ]
 }
