@@ -51,8 +51,12 @@ const AppBuilder: React.FC = () => {
 
         // 加载初始版本
         const appCache = AppAgent.getAppCache(appId)
-        if (appCache?.appCode && appCache.appCode !== "") {
-          versionStore.addVersion(appCache.appCode)
+        if (appCache?.appCode) {
+          versionStore.addVersion(appCache.appCode, {
+            pages: appCache.pages,
+            version: appCache.version,
+            updatedAt: appCache.updatedAt
+          })
         }
       } catch (error) {
         console.error("Error loading app data:", error)
@@ -120,23 +124,31 @@ const AppBuilder: React.FC = () => {
         })
       }
 
-      if (result?.appCode && result.appCode !== "") {
-        versionStore.addVersion(result.appCode)
-        AppAgent.setAppCache(appId!, {
-          ...appCache,
-          pages: updatedPages,
-          appCode: result.appCode,
-          version: appCache.version + 1,
-          updatedAt: new Date().toISOString(),
-        })
-      } else {
-        AppAgent.setAppCache(appId!, {
-          ...appCache,
-          pages: updatedPages,
-          version: appCache.version + 1,
-          updatedAt: new Date().toISOString(),
-        })
+      // 更新应用缓存
+      const newAppCache = {
+        ...appCache,
+        pages: updatedPages,
+        version: appCache.version + 1,
+        updatedAt: new Date().toISOString(),
       }
+
+      // 如果有新的应用代码，更新appCode
+      if (result?.appCode && result.appCode !== "") {
+        newAppCache.appCode = result.appCode
+      }
+
+      // 添加新版本，包含完整的应用状态
+      versionStore.addVersion(
+        newAppCache.appCode || versionStore.getCurrentContent(),
+        {
+          pages: newAppCache.pages,
+          version: newAppCache.version,
+          updatedAt: newAppCache.updatedAt
+        }
+      )
+
+      // 更新缓存
+      AppAgent.setAppCache(appId!, newAppCache)
 
       // 更新最后一条消息状态为成功
       updateLastMessage({ status: "success" })
