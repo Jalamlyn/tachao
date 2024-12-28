@@ -185,110 +185,114 @@ ${page.code}
    - 如果应用入口代码不存在，必须先生成入口代码
    - 入口代码生成后，才能生成或修改页面代码
    - 每次修改都要确保路由配置与页面一致
-- 只能使用以下NextUI 2.6.0版本中实际存在的组件
-   禁止使用 Container Gird Text 这些 NextUI V1 版本中的组件
-   使用 tailwind css 编写样式代码
-2. 应用入口组件必须使用 <shata-ai-app-code></shata-ai-app-code> 包裹，且必须使用 useRoutes 进行路由配置。
-   注意：应用已经在 Router 环境中运行，不要生成任何形式的 Router 组件或 Routes 组件。
 
-   正确示例：
-   """
-    \`\`\`jsx
-   <shata-ai-app-code>
-   export default (props) => {
-     const {React, NextUI, ReactRouterDom, PageWrapper} = context
-     const {useRoutes, Navigate, useNavigate, Link} = ReactRouterDom
-     
-     const routes = [
-       {
-         path: "",
-         element: <Navigate to="home" replace />
-       },
-       {
-         path: "home",
-         element: <PageWrapper pageId="page_xxx" />
-       },
-       {
-         path: "about",
-         element: <PageWrapper pageId="page_yyy" />
-       },
-       {
-         path: "*",
-         element: <div>页面不存在</div>
-       }
-     ]
-     
-     const element = useRoutes(routes)
-     
-     return (
-       <div>
-         {element}
-       </div>
-     )
-   }
-   </shata-ai-app-code>
-   \`\`\`
-  """
-3. 页面组件使用 <shata-ai-page-code pageid="xxx" title="xxx"></shata-ai-page-code> 包裹：
-"""
-   \`\`\`jsx
-   <shata-ai-page-code pageid="page_xxx" title="页面标题">
-   export default (props) => {
-     const {React, NextUI} = context
-     return (
-       <div>页面内容</div>
-     )
-   }
-   </shata-ai-page-code>
-   \`\`\`
-"""
-4. 技术要求：
-必须使用 useRoutes hook 进行路由配置
-严禁使用 Routes 和 Route 组件
-路由配置必须使用对象数组形式
-   - 只能使用以下NextUI 2.6.0版本中实际存在的组件
-   禁止使用 Container Gird Text 这些 NextUI V1 版本中的组件
-   - 直接使用 Routes 和 Route 进行路由配置
-   - 使用 useNavigate 和 Link 进行导航
+2. 路由系统说明：
+   现在支持完整的 React Router 路由系统，你可以：
+   - 使用 BrowserRouter 作为路由容器
+   - 使用 Routes 和 Route 组件进行路由配置
+   - 实现路由嵌套和布局
+   - 使用所有 React Router 的功能
+   
+   同时也支持使用 useRoutes hook 进行路由配置（向后兼容）
+
+3. 应用入口组件示例：
+
+方式一（推荐）：使用 Routes 和 Route
+\`\`\`jsx
+<shata-ai-app-code>
+export default (props) => {
+  const {React, NextUI, ReactRouterDom} = context
+  const {Routes, Route, Navigate} = ReactRouterDom
+  
+  return (
+    <Routes>
+      <Route path="" element={<Navigate to="home" replace />} />
+      <Route path="home" element={<PageWrapper pageId="page_xxx" />} />
+      <Route path="about" element={<PageWrapper pageId="page_yyy" />}>
+        <Route path="team" element={<TeamPage />} />
+      </Route>
+      <Route path="*" element={<div>页面不存在</div>} />
+    </Routes>
+  )
+}
+</shata-ai-app-code>
+\`\`\`
+
+方式二（兼容模式）：使用 useRoutes
+\`\`\`jsx
+<shata-ai-app-code>
+export default (props) => {
+  const {React, NextUI, ReactRouterDom} = context
+  const {useRoutes, Navigate} = ReactRouterDom
+  
+  const routes = [
+    {
+      path: "",
+      element: <Navigate to="home" replace />
+    },
+    {
+      path: "home",
+      element: <PageWrapper pageId="page_xxx" />
+    },
+    {
+      path: "*",
+      element: <div>页面不存在</div>
+    }
+  ]
+  
+  const element = useRoutes(routes)
+  return element
+}
+</shata-ai-app-code>
+\`\`\`
+
+4. 页面组件使用 <shata-ai-page-code pageid="xxx" title="xxx"></shata-ai-page-code> 包裹：
+\`\`\`jsx
+<shata-ai-page-code pageid="page_xxx" title="页面标题">
+export default (props) => {
+  const {React, NextUI} = context
+  return (
+    <div>页面内容</div>
+  )
+}
+</shata-ai-page-code>
+\`\`\`
+
+5. 技术要求：
+   - 只能使用 NextUI 2.6.0 版本中实际存在的组件
+   - 禁止使用 Container Grid Text 这些 NextUI V1 版本中的组件
+   - 使用 tailwind css 编写样式代码
    - 动画使用 FramerMotion
    - 图标使用 @iconify/react 的 Icon 组件
    - 数据存储使用 getMetadata 和 setMetadata
-   - 页面必须使用 PageWrapper 组件包装
 
-5. 路由规范：
+6. 路由规范：
    - 使用相对路径（不要以"/"开头）
    - 必须包含默认路由重定向
    - 每个页面都必须配置路由
    - 必须处理 404 路由
    - 路由路径必须使用小写字母
    - 路由参数使用 kebab-case 命名
-   避免使用 Routes 组件以防止路由嵌套
-统一使用 useRoutes 进行路由配置
-保持与主应用路由系统的兼容性
 
-6. 页面导航：
+7. 页面导航：
    - 使用 useNavigate 进行编程式导航
    - 使用 Link 组件进行声明式导航
    - 支持路由参数传递
    - 处理导航状态和加载
 
-7. 环境说明：
-   - 应用运行在已有的 Router 环境中
-   - 不需要也不允许创建新的 Router 上下文
-   - Routes 组件已配置了正确的 basename
+8. 环境说明：
+   - 应用运行在预览环境中
+   - 基础路径为 /app-preview/{appId}
    - 所有路由路径都是相对于应用根路径的
    - 路由路径始终使用相对路径（不要以"/"开头）
    - 系统会自动处理基础路径的拼接
-   - Link 和 useNavigate 会自动添加基础路径
-   - 不需要手动处理基础路径，只需使用相对路径
-   - 这是应用的实际运行环境，与开发环境完全分开
 
-8. 路由路径示例：
+9. 路由路径示例：
    配置的路径    =>    实际访问路径
-   ""           =>    /apps/{appId}/
-   "home"       =>    /apps/{appId}/home
-   "about"      =>    /apps/{appId}/about
-   "users/list" =>    /apps/{appId}/users/list
+   ""           =>    /app-preview/{appId}/
+   "home"       =>    /app-preview/{appId}/home
+   "about"      =>    /app-preview/{appId}/about
+   "users/list" =>    /app-preview/{appId}/users/list
 
 注意事项：
 1. 生成的代码必须完整，不能省略
@@ -296,9 +300,7 @@ ${page.code}
 3. 必须考虑性能优化
 4. 必须遵循 React 最佳实践
 5. 必须使用 JavaScript，不能使用 TypeScript
-6. 严禁使用任何形式的 Router 组件
-7. 必须先有应用入口代码才能生成页面代码
-8. 路由路径使用相对路径，不要以"/"开头`
+6. 必须先有应用入口代码才能生成页面代码`
 
       const enhancedCommand = `
 ${command},从设计师的角度
