@@ -1,17 +1,20 @@
 import chatChunkExpert from "@/service/chat/chat-chunk-openrouter"
 import chatChunk from "@/service/chat/chat-deepseek"
 import { AppBuilderMessage, AppPages } from "./types"
-import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { getMetadata } from "@/service/apis/metadata"
 import { balanceStore } from "@/stores/balanceStore"
 
 class AppAgent {
   private static instance: AppAgent
-  private _appCache: Map<string, {
-    pages: AppPages
-    appCode: string
-    version: number
-    updatedAt: string
-  }> = new Map()
+  private _appCache: Map<
+    string,
+    {
+      pages: AppPages
+      appCode: string
+      version: number
+      updatedAt: string
+    }
+  > = new Map()
 
   private constructor() {}
 
@@ -110,22 +113,24 @@ class AppAgent {
 当前应用结构：
 
 1. 应用入口代码：
-${appCache.appCode ? appCache.appCode : '需要先创建应用入口代码，包含基础路由配置'}
+${appCache.appCode ? appCache.appCode : "需要先创建应用入口代码，包含基础路由配置"}
 
 2. 页面代码：
 ${Object.entries(appCache.pages)
-  .map(([pageId, page]) => `
+  .map(
+    ([pageId, page]) => `
 页面ID: ${pageId}
 标题: ${page.title}
 代码:
 ${page.code}
-`)
-  .join('\n---\n')}
+`
+  )
+  .join("\n---\n")}
 
 代码生成规范：
 
 1. 代码生成顺序：
-   - 如果应用入口代码不存在，必须先生成入口代码
+   - 如果应用入口代码不存在，必须先生成入口代码, 入口代码只负责路由的控制,不负责生成具体的 UI
    - 入口代码生成后，才能生成或修改页面代码
    - 每次修改都要确保路由配置与页面一致
 
@@ -133,14 +138,14 @@ ${page.code}
    注意：应用已经在 Router 环境中运行，不要生成任何形式的 Router 组件。
 
    正确示例：
-   ```jsx
+    \`\`\`jsx
    <shata-ai-app-code>
    export default (props) => {
      const {React, NextUI, ReactRouterDom, PageWrapper} = context
      const {Routes, Route, Navigate, useNavigate, Link} = ReactRouterDom
      
      return (
-       <NextUI.Container>
+       <div>
          <Routes>
            {/* 使用相对路径，不要以"/"开头 */}
            <Route path="" element={<Navigate to="home" replace />} />
@@ -148,14 +153,14 @@ ${page.code}
            <Route path="about" element={<PageWrapper pageId="page_yyy" />} />
            <Route path="*" element={<div>页面不存在</div>} />
          </Routes>
-       </NextUI.Container>
+       </div>
      )
    }
    </shata-ai-app-code>
-   ```
+   \`\`\`
 
 3. 页面组件使用 <shata-ai-page-code pageid="xxx"></shata-ai-page-code> 包裹：
-   ```jsx
+   \`\`\`jsx
    <shata-ai-page-code pageid="page_xxx">
    export default (props) => {
      const {React, NextUI} = context
@@ -164,7 +169,7 @@ ${page.code}
      )
    }
    </shata-ai-page-code>
-   ```
+   \`\`\`
 
 4. 技术要求：
    - 所有组件必须使用 NextUI 2.0 组件
