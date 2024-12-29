@@ -10,7 +10,7 @@ import { codeStore } from "@/pages/form-temp-manager/components/codeStore"
 
 export const extractShataAIFormContent = (content: string): string => {
   if (!content) {
-    return ""
+    return "尚未编写任何代码"
   }
   const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
   const match = content?.match(regex)
@@ -50,12 +50,13 @@ const AIEditor: React.FC<AIEditorProps> = ({
       const version = versionControl.getCurrentVersion()
       setCurrentVersion(version)
       setIsEditing(false)
-      const rawConfig = version?.rawConfig || version?.code
+      const rawConfig = version?.rawConfig || ""
       setEditedCode(extractShataAIFormContent(rawConfig))
 
       // 同步更新 AIFormAgent 的状态
       AIFormAgent.setRawConfig(rawConfig, versionControl.currentIndex)
     }
+
     updateVersionState()
   }, [versionControl.currentIndex])
 
@@ -65,8 +66,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
   }
 
   const handleSaveEdit = async () => {
-    //手动保存按钮触发的逻辑
-    debugger
+    //debugger 手动保存按钮触发的逻辑
     try {
       const parser = parseConfig || AIFormAgent.parseConfig
       const wrappedCode = wrapWithShataAIForm(editedCode)
@@ -74,7 +74,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
 
       const newVersion = {
         formConfig: parsedConfig.config,
-        rawConfig: extractShataAIFormContent(wrappedCode),
+        rawConfig: wrappedCode,
       }
 
       versionControl.addVersion(newVersion)
@@ -83,8 +83,8 @@ const AIEditor: React.FC<AIEditorProps> = ({
         success: true,
         config: parsedConfig.config,
         rawConfig: wrappedCode,
-        appCode: wrappedCode,
       })
+
       setIsEditing(false)
       message.success("保存成功")
     } catch (error) {
