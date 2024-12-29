@@ -39,6 +39,7 @@ const WelcomeCard = ({ appsCount }) => {
                   size='lg'
                   variant='ghost'
                   startContent={<Icon icon='solar:play-circle-linear' />}
+                  onPress={() => setShowTutorial(true)}
                 >
                   查看教程
                 </Button>
@@ -79,6 +80,178 @@ const WelcomeCard = ({ appsCount }) => {
   )
 }
 
+const TutorialModal = ({ isOpen, onClose }) => {
+  return (
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose}
+      size="3xl"
+      scrollBehavior="inside"
+    >
+      <ModalContent>
+        <ModalHeader className="flex flex-col gap-1">
+          <h3 className="text-xl font-bold">AI待办助手教程</h3>
+          <p className="text-sm text-default-500">预计完成时间：15分钟</p>
+        </ModalHeader>
+        <ModalBody>
+          <div className="space-y-6">
+            {/* 第一步：创建应用 */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-primary font-bold">1</span>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold">创建新应用</h4>
+                    <p className="text-sm text-default-500">设置应用基本信息</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardBody>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 p-4 bg-default-50 rounded-lg">
+                    <Icon icon="solar:notebook-linear" className="w-8 h-8 text-primary" />
+                    <div>
+                      <p className="font-medium">应用名称</p>
+                      <p className="text-sm text-default-500">AI待办助手</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 p-4 bg-default-50 rounded-lg">
+                    <Icon icon="solar:chat-square-code-linear" className="w-8 h-8 text-primary" />
+                    <div>
+                      <p className="font-medium">应用描述</p>
+                      <p className="text-sm text-default-500">智能管理待办事项，支持自然语言输入</p>
+                    </div>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* 第二步：配置AI对话界面 */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-primary font-bold">2</span>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold">配置AI对话界面</h4>
+                    <p className="text-sm text-default-500">创建直观的用户交互界面</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardBody>
+                <div className="space-y-4">
+                  <div className="p-4 bg-default-50 rounded-lg">
+                    <p className="font-medium mb-2">界面组成</p>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Icon icon="solar:chat-round-dots-linear" className="w-5 h-5 text-primary" />
+                        <span>顶部对话输入框</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Icon icon="solar:list-linear" className="w-5 h-5 text-primary" />
+                        <span>中间待办列表</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Icon icon="solar:chart-linear" className="w-5 h-5 text-primary" />
+                        <span>底部数据统计</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* 第三步：实现核心功能 */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-primary font-bold">3</span>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold">实现核心功能</h4>
+                    <p className="text-sm text-default-500">添加智能待办管理功能</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardBody>
+                <div className="space-y-4">
+                  <Card>
+                    <CardBody>
+                      <p className="font-medium mb-2">示例对话</p>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2 p-2 bg-default-100 rounded-lg">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Icon icon="solar:user-linear" className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm">明天下午3点提醒我开会</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2 p-2 bg-success-50 rounded-lg">
+                          <div className="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center">
+                            <Icon icon="solar:robot-linear" className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm">已添加待办事项：</p>
+                            <p className="text-sm font-medium">开会</p>
+                            <p className="text-xs text-default-500">时间：明天下午3:00</p>
+                            <p className="text-xs text-default-500">类型：会议</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* 第四步：发布使用 */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-primary font-bold">4</span>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold">发布使用</h4>
+                    <p className="text-sm text-default-500">完成开发并发布应用</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardBody>
+                <div className="flex items-center gap-4">
+                  <Button
+                    color="primary"
+                    startContent={<Icon icon="solar:rocket-linear" />}
+                    onPress={() => navigate("/we-chat-app/admin/apps")}
+                  >
+                    开始创建应用
+                  </Button>
+                  <Button
+                    variant="flat"
+                    startContent={<Icon icon="solar:document-text-linear" />}
+                  >
+                    查看文档
+                  </Button>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="primary" variant="light" onPress={onClose}>
+            关闭
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  )
+}
+
 const StatsSection = ({ stats, appsCount }) => {
   if (appsCount === 0) {
     return (
@@ -95,7 +268,7 @@ const StatsSection = ({ stats, appsCount }) => {
         }}
         initial='hidden'
         animate='visible'
-        className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'
+        className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
       >
         {[
           {
@@ -208,6 +381,7 @@ const Dashboard: React.FC = () => {
   const { items: apps, load: loadApps } = useMetadata("app")
   const { tasks, loadTasks } = usePendingTasksStore()
   const [isLoading, setIsLoading] = useState(true)
+  const [showTutorial, setShowTutorial] = useState(false)
 
   useEffect(() => {
     updateBreadcrumbs([{ label: "首页", href: "/we-chat-app/admin" }])
@@ -393,6 +567,11 @@ const Dashboard: React.FC = () => {
           )}
         </>
       )}
+      
+      <TutorialModal 
+        isOpen={showTutorial} 
+        onClose={() => setShowTutorial(false)} 
+      />
     </div>
   )
 }
