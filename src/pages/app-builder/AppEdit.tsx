@@ -63,7 +63,6 @@ const AppBuilder: React.FC = observer(() => {
     updateCodeItems()
   }, [versionStore.currentVersion])
 
-  // 在 loadInitialData 成功后更新
   const loadInitialData = async () => {
     if (!appId) return
     try {
@@ -75,7 +74,7 @@ const AppBuilder: React.FC = observer(() => {
         setAppTitle(app.title)
       }
       await versionStore.loadApp(appId)
-      updateCodeItems() // 添加这行
+      updateCodeItems()
     } catch (error) {
       console.error("Error loading initial data:", error)
       message.error("加载应用数据失败")
@@ -389,42 +388,75 @@ const AppBuilder: React.FC = observer(() => {
     }
 
     return (
-      <div className='relative w-full h-full'>
-        <div className='absolute top-2 right-2 z-10 flex gap-2'>
-          <Button
-            size='sm'
-            variant='flat'
-            color='primary'
-            isIconOnly
-            onClick={() => {
-              window.open(`/app-preview/${appId}`, "_blank")
-            }}
-            className='bg-white/70 backdrop-blur-sm'
-          >
-            <Icon icon='mdi:open-in-new' className='w-4 h-4' />
-          </Button>
-          {isRefreshing && (
-            <div className='flex items-center gap-1 px-2 py-1 text-xs text-default-600 bg-white/70 backdrop-blur-sm rounded-lg'>
-              <Icon icon='mdi:refresh' className='w-4 h-4 animate-spin' />
-              刷新中...
+      <div className='relative'>
+        {/* 浏览器风格的工具栏 */}
+        <div className='absolute top-0 left-0 right-0 z-10 bg-default-100 border-b border-default-200 rounded-t-lg px-4 py-2'>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-2'>
+              {/* 浏览器装饰点 */}
+              <div className='flex gap-1.5'>
+                <div className='w-3 h-3 rounded-full bg-danger'></div>
+                <div className='w-3 h-3 rounded-full bg-warning'></div>
+                <div className='w-3 h-3 rounded-full bg-success'></div>
+              </div>
             </div>
-          )}
+            <div className='flex items-center gap-2'>
+              {/* 刷新按钮 */}
+              <Button
+                size='sm'
+                variant='light'
+                isIconOnly
+                onClick={refreshPreview}
+                isDisabled={isRefreshing}
+                className='bg-white/70 backdrop-blur-sm'
+              >
+                <Icon
+                  icon='mdi:refresh'
+                  className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                />
+              </Button>
+              {/* 全屏按钮 */}
+              <Button
+                size='sm'
+                variant='light'
+                isIconOnly
+                onClick={() => {
+                  const iframe = document.querySelector("iframe")
+                  if (iframe && iframe.requestFullscreen) {
+                    iframe.requestFullscreen()
+                  } else if (iframe && iframe.webkitRequestFullscreen) {
+                    iframe.webkitRequestFullscreen()
+                  } else if (iframe && iframe.msRequestFullscreen) {
+                    iframe.msRequestFullscreen()
+                  } else {
+                    console.warn("您的浏览器不支持全屏功能")
+                  }
+                }}
+                className='bg-white/70 backdrop-blur-sm'
+              >
+                <Icon icon='mdi:fullscreen' className='w-4 h-4' />
+              </Button>
+            </div>
+          </div>
         </div>
-        <iframe
-          ref={iframeRef}
-          src={`/app-preview/${appId}`}
-          style={{
-            width: "100%",
-            height: "500px",
-            border: "none",
-            borderRadius: "8px",
-          }}
-          title='App Preview'
-          allowFullScreen
-        />
+
+        {/* iframe 容器 */}
+        <div className='rounded-lg overflow-hidden border border-default-200 shadow-lg'>
+          <iframe
+            ref={iframeRef}
+            src={`/app-preview/${appId}`}
+            style={{
+              width: "100%",
+              height: "600px",
+              border: "none",
+            }}
+            title='App Preview'
+            allowFullScreen
+          />
+        </div>
       </div>
     )
-  }, [appId, isRefreshing])
+  }, [appId, isRefreshing, refreshPreview])
 
   if (!appId) {
     return (
