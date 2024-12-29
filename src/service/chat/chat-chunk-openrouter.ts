@@ -3,6 +3,7 @@ import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { events } from "fetch-event-stream"
 import { costService } from "@/utils/costService"
+import { aiControllerStore } from "@/pages/app-builder/AIEditor/components/AIControllerStore"
 
 export default async function chatChunkOpenAIOffice(
   messages,
@@ -40,8 +41,13 @@ export default async function chatChunkOpenAIOffice(
   }
 
   let controller = new AbortController()
+  // 同时使用全局控制器和现有的 fetchController
+  aiControllerStore.setController(controller)
   fetchController.current = controller
-  onCancel(() => controller.abort())
+  onCancel(() => {
+    controller.abort()
+    aiControllerStore.clear()
+  })
 
   try {
     const response = await fetch(apiEndPoint, {
@@ -105,8 +111,7 @@ export default async function chatChunkOpenAIOffice(
               onCancel,
               false,
               temperature,
-              overFlag,
-              baseModel
+              overFlag
             )
             return // 结束当前调用
           }

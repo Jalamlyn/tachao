@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react"
 
 import { cn } from "@/lib/utils"
 import { imageStore } from "./ImageStore"
+import { aiControllerStore } from "./AIControllerStore"
 import message from "@/components/Message"
 
 interface AIAgent {
@@ -43,6 +44,12 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
       setIsLoading(false)
     }
   }, [input, isLoading, agent, onResult, preview])
+
+  // 处理停止生成
+  const handleStop = useCallback(() => {
+    aiControllerStore.abort()
+    setIsLoading(false)
+  }, [])
 
   // 处理按键事件
   const handleKeyPress = useCallback(
@@ -188,28 +195,44 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
             </Tooltip>
             <div className='flex items-end gap-2'>
               <p className='py-1 text-tiny text-default-400'>{input.length}/2000</p>
-              <Tooltip showArrow content='发送消息'>
-                <Button
-                  isIconOnly
-                  color={!input || isLoading ? "default" : "primary"}
-                  isDisabled={!input || isLoading}
-                  radius='lg'
-                  size='sm'
-                  variant={!input || isLoading ? "flat" : "solid"}
-                  onClick={handleSend}
-                  className='transition-transform active:scale-95'
-                >
-                  {isLoading ? (
-                    <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
-                  ) : (
-                    <Icon
-                      className={cn("[&>path]:stroke-[2px]", !input ? "text-default-600" : "text-primary-foreground")}
-                      icon='solar:arrow-up-linear'
-                      width={20}
-                    />
-                  )}
-                </Button>
-              </Tooltip>
+              {isLoading ? (
+                <Tooltip showArrow content='停止生成'>
+                  <Button
+                    isIconOnly
+                    color="danger"
+                    radius='lg'
+                    size='sm'
+                    variant='flat'
+                    onClick={handleStop}
+                    className='transition-transform active:scale-95'
+                  >
+                    <Icon icon='mdi:stop' width={20} />
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Tooltip showArrow content='发送消息'>
+                  <Button
+                    isIconOnly
+                    color={!input || isLoading ? "default" : "primary"}
+                    isDisabled={!input || isLoading}
+                    radius='lg'
+                    size='sm'
+                    variant={!input || isLoading ? "flat" : "solid"}
+                    onClick={handleSend}
+                    className='transition-transform active:scale-95'
+                  >
+                    {isLoading ? (
+                      <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
+                    ) : (
+                      <Icon
+                        className={cn("[&>path]:stroke-[2px]", !input ? "text-default-600" : "text-primary-foreground")}
+                        icon='solar:arrow-up-linear'
+                        width={20}
+                      />
+                    )}
+                  </Button>
+                </Tooltip>
+              )}
             </div>
           </div>
         }
