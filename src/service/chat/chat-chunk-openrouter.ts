@@ -18,21 +18,14 @@ export default async function chatChunkOpenAIOffice(
       if (msg.role === "system") {
         return msg
       } else {
-        // 处理可能是字符串或对象的消息内容
-        const content = typeof msg.content === 'string' ? msg.content : msg.content.content
-        const images = typeof msg.content === 'string' ? [] : msg.content.images || []
-        
         return {
           role: msg.role,
           content: [
             {
               type: "text",
-              text: content,
+              text: msg.content,
             },
-            ...images.map(img => ({
-              type: "image_url",
-              image_url: { url: img }
-            }))
+            ...(msg.images?.map((img) => ({ type: "image_url", image_url: { url: img } })) || []),
           ],
         }
       }
@@ -112,7 +105,8 @@ export default async function chatChunkOpenAIOffice(
               onCancel,
               false,
               temperature,
-              overFlag
+              overFlag,
+              baseModel
             )
             return // 结束当前调用
           }

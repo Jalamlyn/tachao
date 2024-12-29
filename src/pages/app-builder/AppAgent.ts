@@ -4,6 +4,7 @@ import { AppBuilderMessage, AppPages } from "./types"
 import { getMetadata } from "@/service/apis/metadata"
 import { balanceStore } from "@/stores/balanceStore"
 import { versionStore } from "./store/versionStore"
+import { imageStore } from "./AIEditor/components/ImageStore"
 
 // 添加提示词模块
 const promptModules = {
@@ -389,13 +390,14 @@ export default (props) => {
 页面代码,必须是完整代码, 不能省略任何逻辑和代码
 </shata-ai-code>
 \`\`\`
+所有 shata-ai 标签必须包裹在\`\`\`jsx 和 \`\`\`之间
 ---
 `
 
       const allMessages = [
         { role: "system", content: systemPrompt },
         ...messages,
-        { role: "user", content: enhancedCommand },
+        { role: "user", content: enhancedCommand, images: imageStore.images ? imageStore.images : [] },
       ]
 
       let response = ""

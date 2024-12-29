@@ -7,7 +7,10 @@ import { imageStore } from "./ImageStore"
 import message from "@/components/Message"
 
 interface AIAgent {
-  processCommand: (command: string | { content: string; images?: string[] }, onChunk?: (chunk: string) => void) => Promise<any>
+  processCommand: (
+    command: string | { content: string; images?: string[] },
+    onChunk?: (chunk: string) => void
+  ) => Promise<any>
 }
 
 interface AICommandInputProps {
@@ -30,11 +33,7 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
     try {
       setIsLoading(true)
       // 构造包含图片的消息
-      const message = {
-        content: input,
-        images: preview ? [preview] : []
-      }
-      const result = await agent.processCommand(message)
+      const result = await agent.processCommand(input)
 
       onResult?.(result)
       setInput("")
@@ -77,15 +76,15 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
       const reader = new FileReader()
       reader.onloadend = async () => {
         const base64 = reader.result as string
-        
+
         // 清除之前的图片
         if (preview) {
           imageStore.removeImage(preview)
         }
-        
+
         setPreview(base64)
         imageStore.addImage(base64)
-        
+
         setIsUploading(false)
         message.success("图片上传成功")
       }
@@ -107,26 +106,26 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
   }
 
   return (
-    <form className="flex w-full flex-col gap-2 rounded-medium bg-default-100 transition-colors hover:bg-default-200/70">
+    <form className='flex w-full flex-col gap-2 rounded-medium bg-default-100 transition-colors hover:bg-default-200/70'>
       <input
-        type="file"
+        type='file'
         ref={fileInputRef}
-        className="hidden"
-        accept="image/jpeg,image/png,image/gif"
+        className='hidden'
+        accept='image/jpeg,image/png,image/gif'
         onChange={handleImageUpload}
       />
-      
-      <div className="group flex gap-2 px-4 pt-4">
+
+      <div className='group flex gap-2 px-4 pt-4'>
         {preview && (
           <Badge
             isOneChar
-            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            className='opacity-0 group-hover:opacity-100 transition-opacity duration-200'
             content={
               <Button
                 isIconOnly
-                radius="full"
-                size="sm"
-                variant="light"
+                radius='full'
+                size='sm'
+                variant='light'
                 onClick={() => {
                   setPreview("")
                   imageStore.removeImage(preview)
@@ -134,21 +133,21 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
                     fileInputRef.current.value = ""
                   }
                 }}
-                className="bg-white/80 backdrop-blur-sm hover:bg-danger-50"
+                className='bg-white/80 backdrop-blur-sm hover:bg-danger-50'
               >
-                <Icon icon="mdi:close" className="w-3 h-3 text-danger" />
+                <Icon icon='mdi:close' className='w-3 h-3 text-danger' />
               </Button>
             }
           >
-            <img 
-              src={preview} 
-              alt="Preview" 
-              className="w-16 h-16 object-cover rounded-small border-small border-default-200/50 transition-transform duration-200 hover:scale-105" 
+            <img
+              src={preview}
+              alt='Preview'
+              className='w-16 h-16 object-cover rounded-small border-small border-default-200/50 transition-transform duration-200 hover:scale-105'
             />
           </Badge>
         )}
       </div>
-      
+
       <Textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
@@ -160,65 +159,52 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
           input: "pt-1 pb-6 !pr-10 text-medium",
         }}
         minRows={3}
-        radius="lg"
+        radius='lg'
         startContent={
-          <Tooltip showArrow content="添加图片">
-            <Button 
-              isIconOnly 
-              radius="full" 
-              size="sm" 
-              variant="light" 
+          <Tooltip showArrow content='添加图片'>
+            <Button
+              isIconOnly
+              radius='full'
+              size='sm'
+              variant='light'
               onClick={handleImageClick}
               isDisabled={isUploading}
-              className="hover:bg-default-200"
+              className='hover:bg-default-200'
             >
               {isUploading ? (
-                <Icon className="animate-spin" icon="eos-icons:loading" width={20} />
+                <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
               ) : (
-                <Icon
-                  className="text-default-500"
-                  icon="solar:gallery-minimalistic-linear"
-                  width={20}
-                />
+                <Icon className='text-default-500' icon='solar:gallery-minimalistic-linear' width={20} />
               )}
             </Button>
           </Tooltip>
         }
         endContent={
-          <div className="absolute right-0 flex h-full flex-col items-end justify-between gap-2">
-            <Tooltip showArrow content="语音输入">
-              <Button 
-                isIconOnly 
-                radius="full" 
-                size="sm" 
-                variant="light"
-                className="hover:bg-default-200"
-              >
-                <Icon className="text-default-500" icon="solar:microphone-3-linear" width={20} />
+          <div className='absolute right-0 flex h-full flex-col items-end justify-between gap-2'>
+            <Tooltip showArrow content='语音输入'>
+              <Button isIconOnly radius='full' size='sm' variant='light' className='hover:bg-default-200'>
+                <Icon className='text-default-500' icon='solar:microphone-3-linear' width={20} />
               </Button>
             </Tooltip>
-            <div className="flex items-end gap-2">
-              <p className="py-1 text-tiny text-default-400">{input.length}/2000</p>
-              <Tooltip showArrow content="发送消息">
+            <div className='flex items-end gap-2'>
+              <p className='py-1 text-tiny text-default-400'>{input.length}/2000</p>
+              <Tooltip showArrow content='发送消息'>
                 <Button
                   isIconOnly
                   color={!input || isLoading ? "default" : "primary"}
                   isDisabled={!input || isLoading}
-                  radius="lg"
-                  size="sm"
+                  radius='lg'
+                  size='sm'
                   variant={!input || isLoading ? "flat" : "solid"}
                   onClick={handleSend}
-                  className="transition-transform active:scale-95"
+                  className='transition-transform active:scale-95'
                 >
                   {isLoading ? (
                     <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
                   ) : (
                     <Icon
-                      className={cn(
-                        "[&>path]:stroke-[2px]",
-                        !input ? "text-default-600" : "text-primary-foreground"
-                      )}
-                      icon="solar:arrow-up-linear"
+                      className={cn("[&>path]:stroke-[2px]", !input ? "text-default-600" : "text-primary-foreground")}
+                      icon='solar:arrow-up-linear'
                       width={20}
                     />
                   )}
