@@ -21,6 +21,7 @@ const AppBuilder: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()
   const versionControl = useVersionControl()
   const [showPublishModal, setShowPublishModal] = useState(false)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
 
   // 添加 refs 用于跟踪消息状态
   const accumulatedTextRef = useRef("")
@@ -32,6 +33,13 @@ const AppBuilder: React.FC = () => {
       { label: "应用管理", href: "/we-chat-app/admin/apps" },
       { label: "应用开发", href: "" },
     ])
+  }, [])
+
+  // 添加刷新预览函数
+  const refreshPreview = useCallback(() => {
+    if (iframeRef.current) {
+      iframeRef.current.src = iframeRef.current.src
+    }
   }, [])
 
   // 加载应用数据
@@ -111,47 +119,55 @@ const AppBuilder: React.FC = () => {
         return
       }
 
-      const appCache = AppAgent.getAppCache(appId!)
-      if (!appCache) return
+      try {
+        const appCache = AppAgent.getAppCache(appId!)
+        if (!appCache) return
 
-      const updatedPages = { ...appCache.pages }
-      if (result.pages) {
-        Object.entries(result.pages).forEach(([pageId, pageData]) => {
-          updatedPages[pageId] = {
-            code: pageData.code,
-            title: pageData.title,
-            updatedAt: new Date().toISOString(),
-          }
+        const updatedPages = { ...appCache.pages }
+        if (result.pages) {
+          Object.entries(result.pages).forEach(([pageId, pageData]) => {
+            updatedPages[pageId] = {
+              code: pageData.code,
+              title: pageData.title,
+              updatedAt: new Date().toISOString(),
+            }
+          })
+        }
+
+        // 更新应用缓存
+        const newAppCache = {
+          ...appCache,
+          pages: updatedPages,
+          version: appCache.version + 1,
+          updatedAt: new Date().toISOString(),
+        }
+
+        // 如果有新的应用代码，更新appCode
+        if (result?.appCode && result.appCode !== "") {
+          newAppCache.appCode = result.appCode
+        }
+
+        // 添加新版本
+        versionStore.addVersion(newAppCache.appCode || versionStore.getCurrentContent(), {
+          pages: newAppCache.pages,
+          version: newAppCache.version,
+          updatedAt: newAppCache.updatedAt,
         })
+
+        // 更新缓存
+        AppAgent.setAppCache(appId!, newAppCache)
+
+        // 更新最后一条消息状态为成功
+        updateLastMessage({ status: "success" })
+
+        // 刷新预览
+        refreshPreview()
+      } catch (error) {
+        console.error("Error in handleCommandResult:", error)
+        message.error("处理结果时发生错误")
       }
-
-      // 更新应用缓存
-      const newAppCache = {
-        ...appCache,
-        pages: updatedPages,
-        version: appCache.version + 1,
-        updatedAt: new Date().toISOString(),
-      }
-
-      // 如果有新的应用代码，更新appCode
-      if (result?.appCode && result.appCode !== "") {
-        newAppCache.appCode = result.appCode
-      }
-
-      // 添加新版本，包含完整的应用状态
-      versionStore.addVersion(newAppCache.appCode || versionStore.getCurrentContent(), {
-        pages: newAppCache.pages,
-        version: newAppCache.version,
-        updatedAt: newAppCache.updatedAt,
-      })
-
-      // 更新缓存
-      AppAgent.setAppCache(appId!, newAppCache)
-
-      // 更新最后一条消息状态为成功
-      updateLastMessage({ status: "success" })
     },
-    [appId, updateLastMessage]
+    [appId, updateLastMessage, refreshPreview]
   )
 
   const handlePublish = async () => {
@@ -198,8 +214,8 @@ const AppBuilder: React.FC = () => {
         ...updatedApps[appIndex],
         updatedAt: new Date().toISOString(),
         status: "active",
-        version: appCache.version, // 添加版本信息
-        lastPublishedAt: new Date().toISOString(), // 添加最后发布时间
+        version: appCache.version,
+        lastPublishedAt: new Date().toISOString(),
       }
 
       await setMetadata("app_index", JSON.stringify(updatedApps))
@@ -271,16 +287,34 @@ const AppBuilder: React.FC = () => {
     }
 
     return (
-      <iframe
-        src={`/app-preview/${appId}`}
-        style={{
-          width: "100%",
-          height: "500px",
-          border: "none",
-          borderRadius: "8px",
-        }}
-        title='App Preview'
-      />
+      <div className='relative w-full h-full'>
+        <div className='absolute top-2 right-2 z-10 flex gap-2'>
+          <Button
+            size='sm'
+            variant='flat'
+            color='primary'
+            isIconOnly
+            onClick={() => {
+              window.open(`/app-preview/${appId}`, "_blank")
+            }}
+            className='bg-white/70 backdrop-blur-sm'
+          >
+            <Icon icon='mdi:open-in-new' className='w-4 h-4' />
+          </Button>
+        </div>
+        <iframe
+          ref={iframeRef}
+          src={`/app-preview/${appId}`}
+          style={{
+            width: "100%",
+            height: "500px",
+            border: "none",
+            borderRadius: "8px",
+          }}
+          title='App Preview'
+          allowFullScreen
+        />
+      </div>
     )
   }, [])
 
