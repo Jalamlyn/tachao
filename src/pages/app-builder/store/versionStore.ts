@@ -65,10 +65,12 @@ class VersionStore {
   }
 
   private notifyContentListeners(content: string) {
+    console.log('Notifying content listeners with content length:', content?.length)
     this.contentListeners.forEach((listener) => listener(content))
   }
 
   private notifyHistoryListeners() {
+    console.log('Notifying history listeners')
     this.historyListeners.forEach((listener) => listener())
   }
 
@@ -90,20 +92,43 @@ class VersionStore {
   // 从本地存储加载
   private loadFromStorage() {
     try {
+      console.log('Loading from storage, key:', this.getStorageKey())
       const stored = localStorage.getItem(this.getStorageKey())
+      
       if (stored) {
+        console.log('Found stored data')
         const data = JSON.parse(stored)
         if (Array.isArray(data.versions) && typeof data.currentIndex === "number") {
           this.versions = data.versions
           this.currentIndex = data.currentIndex
+          
+          console.log('Loaded versions:', this.versions.length, 'currentIndex:', this.currentIndex)
+          
+          // 获取当前版本并通知监听器
+          const currentVersion = this.getCurrentVersion()
+          if (currentVersion) {
+            console.log('Current version found, notifying listeners')
+            this.notifyContentListeners(currentVersion.content)
+            this.notifyHistoryListeners()
+          } else {
+            console.log('No current version found')
+          }
         }
       } else {
-        // 如果没有找到对应应用的版本历史，重置状态
+        console.log('No stored data found, resetting state')
         this.versions = []
         this.currentIndex = -1
+        // 重置状态时也需要通知监听器
+        this.notifyContentListeners("")
+        this.notifyHistoryListeners()
       }
     } catch (error) {
       console.error("Error loading version history:", error)
+      // 发生错误时重置状态并通知监听器
+      this.versions = []
+      this.currentIndex = -1
+      this.notifyContentListeners("")
+      this.notifyHistoryListeners()
     }
   }
 
