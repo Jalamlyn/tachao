@@ -22,7 +22,8 @@ class VersionStore {
   private static instance: VersionStore
   private versions: Version[] = []
   private currentIndex: number = -1
-  private readonly STORAGE_KEY = 'versionHistory'
+  private appId: string | null = null
+  private readonly BASE_STORAGE_KEY = "versionHistory"
 
   // 分离内容更新和历史更新的监听器
   private contentListeners = new Set<VersionChangeListener>()
@@ -37,6 +38,18 @@ class VersionStore {
       this.instance = new VersionStore()
     }
     return this.instance
+  }
+
+  // 设置当前应用ID
+  setAppId(appId: string) {
+    this.appId = appId
+    this.loadFromStorage() // 重新加载对应应用的版本历史
+    return this
+  }
+
+  // 获取存储键
+  private getStorageKey(): string {
+    return this.appId ? `${this.BASE_STORAGE_KEY}_${this.appId}` : this.BASE_STORAGE_KEY
   }
 
   // 订阅内容更新
@@ -62,28 +75,35 @@ class VersionStore {
   // 保存到本地存储
   private saveToStorage() {
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify({
-        versions: this.versions,
-        currentIndex: this.currentIndex
-      }))
+      localStorage.setItem(
+        this.getStorageKey(),
+        JSON.stringify({
+          versions: this.versions,
+          currentIndex: this.currentIndex,
+        })
+      )
     } catch (error) {
-      console.error('Error saving version history:', error)
+      console.error("Error saving version history:", error)
     }
   }
 
   // 从本地存储加载
   private loadFromStorage() {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY)
+      const stored = localStorage.getItem(this.getStorageKey())
       if (stored) {
         const data = JSON.parse(stored)
-        if (Array.isArray(data.versions) && typeof data.currentIndex === 'number') {
+        if (Array.isArray(data.versions) && typeof data.currentIndex === "number") {
           this.versions = data.versions
           this.currentIndex = data.currentIndex
         }
+      } else {
+        // 如果没有找到对应应用的版本历史，重置状态
+        this.versions = []
+        this.currentIndex = -1
       }
     } catch (error) {
-      console.error('Error loading version history:', error)
+      console.error("Error loading version history:", error)
     }
   }
 
@@ -94,9 +114,12 @@ class VersionStore {
    * @param description 版本描述
    */
   addVersion(content: string, appState?: Version["appState"], description?: string) {
+    if (appState?.version === this.versions?.[this.versions.length - 1]?.appState?.version) {
+      return
+    }
     // 验证内容
     if (!content.trim()) {
-      console.warn('Attempted to add empty version, skipping...')
+      console.warn("Attempted to add empty version, skipping...")
       return
     }
 
@@ -205,7 +228,7 @@ class VersionStore {
   clear() {
     this.versions = []
     this.currentIndex = -1
-    localStorage.removeItem(this.STORAGE_KEY)
+    localStorage.removeItem(this.getStorageKey())
     this.notifyContentListeners("")
     this.notifyHistoryListeners()
   }
