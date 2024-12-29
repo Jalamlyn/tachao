@@ -22,12 +22,15 @@ class VersionStore {
   private static instance: VersionStore
   private versions: Version[] = []
   private currentIndex: number = -1
+  private readonly STORAGE_KEY = 'versionHistory'
 
   // 分离内容更新和历史更新的监听器
   private contentListeners = new Set<VersionChangeListener>()
   private historyListeners = new Set<VersionHistoryListener>()
 
-  private constructor() {}
+  private constructor() {
+    this.loadFromStorage()
+  }
 
   static getInstance() {
     if (!this.instance) {
@@ -56,6 +59,34 @@ class VersionStore {
     this.historyListeners.forEach((listener) => listener())
   }
 
+  // 保存到本地存储
+  private saveToStorage() {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify({
+        versions: this.versions,
+        currentIndex: this.currentIndex
+      }))
+    } catch (error) {
+      console.error('Error saving version history:', error)
+    }
+  }
+
+  // 从本地存储加载
+  private loadFromStorage() {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY)
+      if (stored) {
+        const data = JSON.parse(stored)
+        if (Array.isArray(data.versions) && typeof data.currentIndex === 'number') {
+          this.versions = data.versions
+          this.currentIndex = data.currentIndex
+        }
+      }
+    } catch (error) {
+      console.error('Error loading version history:', error)
+    }
+  }
+
   /**
    * 添加新版本
    * @param content 版本内容
@@ -63,6 +94,12 @@ class VersionStore {
    * @param description 版本描述
    */
   addVersion(content: string, appState?: Version["appState"], description?: string) {
+    // 验证内容
+    if (!content.trim()) {
+      console.warn('Attempted to add empty version, skipping...')
+      return
+    }
+
     // 移除当前版本之后的所有版本
     this.versions = this.versions.slice(0, this.currentIndex + 1)
 
@@ -78,6 +115,9 @@ class VersionStore {
 
     // 更新当前索引
     this.currentIndex = this.versions.length - 1
+
+    // 保存到本地存储
+    this.saveToStorage()
 
     // 通知更新
     this.notifyContentListeners(content)
@@ -136,6 +176,7 @@ class VersionStore {
     if (this.canRollback()) {
       this.currentIndex--
       const version = this.versions[this.currentIndex]
+      this.saveToStorage()
       this.notifyContentListeners(version.content)
       this.notifyHistoryListeners()
       return version
@@ -150,6 +191,7 @@ class VersionStore {
     if (this.canForward()) {
       this.currentIndex++
       const version = this.versions[this.currentIndex]
+      this.saveToStorage()
       this.notifyContentListeners(version.content)
       this.notifyHistoryListeners()
       return version
@@ -163,6 +205,7 @@ class VersionStore {
   clear() {
     this.versions = []
     this.currentIndex = -1
+    localStorage.removeItem(this.STORAGE_KEY)
     this.notifyContentListeners("")
     this.notifyHistoryListeners()
   }
