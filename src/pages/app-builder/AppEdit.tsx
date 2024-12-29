@@ -13,6 +13,9 @@ import { useVersionControl } from "./hooks/useVersionControl"
 import { versionStore } from "./store/versionStore"
 import { CodeItem } from "./AIEditor/type"
 
+// 添加最大消息数量限制
+const MAX_MESSAGES = 20
+
 export const extractShataAIFormContent = (content: string): string => {
   if (!content) {
     return ""
@@ -305,7 +308,18 @@ const AppBuilder: React.FC = () => {
   }
 
   const addMessage = useCallback((message: AppBuilderMessage) => {
-    setMessages((prev) => [...prev, message])
+    setMessages((prev) => {
+      // 如果消息数量超过限制，移除最早的消息
+      const updatedMessages = [...prev, message]
+      if (updatedMessages.length > MAX_MESSAGES) {
+        // 保留系统消息和最新的消息
+        const systemMessages = updatedMessages.filter(msg => msg.role === 'system')
+        const nonSystemMessages = updatedMessages.filter(msg => msg.role !== 'system')
+        const recentMessages = nonSystemMessages.slice(-MAX_MESSAGES + systemMessages.length)
+        return [...systemMessages, ...recentMessages]
+      }
+      return updatedMessages
+    })
   }, [])
 
   const updateLastMessage = useCallback((update: Partial<AppBuilderMessage>) => {
