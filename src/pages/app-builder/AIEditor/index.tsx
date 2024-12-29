@@ -103,29 +103,33 @@ const AIEditor: React.FC<AIEditorProps> = ({
 
   const renderCodeEditor = (content: string, isEditing: boolean) => {
     return (
-      <Editor
-        height='100%'
-        language='javascript'
-        value={content}
-        options={{
-          readOnly: !isEditing,
-          minimap: { enabled: false },
-          fontSize: "14",
-          lineNumbers: "on",
-          wordWrap: "on",
-        }}
-        theme='vs-dark'
-        onChange={(value) => {
-          if (isEditing) {
-            setEditedCode(value || "")
-          }
-        }}
-      />
+      <div className="h-full w-full">
+        <Editor
+          height="100%"
+          width="100%"
+          language="javascript"
+          value={content}
+          options={{
+            readOnly: !isEditing,
+            minimap: { enabled: false },
+            fontSize: 14,
+            lineNumbers: "on",
+            wordWrap: "on",
+            automaticLayout: true,
+          }}
+          theme="vs-dark"
+          onChange={(value) => {
+            if (isEditing) {
+              setEditedCode(value || "")
+            }
+          }}
+        />
+      </div>
     )
   }
 
   return (
-    <ResizablePanelGroup direction='horizontal'>
+    <ResizablePanelGroup direction="horizontal">
       {renderLeftPanel(
         onStop,
         selectedAILevel,
