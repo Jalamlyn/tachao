@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { motion, useScroll, useTransform, useSpring } from "framer-motion"
+import { motion, useScroll, useTransform, useSpring, useAnimation } from "framer-motion"
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import QRCodeModal from "./QRCodeModal"
@@ -13,8 +13,15 @@ interface HeroProps {
 const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   const navigate = useNavigate()
   const { scrollY } = useScroll()
+  const controls = useAnimation()
+  const [inView, setInView] = useState(false)
+  const [ref, setRef] = useState<HTMLElement | null>(null)
+
+  // 增强的滚动动画效果
   const y = useTransform(scrollY, [0, 500], [0, 150])
   const opacity = useTransform(scrollY, [0, 300], [1, 0])
+  const scale = useTransform(scrollY, [0, 300], [1, 0.95])
+  const rotate = useTransform(scrollY, [0, 500], [0, -5])
 
   const [mounted, setMounted] = useState(false)
   const [touchStart, setTouchStart] = useState(0)
@@ -37,10 +44,27 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       setCurrentStep((prev) => (prev < 3 ? prev + 1 : 0))
     }, 3000)
 
-    return () => {
-      clearInterval(timer)
+    // 使用 Intersection Observer 替代 useInView
+    if (ref) {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          setInView(entry.isIntersecting)
+          if (entry.isIntersecting) {
+            controls.start("visible")
+          }
+        },
+        { threshold: 0.2 }
+      )
+
+      observer.observe(ref)
+      return () => {
+        observer.disconnect()
+        clearInterval(timer)
+      }
     }
-  }, [])
+
+    return () => clearInterval(timer)
+  }, [controls, ref])
 
   const timelineSteps = [
     { time: "1分钟", action: "完成部署", icon: "mdi:rocket-launch" },
@@ -72,6 +96,20 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
     },
   }
 
+  // 新增的滚动动画变体
+  const scrollVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        damping: 25,
+        stiffness: 100,
+      },
+    },
+  }
+
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.touches[0].clientY)
   }
@@ -93,21 +131,34 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
       className='min-h-screen flex items-center justify-center relative overflow-hidden py-20 md:py-32'
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
+      ref={setRef}
     >
       <div className='absolute top-4 right-4 md:top-8 md:right-8 z-20'>
-        <Button
-          size='sm'
-          variant='ghost'
-          className='text-white hover:bg-white/10 font-medium
-            transform hover:scale-105 active:scale-95 transition-all duration-300'
-          onClick={() => navigate("/login")}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <Icon icon='mdi:user' className='mr-1' />
-          企业管理员登录
-        </Button>
+          <Button
+            size='sm'
+            variant='ghost'
+            className='text-white hover:bg-white/10 font-medium
+              transform hover:scale-105 active:scale-95 transition-all duration-300'
+            onClick={() => navigate("/login")}
+          >
+            <Icon icon='mdi:user' className='mr-1' />
+            企业管理员登录
+          </Button>
+        </motion.div>
       </div>
 
-      <motion.div style={{ y, opacity }} className='absolute inset-0 pointer-events-none'>
+      <motion.div
+        style={{ y, opacity, scale, rotateX: rotate }}
+        className='absolute inset-0 pointer-events-none'
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+      >
         <div className='absolute inset-0 bg-gradient-to-b from-primary-dark/50 to-transparent' />
       </motion.div>
 
@@ -116,12 +167,15 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         initial='hidden'
         animate='visible'
         className='text-center max-w-5xl mx-auto px-4 relative z-10 space-y-8 md:space-y-12'
+        style={{
+          willChange: "transform, opacity",
+          backfaceVisibility: "hidden",
+        }}
       >
         <motion.div
           variants={itemVariants}
           className='mb-6 md:mb-8'
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
+          animate={inView ? { opacity: 1 } : { opacity: 0 }}
         >
           <motion.div
             className='relative group perspective-1000 inline-block'
@@ -129,7 +183,18 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <div className='absolute inset-0 bg-gradient-to-r from-blue-500/20 via-primary/20 to-accent/20 blur-2xl rounded-full transform scale-110 group-hover:scale-125 transition-transform duration-700' />
+            <motion.div
+              className='absolute inset-0 bg-gradient-to-r from-blue-500/20 via-primary/20 to-accent/20 blur-2xl rounded-full'
+              animate={{
+                scale: [1, 1.2, 1],
+                rotate: [0, 180, 360],
+              }}
+              transition={{
+                duration: 10,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            />
 
             <motion.div
               className='relative'
@@ -165,7 +230,13 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           </motion.div>
         </motion.div>
 
-        <motion.div variants={itemVariants} className='space-y-4'>
+        {/* 其他组件内容保持不变... */}
+        <motion.div
+          variants={scrollVariants}
+          initial='hidden'
+          animate={inView ? 'visible' : 'hidden'}
+          className='space-y-4'
+        >
           <h1 className='text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight'>
             将你的创意转化为现实代码
             <span className='block mt-4 text-xl md:text-2xl text-white/80'>
@@ -174,8 +245,13 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           </h1>
         </motion.div>
 
-        {/* 时间轴部分 */}
-        <motion.div variants={itemVariants} className='flex justify-center gap-4 md:gap-8 my-8'>
+        <motion.div
+          variants={itemVariants}
+          className='flex justify-center gap-4 md:gap-8 my-8'
+          style={{
+            willChange: "transform",
+          }}
+        >
           {timelineSteps.map((step, index) => (
             <motion.div
               key={step.action}
@@ -186,6 +262,12 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
               animate={{
                 scale: currentStep === index ? 1.1 : 1,
                 opacity: currentStep === index ? 1 : 0.7,
+              }}
+              whileHover={{ scale: 1.05 }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 20,
               }}
             >
               <Icon
@@ -199,64 +281,121 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
           ))}
         </motion.div>
 
-        <motion.div variants={itemVariants} className='space-y-4'>
+        <motion.div
+          variants={scrollVariants}
+          initial='hidden'
+          animate={inView ? 'visible' : 'hidden'}
+          className='space-y-4'
+        >
           <div className='flex flex-wrap justify-center gap-4 text-white/80'>
-            <div className='flex items-center space-x-2'>
+            <motion.div
+              className='flex items-center space-x-2'
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
               <Icon icon='ix:ai' className='text-blue-400' />
               <span>AI智能助手</span>
-            </div>
-            <div className='flex items-center space-x-2'>
+            </motion.div>
+            <motion.div
+              className='flex items-center space-x-2'
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
               <Icon icon='mdi:trending-up' className='text-green-400' />
               <span>10X效率提升</span>
-            </div>
-            <div className='flex items-center space-x-2'>
+            </motion.div>
+            <motion.div
+              className='flex items-center space-x-2'
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
               <Icon icon='mdi:rocket-launch' className='text-purple-400' />
               <span>10分钟上线</span>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
 
-        <motion.div variants={itemVariants} className='flex flex-col md:flex-row gap-4 justify-center items-center'>
-          <Button
-            size='lg'
-            className='bg-white text-primary-dark hover:bg-white/90 font-medium px-8 w-full md:w-auto
-              transform hover:scale-105 active:scale-95 transition-all duration-300
-              shadow-lg hover:shadow-xl text-lg'
-            onClick={() => setIsWaitListOpen(true)}
+        <motion.div
+          variants={itemVariants}
+          className='flex flex-col md:flex-row gap-4 justify-center items-center'
+          style={{
+            willChange: "transform",
+          }}
+        >
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
-            立即体验
-          </Button>
-          <Button
-            size='lg'
-            variant='bordered'
-            className='text-white border-white hover:bg-white/10 font-medium px-8 w-full md:w-auto
-              transform hover:scale-105 active:scale-95 transition-all duration-300
-              shadow-lg hover:shadow-xl text-lg'
-            onClick={() => setIsQRCodeOpen(true)}
+            <Button
+              size='lg'
+              className='bg-white text-primary-dark hover:bg-white/90 font-medium px-8 w-full md:w-auto
+                transform hover:scale-105 active:scale-95 transition-all duration-300
+                shadow-lg hover:shadow-xl text-lg'
+              onClick={() => setIsWaitListOpen(true)}
+            >
+              立即体验
+            </Button>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
-            预约演示
-          </Button>
+            <Button
+              size='lg'
+              variant='bordered'
+              className='text-white border-white hover:bg-white/10 font-medium px-8 w-full md:w-auto
+                transform hover:scale-105 active:scale-95 transition-all duration-300
+                shadow-lg hover:shadow-xl text-lg'
+              onClick={() => setIsQRCodeOpen(true)}
+            >
+              预约演示
+            </Button>
+          </motion.div>
         </motion.div>
 
-        <motion.div variants={itemVariants} className='mt-8 md:mt-12'>
+        <motion.div
+          variants={scrollVariants}
+          initial='hidden'
+          animate={inView ? 'visible' : 'hidden'}
+          className='mt-8 md:mt-12'
+        >
           <p className='text-white/60 text-sm mb-4'>创新技术，值得信赖</p>
           <div className='flex justify-center items-center gap-6'>
-            <div className='text-white/70 text-sm flex items-center gap-2'>
+            <motion.div
+              className='text-white/70 text-sm flex items-center gap-2'
+              whileHover={{ scale: 1.05, color: "#fff" }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
               <Icon icon='mdi:shield-check' className='text-green-400' />
               安全可靠
-            </div>
-            <div className='text-white/70 text-sm flex items-center gap-2'>
+            </motion.div>
+            <motion.div
+              className='text-white/70 text-sm flex items-center gap-2'
+              whileHover={{ scale: 1.05, color: "#fff" }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
               <Icon icon='mdi:rocket-launch' className='text-blue-400' />
               持续创新
-            </div>
-            <div className='text-white/70 text-sm flex items-center gap-2'>
+            </motion.div>
+            <motion.div
+              className='text-white/70 text-sm flex items-center gap-2'
+              whileHover={{ scale: 1.05, color: "#fff" }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
               <Icon icon='tabler:24-hours' className='text-purple-400' />
               专业支持
-            </div>
+            </motion.div>
           </div>
         </motion.div>
 
-        <motion.div variants={itemVariants} className='mt-12'>
+        <motion.div
+          variants={scrollVariants}
+          initial='hidden'
+          animate={inView ? 'visible' : 'hidden'}
+          className='mt-12'
+        >
           <h3 className='text-xl md:text-2xl font-bold text-white mb-6'>支持多行业定制化解决方案</h3>
         </motion.div>
       </motion.div>
