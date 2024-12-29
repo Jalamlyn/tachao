@@ -1,9 +1,10 @@
 import React, { memo, useState, useCallback, useRef } from "react"
-import { Button, Textarea, Tooltip, Progress } from "@nextui-org/react"
+import { Button, Textarea, Tooltip, Progress, Badge, ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import message from "../../Message"
+
 import { cn } from "@/lib/utils"
 import { imageStore } from "./ImageStore"
+import message from "@/components/Message"
 
 interface AIAgent {
   processCommand: (command: string, onChunk?: (chunk: string) => void) => Promise<any>
@@ -101,7 +102,7 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
   }
 
   return (
-    <form className="flex w-full items-start gap-2">
+    <form className="flex w-full flex-col gap-2 rounded-medium bg-default-100 transition-colors hover:bg-default-200/70">
       <input
         type="file"
         ref={fileInputRef}
@@ -110,13 +111,47 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
         onChange={handleImageUpload}
       />
       
+      <div className="group flex gap-2 px-4 pt-4">
+        {preview && (
+          <Badge
+            isOneChar
+            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            content={
+              <Button
+                isIconOnly
+                radius="full"
+                size="sm"
+                variant="light"
+                onClick={() => {
+                  setPreview("")
+                  imageStore.removeImage(preview)
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = ""
+                  }
+                }}
+                className="bg-white/80 backdrop-blur-sm hover:bg-danger-50"
+              >
+                <Icon icon="mdi:close" className="w-3 h-3 text-danger" />
+              </Button>
+            }
+          >
+            <img 
+              src={preview} 
+              alt="Preview" 
+              className="w-16 h-16 object-cover rounded-small border-small border-default-200/50 transition-transform duration-200 hover:scale-105" 
+            />
+          </Badge>
+        )}
+      </div>
+      
       <Textarea
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyPress={handleKeyPress}
         placeholder='请输入您的问题,AI 将帮您处理...'
         classNames={{
-          innerWrapper: "relative w-full",
+          inputWrapper: "!bg-transparent shadow-none",
+          innerWrapper: "relative",
           input: "pt-1 pb-6 !pr-10 text-medium",
         }}
         minRows={3}
@@ -130,6 +165,7 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
               variant="light" 
               onClick={handleImageClick}
               isDisabled={isUploading}
+              className="hover:bg-default-200"
             >
               {isUploading ? (
                 <Icon className="animate-spin" icon="eos-icons:loading" width={20} />
@@ -146,7 +182,13 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
         endContent={
           <div className="absolute right-0 flex h-full flex-col items-end justify-between gap-2">
             <Tooltip showArrow content="语音输入">
-              <Button isIconOnly radius="full" size="sm" variant="light">
+              <Button 
+                isIconOnly 
+                radius="full" 
+                size="sm" 
+                variant="light"
+                className="hover:bg-default-200"
+              >
                 <Icon className="text-default-500" icon="solar:microphone-3-linear" width={20} />
               </Button>
             </Tooltip>
@@ -161,6 +203,7 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
                   size="sm"
                   variant={!input || isLoading ? "flat" : "solid"}
                   onClick={handleSend}
+                  className="transition-transform active:scale-95"
                 >
                   {isLoading ? (
                     <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
@@ -180,31 +223,6 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
           </div>
         }
       />
-      
-      {preview && (
-        <div className="relative">
-          <img 
-            src={preview} 
-            alt="Preview" 
-            className="w-16 h-16 object-cover rounded border border-default-200" 
-          />
-          <Button
-            size="sm"
-            variant="light"
-            isIconOnly
-            className="absolute -top-2 -right-2 p-0 min-w-unit-6 w-unit-6 h-unit-6 rounded-full bg-white/80 backdrop-blur-sm hover:bg-danger-50"
-            onClick={() => {
-              setPreview("")
-              imageStore.removeImage(preview)
-              if (fileInputRef.current) {
-                fileInputRef.current.value = ""
-              }
-            }}
-          >
-            <Icon icon="mdi:close" className="w-3 h-3" />
-          </Button>
-        </div>
-      )}
     </form>
   )
 })
