@@ -2,11 +2,11 @@ import { Tabs, Tab, Button, Select, SelectItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { ResizablePanel } from "@/components/ui/resizable"
 import { cn } from "@/lib/utils"
-import { VersionControl, Version } from "../../types"
+import { Version } from "../../types"
 import { CodeItem } from "../type"
+import { versionStore } from "../../store/versionStore"
 
 export const renderRightPanel = (
-  versionControl: VersionControl,
   selectedTab: string,
   onTabChange: (key: string) => void,
   renderPreview: () => React.ReactNode,
@@ -34,12 +34,12 @@ export const renderRightPanel = (
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={versionControl.rollback}
-                disabled={!versionControl.canRollback}
+                onClick={versionStore.rollback.bind(versionStore)}
+                disabled={!versionStore.canRollback()}
                 className={cn(
                   "h-8 w-8 p-0 rounded-full transition-all duration-200",
                   "hover:bg-primary/10 active:scale-95",
-                  !versionControl.canRollback && "opacity-50 cursor-not-allowed"
+                  !versionStore.canRollback() && "opacity-50 cursor-not-allowed"
                 )}
               >
                 <Icon icon="mdi:chevron-left" className="h-4 w-4" />
@@ -47,19 +47,20 @@ export const renderRightPanel = (
 
               <div className="version-info px-2 min-w-[80px] text-center">
                 <span className="text-sm font-medium">
-                  {versionControl.currentIndex + 1}/{versionControl.versions.length}
+                  {versionStore.getCurrentVersion() ? versionStore.getHistory().findIndex(v => v === versionStore.getCurrentVersion()) + 1 : 0}/
+                  {versionStore.getHistory().length}
                 </span>
               </div>
 
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={versionControl.forward}
-                disabled={!versionControl.canForward}
+                onClick={versionStore.forward.bind(versionStore)}
+                disabled={!versionStore.canForward()}
                 className={cn(
                   "h-8 w-8 p-0 rounded-full transition-all duration-200",
                   "hover:bg-primary/10 active:scale-95",
-                  !versionControl.canForward && "opacity-50 cursor-not-allowed"
+                  !versionStore.canForward() && "opacity-50 cursor-not-allowed"
                 )}
               >
                 <Icon icon="mdi:chevron-right" className="h-4 w-4" />
