@@ -95,6 +95,7 @@ class VersionStore {
           console.log("Loaded versions:", this.versions.length, "currentIndex:", this.currentIndex)
 
           const currentVersion = this.getCurrentVersion()
+          debugger
           if (currentVersion) {
             console.log("Current version found, notifying listeners")
             this.notifyContentListeners(currentVersion.content)
