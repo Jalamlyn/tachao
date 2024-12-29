@@ -91,6 +91,97 @@ const promptModules = {
 1. 基础数据解析
 ${metadataExamples.basic}
 `,
+
+  codeGeneration: `
+重要规则：
+1. 代码完整性要求：
+   - 必须生成完整的代码，禁止使用 ... 或注释来省略代码
+   - 禁止使用 {/* ... */} 这样的注释来替代实际代码
+   - 每个组件必须包含完整的实现，包括所有UI元素和逻辑
+   - 数组渲染必须展示完整的项目结构，不能用注释表示重复项
+   - 所有条件分支都必须完整实现
+
+2. 代码生成规范：
+   - 使用具体的示例数据，而不是用注释表示数据
+   - 列表渲染要展示完整的单项结构
+   - 动画和交互效果要完整实现
+   - 错误处理和加载状态要完整展示
+
+3. 禁止使用的模式：
+   - 禁止使用 ... 省略符号
+   - 禁止使用 {/* ... */} 注释替代代码
+   - 禁止使用 // TODO 或类似注释
+   - 禁止使用 Array(n).fill() 后不展示具体内容
+
+4. 正确的代码示例：
+   // 错误示例：
+   <div className="grid grid-cols-3 gap-4">
+     {/* ... 项目列表 ... */}
+   </div>
+
+   // 正确示例：
+   <div className="grid grid-cols-3 gap-4">
+     {items.map((item, index) => (
+       <Card key={index}>
+         <CardHeader>
+           <h3 className="text-lg font-semibold">{item.title}</h3>
+         </CardHeader>
+         <CardBody>
+           <p className="text-gray-600">{item.description}</p>
+           <div className="mt-4">
+             <Button color="primary" onClick={() => handleAction(item.id)}>
+               查看详情
+             </Button>
+           </div>
+         </CardBody>
+       </Card>
+     ))}
+   </div>
+
+5. 加载状态示例：
+   // 错误示例：
+   {loading && <div>Loading...</div>}
+
+   // 正确示例：
+   {loading ? (
+     <div className="grid grid-cols-3 gap-4">
+       {[1, 2, 3].map((i) => (
+         <Card key={i} className="animate-pulse">
+           <CardHeader className="h-8 bg-gray-200 rounded" />
+           <CardBody>
+             <div className="h-4 bg-gray-200 rounded mb-2" />
+             <div className="h-4 bg-gray-200 rounded w-2/3" />
+           </CardBody>
+         </Card>
+       ))}
+     </div>
+   ) : (
+     <div className="grid grid-cols-3 gap-4">
+       {items.map((item) => (
+         <Card key={item.id}>
+           <CardHeader>
+             <h3 className="text-lg font-semibold">{item.title}</h3>
+           </CardHeader>
+           <CardBody>
+             <p className="text-gray-600">{item.description}</p>
+             <div className="mt-4">
+               <Button color="primary" onClick={() => handleAction(item.id)}>
+                 查看详情
+               </Button>
+             </div>
+           </CardBody>
+         </Card>
+       ))}
+     </div>
+   )}
+
+6. 数据展示规范：
+   - 使用真实的示例数据结构
+   - 包含完整的类型定义
+   - 展示所有可能的状态
+   - 实现完整的交互逻辑
+
+请确保生成的每一段代码都是完整的、可直接使用的，不包含任何省略或注释替代。如果代码过长，也要完整生成，不要使用省略符号。`,
 }
 
 class AppAgent {
@@ -170,6 +261,21 @@ class AppAgent {
     }
   }
 
+  private checkCodeCompleteness(code: string): boolean {
+    const suspiciousPatterns = [
+      '...',
+      '{/*',
+      '*/}',
+      '// ...',
+      'TODO',
+      'todo',
+      'Array(n).fill()',
+      '/* ... */',
+    ]
+
+    return !suspiciousPatterns.some(pattern => code.includes(pattern))
+  }
+
   public async processCommand(
     appId: string,
     messages: AppBuilderMessage[],
@@ -199,6 +305,8 @@ ${promptModules.thoughtChain}
 ${promptModules.reflection}
 
 ${promptModules.metadataHandling}
+
+${promptModules.codeGeneration}
 
 ${API_PROMPTS.multimodal}
 
@@ -433,6 +541,11 @@ export default (props) => {
         true,
         0
       )
+
+      // 检查代码完整性
+      if (!this.checkCodeCompleteness(response)) {
+        throw new Error('生成的代码不完整，包含省略符号或注释替代。请重新生成完整代码。')
+      }
 
       // 解析响应
       const pageCodeMatches = response.match(
