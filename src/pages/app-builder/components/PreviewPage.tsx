@@ -21,10 +21,16 @@ const PreviewPage: React.FC<PreviewPageProps> = ({ appId }) => {
       return
     }
 
-    // 向父页面发送ready消息
-    window.parent.postMessage({ type: "preview_ready", appId }, "*")
+    // 获取父窗口引用 - 支持 iframe 和新窗口场景
+    const parentWindow = window.opener || window.parent
+    
+    // 向父窗口发送ready消息
+    parentWindow.postMessage({ 
+      type: "preview_ready", 
+      appId 
+    }, "*")
 
-    // 监听来自父页面的消息
+    // 监听来自父窗口的消息
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === "update_preview" && event.data.appId === appId) {
         setAppCode(event.data.code)

@@ -13,6 +13,19 @@ import { useVersionControl } from "./hooks/useVersionControl"
 import { versionStore } from "./store/versionStore"
 import { CodeItem } from "./AIEditor/type"
 
+export const extractShataAIFormContent = (content: string): string => {
+  if (!content) {
+    return ""
+  }
+  const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
+  const match = content?.match(regex)
+  return match ? match[1].trim() : content
+}
+
+const wrapWithShataAIForm = (content: string): string => {
+  return `<shata-ai-code>\n${content}\n</shata-ai-code>`
+}
+
 const AppBuilder: React.FC = () => {
   const { appId } = useParams<{ appId: string }>()
   const [isLoading, setIsLoading] = useState(true)
@@ -101,17 +114,18 @@ const AppBuilder: React.FC = () => {
         // 预览页面准备就绪，发送当前代码
         const currentVersion = versionStore.getCurrentVersion()
         if (currentVersion?.content) {
-          const iframe = document.querySelector("iframe")
-          if (iframe?.contentWindow) {
-            iframe.contentWindow.postMessage(
-              {
-                type: "update_preview",
-                appId,
-                code: currentVersion.content,
-              },
-              "*"
-            )
-          }
+          // 获取消息来源窗口
+          const targetWindow = event.source as Window
+          
+          // 发送代码更新消息
+          targetWindow.postMessage(
+            {
+              type: "update_preview",
+              appId,
+              code: currentVersion.content,
+            },
+            "*"
+          )
         }
       } else if (event.data.type === "request_page_code" && event.data.appId === appId) {
         // 处理页面代码请求
