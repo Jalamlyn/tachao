@@ -9,6 +9,7 @@ import message from "./Message"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { FormRendererWrapper } from "./renderers/FormRendererWrapper"
 import { ReportRendererWrapper } from "./renderers/ReportRendererWrapper"
+import { ai } from "@/service/ai"
 
 interface PageRendererProps {
   code?: string
@@ -67,6 +68,7 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ code, pageId, appId 
           api: { getMetadata, setMetadata },
           FormRenderer: FormRendererWrapper,
           ReportRenderer: ReportRendererWrapper,
+          ai,
         }
 
         // 创建组件

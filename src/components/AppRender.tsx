@@ -10,6 +10,7 @@ import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { FormRendererWrapper } from "./renderers/FormRendererWrapper"
 import { ReportRendererWrapper } from "./renderers/ReportRendererWrapper"
 import { PageWrapper } from "@/pages/app-builder/components/PageWrapper"
+import { ai } from "@/service/ai"
 
 interface AppRenderProps {
   code: string
@@ -45,6 +46,7 @@ export const AppRender: React.FC<AppRenderProps> = (props) => {
           FormRenderer: FormRendererWrapper,
           ReportRenderer: ReportRendererWrapper,
           PageWrapper,
+          ai,
         }
 
         // 合并额外的上下文
