@@ -8,14 +8,6 @@ import { promptsComposer } from "./prompts"
 
 class AppAgent {
   private static instance: AppAgent
-  private _appCache: Map<
-    string,
-    {
-      pages: AppPages
-      version: number
-      updatedAt: string
-    }
-  > = new Map()
 
   private constructor() {}
 
@@ -24,21 +16,6 @@ class AppAgent {
       AppAgent.instance = new AppAgent()
     }
     return AppAgent.instance
-  }
-
-  public getAppCache(appId: string) {
-    return this._appCache.get(appId)
-  }
-
-  public setAppCache(
-    appId: string,
-    data: {
-      pages: AppPages
-      version: number
-      updatedAt: string
-    }
-  ) {
-    this._appCache.set(appId, data)
   }
 
   public async loadAppCache(appId: string) {
@@ -67,19 +44,12 @@ class AppAgent {
         }
       }
 
-      // 设置缓存
-      this.setAppCache(appId, {
-        pages,
-        version: appData?.version || 1,
-        updatedAt: appData?.updatedAt || new Date().toISOString(),
-      })
-
       // 初始化版本控制
       if (appData?.code) {
         versionStore.addVersion(appData.code, {
           pages,
-          version: appData.version || 1,
-          updatedAt: appData.updatedAt,
+          version: appData?.version || 1,
+          updatedAt: appData?.updatedAt || new Date().toISOString(),
         })
       }
     } catch (error) {
