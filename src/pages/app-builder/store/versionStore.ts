@@ -1,3 +1,4 @@
+import { makeAutoObservable } from "mobx"
 import { AppPages } from "../types"
 import { getMetadata } from "@/service/apis/metadata"
 
@@ -12,112 +13,91 @@ type Version = {
   description?: string
 }
 
-type VersionChangeListener = (content: string) => void
-type VersionHistoryListener = () => void
-
 class VersionStore {
-  private static instance: VersionStore
   private versions: Version[] = []
   private currentIndex: number = -1
   private appId: string | null = null
   private readonly BASE_STORAGE_KEY = "versionHistory"
 
-  private contentListeners = new Set<VersionChangeListener>()
-  private historyListeners = new Set<VersionHistoryListener>()
-
-  private constructor() {
+  constructor() {
+    makeAutoObservable(this, {}, { autoBind: true })
     this.loadFromStorage()
   }
 
-  static getInstance() {
-    if (!this.instance) {
-      this.instance = new VersionStore()
-    }
-    return this.instance
+  // 计算属性
+  get currentVersion(): Version | null {
+    return this.versions[this.currentIndex] || null
   }
 
+  get currentContent(): string {
+    return this.currentVersion?.content || ""
+  }
+
+  get canRollback(): boolean {
+    return this.currentIndex > 0
+  }
+
+  get canForward(): boolean {
+    return this.currentIndex < this.versions.length - 1
+  }
+
+  // actions
   setAppId(appId: string) {
     this.appId = appId
     this.loadFromStorage()
-    return this
   }
 
-  private getStorageKey(): string {
-    return this.appId ? `${this.BASE_STORAGE_KEY}_${this.appId}` : this.BASE_STORAGE_KEY
+  addVersion(content: string, appState?: Version["appState"]) {
+    // 避免重复版本
+    if (appState?.version === this.versions[this.versions.length - 1]?.appState?.version) {
+      return
+    }
+
+    if (!content?.trim()) {
+      console.warn("Attempted to add empty version, skipping...")
+      return
+    }
+
+    // 清除当前版本之后的所有版本
+    this.versions = this.versions.slice(0, this.currentIndex + 1)
+
+    const newVersion: Version = {
+      timestamp: Date.now(),
+      content,
+      appState,
+    }
+
+    this.versions.push(newVersion)
+    this.currentIndex = this.versions.length - 1
+    this.saveToStorage()
   }
 
-  subscribeToContent(listener: VersionChangeListener) {
-    this.contentListeners.add(listener)
-    return () => this.contentListeners.delete(listener)
-  }
-
-  subscribeToHistory(listener: VersionHistoryListener) {
-    this.historyListeners.add(listener)
-    return () => this.historyListeners.delete(listener)
-  }
-
-  private notifyContentListeners(content: string) {
-    console.log("Notifying content listeners with content length:", content?.length)
-    this.contentListeners.forEach((listener) => listener(content))
-  }
-
-  private notifyHistoryListeners() {
-    console.log("Notifying history listeners")
-    this.historyListeners.forEach((listener) => listener())
-  }
-
-  private saveToStorage() {
-    try {
-      localStorage.setItem(
-        this.getStorageKey(),
-        JSON.stringify({
-          versions: this.versions,
-          currentIndex: this.currentIndex,
-        })
-      )
-    } catch (error) {
-      console.error("Error saving version history:", error)
+  rollback() {
+    if (this.canRollback) {
+      this.currentIndex--
+      this.saveToStorage()
     }
   }
 
-  private loadFromStorage() {
-    try {
-      console.log("Loading from storage, key:", this.getStorageKey())
-      const stored = localStorage.getItem(this.getStorageKey())
-
-      if (stored) {
-        console.log("Found stored data")
-        const data = JSON.parse(stored)
-        if (Array.isArray(data.versions) && typeof data.currentIndex === "number") {
-          this.versions = data.versions
-          this.currentIndex = data.currentIndex
-
-          console.log("Loaded versions:", this.versions.length, "currentIndex:", this.currentIndex)
-
-          const currentVersion = this.getCurrentVersion()
-          debugger
-          if (currentVersion) {
-            console.log("Current version found, notifying listeners")
-            this.notifyContentListeners(currentVersion.content)
-            this.notifyHistoryListeners()
-          } else {
-            console.log("No current version found")
-          }
-        }
-      } else {
-        console.log("No stored data found, resetting state")
-        this.versions = []
-        this.currentIndex = -1
-        this.notifyContentListeners("")
-        this.notifyHistoryListeners()
-      }
-    } catch (error) {
-      console.error("Error loading version history:", error)
-      this.versions = []
-      this.currentIndex = -1
-      this.notifyContentListeners("")
-      this.notifyHistoryListeners()
+  forward() {
+    if (this.canForward) {
+      this.currentIndex++
+      this.saveToStorage()
     }
+  }
+
+  clear() {
+    this.versions = []
+    this.currentIndex = -1
+    localStorage.removeItem(this.getStorageKey())
+  }
+
+  getHistory(): Version[] {
+    return [...this.versions]
+  }
+
+  getPageCode(pageId: string): string | null {
+    return this.currentVersion?.appState?.pages[pageId]?.code || null
   }
 
   async loadApp(appId: string) {
@@ -160,103 +140,52 @@ class VersionStore {
     }
   }
 
-  addVersion(content: string, appState?: Version["appState"], description?: string) {
-    if (appState?.version === this.versions?.[this.versions.length - 1]?.appState?.version) {
-      return
-    }
-    if (!content?.trim()) {
-      console.warn("Attempted to add empty version, skipping...")
-      return
-    }
-
-    this.versions = this.versions.slice(0, this.currentIndex + 1)
-
-    const newVersion: Version = {
-      timestamp: Date.now(),
-      content,
-      appState,
-      description,
-    }
-
-    this.versions.push(newVersion)
-    this.currentIndex = this.versions.length - 1
-    this.saveToStorage()
-    this.notifyContentListeners(content)
-    this.notifyHistoryListeners()
-  }
-
-  getCurrentVersion(): Version | null {
-    return this.versions[this.currentIndex] || null
-  }
-
-  getCurrentContent(): string {
-    return this.getCurrentVersion()?.content || ""
-  }
-
-  getCurrentAppState(): Version["appState"] | undefined {
-    return this.getCurrentVersion()?.appState
-  }
-
-  getPageCode(pageId: string): string | null {
-    const currentVersion = this.getCurrentVersion()
-    return currentVersion?.appState?.pages[pageId]?.code || null
-  }
-
-  canRollback(): boolean {
-    return this.currentIndex > 0
-  }
-
-  canForward(): boolean {
-    return this.currentIndex < this.versions.length - 1
-  }
-
-  rollback(): Version | null {
-    if (this.canRollback()) {
-      this.currentIndex--
-      const version = this.versions[this.currentIndex]
-      this.saveToStorage()
-      this.notifyContentListeners(version.content)
-      this.notifyHistoryListeners()
-      return version
-    }
-    return null
-  }
-
-  forward(): Version | null {
-    if (this.canForward()) {
-      this.currentIndex++
-      const version = this.versions[this.currentIndex]
-      this.saveToStorage()
-      this.notifyContentListeners(version.content)
-      this.notifyHistoryListeners()
-      return version
-    }
-    return null
-  }
-
-  clear() {
-    this.versions = []
-    this.currentIndex = -1
-    localStorage.removeItem(this.getStorageKey())
-    this.notifyContentListeners("")
-    this.notifyHistoryListeners()
-  }
-
-  getHistory(): Version[] {
-    return [...this.versions]
-  }
-
   exportForPublish() {
-    const currentVersion = this.getCurrentVersion()
-    if (!currentVersion) return null
+    if (!this.currentVersion) return null
 
     return {
-      appCode: currentVersion.content,
-      pages: currentVersion.appState?.pages || {},
-      version: currentVersion.appState?.version || 1,
+      appCode: this.currentVersion.content,
+      pages: this.currentVersion.appState?.pages || {},
+      version: this.currentVersion.appState?.version || 1,
       updatedAt: new Date().toISOString(),
+    }
+  }
+
+  // 私有方法
+  private getStorageKey(): string {
+    return this.appId ? `${this.BASE_STORAGE_KEY}_${this.appId}` : this.BASE_STORAGE_KEY
+  }
+
+  private saveToStorage() {
+    try {
+      localStorage.setItem(
+        this.getStorageKey(),
+        JSON.stringify({
+          versions: this.versions,
+          currentIndex: this.currentIndex,
+        })
+      )
+    } catch (error) {
+      console.error("Error saving version history:", error)
+    }
+  }
+
+  private loadFromStorage() {
+    try {
+      const stored = localStorage.getItem(this.getStorageKey())
+      if (stored) {
+        const data = JSON.parse(stored)
+        if (Array.isArray(data.versions) && typeof data.currentIndex === "number") {
+          this.versions = data.versions
+          this.currentIndex = data.currentIndex
+        }
+      }
+    } catch (error) {
+      console.error("Error loading version history:", error)
+      this.versions = []
+      this.currentIndex = -1
     }
   }
 }
 
-export const versionStore = VersionStore.getInstance()
+export const versionStore = new VersionStore()
