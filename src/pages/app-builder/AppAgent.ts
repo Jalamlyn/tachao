@@ -261,21 +261,6 @@ class AppAgent {
     }
   }
 
-  private checkCodeCompleteness(code: string): boolean {
-    const suspiciousPatterns = [
-      '...',
-      '{/*',
-      '*/}',
-      '// ...',
-      'TODO',
-      'todo',
-      'Array(n).fill()',
-      '/* ... */',
-    ]
-
-    return !suspiciousPatterns.some(pattern => code.includes(pattern))
-  }
-
   public async processCommand(
     appId: string,
     messages: AppBuilderMessage[],
@@ -309,25 +294,6 @@ ${promptModules.metadataHandling}
 ${promptModules.codeGeneration}
 
 ${API_PROMPTS.multimodal}
-
-当前应用结构：
-
-1. 应用入口代码：
-${versionStore.getCurrentContent() || "需要先创建应用入口代码，包含基础路由配置"}
-
-2. 页面代码：
-${Object.entries(appCache?.pages)
-  .map(
-    ([pageId, page]) => `
-页面ID: ${pageId}
-标题: ${page.title}
-代码:
-${page.code}
-`
-  )
-  .join("\n---\n")}
-
-代码生成规范：
 
 1. 代码生成顺序：
    - 如果应用入口代码不存在，必须先生成入口代码
@@ -475,7 +441,24 @@ export default (props) => {
 5. 必须使用 JavaScript，不能使用 TypeScript
 6. 必须先有应用入口代码才能生成页面代码`
 
-      const enhancedCommand = `
+      const enhancedCommand = `<project>
+      
+1. 应用入口代码：
+${versionStore.getCurrentContent() || "需要先创建应用入口代码，包含基础路由配置"}
+
+2. 页面代码：
+${Object.entries(appCache?.pages)
+  .map(
+    ([pageId, page]) => `
+页面ID: ${pageId}
+标题: ${page.title}
+代码:
+${page.code}
+`
+  )
+  .join(
+    "\n---\n"
+  )}</project>, <project> 里是现有代码, 你修改现有代码的时候必须每次都返回修改后的完整代码, 不允许有省略和注释任何一行代码
 <我的输入>${command}</我的输入>, 分析我的输入的意图, 将分析结果写到
 ---
 \`\`\`jsx <shata-ai-think></shata-ai-think>\`\`\` 
@@ -518,7 +501,13 @@ export default (props) => {
 页面代码,必须是完整代码, 不能省略任何逻辑和代码
 </shata-ai-code>
 \`\`\`
-所有 shata-ai 标签必须包裹在\`\`\`jsx 和 \`\`\`之间, 生成的所有代码必须是完整代码, 不能省略和注释任何一行代码或者逻辑
+所有 shata-ai 标签必须包裹在\`\`\`jsx 和 \`\`\`之间, 严格要求：
+1. 必须生成完整的代码实现，禁止以下行为：
+   - 使用 ... 省略符号
+   - 使用 // ... 注释省略
+   - 使用"代码保持不变"等表述
+   - 使用"其他部分不变"等表述
+   - 使用 TODO 或待实现等标记
 ---
 `
 
@@ -541,11 +530,6 @@ export default (props) => {
         true,
         0
       )
-
-      // 检查代码完整性
-      if (!this.checkCodeCompleteness(response)) {
-        throw new Error('生成的代码不完整，包含省略符号或注释替代。请重新生成完整代码。')
-      }
 
       // 解析响应
       const pageCodeMatches = response.match(
