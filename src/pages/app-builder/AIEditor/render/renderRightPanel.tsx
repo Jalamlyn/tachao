@@ -1,8 +1,9 @@
-import { Tabs, Tab, Button } from "@nextui-org/react"
+import { Tabs, Tab, Button, Select, SelectItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { ResizablePanel } from "@/components/ui/resizable"
 import { cn } from "@/lib/utils"
 import { VersionControl, Version } from "../../types"
+import { CodeItem } from "../type"
 
 export const renderRightPanel = (
   versionControl: VersionControl,
@@ -19,7 +20,10 @@ export const renderRightPanel = (
   editedCode?: string,
   setIsEditing?: (editing: boolean) => void,
   handleSaveEdit?: () => void,
-  handleCancelEdit?: () => void
+  handleCancelEdit?: () => void,
+  codeItems?: CodeItem[],
+  selectedCodeId?: string,
+  onCodeSelect?: (id: string) => void
 ) => {
   return (
     <ResizablePanel defaultSize={50} className='resizable-panel bg-slate-50'>
@@ -76,10 +80,28 @@ export const renderRightPanel = (
         )}
         {selectedTab === "code" && showCodeTab && (
           <div className='relative h-[calc(100vh-260px)] rounded-lg overflow-auto mt-2'>
-            <>
-              {renderCodeEditor(isEditing ? editedCode || "" : currentVersion?.content || "", isEditing || false)}
+            <div className='absolute top-2 left-2 right-2 z-10 flex justify-between items-center'>
+              <Select
+                size='sm'
+                className='max-w-xs bg-white/80 backdrop-blur-sm'
+                selectedKeys={selectedCodeId ? [selectedCodeId] : []}
+                onChange={(e) => onCodeSelect?.(e.target.value)}
+              >
+                {codeItems?.map((item) => (
+                  <SelectItem
+                    key={item.id}
+                    value={item.id}
+                    startContent={
+                      <Icon icon={item.type === "app" ? "mdi:application" : "mdi:file-code"} className='w-4 h-4' />
+                    }
+                  >
+                    {item.title}
+                  </SelectItem>
+                ))}
+              </Select>
+
               {isEditing ? (
-                <div className='absolute top-2 right-2 space-x-2'>
+                <div className='space-x-2'>
                   <Button
                     size='sm'
                     color='primary'
@@ -98,18 +120,26 @@ export const renderRightPanel = (
                   </Button>
                 </div>
               ) : (
-                <div className='absolute top-2 right-2'>
-                  <Button
-                    size='sm'
-                    color='primary'
-                    onClick={() => setIsEditing?.(true)}
-                    startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
-                  >
-                    编辑
-                  </Button>
-                </div>
+                <Button
+                  size='sm'
+                  color='primary'
+                  onClick={() => setIsEditing?.(true)}
+                  startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
+                >
+                  编辑
+                </Button>
               )}
-            </>
+            </div>
+            <div className='mt-14'>
+              {renderCodeEditor(
+                isEditing
+                  ? editedCode || ""
+                  : selectedCodeId
+                    ? codeItems?.find((item) => item.id === selectedCodeId)?.code || ""
+                    : "",
+                isEditing || false
+              )}
+            </div>
           </div>
         )}
       </div>

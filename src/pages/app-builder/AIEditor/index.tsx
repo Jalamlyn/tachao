@@ -7,7 +7,7 @@ import { renderLeftPanel } from "./render/renderLeftPanel"
 import { renderRightPanel } from "./render/renderRightPanel"
 import { AI_LEVELS, AIEditorProps } from "./type"
 import { versionStore } from "../store/versionStore"
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react"
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Select, SelectItem } from "@nextui-org/react"
 import { useParams } from "react-router-dom"
 
 export const extractShataAIFormContent = (content: string): string => {
@@ -40,28 +40,51 @@ const AIEditor: React.FC<AIEditorProps> = ({
   showDataTab = false,
   showCodeTab = false,
   previewTabName = "预览",
+  codeItems = [],
+  selectedCodeId,
+  onCodeSelect,
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editedCode, setEditedCode] = useState("")
   const [showClearConfirm, setShowClearConfirm] = useState(false)
-  const { appId } = useParams()
 
   // 在应用开发场景中，始终使用专家模型
   const selectedAILevel: keyof typeof AI_LEVELS = "EXPERT"
 
   useEffect(() => {
-    const currentContent = versionStore.getCurrentContent()
-    setEditedCode(extractShataAIFormContent(currentContent))
-  }, [versionControl.currentIndex])
+    if (selectedCodeId) {
+      const selectedItem = codeItems.find((item) => item.id === selectedCodeId)
+      if (selectedItem) {
+        setEditedCode(selectedItem.code)
+      }
+    }
+  }, [selectedCodeId])
 
   const handleSaveEdit = async () => {
     try {
-      const wrappedCode = wrapWithShataAIForm(editedCode)
-      onCommandResult({
-        success: true,
-        rawConfig: wrappedCode,
-        appCode: extractShataAIFormContent(wrappedCode),
-      })
+      const selectedItem = codeItems.find((item) => item.id === selectedCodeId)
+      if (!selectedItem) return
+
+      if (selectedItem.type === "app") {
+        const wrappedCode = wrapWithShataAIForm(editedCode)
+        onCommandResult({
+          success: true,
+          rawConfig: wrappedCode,
+          appCode: extractShataAIFormContent(wrappedCode),
+        })
+      } else {
+        onCommandResult({
+          success: true,
+          pages: {
+            [selectedItem.id]: {
+              code: editedCode,
+              title: selectedItem.title,
+              updatedAt: new Date().toISOString(),
+            },
+          },
+        })
+      }
+
       setIsEditing(false)
       message.success("保存成功")
     } catch (error) {
@@ -71,24 +94,11 @@ const AIEditor: React.FC<AIEditorProps> = ({
   }
 
   const handleCancelEdit = () => {
-    const currentContent = versionStore.getCurrentContent()
-    setEditedCode(extractShataAIFormContent(currentContent))
-    setIsEditing(false)
-  }
-
-  const handleClearMessages = () => {
-    setShowClearConfirm(true)
-  }
-
-  const handleConfirmClear = () => {
-    if (onClearMessages) {
-      onClearMessages()
-      if (appId) {
-        localStorage.removeItem(`app_cache_${appId}`)
-      }
-      message.success("对话和缓存已清空")
+    const selectedItem = codeItems.find((item) => item.id === selectedCodeId)
+    if (selectedItem) {
+      setEditedCode(selectedItem.code)
     }
-    setShowClearConfirm(false)
+    setIsEditing(false)
   }
 
   const renderCodeEditor = (content: string, isEditing: boolean) => {
@@ -96,7 +106,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
       <Editor
         height='100%'
         language='javascript'
-        value={extractShataAIFormContent(content)}
+        value={content}
         options={{
           readOnly: !isEditing,
           minimap: { enabled: false },
@@ -108,7 +118,6 @@ const AIEditor: React.FC<AIEditorProps> = ({
         onChange={(value) => {
           if (isEditing) {
             setEditedCode(value || "")
-            setIsEditing(true)
           }
         }}
       />
@@ -116,56 +125,41 @@ const AIEditor: React.FC<AIEditorProps> = ({
   }
 
   return (
-    <div className='h-[calc(100vh-140px)] overflow-hidden'>
-      <ResizablePanelGroup direction='horizontal' className='h-full p-2'>
-        {renderLeftPanel(
-          onStop,
-          selectedAILevel,
-          () => {}, // 移除模型选择功能
-          handleClearMessages,
-          messages,
-          imageUpload,
-          excelUpload,
-          agent,
-          onCommandResult
-        )}
-        <ResizableHandle withHandle />
-        {renderRightPanel(
-          versionControl,
-          selectedTab,
-          onTabChange,
-          renderPreview,
-          showDataTab,
-          previewTabName,
-          renderCodeEditor,
-          versionStore.getCurrentVersion(),
-          showCodeTab,
-          renderDataView,
-          isEditing,
-          editedCode,
-          setIsEditing,
-          handleSaveEdit,
-          handleCancelEdit
-        )}
-      </ResizablePanelGroup>
-
-      <Modal isOpen={showClearConfirm} onClose={() => setShowClearConfirm(false)}>
-        <ModalContent>
-          <ModalHeader className='flex flex-col gap-1'>确认清除</ModalHeader>
-          <ModalBody>
-            <p>确认要清除所有对话记录和应用代码缓存吗？此操作不可恢复。</p>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant='light' onPress={() => setShowClearConfirm(false)}>
-              取消
-            </Button>
-            <Button color='danger' onPress={handleConfirmClear}>
-              确认清除
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </div>
+    <ResizablePanelGroup direction='horizontal'>
+      {renderLeftPanel(
+        onStop,
+        selectedAILevel,
+        () => {},
+        onClearMessages,
+        messages,
+        imageUpload,
+        excelUpload,
+        agent,
+        onCommandResult,
+        versionControl
+      )}
+      <ResizableHandle />
+      {renderRightPanel(
+        versionControl,
+        selectedTab,
+        onTabChange,
+        renderPreview,
+        showDataTab,
+        previewTabName,
+        renderCodeEditor,
+        selectedCodeId ? codeItems.find((item) => item.id === selectedCodeId) : null,
+        showCodeTab,
+        renderDataView,
+        isEditing,
+        editedCode,
+        setIsEditing,
+        handleSaveEdit,
+        handleCancelEdit,
+        codeItems,
+        selectedCodeId,
+        onCodeSelect
+      )}
+    </ResizablePanelGroup>
   )
 }
 

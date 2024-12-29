@@ -32,6 +32,14 @@ export interface Message {
   aiLevel?: keyof typeof AI_LEVELS
 }
 
+export interface CodeItem {
+  id: string
+  title: string
+  type: "app" | "page"
+  code: string
+  updatedAt?: string
+}
+
 export interface AIEditorProps {
   parseConfig: any
   messages: Message[]
@@ -64,4 +72,7 @@ export interface AIEditorProps {
     customOptions?: any
   }
   imageUpload?: boolean
+  codeItems?: CodeItem[]
+  selectedCodeId?: string
+  onCodeSelect?: (id: string) => void
 }
