@@ -21,6 +21,7 @@ interface AppRenderProps {
 }
 
 export const AppRender: React.FC<AppRenderProps> = (props) => {
+  
   const { code, context: extraContext, onError, appId } = props
   const [Component, setComponent] = useState<React.ComponentType<any> | null>(null)
   const [error, setError] = useState<Error | null>(null)
@@ -72,7 +73,6 @@ export const AppRender: React.FC<AppRenderProps> = (props) => {
 
     createComponent()
   }, [code, extraContext, onError])
-
   if (!code) {
     return (
       <div className='flex flex-col items-center justify-center min-h-[400px] bg-default-50'>
