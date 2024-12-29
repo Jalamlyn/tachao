@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react"
 import { useParams } from "react-router-dom"
 import { Button, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
+import { observer } from "mobx-react-lite"
 import PageLayout from "@/components/PageLayout"
 import AIEditor from "./AIEditor"
 import AppAgent from "./AppAgent"
@@ -27,7 +28,7 @@ const wrapWithShataAIForm = (content: string): string => {
   return `<shata-ai-code>\n${content}\n</shata-ai-code>`
 }
 
-const AppBuilder: React.FC = () => {
+const AppBuilder: React.FC = observer(() => {
   const { appId } = useParams<{ appId: string }>()
   const [isLoading, setIsLoading] = useState(true)
   const [messages, setMessages] = useState<AppBuilderMessage[]>([])
@@ -37,9 +38,8 @@ const AppBuilder: React.FC = () => {
   const [showPublishModal, setShowPublishModal] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [selectedCodeId, setSelectedCodeId] = useState<string>("")
+  const [selectedCodeId, setSelectedCodeId] = useState<string>("app_entry")
   const [codeItems, setCodeItems] = useState<CodeItem[]>([])
-  const [content, setContent] = useState(versionStore.getCurrentContent())
 
   const accumulatedTextRef = useRef("")
   const currentMessageIdRef = useRef<string | null>(null)
@@ -53,26 +53,29 @@ const AppBuilder: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    debugger
     if (appId) {
       versionStore.setAppId(appId)
       loadInitialData()
     }
   }, [appId])
 
+  useEffect(() => {
+    updateCodeItems()
+  }, [versionStore.currentVersion])
+
+  // 在 loadInitialData 成功后更新
   const loadInitialData = async () => {
     if (!appId) return
     try {
       setIsLoading(true)
-      // 获取应用标题
       const result = await getMetadata(["app_index"])
       const apps = result.data?.[0]?.value ? JSON.parse(result.data[0].value) : []
       const app = apps.find((a: any) => a.id === appId)
       if (app) {
         setAppTitle(app.title)
       }
-      // 加载应用数据
       await versionStore.loadApp(appId)
+      updateCodeItems() // 添加这行
     } catch (error) {
       console.error("Error loading initial data:", error)
       message.error("加载应用数据失败")
@@ -80,24 +83,6 @@ const AppBuilder: React.FC = () => {
       setIsLoading(false)
     }
   }
-
-  useEffect(() => {
-    const contentUnsubscribe = versionStore.subscribeToContent((content) => {
-      debugger
-      setContent(content)
-      refreshPreview()
-      updateCodeItems()
-    })
-    const historyUnsubscribe = versionStore.subscribeToHistory(() => {
-      refreshPreview()
-      updateCodeItems()
-    })
-
-    return () => {
-      contentUnsubscribe()
-      historyUnsubscribe()
-    }
-  }, [])
 
   const refreshPreview = useCallback(() => {
     if (iframeRef.current && !isRefreshing) {
@@ -108,7 +93,7 @@ const AppBuilder: React.FC = () => {
   }, [isRefreshing])
 
   const updateCodeItems = useCallback(() => {
-    const currentVersion = versionStore.getCurrentVersion()
+    const currentVersion = versionStore.currentVersion
     if (!currentVersion) return
 
     const items: CodeItem[] = []
@@ -133,7 +118,7 @@ const AppBuilder: React.FC = () => {
         })
       })
     }
-    debugger
+
     setCodeItems(items)
     if (items.length > 0 && !selectedCodeId) {
       setSelectedCodeId(items[0].id)
@@ -143,7 +128,7 @@ const AppBuilder: React.FC = () => {
   const handleMessage = useCallback(
     (event: MessageEvent) => {
       if (event.data.type === "preview_ready" && event.data.appId === appId) {
-        const currentVersion = versionStore.getCurrentVersion()
+        const currentVersion = versionStore.currentVersion
         if (currentVersion?.content) {
           const targetWindow = event.source as Window
           targetWindow.postMessage(
@@ -193,7 +178,7 @@ const AppBuilder: React.FC = () => {
       }
 
       try {
-        const currentVersion = versionStore.getCurrentVersion()
+        const currentVersion = versionStore.currentVersion
         console.log("Current version before update:", currentVersion)
 
         if (!currentVersion) {
@@ -222,7 +207,7 @@ const AppBuilder: React.FC = () => {
           })
         }
 
-        console.log("Current version after update:", versionStore.getCurrentVersion())
+        console.log("Current version after update:", versionStore.currentVersion)
 
         updateLastMessage({ status: "success" })
 
@@ -378,7 +363,7 @@ const AppBuilder: React.FC = () => {
     currentMessageIdRef.current = assistantMessage.id
 
     try {
-      const result = await AppAgent.processCommand(appId!, messages, command, handleChunk)
+      const result = await AppAgent.processCommand(appId, messages, command, handleChunk)
       return result
     } catch (error) {
       console.error("Error in chat:", error)
@@ -393,7 +378,7 @@ const AppBuilder: React.FC = () => {
   }
 
   const renderPreview = useCallback(() => {
-    const version = versionStore.getCurrentVersion()
+    const version = versionStore.currentVersion
     if (!version?.content) {
       return (
         <div className='flex flex-col items-center justify-center min-h-[400px] bg-default-50'>
@@ -439,7 +424,7 @@ const AppBuilder: React.FC = () => {
         />
       </div>
     )
-  }, [content, isRefreshing, appId])
+  }, [appId, isRefreshing])
 
   if (!appId) {
     return (
@@ -513,6 +498,6 @@ const AppBuilder: React.FC = () => {
       </Modal>
     </PageLayout>
   )
-}
+})
 
 export default AppBuilder

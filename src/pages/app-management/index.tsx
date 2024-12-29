@@ -7,6 +7,7 @@ import { AppGallery } from "./components/AppGallery"
 import { CreateAppModal } from "./components/CreateAppModal"
 import { PageList } from "./components/PageList"
 import { AppIndex, useAppStore } from "./store/useAppStore"
+import { versionStore } from "../app-builder/store/versionStore"
 
 const AppManagement: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()
@@ -47,7 +48,7 @@ const AppManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!appToDelete) return
     await deleteApp(appToDelete.id)
-    localStorage.removeItem(`app_cache_${appToDelete.id}`)
+    versionStore.clear()
     setDeleteModalOpen(false)
   }
 

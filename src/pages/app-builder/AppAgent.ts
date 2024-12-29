@@ -33,7 +33,7 @@ class AppAgent {
     }
 
     try {
-      const currentVersion = versionStore.getCurrentVersion()
+      const currentVersion = versionStore.currentVersion
       const systemPrompt = promptsComposer.getSystemPrompt()
 
       const enhancedCommand = `<project>
