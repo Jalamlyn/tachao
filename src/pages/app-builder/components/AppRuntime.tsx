@@ -5,6 +5,7 @@ import { getMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
 import { Icon } from "@iconify/react"
 import { AppContext } from "@/contexts/AppContext"
+import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 
 interface AppRuntimeProps {
   appId: string
@@ -195,15 +196,17 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
 
   return (
     <>
-      <AppContext.Provider value={{ appId, runtimeContext }}>
-        <AppRender
-          basename={`/app-run/${appId}`}
-          code={appCode}
-          context={runtimeContext}
-          onError={handleError}
-          appId={appId}
-        />
-      </AppContext.Provider>
+      <PermissionCheck resourceType="app" resourceId={appId}>
+        <AppContext.Provider value={{ appId, runtimeContext }}>
+          <AppRender
+            basename={`/app-run/${appId}`}
+            code={appCode}
+            context={runtimeContext}
+            onError={handleError}
+            appId={appId}
+          />
+        </AppContext.Provider>
+      </PermissionCheck>
 
       <Modal isOpen={showUpdateModal} onClose={() => setShowUpdateModal(false)}>
         <ModalContent>

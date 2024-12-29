@@ -4,6 +4,7 @@ import { Spinner } from "@nextui-org/react"
 import message from "@/components/Message"
 import { Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
+import { PermissionCheck } from "@/permissions/components/PermissionCheck"
 
 interface PreviewPageProps {
   appId: string
@@ -52,18 +53,20 @@ const PreviewPage: React.FC<PreviewPageProps> = ({ appId }) => {
 
   return (
     <Provider>
-      <AppContext.Provider value={{ appId, runtimeContext: previewContext }}>
-        <AppRender
-          appId={appId}
-          basename={`/app-preview/${appId}`}
-          code={appCode}
-          context={previewContext}
-          onError={(error) => {
-            console.error("Preview error:", error)
-            message.error(`预览错误: ${error.message}`)
-          }}
-        />
-      </AppContext.Provider>
+      <PermissionCheck resourceType="app" resourceId={appId}>
+        <AppContext.Provider value={{ appId, runtimeContext: previewContext }}>
+          <AppRender
+            appId={appId}
+            basename={`/app-preview/${appId}`}
+            code={appCode}
+            context={previewContext}
+            onError={(error) => {
+              console.error("Preview error:", error)
+              message.error(`预览错误: ${error.message}`)
+            }}
+          />
+        </AppContext.Provider>
+      </PermissionCheck>
     </Provider>
   )
 }

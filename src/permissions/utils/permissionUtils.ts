@@ -60,9 +60,16 @@ export const hasPermission = async (resourceType: ResourceType, resourceId: stri
     return true
   }
 
-  // 2. 只检查实际权限
+  // 2. 获取资源权限
   const permissions = await getResourcePermissions(resourceType)
   const resourcePermission = permissions[resourceId]
+
+  // 3. 检查是否公开访问
+  if (resourcePermission?.isPublic) {
+    return true
+  }
+
+  // 4. 检查具体权限
   return resourcePermission?.accounts.some((acc) => acc.accountId === accountId) || false
 }
 
@@ -80,6 +87,11 @@ export const hasTemplatePermission = async (
 
   if (!templatePermission) {
     return false
+  }
+
+  // 检查是否公开访问
+  if (templatePermission.isPublic) {
+    return true
   }
 
   const userPermission = templatePermission.accounts.find((acc) => acc.accountId === user.id)
@@ -127,6 +139,7 @@ export const addPermission = async (
       resourceType,
       resourceId,
       accounts: [],
+      isPublic: false,
     }
   }
 
@@ -208,6 +221,27 @@ export const checkPermissionRequestStatus = async (resourceType: string, resourc
   )
 }
 
+// 新增: 设置资源的公开访问状态
+export const setResourcePublicAccess = async (
+  resourceType: ResourceType,
+  resourceId: string,
+  isPublic: boolean
+): Promise<void> => {
+  const permissions = await getResourcePermissions(resourceType)
+
+  if (!permissions[resourceId]) {
+    permissions[resourceId] = {
+      resourceType,
+      resourceId,
+      accounts: [],
+      isPublic: false,
+    }
+  }
+
+  permissions[resourceId].isPublic = isPublic
+  await setResourcePermissions(resourceType, permissions)
+}
+
 // 新增订阅相关方法
 export const subscriptionService = {
   // 获取订阅信息
@@ -222,7 +256,6 @@ export const subscriptionService = {
   },
 
   // 更新订阅信息
-  // 在 updateSubscription 方法中修改费用记录部分
   async updateSubscription(orgId: string, subscription: Subscription): Promise<void> {
     try {
       // 获取当前订阅信息

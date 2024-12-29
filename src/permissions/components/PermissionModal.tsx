@@ -13,12 +13,14 @@ import {
   SelectItem,
   Spinner,
   Checkbox,
+  Switch,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { usePermissions } from "../hooks/usePermissions"
 import { Permission, ResourceType, TemplatePermissionRole } from "../types"
 import { queryRamAccount } from "@/service/apis/user"
 import message from "@/components/Message"
+import { setResourcePublicAccess } from "../utils/permissionUtils"
 
 interface PermissionModalProps {
   isOpen: boolean
@@ -41,6 +43,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   const [accounts, setAccounts] = useState<any[]>([])
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false)
   const [selectedRoles, setSelectedRoles] = useState<string[]>([])
+  const [isPublic, setIsPublic] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -65,6 +68,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   const loadPermissions = async () => {
     const data = await getPermissions(resourceId)
     setPermissions(data)
+    setIsPublic(data?.isPublic || false)
   }
 
   const handleAddPermission = async () => {
@@ -110,6 +114,19 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
       message.success("移除权限成功")
     } catch (error) {
       message.error("移除权限失败")
+    }
+  }
+
+  const handlePublicAccessChange = async (isChecked: boolean) => {
+    try {
+      await setResourcePublicAccess(resourceType, resourceId, isChecked)
+      setIsPublic(isChecked)
+      await loadPermissions()
+      message.success(isChecked ? "已设置为公开访问" : "已取消公开访问")
+    } catch (error) {
+      console.error("Error setting public access:", error)
+      message.error("设置公开访问状态失败")
+      setIsPublic(!isChecked) // 恢复状态
     }
   }
 
@@ -220,6 +237,17 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
             <ModalHeader className='flex flex-col gap-1'>管理访问权限 - {resourceTitle}</ModalHeader>
             <ModalBody>
               <div className='space-y-4'>
+                {/* 公开访问开关 */}
+                <div className='flex justify-between items-center p-3 rounded-lg border border-default-200'>
+                  <div>
+                    <h3 className='text-medium font-semibold'>公开访问</h3>
+                    <p className='text-small text-default-500'>
+                      开启后，所有登录用户都可以访问此{resourceType === "app" ? "应用" : "资源"}
+                    </p>
+                  </div>
+                  <Switch isSelected={isPublic} onValueChange={handlePublicAccessChange} size='lg' color='success' />
+                </div>
+
                 <div className='flex items-center gap-2'>
                   {isLoadingAccounts ? (
                     <div className='w-full flex items-center gap-2 h-12'>

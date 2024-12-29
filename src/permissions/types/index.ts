@@ -13,6 +13,7 @@ export interface Permission {
   resourceType: ResourceType
   resourceId: string
   accounts: PermissionAccount[]
+  isPublic?: boolean // 新增: 标识资源是否公开访问
 }
 
 export interface PermissionMetadata {
@@ -29,8 +30,8 @@ export interface UsePermissionsReturn {
 }
 
 // 订阅相关类型定义
-export type SubscriptionType = 'personal' | 'enterprise' | 'custom'
-export type SubscriptionStatus = 'active' | 'expired' | 'warning'
+export type SubscriptionType = "personal" | "enterprise" | "custom"
+export type SubscriptionStatus = "active" | "expired" | "warning"
 
 export interface SubscriptionFeatures {
   nbAccountLimit: number
@@ -59,7 +60,7 @@ export interface AccountUsage {
   accounts: Array<{
     accountId: string
     name: string
-    type: 'admin' | 'nb' | 'wb'
+    type: "admin" | "nb" | "wb"
     createdAt: string
   }>
 }
