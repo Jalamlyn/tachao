@@ -5,6 +5,7 @@ import { getMetadata } from "@/service/apis/metadata"
 import { balanceStore } from "@/stores/balanceStore"
 import { versionStore } from "./store/versionStore"
 import { imageStore } from "./AIEditor/components/ImageStore"
+import { API_PROMPTS } from "./prompts/api-prompts"
 
 // 添加提示词模块
 const promptModules = {
@@ -176,6 +177,8 @@ class AppAgent {
 ${promptModules.thoughtChain}
 
 ${promptModules.reflection}
+
+${API_PROMPTS.multimodal}
 
 当前应用结构：
 

@@ -78,7 +78,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
             size='sm'
             variant='flat'
             startContent={<Icon icon='mdi:eye' className='w-4 h-4' />}
-            onPress={() => window.open(`/apps/${app.id}`, "_blank")}
+            onPress={() => window.open(`/app-run/${app.id}`, "_blank")}
           >
             访问应用
           </Button>

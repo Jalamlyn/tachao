@@ -2,7 +2,6 @@ import { useEffect, useState } from "react"
 import { useCurrentUser } from "../hooks/useCurrentUser"
 import { checkPermissionRequestStatus, hasPermission, hasTemplatePermission, subscriptionService } from "../utils/permissionUtils"
 import { Spinner } from "@nextui-org/react"
-import { Navigate } from "react-router-dom"
 import { ResourceType, TemplatePermissionRole } from "../types"
 import message from "@/components/Message"
 
@@ -19,7 +18,7 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
   resourceId,
   role,
   children,
-  fallback = <Navigate to={`/unauthorized?type=${resourceType}&id=${resourceId}`} />,
+  fallback,
 }) => {
   const { user, isLoading: userLoading } = useCurrentUser()
   const [hasAccess, setHasAccess] = useState(false)
@@ -113,7 +112,12 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
 
   // 处理未登录状态
   if (!user) {
-    return <>{fallback}</>
+    if (fallback) {
+      return <>{fallback}</>
+    }
+    // 如果没有提供 fallback，则使用默认的重定向
+    window.location.href = `/unauthorized?type=${resourceType}&id=${resourceId}`
+    return null
   }
 
   // 如果有权限，显示子组件
@@ -123,7 +127,7 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
 
   // 如果没有权限，根据申请状态显示不同内容
   if (requestStatus.status !== "none") {
-    // 将申请状态传递给 fallback 组件
+    // 构建未授权页面的 URL 参数
     const unauthorizedParams = new URLSearchParams({
       type: resourceType,
       id: resourceId,
@@ -134,9 +138,21 @@ export const PermissionCheck: React.FC<PermissionCheckProps> = ({
       ...(requestStatus.updatedAt && { updatedAt: requestStatus.updatedAt }),
     })
 
-    return <Navigate to={`/unauthorized?${unauthorizedParams.toString()}`} />
+    if (fallback) {
+      return <>{fallback}</>
+    }
+    
+    // 如果没有提供 fallback，则使用默认的重定向
+    window.location.href = `/unauthorized?${unauthorizedParams.toString()}`
+    return null
   }
 
   // 默认显示未授权页面
-  return <>{fallback}</>
+  if (fallback) {
+    return <>{fallback}</>
+  }
+
+  // 如果没有提供 fallback，则使用默认的重定向
+  window.location.href = `/unauthorized?type=${resourceType}&id=${resourceId}`
+  return null
 }

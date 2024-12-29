@@ -49,7 +49,7 @@ export const PageWrapper: React.FC<PageWrapperProps> = ({ pageId }) => {
           const pageData = {
             id: pageId,
             title: "新页面",
-            code: `<shata-ai-code type="page">
+            code: `
 export default (props) => {
   const {React, NextUI} = context
   return (
@@ -58,7 +58,7 @@ export default (props) => {
     </div>
   )
 }
-</shata-ai-code>`,
+`,
             appId,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),

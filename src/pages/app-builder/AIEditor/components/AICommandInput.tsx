@@ -48,7 +48,6 @@ const AICommandInput = memo(({ agent, onResult, onStop }: AICommandInputProps) =
 
   // 处理停止生成
   const handleStop = useCallback(() => {
-    debugger
     aiControllerStore.abort()
     setIsLoading(false)
     onStop?.() // 调用onStop回调通知父组件更新消息状态
@@ -202,7 +201,7 @@ const AICommandInput = memo(({ agent, onResult, onStop }: AICommandInputProps) =
                 <Tooltip showArrow content='停止生成'>
                   <Button
                     isIconOnly
-                    color="danger"
+                    color='danger'
                     radius='lg'
                     size='sm'
                     variant='flat'

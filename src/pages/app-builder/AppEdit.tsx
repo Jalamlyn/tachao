@@ -115,7 +115,7 @@ const AppBuilder: React.FC = () => {
   // 处理停止生成
   const handleStop = useCallback(() => {
     updateLastMessage({
-      status: "stopped",
+      status: "cancelled",
       content: accumulatedTextRef.current || "生成已停止",
     })
   }, [updateLastMessage])

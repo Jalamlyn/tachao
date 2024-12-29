@@ -6,8 +6,9 @@ import AIFormAgent from "@/service/agents/AIFormAgent"
 import { renderLeftPanel } from "./render/renderLeftPanel"
 import { renderRightPanel } from "./render/renderRightPanel"
 import { AI_LEVELS, AIEditorProps } from "./type"
-import { versionStore } from "./store/versionStore"
+import { versionStore } from "../store/versionStore"
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react"
+import { useParams } from "react-router-dom"
 
 export const extractShataAIFormContent = (content: string): string => {
   if (!content) {
@@ -26,6 +27,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
   imageUpload = true,
   excelUpload = true,
   parseConfig,
+  onStop,
   messages,
   selectedTab,
   onTabChange,
@@ -42,6 +44,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
   const [isEditing, setIsEditing] = useState(false)
   const [editedCode, setEditedCode] = useState("")
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const { appId } = useParams()
 
   // 在应用开发场景中，始终使用专家模型
   const selectedAILevel: keyof typeof AI_LEVELS = "EXPERT"
@@ -80,9 +83,6 @@ const AIEditor: React.FC<AIEditorProps> = ({
   const handleConfirmClear = () => {
     if (onClearMessages) {
       onClearMessages()
-      // 清除本地存储中的应用代码
-      const urlParams = new URLSearchParams(window.location.search)
-      const appId = urlParams.get('appId') || window.location.pathname.split('/')[2]
       if (appId) {
         localStorage.removeItem(`app_cache_${appId}`)
       }
@@ -119,6 +119,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
     <div className='h-[calc(100vh-140px)] overflow-hidden'>
       <ResizablePanelGroup direction='horizontal' className='h-full p-2'>
         {renderLeftPanel(
+          onStop,
           selectedAILevel,
           () => {}, // 移除模型选择功能
           handleClearMessages,
@@ -150,15 +151,15 @@ const AIEditor: React.FC<AIEditorProps> = ({
 
       <Modal isOpen={showClearConfirm} onClose={() => setShowClearConfirm(false)}>
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">确认清除</ModalHeader>
+          <ModalHeader className='flex flex-col gap-1'>确认清除</ModalHeader>
           <ModalBody>
             <p>确认要清除所有对话记录和应用代码缓存吗？此操作不可恢复。</p>
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" onPress={() => setShowClearConfirm(false)}>
+            <Button variant='light' onPress={() => setShowClearConfirm(false)}>
               取消
             </Button>
-            <Button color="danger" onPress={handleConfirmClear}>
+            <Button color='danger' onPress={handleConfirmClear}>
               确认清除
             </Button>
           </ModalFooter>

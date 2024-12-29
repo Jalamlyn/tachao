@@ -14,6 +14,16 @@ import { StoreProvider } from "./stores/StoreProvider"
 import RechargeModal from "./components/RechargeModal"
 import PreviewPage from "./pages/app-builder/components/PreviewPage"
 import AppRuntime from "./pages/app-builder/components/AppRuntime"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
 
 // 配置 MobX
 configure({
@@ -50,7 +60,9 @@ const AppSelector: React.FC = () => {
     }
     return (
       <StoreProvider>
-        <PreviewPage appId={appId} />
+        <QueryClientProvider client={queryClient}>
+          <PreviewPage appId={appId} />
+        </QueryClientProvider>
       </StoreProvider>
     )
   }
@@ -64,9 +76,11 @@ const AppSelector: React.FC = () => {
 
     return (
       <StoreProvider>
-        <Provider>
-          <AppRuntime appId={appId} />
-        </Provider>
+        <QueryClientProvider client={queryClient}>
+          <Provider>
+            <AppRuntime appId={appId} />
+          </Provider>
+        </QueryClientProvider>
       </StoreProvider>
     )
   }

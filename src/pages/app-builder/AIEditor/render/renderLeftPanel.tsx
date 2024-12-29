@@ -10,6 +10,7 @@ import { AI_LEVELS } from "../type"
 import { VersionControl } from "../../types"
 
 export const renderLeftPanel = (
+  onStop,
   selectedAILevel: keyof typeof AI_LEVELS,
   handleAILevelChange: (level: keyof typeof AI_LEVELS) => void,
   handleClearMessages: () => void,
@@ -53,7 +54,7 @@ export const renderLeftPanel = (
         </ScrollShadow>
 
         <div className='p-2'>
-          <AICommandInput agent={agent} onResult={onCommandResult} aiLevel={selectedAILevel} />
+          <AICommandInput onStop={onStop} agent={agent} onResult={onCommandResult} aiLevel={selectedAILevel} />
         </div>
       </div>
     </ResizablePanel>
