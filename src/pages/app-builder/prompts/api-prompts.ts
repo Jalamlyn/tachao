@@ -14,10 +14,10 @@ const response = await context.ai.process({
 2. 数据存储 API:
 \`\`\`javascript
 // 读取数据
-const data = await context.api.getMetadata(["user_data"]);
+const data = await context.api.getMetadata([\`\${context.appId}_user_data\`]);
 
 // 写入数据
-await context.api.setMetadata("user_data", {
+await context.api.setMetadata(\`\${context.appId}_user_data\`, {
   name: "张三",
   preferences: { theme: "dark" }
 });

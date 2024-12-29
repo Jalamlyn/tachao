@@ -118,7 +118,7 @@ class VersionStore {
       return
     }
     // 验证内容
-    if (!content.trim()) {
+    if (!content?.trim()) {
       console.warn("Attempted to add empty version, skipping...")
       return
     }

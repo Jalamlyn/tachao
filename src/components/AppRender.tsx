@@ -21,7 +21,7 @@ interface AppRenderProps {
 }
 
 export const AppRender: React.FC<AppRenderProps> = (props) => {
-  const { code, context: extraContext, onError } = props
+  const { code, context: extraContext, onError, appId } = props
   const [Component, setComponent] = useState<React.ComponentType<any> | null>(null)
   const [error, setError] = useState<Error | null>(null)
   useEffect(() => {
@@ -47,6 +47,7 @@ export const AppRender: React.FC<AppRenderProps> = (props) => {
           ReportRenderer: ReportRendererWrapper,
           PageWrapper,
           ai,
+          appId,
         }
 
         // 合并额外的上下文

@@ -69,6 +69,7 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ code, pageId, appId 
           FormRenderer: FormRendererWrapper,
           ReportRenderer: ReportRendererWrapper,
           ai,
+          appId,
         }
 
         // 创建组件
