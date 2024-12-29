@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { Card, Button, Chip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { motion } from "framer-motion"
+import { motion, useAnimation, useInView } from "framer-motion"
 import QRCodeModal from "./QRCodeModal"
 import WaitListModal from "./WaitListModal"
 
@@ -158,6 +158,44 @@ const PricingSection = () => {
     }
   }
 
+  // 新增的动画变体
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.1,
+      },
+    },
+  }
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        damping: 20,
+        stiffness: 100,
+      },
+    },
+  }
+
+  const featureVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        type: "spring",
+        damping: 25,
+        stiffness: 120,
+      },
+    },
+  }
+
   return (
     <section className='py-20 bg-gradient-to-b from-white to-default-50'>
       <div className='mx-auto px-4'>
@@ -165,21 +203,28 @@ const PricingSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
           className='text-center mb-12'
         >
           <h2 className='text-3xl md:text-4xl font-bold mb-4'>简单透明的价格体系</h2>
           <p className='text-xl text-default-600'>选择最适合您企业的方案</p>
         </motion.div>
 
-        <div className='grid md:grid-cols-4 gap-8 max-w-7xl mx-auto'>
+        <motion.div
+          className='grid md:grid-cols-4 gap-8 max-w-7xl mx-auto'
+          variants={containerVariants}
+          initial='hidden'
+          whileInView='visible'
+          viewport={{ once: true }}
+        >
           {Object.values(SUBSCRIPTION_PLANS).map((plan, index) => (
             <motion.div
               key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
+              variants={cardVariants}
               className={`flex ${plan.highlight ? "md:-translate-y-2" : ""}`}
+              style={{
+                willChange: "transform, opacity",
+              }}
             >
               <Card
                 className={`relative flex flex-col w-full transition-all duration-300 hover:shadow-xl
@@ -187,7 +232,11 @@ const PricingSection = () => {
                   hover:scale-[1.02] hover:border-primary/50
                 `}
               >
-                <div className='flex flex-col flex-1 p-6'>
+                <motion.div
+                  className='flex flex-col flex-1 p-6'
+                  whileHover={{ scale: 1.01 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                >
                   <div className='mb-6'>
                     <h3 className='text-2xl font-bold mb-2'>{plan.name}</h3>
                     <div className='mb-4'>
@@ -200,12 +249,15 @@ const PricingSection = () => {
                   </div>
 
                   <div className='flex-grow'>
-                    <div className='space-y-4'>
+                    <motion.div className='space-y-4'>
                       {plan.features.map((feature, idx) => (
-                        <div
+                        <motion.div
                           key={idx}
+                          variants={featureVariants}
                           className={`flex items-center gap-3 ${feature.highlight ? "text-primary font-medium" : ""} 
                             ${feature.isLimited ? "text-default-400" : ""}`}
+                          whileHover={{ x: 5 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 10 }}
                         >
                           <Icon
                             icon={feature.icon}
@@ -213,41 +265,52 @@ const PricingSection = () => {
                               ${feature.isLimited ? "text-default-400" : ""}`}
                           />
                           <span>{feature.text}</span>
-                        </div>
+                        </motion.div>
                       ))}
-                    </div>
+                    </motion.div>
                   </div>
 
                   <div className='mt-8'>
-                    <Button
-                      color={plan.color}
-                      variant={plan.highlight ? "shadow" : "flat"}
-                      className='w-full transition-transform duration-200 hover:scale-105'
-                      size='lg'
-                      onPress={() => handleButtonClick(plan.type)}
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
                     >
-                      {plan.type === "free" ? "立即注册" : "申请专属账号"}
-                    </Button>
+                      <Button
+                        color={plan.color}
+                        variant={plan.highlight ? "shadow" : "flat"}
+                        className='w-full transition-transform duration-200 hover:scale-105'
+                        size='lg'
+                        onPress={() => handleButtonClick(plan.type)}
+                      >
+                        {plan.type === "free" ? "立即注册" : "申请专属账号"}
+                      </Button>
+                    </motion.div>
                   </div>
-                </div>
+                </motion.div>
               </Card>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.4 }}
           className='mt-12 text-center'
         >
-          <div className='inline-block p-4 bg-default-50 rounded-lg'>
+          <motion.div
+            className='inline-block p-4 bg-default-50 rounded-lg'
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+          >
             <p className='text-default-600'>
               所有方案均包含:
               <span className='font-medium mx-2'>免费技术支持</span>•<span className='font-medium mx-2'>安全保障</span>•
               <span className='font-medium mx-2'>定期更新</span>
             </p>
-          </div>
+          </motion.div>
         </motion.div>
       </div>
 
