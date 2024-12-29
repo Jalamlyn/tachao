@@ -44,54 +44,55 @@ const AppBuilder: React.FC = () => {
     if (iframeRef.current && !isRefreshing) {
       setIsRefreshing(true)
       iframeRef.current.src = iframeRef.current.src
-      setTimeout(() => setIsRefreshing(false), 500) // 防抖
+      setTimeout(() => setIsRefreshing(false), 500)
     }
   }, [isRefreshing])
 
-  // 监听版本变化
-  useEffect(() => {
-    const unsubscribe = versionStore.subscribeToHistory(() => {
-      refreshPreview()
-    })
-    return () => unsubscribe()
-  }, [refreshPreview])
-
-  // 初始化代码列表
-  useEffect(() => {
-    const currentContent = versionStore.getCurrentContent()
-    const appCache = appId ? JSON.parse(localStorage.getItem(`app_cache_${appId}`) || "{}") : {}
+  // 更新代码列表的函数
+  const updateCodeItems = useCallback(() => {
+    const currentVersion = versionStore.getCurrentVersion()
+    if (!currentVersion) return
 
     const items: CodeItem[] = []
 
     // 添加应用入口代码
-    if (currentContent) {
+    if (currentVersion.content) {
       items.push({
         id: "app_entry",
         title: "应用入口 (App Entry)",
         type: "app",
-        code: currentContent,
-        updatedAt: appCache.updatedAt,
+        code: currentVersion.content,
+        updatedAt: currentVersion.appState?.updatedAt
       })
     }
 
     // 添加页面代码
-    if (appCache.pages) {
-      Object.entries(appCache.pages).forEach(([pageId, page]: [string, any]) => {
+    if (currentVersion.appState?.pages) {
+      Object.entries(currentVersion.appState.pages).forEach(([pageId, page]) => {
         items.push({
           id: pageId,
           title: `${page.title} (${pageId})`,
           type: "page",
           code: page.code,
-          updatedAt: page.updatedAt,
+          updatedAt: page.updatedAt
         })
       })
     }
 
     setCodeItems(items)
-    if (items.length > 0) {
+    if (items.length > 0 && !selectedCodeId) {
       setSelectedCodeId(items[0].id)
     }
-  }, [appId, versionControl.currentIndex])
+  }, [selectedCodeId])
+
+  // 监听版本变化
+  useEffect(() => {
+    const unsubscribe = versionStore.subscribeToHistory(() => {
+      refreshPreview()
+      updateCodeItems()
+    })
+    return () => unsubscribe()
+  }, [refreshPreview, updateCodeItems])
 
   // 加载应用数据
   useEffect(() => {
@@ -111,7 +112,7 @@ const AppBuilder: React.FC = () => {
 
         // 加载初始版本
         const appCache = AppAgent.getAppCache(appId)
-        if (appCache?.appCode) {
+        if (appCache) {
           versionStore.addVersion(appCache.appCode, {
             pages: appCache.pages,
             version: appCache.version,
@@ -128,6 +129,107 @@ const AppBuilder: React.FC = () => {
 
     loadAppData()
   }, [appId])
+
+  const handleCommandResult = useCallback(
+    (result: any) => {
+      if (!result.success) {
+        message.error(result.error || "操作失败")
+        return
+      }
+
+      try {
+        const currentVersion = versionStore.getCurrentVersion()
+        if (!currentVersion) return
+
+        const updatedPages = { ...currentVersion.appState?.pages }
+        if (result.pages) {
+          Object.entries(result.pages).forEach(([pageId, pageData]) => {
+            updatedPages[pageId] = {
+              code: pageData.code,
+              title: pageData.title,
+              updatedAt: new Date().toISOString(),
+            }
+          })
+        }
+
+        // 添加新版本
+        versionStore.addVersion(
+          result.appCode || currentVersion.content,
+          {
+            pages: updatedPages,
+            version: (currentVersion.appState?.version || 0) + 1,
+            updatedAt: new Date().toISOString(),
+          }
+        )
+
+        // 更新最后一条消息状态为成功
+        updateLastMessage({ status: "success" })
+      } catch (error) {
+        console.error("Error in handleCommandResult:", error)
+        message.error("处理结果时发生错误")
+      }
+    },
+    []
+  )
+
+  const handlePublish = async () => {
+    if (!appId) return
+    try {
+      setIsLoading(true)
+      const publishData = versionStore.exportForPublish()
+      if (!publishData) {
+        throw new Error("没有可发布的内容")
+      }
+
+      // 1. 更新所有页面
+      for (const [pageId, page] of Object.entries(publishData.pages)) {
+        await setMetadata(
+          pageId,
+          JSON.stringify({
+            id: pageId,
+            title: page.title,
+            code: page.code,
+            appId,
+            updatedAt: page.updatedAt,
+          })
+        )
+      }
+
+      // 2. 更新应用代码
+      await setMetadata(
+        `app_${appId}`,
+        JSON.stringify({
+          code: publishData.appCode,
+          updatedAt: publishData.updatedAt,
+          version: publishData.version,
+        })
+      )
+
+      // 3. 更新应用索引
+      const appIndexResult = await getMetadata(["app_index"])
+      const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
+      const appIndex = apps.findIndex((a: any) => a.id === appId)
+      if (appIndex === -1) throw new Error("应用不存在")
+
+      const updatedApps = [...apps]
+      updatedApps[appIndex] = {
+        ...updatedApps[appIndex],
+        updatedAt: new Date().toISOString(),
+        status: "active",
+        version: publishData.version,
+        lastPublishedAt: new Date().toISOString(),
+      }
+
+      await setMetadata("app_index", JSON.stringify(updatedApps))
+      message.success("发布成功")
+      setShowPublishModal(true)
+    } catch (error) {
+      console.error("Error publishing app:", error)
+      message.error("发布失败")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // 添加消息处理函数
   const addMessage = useCallback((message: AppBuilderMessage) => {
@@ -170,142 +272,6 @@ const AppBuilder: React.FC = () => {
       content: accumulatedTextRef.current || "生成已停止",
     })
   }, [updateLastMessage])
-
-  const handleCommandResult = useCallback(
-    (result: any) => {
-      if (!result.success) {
-        message.error(result.error || "操作失败")
-        return
-      }
-
-      try {
-        const appCache = AppAgent.getAppCache(appId!)
-        if (!appCache) return
-
-        const updatedPages = { ...appCache.pages }
-        if (result.pages) {
-          Object.entries(result.pages).forEach(([pageId, pageData]) => {
-            updatedPages[pageId] = {
-              code: pageData.code,
-              title: pageData.title,
-              updatedAt: new Date().toISOString(),
-            }
-          })
-        }
-
-        // 更新应用缓存
-        const newAppCache = {
-          ...appCache,
-          pages: updatedPages,
-          version: appCache.version + 1,
-          updatedAt: new Date().toISOString(),
-        }
-
-        // 如果有新的应用代码，更新appCode
-        if (result?.appCode && result.appCode !== "") {
-          newAppCache.appCode = result.appCode
-        }
-
-        // 添加新版本
-        versionStore.addVersion(newAppCache.appCode || versionStore.getCurrentContent(), {
-          pages: newAppCache.pages,
-          version: newAppCache.version,
-          updatedAt: newAppCache.updatedAt,
-        })
-
-        // 更新缓存
-        AppAgent.setAppCache(appId!, newAppCache)
-
-        // 更新最后一条消息状态为成功
-        updateLastMessage({ status: "success" })
-
-        // 更新代码列表
-        const items: CodeItem[] = [
-          {
-            id: "app_entry",
-            title: "应用入口 (App Entry)",
-            type: "app",
-            code: newAppCache.appCode,
-            updatedAt: newAppCache.updatedAt,
-          },
-          ...Object.entries(updatedPages).map(([pageId, page]) => ({
-            id: pageId,
-            title: `${page.title} (${pageId})`,
-            type: "page" as const,
-            code: page.code,
-            updatedAt: page.updatedAt,
-          })),
-        ]
-        setCodeItems(items)
-
-        // 刷新预览
-        refreshPreview()
-      } catch (error) {
-        console.error("Error in handleCommandResult:", error)
-        message.error("处理结果时发生错误")
-      }
-    },
-    [appId, updateLastMessage, refreshPreview]
-  )
-
-  const handlePublish = async () => {
-    if (!appId) return
-    try {
-      setIsLoading(true)
-      const appCache = AppAgent.getAppCache(appId)
-      if (!appCache) {
-        throw new Error("应用缓存不存在")
-      }
-
-      // 1. 更新所有页面
-      for (const [pageId, page] of Object.entries(appCache.pages)) {
-        await setMetadata(
-          pageId,
-          JSON.stringify({
-            id: pageId,
-            title: page.title,
-            code: page.code,
-            appId,
-            updatedAt: page.updatedAt,
-          })
-        )
-      }
-
-      // 2. 更新应用代码
-      await setMetadata(
-        `app_${appId}`,
-        JSON.stringify({
-          code: appCache.appCode,
-          updatedAt: new Date().toISOString(),
-          version: appCache.version,
-        })
-      )
-
-      // 3. 更新应用索引
-      const appIndexResult = await getMetadata(["app_index"])
-      const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
-      const appIndex = apps.findIndex((a: any) => a.id === appId)
-      if (appIndex === -1) throw new Error("应用不存在")
-
-      const updatedApps = [...apps]
-      updatedApps[appIndex] = {
-        ...updatedApps[appIndex],
-        updatedAt: new Date().toISOString(),
-        status: "active",
-        version: appCache.version,
-        lastPublishedAt: new Date().toISOString(),
-      }
-
-      await setMetadata("app_index", JSON.stringify(updatedApps))
-      message.success("发布成功")
-      setShowPublishModal(true)
-    } catch (error) {
-      console.error("Error publishing app:", error)
-      message.error("发布失败")
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleClearMessages = () => {
     setMessages([])
