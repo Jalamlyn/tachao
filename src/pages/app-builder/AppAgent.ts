@@ -1,6 +1,5 @@
 import chatChunkExpert from "@/service/chat/chat-chunk-openrouter"
-import { AppBuilderMessage, AppPages } from "./types"
-import { getMetadata } from "@/service/apis/metadata"
+import { AppBuilderMessage } from "./types"
 import { balanceStore } from "@/stores/balanceStore"
 import { versionStore } from "./store/versionStore"
 import { imageStore } from "./AIEditor/components/ImageStore"
@@ -16,46 +15,6 @@ class AppAgent {
       AppAgent.instance = new AppAgent()
     }
     return AppAgent.instance
-  }
-
-  public async loadAppCache(appId: string) {
-    try {
-      // 获取应用信息
-      const appIndexResult = await getMetadata(["app_index"])
-      const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
-      const app = apps.find((a: any) => a.id === appId)
-      if (!app) throw new Error("App not found")
-
-      // 获取应用代码
-      const appResult = await getMetadata([`app_${appId}`])
-      const appData = appResult.data?.[0]?.value ? JSON.parse(appResult.data[0].value) : null
-
-      // 获取所有页面的代码
-      const pages: AppPages = {}
-      for (const page of app.pages || []) {
-        const pageResult = await getMetadata([page.id])
-        if (pageResult.data?.[0]?.value) {
-          const pageData = JSON.parse(pageResult.data[0].value)
-          pages[page.id] = {
-            code: pageData.code,
-            title: pageData.title,
-            updatedAt: pageData.updatedAt,
-          }
-        }
-      }
-
-      // 初始化版本控制
-      if (appData?.code) {
-        versionStore.addVersion(appData.code, {
-          pages,
-          version: appData?.version || 1,
-          updatedAt: appData?.updatedAt || new Date().toISOString(),
-        })
-      }
-    } catch (error) {
-      console.error("Error loading app cache:", error)
-      throw error
-    }
   }
 
   public async processCommand(
