@@ -7,7 +7,7 @@ import { imageStore } from "./ImageStore"
 import message from "@/components/Message"
 
 interface AIAgent {
-  processCommand: (command: string, onChunk?: (chunk: string) => void) => Promise<any>
+  processCommand: (command: string | { content: string; images?: string[] }, onChunk?: (chunk: string) => void) => Promise<any>
 }
 
 interface AICommandInputProps {
@@ -29,7 +29,12 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
 
     try {
       setIsLoading(true)
-      const result = await agent.processCommand(input)
+      // 构造包含图片的消息
+      const message = {
+        content: input,
+        images: preview ? [preview] : []
+      }
+      const result = await agent.processCommand(message)
 
       onResult?.(result)
       setInput("")
@@ -38,7 +43,7 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
     } finally {
       setIsLoading(false)
     }
-  }, [input, isLoading, agent, onResult])
+  }, [input, isLoading, agent, onResult, preview])
 
   // 处理按键事件
   const handleKeyPress = useCallback(
