@@ -7,6 +7,156 @@ import { versionStore } from "./store/versionStore"
 import { imageStore } from "./AIEditor/components/ImageStore"
 import { API_PROMPTS } from "./prompts/api-prompts"
 
+// Metadata 处理示例模块
+const metadataExamples = {
+  // 1. 基础数据解析示例
+  basic: `
+// 正确的数据解析方式
+const result = await getMetadata(["app_index"])
+if (result.data?.[0]?.value) {
+  const apps = JSON.parse(result.data[0].value)
+  // 处理解析后的数据
+  console.log(apps)
+}
+`,
+
+  // 2. 错误处理示例
+  errorHandling: `
+try {
+  const result = await getMetadata(["app_index"])
+  if (!result.data?.[0]?.value) {
+    throw new Error("No data found")
+  }
+  const apps = JSON.parse(result.data[0].value)
+  // 处理数据
+} catch (error) {
+  console.error("Error parsing metadata:", error)
+  message.error("Failed to load data")
+}
+`,
+
+  // 3. 数据保存示例
+  saving: `
+try {
+  const data = {
+    id: "app_123",
+    title: "My App",
+    version: 1,
+    updatedAt: new Date().toISOString()
+  }
+  await setMetadata("app_123", JSON.stringify(data))
+  message.success("Data saved successfully")
+} catch (error) {
+  console.error("Error saving metadata:", error)
+  message.error("Failed to save data")
+}
+`,
+
+  // 4. 批量数据处理示例
+  batchProcessing: `
+// 获取多个 metadata
+const ids = ["app_1", "app_2", "app_3"]
+const result = await getMetadata(ids)
+const validData = result.data
+  .filter(item => item?.value) // 过滤有效数据
+  .map(item => {
+    try {
+      return JSON.parse(item.value)
+    } catch (error) {
+      console.error(\`Error parsing data for \${item.name}:\`, error)
+      return null
+    }
+  })
+  .filter(Boolean) // 过滤解析失败的数据
+`,
+
+  // 5. 类型安全的数据处理示例
+  typeSafe: `
+interface AppMetadata {
+  id: string
+  title: string
+  version: number
+  updatedAt: string
+  pages?: {
+    id: string
+    title: string
+    code: string
+  }[]
+}
+
+async function getAppMetadata(appId: string): Promise<AppMetadata | null> {
+  try {
+    const result = await getMetadata([\`app_\${appId}\`])
+    if (!result.data?.[0]?.value) {
+      return null
+    }
+    const data = JSON.parse(result.data[0].value) as AppMetadata
+    return data
+  } catch (error) {
+    console.error("Error getting app metadata:", error)
+    return null
+  }
+}
+`,
+
+  // 6. 数据验证示例
+  validation: `
+function validateAppData(data: any): boolean {
+  return (
+    typeof data === "object" &&
+    typeof data.id === "string" &&
+    typeof data.title === "string" &&
+    typeof data.version === "number" &&
+    typeof data.updatedAt === "string"
+  )
+}
+
+async function saveAppData(appId: string, data: any) {
+  if (!validateAppData(data)) {
+    throw new Error("Invalid app data format")
+  }
+  await setMetadata(\`app_\${appId}\`, JSON.stringify(data))
+}
+`,
+
+  // 7. 缓存处理示例
+  caching: `
+const APP_CACHE_KEY = "app_cache_"
+
+function getCachedAppData(appId: string) {
+  const cached = localStorage.getItem(\`\${APP_CACHE_KEY}\${appId}\`)
+  return cached ? JSON.parse(cached) : null
+}
+
+function setCachedAppData(appId: string, data: any) {
+  localStorage.setItem(
+    \`\${APP_CACHE_KEY}\${appId}\`,
+    JSON.stringify({
+      ...data,
+      cachedAt: new Date().toISOString()
+    })
+  )
+}
+
+async function getAppDataWithCache(appId: string) {
+  // 先尝试从缓存获取
+  const cached = getCachedAppData(appId)
+  if (cached) {
+    return cached
+  }
+
+  // 缓存不存在或过期，从服务器获取
+  const result = await getMetadata([\`app_\${appId}\`])
+  if (result.data?.[0]?.value) {
+    const data = JSON.parse(result.data[0].value)
+    setCachedAppData(appId, data)
+    return data
+  }
+  return null
+}
+`
+}
+
 // 添加提示词模块
 const promptModules = {
   thoughtChain: `作为一个专业的需求分析专家，请按照以下步骤分析用户需求并提供完整实现：
@@ -71,6 +221,37 @@ const promptModules = {
 </shata-ai-reflection> 
 \`\`\`
 --- 标签中。`,
+
+  metadataHandling: `在处理 Metadata 数据时，请遵循以下最佳实践和示例：
+
+1. 基础数据解析
+${metadataExamples.basic}
+
+2. 错误处理
+${metadataExamples.errorHandling}
+
+3. 数据保存
+${metadataExamples.saving}
+
+4. 批量数据处理
+${metadataExamples.batchProcessing}
+
+5. 类型安全处理
+${metadataExamples.typeSafe}
+
+6. 数据验证
+${metadataExamples.validation}
+
+7. 缓存策略
+${metadataExamples.caching}
+
+请确保在处理 Metadata 数据时遵循这些示例中展示的最佳实践：
+1. 始终进行错误处理
+2. 使用类型安全的方法
+3. 实现数据验证
+4. 合理使用缓存
+5. 提供用户友好的错误消息
+`
 }
 
 class AppAgent {
@@ -177,6 +358,8 @@ class AppAgent {
 ${promptModules.thoughtChain}
 
 ${promptModules.reflection}
+
+${promptModules.metadataHandling}
 
 ${API_PROMPTS.multimodal}
 
@@ -335,12 +518,6 @@ export default (props) => {
    - 路由路径始终使用相对路径（不要以"/"开头）
    - 系统会自动处理基础路径的拼接
 
-9. 路由路径示例：
-   配置的路径    =>    实际访问路径
-   ""           =>    /app-preview/{appId}/
-   "home"       =>    /app-preview/{appId}/home
-   "about"      =>    /app-preview/{appId}/about
-   "users/list" =>    /app-preview/{appId}/users/list
 
 注意事项：
 1. 生成的代码必须完整，不能省略
@@ -393,7 +570,7 @@ export default (props) => {
 页面代码,必须是完整代码, 不能省略任何逻辑和代码
 </shata-ai-code>
 \`\`\`
-所有 shata-ai 标签必须包裹在\`\`\`jsx 和 \`\`\`之间
+所有 shata-ai 标签必须包裹在\`\`\`jsx 和 \`\`\`之间, 生成的代码必须是完整代码, 不能省略和注释任何一行代码或者逻辑
 ---
 `
 
