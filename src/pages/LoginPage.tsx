@@ -9,7 +9,6 @@ import { message } from "@/components/Message"
 import { useTranslation } from "react-i18next"
 import { jsonParse, jsonStringify } from "@/utils"
 import { motion } from "framer-motion"
-import AnimatedBackground from "@/pages/landing/AnimatedBackground"
 
 export default function WeChatLoginPage() {
   const { t } = useTranslation()
@@ -21,8 +20,6 @@ export default function WeChatLoginPage() {
   const [password, setPassword] = useState("")
   const [enterpriseName, setEnterpriseName] = useState("")
   const [sloganVisible, setSloganVisible] = useState(false)
-
-  const navigate = useNavigate()
 
   const loginData = useRef({
     account: "",
@@ -74,7 +71,7 @@ export default function WeChatLoginPage() {
 
     try {
       const res = await login(loginData.current)
-      const auth = app.auth()
+      // const auth = app.auth()
 
       // 执行 auth.signIn
       // await auth.signIn({
@@ -117,7 +114,6 @@ export default function WeChatLoginPage() {
 
   return (
     <div className='min-h-screen relative bg-gradient-to-b from-primary-dark to-primary-light'>
-      <AnimatedBackground />
       <div className='container mx-auto px-4 min-h-screen flex items-center justify-center'>
         <motion.div
           initial={{ opacity: 0, y: 20 }}

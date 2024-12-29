@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom"
 import { Helmet } from "react-helmet"
 import Hero from "@/pages/landing/Hero"
 import Footer from "@/pages/landing/Footer"
-import AnimatedBackground from "@/pages/landing/AnimatedBackground"
 import ScrollProgress from "@/pages/landing/ScrollProgress"
 import PricingSection from "@/pages/landing/PricingSection"
 
@@ -31,19 +30,17 @@ const LandingPage: React.FC = () => {
         <meta name='description' content='让 AI 为企业赋能，提升效率，降低成本，1分钟部署，5分钟开发，10分钟上线' />
         <meta name='keywords' content='AI,企业服务,效率提升,智能化,沙塔,快速部署,企业管理系统' />
         <meta property='og:title' content='沙塔智能 - 将你的创意转化为现实代码' />
-        <meta property='og:description' content='让 AI 为企业赋能，提升效率，降低成本，1分钟部署，5分钟开发，10分钟上线' />
+        <meta
+          property='og:description'
+          content='让 AI 为企业赋能，提升效率，降低成本，1分钟部署，5分钟开发，10分钟上线'
+        />
         <meta property='og:type' content='website' />
         <meta name='viewport' content='width=device-width, initial-scale=1.0' />
       </Helmet>
 
-      <AnimatedBackground />
       <ScrollProgress />
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }} 
-        animate={controls} 
-        className='relative'
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={controls} className='relative'>
         <Hero onGetStarted={handleGetStarted} />
         <PricingSection />
         <Footer />
