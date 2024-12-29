@@ -47,6 +47,7 @@ const AppManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!appToDelete) return
     await deleteApp(appToDelete.id)
+    localStorage.removeItem(`app_cache_${appToDelete.id}`)
     setDeleteModalOpen(false)
   }
 
@@ -69,11 +70,7 @@ const AppManagement: React.FC = () => {
         isLoading={isCreating}
       />
 
-      <PageList
-        isOpen={!!selectedApp}
-        onClose={() => setSelectedApp(null)}
-        app={selectedApp!}
-      />
+      <PageList isOpen={!!selectedApp} onClose={() => setSelectedApp(null)} app={selectedApp!} />
 
       <Modal
         isOpen={isDeleteModalOpen}

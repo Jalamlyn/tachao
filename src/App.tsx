@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { Navigate, useRoutes, useNavigate, useLocation } from "react-router-dom"
+import { Navigate, Routes, Route, useNavigate, useLocation } from "react-router-dom"
 import { NextUIProvider } from "@nextui-org/react"
 import { useTranslation } from "react-i18next"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -58,76 +58,71 @@ function App() {
     return false
   }
 
-  const element = useRoutes([
-    { path: "/", element: <LandingPage /> },
-    {
-      path: "/ai",
-      element: shouldRedirectToLogin() ? <Navigate to='/external-login' /> : <AIHomePage />,
-      children: [{ index: true, element: <Navigate to='management' replace /> }],
-    },
-    { path: "/login", element: <WeChatLoginPage /> },
-    { path: "/external-login", element: <ExternalLoginPage /> },
-    {
-      path: "/form-preview/:templateId",
-      element: (
-        <div className='h-screen overflow-auto'>
-          <FormPreview />
-        </div>
-      ),
-    },
-    { path: "/form/:formId", element: <Form /> },
-    {
-      path: "/form-create/:templateId",
-      element: (
-        <PermissionCheck resourceType='template' resourceId={location.pathname.split("/").pop() || ""} role='creator'>
-          <FormCreate />
-        </PermissionCheck>
-      ),
-    },
-    { path: "/report/:reportId", element: <Report /> },
-    {
-      path: "/apps/:appId/*",
-      element: <AppEntry />,
-      children: [
-        {
-          path: "enterprise/*",
-          element: (
-            <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
-              <EnterpriseLayout />
-            </PermissionCheck>
-          ),
-        },
-      ],
-    },
-    {
-      path: "/forms/analysis",
-      element: shouldRedirectToLogin() ? <Navigate to='/login' /> : <AnalysisPage />,
-    },
-    {
-      path: "/resources/view/:id",
-      element: shouldRedirectToLogin() ? <Navigate to='/login' /> : <ResourceDataTable />,
-    },
-    { path: "/unauthorized", element: <UnauthorizedPage /> },
-    {
-      path: "/operations/wait-list",
-      element: shouldRedirectToLogin() ? <Navigate to='/login' /> : <WaitListPage />,
-    },
-    ...renderWeChatApp(),
-    {
-      path: "/apps/:appId/pages/:pageId",
-      element: (
-        <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
-          <PagePreview />
-        </PermissionCheck>
-      ),
-    },
-  ])
-
   return (
     <QueryClientProvider client={queryClient}>
       <NextUIProvider navigate={navigate}>
         <div className='min-h-screen'>
-          {element}
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route
+              path="/ai"
+              element={shouldRedirectToLogin() ? <Navigate to='/external-login' /> : <AIHomePage />}
+            >
+              <Route index element={<Navigate to='management' replace />} />
+            </Route>
+            <Route path="/login" element={<WeChatLoginPage />} />
+            <Route path="/external-login" element={<ExternalLoginPage />} />
+            <Route
+              path="/form-preview/:templateId"
+              element={
+                <div className='h-screen overflow-auto'>
+                  <FormPreview />
+                </div>
+              }
+            />
+            <Route path="/form/:formId" element={<Form />} />
+            <Route
+              path="/form-create/:templateId"
+              element={
+                <PermissionCheck resourceType='template' resourceId={location.pathname.split("/").pop() || ""} role='creator'>
+                  <FormCreate />
+                </PermissionCheck>
+              }
+            />
+            <Route path="/report/:reportId" element={<Report />} />
+            <Route path="/apps/:appId/*" element={<AppEntry />}>
+              <Route
+                path="enterprise/*"
+                element={
+                  <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
+                    <EnterpriseLayout />
+                  </PermissionCheck>
+                }
+              />
+            </Route>
+            <Route
+              path="/forms/analysis"
+              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <AnalysisPage />}
+            />
+            <Route
+              path="/resources/view/:id"
+              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <ResourceDataTable />}
+            />
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
+            <Route
+              path="/operations/wait-list"
+              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <WaitListPage />}
+            />
+            {renderWeChatApp()}
+            <Route
+              path="/apps/:appId/pages/:pageId"
+              element={
+                <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
+                  <PagePreview />
+                </PermissionCheck>
+              }
+            />
+          </Routes>
           <Toaster />
         </div>
       </NextUIProvider>
