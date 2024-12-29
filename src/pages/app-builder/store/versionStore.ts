@@ -22,7 +22,7 @@ class VersionStore {
   private static instance: VersionStore
   private versions: Version[] = []
   private currentIndex: number = -1
-  
+
   // 分离内容更新和历史更新的监听器
   private contentListeners = new Set<VersionChangeListener>()
   private historyListeners = new Set<VersionHistoryListener>()
@@ -49,24 +49,11 @@ class VersionStore {
   }
 
   private notifyContentListeners(content: string) {
-    this.contentListeners.forEach(listener => listener(content))
+    this.contentListeners.forEach((listener) => listener(content))
   }
 
   private notifyHistoryListeners() {
-    this.historyListeners.forEach(listener => listener())
-  }
-
-  // 同步到本地存储
-  private syncToLocalStorage(version: Version) {
-    if (version.appState) {
-      const appId = window.location.pathname.split('/').pop()
-      if (appId) {
-        localStorage.setItem(`app_cache_${appId}`, JSON.stringify({
-          ...version.appState,
-          appCode: version.content
-        }))
-      }
-    }
+    this.historyListeners.forEach((listener) => listener())
   }
 
   /**
@@ -75,26 +62,23 @@ class VersionStore {
    * @param appState 应用状态
    * @param description 版本描述
    */
-  addVersion(content: string, appState?: Version['appState'], description?: string) {
+  addVersion(content: string, appState?: Version["appState"], description?: string) {
     // 移除当前版本之后的所有版本
     this.versions = this.versions.slice(0, this.currentIndex + 1)
-    
+
     // 添加新版本
     const newVersion: Version = {
       timestamp: Date.now(),
       content,
       appState,
-      description
+      description,
     }
-    
+
     this.versions.push(newVersion)
-    
+
     // 更新当前索引
     this.currentIndex = this.versions.length - 1
-    
-    // 同步到本地存储
-    this.syncToLocalStorage(newVersion)
-    
+
     // 通知更新
     this.notifyContentListeners(content)
     this.notifyHistoryListeners()
@@ -111,14 +95,24 @@ class VersionStore {
    * 获取当前内容
    */
   getCurrentContent(): string {
-    return this.getCurrentVersion()?.content || ''
+    return this.getCurrentVersion()?.content || ""
   }
 
   /**
    * 获取当前应用状态
    */
-  getCurrentAppState(): Version['appState'] | undefined {
+  getCurrentAppState(): Version["appState"] | undefined {
     return this.getCurrentVersion()?.appState
+  }
+
+  /**
+   * 获取特定页面的代码
+   * @param pageId 页面ID
+   * @returns 页面代码或null
+   */
+  getPageCode(pageId: string): string | null {
+    const currentVersion = this.getCurrentVersion()
+    return currentVersion?.appState?.pages[pageId]?.code || null
   }
 
   /**
@@ -142,10 +136,6 @@ class VersionStore {
     if (this.canRollback()) {
       this.currentIndex--
       const version = this.versions[this.currentIndex]
-      
-      // 同步到本地存储
-      this.syncToLocalStorage(version)
-      
       this.notifyContentListeners(version.content)
       this.notifyHistoryListeners()
       return version
@@ -160,10 +150,6 @@ class VersionStore {
     if (this.canForward()) {
       this.currentIndex++
       const version = this.versions[this.currentIndex]
-      
-      // 同步到本地存储
-      this.syncToLocalStorage(version)
-      
       this.notifyContentListeners(version.content)
       this.notifyHistoryListeners()
       return version
@@ -177,7 +163,7 @@ class VersionStore {
   clear() {
     this.versions = []
     this.currentIndex = -1
-    this.notifyContentListeners('')
+    this.notifyContentListeners("")
     this.notifyHistoryListeners()
   }
 
@@ -186,6 +172,21 @@ class VersionStore {
    */
   getHistory(): Version[] {
     return [...this.versions]
+  }
+
+  /**
+   * 导出发布数据
+   */
+  exportForPublish() {
+    const currentVersion = this.getCurrentVersion()
+    if (!currentVersion) return null
+
+    return {
+      appCode: currentVersion.content,
+      pages: currentVersion.appState?.pages || {},
+      version: currentVersion.appState?.version || 1,
+      updatedAt: new Date().toISOString(),
+    }
   }
 }
 
