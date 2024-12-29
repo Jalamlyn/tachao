@@ -6,7 +6,8 @@ import AIFormAgent from "@/service/agents/AIFormAgent"
 import { renderLeftPanel } from "./render/renderLeftPanel"
 import { renderRightPanel } from "./render/renderRightPanel"
 import { AI_LEVELS, AIEditorProps } from "./type"
-import { versionStore } from "../store/versionStore"
+import { versionStore } from "./store/versionStore"
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react"
 
 export const extractShataAIFormContent = (content: string): string => {
   if (!content) {
@@ -40,6 +41,7 @@ const AIEditor: React.FC<AIEditorProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editedCode, setEditedCode] = useState("")
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   // 在应用开发场景中，始终使用专家模型
   const selectedAILevel: keyof typeof AI_LEVELS = "EXPERT"
@@ -72,10 +74,21 @@ const AIEditor: React.FC<AIEditorProps> = ({
   }
 
   const handleClearMessages = () => {
+    setShowClearConfirm(true)
+  }
+
+  const handleConfirmClear = () => {
     if (onClearMessages) {
       onClearMessages()
-      message.success("对话已清空")
+      // 清除本地存储中的应用代码
+      const urlParams = new URLSearchParams(window.location.search)
+      const appId = urlParams.get('appId') || window.location.pathname.split('/')[2]
+      if (appId) {
+        localStorage.removeItem(`app_cache_${appId}`)
+      }
+      message.success("对话和缓存已清空")
     }
+    setShowClearConfirm(false)
   }
 
   const renderCodeEditor = (content: string, isEditing: boolean) => {
@@ -134,6 +147,23 @@ const AIEditor: React.FC<AIEditorProps> = ({
           handleCancelEdit
         )}
       </ResizablePanelGroup>
+
+      <Modal isOpen={showClearConfirm} onClose={() => setShowClearConfirm(false)}>
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">确认清除</ModalHeader>
+          <ModalBody>
+            <p>确认要清除所有对话记录和应用代码缓存吗？此操作不可恢复。</p>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="light" onPress={() => setShowClearConfirm(false)}>
+              取消
+            </Button>
+            <Button color="danger" onPress={handleConfirmClear}>
+              确认清除
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   )
 }
