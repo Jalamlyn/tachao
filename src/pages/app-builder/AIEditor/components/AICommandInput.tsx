@@ -17,9 +17,10 @@ interface AIAgent {
 interface AICommandInputProps {
   agent: AIAgent
   onResult?: (result: any) => void
+  onStop?: () => void // 新增onStop回调
 }
 
-const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
+const AICommandInput = memo(({ agent, onResult, onStop }: AICommandInputProps) => {
   // 内部状态管理
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -47,9 +48,11 @@ const AICommandInput = memo(({ agent, onResult }: AICommandInputProps) => {
 
   // 处理停止生成
   const handleStop = useCallback(() => {
+    debugger
     aiControllerStore.abort()
     setIsLoading(false)
-  }, [])
+    onStop?.() // 调用onStop回调通知父组件更新消息状态
+  }, [onStop])
 
   // 处理按键事件
   const handleKeyPress = useCallback(

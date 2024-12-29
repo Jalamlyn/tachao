@@ -112,6 +112,14 @@ const AppBuilder: React.FC = () => {
     [updateLastMessage]
   )
 
+  // 处理停止生成
+  const handleStop = useCallback(() => {
+    updateLastMessage({
+      status: "stopped",
+      content: accumulatedTextRef.current || "生成已停止",
+    })
+  }, [updateLastMessage])
+
   const handleCommandResult = useCallback(
     (result: any) => {
       if (!result.success) {
@@ -356,6 +364,7 @@ const AppBuilder: React.FC = () => {
           renderPreview={renderPreview}
           onCommandResult={handleCommandResult}
           onClearMessages={handleClearMessages}
+          onStop={handleStop}
           showCodeTab
           previewTabName='应用预览'
         />
