@@ -22,6 +22,7 @@ const AppBuilder: React.FC = () => {
   const versionControl = useVersionControl()
   const [showPublishModal, setShowPublishModal] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   // 添加 refs 用于跟踪消息状态
   const accumulatedTextRef = useRef("")
@@ -37,10 +38,20 @@ const AppBuilder: React.FC = () => {
 
   // 添加刷新预览函数
   const refreshPreview = useCallback(() => {
-    if (iframeRef.current) {
+    if (iframeRef.current && !isRefreshing) {
+      setIsRefreshing(true)
       iframeRef.current.src = iframeRef.current.src
+      setTimeout(() => setIsRefreshing(false), 500) // 防抖
     }
-  }, [])
+  }, [isRefreshing])
+
+  // 监听版本变化
+  useEffect(() => {
+    const unsubscribe = versionStore.subscribeToHistory(() => {
+      refreshPreview()
+    })
+    return () => unsubscribe()
+  }, [refreshPreview])
 
   // 加载应用数据
   useEffect(() => {
@@ -309,6 +320,12 @@ const AppBuilder: React.FC = () => {
           >
             <Icon icon='mdi:open-in-new' className='w-4 h-4' />
           </Button>
+          {isRefreshing && (
+            <div className='flex items-center gap-1 px-2 py-1 text-xs text-default-600 bg-white/70 backdrop-blur-sm rounded-lg'>
+              <Icon icon='mdi:refresh' className='w-4 h-4 animate-spin' />
+              刷新中...
+            </div>
+          )}
         </div>
         <iframe
           ref={iframeRef}
@@ -324,7 +341,7 @@ const AppBuilder: React.FC = () => {
         />
       </div>
     )
-  }, [])
+  }, [isRefreshing])
 
   if (!appId) {
     return (

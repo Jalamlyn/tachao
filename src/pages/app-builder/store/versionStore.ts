@@ -56,6 +56,19 @@ class VersionStore {
     this.historyListeners.forEach(listener => listener())
   }
 
+  // 同步到本地存储
+  private syncToLocalStorage(version: Version) {
+    if (version.appState) {
+      const appId = window.location.pathname.split('/').pop()
+      if (appId) {
+        localStorage.setItem(`app_cache_${appId}`, JSON.stringify({
+          ...version.appState,
+          appCode: version.content
+        }))
+      }
+    }
+  }
+
   /**
    * 添加新版本
    * @param content 版本内容
@@ -67,15 +80,20 @@ class VersionStore {
     this.versions = this.versions.slice(0, this.currentIndex + 1)
     
     // 添加新版本
-    this.versions.push({
+    const newVersion: Version = {
       timestamp: Date.now(),
       content,
       appState,
       description
-    })
+    }
+    
+    this.versions.push(newVersion)
     
     // 更新当前索引
     this.currentIndex = this.versions.length - 1
+    
+    // 同步到本地存储
+    this.syncToLocalStorage(newVersion)
     
     // 通知更新
     this.notifyContentListeners(content)
@@ -124,6 +142,10 @@ class VersionStore {
     if (this.canRollback()) {
       this.currentIndex--
       const version = this.versions[this.currentIndex]
+      
+      // 同步到本地存储
+      this.syncToLocalStorage(version)
+      
       this.notifyContentListeners(version.content)
       this.notifyHistoryListeners()
       return version
@@ -138,6 +160,10 @@ class VersionStore {
     if (this.canForward()) {
       this.currentIndex++
       const version = this.versions[this.currentIndex]
+      
+      // 同步到本地存储
+      this.syncToLocalStorage(version)
+      
       this.notifyContentListeners(version.content)
       this.notifyHistoryListeners()
       return version
