@@ -3,44 +3,65 @@ export const COMPONENT_PROMPTS = {
 
 \`\`\`jsx
 <shata-ai-code type="app">
-export default (props) => {
-  const {React,NextUI,ReactRouterDom,FramerMotion,Icon,message,api: { getMetadata, setMetadata },FormRenderer,ReportRenderer} = context
-  const {Routes, Route, Navigate, BrowserRouter} = ReactRouterDom
-  const {Card, CardBody, CardHeader} = NextUI
-  const {motion} = FramerMotion
+const { wpm, React, observer, appId } = context;
+const { Suspense } = React;
 
+const HomePage = React.lazy(() => wpm.import('homePage'));
+const SettingsPage = React.lazy(() => wpm.import('settingsPage'));
+
+const App = () => {
   return (
-    <BrowserRouter basename={props.basename}>
-      <Routes>
-        <Route path="/" element={<Navigate to="home" replace />} />
-        <Route path="home" element={<context.PageWrapper pageId="page_home" />} />
-        <Route path="*" element={<div>页面不存在</div>} />
-      </Routes>
-    </BrowserRouter>
-  )
-}
+    <Suspense fallback={<div>Loading...</div>}>
+      <div>
+        <HomePage />
+        <SettingsPage />
+      </div>
+    </Suspense>
+  );
+};
+
+// 重要：入口模块必须使用 context.appId 作为模块名
+wpm.export(appId, App);
 </shata-ai-code>
 \`\`\``,
 
   pageComponent: `4. 页面组件使用 <shata-ai-code type="page" pageid="xxx" title="xxx"></shata-ai-code> 包裹：
 \`\`\`jsx
 <shata-ai-code type="page" pageid="page_xxx" title="页面标题">
-export default (props) => {
-  const {React, NextUI} = context
+const { wpm, React, observer } = context;
+const { useState, useEffect } = React;
+
+// 使用 React.lazy 导入其他组件
+const SubComponent = React.lazy(() => wpm.import('subComponent'));
+
+// 直接导入非组件模块
+const todoStore = await wpm.import('todoStore');
+const todoService = await wpm.import('todoService');
+
+const PageComponent = observer(() => {
   return (
-    <div>页面内容</div>
-  )
-}
+    <div>
+      <React.Suspense fallback={<div>Loading...</div>}>
+        <SubComponent />
+      </React.Suspense>
+    </div>
+  );
+});
+
+wpm.export('page_xxx', PageComponent);
 </shata-ai-code>
 \`\`\``,
 
   storeTemplate: `5. Store 代码使用 <shata-ai-code type="store" name="xxx"></shata-ai-code> 包裹：
 \`\`\`jsx
 <shata-ai-code type="store" name="todoStore">
-export default (context) => {
-  const { makeAutoObservable } = context.mobx
-  
-  return class TodoStore {
+const { wpm, mobx } = context;
+const { makeAutoObservable } = mobx;
+
+// 直接导入其他模块
+const todoService = await wpm.import('todoService');
+
+class TodoStore {
     todos = []
     loading = false
     
@@ -51,84 +72,62 @@ export default (context) => {
     async loadTodos() {
       this.loading = true
       try {
-        const result = await context.services.todo.getTodos()
+        const result = await todoService.getTodos()
         this.todos = result
       } finally {
         this.loading = false
       }
     }
-    
-    async addTodo(todo) {
-      await context.services.todo.saveTodo(todo)
-      await this.loadTodos()
-    }
-  }
 }
+
+const store = new TodoStore();
+wpm.export('todoStore', store);
 </shata-ai-code>
 \`\`\``,
 
   serviceTemplate: `6. Service 代码使用 <shata-ai-code type="service" name="xxx"></shata-ai-code> 包裹：
 \`\`\`jsx
 <shata-ai-code type="service" name="todoService">
-export default (context) => {
-  const { getMetadata, setMetadata, getPublicMetadata } = context.api
-  const { appId } = context
+const { wpm, api } = context;
+const { getMetadata, setMetadata } = api;
+
+// 直接导入其他模块
+const todoModule = await wpm.import('todoModule');
+
+const service = {
+  async getTodos() {
+    const result = await getMetadata(['todos']);
+    return result.data;
+  },
   
-  // 生成带 appId 前缀的 key
-  const getKey = (key) => \`\${appId}_\${key}\`
-  
-  return {
-    async getTodos() {
-      const result = await getMetadata([getKey('todos')])
-      return JSON.parse(result.data?.[0]?.value || '[]')
-    },
-    
-    async getPublicTodos() {
-      const result = await getPublicMetadata([getKey('public_todos')], appId)
-      return JSON.parse(result.data?.[0]?.value || '[]')
-    },
-    
-    async saveTodo(todo, isPublic = false) {
-      const key = getKey(isPublic ? 'public_todos' : 'todos')
-      const todos = await (isPublic ? this.getPublicTodos() : this.getTodos())
-      todos.push({
-        ...todo,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      })
-      await setMetadata(key, JSON.stringify(todos), appId)
-    }
+  async saveTodo(todo) {
+    await setMetadata('todos', todo);
   }
-}
+};
+
+wpm.export('todoService', service);
 </shata-ai-code>
 \`\`\``,
 
-  moduleTemplate: `7. Module 代码使用 <shata-ai-code type="module" name="xxx"></shata-ai-code> 包裹：
+  moduleTemplate: `7. Module 代码使用 <shata-ai-code type="module" name="xxx"></shata-ai-code> 包裰：
 \`\`\`jsx
 <shata-ai-code type="module" name="todoModule">
-export default (context) => {
-  return {
-    formatTodo(todo) {
-      return {
-        ...todo,
-        createdAt: new Date(todo.createdAt).toLocaleString()
-      }
-    },
-    
-    validateTodo(todo) {
-      return todo.title && todo.title.length >= 3
-    },
-    
-    sortTodos(todos, order = 'desc') {
-      return [...todos].sort((a, b) => {
-        const timeA = new Date(a.createdAt).getTime()
-        const timeB = new Date(b.createdAt).getTime()
-        return order === 'desc' ? timeB - timeA : timeA - timeB
-      })
+const { wpm } = context;
+
+const module = {
+  formatTodo(todo) {
+    return {
+      ...todo,
+      createdAt: new Date(todo.createdAt).toLocaleString()
     }
+  },
+  
+  validateTodo(todo) {
+    return todo.title && todo.title.length >= 3
   }
-}
+};
+
+wpm.export('todoModule', module);
 </shata-ai-code>
 \`\`\``,
 
@@ -138,50 +137,28 @@ export default (context) => {
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "title": "Todo Schema",
-  "description": "Todo item data structure",
   "properties": {
     "id": {
-      "type": "string",
-      "description": "Unique identifier"
+      "type": "string"
     },
     "title": {
       "type": "string",
-      "description": "Todo title",
-      "minLength": 1,
-      "maxLength": 100
+      "minLength": 3
     },
     "completed": {
       "type": "boolean",
       "default": false
-    },
-    "createdAt": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "updatedAt": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "tags": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "priority": {
-      "type": "integer",
-      "minimum": 1,
-      "maximum": 5,
-      "default": 3
     }
   },
-  "required": ["id", "title", "createdAt"]
+  "required": ["id", "title"]
 }
 </shata-ai-code>
 \`\`\``,
 
   componentRules: `9. 技术要求：
+   - 入口模块(type="app")必须使用 context.appId 作为模块名
+   - React组件使用 React.lazy 和 Suspense 实现动态加载
+   - 非组件模块使用 await wpm.import 直接导入
    - 只能使用 NextUI 2.6.0 版本中实际存在的组件
    - 禁止使用 Container Grid Text 这些 NextUI V1 版本中的组件
    - 使用 tailwind css 编写样式代码
@@ -191,5 +168,8 @@ export default (context) => {
    - Store 必须使用 MobX
    - Service 必须使用 appId 前缀
    - Module 只能包含纯函数
-   - Schema 使用标准的 JSON Schema`
+   - Schema 使用标准的 JSON Schema
+   - 使用 wpm.export 导出模块
+   - 使用 wpm.import 导入模块
+   - 避免循环依赖`,
 }
