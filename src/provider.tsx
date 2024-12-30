@@ -254,7 +254,7 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
     <NextUIProvider>
       <main className={`${darkMode.value ? "light" : "light"} text-foreground bg-background relative`}>
         <motion.div
-          className={`fixed inset-0 bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col justify-center items-center z-50`}
+          className={`fixed inset-0 bg-gradient-to-br from-blue-600 to-black flex flex-col justify-center items-center z-50`}
           initial={{ opacity: 1 }}
           animate={{
             opacity: shouldRenderChildren() ? 0 : 1,

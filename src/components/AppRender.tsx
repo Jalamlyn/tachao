@@ -11,6 +11,7 @@ import { FormRendererWrapper } from "./renderers/FormRendererWrapper"
 import { ReportRendererWrapper } from "./renderers/ReportRendererWrapper"
 import { PageWrapper } from "@/pages/app-builder/components/PageWrapper"
 import { ai } from "@/service/ai"
+import * as mobx from "mobx"
 
 interface AppRenderProps {
   code: string
@@ -21,7 +22,6 @@ interface AppRenderProps {
 }
 
 export const AppRender: React.FC<AppRenderProps> = (props) => {
-  
   const { code, context: extraContext, onError, appId } = props
   const [Component, setComponent] = useState<React.ComponentType<any> | null>(null)
   const [error, setError] = useState<Error | null>(null)
@@ -49,6 +49,7 @@ export const AppRender: React.FC<AppRenderProps> = (props) => {
           PageWrapper,
           ai,
           appId,
+          mobx,
         }
 
         // 合并额外的上下文

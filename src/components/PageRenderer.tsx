@@ -11,6 +11,7 @@ import { FormRendererWrapper } from "./renderers/FormRendererWrapper"
 import { ReportRendererWrapper } from "./renderers/ReportRendererWrapper"
 import { ai } from "@/service/ai"
 import { extractShataAICode } from "@/utils/generateColumns"
+import * as mobx from "mobx"
 
 interface PageRendererProps {
   code?: string
@@ -71,6 +72,7 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ code, pageId, appId 
           ReportRenderer: ReportRendererWrapper,
           ai,
           appId,
+          mobx,
         }
 
         // 创建组件
