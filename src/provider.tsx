@@ -16,7 +16,17 @@ import { subscriptionService } from "./permissions/utils/permissionUtils"
 
 // 添加新的样式
 const loadingAnimationStyles = `
+  @font-face {
+    font-family: 'Brand Font';
+    src: local('PingFang SC'),
+         local('Microsoft YaHei'),
+         url('/fonts/subset.woff2') format('woff2');
+    font-weight: 700;
+    font-display: block;
+  }
+
   .brand-reveal {
+    font-family: 'Brand Font', -apple-system, "SF Pro SC", "PingFang SC", "Microsoft YaHei", sans-serif;
     font-size: 3.5rem;
     font-weight: 700;
     background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
@@ -26,18 +36,28 @@ const loadingAnimationStyles = `
     animation: revealText 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
     text-shadow: 0 0 20px rgba(255,255,255,0.5);
     letter-spacing: 0.05em;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .fonts-loaded .brand-reveal {
+    opacity: 1;
+    visibility: visible;
   }
 
   @keyframes revealText {
     from {
       filter: blur(8px);
       opacity: 0;
-      transform: scale(0.96);
+      transform: scale(0.96) translateZ(0);
     }
     to {
       filter: blur(0);
       opacity: 1;
-      transform: scale(1);
+      transform: scale(1) translateZ(0);
     }
   }
 `
@@ -152,6 +172,22 @@ const initializeSubscription = async () => {
 }
 
 const LoadingText = () => {
+  useEffect(() => {
+    // 预加载字体
+    const preloadFont = async () => {
+      if ('fonts' in document) {
+        try {
+          await document.fonts.load('700 3.5rem "Brand Font"');
+          document.documentElement.classList.add('fonts-loaded');
+        } catch (err) {
+          console.error('Font loading failed:', err);
+        }
+      }
+    };
+
+    preloadFont();
+  }, []);
+
   return (
     <div className="brand-reveal">
       即想智能
@@ -173,8 +209,19 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
     const styleSheet = document.createElement("style")
     styleSheet.textContent = loadingAnimationStyles
     document.head.appendChild(styleSheet)
+
+    // 添加字体预加载
+    const linkElement = document.createElement('link');
+    linkElement.rel = 'preload';
+    linkElement.href = '/fonts/subset.woff2';
+    linkElement.as = 'font';
+    linkElement.type = 'font/woff2';
+    linkElement.crossOrigin = 'anonymous';
+    document.head.appendChild(linkElement);
+
     return () => {
-      document.head.removeChild(styleSheet)
+      document.head.removeChild(styleSheet);
+      document.head.removeChild(linkElement);
     }
   }, [])
 
