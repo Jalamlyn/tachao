@@ -25,43 +25,141 @@ const loadingAnimationStyles = `
     font-display: block;
   }
 
-  .brand-reveal {
+  .brand-container {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .cube-container {
+    width: 80px;
+    height: 80px;
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    animation: rotate 10s infinite linear;
+  }
+
+  .cube {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+  }
+
+  .cube-face {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .front { transform: translateZ(40px); }
+  .back { transform: translateZ(-40px) rotateY(180deg); }
+  .right { transform: translateX(40px) rotateY(90deg); }
+  .left { transform: translateX(-40px) rotateY(-90deg); }
+  .top { transform: translateY(-40px) rotateX(90deg); }
+  .bottom { transform: translateY(40px) rotateX(-90deg); }
+
+  @keyframes rotate {
+    from {
+      transform: rotateX(30deg) rotateY(0);
+    }
+    to {
+      transform: rotateX(30deg) rotateY(360deg);
+    }
+  }
+
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .brand-name {
     font-family: 'Brand Font', -apple-system, "SF Pro SC", "PingFang SC", "Microsoft YaHei", sans-serif;
     font-size: 3.5rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: blur(8px);
-    animation: revealText 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    text-shadow: 0 0 20px rgba(255,255,255,0.5);
+    font-weight: 900;
+    color: #333;
     letter-spacing: 0.05em;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    opacity: 0;
-    visibility: hidden;
+    animation: fadeIn 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
-  .fonts-loaded .brand-reveal {
+  .brand-slogan {
+    font-size: 1rem;
+    color: #666;
+    letter-spacing: 0.1em;
+    animation: fadeIn 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation-delay: 100ms;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .fonts-loaded .brand-name,
+  .fonts-loaded .brand-slogan {
     opacity: 1;
     visibility: visible;
   }
-
-  @keyframes revealText {
-    from {
-      filter: blur(8px);
-      opacity: 0;
-      transform: scale(0.96) translateZ(0);
-    }
-    to {
-      filter: blur(0);
-      opacity: 1;
-      transform: scale(1) translateZ(0);
-    }
-  }
 `
 
+const Cube = () => {
+  return (
+    <div className="cube-container">
+      <div className="cube">
+        <div className="cube-face front"></div>
+        <div className="cube-face back"></div>
+        <div className="cube-face right"></div>
+        <div className="cube-face left"></div>
+        <div className="cube-face top"></div>
+        <div className="cube-face bottom"></div>
+      </div>
+    </div>
+  );
+};
+
+const LoadingText = () => {
+  useEffect(() => {
+    const preloadFont = async () => {
+      if ('fonts' in document) {
+        try {
+          await document.fonts.load('900 3.5rem "Brand Font"');
+          document.documentElement.classList.add('fonts-loaded');
+        } catch (err) {
+          console.error('Font loading failed:', err);
+        }
+      }
+    };
+
+    preloadFont();
+  }, []);
+
+  return (
+    <div className="brand-container">
+      <Cube />
+      <div className="brand-text">
+        <div className="brand-name">即想智能</div>
+        <div className="brand-slogan">将你的创意转化为现实代码</div>
+      </div>
+    </div>
+  );
+};
+
+// 保持原有的其他代码不变
 const preloadModules = async () => {
   let retryCount = 0
   const maxRetries = 3
@@ -171,26 +269,6 @@ const initializeSubscription = async () => {
   }
 }
 
-const LoadingText = () => {
-  useEffect(() => {
-    // 预加载字体
-    const preloadFont = async () => {
-      if ("fonts" in document) {
-        try {
-          await document.fonts.load('700 3.5rem "Brand Font"')
-          document.documentElement.classList.add("fonts-loaded")
-        } catch (err) {
-          console.error("Font loading failed:", err)
-        }
-      }
-    }
-
-    preloadFont()
-  }, [])
-
-  return <div className='brand-reveal'>即想智能</div>
-}
-
 export const Provider = observer(({ children }: { children: React.ReactNode }) => {
   const darkMode = useDarkMode(false)
   const [isInit, setIsInit] = useState(false)
@@ -207,17 +285,17 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
     document.head.appendChild(styleSheet)
 
     // 添加字体预加载
-    const linkElement = document.createElement("link")
-    linkElement.rel = "preload"
-    linkElement.href = "/fonts/subset.woff2"
-    linkElement.as = "font"
-    linkElement.type = "font/woff2"
-    linkElement.crossOrigin = "anonymous"
-    document.head.appendChild(linkElement)
+    const linkElement = document.createElement('link');
+    linkElement.rel = 'preload';
+    linkElement.href = '/fonts/subset.woff2';
+    linkElement.as = 'font';
+    linkElement.type = 'font/woff2';
+    linkElement.crossOrigin = 'anonymous';
+    document.head.appendChild(linkElement);
 
     return () => {
-      document.head.removeChild(styleSheet)
-      document.head.removeChild(linkElement)
+      document.head.removeChild(styleSheet);
+      document.head.removeChild(linkElement);
     }
   }, [])
 
