@@ -13,18 +13,9 @@ import { useStore } from "./stores/StoreProvider"
 import globalStore from "./globalStore"
 import { observer } from "mobx-react-lite"
 import { subscriptionService } from "./permissions/utils/permissionUtils"
+import logo from "../public/assets/logo-2.png"
 
-// 添加新的样式
 const loadingAnimationStyles = `
-  @font-face {
-    font-family: 'Brand Font';
-    src: local('PingFang SC'),
-         local('Microsoft YaHei'),
-         url('/fonts/subset.woff2') format('woff2');
-    font-weight: 700;
-    font-display: block;
-  }
-
   .brand-container {
     display: flex;
     align-items: center;
@@ -73,93 +64,58 @@ const loadingAnimationStyles = `
     }
   }
 
-  .brand-text {
+  .logo-container {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 1rem;
   }
 
-  .brand-name {
-    font-family: 'Brand Font', -apple-system, "SF Pro SC", "PingFang SC", "Microsoft YaHei", sans-serif;
-    font-size: 3.5rem;
-    font-weight: 900;
-    color: #333;
-    letter-spacing: 0.05em;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    animation: fadeIn 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  .logo-image {
+    width: 200px;
+    height: auto;
+    opacity: 0;
+    animation: fadeInLogo 0.6s ease-out forwards;
   }
 
-  .brand-slogan {
-    font-size: 1rem;
-    color: #666;
-    letter-spacing: 0.1em;
-    animation: fadeIn 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    animation-delay: 100ms;
-  }
-
-  @keyframes fadeIn {
+  @keyframes fadeInLogo {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(20px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-
-  .fonts-loaded .brand-name,
-  .fonts-loaded .brand-slogan {
-    opacity: 1;
-    visibility: visible;
-  }
 `
 
 const Cube = () => {
   return (
-    <div className="cube-container">
-      <div className="cube">
-        <div className="cube-face front"></div>
-        <div className="cube-face back"></div>
-        <div className="cube-face right"></div>
-        <div className="cube-face left"></div>
-        <div className="cube-face top"></div>
-        <div className="cube-face bottom"></div>
+    <div className='cube-container'>
+      <div className='cube'>
+        <div className='cube-face front'></div>
+        <div className='cube-face back'></div>
+        <div className='cube-face right'></div>
+        <div className='cube-face left'></div>
+        <div className='cube-face top'></div>
+        <div className='cube-face bottom'></div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-const LoadingText = () => {
-  useEffect(() => {
-    const preloadFont = async () => {
-      if ('fonts' in document) {
-        try {
-          await document.fonts.load('900 3.5rem "Brand Font"');
-          document.documentElement.classList.add('fonts-loaded');
-        } catch (err) {
-          console.error('Font loading failed:', err);
-        }
-      }
-    };
-
-    preloadFont();
-  }, []);
-
+const LogoAnimation = () => {
   return (
-    <div className="brand-container">
+    <div className='brand-container'>
       <Cube />
-      <div className="brand-text">
-        <div className="brand-name">即想智能</div>
-        <div className="brand-slogan">将你的创意转化为现实代码</div>
+      <div className='logo-container'>
+        <img src={logo} alt="即想智能" className='logo-image' />
       </div>
     </div>
-  );
-};
+  )
+}
 
-// 保持原有的其他代码不变
 const preloadModules = async () => {
   let retryCount = 0
   const maxRetries = 3
@@ -188,7 +144,6 @@ const preloadModules = async () => {
   })
 }
 
-// 计算实际可用余额
 const calculateActualBalance = async () => {
   try {
     const accountRes = await getAccount()
@@ -279,23 +234,12 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
   const { balanceStore } = useStore()
 
   useEffect(() => {
-    // 添加动画样式到head
     const styleSheet = document.createElement("style")
     styleSheet.textContent = loadingAnimationStyles
     document.head.appendChild(styleSheet)
 
-    // 添加字体预加载
-    const linkElement = document.createElement('link');
-    linkElement.rel = 'preload';
-    linkElement.href = '/fonts/subset.woff2';
-    linkElement.as = 'font';
-    linkElement.type = 'font/woff2';
-    linkElement.crossOrigin = 'anonymous';
-    document.head.appendChild(linkElement);
-
     return () => {
-      document.head.removeChild(styleSheet);
-      document.head.removeChild(linkElement);
+      document.head.removeChild(styleSheet)
     }
   }, [])
 
@@ -403,7 +347,7 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
           }`}
         >
           <div className='relative flex flex-col items-center'>
-            <LoadingText />
+            <LogoAnimation />
             <div className='absolute -bottom-12'>
               <Spinner
                 size='lg'
