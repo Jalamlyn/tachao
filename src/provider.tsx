@@ -16,36 +16,28 @@ import { subscriptionService } from "./permissions/utils/permissionUtils"
 
 // 添加新的样式
 const loadingAnimationStyles = `
-  .typing-container {
-    font-size: 3rem;
-    font-weight: bold;
-    color: white;
-    white-space: nowrap;
-    overflow: hidden;
-    position: relative;
-    width: fit-content;
-    animation: typing 2s steps(4);
+  .brand-reveal {
+    font-size: 3.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: blur(8px);
+    animation: revealText 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    text-shadow: 0 0 20px rgba(255,255,255,0.5);
+    letter-spacing: 0.05em;
   }
 
-  .cursor {
-    display: inline-block;
-    width: 2px;
-    margin-left: 2px;
-    animation: blink 1s step-end infinite;
-  }
-
-  @keyframes typing {
-    from { 
-      width: 0;
+  @keyframes revealText {
+    from {
+      filter: blur(8px);
+      opacity: 0;
+      transform: scale(0.96);
     }
-    to { 
-      width: 8em;
-    }
-  }
-
-  @keyframes blink {
-    50% { 
-      opacity: 0; 
+    to {
+      filter: blur(0);
+      opacity: 1;
+      transform: scale(1);
     }
   }
 `
@@ -161,9 +153,8 @@ const initializeSubscription = async () => {
 
 const LoadingText = () => {
   return (
-    <div className="typing-container">
+    <div className="brand-reveal">
       即想智能
-      <span className="cursor">|</span>
     </div>
   );
 };
