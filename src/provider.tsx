@@ -16,44 +16,14 @@ import { subscriptionService } from "./permissions/utils/permissionUtils"
 import logo from "../public/assets/logo-2.png"
 import { motion } from "framer-motion"
 
-const MotionImage = motion(Image)
-
 const LogoAnimation = () => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }} // 减少到300ms
     >
-      <MotionImage
-        width={400}
-        src={logo}
-        alt='即想智能'
-        initial={{ scale: 0.8 }}
-        animate={{ 
-          scale: 1,
-          filter: [
-            'brightness(100%)',
-            'brightness(120%)',
-            'brightness(100%)'
-          ]
-        }}
-        transition={{
-          scale: { duration: 0.8, ease: "easeOut" },
-          filter: {
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }
-        }}
-        whileHover={{
-          scale: 1.05,
-          transition: { duration: 0.3 }
-        }}
-        style={{
-          willChange: 'transform, filter'
-        }}
-      />
+      <Image width={400} src={logo}></Image>
     </motion.div>
   )
 }
@@ -276,22 +246,23 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
         <motion.div
           className={`fixed inset-0 bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col justify-center items-center z-50`}
           initial={{ opacity: 1 }}
-          animate={{ 
+          animate={{
             opacity: shouldRenderChildren() ? 0 : 1,
           }}
           transition={{ duration: 0.6, ease: "easeInOut" }}
           style={{
-            pointerEvents: shouldRenderChildren() ? "none" : "auto"
+            pointerEvents: shouldRenderChildren() ? "none" : "auto",
           }}
         >
-          <div className='relative flex items-center'>
+          <div className='relative flex flex-col gap-4 items-center'>
             <LogoAnimation />
+            <Spinner size='lg' color='white' />
           </div>
         </motion.div>
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ 
-            opacity: shouldRenderChildren() ? 1 : 0
+          animate={{
+            opacity: shouldRenderChildren() ? 1 : 0,
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
