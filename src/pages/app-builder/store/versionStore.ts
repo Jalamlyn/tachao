@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx"
-import { AppPages } from "../types"
+import { AppPages, AppStores, AppServices, AppModules, AppSchemas } from "../types"
 import { getMetadata } from "@/service/apis/metadata"
 
 type Version = {
@@ -7,6 +7,10 @@ type Version = {
   content: string
   appState?: {
     pages: AppPages
+    stores?: AppStores
+    services?: AppServices
+    modules?: AppModules
+    schemas?: AppSchemas
     version: number
     updatedAt: string
   }
@@ -100,6 +104,22 @@ class VersionStore {
     return this.currentVersion?.appState?.pages[pageId]?.code || null
   }
 
+  getStoreCode(name: string): string | null {
+    return this.currentVersion?.appState?.stores?.[name]?.code || null
+  }
+
+  getServiceCode(name: string): string | null {
+    return this.currentVersion?.appState?.services?.[name]?.code || null
+  }
+
+  getModuleCode(name: string): string | null {
+    return this.currentVersion?.appState?.modules?.[name]?.code || null
+  }
+
+  getSchemaCode(name: string): string | null {
+    return this.currentVersion?.appState?.schemas?.[name]?.code || null
+  }
+
   async loadApp(appId: string) {
     try {
       // 获取应用信息
@@ -114,6 +134,12 @@ class VersionStore {
 
       // 获取所有页面的代码
       const pages: AppPages = {}
+      const stores: AppStores = {}
+      const services: AppServices = {}
+      const modules: AppModules = {}
+      const schemas: AppSchemas = {}
+
+      // 加载页面代码
       for (const page of app.pages || []) {
         const pageResult = await getMetadata([page.id])
         if (pageResult.data?.[0]?.value) {
@@ -126,10 +152,30 @@ class VersionStore {
         }
       }
 
+      // 加载其他类型的代码
+      const codeTypes = [
+        { type: "store", container: stores },
+        { type: "service", container: services },
+        { type: "module", container: modules },
+        { type: "schema", container: schemas },
+      ]
+
+      for (const { type, container } of codeTypes) {
+        const typeResult = await getMetadata([`${appId}_${type}s`])
+        if (typeResult.data?.[0]?.value) {
+          const typeData = JSON.parse(typeResult.data?.[0]?.value || "{}")
+          Object.assign(container, typeData)
+        }
+      }
+
       // 初始化版本控制
       if (appData?.code) {
         this.addVersion(appData.code, {
           pages,
+          stores,
+          services,
+          modules,
+          schemas,
           version: appData?.version || 1,
           updatedAt: appData?.updatedAt || new Date().toISOString(),
         })
@@ -146,6 +192,10 @@ class VersionStore {
     return {
       appCode: this.currentVersion.content,
       pages: this.currentVersion.appState?.pages || {},
+      stores: this.currentVersion.appState?.stores || {},
+      services: this.currentVersion.appState?.services || {},
+      modules: this.currentVersion.appState?.modules || {},
+      schemas: this.currentVersion.appState?.schemas || {},
       version: this.currentVersion.appState?.version || 1,
       updatedAt: new Date().toISOString(),
     }
