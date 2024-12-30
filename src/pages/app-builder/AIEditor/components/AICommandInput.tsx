@@ -17,10 +17,11 @@ interface AIAgent {
 interface AICommandInputProps {
   agent: AIAgent
   onResult?: (result: any) => void
-  onStop?: () => void // 新增onStop回调
+  onStop?: () => void
+  aiLevel?: string
 }
 
-const AICommandInput = memo(({ agent, onResult, onStop }: AICommandInputProps) => {
+const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInputProps) => {
   // 内部状态管理
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -114,6 +115,18 @@ const AICommandInput = memo(({ agent, onResult, onStop }: AICommandInputProps) =
     fileInputRef.current?.click()
   }
 
+  // 获取 AI 等级提示
+  const getAILevelTooltip = () => {
+    switch (aiLevel) {
+      case "EXPERT":
+        return "专家模式：支持复杂的代码生成和分析"
+      case "ADVANCED":
+        return "高级模式：支持基础的代码生成"
+      default:
+        return "标准模式"
+    }
+  }
+
   return (
     <form className='flex w-full flex-col gap-2 rounded-medium bg-default-100 transition-colors hover:bg-default-200/70'>
       <input
@@ -170,23 +183,44 @@ const AICommandInput = memo(({ agent, onResult, onStop }: AICommandInputProps) =
         minRows={3}
         radius='lg'
         startContent={
-          <Tooltip showArrow content='添加图片'>
-            <Button
-              isIconOnly
-              radius='full'
-              size='sm'
-              variant='light'
-              onClick={handleImageClick}
-              isDisabled={isUploading}
-              className='hover:bg-default-200'
-            >
-              {isUploading ? (
-                <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
-              ) : (
-                <Icon className='text-default-500' icon='solar:gallery-minimalistic-linear' width={20} />
-              )}
-            </Button>
-          </Tooltip>
+          <div className="flex gap-2">
+            <Tooltip showArrow content='添加图片'>
+              <Button
+                isIconOnly
+                radius='full'
+                size='sm'
+                variant='light'
+                onClick={handleImageClick}
+                isDisabled={isUploading}
+                className='hover:bg-default-200'
+              >
+                {isUploading ? (
+                  <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
+                ) : (
+                  <Icon className='text-default-500' icon='solar:gallery-minimalistic-linear' width={20} />
+                )}
+              </Button>
+            </Tooltip>
+            <Tooltip showArrow content={getAILevelTooltip()}>
+              <Button
+                isIconOnly
+                radius='full'
+                size='sm'
+                variant='light'
+                className='hover:bg-default-200'
+              >
+                <Icon 
+                  className={cn(
+                    'text-default-500',
+                    aiLevel === 'EXPERT' && 'text-warning',
+                    aiLevel === 'ADVANCED' && 'text-primary'
+                  )} 
+                  icon={aiLevel === 'EXPERT' ? 'mdi:atom' : 'mdi:rocket'} 
+                  width={20} 
+                />
+              </Button>
+            </Tooltip>
+          </div>
         }
         endContent={
           <div className='absolute right-0 flex h-full flex-col items-end justify-between gap-2'>

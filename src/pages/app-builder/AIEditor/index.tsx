@@ -79,7 +79,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
             rawConfig: wrappedCode,
             appCode: extractShataAIFormContent(wrappedCode),
           })
-        } else {
+        } else if (selectedItem.type === "page") {
           const updatedPages = { ...currentVersion?.appState?.pages }
           updatedPages[selectedItem.id] = {
             ...updatedPages[selectedItem.id],
@@ -105,6 +105,39 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               },
             },
           })
+        } else {
+          // 处理新类型的代码保存
+          const updatedState = { ...currentVersion?.appState }
+          const containerKey = `${selectedItem.type}s` as keyof typeof updatedState
+          
+          if (!updatedState[containerKey]) {
+            updatedState[containerKey] = {}
+          }
+          
+          updatedState[containerKey] = {
+            ...updatedState[containerKey],
+            [selectedItem.name]: {
+              code: editedCode,
+              updatedAt: new Date().toISOString(),
+            },
+          }
+
+          // 添加新版本
+          versionStore.addVersion(currentContent, {
+            ...updatedState,
+            version: (currentVersion?.appState?.version || 0) + 1,
+            updatedAt: new Date().toISOString(),
+          })
+
+          onCommandResult({
+            success: true,
+            [containerKey]: {
+              [selectedItem.name]: {
+                code: editedCode,
+                updatedAt: new Date().toISOString(),
+              },
+            },
+          })
         }
 
         setIsEditing(false)
@@ -121,9 +154,20 @@ const AIEditor: React.FC<AIEditorProps> = observer(
       if (selectedCodeId === "app_entry") {
         setEditedCode(currentContent || "")
       } else {
-        const pageCode = versionStore.getPageCode(selectedCodeId)
-        if (pageCode) {
-          setEditedCode(pageCode)
+        const selectedItem = codeItems.find((item) => item.id === selectedCodeId)
+        if (!selectedItem) return
+
+        if (selectedItem.type === "page") {
+          const pageCode = versionStore.getPageCode(selectedCodeId)
+          if (pageCode) {
+            setEditedCode(pageCode)
+          }
+        } else {
+          // 获取其他类型的代码
+          const code = versionStore[`get${selectedItem.type.charAt(0).toUpperCase() + selectedItem.type.slice(1)}Code`]?.(selectedItem.name)
+          if (code) {
+            setEditedCode(code)
+          }
         }
       }
       setIsEditing(false)
@@ -155,6 +199,27 @@ const AIEditor: React.FC<AIEditorProps> = observer(
         </div>
       )
     }
+
+    // 获取代码类型图标
+    const getCodeTypeIcon = (type: string) => {
+      switch (type) {
+        case "app":
+          return "mdi:application"
+        case "page":
+          return "mdi:file-code"
+        case "store":
+          return "mdi:database"
+        case "service":
+          return "mdi:api"
+        case "module":
+          return "mdi:puzzle"
+        case "schema":
+          return "mdi:json"
+        default:
+          return "mdi:code-tags"
+      }
+    }
+
     return (
       <ResizablePanelGroup direction='horizontal'>
         <ResizablePanel defaultSize={50} className='resizable-panel'>
@@ -263,10 +328,15 @@ const AIEditor: React.FC<AIEditorProps> = observer(
                         key={item.id}
                         value={item.id}
                         startContent={
-                          <Icon icon={item.type === "app" ? "mdi:application" : "mdi:file-code"} className='w-4 h-4' />
+                          <Icon icon={getCodeTypeIcon(item.type)} className='w-4 h-4' />
                         }
                       >
                         {item.title}
+                        {item.type !== "app" && item.type !== "page" && item.name && (
+                          <span className="ml-2 text-xs text-default-400">
+                            ({item.name})
+                          </span>
+                        )}
                       </SelectItem>
                     ))}
                   </Select>
