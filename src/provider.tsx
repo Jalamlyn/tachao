@@ -14,6 +14,39 @@ import globalStore from "./globalStore"
 import { observer } from "mobx-react-lite"
 import { subscriptionService } from "./permissions/utils/permissionUtils"
 
+// 添加新的样式
+const loadingAnimationStyles = `
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(255,255,255,0.8),
+                 0 0 20px rgba(255,255,255,0.8),
+                 0 0 30px rgba(255,255,255,0.8);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(255,255,255,1),
+                 0 0 30px #4f46e5,
+                 0 0 40px #4f46e5;
+  }
+}
+
+.loading-char {
+  animation: float 3s ease-in-out infinite, glow 2s ease-in-out infinite;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+`
+
 const preloadModules = async () => {
   let retryCount = 0
   const maxRetries = 3
@@ -45,30 +78,23 @@ const preloadModules = async () => {
 // 计算实际可用余额
 const calculateActualBalance = async () => {
   try {
-    // 获取账户信息
     const accountRes = await getAccount()
     if (!accountRes?.totalComputePower) {
       return 0
     }
 
-    // 先将总额转换为塔币单位
     const totalBalance = accountRes.totalComputePower / 100
 
-    // 获取费用记录
     const costRecords = await getMetadata(["ai-cost-records"])
     const records = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
 
-    // 计算总费用(费用记录中已经是塔币单位)
     const totalCost = records.reduce((sum, record) => {
-      // 确保 totalCost 存在且为数字
       const cost = typeof record.totalCost === "number" ? record.totalCost : 0
       return sum + cost
     }, 0)
 
-    // 计算实际余额
     const actualBalance = totalBalance - totalCost
 
-    // 记录余额变动日志
     try {
       const balanceLogs = await getMetadata(["balance-logs"])
       const existingLogs = balanceLogs?.data[0]?.value ? JSON.parse(balanceLogs.data[0].value) : []
@@ -100,7 +126,6 @@ const calculateActualBalance = async () => {
   }
 }
 
-// 新增：初始化订阅信息
 const initializeSubscription = async () => {
   try {
     const subscription = await subscriptionService.getSubscription(globalStore.organizationId)
@@ -122,7 +147,6 @@ const initializeSubscription = async () => {
     }
   } catch (error) {
     console.error("Error initializing subscription:", error)
-    // 设置默认值
     globalStore.subscription = {
       status: null,
       type: null,
@@ -141,21 +165,28 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
   const [appIdReady, setAppIdReady] = useState(false)
   const { balanceStore } = useStore()
 
+  useEffect(() => {
+    // 添加动画样式到head
+    const styleSheet = document.createElement("style")
+    styleSheet.textContent = loadingAnimationStyles
+    document.head.appendChild(styleSheet)
+    return () => {
+      document.head.removeChild(styleSheet)
+    }
+  }, [])
+
   const handleInitializationSuccess = () => {
     setShowInitializer(false)
     setIsInit(true)
     setAppIdReady(true)
   }
 
-  // 初始化余额和订阅信息
   useEffect(() => {
     const initializeData = async () => {
       if (isInit && !location.pathname.includes("/login")) {
         const actualBalance = await calculateActualBalance()
         balanceStore.setActualBalance(actualBalance)
         globalStore.actualBalance = actualBalance
-
-        // 初始化订阅信息
         await initializeSubscription()
       }
     }
@@ -191,7 +222,6 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
       }
     } catch (error) {
       console.error("Initialization check failed:", error)
-      // 设置默认值
       globalStore.subscription = {
         status: null,
         type: null,
@@ -249,26 +279,19 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
           }`}
         >
           <div className='relative flex flex-col items-center'>
-            <h1 className='text-5xl font-bold text-white mb-8 relative'>
-              <span className='inline-block animate-pulse'>S</span>
-              <span className='inline-block animate-pulse' style={{ animationDelay: "0.1s" }}>
-                h
-              </span>
-              <span className='inline-block animate-pulse' style={{ animationDelay: "0.2s" }}>
-                a
-              </span>
-              <span className='inline-block animate-pulse' style={{ animationDelay: "0.3s" }}>
-                t
-              </span>
-              <span className='inline-block animate-pulse' style={{ animationDelay: "0.4s" }}>
-                a
-              </span>
-              <span className='inline-block animate-pulse' style={{ animationDelay: "0.5s" }}>
-                A
-              </span>
-              <span className='inline-block animate-pulse' style={{ animationDelay: "0.6s" }}>
-                I
-              </span>
+            <h1 className='text-5xl font-bold mb-8 relative bg-clip-text'>
+              {['即', '想', '智', '能'].map((char, index) => (
+                <span
+                  key={index}
+                  className='loading-char'
+                  style={{
+                    animationDelay: `${index * 0.2}s`,
+                    backgroundImage: `linear-gradient(to right, rgb(96, 165, 250) ${index * 25}%, rgb(224, 242, 254) ${index * 25 + 50}%)`
+                  }}
+                >
+                  {char}
+                </span>
+              ))}
             </h1>
             <div className='absolute -bottom-12'>
               <Spinner
