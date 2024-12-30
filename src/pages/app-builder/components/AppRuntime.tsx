@@ -21,6 +21,10 @@ interface AppCache {
   version: number
   updatedAt: string
   pages: Record<string, any>
+  stores: Record<string, any>
+  services: Record<string, any>
+  modules: Record<string, any>
+  schemas: Record<string, any>
 }
 
 export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [], runtimeContext = {} }) => {
@@ -124,8 +128,14 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
         const appData = JSON.parse(result.data[0].value)
         setAppCode(appData.code)
 
-        // 3. 预加载所有页面代码
+        // 3. 预加载所有代码
         const pages: Record<string, any> = {}
+        const stores: Record<string, any> = {}
+        const services: Record<string, any> = {}
+        const modules: Record<string, any> = {}
+        const schemas: Record<string, any> = {}
+
+        // 加载页面代码
         const pagePromises = (app.pages || []).map(async (page: any) => {
           const pageResult = await getMetadata([page.id])
           if (pageResult.data?.[0]?.value) {
@@ -134,7 +144,23 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
           }
         })
 
-        await Promise.all(pagePromises)
+        // 加载其他类型的代码
+        const codeTypes = [
+          { type: "store", container: stores },
+          { type: "service", container: services },
+          { type: "module", container: modules },
+          { type: "schema", container: schemas },
+        ]
+
+        const otherPromises = codeTypes.map(async ({ type, container }) => {
+          const typeResult = await getMetadata([`${appId}_${type}s`])
+          if (typeResult.data?.[0]?.value) {
+            const typeData = JSON.parse(typeResult.data[0].value)
+            Object.assign(container, typeData)
+          }
+        })
+
+        await Promise.all([...pagePromises, ...otherPromises])
 
         // 4. 保存到缓存
         saveAppCache({
@@ -142,7 +168,10 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
           version: app.version,
           updatedAt: app.updatedAt,
           pages,
-          appData: app,
+          stores,
+          services,
+          modules,
+          schemas,
         })
       } catch (error) {
         console.error("Error loading app:", error)
@@ -194,14 +223,24 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
     )
   }
 
+  // 构建完整的运行时上下文
+  const fullRuntimeContext = {
+    ...runtimeContext,
+    appId,
+    stores: {},
+    services: {},
+    modules: {},
+    schemas: {},
+  }
+
   return (
     <>
       <PermissionCheck resourceType="app" resourceId={appId}>
-        <AppContext.Provider value={{ appId, runtimeContext }}>
+        <AppContext.Provider value={{ appId, runtimeContext: fullRuntimeContext }}>
           <AppRender
             basename={`/app-run/${appId}`}
             code={appCode}
-            context={runtimeContext}
+            context={fullRuntimeContext}
             onError={handleError}
             appId={appId}
           />

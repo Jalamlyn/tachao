@@ -14,6 +14,10 @@ interface PreviewPageProps {
 const PreviewPage: React.FC<PreviewPageProps> = ({ appId }) => {
   const [appCode, setAppCode] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [stores, setStores] = useState<Record<string, any>>({})
+  const [services, setServices] = useState<Record<string, any>>({})
+  const [modules, setModules] = useState<Record<string, any>>({})
+  const [schemas, setSchemas] = useState<Record<string, any>>({})
 
   useEffect(() => {
     if (!appId) {
@@ -34,6 +38,10 @@ const PreviewPage: React.FC<PreviewPageProps> = ({ appId }) => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === "update_preview" && event.data.appId === appId) {
         setAppCode(event.data.code)
+        setStores(event.data.stores || {})
+        setServices(event.data.services || {})
+        setModules(event.data.modules || {})
+        setSchemas(event.data.schemas || {})
         setIsLoading(false)
       }
     }
@@ -51,7 +59,13 @@ const PreviewPage: React.FC<PreviewPageProps> = ({ appId }) => {
     api: {
       getMetadata: async () => ({ data: [] }),
       setMetadata: async () => true,
+      getPublicMetadata: async () => ({ data: [] }),
     },
+    stores,
+    services,
+    modules,
+    schemas,
+    appId,
   }
 
   if (!appId) {
