@@ -3,7 +3,6 @@ import { Spinner } from "@nextui-org/react"
 import { PageRenderer } from "@/components/PageRenderer"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { AppContext } from "@/contexts/AppContext"
-import { Icon } from "@iconify/react"
 
 interface PageWrapperProps {
   pageId: string

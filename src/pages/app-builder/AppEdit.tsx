@@ -11,6 +11,7 @@ import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { versionStore } from "./store/versionStore"
+import { toJS } from "mobx"
 
 const MAX_MESSAGES = 10
 const CODE_TYPES = ["app", "page", "store", "service", "module", "schema"] as const
@@ -199,18 +200,27 @@ const AppBuilder: React.FC = observer(() => {
         const currentVersion = versionStore.currentVersion
         if (currentVersion?.content) {
           const targetWindow = event.source as Window
-          targetWindow.postMessage(
-            {
-              type: "update_preview",
-              appId,
-              code: currentVersion.content,
-              stores: currentVersion.appState?.stores || {},
-              services: currentVersion.appState?.services || {},
-              modules: currentVersion.appState?.modules || {},
-              schemas: currentVersion.appState?.schemas || {},
-            },
-            "*"
-          )
+
+          // 使用 toJS 转换 MobX 响应式对象为普通对象
+          const plainAppState = currentVersion.appState ? toJS(currentVersion.appState) : {}
+
+          try {
+            targetWindow.postMessage(
+              {
+                type: "update_preview",
+                appId,
+                code: currentVersion.content,
+                stores: plainAppState.stores || {},
+                services: plainAppState.services || {},
+                modules: plainAppState.modules || {},
+                schemas: plainAppState.schemas || {},
+              },
+              "*"
+            )
+          } catch (error) {
+            console.error("Error posting message to preview:", error)
+            message.error("预览更新失败")
+          }
         }
       } else if (event.data.type === "request_page_code" && event.data.appId === appId) {
         const { pageId } = event.data
@@ -218,15 +228,20 @@ const AppBuilder: React.FC = observer(() => {
 
         const iframe = document.querySelector("iframe")
         if (iframe?.contentWindow) {
-          iframe.contentWindow.postMessage(
-            {
-              type: "update_page_code",
-              appId,
-              pageId,
-              code: pageCode,
-            },
-            "*"
-          )
+          try {
+            iframe.contentWindow.postMessage(
+              {
+                type: "update_page_code",
+                appId,
+                pageId,
+                code: pageCode ? toJS(pageCode) : null, // 这里也使用 toJS
+              },
+              "*"
+            )
+          } catch (error) {
+            console.error("Error posting page code:", error)
+            message.error("页面代码更新失败")
+          }
         }
       }
     },

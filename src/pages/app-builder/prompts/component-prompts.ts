@@ -5,7 +5,6 @@ export const COMPONENT_PROMPTS = {
 <shata-ai-code type="app">
 export default (props) => {
   const {React,NextUI,ReactRouterDom,FramerMotion,Icon,message,api: { getMetadata, setMetadata },FormRenderer,ReportRenderer,PageWrapper} = context
-  // 必须导出 PageWrapper 组件,不然报错
   const {Routes, Route, Navigate, BrowserRouter} = ReactRouterDom
   const {Card, CardBody, CardHeader} = NextUI
   const {motion} = FramerMotion
@@ -14,7 +13,7 @@ export default (props) => {
     <BrowserRouter basename={props.basename}>
       <Routes>
         <Route path="/" element={<Navigate to="home" replace />} />
-        <Route path="home" element={<HomePage />} />
+        <Route path="home" element={<PageWrapper pageId="page_home" />} />
         <Route path="*" element={<div>页面不存在</div>} />
       </Routes>
     </BrowserRouter>
