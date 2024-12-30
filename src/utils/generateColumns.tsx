@@ -134,11 +134,34 @@ export const flattenData = (data: any[]) => {
   })
 }
 
-export const extractShataAICode = (content: string) => {
-  const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
-  const match = content?.match(regex)
-  if (match) {
-    return match[1].trim()
+/**
+ * 从内容中提取 shata-ai-code 标签中的代码
+ * 支持以下格式:
+ * 1. 简单标签: <shata-ai-code>code</shata-ai-code>
+ * 2. 带参数标签: <shata-ai-code type="page" pageid="xxx" title="xxx">code</shata-ai-code>
+ * 3. 带参数标签: <shata-ai-code type="store" name="xxx">code</shata-ai-code>
+ * @param content 包含代码的字符串
+ * @returns 提取的代码内容
+ */
+export const extractShataAICode = (content: string): string => {
+  if (!content) return content
+
+  try {
+    // 匹配带参数的 shata-ai-code 标签
+    // [\s\S]*? 用于非贪婪匹配任意字符(包括换行)
+    // [^>]* 用于匹配除>之外的任意字符(标签参数)
+    const regex = /<shata-ai-code[^>]*>([\s\S]*?)<\/shata-ai-code>/
+    const match = content.match(regex)
+    
+    if (match && match[1]) {
+      return match[1].trim()
+    }
+    
+    // 如果没有匹配到标签或内容为空,返回原始内容
+    return content
+  } catch (error) {
+    console.error('Error extracting shata-ai-code:', error)
+    // 发生错误时返回原始内容
+    return content
   }
-  return content
 }

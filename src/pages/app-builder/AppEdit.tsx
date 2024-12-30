@@ -475,6 +475,7 @@ const AppBuilder: React.FC = observer(() => {
 
       try {
         const currentVersion = versionStore.currentVersion
+        debugger
         const newAppState = {
           pages: { ...currentVersion?.appState?.pages } || {},
           stores: { ...currentVersion?.appState?.stores } || {},
@@ -620,7 +621,7 @@ const AppBuilder: React.FC = observer(() => {
         </div>
 
         {/* iframe 容器 */}
-        <div className='rounded-lg overflow-hidden border border-default-200 shadow-lg'>
+        <div className='rounded-lg overflow-hidden border border-default-200 shadow-lg pt-12'>
           <iframe
             ref={iframeRef}
             src={`/app-preview/${appId}`}

@@ -10,6 +10,7 @@ import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { FormRendererWrapper } from "./renderers/FormRendererWrapper"
 import { ReportRendererWrapper } from "./renderers/ReportRendererWrapper"
 import { ai } from "@/service/ai"
+import { extractShataAICode } from "@/utils/generateColumns"
 
 interface PageRendererProps {
   code?: string
@@ -50,10 +51,10 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ code, pageId, appId 
       }
 
       if (!code) return
-
+      const _code = extractShataAICode(code)
       try {
         // 转换代码
-        const { code: transformedCode } = transform(code, {
+        const { code: transformedCode } = transform(_code, {
           presets: ["react"],
         })
 
