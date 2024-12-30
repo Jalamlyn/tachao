@@ -6,9 +6,41 @@ export interface AppPages {
   }
 }
 
+export interface AppStores {
+  [name: string]: {
+    code: string
+    updatedAt: string
+  }
+}
+
+export interface AppServices {
+  [name: string]: {
+    code: string
+    updatedAt: string
+  }
+}
+
+export interface AppModules {
+  [name: string]: {
+    code: string
+    updatedAt: string
+  }
+}
+
+export interface AppSchemas {
+  [name: string]: {
+    code: string
+    updatedAt: string
+  }
+}
+
 export interface AppCache {
   [appId: string]: {
     pages: AppPages
+    stores: AppStores
+    services: AppServices
+    modules: AppModules
+    schemas: AppSchemas
     appCode: string
     version: number
     updatedAt: string
@@ -26,5 +58,9 @@ export interface AppBuilderMessage {
 export interface AppBuilderVersion {
   appCode: string
   pages: AppPages
+  stores?: AppStores
+  services?: AppServices
+  modules?: AppModules
+  schemas?: AppSchemas
   timestamp: string
 }

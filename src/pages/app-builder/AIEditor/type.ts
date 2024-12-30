@@ -1,12 +1,10 @@
-import React from "react"
-
 export const AI_LEVELS = {
   EXPERT: {
     label: "高级",
     value: "EXPERT",
     cost: 5,
     color: "warning",
-    icon: "mdi:atom", // 使用SVG图标
+    icon: "mdi:atom",
     description: "高级模型, 能够进行复杂的问题推理和思考, 速度较慢, 费用较贵",
   },
   ADVANCED: {
@@ -14,7 +12,7 @@ export const AI_LEVELS = {
     value: "ADVANCED",
     cost: 0.5,
     color: "primary",
-    icon: "mdi:rocket", // 使用SVG图标
+    icon: "mdi:rocket",
     description: "初级模型, 能够进行常规的快速推理和思考, 速度较快,费用较便宜",
   },
 } as const
@@ -35,9 +33,10 @@ export interface Message {
 export interface CodeItem {
   id: string
   title: string
-  type: "app" | "page"
+  type: "app" | "page" | "store" | "service" | "module" | "schema"
   code: string
   updatedAt?: string
+  name?: string // 用于 store/service/module/schema 的名称
 }
 
 export interface AIEditorProps {
