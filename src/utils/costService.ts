@@ -53,12 +53,12 @@ export const costService = {
     const isCoding = content.includes(`shata-ai-code`)
     const ratePerMillionTokens = {
       EXPERT: {
-        input: isCoding ? 262.8 : 26.28,
-        output: isCoding ? 1314 : 131.4,
+        input: isCoding ? 219 : 43.8,
+        output: isCoding ? 109 : 21.8,
       },
       ADVANCED: {
-        input: isCoding ? 87.6 : 8.76,
-        output: isCoding ? 292 : 29.2,
+        input: isCoding ? 73 : 14.6,
+        output: isCoding ? 292 : 58.4,
       },
     }
 
