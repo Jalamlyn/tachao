@@ -4,7 +4,7 @@ import { queryMyProject } from "./service/apis/project"
 import { queryApps } from "./service/apis/app"
 import { localDB } from "./utils/localDB"
 import { useEffect, useState } from "react"
-import { Spinner } from "@nextui-org/react"
+import { Image, Spinner } from "@nextui-org/react"
 import { preloadBabel, preloadTokenizer } from "./utils/moduleLoader"
 import EnterpriseInitializer from "./components/EnterpriseInitializer"
 import { getAccount } from "./service/apis/pay"
@@ -14,105 +14,47 @@ import globalStore from "./globalStore"
 import { observer } from "mobx-react-lite"
 import { subscriptionService } from "./permissions/utils/permissionUtils"
 import logo from "../public/assets/logo-2.png"
+import { motion } from "framer-motion"
 
-const loadingAnimationStyles = `
-  .brand-container {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-  }
-
-  .cube-container {
-    width: 80px;
-    height: 80px;
-    perspective: 1000px;
-    transform-style: preserve-3d;
-    animation: rotate 10s infinite linear;
-  }
-
-  .cube {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    transform-style: preserve-3d;
-  }
-
-  .cube-face {
-    position: absolute;
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .front { transform: translateZ(40px); }
-  .back { transform: translateZ(-40px) rotateY(180deg); }
-  .right { transform: translateX(40px) rotateY(90deg); }
-  .left { transform: translateX(-40px) rotateY(-90deg); }
-  .top { transform: translateY(-40px) rotateX(90deg); }
-  .bottom { transform: translateY(40px) rotateX(-90deg); }
-
-  @keyframes rotate {
-    from {
-      transform: rotateX(30deg) rotateY(0);
-    }
-    to {
-      transform: rotateX(30deg) rotateY(360deg);
-    }
-  }
-
-  .logo-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .logo-image {
-    width: 200px;
-    height: auto;
-    opacity: 0;
-    animation: fadeInLogo 0.6s ease-out forwards;
-  }
-
-  @keyframes fadeInLogo {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`
-
-const Cube = () => {
-  return (
-    <div className='cube-container'>
-      <div className='cube'>
-        <div className='cube-face front'></div>
-        <div className='cube-face back'></div>
-        <div className='cube-face right'></div>
-        <div className='cube-face left'></div>
-        <div className='cube-face top'></div>
-        <div className='cube-face bottom'></div>
-      </div>
-    </div>
-  )
-}
+const MotionImage = motion(Image)
 
 const LogoAnimation = () => {
   return (
-    <div className='brand-container'>
-      <Cube />
-      <div className='logo-container'>
-        <img src={logo} alt="即想智能" className='logo-image' />
-      </div>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+    >
+      <MotionImage
+        width={400}
+        src={logo}
+        alt='即想智能'
+        initial={{ scale: 0.8 }}
+        animate={{ 
+          scale: 1,
+          filter: [
+            'brightness(100%)',
+            'brightness(120%)',
+            'brightness(100%)'
+          ]
+        }}
+        transition={{
+          scale: { duration: 0.8, ease: "easeOut" },
+          filter: {
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }
+        }}
+        whileHover={{
+          scale: 1.05,
+          transition: { duration: 0.3 }
+        }}
+        style={{
+          willChange: 'transform, filter'
+        }}
+      />
+    </motion.div>
   )
 }
 
@@ -233,16 +175,6 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
   const [appIdReady, setAppIdReady] = useState(false)
   const { balanceStore } = useStore()
 
-  useEffect(() => {
-    const styleSheet = document.createElement("style")
-    styleSheet.textContent = loadingAnimationStyles
-    document.head.appendChild(styleSheet)
-
-    return () => {
-      document.head.removeChild(styleSheet)
-    }
-  }, [])
-
   const handleInitializationSuccess = () => {
     setShowInitializer(false)
     setIsInit(true)
@@ -320,7 +252,7 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
           setModulesLoaded(true)
           setTimeout(() => {
             setIsTransitioning(false)
-          }, 300)
+          }, 500)
         })
         .catch((err) => console.error("Failed to preload modules:", err))
     }
@@ -341,32 +273,30 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
   return (
     <NextUIProvider>
       <main className={`${darkMode.value ? "light" : "light"} text-foreground bg-background relative`}>
-        <div
-          className={`fixed inset-0 bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col justify-center items-center transition-opacity duration-600 ease-in-out z-50 ${
-            shouldRenderChildren() ? "opacity-0 pointer-events-none" : "opacity-100"
-          }`}
+        <motion.div
+          className={`fixed inset-0 bg-gradient-to-br from-blue-600 to-blue-800 flex flex-col justify-center items-center z-50`}
+          initial={{ opacity: 1 }}
+          animate={{ 
+            opacity: shouldRenderChildren() ? 0 : 1,
+          }}
+          transition={{ duration: 0.6, ease: "easeInOut" }}
+          style={{
+            pointerEvents: shouldRenderChildren() ? "none" : "auto"
+          }}
         >
-          <div className='relative flex flex-col items-center'>
+          <div className='relative flex items-center'>
             <LogoAnimation />
-            <div className='absolute -bottom-12'>
-              <Spinner
-                size='lg'
-                classNames={{
-                  base: "w-8 h-8",
-                  wrapper: "w-8 h-8",
-                }}
-                color='white'
-              />
-            </div>
           </div>
-        </div>
-        <div
-          className={`transition-opacity duration-300 ease-in-out ${
-            shouldRenderChildren() ? "opacity-100" : "opacity-0"
-          }`}
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ 
+            opacity: shouldRenderChildren() ? 1 : 0
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
         >
           {shouldRenderChildren() && children}
-        </div>
+        </motion.div>
         <EnterpriseInitializer isOpen={showInitializer} onClose={() => {}} onSuccess={handleInitializationSuccess} />
       </main>
     </NextUIProvider>
