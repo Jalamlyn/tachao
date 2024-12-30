@@ -175,25 +175,21 @@ const LoadingText = () => {
   useEffect(() => {
     // 预加载字体
     const preloadFont = async () => {
-      if ('fonts' in document) {
+      if ("fonts" in document) {
         try {
-          await document.fonts.load('700 3.5rem "Brand Font"');
-          document.documentElement.classList.add('fonts-loaded');
+          await document.fonts.load('700 3.5rem "Brand Font"')
+          document.documentElement.classList.add("fonts-loaded")
         } catch (err) {
-          console.error('Font loading failed:', err);
+          console.error("Font loading failed:", err)
         }
       }
-    };
+    }
 
-    preloadFont();
-  }, []);
+    preloadFont()
+  }, [])
 
-  return (
-    <div className="brand-reveal">
-      即想智能
-    </div>
-  );
-};
+  return <div className='brand-reveal'>即想智能</div>
+}
 
 export const Provider = observer(({ children }: { children: React.ReactNode }) => {
   const darkMode = useDarkMode(false)
@@ -211,17 +207,17 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
     document.head.appendChild(styleSheet)
 
     // 添加字体预加载
-    const linkElement = document.createElement('link');
-    linkElement.rel = 'preload';
-    linkElement.href = '/fonts/subset.woff2';
-    linkElement.as = 'font';
-    linkElement.type = 'font/woff2';
-    linkElement.crossOrigin = 'anonymous';
-    document.head.appendChild(linkElement);
+    const linkElement = document.createElement("link")
+    linkElement.rel = "preload"
+    linkElement.href = "/fonts/subset.woff2"
+    linkElement.as = "font"
+    linkElement.type = "font/woff2"
+    linkElement.crossOrigin = "anonymous"
+    document.head.appendChild(linkElement)
 
     return () => {
-      document.head.removeChild(styleSheet);
-      document.head.removeChild(linkElement);
+      document.head.removeChild(styleSheet)
+      document.head.removeChild(linkElement)
     }
   }, [])
 
