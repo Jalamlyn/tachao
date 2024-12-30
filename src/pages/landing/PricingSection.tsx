@@ -1,7 +1,7 @@
 import React, { useState } from "react"
-import { Card, Button, Chip } from "@nextui-org/react"
+import { Card, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { motion, useAnimation, useInView } from "framer-motion"
+import { motion } from "framer-motion"
 import QRCodeModal from "./QRCodeModal"
 import WaitListModal from "./WaitListModal"
 
@@ -13,35 +13,13 @@ const SUBSCRIPTION_PLANS = {
     period: "",
     description: "适合初创团队和个人使用",
     features: [
-      {
-        text: "1个管理员账号",
-        icon: "solar:user-id-bold-duotone",
-      },
-      {
-        text: "不限数量外部账号",
-        icon: "solar:users-group-rounded-bold-duotone",
-        highlight: true,
-      },
-      {
-        text: "基础管理功能",
-        icon: "solar:widget-bold-duotone",
-      },
-      {
-        text: "基础数据分析",
-        icon: "solar:chart-bold-duotone",
-      },
-      {
-        text: "社区支持",
-        icon: "solar:chat-square-like-bold-duotone",
-      },
-      {
-        text: "不含AI功能",
-        icon: "solar:forbidden-circle-bold-duotone",
-        isLimited: true,
-      },
+      { text: "1个管理员账号", icon: "solar:user-id-bold-duotone" },
+      { text: "不限数量外部账号", icon: "solar:users-group-rounded-bold-duotone", highlight: true },
+      { text: "基础管理功能", icon: "solar:widget-bold-duotone" },
+      { text: "基础数据分析", icon: "solar:chart-bold-duotone" },
+      { text: "社区支持", icon: "solar:chat-square-like-bold-duotone" },
+      { text: "不含AI功能", icon: "solar:forbidden-circle-bold-duotone", isLimited: true },
     ],
-    highlight: false,
-    color: "default",
   },
   personal: {
     type: "personal",
@@ -50,25 +28,11 @@ const SUBSCRIPTION_PLANS = {
     period: "月",
     description: "适合个人或小型团队使用",
     features: [
-      {
-        text: "1个管理员账号",
-        icon: "solar:user-id-bold-duotone",
-      },
-      {
-        text: "不限数量外部账号",
-        icon: "solar:users-group-rounded-bold-duotone",
-      },
-      {
-        text: "10个塔币/月",
-        icon: "solar:dollar-minimalistic-bold-duotone",
-      },
-      {
-        text: "基础AI功能",
-        icon: "iconamoon:lightning-2-fill",
-      },
+      { text: "1个管理员账号", icon: "solar:user-id-bold-duotone" },
+      { text: "不限数量外部账号", icon: "solar:users-group-rounded-bold-duotone" },
+      { text: "10个塔币/月", icon: "solar:dollar-minimalistic-bold-duotone" },
+      { text: "基础AI功能", icon: "iconamoon:lightning-2-fill" },
     ],
-    highlight: false,
-    color: "default",
   },
   enterprise: {
     type: "enterprise",
@@ -77,35 +41,14 @@ const SUBSCRIPTION_PLANS = {
     period: "月",
     description: "适合中小型企业使用",
     features: [
-      {
-        text: "1个管理员账号",
-        icon: "solar:user-id-bold-duotone",
-      },
-      {
-        text: "4个内部账号",
-        icon: "solar:users-group-rounded-bold-duotone",
-        highlight: true,
-      },
-      {
-        text: "不限数量外部账号",
-        icon: "solar:users-group-rounded-bold-duotone",
-      },
-      {
-        text: "100个塔币/月",
-        icon: "solar:dollar-minimalistic-bold-duotone",
-        highlight: true,
-      },
-      {
-        text: "完整AI功能",
-        icon: "iconamoon:lightning-2-fill",
-      },
-      {
-        text: "优先技术支持",
-        icon: "solar:shield-user-bold-duotone",
-      },
+      { text: "1个管理员账号", icon: "solar:user-id-bold-duotone" },
+      { text: "4个内部账号", icon: "solar:users-group-rounded-bold-duotone", highlight: true },
+      { text: "不限数量外部账号", icon: "solar:users-group-rounded-bold-duotone" },
+      { text: "100个塔币/月", icon: "solar:dollar-minimalistic-bold-duotone", highlight: true },
+      { text: "完整AI功能", icon: "iconamoon:lightning-2-fill" },
+      { text: "优先技术支持", icon: "solar:shield-user-bold-duotone" },
     ],
     highlight: true,
-    color: "primary",
   },
   custom: {
     type: "custom",
@@ -114,33 +57,13 @@ const SUBSCRIPTION_PLANS = {
     period: "",
     description: "适合大型企业使用",
     features: [
-      {
-        text: "无限内部账号",
-        icon: "solar:users-group-rounded-bold-duotone",
-      },
-      {
-        text: "不限数量外部账号",
-        icon: "solar:users-group-rounded-bold-duotone",
-      },
-      {
-        text: "自定义塔币数量",
-        icon: "solar:dollar-minimalistic-bold-duotone",
-      },
-      {
-        text: "专属AI模型",
-        icon: "iconamoon:lightning-2-fill",
-      },
-      {
-        text: "专属技术支持",
-        icon: "solar:shield-user-bold-duotone",
-      },
-      {
-        text: "定制化开发",
-        icon: "solar:code-square-bold-duotone",
-      },
+      { text: "无限内部账号", icon: "solar:users-group-rounded-bold-duotone" },
+      { text: "不限数量外部账号", icon: "solar:users-group-rounded-bold-duotone" },
+      { text: "自定义塔币数量", icon: "solar:dollar-minimalistic-bold-duotone" },
+      { text: "专属AI模型", icon: "iconamoon:lightning-2-fill" },
+      { text: "专属技术支持", icon: "solar:shield-user-bold-duotone" },
+      { text: "定制化开发", icon: "solar:code-square-bold-duotone" },
     ],
-    highlight: false,
-    color: "secondary",
   },
 }
 
@@ -158,160 +81,78 @@ const PricingSection = () => {
     }
   }
 
-  // 新增的动画变体
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.1,
-      },
-    },
-  }
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring",
-        damping: 20,
-        stiffness: 100,
-      },
-    },
-  }
-
-  const featureVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: {
-        type: "spring",
-        damping: 25,
-        stiffness: 120,
-      },
-    },
-  }
-
   return (
-    <section className='py-20 bg-gradient-to-b from-white to-default-50'>
-      <div className='mx-auto px-4'>
+    <section className="py-20 bg-gradient-to-b from-[#19073B] to-[#2D1B69]">
+      <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className='text-center mb-12'
+          className="text-center mb-16"
         >
-          <h2 className='text-3xl md:text-4xl font-bold mb-4'>简单透明的价格体系</h2>
-          <p className='text-xl text-default-600'>选择最适合您企业的方案</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-cyan-200 mb-4">
+            简单透明的价格体系
+          </h2>
+          <p className="text-xl text-white/80">选择最适合您企业的方案</p>
         </motion.div>
 
-        <motion.div
-          className='grid md:grid-cols-4 gap-8 max-w-7xl mx-auto'
-          variants={containerVariants}
-          initial='hidden'
-          whileInView='visible'
-          viewport={{ once: true }}
-        >
-          {Object.values(SUBSCRIPTION_PLANS).map((plan, index) => (
+        <div className="grid md:grid-cols-4 gap-8 max-w-7xl mx-auto">
+          {Object.entries(SUBSCRIPTION_PLANS).map(([key, plan]) => (
             <motion.div
-              key={plan.name}
-              variants={cardVariants}
-              className={`flex ${plan.highlight ? "md:-translate-y-2" : ""}`}
-              style={{
-                willChange: "transform, opacity",
-              }}
+              key={key}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="h-full"
             >
               <Card
-                className={`relative flex flex-col w-full transition-all duration-300 hover:shadow-xl
-                  ${plan.highlight ? "border-primary shadow-lg" : "shadow-md"}
-                  hover:scale-[1.02] hover:border-primary/50
-                `}
+                className={`h-full bg-white/5 backdrop-blur-sm border-white/10 hover:border-white/20 
+                  ${plan.highlight ? "border-purple-500/50" : ""}
+                  transition-all duration-300 hover:transform hover:scale-105`}
               >
-                <motion.div
-                  className='flex flex-col flex-1 p-6'
-                  whileHover={{ scale: 1.01 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <div className='mb-6'>
-                    <h3 className='text-2xl font-bold mb-2'>{plan.name}</h3>
-                    <div className='mb-4'>
-                      <span className='text-3xl font-bold'>
+                <div className="p-6 h-full flex flex-col">
+                  <div className="mb-6">
+                    <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                    <div className="mb-4">
+                      <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
                         {typeof plan.price === "number" ? `￥${plan.price}` : plan.price}
                       </span>
-                      {plan.period && <span className='text-default-500'>/{plan.period}</span>}
+                      {plan.period && <span className="text-white/60">/{plan.period}</span>}
                     </div>
-                    <p className='text-default-600'>{plan.description}</p>
+                    <p className="text-white/60">{plan.description}</p>
                   </div>
 
-                  <div className='flex-grow'>
-                    <motion.div className='space-y-4'>
-                      {plan.features.map((feature, idx) => (
-                        <motion.div
-                          key={idx}
-                          variants={featureVariants}
-                          className={`flex items-center gap-3 ${feature.highlight ? "text-primary font-medium" : ""} 
-                            ${feature.isLimited ? "text-default-400" : ""}`}
-                          whileHover={{ x: 5 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                        >
-                          <Icon
-                            icon={feature.icon}
-                            className={`w-5 h-5 ${feature.highlight ? "text-primary" : "text-default-500"}
-                              ${feature.isLimited ? "text-default-400" : ""}`}
-                          />
-                          <span>{feature.text}</span>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  </div>
-
-                  <div className='mt-8'>
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                    >
-                      <Button
-                        color={plan.color}
-                        variant={plan.highlight ? "shadow" : "flat"}
-                        className='w-full transition-transform duration-200 hover:scale-105'
-                        size='lg'
-                        onPress={() => handleButtonClick(plan.type)}
+                  <div className="flex-1 space-y-4 mb-6">
+                    {plan.features.map((feature, index) => (
+                      <div
+                        key={index}
+                        className={`flex items-center gap-3 
+                          ${feature.highlight ? "text-cyan-400" : "text-white/80"}
+                          ${feature.isLimited ? "text-white/40" : ""}`}
                       >
-                        {plan.type === "free" ? "立即注册" : "申请专属账号"}
-                      </Button>
-                    </motion.div>
+                        <Icon icon={feature.icon} className="w-5 h-5 flex-shrink-0" />
+                        <span>{feature.text}</span>
+                      </div>
+                    ))}
                   </div>
-                </motion.div>
+
+                  <Button
+                    className={`w-full h-12 mt-auto ${
+                      plan.highlight
+                        ? "bg-gradient-to-r from-purple-500 to-cyan-500 text-white"
+                        : "bg-white/10 text-white hover:bg-white/20"
+                    }`}
+                    onClick={() => handleButtonClick(plan.type)}
+                  >
+                    {plan.type === "free" ? "立即注册" : "申请专属账号"}
+                  </Button>
+                </div>
               </Card>
             </motion.div>
           ))}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className='mt-12 text-center'
-        >
-          <motion.div
-            className='inline-block p-4 bg-default-50 rounded-lg'
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-          >
-            <p className='text-default-600'>
-              所有方案均包含:
-              <span className='font-medium mx-2'>免费技术支持</span>•<span className='font-medium mx-2'>安全保障</span>•
-              <span className='font-medium mx-2'>定期更新</span>
-            </p>
-          </motion.div>
-        </motion.div>
+        </div>
       </div>
 
       <QRCodeModal isOpen={isQRCodeOpen} onClose={() => setIsQRCodeOpen(false)} />
