@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom"
 import { CreateAppInput } from "../store/useAppStore"
 import { Icon } from "@iconify/react"
 import confetti from "canvas-confetti"
+import { versionStore } from "@/pages/app-builder/store/versionStore"
 
 interface CreateAppModalProps {
   isOpen: boolean
@@ -138,7 +139,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
       setTitle("")
       setTemplate("enterprise")
       onClose()
-
+      versionStore.clear()
       // 触发成功动画
       triggerConfetti()
 

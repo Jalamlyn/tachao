@@ -44,6 +44,7 @@ export interface AppCache {
     appCode: string
     version: number
     updatedAt: string
+    cachedAt: string
   }
 }
 
@@ -63,4 +64,40 @@ export interface AppBuilderVersion {
   modules?: AppModules
   schemas?: AppSchemas
   timestamp: string
+  version: number
+  updatedAt: string
+}
+
+export interface CodeItem {
+  id: string
+  title: string
+  type: "app" | "page" | "store" | "service" | "module" | "schema"
+  code: string
+  updatedAt?: string
+  name?: string
+  isPublic?: boolean
+}
+
+export interface PublishData {
+  appCode: string
+  pages: AppPages
+  stores: AppStores
+  services: AppServices
+  modules: AppModules
+  schemas: AppSchemas
+  version: number
+  updatedAt: string
+}
+
+export interface CacheConfig {
+  maxAge: number // 缓存最大保存时间(毫秒)
+  version: string // 缓存版本号
+  prefix: string // 缓存key前缀
+}
+
+export interface VersionInfo {
+  version: number
+  updatedAt: string
+  lastPublishedAt?: string
+  status: "draft" | "published"
 }

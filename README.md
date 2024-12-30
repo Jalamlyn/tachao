@@ -1,2 +1,2 @@
-# Shata AI App Template
+IdeaNow AI App Template
 ## quick

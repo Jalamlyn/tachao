@@ -1,5 +1,4 @@
 import { NextUIProvider } from "@nextui-org/system"
-import { useNavigate } from "react-router-dom"
 import useDarkMode from "use-dark-mode"
 import { queryMyProject } from "./service/apis/project"
 import { queryApps } from "./service/apis/app"
@@ -230,14 +229,14 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
   }, [isInit])
 
   const shouldRenderChildren = () => {
-    const isLoginPage = location.pathname.includes('/login')
-    const isExternalLoginPage = location.pathname === '/external-login'
-    const isRootPath = location.pathname === '/'
-    
+    const isLoginPage = location.pathname.includes("/login")
+    const isExternalLoginPage = location.pathname === "/external-login"
+    const isRootPath = location.pathname === "/"
+
     if (isLoginPage || isExternalLoginPage || isRootPath) {
       return isInit && modulesLoaded && !isTransitioning
     }
-    
+
     return isInit && modulesLoaded && !isTransitioning && appIdReady
   }
 

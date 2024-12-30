@@ -6,6 +6,13 @@ import message from "@/components/Message"
 import { Icon } from "@iconify/react"
 import { AppContext } from "@/contexts/AppContext"
 import { PermissionCheck } from "@/permissions/components/PermissionCheck"
+import { AppCache, CacheConfig, VersionInfo } from "../types"
+
+const CACHE_CONFIG: CacheConfig = {
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7天
+  version: "1.0.0",
+  prefix: "app_runtime_",
+}
 
 interface AppRuntimeProps {
   appId: string
@@ -16,50 +23,89 @@ interface AppRuntimeProps {
   }
 }
 
-interface AppCache {
-  code: string
-  version: number
-  updatedAt: string
-  pages: Record<string, any>
-  stores: Record<string, any>
-  services: Record<string, any>
-  modules: Record<string, any>
-  schemas: Record<string, any>
-}
-
 export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [], runtimeContext = {} }) => {
   const [appCode, setAppCode] = useState<string | null>(null)
   const [appData, setAppData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showUpdateModal, setShowUpdateModal] = useState(false)
-  const [newVersion, setNewVersion] = useState<number | null>(null)
+  const [newVersion, setNewVersion] = useState<VersionInfo | null>(null)
+  const [codeCache, setCodeCache] = useState<AppCache | null>(null)
 
   // 获取缓存的应用数据
   const getCachedApp = useCallback(() => {
     if (!appId) return null
-    const cached = localStorage.getItem(`app_runtime_${appId}`)
-    return cached ? JSON.parse(cached) : null
+    try {
+      const cacheKey = `${CACHE_CONFIG.prefix}${appId}`
+      const cached = localStorage.getItem(cacheKey)
+      if (!cached) return null
+
+      const parsedCache = JSON.parse(cached)
+
+      // 检查缓存版本
+      if (parsedCache.version !== CACHE_CONFIG.version) {
+        localStorage.removeItem(cacheKey)
+        return null
+      }
+
+      // 检查缓存是否过期
+      const now = Date.now()
+      if (now - new Date(parsedCache.cachedAt).getTime() > CACHE_CONFIG.maxAge) {
+        localStorage.removeItem(cacheKey)
+        return null
+      }
+
+      return parsedCache
+    } catch (error) {
+      console.error("Error reading cache:", error)
+      return null
+    }
   }, [appId])
 
   // 保存应用缓存
   const saveAppCache = useCallback(
-    (data: AppCache) => {
+    (data: Omit<AppCache[string], "cachedAt">) => {
       if (!appId) return
-      localStorage.setItem(
-        `app_runtime_${appId}`,
-        JSON.stringify({
+      try {
+        const cacheKey = `${CACHE_CONFIG.prefix}${appId}`
+        const cacheData = {
           ...data,
+          version: CACHE_CONFIG.version,
           cachedAt: new Date().toISOString(),
-        })
-      )
+        }
+        localStorage.setItem(cacheKey, JSON.stringify(cacheData))
+        setCodeCache(cacheData)
+      } catch (error) {
+        console.error("Error saving cache:", error)
+      }
     },
     [appId]
   )
 
+  // 清理过期缓存
+  const clearOutdatedCache = useCallback(() => {
+    const now = Date.now()
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith(CACHE_CONFIG.prefix)) {
+        try {
+          const cached = JSON.parse(localStorage.getItem(key) || "")
+          const isOutdated =
+            cached.version !== CACHE_CONFIG.version || now - new Date(cached.cachedAt).getTime() > CACHE_CONFIG.maxAge
+
+          if (isOutdated) {
+            localStorage.removeItem(key)
+          }
+        } catch (error) {
+          console.error("Error cleaning cache:", error)
+          localStorage.removeItem(key)
+        }
+      }
+    })
+  }, [])
+
   // 检查应用更新
   const checkForUpdates = useCallback(async () => {
-    if (!appId) return
+    if (!appId || !codeCache) return
 
     try {
       const appIndexResult = await getMetadata(["app_index"])
@@ -70,15 +116,21 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
         throw new Error("应用不存在")
       }
 
-      const cachedApp = getCachedApp()
-      if (cachedApp && app.version > cachedApp.version) {
-        setNewVersion(app.version)
+      const versionInfo: VersionInfo = {
+        version: app.version,
+        updatedAt: app.updatedAt,
+        lastPublishedAt: app.lastPublishedAt,
+        status: app.status,
+      }
+
+      if (app.version > codeCache.version) {
+        setNewVersion(versionInfo)
         setShowUpdateModal(true)
       }
     } catch (error) {
       console.error("Error checking for updates:", error)
     }
-  }, [appId, getCachedApp])
+  }, [appId, codeCache])
 
   // 加载应用代码
   const loadAppCode = useCallback(
@@ -96,8 +148,9 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
         // 如果不是强制获取，先尝试使用缓存
         const cachedApp = getCachedApp()
         if (!forceFetch && cachedApp) {
-          setAppCode(cachedApp.code)
-          setAppData(cachedApp.appData)
+          setAppCode(cachedApp.appCode)
+          setAppData(cachedApp)
+          setCodeCache(cachedApp)
           setIsLoading(false)
           // 异步检查更新
           checkForUpdates()
@@ -163,8 +216,8 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
         await Promise.all([...pagePromises, ...otherPromises])
 
         // 4. 保存到缓存
-        saveAppCache({
-          code: appData.code,
+        const cacheData = {
+          appCode: appData.code,
           version: app.version,
           updatedAt: app.updatedAt,
           pages,
@@ -172,7 +225,9 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
           services,
           modules,
           schemas,
-        })
+        }
+
+        saveAppCache(cacheData)
       } catch (error) {
         console.error("Error loading app:", error)
         setError(error instanceof Error ? error.message : "加载应用失败")
@@ -195,6 +250,12 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
     }
   }
 
+  // 初始化时清理过期缓存
+  useEffect(() => {
+    clearOutdatedCache()
+  }, [clearOutdatedCache])
+
+  // 加载应用代码
   useEffect(() => {
     loadAppCode()
   }, [loadAppCode])
@@ -227,15 +288,15 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
   const fullRuntimeContext = {
     ...runtimeContext,
     appId,
-    stores: {},
-    services: {},
-    modules: {},
-    schemas: {},
+    stores: codeCache?.stores || {},
+    services: codeCache?.services || {},
+    modules: codeCache?.modules || {},
+    schemas: codeCache?.schemas || {},
   }
 
   return (
     <>
-      <PermissionCheck resourceType="app" resourceId={appId}>
+      <PermissionCheck resourceType='app' resourceId={appId}>
         <AppContext.Provider value={{ appId, runtimeContext: fullRuntimeContext }}>
           <AppRender
             basename={`/app-run/${appId}`}
@@ -253,8 +314,13 @@ export const AppRuntime: React.FC<AppRuntimeProps> = ({ appId, permissions = [],
           <ModalBody>
             <div className='flex items-center gap-2'>
               <Icon icon='mdi:update' className='w-6 h-6 text-primary' />
-              <p>应用有新的版本可用（v{newVersion}），是否立即更新？</p>
+              <p>应用有新的版本可用（v{newVersion?.version}），是否立即更新？</p>
             </div>
+            {newVersion?.lastPublishedAt && (
+              <p className='text-sm text-default-500'>
+                最后发布时间: {new Date(newVersion.lastPublishedAt).toLocaleString()}
+              </p>
+            )}
           </ModalBody>
           <ModalFooter>
             <Button variant='light' onPress={() => setShowUpdateModal(false)}>

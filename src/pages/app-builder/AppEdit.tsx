@@ -1,4 +1,400 @@
-const handleStop = useCallback(() => {
+import React, { useState, useEffect, useCallback, useRef } from "react"
+import { useParams } from "react-router-dom"
+import { Button, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
+import { Icon } from "@iconify/react"
+import { observer } from "mobx-react-lite"
+import PageLayout from "@/components/PageLayout"
+import AIEditor from "./AIEditor"
+import AppAgent from "./AppAgent"
+import { AppBuilderMessage, CodeItem, PublishData } from "./types"
+import message from "@/components/Message"
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
+import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { versionStore } from "./store/versionStore"
+
+const MAX_MESSAGES = 10
+const CODE_TYPES = ["app", "page", "store", "service", "module", "schema"] as const
+
+export const extractShataAIFormContent = (content: string): string => {
+  if (!content) {
+    return ""
+  }
+  const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
+  const match = content?.match(regex)
+  return match ? match[1].trim() : content
+}
+
+const AppBuilder: React.FC = observer(() => {
+  const { appId } = useParams<{ appId: string }>()
+  const [isLoading, setIsLoading] = useState(true)
+  const [messages, setMessages] = useState<AppBuilderMessage[]>([])
+  const [selectedTab, setSelectedTab] = useState("preview")
+  const [appTitle, setAppTitle] = useState("")
+  const { updateBreadcrumbs } = useBreadcrumb()
+  const [showPublishModal, setShowPublishModal] = useState(false)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [selectedCodeId, setSelectedCodeId] = useState<string>("app_entry")
+  const [codeItems, setCodeItems] = useState<CodeItem[]>([])
+  const [publishInProgress, setPublishInProgress] = useState(false)
+  const [publishError, setPublishError] = useState<string | null>(null)
+
+  const accumulatedTextRef = useRef("")
+  const currentMessageIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    updateBreadcrumbs([
+      { label: "首页", href: "/we-chat-app/admin" },
+      { label: "应用管理", href: "/we-chat-app/admin/apps" },
+      { label: "应用开发", href: "" },
+    ])
+  }, [])
+
+  useEffect(() => {
+    if (appId) {
+      versionStore.setAppId(appId)
+      loadInitialData()
+    }
+  }, [appId])
+
+  useEffect(() => {
+    updateCodeItems()
+  }, [versionStore.currentVersion])
+
+  const loadInitialData = async () => {
+    if (!appId) return
+    try {
+      setIsLoading(true)
+      const result = await getMetadata(["app_index"])
+      const apps = result.data?.[0]?.value ? JSON.parse(result.data[0].value) : []
+      const app = apps.find((a: any) => a.id === appId)
+      if (app) {
+        setAppTitle(app.title)
+      }
+      await versionStore.loadApp(appId)
+      updateCodeItems()
+    } catch (error) {
+      console.error("Error loading initial data:", error)
+      message.error("加载应用数据失败")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const refreshPreview = useCallback(() => {
+    if (iframeRef.current && !isRefreshing) {
+      setIsRefreshing(true)
+      iframeRef.current.src = iframeRef.current.src
+      setTimeout(() => setIsRefreshing(false), 500)
+    }
+  }, [isRefreshing])
+
+  const updateCodeItems = useCallback(() => {
+    const currentVersion = versionStore.currentVersion
+    if (!currentVersion) return
+
+    const items: CodeItem[] = []
+
+    // App Entry
+    if (currentVersion.content) {
+      items.push({
+        id: "app_entry",
+        title: "应用入口 (App Entry)",
+        type: "app",
+        code: currentVersion.content,
+        updatedAt: currentVersion.appState?.updatedAt,
+      })
+    }
+
+    // Pages
+    if (currentVersion.appState?.pages) {
+      Object.entries(currentVersion.appState.pages).forEach(([pageId, page]) => {
+        items.push({
+          id: pageId,
+          title: `${page.title} (${pageId})`,
+          type: "page",
+          code: page.code,
+          updatedAt: page.updatedAt,
+        })
+      })
+    }
+
+    // Stores
+    if (currentVersion.appState?.stores) {
+      Object.entries(currentVersion.appState.stores).forEach(([name, store]) => {
+        items.push({
+          id: `store_${name}`,
+          title: `Store: ${name}`,
+          type: "store",
+          name,
+          code: store.code,
+          updatedAt: store.updatedAt,
+        })
+      })
+    }
+
+    // Services
+    if (currentVersion.appState?.services) {
+      Object.entries(currentVersion.appState.services).forEach(([name, service]) => {
+        items.push({
+          id: `service_${name}`,
+          title: `Service: ${name}`,
+          type: "service",
+          name,
+          code: service.code,
+          updatedAt: service.updatedAt,
+        })
+      })
+    }
+
+    // Modules
+    if (currentVersion.appState?.modules) {
+      Object.entries(currentVersion.appState.modules).forEach(([name, module]) => {
+        items.push({
+          id: `module_${name}`,
+          title: `Module: ${name}`,
+          type: "module",
+          name,
+          code: module.code,
+          updatedAt: module.updatedAt,
+        })
+      })
+    }
+
+    // Schemas
+    if (currentVersion.appState?.schemas) {
+      Object.entries(currentVersion.appState.schemas).forEach(([name, schema]) => {
+        items.push({
+          id: `schema_${name}`,
+          title: `Schema: ${name}`,
+          type: "schema",
+          name,
+          code: schema.code,
+          updatedAt: schema.updatedAt,
+        })
+      })
+    }
+
+    // 按类型和更新时间排序
+    items.sort((a, b) => {
+      // 首先按类型排序
+      const typeOrder = CODE_TYPES.indexOf(a.type) - CODE_TYPES.indexOf(b.type)
+      if (typeOrder !== 0) return typeOrder
+
+      // 然后按更新时间倒序
+      const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0
+      const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0
+      return timeB - timeA
+    })
+
+    setCodeItems(items)
+    if (items.length > 0 && !selectedCodeId) {
+      setSelectedCodeId(items[0].id)
+    }
+  }, [selectedCodeId])
+
+  const handleMessage = useCallback(
+    (event: MessageEvent) => {
+      if (event.data.type === "preview_ready" && event.data.appId === appId) {
+        const currentVersion = versionStore.currentVersion
+        if (currentVersion?.content) {
+          const targetWindow = event.source as Window
+          targetWindow.postMessage(
+            {
+              type: "update_preview",
+              appId,
+              code: currentVersion.content,
+              stores: currentVersion.appState?.stores || {},
+              services: currentVersion.appState?.services || {},
+              modules: currentVersion.appState?.modules || {},
+              schemas: currentVersion.appState?.schemas || {},
+            },
+            "*"
+          )
+        }
+      } else if (event.data.type === "request_page_code" && event.data.appId === appId) {
+        const { pageId } = event.data
+        const pageCode = versionStore.getPageCode(pageId)
+
+        const iframe = document.querySelector("iframe")
+        if (iframe?.contentWindow) {
+          iframe.contentWindow.postMessage(
+            {
+              type: "update_page_code",
+              appId,
+              pageId,
+              code: pageCode,
+            },
+            "*"
+          )
+        }
+      }
+    },
+    [appId]
+  )
+
+  useEffect(() => {
+    window.addEventListener("message", handleMessage)
+    return () => {
+      window.removeEventListener("message", handleMessage)
+    }
+  }, [handleMessage])
+
+  const handlePublish = async () => {
+    if (!appId) return
+    try {
+      setIsLoading(true)
+      setPublishInProgress(true)
+      setPublishError(null)
+
+      const publishData = versionStore.exportForPublish()
+      if (!publishData) {
+        throw new Error("没有可发布的内容")
+      }
+
+      // 验证所有必需的代码
+      validatePublishData(publishData)
+
+      // 发布页面代码
+      for (const [pageId, page] of Object.entries(publishData.pages)) {
+        await setMetadata(
+          pageId,
+          JSON.stringify({
+            id: pageId,
+            title: page.title,
+            code: page.code,
+            appId,
+            updatedAt: page.updatedAt,
+          })
+        )
+      }
+
+      // 发布其他类型的代码
+      const codeTypes = [
+        { type: "stores", data: publishData.stores },
+        { type: "services", data: publishData.services },
+        { type: "modules", data: publishData.modules },
+        { type: "schemas", data: publishData.schemas },
+      ]
+
+      for (const { type, data } of codeTypes) {
+        if (Object.keys(data || {}).length > 0) {
+          await setMetadata(`${appId}_${type}`, JSON.stringify(data))
+        }
+      }
+
+      // 发布应用入口代码
+      await setMetadata(
+        `app_${appId}`,
+        JSON.stringify({
+          code: publishData.appCode,
+          updatedAt: publishData.updatedAt,
+          version: publishData.version,
+        })
+      )
+
+      // 更新应用索引
+      const appIndexResult = await getMetadata(["app_index"])
+      const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
+      const appIndex = apps.findIndex((a: any) => a.id === appId)
+      if (appIndex === -1) throw new Error("应用不存在")
+
+      const updatedApps = [...apps]
+      updatedApps[appIndex] = {
+        ...updatedApps[appIndex],
+        updatedAt: new Date().toISOString(),
+        status: "active",
+        version: publishData.version,
+        lastPublishedAt: new Date().toISOString(),
+      }
+
+      await setMetadata("app_index", JSON.stringify(updatedApps))
+
+      versionStore.clear()
+      message.success("发布成功")
+      setShowPublishModal(true)
+    } catch (error) {
+      console.error("Error publishing app:", error)
+      setPublishError(error instanceof Error ? error.message : "发布失败")
+      message.error(error instanceof Error ? error.message : "发布失败")
+    } finally {
+      setIsLoading(false)
+      setPublishInProgress(false)
+    }
+  }
+
+  const validatePublishData = (data: PublishData) => {
+    if (!data.appCode) {
+      throw new Error("缺少应用入口代码")
+    }
+
+    if (Object.keys(data.pages).length === 0) {
+      throw new Error("至少需要一个页面")
+    }
+
+    // 验证每个页面的必需字段
+    Object.entries(data.pages).forEach(([pageId, page]) => {
+      if (!page.code || !page.title) {
+        throw new Error(`页面 ${pageId} 缺少必需的字段`)
+      }
+    })
+
+    // 验证其他类型代码的完整性
+    const validateCode = (type: string, items: Record<string, any>) => {
+      Object.entries(items || {}).forEach(([name, item]) => {
+        if (!item.code) {
+          throw new Error(`${type} ${name} 缺少代码内容`)
+        }
+      })
+    }
+
+    validateCode("Store", data.stores)
+    validateCode("Service", data.services)
+    validateCode("Module", data.modules)
+    validateCode("Schema", data.schemas)
+  }
+
+  const addMessage = useCallback((message: AppBuilderMessage) => {
+    setMessages((prev) => {
+      const updatedMessages = [...prev, message]
+      if (updatedMessages.length > MAX_MESSAGES) {
+        const systemMessages = updatedMessages.filter((msg) => msg.role === "system")
+        const nonSystemMessages = updatedMessages.filter((msg) => msg.role !== "system")
+        const recentMessages = nonSystemMessages.slice(-MAX_MESSAGES + systemMessages.length)
+        return [...systemMessages, ...recentMessages]
+      }
+      return updatedMessages
+    })
+  }, [])
+
+  const updateLastMessage = useCallback((update: Partial<AppBuilderMessage>) => {
+    setMessages((prev) => {
+      const messages = [...prev]
+      const lastIndex = messages.length - 1
+      if (lastIndex >= 0) {
+        messages[lastIndex] = {
+          ...messages[lastIndex],
+          ...update,
+        }
+      }
+      return messages
+    })
+  }, [])
+
+  const handleChunk = useCallback(
+    (chunk: string) => {
+      accumulatedTextRef.current += chunk
+      if (accumulatedTextRef.current !== "") {
+        updateLastMessage({
+          content: accumulatedTextRef.current,
+          status: "streaming",
+        })
+      }
+    },
+    [updateLastMessage]
+  )
+
+  const handleStop = useCallback(() => {
     updateLastMessage({
       status: "cancelled",
       content: accumulatedTextRef.current || "生成已停止",
@@ -46,6 +442,106 @@ const handleStop = useCallback(() => {
       currentMessageIdRef.current = null
     }
   }
+  const handleCommandResult = useCallback(
+    (result: {
+      success: boolean
+      appCode?: string
+      pages?: { [pageId: string]: any }
+      stores?: { [name: string]: any }
+      services?: { [name: string]: any }
+      modules?: { [name: string]: any }
+      schemas?: { [name: string]: any }
+      error?: string
+    }) => {
+      if (!result.success) {
+        message.error(result.error || "处理失败")
+        return
+      }
+
+      try {
+        const currentVersion = versionStore.currentVersion
+        const newAppState = {
+          pages: { ...currentVersion?.appState?.pages } || {},
+          stores: { ...currentVersion?.appState?.stores } || {},
+          services: { ...currentVersion?.appState?.services } || {},
+          modules: { ...currentVersion?.appState?.modules } || {},
+          schemas: { ...currentVersion?.appState?.schemas } || {},
+          version: (currentVersion?.appState?.version || 0) + 1,
+          updatedAt: new Date().toISOString(),
+        }
+
+        // 更新应用入口代码
+        if (result.appCode) {
+          versionStore.addVersion(result.appCode, newAppState)
+        }
+
+        // 更新页面代码
+        if (result.pages) {
+          Object.entries(result.pages).forEach(([pageId, page]) => {
+            newAppState.pages[pageId] = {
+              code: page.code,
+              title: page.title,
+              updatedAt: page.updatedAt || new Date().toISOString(),
+            }
+          })
+        }
+
+        // 更新 Store 代码
+        if (result.stores) {
+          Object.entries(result.stores).forEach(([name, store]) => {
+            newAppState.stores[name] = {
+              code: store.code,
+              updatedAt: store.updatedAt || new Date().toISOString(),
+            }
+          })
+        }
+
+        // 更新 Service 代码
+        if (result.services) {
+          Object.entries(result.services).forEach(([name, service]) => {
+            newAppState.services[name] = {
+              code: service.code,
+              updatedAt: service.updatedAt || new Date().toISOString(),
+            }
+          })
+        }
+
+        // 更新 Module 代码
+        if (result.modules) {
+          Object.entries(result.modules).forEach(([name, module]) => {
+            newAppState.modules[name] = {
+              code: module.code,
+              updatedAt: module.updatedAt || new Date().toISOString(),
+            }
+          })
+        }
+
+        // 更新 Schema 代码
+        if (result.schemas) {
+          Object.entries(result.schemas).forEach(([name, schema]) => {
+            newAppState.schemas[name] = {
+              code: schema.code,
+              updatedAt: schema.updatedAt || new Date().toISOString(),
+            }
+          })
+        }
+
+        // 如果只更新了组件代码而没有更新应用入口代码
+        if (!result.appCode && (result.pages || result.stores || result.services || result.modules || result.schemas)) {
+          versionStore.addVersion(currentVersion?.content || "", newAppState)
+        }
+
+        // 更新代码项列表
+        updateCodeItems()
+
+        message.success("代码生成成功")
+      } catch (error) {
+        console.error("Error handling command result:", error)
+        message.error("处理结果失败")
+      }
+    },
+    [updateCodeItems]
+  )
 
   const renderPreview = useCallback(() => {
     const version = versionStore.currentVersion
@@ -81,10 +577,7 @@ const handleStop = useCallback(() => {
                 isDisabled={isRefreshing}
                 className='bg-white/70 backdrop-blur-sm'
               >
-                <Icon
-                  icon='mdi:refresh'
-                  className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
-                />
+                <Icon icon='mdi:refresh' className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
               </Button>
               {/* 全屏按钮 */}
               <Button

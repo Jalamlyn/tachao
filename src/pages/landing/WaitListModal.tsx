@@ -174,7 +174,7 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
               <h3 className='text-xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent'>
                 申请开通账号
               </h3>
-              <p className='text-sm text-default-500'>填写以下信息，开启 ShaTa AI 数智化之旅</p>
+              <p className='text-sm text-default-500'>填写以下信息，开启 即想 AI 数智化之旅</p>
             </ModalHeader>
 
             <ModalBody>
@@ -244,7 +244,7 @@ const WaitListModal: React.FC<WaitListModalProps> = ({ isOpen, onClose }) => {
                 <Textarea
                   isRequired
                   label='使用目的'
-                  placeholder='请简要描述您计划如何使用 ShaTa AI'
+                  placeholder='请简要描述您计划如何使用“即想”'
                   value={formData.purpose}
                   onValueChange={(value) => setFormData({ ...formData, purpose: value })}
                   minRows={3}

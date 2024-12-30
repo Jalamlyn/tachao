@@ -74,30 +74,28 @@ const PricingSection = () => {
   const handleButtonClick = (planType: string) => {
     if (planType === "custom") {
       setIsQRCodeOpen(true)
-    } else if (planType === "free") {
-      window.open("https://app.shata.ai/register", "_blank")
     } else {
       setIsWaitListOpen(true)
     }
   }
 
   return (
-    <section className="py-20 bg-gradient-to-b from-[#19073B] to-[#2D1B69]">
-      <div className="container mx-auto px-4">
+    <section className='py-20 bg-gradient-to-b from-[#19073B] to-[#2D1B69]'>
+      <div className='mx-auto px-4'>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className='text-center mb-16'
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-cyan-200 mb-4">
+          <h2 className='text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-cyan-200 mb-4'>
             简单透明的价格体系
           </h2>
-          <p className="text-xl text-white/80">选择最适合您企业的方案</p>
+          <p className='text-xl text-white/80'>选择最适合您企业的方案</p>
         </motion.div>
 
-        <div className="grid md:grid-cols-4 gap-8 max-w-7xl mx-auto">
+        <div className='grid md:grid-cols-4 gap-8 max-w-7xl mx-auto'>
           {Object.entries(SUBSCRIPTION_PLANS).map(([key, plan]) => (
             <motion.div
               key={key}
@@ -105,26 +103,26 @@ const PricingSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="h-full"
+              className='h-full'
             >
               <Card
                 className={`h-full bg-white/5 backdrop-blur-sm border-white/10 hover:border-white/20 
                   ${plan.highlight ? "border-purple-500/50" : ""}
                   transition-all duration-300 hover:transform hover:scale-105`}
               >
-                <div className="p-6 h-full flex flex-col">
-                  <div className="mb-6">
-                    <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                    <div className="mb-4">
-                      <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">
+                <div className='p-6 h-full flex flex-col'>
+                  <div className='mb-6'>
+                    <h3 className='text-2xl font-bold text-white mb-2'>{plan.name}</h3>
+                    <div className='mb-4'>
+                      <span className='text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400'>
                         {typeof plan.price === "number" ? `￥${plan.price}` : plan.price}
                       </span>
-                      {plan.period && <span className="text-white/60">/{plan.period}</span>}
+                      {plan.period && <span className='text-white/60'>/{plan.period}</span>}
                     </div>
-                    <p className="text-white/60">{plan.description}</p>
+                    <p className='text-white/60'>{plan.description}</p>
                   </div>
 
-                  <div className="flex-1 space-y-4 mb-6">
+                  <div className='flex-1 space-y-4 mb-6'>
                     {plan.features.map((feature, index) => (
                       <div
                         key={index}
@@ -132,7 +130,7 @@ const PricingSection = () => {
                           ${feature.highlight ? "text-cyan-400" : "text-white/80"}
                           ${feature.isLimited ? "text-white/40" : ""}`}
                       >
-                        <Icon icon={feature.icon} className="w-5 h-5 flex-shrink-0" />
+                        <Icon icon={feature.icon} className='w-5 h-5 flex-shrink-0' />
                         <span>{feature.text}</span>
                       </div>
                     ))}
@@ -146,7 +144,7 @@ const PricingSection = () => {
                     }`}
                     onClick={() => handleButtonClick(plan.type)}
                   >
-                    {plan.type === "free" ? "立即注册" : "申请专属账号"}
+                    申请专属账号
                   </Button>
                 </div>
               </Card>

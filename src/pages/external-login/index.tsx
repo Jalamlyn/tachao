@@ -92,7 +92,7 @@ export default function ExternalLoginPage() {
                   transition={{ duration: 1 }}
                   className='text-lg mb-6 drop-shadow'
                 >
-                  沙塔智能, 将你的创意转化为现实代码
+                  即想智能, 将你的创意转化为现实代码
                 </motion.p>
               </motion.div>
 
