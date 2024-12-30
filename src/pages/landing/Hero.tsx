@@ -22,15 +22,16 @@ const SmartButton: React.FC<React.PropsWithChildren<{ onClick?: () => void; vari
     <motion.div
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      className="relative"
+      className="relative group"
     >
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-lg blur opacity-20 group-hover:opacity-30 transition duration-1000 group-hover:duration-200" />
       <Button
         size="lg"
         className={`${
           variant === "primary"
             ? "bg-gradient-to-r from-purple-500 to-cyan-500 text-white"
-            : "border-white/20 text-white hover:bg-white/10"
-        } hover:opacity-90 px-8 h-14 text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300`}
+            : "bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20"
+        } relative px-8 h-14 text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:ring-2 hover:ring-purple-500/20`}
         onClick={onClick}
       >
         {children}
