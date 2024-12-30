@@ -23,10 +23,6 @@ export const extractShataAIFormContent = (content: string): string => {
   return match ? match[1].trim() : content
 }
 
-const wrapWithShataAIForm = (content: string): string => {
-  return `<shata-ai-code>\n${content}\n</shata-ai-code>`
-}
-
 const AIEditor: React.FC<AIEditorProps> = observer(
   ({
     onStop,
@@ -54,6 +50,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     // 使用 MobX 的响应式属性
     const currentVersion = versionStore.currentVersion
     const currentContent = versionStore.currentContent
+
     useEffect(() => {
       if (selectedCodeId) {
         if (selectedCodeId === "app_entry") {
@@ -69,75 +66,11 @@ const AIEditor: React.FC<AIEditorProps> = observer(
 
     const handleSaveEdit = async () => {
       try {
-        const selectedItem = codeItems.find((item) => item.id === selectedCodeId)
-        if (!selectedItem) return
-
-        if (selectedItem.type === "app") {
-          const wrappedCode = wrapWithShataAIForm(editedCode)
-          onCommandResult({
-            success: true,
-            rawConfig: wrappedCode,
-            appCode: extractShataAIFormContent(wrappedCode),
-          })
-        } else if (selectedItem.type === "page") {
-          const updatedPages = { ...currentVersion?.appState?.pages }
-          updatedPages[selectedItem.id] = {
-            ...updatedPages[selectedItem.id],
-            code: editedCode,
-            title: selectedItem.title,
-            updatedAt: new Date().toISOString(),
-          }
-
-          // 添加新版本
-          versionStore.addVersion(currentContent, {
-            pages: updatedPages,
-            version: (currentVersion?.appState?.version || 0) + 1,
-            updatedAt: new Date().toISOString(),
-          })
-
-          onCommandResult({
-            success: true,
-            pages: {
-              [selectedItem.id]: {
-                code: editedCode,
-                title: selectedItem.title,
-                updatedAt: new Date().toISOString(),
-              },
-            },
-          })
-        } else {
-          // 处理新类型的代码保存
-          const updatedState = { ...currentVersion?.appState }
-          const containerKey = `${selectedItem.type}s` as keyof typeof updatedState
-          
-          if (!updatedState[containerKey]) {
-            updatedState[containerKey] = {}
-          }
-          
-          updatedState[containerKey] = {
-            ...updatedState[containerKey],
-            [selectedItem.name]: {
-              code: editedCode,
-              updatedAt: new Date().toISOString(),
-            },
-          }
-
-          // 添加新版本
-          versionStore.addVersion(currentContent, {
-            ...updatedState,
-            version: (currentVersion?.appState?.version || 0) + 1,
-            updatedAt: new Date().toISOString(),
-          })
-
-          onCommandResult({
-            success: true,
-            [containerKey]: {
-              [selectedItem.name]: {
-                code: editedCode,
-                updatedAt: new Date().toISOString(),
-              },
-            },
-          })
+        // 执行代码
+        const result = await versionStore.executeModules(editedCode)
+        
+        if (result.some(r => !r.success)) {
+          throw new Error('Failed to execute some modules')
         }
 
         setIsEditing(false)
@@ -154,20 +87,9 @@ const AIEditor: React.FC<AIEditorProps> = observer(
       if (selectedCodeId === "app_entry") {
         setEditedCode(currentContent || "")
       } else {
-        const selectedItem = codeItems.find((item) => item.id === selectedCodeId)
-        if (!selectedItem) return
-
-        if (selectedItem.type === "page") {
-          const pageCode = versionStore.getPageCode(selectedCodeId)
-          if (pageCode) {
-            setEditedCode(pageCode)
-          }
-        } else {
-          // 获取其他类型的代码
-          const code = versionStore[`get${selectedItem.type.charAt(0).toUpperCase() + selectedItem.type.slice(1)}Code`]?.(selectedItem.name)
-          if (code) {
-            setEditedCode(code)
-          }
+        const pageCode = versionStore.getPageCode(selectedCodeId)
+        if (pageCode) {
+          setEditedCode(pageCode)
         }
       }
       setIsEditing(false)
