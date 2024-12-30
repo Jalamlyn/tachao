@@ -7,74 +7,14 @@ export default (props) => {
   const {React,NextUI,ReactRouterDom,FramerMotion,Icon,message,api: { getMetadata, setMetadata },FormRenderer,ReportRenderer,PageWrapper} = context
   // 必须导出 PageWrapper 组件,不然报错
   const {Routes, Route, Navigate, BrowserRouter} = ReactRouterDom
-  const {Card, CardBody, CardHeader,TableBody,TableHeader,Modal, ModalContent,ModalBody,ModalHeader,Form,Navbar, 
-  NavbarBrand, 
-  NavbarContent, 
-  NavbarItem, 
-  NavbarMenuToggle,
-  NavbarMenu,
-  NavbarMenuItem} = NextUI // next ui v2.6.0 components
+  const {Card, CardBody, CardHeader} = NextUI
   const {motion} = FramerMotion
-
-  // 定义默认首页组件
-  const HomePage = () => {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-8">
-        <Card className="max-w-4xl mx-auto">
-          <CardHeader className="flex gap-3">
-            <Icon icon="mdi:home" className="w-8 h-8 text-primary" />
-            <div className="flex flex-col">
-              <p className="text-xl font-bold">欢迎使用</p>
-              <p className="text-small text-default-500">这是您的应用首页</p>
-            </div>
-          </CardHeader>
-          <CardBody>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardBody>
-                  <h3 className="text-lg font-semibold mb-2">快速开始</h3>
-                  <p className="text-default-500">
-                    开始构建您的应用页面，添加更多功能和内容。
-                  </p>
-                </CardBody>
-              </Card>
-              <Card>
-                <CardBody>
-                  <h3 className="text-lg font-semibold mb-2">功能示例</h3>
-                  <p className="text-default-500">
-                    这里展示了基本的卡片布局和组件使用方式。
-                  </p>
-                </CardBody>
-              </Card>
-            </div>
-          </CardBody>
-        </Card>
-      </div>
-    )
-  }
 
   return (
     <BrowserRouter basename={props.basename}>
-      <Navbar>
-        <NavbarBrand>
-          <Icon icon="mdi:home" className="w-6 h-6 text-primary" />
-          <p className="font-bold text-inherit ml-2">我的应用</p>
-        </NavbarBrand>
-        <NavbarContent className="hidden sm:flex gap-4" justify="center">
-          <NavbarItem>
-            <Link to="home" className="text-default-600">首页</Link>
-          </NavbarItem>
-          <NavbarItem>
-            <Link to="about" className="text-default-600">关于</Link>
-          </NavbarItem>
-        </NavbarContent>
-      </Navbar>
       <Routes>
         <Route path="/" element={<Navigate to="home" replace />} />
         <Route path="home" element={<HomePage />} />
-        <Route path="about" element={<context.PageWrapper pageId="page_yyy" />}>
-          <Route path="team" element={<context.PageWrapper pageId="page_yyy_xxx" />} />
-        </Route>
         <Route path="*" element={<div>页面不存在</div>} />
       </Routes>
     </BrowserRouter>
@@ -95,11 +35,162 @@ export default (props) => {
 </shata-ai-code>
 \`\`\``,
 
-  componentRules: `5. 技术要求：
+  storeTemplate: `5. Store 代码使用 <shata-ai-code type="store" name="xxx"></shata-ai-code> 包裹：
+\`\`\`jsx
+<shata-ai-code type="store" name="todoStore">
+export default (context) => {
+  const { makeAutoObservable } = context.mobx
+  
+  return class TodoStore {
+    todos = []
+    loading = false
+    
+    constructor() {
+      makeAutoObservable(this)
+    }
+    
+    async loadTodos() {
+      this.loading = true
+      try {
+        const result = await context.services.todo.getTodos()
+        this.todos = result
+      } finally {
+        this.loading = false
+      }
+    }
+    
+    async addTodo(todo) {
+      await context.services.todo.saveTodo(todo)
+      await this.loadTodos()
+    }
+  }
+}
+</shata-ai-code>
+\`\`\``,
+
+  serviceTemplate: `6. Service 代码使用 <shata-ai-code type="service" name="xxx"></shata-ai-code> 包裹：
+\`\`\`jsx
+<shata-ai-code type="service" name="todoService">
+export default (context) => {
+  const { getMetadata, setMetadata, getPublicMetadata } = context.api
+  const { appId } = context
+  
+  // 生成带 appId 前缀的 key
+  const getKey = (key) => \`\${appId}_\${key}\`
+  
+  return {
+    async getTodos() {
+      const result = await getMetadata([getKey('todos')])
+      return JSON.parse(result.data?.[0]?.value || '[]')
+    },
+    
+    async getPublicTodos() {
+      const result = await getPublicMetadata([getKey('public_todos')], appId)
+      return JSON.parse(result.data?.[0]?.value || '[]')
+    },
+    
+    async saveTodo(todo, isPublic = false) {
+      const key = getKey(isPublic ? 'public_todos' : 'todos')
+      const todos = await (isPublic ? this.getPublicTodos() : this.getTodos())
+      todos.push({
+        ...todo,
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      })
+      await setMetadata(key, JSON.stringify(todos), appId)
+    }
+  }
+}
+</shata-ai-code>
+\`\`\``,
+
+  moduleTemplate: `7. Module 代码使用 <shata-ai-code type="module" name="xxx"></shata-ai-code> 包裹：
+\`\`\`jsx
+<shata-ai-code type="module" name="todoModule">
+export default (context) => {
+  return {
+    formatTodo(todo) {
+      return {
+        ...todo,
+        createdAt: new Date(todo.createdAt).toLocaleString()
+      }
+    },
+    
+    validateTodo(todo) {
+      return todo.title && todo.title.length >= 3
+    },
+    
+    sortTodos(todos, order = 'desc') {
+      return [...todos].sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime()
+        const timeB = new Date(b.createdAt).getTime()
+        return order === 'desc' ? timeB - timeA : timeA - timeB
+      })
+    }
+  }
+}
+</shata-ai-code>
+\`\`\``,
+
+  schemaTemplate: `8. Schema 代码使用 <shata-ai-code type="schema" name="xxx"></shata-ai-code> 包裹：
+\`\`\`jsx
+<shata-ai-code type="schema" name="todoSchema">
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Todo Schema",
+  "description": "Todo item data structure",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier"
+    },
+    "title": {
+      "type": "string",
+      "description": "Todo title",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "default": 3
+    }
+  },
+  "required": ["id", "title", "createdAt"]
+}
+</shata-ai-code>
+\`\`\``,
+
+  componentRules: `9. 技术要求：
    - 只能使用 NextUI 2.6.0 版本中实际存在的组件
    - 禁止使用 Container Grid Text 这些 NextUI V1 版本中的组件
    - 使用 tailwind css 编写样式代码
    - 动画使用 FramerMotion
    - 图标使用 @iconify/react 的 Icon 组件
-   - 数据存储使用 getMetadata 和 setMetadata`
+   - 数据存储使用 getMetadata 和 setMetadata
+   - Store 必须使用 MobX
+   - Service 必须使用 appId 前缀
+   - Module 只能包含纯函数
+   - Schema 使用标准的 JSON Schema`
 }

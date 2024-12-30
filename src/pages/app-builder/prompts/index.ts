@@ -35,12 +35,21 @@ ${API_PROMPTS.multimodal}
 2. 路由系统说明：
 ${ROUTER_PROMPTS.routingSystem}
 
+3. 代码类型说明：
 ${COMPONENT_PROMPTS.appEntry}
-
 ${COMPONENT_PROMPTS.pageComponent}
+${COMPONENT_PROMPTS.storeTemplate}
+${COMPONENT_PROMPTS.serviceTemplate}
+${COMPONENT_PROMPTS.moduleTemplate}
+${COMPONENT_PROMPTS.schemaTemplate}
 
+4. 技术规范：
 ${COMPONENT_PROMPTS.componentRules}
+${TECH_PROMPTS.mobx}
+${TECH_PROMPTS.metadata}
+${TECH_PROMPTS.schema}
 
+5. 环境说明：
 ${ENV_PROMPTS.preview}
 
 注意事项：
@@ -49,13 +58,21 @@ ${ENV_PROMPTS.preview}
 3. 必须考虑性能优化
 4. 必须遵循 React 最佳实践
 5. 必须使用 JavaScript，不能使用 TypeScript
-6. 必须先有应用入口代码才能生成页面代码`
+6. 必须先有应用入口代码才能生成页面代码
+7. Store 必须使用 MobX
+8. Service 必须使用 appId 前缀
+9. Module 只能包含纯函数
+10. Schema 必须使用标准的 JSON Schema`
   },
   
   getCodeGenerationPrompt() {
     return `${BASE_PROMPTS.codeGeneration}
 ${COMPONENT_PROMPTS.appEntry}
-${COMPONENT_PROMPTS.pageComponent}`
+${COMPONENT_PROMPTS.pageComponent}
+${COMPONENT_PROMPTS.storeTemplate}
+${COMPONENT_PROMPTS.serviceTemplate}
+${COMPONENT_PROMPTS.moduleTemplate}
+${COMPONENT_PROMPTS.schemaTemplate}`
   },
 
   getRouterPrompt() {
@@ -67,7 +84,10 @@ ${ROUTER_PROMPTS.navigationSystem}`
   getTechPrompt() {
     return `${TECH_PROMPTS.nextUI}
 ${TECH_PROMPTS.tailwind}
-${TECH_PROMPTS.framerMotion}`
+${TECH_PROMPTS.framerMotion}
+${TECH_PROMPTS.mobx}
+${TECH_PROMPTS.metadata}
+${TECH_PROMPTS.schema}`
   },
 
   getEnvPrompt() {
