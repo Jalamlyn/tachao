@@ -157,18 +157,10 @@ ${schema.code}
         /<shata-ai-code type="page" pageid="([^"]+)" title="([^"]+)">([\s\S]*?)<\/shata-ai-code>/g
       )
       const appCodeMatch = response.match(/<shata-ai-code type="app">([\s\S]*?)<\/shata-ai-code>/)
-      const storeMatches = response.match(
-        /<shata-ai-code type="store" name="([^"]+)">([\s\S]*?)<\/shata-ai-code>/g
-      )
-      const serviceMatches = response.match(
-        /<shata-ai-code type="service" name="([^"]+)">([\s\S]*?)<\/shata-ai-code>/g
-      )
-      const moduleMatches = response.match(
-        /<shata-ai-code type="module" name="([^"]+)">([\s\S]*?)<\/shata-ai-code>/g
-      )
-      const schemaMatches = response.match(
-        /<shata-ai-code type="schema" name="([^"]+)">([\s\S]*?)<\/shata-ai-code>/g
-      )
+      const storeMatches = response.match(/<shata-ai-code type="store" name="([^"]+)">([\s\S]*?)<\/shata-ai-code>/g)
+      const serviceMatches = response.match(/<shata-ai-code type="service" name="([^"]+)">([\s\S]*?)<\/shata-ai-code>/g)
+      const moduleMatches = response.match(/<shata-ai-code type="module" name="([^"]+)">([\s\S]*?)<\/shata-ai-code>/g)
+      const schemaMatches = response.match(/<shata-ai-code type="schema" name="([^"]+)">([\s\S]*?)<\/shata-ai-code>/g)
 
       const updatedPages: { [pageId: string]: any } = {}
       const updatedStores: { [name: string]: any } = {}
@@ -248,11 +240,13 @@ ${schema.code}
       return {
         success: true,
         appCode,
-        pages: updatedPages,
-        stores: updatedStores,
-        services: updatedServices,
-        modules: updatedModules,
-        schemas: updatedSchemas,
+        appState: {
+          pages: updatedPages,
+          stores: updatedStores,
+          services: updatedServices,
+          modules: updatedModules,
+          schemas: updatedSchemas,
+        },
       }
     } catch (error) {
       console.error("Error in processCommand:", error)

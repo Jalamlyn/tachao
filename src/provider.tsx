@@ -1,4 +1,3 @@
-import { NextUIProvider } from "@nextui-org/system"
 import useDarkMode from "use-dark-mode"
 import { queryMyProject } from "./service/apis/project"
 import { queryApps } from "./service/apis/app"
@@ -251,35 +250,33 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
   }
 
   return (
-    <NextUIProvider>
-      <main className={`${darkMode.value ? "light" : "light"} text-foreground bg-background relative`}>
-        <motion.div
-          className={`fixed inset-0 bg-gradient-to-br from-blue-600 to-black flex flex-col justify-center items-center z-50`}
-          initial={{ opacity: 1 }}
-          animate={{
-            opacity: shouldRenderChildren() ? 0 : 1,
-          }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
-          style={{
-            pointerEvents: shouldRenderChildren() ? "none" : "auto",
-          }}
-        >
-          <div className='relative flex flex-col gap-4 items-center'>
-            <LogoAnimation />
-            <Spinner size='lg' color='white' />
-          </div>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: shouldRenderChildren() ? 1 : 0,
-          }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-        >
-          {shouldRenderChildren() && children}
-        </motion.div>
-        <EnterpriseInitializer isOpen={showInitializer} onClose={() => {}} onSuccess={handleInitializationSuccess} />
-      </main>
-    </NextUIProvider>
+    <main className={`${darkMode.value ? "light" : "light"} text-foreground bg-background relative`}>
+      <motion.div
+        className={`fixed inset-0 bg-gradient-to-br from-blue-600 to-black flex flex-col justify-center items-center z-50`}
+        initial={{ opacity: 1 }}
+        animate={{
+          opacity: shouldRenderChildren() ? 0 : 1,
+        }}
+        transition={{ duration: 0.6, ease: "easeInOut" }}
+        style={{
+          pointerEvents: shouldRenderChildren() ? "none" : "auto",
+        }}
+      >
+        <div className='relative flex flex-col gap-4 items-center'>
+          <LogoAnimation />
+          <Spinner size='lg' color='white' />
+        </div>
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{
+          opacity: shouldRenderChildren() ? 1 : 0,
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
+        {shouldRenderChildren() && children}
+      </motion.div>
+      <EnterpriseInitializer isOpen={showInitializer} onClose={() => {}} onSuccess={handleInitializationSuccess} />
+    </main>
   )
 })

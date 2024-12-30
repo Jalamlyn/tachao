@@ -1,6 +1,30 @@
 import { makeAutoObservable } from "mobx"
 import { AppPages, AppStores, AppServices, AppModules, AppSchemas } from "../types"
-import { getMetadata } from "@/service/apis/metadata"
+import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import wpm from "@wpm-js/core"
+import React from "react"
+import * as ReactRouterDom from "react-router-dom"
+import * as FramerMotion from "framer-motion"
+import { message } from "antd"
+import { ai } from "@/service/ai"
+import * as NextUI from "@nextui-org/react"
+import { observer } from "mobx-react-lite"
+import * as mobx from "mobx"
+import { Icon } from "@iconify/react"
+
+// 新增类型定义
+interface ShataAICode {
+  type: "app" | "page" | "store" | "service" | "module" | "schema"
+  code: string
+  name?: string
+  title?: string
+}
+
+interface ParseResult {
+  success: boolean
+  error?: string
+  moduleName?: string
+}
 
 type Version = {
   timestamp: number
@@ -45,14 +69,78 @@ class VersionStore {
     return this.currentIndex < this.versions.length - 1
   }
 
-  // actions
+  // 新增方法: 解析单个代码块
+  async parseAICode(code: string, context: any): Promise<ParseResult> {
+    const wrappedCode = `
+      return async (context) => {
+        ${code}
+      }
+    `
+
+    try {
+      const moduleFunction = new Function("return " + wrappedCode)()
+      await moduleFunction(context)
+      return { success: true }
+    } catch (error) {
+      console.error("Error parsing AI code:", error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      }
+    }
+  }
+
+  // 新增方法: 执行所有模块
+  async executeModules(content: string): Promise<ParseResult[]> {
+    const codes = this.extractShataAICodes(content)
+    const results: ParseResult[] = []
+    let hasAppModule = false
+
+    // 准备 context
+    const context = {
+      wpm,
+      React,
+      observer,
+      Icon,
+      NextUI,
+      ReactRouterDom,
+      FramerMotion,
+      message,
+      appId: this.appId,
+      api: {
+        getMetadata,
+        setMetadata,
+      },
+      ai,
+      mobx,
+    }
+
+    for (const codeBlock of codes) {
+      if (codeBlock.type === "app") {
+        if (hasAppModule) {
+          results.push({
+            success: false,
+            error: "Multiple app entry modules found",
+          })
+          continue
+        }
+        hasAppModule = true
+      }
+
+      const result = await this.parseAICode(codeBlock.code, context)
+      results.push(result)
+    }
+
+    return results
+  }
+
+  // 现有方法
   setAppId(appId: string) {
     this.appId = appId
     this.loadFromStorage()
   }
 
   addVersion(content: string, appState?: Version["appState"]) {
-    // 避免重复版本
     if (appState?.version === this.versions[this.versions.length - 1]?.appState?.version) {
       return
     }
@@ -62,7 +150,6 @@ class VersionStore {
       return
     }
 
-    // 清除当前版本之后的所有版本
     this.versions = this.versions.slice(0, this.currentIndex + 1)
 
     const newVersion: Version = {
@@ -122,24 +209,20 @@ class VersionStore {
 
   async loadApp(appId: string) {
     try {
-      // 获取应用信息
       const appIndexResult = await getMetadata(["app_index"])
       const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
       const app = apps.find((a: any) => a.id === appId)
       if (!app) throw new Error("App not found")
 
-      // 获取应用代码
       const appResult = await getMetadata([`app_${appId}`])
       const appData = appResult.data?.[0]?.value ? JSON.parse(appResult.data[0].value) : null
 
-      // 获取所有页面的代码
       const pages: AppPages = {}
       const stores: AppStores = {}
       const services: AppServices = {}
       const modules: AppModules = {}
       const schemas: AppSchemas = {}
 
-      // 加载页面代码
       for (const page of app.pages || []) {
         const pageResult = await getMetadata([page.id])
         if (pageResult.data?.[0]?.value) {
@@ -152,7 +235,6 @@ class VersionStore {
         }
       }
 
-      // 加载其他类型的代码
       const codeTypes = [
         { type: "store", container: stores },
         { type: "service", container: services },
@@ -168,7 +250,6 @@ class VersionStore {
         }
       }
 
-      // 初始化版本控制
       if (appData?.code) {
         this.addVersion(appData.code, {
           pages,

@@ -115,18 +115,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     fileInputRef.current?.click()
   }
 
-  // 获取 AI 等级提示
-  const getAILevelTooltip = () => {
-    switch (aiLevel) {
-      case "EXPERT":
-        return "专家模式：支持复杂的代码生成和分析"
-      case "ADVANCED":
-        return "高级模式：支持基础的代码生成"
-      default:
-        return "标准模式"
-    }
-  }
-
   return (
     <form className='flex w-full flex-col gap-2 rounded-medium bg-default-100 transition-colors hover:bg-default-200/70'>
       <input
@@ -183,7 +171,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
         minRows={3}
         radius='lg'
         startContent={
-          <div className="flex gap-2">
+          <div className='flex gap-2'>
             <Tooltip showArrow content='添加图片'>
               <Button
                 isIconOnly
@@ -199,25 +187,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
                 ) : (
                   <Icon className='text-default-500' icon='solar:gallery-minimalistic-linear' width={20} />
                 )}
-              </Button>
-            </Tooltip>
-            <Tooltip showArrow content={getAILevelTooltip()}>
-              <Button
-                isIconOnly
-                radius='full'
-                size='sm'
-                variant='light'
-                className='hover:bg-default-200'
-              >
-                <Icon 
-                  className={cn(
-                    'text-default-500',
-                    aiLevel === 'EXPERT' && 'text-warning',
-                    aiLevel === 'ADVANCED' && 'text-primary'
-                  )} 
-                  icon={aiLevel === 'EXPERT' ? 'mdi:atom' : 'mdi:rocket'} 
-                  width={20} 
-                />
               </Button>
             </Tooltip>
           </div>

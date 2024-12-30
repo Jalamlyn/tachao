@@ -3,22 +3,65 @@ export const COMPONENT_PROMPTS = {
 
 \`\`\`jsx
 <shata-ai-code type="app">
-const { wpm, React, observer, appId } = context;
+const { wpm, React, ReactRouterDom, observer, appId } = context;
 const { Suspense } = React;
+const { BrowserRouter, Routes, Route, Navigate } = ReactRouterDom;
 
+// 使用 React.lazy 导入页面组件
 const HomePage = React.lazy(() => wpm.import('homePage'));
 const SettingsPage = React.lazy(() => wpm.import('settingsPage'));
+const NotFoundPage = React.lazy(() => wpm.import('notFoundPage'));
 
-const App = () => {
+// 加载状态组件
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
+
+const App = observer(() => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <div>
-        <HomePage />
-        <SettingsPage />
-      </div>
-    </Suspense>
+    <BrowserRouter basename={\`/app-run/\${appId}\`}>
+      <Routes>
+        {/* 默认路由重定向 */}
+        <Route 
+          path="/" 
+          element={<Navigate to="home" replace />} 
+        />
+
+        {/* 主页路由 */}
+        <Route
+          path="home"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <HomePage />
+            </Suspense>
+          }
+        />
+
+        {/* 设置页路由 */}
+        <Route
+          path="settings"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <SettingsPage />
+            </Suspense>
+          }
+        />
+
+        {/* 404路由 */}
+        <Route
+          path="*"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <NotFoundPage />
+            </Suspense>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
-};
+});
 
 // 重要：入口模块必须使用 context.appId 作为模块名
 wpm.export(appId, App);
@@ -134,7 +177,9 @@ wpm.export('todoModule', module);
   schemaTemplate: `8. Schema 代码使用 <shata-ai-code type="schema" name="xxx"></shata-ai-code> 包裹：
 \`\`\`jsx
 <shata-ai-code type="schema" name="todoSchema">
-{
+const {wpm} = context;
+
+const schema = {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
@@ -152,6 +197,9 @@ wpm.export('todoModule', module);
   },
   "required": ["id", "title"]
 }
+
+wpm.export('todoSchema', schema);
+
 </shata-ai-code>
 \`\`\``,
 

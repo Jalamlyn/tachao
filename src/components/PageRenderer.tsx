@@ -12,6 +12,8 @@ import { ReportRendererWrapper } from "./renderers/ReportRendererWrapper"
 import { ai } from "@/service/ai"
 import { extractShataAICode } from "@/utils/generateColumns"
 import * as mobx from "mobx"
+import { observer } from "mobx-react-lite"
+import wpm from "@wpm-js/core"
 
 interface PageRendererProps {
   code?: string
@@ -73,6 +75,8 @@ export const PageRenderer: React.FC<PageRendererProps> = ({ code, pageId, appId 
           ai,
           appId,
           mobx,
+          wpm,
+          observer,
         }
 
         // 创建组件
