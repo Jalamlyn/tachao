@@ -112,7 +112,7 @@ const AppBuilder: React.FC = observer(() => {
       Object.entries(currentVersion.appState.pages).forEach(([pageId, page]) => {
         items.push({
           id: pageId,
-          title: `${page.title} (${pageId})`,
+          title: `${page.title}`,
           type: "page",
           code: page.code,
           updatedAt: page.updatedAt,
@@ -457,6 +457,7 @@ const AppBuilder: React.FC = observer(() => {
       currentMessageIdRef.current = null
     }
   }
+
   const handleCommandResult = useCallback(
     (result: {
       success: boolean
@@ -475,23 +476,29 @@ const AppBuilder: React.FC = observer(() => {
 
       try {
         const currentVersion = versionStore.currentVersion
-        debugger
+        
+        // 初始化新的应用状态
         const newAppState = {
-          pages: { ...currentVersion?.appState?.pages } || {},
-          stores: { ...currentVersion?.appState?.stores } || {},
-          services: { ...currentVersion?.appState?.services } || {},
-          modules: { ...currentVersion?.appState?.modules } || {},
-          schemas: { ...currentVersion?.appState?.schemas } || {},
-          version: (currentVersion?.appState?.version || 0) + 1,
+          pages: {},
+          stores: {},
+          services: {},
+          modules: {},
+          schemas: {},
+          version: 1,
           updatedAt: new Date().toISOString(),
         }
 
-        // 更新应用入口代码
-        if (result.appCode) {
-          versionStore.addVersion(result.appCode, newAppState)
+        // 如果存在当前版本，则合并现有状态
+        if (currentVersion?.appState) {
+          newAppState.pages = { ...currentVersion.appState.pages }
+          newAppState.stores = { ...currentVersion.appState.stores }
+          newAppState.services = { ...currentVersion.appState.services }
+          newAppState.modules = { ...currentVersion.appState.modules }
+          newAppState.schemas = { ...currentVersion.appState.schemas }
+          newAppState.version = (currentVersion.appState.version || 0) + 1
         }
 
-        // 更新页面代码
+        // 合并新生成的代码
         if (result.pages) {
           Object.entries(result.pages).forEach(([pageId, page]) => {
             newAppState.pages[pageId] = {
@@ -502,7 +509,6 @@ const AppBuilder: React.FC = observer(() => {
           })
         }
 
-        // 更新 Store 代码
         if (result.stores) {
           Object.entries(result.stores).forEach(([name, store]) => {
             newAppState.stores[name] = {
@@ -512,7 +518,6 @@ const AppBuilder: React.FC = observer(() => {
           })
         }
 
-        // 更新 Service 代码
         if (result.services) {
           Object.entries(result.services).forEach(([name, service]) => {
             newAppState.services[name] = {
@@ -522,7 +527,6 @@ const AppBuilder: React.FC = observer(() => {
           })
         }
 
-        // 更新 Module 代码
         if (result.modules) {
           Object.entries(result.modules).forEach(([name, module]) => {
             newAppState.modules[name] = {
@@ -532,7 +536,6 @@ const AppBuilder: React.FC = observer(() => {
           })
         }
 
-        // 更新 Schema 代码
         if (result.schemas) {
           Object.entries(result.schemas).forEach(([name, schema]) => {
             newAppState.schemas[name] = {
@@ -542,8 +545,16 @@ const AppBuilder: React.FC = observer(() => {
           })
         }
 
-        // 如果只更新了组件代码而没有更新应用入口代码
-        if (!result.appCode && (result.pages || result.stores || result.services || result.modules || result.schemas)) {
+        // 更新版本
+        if (result.appCode) {
+          versionStore.addVersion(result.appCode, newAppState)
+        } else if (
+          result.pages ||
+          result.stores ||
+          result.services ||
+          result.modules ||
+          result.schemas
+        ) {
           versionStore.addVersion(currentVersion?.content || "", newAppState)
         }
 
