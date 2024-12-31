@@ -37,6 +37,16 @@ interface ConfirmOptions {
   cancelText?: string
 }
 
+interface MessageOptions {
+  duration?: number
+  forceShow?: boolean
+  dedupeWindow?: number
+}
+
+// 消息缓存
+const messageCache = new Map<string, number>()
+const DEFAULT_MESSAGE_THRESHOLD = 3000 // 默认3秒内相同消息不重复显示
+
 // 错误信息格式化组件
 const ErrorMessageList: React.FC<{ messages: string[] }> = ({ messages }) => {
   return (
@@ -80,7 +90,39 @@ const MessageWithCopy: React.FC<MessageWithCopyProps> = ({ content, type }) => {
   )
 }
 
-const showMessage = (type: MessageType, content: React.ReactNode | string[], duration = 6000): string => {
+const showMessage = (
+  type: MessageType,
+  content: React.ReactNode | string[],
+  options: MessageOptions = {}
+): string => {
+  const { duration = 6000, forceShow = false, dedupeWindow = DEFAULT_MESSAGE_THRESHOLD } = options
+
+  // 将 content 转换为字符串用于比较
+  const contentString = Array.isArray(content)
+    ? content.join(",")
+    : typeof content === "string"
+    ? content
+    : JSON.stringify(content)
+
+  // 检查是否是重复消息
+  const now = Date.now()
+  const lastShown = messageCache.get(contentString)
+  
+  // 如果不是强制显示，且是重复消息且在阈值时间内，不显示
+  if (!forceShow && lastShown && now - lastShown < dedupeWindow) {
+    return ""
+  }
+
+  // 更新消息缓存
+  messageCache.set(contentString, now)
+
+  // 清理旧的缓存
+  for (const [key, timestamp] of messageCache.entries()) {
+    if (now - timestamp > dedupeWindow) {
+      messageCache.delete(key)
+    }
+  }
+
   const id = Math.random().toString(36).substr(2, 9)
 
   let messageContent: React.ReactNode
@@ -100,11 +142,11 @@ const showMessage = (type: MessageType, content: React.ReactNode | string[], dur
 }
 
 const message = {
-  success: (content: React.ReactNode, duration?: number) => showMessage("success", content, duration),
-  error: (content: React.ReactNode | string[], duration?: number) => showMessage("error", content, duration),
-  warning: (content: React.ReactNode, duration?: number) => showMessage("warning", content, duration),
-  info: (content: React.ReactNode, duration?: number) => showMessage("info", content, duration),
-  delete: (content: React.ReactNode, duration?: number) => showMessage("delete", content, duration),
+  success: (content: React.ReactNode, options?: MessageOptions) => showMessage("success", content, options),
+  error: (content: React.ReactNode | string[], options?: MessageOptions) => showMessage("error", content, options),
+  warning: (content: React.ReactNode, options?: MessageOptions) => showMessage("warning", content, options),
+  info: (content: React.ReactNode, options?: MessageOptions) => showMessage("info", content, options),
+  delete: (content: React.ReactNode, options?: MessageOptions) => showMessage("delete", content, options),
   loading: (content: React.ReactNode) => showMessage("loading", content),
   dismiss: (toastId: string) => toast.dismiss(toastId),
   update: (toastId: string, content: React.ReactNode) => {
