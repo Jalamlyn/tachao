@@ -473,6 +473,39 @@ class AppCodeStore {
     }
   }
 
+  private validateModuleExports(version: Version): string[] {
+    const errors: string[] = []
+    const exportedModules = new Set<string>()
+
+    // 首先收集所有已导出的模块
+    for (const [moduleId, moduleWrapper] of Object.entries(version.modules)) {
+      const code = moduleWrapper.data.code
+      const exportMatch = code.match(/wpm\.export\(['"](.*?)['"]/g)
+      if (exportMatch) {
+        exportMatch.forEach((match) => {
+          const moduleName = match.match(/wpm\.export\(['"](.*?)['"]/)![1]
+          exportedModules.add(moduleName)
+        })
+      }
+    }
+
+    // 然后检查所有导入是否都已导出
+    for (const [moduleId, moduleWrapper] of Object.entries(version.modules)) {
+      const code = moduleWrapper.data.code
+      const importMatch = code.match(/wpm\.import\(['"](.*?)['"]\)/g)
+      if (importMatch) {
+        importMatch.forEach((match) => {
+          const moduleName = match.match(/wpm\.import\(['"](.*?)['"]/)![1]
+          if (!exportedModules.has(moduleName)) {
+            errors.push(`Module "${moduleId}" imports "${moduleName}" but "${moduleName}" has not been exported`)
+          }
+        })
+      }
+    }
+
+    return errors
+  }
+
   // 修改现有方法以使用新的处理逻辑
   async handleAIGeneration(aiResponse: string): Promise<Version> {
     if (!this.appId) {
@@ -519,6 +552,15 @@ class AppCodeStore {
             {}
           ),
         }
+
+        // 验证模块的导入导出一致性
+        const exportErrors = this.validateModuleExports(newVersion)
+        if (exportErrors.length > 0) {
+          throw new Error(
+            `Module export validation failed: Some modules are imported but not exported: ${exportErrors.join(", ")}`
+          )
+        }
+
         return newVersion
       }
 
@@ -562,10 +604,12 @@ class AppCodeStore {
         modules: updatedModules,
       }
 
-      // 6. 验证模块依赖关系
-      const dependencyErrors = this.validateModuleDependencies(newVersion)
-      if (dependencyErrors.length > 0) {
-        throw new Error(`Module dependency validation failed: ${dependencyErrors.join(", ")}`)
+      // 验证模块的导入导出一致性
+      const exportErrors = this.validateModuleExports(newVersion)
+      if (exportErrors.length > 0) {
+        throw new Error(
+          `Module export validation failed: Some modules are imported but not exported: ${exportErrors.join(", ")}`
+        )
       }
 
       return newVersion

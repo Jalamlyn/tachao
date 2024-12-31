@@ -122,8 +122,8 @@ ${module.data.code}
         .join("\n---\n")
     : ""
 }
-</project>, <project> 里是现有代码, 你修改现有代码的时候必须每次都返回修改后的完整代码, 不允许有省略和注释任何一行代码
-<我的输入>${command}</我的输入>`
+</project>, <project> 里是现有代码, 你修改现有代码的时候必须每次都返回修改后的完整代码, 不允许有省略和注释任何一行代码, 如果代码中用 wpm.import 了某个模块, 那必须同时生成这个模块,并 wpm.export, 不允许 wpm.import 还没有被 wpm.export 的模块, 生成所有代码都必须包裹在\`\`\`jsx<shata-ai-code>生成的代码</shata-ai-code>\`\`\`标签中, 在生成代码前,你需要先列出要生成或者修改的模块名称,然后再开始生成代码,所有列出的模块都必须生成
+<我的输入>${command}, 从设计师的角度</我的输入>`
 
       const allMessages = [
         { role: "system", content: systemPrompt },

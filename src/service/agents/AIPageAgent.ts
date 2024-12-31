@@ -188,11 +188,7 @@ export default (props) => {
         success: true,
       }
     } catch (error) {
-      console.error("Error in processCommand:", error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "未知错误",
-      }
+      throw error
     }
   }
 }

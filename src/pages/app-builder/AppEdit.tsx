@@ -10,7 +10,51 @@ import { AppBuilderMessage, CodeItem } from "./types"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { appCodeStore } from "./store/appCodeStore"
-import { toJS } from "mobx"
+const ErrorPrompt = ({ error, onFix }) => {
+  // 解析错误信息
+  const parseError = (error) => {
+    const match = error.message.match(/Module (.*?) depends on non-existent module (.*?)$/)
+    if (match) {
+      return {
+        dependentModule: match[1],
+        missingModule: match[2],
+      }
+    }
+    return null
+  }
+
+  const errorInfo = parseError(error)
+  if (!errorInfo) return null
+
+  return (
+    <div className='p-4 bg-danger-50 rounded-lg mb-4'>
+      <div className='flex items-start gap-3'>
+        <Icon icon='mdi:alert-circle' className='w-5 h-5 text-danger mt-0.5' />
+        <div className='flex-1'>
+          <h4 className='font-medium text-danger'>检测到缺失模块</h4>
+          <div className='mt-2 space-y-1 text-sm text-danger-600'>
+            <p>
+              缺失模块: <code>{errorInfo.missingModule}</code>
+            </p>
+            <p>
+              依赖此模块的组件: <code>{errorInfo.dependentModule}</code>
+            </p>
+          </div>
+          <Button
+            color='primary'
+            variant='flat'
+            size='sm'
+            className='mt-3'
+            startContent={<Icon icon='mdi:wrench' className='w-4 h-4' />}
+            onClick={() => onFix(errorInfo)}
+          >
+            修复此问题
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const MAX_MESSAGES = 10
 
@@ -26,6 +70,7 @@ const AppBuilder: React.FC = observer(() => {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [publishInProgress, setPublishInProgress] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
+  const [moduleError, setModuleError] = useState(null)
 
   const accumulatedTextRef = useRef("")
   const currentMessageIdRef = useRef<string | null>(null)
@@ -157,7 +202,27 @@ const AppBuilder: React.FC = observer(() => {
     accumulatedTextRef.current = ""
     currentMessageIdRef.current = null
   }
+  const handleFix = (errorInfo) => {
+    // 构造修复指令
+    const fixCommand = `请帮我创建缺失的 ${errorInfo.missingModule} 模块，它被 ${errorInfo.dependentModule} 组件依赖。`
 
+    // 添加用户消息
+    const userMessage = {
+      role: "user",
+      content: fixCommand,
+      id: Date.now().toString(),
+      timestamp: new Date().toLocaleTimeString(),
+    }
+
+    // 将消息添加到对话
+    addMessage(userMessage)
+
+    // 清除错误状态
+    setModuleError(null)
+
+    // 触发AI处理
+    processCommand(fixCommand)
+  }
   const processCommand = async (command: string) => {
     const userMessage: AppBuilderMessage = {
       role: "user",
@@ -183,12 +248,15 @@ const AppBuilder: React.FC = observer(() => {
       const result = await AppAgent.processCommand(appId, messages, command, handleChunk)
       return result
     } catch (error) {
-      console.error("Error in chat:", error)
-      updateLastMessage({
-        content: error instanceof Error ? error.message : "处理过程中发生错误",
-        status: "error",
-      })
-      throw error
+      if (error.message.includes("Module dependency validation failed")) {
+        setModuleError(error)
+      } else {
+        updateLastMessage({
+          content: error instanceof Error ? error.message : "处理过程中发生错误",
+          status: "error",
+        })
+        throw error
+      }
     } finally {
       currentMessageIdRef.current = null
     }
@@ -310,51 +378,54 @@ const AppBuilder: React.FC = observer(() => {
   )
 
   return (
-    <PageLayout title={`构建应用 - ${appTitle}`} titleIcon='mdi:tools' actions={pageActions}>
-      <div className='h-[calc(100vh-140px)] overflow-auto'>
-        <AIEditor
-          parseConfig={async (code: string) => ({ code })}
-          messages={messages}
-          selectedTab={selectedTab}
-          onTabChange={setSelectedTab}
-          agent={{
-            processCommand,
-          }}
-          renderPreview={renderPreview}
-          onCommandResult={handleCommandResult}
-          handleClearMessages={handleClearMessages}
-          onStop={handleStop}
-          showCodeTab
-          previewTabName='应用预览'
-          appId={appId}
-        />
-      </div>
+    <>
+      {moduleError && <ErrorPrompt error={moduleError} onFix={handleFix} />}
+      <PageLayout title={`构建应用 - ${appTitle}`} titleIcon='mdi:tools' actions={pageActions}>
+        <div className='h-[calc(100vh-140px)] overflow-auto'>
+          <AIEditor
+            parseConfig={async (code: string) => ({ code })}
+            messages={messages}
+            selectedTab={selectedTab}
+            onTabChange={setSelectedTab}
+            agent={{
+              processCommand,
+            }}
+            renderPreview={renderPreview}
+            onCommandResult={handleCommandResult}
+            handleClearMessages={handleClearMessages}
+            onStop={handleStop}
+            showCodeTab
+            previewTabName='应用预览'
+            appId={appId}
+          />
+        </div>
 
-      <Modal isOpen={showPublishModal} onClose={() => setShowPublishModal(false)}>
-        <ModalContent>
-          <ModalHeader className='flex flex-col gap-1'>发布成功</ModalHeader>
-          <ModalBody>
-            <p>应用已成功发布！您可以通过以下链接访问：</p>
-            <div className='flex items-center gap-2 p-2 bg-default-100 rounded'>
-              <code className='text-sm'>/app-run/{appId}</code>
-              <Button
-                size='sm'
-                variant='flat'
-                onClick={() => window.open(`/app-run/${appId}`, "_blank")}
-                startContent={<Icon icon='mdi:open-in-new' className='w-4 h-4' />}
-              >
-                查看应用
+        <Modal isOpen={showPublishModal} onClose={() => setShowPublishModal(false)}>
+          <ModalContent>
+            <ModalHeader className='flex flex-col gap-1'>发布成功</ModalHeader>
+            <ModalBody>
+              <p>应用已成功发布！您可以通过以下链接访问：</p>
+              <div className='flex items-center gap-2 p-2 bg-default-100 rounded'>
+                <code className='text-sm'>/app-run/{appId}</code>
+                <Button
+                  size='sm'
+                  variant='flat'
+                  onClick={() => window.open(`/app-run/${appId}`, "_blank")}
+                  startContent={<Icon icon='mdi:open-in-new' className='w-4 h-4' />}
+                >
+                  查看应用
+                </Button>
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button color='primary' onPress={() => setShowPublishModal(false)}>
+                关闭
               </Button>
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button color='primary' onPress={() => setShowPublishModal(false)}>
-              关闭
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </PageLayout>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </PageLayout>
+    </>
   )
 })
 
