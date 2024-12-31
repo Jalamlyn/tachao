@@ -172,7 +172,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
       <div className='absolute top-2 left-2 right-2 z-10 flex justify-between items-center'>
         <motion.div
           initial={false}
-          animate={{ width: isPanelCollapsed ? "40px" : "calc(100% - 120px)" }}
+          animate={{ width: isPanelCollapsed ? "40px" : "calc(100% - 40px)" }}
           className='bg-white/80 backdrop-blur-sm rounded-lg shadow-sm'
         >
           <div className='flex h-full'>
@@ -180,7 +180,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
               {!isPanelCollapsed && (
                 <motion.div
                   initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: "250px", opacity: 1 }}
+                  animate={{ width: "150px", opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   className='border-r'
                 >
@@ -230,16 +230,8 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
             <div className='flex-1 relative'>
               <div className='absolute top-2 right-2 z-20 flex items-center gap-2'>
                 <Tooltip content={isPanelCollapsed ? "展开文件面板" : "收起文件面板"}>
-                  <Button
-                    size='sm'
-                    variant='flat'
-                    isIconOnly
-                    onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
-                  >
-                    <Icon
-                      icon={isPanelCollapsed ? "mdi:chevron-right" : "mdi:chevron-left"}
-                      className='w-4 h-4'
-                    />
+                  <Button size='sm' variant='flat' isIconOnly onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}>
+                    <Icon icon={isPanelCollapsed ? "mdi:chevron-right" : "mdi:chevron-left"} className='w-4 h-4' />
                   </Button>
                 </Tooltip>
                 {isEditing ? (

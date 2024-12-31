@@ -27,10 +27,10 @@ const queryClient = new QueryClient({
 
 // 配置 MobX
 configure({
-  enforceActions: "observed",
-  computedRequiresReaction: true,
-  reactionRequiresObservable: true,
-  observableRequiresReaction: true,
+  enforceActions: "never",
+  computedRequiresReaction: false,
+  reactionRequiresObservable: false,
+  observableRequiresReaction: false,
 })
 
 // 通用的 URL 解析函数

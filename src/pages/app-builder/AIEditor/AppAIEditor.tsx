@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react"
 import { ResizableHandle, ResizablePanelGroup } from "@/components/ui/resizable"
-import message from "@/components/Message"
 import MessageCard from "@/components/MessageCard"
 import AICommandInput from "./components/AICommandInput"
 import mo2 from "/assets/mo-2.png"
@@ -35,7 +34,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
 
     return (
       <ResizablePanelGroup direction='horizontal'>
-        <ResizablePanel defaultSize={50} className='resizable-panel'>
+        <ResizablePanel defaultSize={30} className='resizable-panel'>
           <div className='h-full flex flex-col'>
             <div className='flex justify-between items-center p-2 border-b mb-2'>
               <div className='flex items-center gap-4'></div>
@@ -72,7 +71,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
           </div>
         </ResizablePanel>
         <ResizableHandle />
-        <ResizablePanel defaultSize={50} className='resizable-panel bg-slate-50'>
+        <ResizablePanel defaultSize={70} className='resizable-panel bg-slate-50'>
           <div className='relative h-full flex flex-col'>
             <div className='version-control-wrapper absolute -top-2 right-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-2 transition-all duration-200 hover:bg-white z-50'>
               <div className='flex items-center gap-3'>
@@ -125,11 +124,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderDataView?.()}</div>
             )}
 
-            <CodeView 
-              appId={appId}
-              showCodeTab={showCodeTab}
-              selectedTab={selectedTab}
-            />
+            <CodeView appId={appId} showCodeTab={showCodeTab} selectedTab={selectedTab} />
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>

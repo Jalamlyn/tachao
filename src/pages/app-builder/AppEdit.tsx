@@ -196,10 +196,6 @@ const AppBuilder: React.FC = observer(() => {
 
   const handleCommandResult = useCallback(
     async (result: any) => {
-      if (!result.success) {
-        message.error(result.error || "处理失败")
-        return
-      }
       try {
         message.success("代码生成成功")
         refreshPreview()
@@ -213,8 +209,7 @@ const AppBuilder: React.FC = observer(() => {
 
   const renderPreview = useCallback(() => {
     const version = appCodeStore.currentVersion
-    console.log(toJS(version))
-    if (!version?.modules[`${appId}_app_entry`]) {
+    if (!version?.modules?.[`${appId}_app_entry`]) {
       return (
         <div className='flex flex-col items-center justify-center min-h-[400px] bg-default-50'>
           <Icon icon='mdi:apps' className='w-16 h-16 text-default-300' />

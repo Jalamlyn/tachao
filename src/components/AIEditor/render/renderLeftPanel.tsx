@@ -20,7 +20,7 @@ export const renderLeftPanel = (
   onCommandResult
 ) => {
   return (
-    <ResizablePanel defaultSize={50} className='resizable-panel'>
+    <ResizablePanel defaultSize={30} className='resizable-panel'>
       <div className='h-full flex flex-col'>
         <div className='flex justify-between items-center p-2 border-b mb-2'>
           <div className='flex items-center gap-4'>

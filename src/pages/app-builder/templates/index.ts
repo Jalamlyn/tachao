@@ -1,11 +1,25 @@
 // 基础模板 - 简单的Hello World应用
 export const basicTemplate = () => `
-const { wpm, React, ReactRouterDom, observer, appId } = context;
+// 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
+const { 
+  wpm, 
+  React, 
+  ReactRouterDom, 
+  observer, 
+  appId, 
+  Icon, 
+  FramerMotion,
+  NextUI,
+  message,
+  api,
+  ai,
+  mobx 
+} = context;
+
 const { Routes, Route, Navigate } = ReactRouterDom;
 
 // 创建一个简单的首页
 const HomePage = () => {
-  const { NextUI } = context;
   const { Card, CardBody } = NextUI;
   
   return (
@@ -52,9 +66,23 @@ wpm.export(appId, App);
 
 // SaaS官网模板
 export const saasTemplate = () => `
-const { wpm, React, ReactRouterDom, observer, appId, Icon } = context;
+// 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
+const { 
+  wpm, 
+  React, 
+  ReactRouterDom, 
+  observer, 
+  appId, 
+  Icon, 
+  FramerMotion,
+  NextUI,
+  message,
+  api,
+  ai,
+  mobx 
+} = context;
+
 const { Routes, Route } = ReactRouterDom;
-const { NextUI } = context;
 const { Button, Card, CardBody, Link } = NextUI;
 
 // 导航栏组件
@@ -185,9 +213,23 @@ wpm.export(appId, App);
 
 // 管理系统模板
 export const adminTemplate = () => `
-const { wpm, React, ReactRouterDom, observer, appId, Icon } = context;
+// 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
+const { 
+  wpm, 
+  React, 
+  ReactRouterDom, 
+  observer, 
+  appId, 
+  Icon, 
+  FramerMotion,
+  NextUI,
+  message,
+  api,
+  ai,
+  mobx 
+} = context;
+
 const { Routes, Route, Navigate, Link } = ReactRouterDom;
-const { NextUI } = context;
 const { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Avatar } = NextUI;
 
 // 侧边栏数据

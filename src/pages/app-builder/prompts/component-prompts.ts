@@ -3,7 +3,22 @@ export const COMPONENT_PROMPTS = {
 
 \`\`\`jsx
 <shata-ai-code type="app">
-const { wpm, React, ReactRouterDom, observer, appId, Icon, FramerMotion } = context;
+// 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
+const { 
+  wpm, 
+  React, 
+  ReactRouterDom, 
+  observer, 
+  appId, 
+  Icon, 
+  FramerMotion,
+  NextUI,
+  message,
+  api,
+  ai,
+  mobx 
+} = context;
+
 const { Routes, Route, Navigate } = ReactRouterDom;
 
 // 导入前必须确保这些页面模块已经创建并导出
@@ -62,7 +77,22 @@ wpm.export(appId, App);
   pageComponent: `4. 页面组件使用 <shata-ai-code type="page" pageid="page_xxx" title="xxx"></shata-ai-code> 包裹：
 \`\`\`jsx
 <shata-ai-code type="page" pageid="page_xxx" title="页面标题">
-const { wpm, React, observer } = context;
+// 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
+const { 
+  wpm, 
+  React, 
+  observer, 
+  Icon, 
+  NextUI,
+  ReactRouterDom,
+  FramerMotion,
+  message,
+  api,
+  ai,
+  mobx,
+  appId 
+} = context;
+
 const { useState, useEffect } = React;
 
 // 导入前必须确保这些模块已经创建并导出
@@ -86,7 +116,22 @@ wpm.export('page_xxx', PageComponent);
   storeTemplate: `5. Store 代码使用 <shata-ai-code type="store" name="store_xxx"></shata-ai-code> 包裹：
 \`\`\`jsx
 <shata-ai-code type="store" name="store_todo">
-const { wpm, mobx } = context;
+// 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
+const { 
+  wpm, 
+  mobx,
+  React, 
+  observer, 
+  Icon, 
+  NextUI,
+  ReactRouterDom,
+  FramerMotion,
+  message,
+  api,
+  ai,
+  appId 
+} = context;
+
 const { makeAutoObservable } = mobx;
 
 // 导入前必须确保 todoService 模块已经创建并导出
@@ -120,7 +165,22 @@ wpm.export('store_todo', store);
   serviceTemplate: `6. Service 代码使用 <shata-ai-code type="service" name="service_xxx"></shata-ai-code> 包裹：
 \`\`\`jsx
 <shata-ai-code type="service" name="service_todo">
-const { wpm, api } = context;
+// 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
+const { 
+  wpm, 
+  api,
+  React, 
+  observer, 
+  Icon, 
+  NextUI,
+  ReactRouterDom,
+  FramerMotion,
+  message,
+  ai,
+  mobx,
+  appId 
+} = context;
+
 const { getMetadata, setMetadata } = api;
 
 // 导入前必须确保 todoModule 模块已经创建并导出
@@ -145,7 +205,21 @@ wpm.export('service_todo', service);
   moduleTemplate: `7. Module 代码使用 <shata-ai-code type="module" name="module_xxx"></shata-ai-code> 包裰：
 \`\`\`jsx
 <shata-ai-code type="module" name="module_todo">
-const { wpm } = context;
+// 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
+const { 
+  wpm,
+  React, 
+  observer, 
+  Icon, 
+  NextUI,
+  ReactRouterDom,
+  FramerMotion,
+  message,
+  api,
+  ai,
+  mobx,
+  appId 
+} = context;
 
 const module = {
   formatTodo(todo) {
@@ -168,7 +242,21 @@ wpm.export('module_todo', module);
   schemaTemplate: `8. Schema 代码使用 <shata-ai-code type="schema" name="schema_xxx"></shata-ai-code> 包裹：
 \`\`\`jsx
 <shata-ai-code type="schema" name="schema_todo">
-const {wpm} = context;
+// 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
+const {
+  wpm,
+  React, 
+  observer, 
+  Icon, 
+  NextUI,
+  ReactRouterDom,
+  FramerMotion,
+  message,
+  api,
+  ai,
+  mobx,
+  appId
+} = context;
 
 const schema = {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -215,5 +303,6 @@ wpm.export('schema_todo', schema);
    - 避免循环依赖
    - 在使用 wpm.import 前必须确保模块已经导出
    - 检查所有导入模块的存在性
-   - 按正确顺序创建和导出模块`,
+   - 按正确顺序创建和导出模块
+   - 必须在每个模块开头解构所有 context 依赖，即使暂时不使用也要保留，以便后续扩展`,
 }

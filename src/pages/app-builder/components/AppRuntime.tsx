@@ -62,8 +62,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
         }
 
         // 4. 执行所有模块
-        const results = appCodeStore.executeModules(context)
-        debugger
+        const results = await appCodeStore.executeModules(context)
         // 5. 检查执行结果
         const errors = results.filter((r) => !r.success)
         if (errors.length > 0) {

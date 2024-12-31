@@ -9,12 +9,15 @@ import {
   Input,
   Card,
   CardBody,
+  RadioGroup,
+  Radio,
 } from "@nextui-org/react"
 import { useNavigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
 import confetti from "canvas-confetti"
 import { message } from "antd"
 import { appCodeStore } from "@/pages/app-builder/store/appCodeStore"
+import { templates } from "@/pages/app-builder/templates"
 
 interface CreateAppModalProps {
   isOpen: boolean
@@ -110,6 +113,7 @@ const SuccessDialog: React.FC<SuccessDialogProps> = ({ isOpen, onClose, onConfir
 
 export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose, isLoading }) => {
   const [title, setTitle] = useState("")
+  const [selectedTemplate, setSelectedTemplate] = useState("basic")
   const [showSuccess, setShowSuccess] = useState(false)
   const [newAppId, setNewAppId] = useState<string>("")
   const navigate = useNavigate()
@@ -131,11 +135,9 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   const handleSubmit = async () => {
     if (!title.trim()) return
     try {
-      // 直接调用createApp,不需要关心ID生成
-      const { app, initialVersion } = await appCodeStore.createApp(title.trim())
-      debugger
+      const { app, initialVersion } = await appCodeStore.createApp(title.trim(), selectedTemplate)
       appCodeStore.addVersion(initialVersion)
-      setNewAppId(app.id) // 使用返回的app.id
+      setNewAppId(app.id)
       setTitle("")
       onClose()
 
@@ -170,6 +172,18 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
               variant='bordered'
               isRequired
             />
+            <div className='mt-4'>
+              <RadioGroup label='选择模板' value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                {templates.map((template) => (
+                  <Radio key={template.id} value={template.id}>
+                    <div className='flex flex-col'>
+                      <span className='text-sm font-medium'>{template.name}</span>
+                      <span className='text-xs text-default-500'>{template.description}</span>
+                    </div>
+                  </Radio>
+                ))}
+              </RadioGroup>
+            </div>
           </ModalBody>
           <ModalFooter>
             <Button variant='light' onPress={onClose}>
