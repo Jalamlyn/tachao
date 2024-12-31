@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react"
-import { Select, SelectItem, Button } from "@nextui-org/react"
+import { Button, Tabs, Tab } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import Editor from "@monaco-editor/react"
 import { appCodeStore } from "../../store/appCodeStore"
 import message from "@/components/Message"
 import { CodeItem } from "../type"
+import { cn } from "@/lib/utils"
 
 interface CodeViewProps {
   appId: string
@@ -13,7 +14,7 @@ interface CodeViewProps {
 }
 
 export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selectedTab }) => {
-  const [selectedCodeId, setSelectedCodeId] = useState<Set<string>>(new Set(["app_entry"]))
+  const [selectedCodeId, setSelectedCodeId] = useState<string>("app_entry")
   const [editedCode, setEditedCode] = useState("")
   const [isEditing, setIsEditing] = useState(false)
   const [codeItems, setCodeItems] = useState<CodeItem[]>([])
@@ -60,12 +61,11 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
 
   // 加载代码
   useEffect(() => {
-    const currentSelectedId = Array.from(selectedCodeId)[0]
-    if (currentSelectedId) {
+    if (selectedCodeId) {
       const currentVersion = appCodeStore.currentVersion
       if (!currentVersion) return
 
-      const moduleId = currentSelectedId === "app_entry" ? `${appId}_app_entry` : currentSelectedId
+      const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
 
       const moduleWrapper = currentVersion.modules[moduleId]
       if (moduleWrapper) {
@@ -83,11 +83,8 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
 
   // 处理代码选择
   const handleCodeSelect = useCallback(
-    (selection: Set<string>) => {
-      setSelectedCodeId(selection)
-      const moduleId = Array.from(selection)[0]
-
-      if (!moduleId) return
+    (moduleId: string) => {
+      setSelectedCodeId(moduleId)
 
       const currentVersion = appCodeStore.currentVersion
       if (!currentVersion) return
@@ -106,15 +103,14 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
   // 保存代码
   const handleSaveEdit = async () => {
     try {
-      const currentSelectedId = Array.from(selectedCodeId)[0]
-      if (!currentSelectedId) return
+      if (!selectedCodeId) return
 
-      const moduleId = currentSelectedId === "app_entry" ? `${appId}_app_entry` : currentSelectedId
+      const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
 
       const newVersion = await appCodeStore.addModules({
         [moduleId]: editedCode,
       })
-      
+
       appCodeStore.addVersion(newVersion)
 
       setIsEditing(false)
@@ -128,10 +124,9 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
   // 取消编辑
   const handleCancelEdit = () => {
     const currentVersion = appCodeStore.currentVersion
-    const currentSelectedId = Array.from(selectedCodeId)[0]
-    if (!currentVersion || !currentSelectedId) return
+    if (!currentVersion || !selectedCodeId) return
 
-    const moduleId = currentSelectedId === "app_entry" ? `${appId}_app_entry` : currentSelectedId
+    const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
 
     const moduleWrapper = currentVersion.modules[moduleId]
     if (moduleWrapper) {
@@ -165,27 +160,35 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
   return (
     <div className='relative h-[calc(100vh-260px)] rounded-lg overflow-hidden mt-2'>
       <div className='absolute top-2 left-2 right-2 z-10 flex justify-between items-center'>
-        <Select
-          size='sm'
-          className='max-w-xs bg-white/80 backdrop-blur-sm'
-          selectedKeys={selectedCodeId}
-          onSelectionChange={handleCodeSelect}
-        >
-          {codeItems?.map((item) => (
-            <SelectItem
-              key={item.id}
-              value={item.id}
-              startContent={<Icon icon={getCodeTypeIcon(item.type)} className='w-4 h-4' />}
-            >
-              {item.title}
-              {item.type !== "app" && item.type !== "page" && item.name && (
-                <span className='ml-2 text-xs text-default-400'>
-                  ({item.name})
-                </span>
-              )}
-            </SelectItem>
-          ))}
-        </Select>
+        <div className='flex-1 max-w-[70%] bg-white/80 backdrop-blur-sm rounded-lg shadow-sm'>
+          <Tabs
+            aria-label="Code modules"
+            selectedKey={selectedCodeId}
+            onSelectionChange={(key) => handleCodeSelect(key.toString())}
+            variant="underlined"
+            classNames={{
+              tabList: "gap-4 w-full relative rounded-none p-0 border-b border-divider",
+              cursor: "w-full bg-primary",
+              tab: "max-w-fit px-0 h-12",
+              tabContent: "group-data-[selected=true]:text-primary"
+            }}
+          >
+            {codeItems.map((item) => (
+              <Tab
+                key={item.id}
+                title={
+                  <div className="flex items-center gap-2">
+                    <Icon icon={getCodeTypeIcon(item.type)} className="w-4 h-4" />
+                    <span className="text-sm">{item.title}</span>
+                    {item.type !== "app" && item.type !== "page" && item.name && (
+                      <span className="text-xs text-default-400">({item.name})</span>
+                    )}
+                  </div>
+                }
+              />
+            ))}
+          </Tabs>
+        </div>
 
         {isEditing ? (
           <div className='space-x-2'>
@@ -212,6 +215,7 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
             color='primary'
             onClick={() => setIsEditing(true)}
             startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
+            isDisabled={!selectedCodeId}
           >
             编辑
           </Button>
