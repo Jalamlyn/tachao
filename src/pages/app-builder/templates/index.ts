@@ -17,31 +17,187 @@ const {
 } = context;
 
 const { Routes, Route, Navigate } = ReactRouterDom;
+const { motion } = FramerMotion;
 
-// 创建一个简单的首页
+// 创建一个引导性的首页
 const HomePage = () => {
-  const { Card, CardBody } = NextUI;
+  const { Card, CardBody, Button, Divider } = NextUI;
+  const [showWelcome, setShowWelcome] = React.useState(true);
   
   return (
-    <div className="p-8">
-      <Card>
-        <CardBody>
-          <h1 className="text-2xl font-bold mb-4">👋 Hello!</h1>
-          <p className="text-default-500">
-            欢迎使用AI应用构建器。这是一个示例页面，您可以:
-          </p>
-          <ul className="list-disc list-inside mt-2 space-y-2 text-default-500">
-            <li>使用AI助手生成新的页面</li>
-            <li>修改现有代码</li>
-            <li>添加更多功能</li>
-          </ul>
-        </CardBody>
-      </Card>
+    <div className="min-h-screen bg-gradient-to-b from-primary-50 to-secondary-50 p-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        {/* 欢迎卡片 */}
+        {showWelcome && (
+          <Card className="mb-6 bg-white/80 backdrop-blur-sm shadow-lg">
+            <CardBody>
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className="flex items-center gap-4"
+              >
+                <div className="p-3 rounded-full bg-primary-100">
+                  <Icon icon="mdi:robot-happy" className="w-8 h-8 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-primary">欢迎使用 AI 应用构建器！</h2>
+                  <p className="text-default-600 mt-1">
+                    我是您的 AI 助手，让我们一起开始构建应用吧！
+                  </p>
+                </div>
+                <Button
+                  isIconOnly
+                  variant="light"
+                  onClick={() => setShowWelcome(false)}
+                  className="text-default-400"
+                >
+                  <Icon icon="mdi:close" className="w-5 h-5" />
+                </Button>
+              </motion.div>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* 主要内容区 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 左侧：快速开始 */}
+          <Card className="bg-white/80 backdrop-blur-sm shadow-lg">
+            <CardBody>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Icon icon="mdi:rocket-launch" className="w-5 h-5 text-primary" />
+                  快速开始
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-primary-50 hover:bg-primary-100 transition-colors">
+                    <div className="mt-1">
+                      <Icon icon="mdi:message-text" className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-default-700">告诉AI您的需求</p>
+                      <p className="text-sm text-default-500">
+                        例如："帮我创建一个待办事项列表页面"
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary-50 hover:bg-secondary-100 transition-colors">
+                    <div className="mt-1">
+                      <Icon icon="mdi:wand" className="w-5 h-5 text-secondary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-default-700">AI 智能生成</p>
+                      <p className="text-sm text-default-500">
+                        自动生成符合需求的页面代码和组件
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-success-50 hover:bg-success-100 transition-colors">
+                    <div className="mt-1">
+                      <Icon icon="mdi:check-circle" className="w-5 h-5 text-success" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-default-700">实时预览</p>
+                      <p className="text-sm text-default-500">
+                        即时查看生成的页面效果并进行调整
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </CardBody>
+          </Card>
+
+          {/* 右侧：示例提示 */}
+          <Card className="bg-white/80 backdrop-blur-sm shadow-lg">
+            <CardBody>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+              >
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Icon icon="mdi:lightbulb" className="w-5 h-5 text-warning" />
+                  您可以这样问我
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    "创建一个数据展示页面，包含图表和表格",
+                    "添加一个用户管理模块，支持增删改查",
+                    "设计一个响应式的导航栏组件",
+                    "实现一个带有拖拽功能的看板",
+                    "生成一个表单页面，带有数据验证"
+                  ].map((tip, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: 0.8 + index * 0.1 }}
+                      className="flex items-center gap-2 p-2 rounded hover:bg-default-100 cursor-pointer group"
+                      onClick={() => {
+                        // 可以在这里添加点击复制功能
+                        navigator.clipboard.writeText(tip);
+                        message.success("提示已复制到剪贴板");
+                      }}
+                    >
+                      <Icon 
+                        icon="mdi:content-copy" 
+                        className="w-4 h-4 text-default-400 opacity-0 group-hover:opacity-100 transition-opacity" 
+                      />
+                      <span className="text-default-600">{tip}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            </CardBody>
+          </Card>
+        </div>
+
+        {/* 底部：AI 命令输入提示 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2 }}
+          className="mt-6"
+        >
+          <Card className="bg-gradient-to-r from-primary-100 to-secondary-100 shadow-lg">
+            <CardBody>
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-full bg-white/30 backdrop-blur-sm">
+                  <Icon icon="mdi:cursor-text" className="w-6 h-6 text-primary-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-primary-700">
+                    在下方输入框输入您的需求，让我们开始吧！
+                  </h3>
+                  <p className="text-sm text-primary-600 mt-1">
+                    提示：输入清晰具体的需求描述，可以帮助我更好地理解您的期望
+                  </p>
+                </div>
+                <Button
+                  color="primary"
+                  endContent={<Icon icon="mdi:arrow-down" className="w-4 h-4" />}
+                >
+                  开始输入
+                </Button>
+              </div>
+            </CardBody>
+          </Card>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
 
-// 创建一个基础的应用布局
+// 应用布局
 const AppLayout = observer(() => {
   return (
     <div className="min-h-screen bg-default-50">
@@ -54,9 +210,7 @@ const AppLayout = observer(() => {
 const App = () => {
   return (
     <Routes>
-      <Route path="/" element={<AppLayout />}>
-        <Route index element={<HomePage />} />
-      </Route>
+      <Route path="/*" element={<AppLayout />} />
     </Routes>
   );
 };
