@@ -6,6 +6,7 @@ export const COMPONENT_PROMPTS = {
 const { wpm, React, ReactRouterDom, observer, appId, Icon, FramerMotion } = context;
 const { Routes, Route, Navigate } = ReactRouterDom;
 
+// 导入前必须确保这些页面模块已经创建并导出
 const HomePage = await wpm.import('page_home')
 const SettingsPage = await wpm.import('page_settings')
 const NotFoundPage = await wpm.import('page_notFound')
@@ -64,9 +65,8 @@ wpm.export(appId, App);
 const { wpm, React, observer } = context;
 const { useState, useEffect } = React;
 
+// 导入前必须确保这些模块已经创建并导出
 const SubComponent = await wpm.import('subComponent')
-
-// 直接导入非组件模块
 const todoStore = await wpm.import('todoStore');
 const todoService = await wpm.import('todoService');
 
@@ -78,6 +78,7 @@ const PageComponent = observer(() => {
   );
 });
 
+// 重要：必须导出页面组件，否则其他模块无法导入
 wpm.export('page_xxx', PageComponent);
 </shata-ai-code>
 \`\`\``,
@@ -88,7 +89,7 @@ wpm.export('page_xxx', PageComponent);
 const { wpm, mobx } = context;
 const { makeAutoObservable } = mobx;
 
-// 直接导入其他模块
+// 导入前必须确保 todoService 模块已经创建并导出
 const todoService = await wpm.import('todoService');
 
 class TodoStore {
@@ -111,6 +112,7 @@ class TodoStore {
 }
 
 const store = new TodoStore();
+// 重要：必须导出 store 实例，否则其他模块无法导入
 wpm.export('store_todo', store);
 </shata-ai-code>
 \`\`\``,
@@ -121,7 +123,7 @@ wpm.export('store_todo', store);
 const { wpm, api } = context;
 const { getMetadata, setMetadata } = api;
 
-// 直接导入其他模块
+// 导入前必须确保 todoModule 模块已经创建并导出
 const todoModule = await wpm.import('todoModule');
 
 const service = {
@@ -135,6 +137,7 @@ const service = {
   }
 };
 
+// 重要：必须导出 service 实例，否则其他模块无法导入
 wpm.export('service_todo', service);
 </shata-ai-code>
 \`\`\``,
@@ -157,6 +160,7 @@ const module = {
   }
 };
 
+// 重要：必须导出 module 实例，否则其他模块无法导入
 wpm.export('module_todo', module);
 </shata-ai-code>
 \`\`\``,
@@ -185,6 +189,7 @@ const schema = {
   "required": ["id", "title"]
 }
 
+// 重要：必须导出 schema 定义，否则其他模块无法导入
 wpm.export('schema_todo', schema);
 
 </shata-ai-code>
@@ -207,5 +212,8 @@ wpm.export('schema_todo', schema);
    - 使用 wpm.import 导入自定义模块,不能导入三方模块
    - 所有依赖都从 context 中获取, 不允许直接引入
    - observer 可以包裹初 type=app 以外的组件, 避免不必要的渲染
-   - 避免循环依赖`,
+   - 避免循环依赖
+   - 在使用 wpm.import 前必须确保模块已经导出
+   - 检查所有导入模块的存在性
+   - 按正确顺序创建和导出模块`,
 }

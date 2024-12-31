@@ -36,24 +36,50 @@ export const TECH_PROMPTS = {
 - 清晰的数据结构`,
 
   wpm: `Web Package Manager (WPM) 使用规范:
-- 模块导出规范:
-  * 使用 wpm.export(moduleName, moduleInstance) 导出模块
-  * 模块名称要清晰且唯一
-  * 在模块初始化完成后立即导出
-
 - 模块导入规范:
   * 使用 await wpm.import(moduleName) 导入模块
   * 在组件或模块初始化时导入依赖
   * 处理导入失败的异常情况
+  * 在使用 wpm.import 前必须确保模块已经导出
+  * 检查所有导入模块的存在性
+
+- 模块导出规范:
+  * 页面模块: wpm.export('page_xxx', PageComponent)
+  * Store模块: wpm.export('store_xxx', storeInstance)
+  * Service模块: wpm.export('service_xxx', serviceInstance)
+  * 通用模块: wpm.export('module_xxx', moduleInstance)
+  * 入口模块必须使用 context.appId
 
 - 依赖管理:
   * 避免循环依赖
   * 明确模块间的依赖关系
   * 合理组织模块层次结构
+  * 按正确顺序创建和导出模块
+
+- 错误示例:
+  * ❌ 错误 - 导入未创建的模块
+    const HomePage = await wpm.import('page_home'); // 如果 page_home 未导出则会失败
+  
+  * ✅ 正确 - 先导出再导入
+    // 在 page_home.js 中
+    const HomePage = () => { /* ... */ };
+    wpm.export('page_home', HomePage);
+    
+    // 在其他文件中
+    const HomePage = await wpm.import('page_home'); // 现在可以安全导入
+
+- 依赖检查清单:
+  * 检查所有 import 的模块是否已创建
+  * 确认所有模块都已正确导出
+  * 验证模块导入导出的顺序是否正确
+  * 确保没有循环依赖
 
 - 最佳实践:
   * 模块导入导出使用异步函数
   * 模块名称使用驼峰命名
   * 导入的模块优先在组件顶层声明
-  * 避免运行时动态导入导出`
+  * 避免运行时动态导入导出
+  * 在导入前验证模块是否已导出
+  * 处理模块导入失败的情况
+  * 提供清晰的错误信息`
 }
