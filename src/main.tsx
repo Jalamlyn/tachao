@@ -62,6 +62,7 @@ const AppSelector: React.FC = () => {
       <StoreProvider>
         <QueryClientProvider client={queryClient}>
           <PreviewPage appId={appId} />
+          <Toaster position='top-center' expand={true} richColors closeButton />
         </QueryClientProvider>
       </StoreProvider>
     )
@@ -79,6 +80,7 @@ const AppSelector: React.FC = () => {
         <QueryClientProvider client={queryClient}>
           <Provider>
             <AppRuntime appId={appId} />
+            <Toaster position='top-center' expand={true} richColors closeButton />
           </Provider>
         </QueryClientProvider>
       </StoreProvider>

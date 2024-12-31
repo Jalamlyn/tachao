@@ -14,6 +14,7 @@ import { observer } from "mobx-react-lite"
 import * as mobx from "mobx"
 import { Icon } from "@iconify/react"
 import { appCodeStore } from "../store/appCodeStore"
+import { getMetadata, getPublicMetaData, setMetadata } from "@/service/apis/metadata"
 
 interface PreviewPageProps {
   appId: string
@@ -53,9 +54,9 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
           message,
           appId,
           api: {
-            getMetadata: async () => ({ data: [] }),
-            setMetadata: async () => true,
-            getPublicMetadata: async () => ({ data: [] }),
+            getMetadata,
+            setMetadata,
+            getPublicMetaData,
           },
           ai,
           mobx,
