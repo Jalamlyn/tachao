@@ -13,7 +13,7 @@ interface CodeViewProps {
 }
 
 export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selectedTab }) => {
-  const [selectedCodeId, setSelectedCodeId] = useState<string>("app_entry")
+  const [selectedCodeId, setSelectedCodeId] = useState<Set<string>>(new Set(["app_entry"]))
   const [editedCode, setEditedCode] = useState("")
   const [isEditing, setIsEditing] = useState(false)
   const [codeItems, setCodeItems] = useState<CodeItem[]>([])
@@ -60,11 +60,12 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
 
   // 加载代码
   useEffect(() => {
-    if (selectedCodeId) {
+    const currentSelectedId = Array.from(selectedCodeId)[0]
+    if (currentSelectedId) {
       const currentVersion = appCodeStore.currentVersion
       if (!currentVersion) return
 
-      const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
+      const moduleId = currentSelectedId === "app_entry" ? `${appId}_app_entry` : currentSelectedId
 
       const moduleWrapper = currentVersion.modules[moduleId]
       if (moduleWrapper) {
@@ -82,8 +83,11 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
 
   // 处理代码选择
   const handleCodeSelect = useCallback(
-    (moduleId: string) => {
-      setSelectedCodeId(moduleId)
+    (selection: Set<string>) => {
+      setSelectedCodeId(selection)
+      const moduleId = Array.from(selection)[0]
+
+      if (!moduleId) return
 
       const currentVersion = appCodeStore.currentVersion
       if (!currentVersion) return
@@ -102,9 +106,10 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
   // 保存代码
   const handleSaveEdit = async () => {
     try {
-      if (!selectedCodeId) return
+      const currentSelectedId = Array.from(selectedCodeId)[0]
+      if (!currentSelectedId) return
 
-      const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
+      const moduleId = currentSelectedId === "app_entry" ? `${appId}_app_entry` : currentSelectedId
 
       const newVersion = await appCodeStore.addModules({
         [moduleId]: editedCode,
@@ -123,9 +128,10 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
   // 取消编辑
   const handleCancelEdit = () => {
     const currentVersion = appCodeStore.currentVersion
-    if (!currentVersion || !selectedCodeId) return
+    const currentSelectedId = Array.from(selectedCodeId)[0]
+    if (!currentVersion || !currentSelectedId) return
 
-    const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
+    const moduleId = currentSelectedId === "app_entry" ? `${appId}_app_entry` : currentSelectedId
 
     const moduleWrapper = currentVersion.modules[moduleId]
     if (moduleWrapper) {
@@ -162,8 +168,8 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
         <Select
           size='sm'
           className='max-w-xs bg-white/80 backdrop-blur-sm'
-          selectedKeys={[selectedCodeId]}
-          onChange={(e) => handleCodeSelect(e.target.value)}
+          selectedKeys={selectedCodeId}
+          onSelectionChange={handleCodeSelect}
         >
           {codeItems?.map((item) => (
             <SelectItem
