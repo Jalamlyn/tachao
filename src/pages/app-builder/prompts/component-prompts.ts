@@ -3,14 +3,12 @@ export const COMPONENT_PROMPTS = {
 
 \`\`\`jsx
 <shata-ai-code type="app">
-const { wpm, React, ReactRouterDom, observer, appId } = context;
-const { Suspense } = React;
-const { BrowserRouter, Routes, Route, Navigate } = ReactRouterDom;
+const { wpm, React, ReactRouterDom, observer, appId, Icon, FramerMotion } = context;
+const { Routes, Route, Navigate } = ReactRouterDom;
 
-// 使用 React.lazy 导入页面组件
-const HomePage = React.lazy(() => wpm.import('homePage'));
-const SettingsPage = React.lazy(() => wpm.import('settingsPage'));
-const NotFoundPage = React.lazy(() => wpm.import('notFoundPage'));
+const HomePage = await wpm.import('page_home')
+const SettingsPage = await wpm.import('page_settings')
+const NotFoundPage = await wpm.import('page_notFound')
 
 // 加载状态组件
 const LoadingFallback = () => (
@@ -19,9 +17,8 @@ const LoadingFallback = () => (
   </div>
 );
 
-const App = observer(() => {
+const App = () => {
   return (
-    <BrowserRouter basename={\`/app-run/\${appId}\`}>
       <Routes>
         {/* 默认路由重定向 */}
         <Route 
@@ -33,9 +30,7 @@ const App = observer(() => {
         <Route
           path="home"
           element={
-            <Suspense fallback={<LoadingFallback />}>
               <HomePage />
-            </Suspense>
           }
         />
 
@@ -43,9 +38,7 @@ const App = observer(() => {
         <Route
           path="settings"
           element={
-            <Suspense fallback={<LoadingFallback />}>
               <SettingsPage />
-            </Suspense>
           }
         />
 
@@ -53,29 +46,25 @@ const App = observer(() => {
         <Route
           path="*"
           element={
-            <Suspense fallback={<LoadingFallback />}>
               <NotFoundPage />
-            </Suspense>
           }
         />
       </Routes>
-    </BrowserRouter>
   );
-});
+};
 
 // 重要：入口模块必须使用 context.appId 作为模块名
 wpm.export(appId, App);
 </shata-ai-code>
 \`\`\``,
 
-  pageComponent: `4. 页面组件使用 <shata-ai-code type="page" pageid="xxx" title="xxx"></shata-ai-code> 包裹：
+  pageComponent: `4. 页面组件使用 <shata-ai-code type="page" pageid="page_xxx" title="xxx"></shata-ai-code> 包裹：
 \`\`\`jsx
 <shata-ai-code type="page" pageid="page_xxx" title="页面标题">
 const { wpm, React, observer } = context;
 const { useState, useEffect } = React;
 
-// 使用 React.lazy 导入其他组件
-const SubComponent = React.lazy(() => wpm.import('subComponent'));
+const SubComponent = await wpm.import('subComponent')
 
 // 直接导入非组件模块
 const todoStore = await wpm.import('todoStore');
@@ -84,9 +73,7 @@ const todoService = await wpm.import('todoService');
 const PageComponent = observer(() => {
   return (
     <div>
-      <React.Suspense fallback={<div>Loading...</div>}>
         <SubComponent />
-      </React.Suspense>
     </div>
   );
 });
@@ -95,9 +82,9 @@ wpm.export('page_xxx', PageComponent);
 </shata-ai-code>
 \`\`\``,
 
-  storeTemplate: `5. Store 代码使用 <shata-ai-code type="store" name="xxx"></shata-ai-code> 包裹：
+  storeTemplate: `5. Store 代码使用 <shata-ai-code type="store" name="store_xxx"></shata-ai-code> 包裹：
 \`\`\`jsx
-<shata-ai-code type="store" name="todoStore">
+<shata-ai-code type="store" name="store_todo">
 const { wpm, mobx } = context;
 const { makeAutoObservable } = mobx;
 
@@ -124,13 +111,13 @@ class TodoStore {
 }
 
 const store = new TodoStore();
-wpm.export('todoStore', store);
+wpm.export('store_todo', store);
 </shata-ai-code>
 \`\`\``,
 
-  serviceTemplate: `6. Service 代码使用 <shata-ai-code type="service" name="xxx"></shata-ai-code> 包裹：
+  serviceTemplate: `6. Service 代码使用 <shata-ai-code type="service" name="service_xxx"></shata-ai-code> 包裹：
 \`\`\`jsx
-<shata-ai-code type="service" name="todoService">
+<shata-ai-code type="service" name="service_todo">
 const { wpm, api } = context;
 const { getMetadata, setMetadata } = api;
 
@@ -148,13 +135,13 @@ const service = {
   }
 };
 
-wpm.export('todoService', service);
+wpm.export('service_todo', service);
 </shata-ai-code>
 \`\`\``,
 
-  moduleTemplate: `7. Module 代码使用 <shata-ai-code type="module" name="xxx"></shata-ai-code> 包裰：
+  moduleTemplate: `7. Module 代码使用 <shata-ai-code type="module" name="module_xxx"></shata-ai-code> 包裰：
 \`\`\`jsx
-<shata-ai-code type="module" name="todoModule">
+<shata-ai-code type="module" name="module_todo">
 const { wpm } = context;
 
 const module = {
@@ -170,13 +157,13 @@ const module = {
   }
 };
 
-wpm.export('todoModule', module);
+wpm.export('module_todo', module);
 </shata-ai-code>
 \`\`\``,
 
-  schemaTemplate: `8. Schema 代码使用 <shata-ai-code type="schema" name="xxx"></shata-ai-code> 包裹：
+  schemaTemplate: `8. Schema 代码使用 <shata-ai-code type="schema" name="schema_xxx"></shata-ai-code> 包裹：
 \`\`\`jsx
-<shata-ai-code type="schema" name="todoSchema">
+<shata-ai-code type="schema" name="schema_todo">
 const {wpm} = context;
 
 const schema = {
@@ -198,26 +185,27 @@ const schema = {
   "required": ["id", "title"]
 }
 
-wpm.export('todoSchema', schema);
+wpm.export('schema_todo', schema);
 
 </shata-ai-code>
 \`\`\``,
 
   componentRules: `9. 技术要求：
    - 入口模块(type="app")必须使用 context.appId 作为模块名
-   - React组件使用 React.lazy 和 Suspense 实现动态加载
    - 非组件模块使用 await wpm.import 直接导入
    - 只能使用 NextUI 2.6.0 版本中实际存在的组件
    - 禁止使用 Container Grid Text 这些 NextUI V1 版本中的组件
    - 使用 tailwind css 编写样式代码
    - 动画使用 FramerMotion
-   - 图标使用 @iconify/react 的 Icon 组件
+   - 图标使用 @iconify/react 的 Icon 组件, 从 context 中获取
    - 数据存储使用 getMetadata 和 setMetadata
    - Store 必须使用 MobX
    - Service 必须使用 appId 前缀
    - Module 只能包含纯函数
    - Schema 使用标准的 JSON Schema
-   - 使用 wpm.export 导出模块
-   - 使用 wpm.import 导入模块
+   - 使用 wpm.export 导出自定义模块
+   - 使用 wpm.import 导入自定义模块,不能导入三方模块
+   - 所有依赖都从 context 中获取, 不允许直接引入
+   - observer 可以包裹初 type=app 以外的组件, 避免不必要的渲染
    - 避免循环依赖`,
 }

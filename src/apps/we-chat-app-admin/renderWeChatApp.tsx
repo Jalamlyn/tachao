@@ -22,7 +22,7 @@ import AppBuilder from "@/pages/app-builder/AppEdit"
 export default function renderWeChatApp() {
   return (
     <Route
-      path="/we-chat-app/admin"
+      path='/we-chat-app/admin'
       element={
         <PermissionCheck resourceType='page' resourceId='/we-chat-app/admin'>
           <AdminPage />
@@ -30,46 +30,25 @@ export default function renderWeChatApp() {
       }
     >
       <Route index element={<Dashboard />} />
-      <Route path="settings" element={<EnterpriseSettings />} />
-      <Route path="documents" element={<FormTempManager />} />
-      <Route path="forms" element={<FormManager />} />
-      <Route path="documents/create" element={<AIFormEditor />} />
-      <Route path="documents/edit/:templateId" element={<AIFormEditor />} />
-      <Route path="documents/data/:templateId" element={<FormDataManager />} />
-      <Route path="form-preview/:templateId" element={<FormPreview />} />
-      <Route path="resources" element={<ResourceManagement />} />
-      <Route path="resources/:resourceId" element={<ResourceDetail />} />
-      <Route path="reports" element={<ReportManagement />} />
-      <Route path="reports/ai/create/:templateId" element={<AIReportEditor />} />
-      <Route path="reports/ai/:reportId" element={<AIReportEditor />} />
-      <Route path="ai-assistant" element={<FormAnalysis />} />
-      <Route path="apps" element={<AppManagement />} />
-      <Route path="pending-tasks" element={<PendingTasks />} />
-      <Route path="file-manager" element={<FileManager />} />
-      <Route
-        path="apps/:appId/pages/create"
-        element={
-          <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
-            <PageEditor />
-          </PermissionCheck>
-        }
-      />
-      <Route
-        path="apps/:appId/pages/:pageId/edit"
-        element={
-          <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
-            <PageEditor />
-          </PermissionCheck>
-        }
-      />
-      <Route
-        path="apps/:appId/builder"
-        element={
-          <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
-            <AppBuilder />
-          </PermissionCheck>
-        }
-      />
+      <Route path='settings' element={<EnterpriseSettings />} />
+      <Route path='documents' element={<FormTempManager />} />
+      <Route path='forms' element={<FormManager />} />
+      <Route path='documents/create' element={<AIFormEditor />} />
+      <Route path='documents/edit/:templateId' element={<AIFormEditor />} />
+      <Route path='documents/data/:templateId' element={<FormDataManager />} />
+      <Route path='form-preview/:templateId' element={<FormPreview />} />
+      <Route path='resources' element={<ResourceManagement />} />
+      <Route path='resources/:resourceId' element={<ResourceDetail />} />
+      <Route path='reports' element={<ReportManagement />} />
+      <Route path='reports/ai/create/:templateId' element={<AIReportEditor />} />
+      <Route path='reports/ai/:reportId' element={<AIReportEditor />} />
+      <Route path='ai-assistant' element={<FormAnalysis />} />
+      <Route path='apps' element={<AppManagement />} />
+      <Route path='pending-tasks' element={<PendingTasks />} />
+      <Route path='file-manager' element={<FileManager />} />
+      <Route path='apps/:appId/pages/create' element={<PageEditor />} />
+      <Route path='apps/:appId/pages/:pageId/edit' element={<PageEditor />} />
+      <Route path='apps/:appId/builder' element={<AppBuilder />} />
     </Route>
   )
 }

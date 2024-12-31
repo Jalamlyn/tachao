@@ -116,7 +116,7 @@ const NewForm: React.FC = () => {
   }
 
   return (
-    <PermissionCheck resourceType="template" resourceId={formState.templateId} role="viewer">
+    <PermissionCheck resourceType='template' resourceId={formState.templateId} role='viewer'>
       {renderContent()}
     </PermissionCheck>
   )

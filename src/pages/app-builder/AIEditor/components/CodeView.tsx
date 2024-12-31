@@ -116,7 +116,7 @@ export const CodeView: React.FC<CodeViewProps> = ({
       const newVersion = await appCodeStore.addModules({
         [moduleId]: editedCode
       })
-
+      debugger
       appCodeStore.addVersion(newVersion)
 
       setIsEditing(false)

@@ -5,7 +5,6 @@ import message from "@/components/Message"
 import { Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
 import { PermissionCheck } from "@/permissions/components/PermissionCheck"
-import { versionStore } from "../store/versionStore"
 import wpm from "@wpm-js/core"
 import * as ReactRouterDom from "react-router-dom"
 import * as FramerMotion from "framer-motion"
@@ -14,6 +13,7 @@ import * as NextUI from "@nextui-org/react"
 import { observer } from "mobx-react-lite"
 import * as mobx from "mobx"
 import { Icon } from "@iconify/react"
+import { appCodeStore } from "../store/appCodeStore"
 
 interface PreviewPageProps {
   appId: string
@@ -34,17 +34,14 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
       try {
         setIsLoading(true)
         setError(null)
-        versionStore.setAppId(appId)
-        
-        // 先加载应用数据
-        await versionStore.loadApp(appId)
-        
-        const currentVersion = versionStore.currentVersion
-        if (!currentVersion) {
-          throw new Error("没有可用的版本")
-        }
 
-        // 准备执行上下文
+        // 1. 先设置 appId
+        appCodeStore.setAppId(appId)
+
+        // 2. 加载应用数据
+        await appCodeStore.loadApp(appId)
+
+        // 3. 准备执行上下文
         const context = {
           wpm,
           React,
@@ -64,8 +61,17 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
           mobx,
         }
 
-        // 执行所有模块
-        versionStore.executeModules(context)
+        // 4. 执行所有模块
+        const results = appCodeStore.executeModules(context)
+        debugger
+        // 5. 检查执行结果
+        const errors = results.filter((r) => !r.success)
+        if (errors.length > 0) {
+          console.error("Module execution errors:", errors)
+          setError("模块执行失败")
+          return
+        }
+
         setIsLoading(false)
       } catch (error) {
         console.error("Error initializing preview:", error)
@@ -75,7 +81,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
     }
 
     initializePreview()
-  }, [appId, versionStore.currentIndex]) // 添加 currentIndex 作为依赖，这样版本变化时会重新初始化
+  }, [appId]) // 监听版本变化
 
   if (!appId) {
     return (

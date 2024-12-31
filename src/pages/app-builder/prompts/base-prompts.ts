@@ -5,8 +5,7 @@ export const BASE_PROMPTS = {
 重要规则：
 1. 模块导入导出规则
    - 入口模块(type="app")必须使用 context.appId 作为模块名
-   - React组件使用 React.lazy(() => wpm.import('xxx')) 导入
-   - 非组件模块使用 await wpm.import('xxx') 导入
+   - 模块使用 await wpm.import('xxx') 导入
    - 所有模块必须使用 wpm.export 导出
 
 2. 代码生成规则
@@ -94,7 +93,6 @@ export const BASE_PROMPTS = {
 
 4. 模块依赖管理规范：
    - 入口模块必须使用 context.appId 作为模块名
-   - React组件使用 React.lazy 和 Suspense 实现动态加载
    - 非组件模块使用 await wpm.import 直接导入
    - 避免循环依赖
    - 明确模块间的依赖关系

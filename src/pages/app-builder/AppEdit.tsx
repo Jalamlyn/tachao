@@ -4,26 +4,15 @@ import { Button, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFoot
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
 import PageLayout from "@/components/PageLayout"
-import AIEditor from "./AIEditor"
+import AIEditor from "./AIEditor/AppAIEditor"
 import AppAgent from "./AppAgent"
-import { AppBuilderMessage, CodeItem, PublishData } from "./types"
+import { AppBuilderMessage, CodeItem } from "./types"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
-import { getMetadata, setMetadata } from "@/service/apis/metadata"
-import { versionStore } from "./store/versionStore"
+import { appCodeStore } from "./store/appCodeStore"
 import { toJS } from "mobx"
 
 const MAX_MESSAGES = 10
-const CODE_TYPES = ["app", "page", "store", "service", "module", "schema"] as const
-
-export const extractShataAIFormContent = (content: string): string => {
-  if (!content) {
-    return ""
-  }
-  const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
-  const match = content?.match(regex)
-  return match ? match[1].trim() : content
-}
 
 const AppBuilder: React.FC = observer(() => {
   const { appId } = useParams<{ appId: string }>()
@@ -35,8 +24,6 @@ const AppBuilder: React.FC = observer(() => {
   const [showPublishModal, setShowPublishModal] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [selectedCodeId, setSelectedCodeId] = useState<string>("app_entry")
-  const [codeItems, setCodeItems] = useState<CodeItem[]>([])
   const [publishInProgress, setPublishInProgress] = useState(false)
   const [publishError, setPublishError] = useState<string | null>(null)
 
@@ -52,35 +39,34 @@ const AppBuilder: React.FC = observer(() => {
   }, [])
 
   useEffect(() => {
-    if (appId) {
-      versionStore.setAppId(appId)
-      loadInitialData()
-    }
-  }, [appId])
+    const initEditor = async () => {
+      if (!appId) return
 
-  useEffect(() => {
-    updateCodeItems()
-  }, [versionStore.currentVersion])
+      try {
+        setIsLoading(true)
 
-  const loadInitialData = async () => {
-    if (!appId) return
-    try {
-      setIsLoading(true)
-      const result = await getMetadata(["app_index"])
-      const apps = result.data?.[0]?.value ? JSON.parse(result.data[0].value) : []
-      const app = apps.find((a: any) => a.id === appId)
-      if (app) {
-        setAppTitle(app.title)
+        // loadApp 内部会处理所有初始化逻辑
+        const version = await appCodeStore.loadApp(appId)
+
+        // 只需要处理UI相关的初始化
+        if (version?.app?.name) {
+          setAppTitle(version.app.name)
+        }
+
+        // 设置默认标签页
+        if (!selectedTab) {
+          setSelectedTab("preview")
+        }
+      } catch (error) {
+        console.error("Error initializing editor:", error)
+        message.error("加载应用失败")
+      } finally {
+        setIsLoading(false)
       }
-      await versionStore.loadApp(appId)
-      updateCodeItems()
-    } catch (error) {
-      console.error("Error loading initial data:", error)
-      message.error("加载应用数据失败")
-    } finally {
-      setIsLoading(false)
     }
-  }
+
+    initEditor()
+  }, [appId])
 
   const refreshPreview = useCallback(() => {
     if (iframeRef.current && !isRefreshing) {
@@ -90,171 +76,6 @@ const AppBuilder: React.FC = observer(() => {
     }
   }, [isRefreshing])
 
-  const updateCodeItems = useCallback(() => {
-    const currentVersion = versionStore.currentVersion
-    if (!currentVersion) return
-
-    const items: CodeItem[] = []
-
-    // App Entry
-    if (currentVersion.content) {
-      items.push({
-        id: "app_entry",
-        title: "应用入口 (App Entry)",
-        type: "app",
-        code: currentVersion.content,
-        updatedAt: currentVersion.appState?.updatedAt,
-      })
-    }
-
-    // Pages
-    if (currentVersion.appState?.pages) {
-      Object.entries(currentVersion.appState.pages).forEach(([pageId, page]) => {
-        items.push({
-          id: pageId,
-          title: `${page.title}`,
-          type: "page",
-          code: page.code,
-          updatedAt: page.updatedAt,
-        })
-      })
-    }
-
-    // Stores
-    if (currentVersion.appState?.stores) {
-      Object.entries(currentVersion.appState.stores).forEach(([name, store]) => {
-        items.push({
-          id: `store_${name}`,
-          title: `Store: ${name}`,
-          type: "store",
-          name,
-          code: store.code,
-          updatedAt: store.updatedAt,
-        })
-      })
-    }
-
-    // Services
-    if (currentVersion.appState?.services) {
-      Object.entries(currentVersion.appState.services).forEach(([name, service]) => {
-        items.push({
-          id: `service_${name}`,
-          title: `Service: ${name}`,
-          type: "service",
-          name,
-          code: service.code,
-          updatedAt: service.updatedAt,
-        })
-      })
-    }
-
-    // Modules
-    if (currentVersion.appState?.modules) {
-      Object.entries(currentVersion.appState.modules).forEach(([name, module]) => {
-        items.push({
-          id: `module_${name}`,
-          title: `Module: ${name}`,
-          type: "module",
-          name,
-          code: module.code,
-          updatedAt: module.updatedAt,
-        })
-      })
-    }
-
-    // Schemas
-    if (currentVersion.appState?.schemas) {
-      Object.entries(currentVersion.appState.schemas).forEach(([name, schema]) => {
-        items.push({
-          id: `schema_${name}`,
-          title: `Schema: ${name}`,
-          type: "schema",
-          name,
-          code: schema.code,
-          updatedAt: schema.updatedAt,
-        })
-      })
-    }
-
-    // 按类型和更新时间排序
-    items.sort((a, b) => {
-      // 首先按类型排序
-      const typeOrder = CODE_TYPES.indexOf(a.type) - CODE_TYPES.indexOf(b.type)
-      if (typeOrder !== 0) return typeOrder
-
-      // 然后按更新时间倒序
-      const timeA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0
-      const timeB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0
-      return timeB - timeA
-    })
-
-    setCodeItems(items)
-    if (items.length > 0 && !selectedCodeId) {
-      setSelectedCodeId(items[0].id)
-    }
-  }, [selectedCodeId])
-
-  const handleMessage = useCallback(
-    (event: MessageEvent) => {
-      if (event.data.type === "preview_ready" && event.data.appId === appId) {
-        const currentVersion = versionStore.currentVersion
-        if (currentVersion?.content) {
-          const targetWindow = event.source as Window
-
-          // 使用 toJS 转换 MobX 响应式对象为普通对象
-          const plainAppState = currentVersion.appState ? toJS(currentVersion.appState) : {}
-
-          try {
-            targetWindow.postMessage(
-              {
-                type: "update_preview",
-                appId,
-                code: currentVersion.content,
-                stores: plainAppState.stores || {},
-                services: plainAppState.services || {},
-                modules: plainAppState.modules || {},
-                schemas: plainAppState.schemas || {},
-              },
-              "*"
-            )
-          } catch (error) {
-            console.error("Error posting message to preview:", error)
-            message.error("预览更新失败")
-          }
-        }
-      } else if (event.data.type === "request_page_code" && event.data.appId === appId) {
-        const { pageId } = event.data
-        const pageCode = versionStore.getPageCode(pageId)
-
-        const iframe = document.querySelector("iframe")
-        if (iframe?.contentWindow) {
-          try {
-            iframe.contentWindow.postMessage(
-              {
-                type: "update_page_code",
-                appId,
-                pageId,
-                code: pageCode ? toJS(pageCode) : null, // 这里也使用 toJS
-              },
-              "*"
-            )
-          } catch (error) {
-            console.error("Error posting page code:", error)
-            message.error("页面代码更新失败")
-          }
-        }
-      }
-    },
-    [appId]
-  )
-
-  useEffect(() => {
-    window.addEventListener("message", handleMessage)
-    return () => {
-      window.removeEventListener("message", handleMessage)
-    }
-  }, [handleMessage])
-
   const handlePublish = async () => {
     if (!appId) return
     try {
@@ -262,71 +83,17 @@ const AppBuilder: React.FC = observer(() => {
       setPublishInProgress(true)
       setPublishError(null)
 
-      const publishData = versionStore.exportForPublish()
-      if (!publishData) {
-        throw new Error("没有可发布的内容")
+      // 使用appCodeStore发布
+      const result = await appCodeStore.publishToServer({
+        useLatest: !appCodeStore.isViewingHistory,
+      })
+
+      if (result.publishInfo.hasNewerVersion) {
+        message.info(`已发布${result.publishInfo.versionDate}的版本，` + "但存在更新的版本未发布")
+      } else {
+        message.success("发布成功")
       }
 
-      // 验证所有必需的代码
-      validatePublishData(publishData)
-
-      // 发布页面代码
-      for (const [pageId, page] of Object.entries(publishData.pages)) {
-        await setMetadata(
-          pageId,
-          JSON.stringify({
-            id: pageId,
-            title: page.title,
-            code: page.code,
-            appId,
-            updatedAt: page.updatedAt,
-          })
-        )
-      }
-
-      // 发布其他类型的代码
-      const codeTypes = [
-        { type: "stores", data: publishData.stores },
-        { type: "services", data: publishData.services },
-        { type: "modules", data: publishData.modules },
-        { type: "schemas", data: publishData.schemas },
-      ]
-
-      for (const { type, data } of codeTypes) {
-        if (Object.keys(data || {}).length > 0) {
-          await setMetadata(`${appId}_${type}`, JSON.stringify(data))
-        }
-      }
-
-      // 发布应用入口代码
-      await setMetadata(
-        `app_${appId}`,
-        JSON.stringify({
-          code: publishData.appCode,
-          updatedAt: publishData.updatedAt,
-          version: publishData.version,
-        })
-      )
-
-      // 更新应用索引
-      const appIndexResult = await getMetadata(["app_index"])
-      const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
-      const appIndex = apps.findIndex((a: any) => a.id === appId)
-      if (appIndex === -1) throw new Error("应用不存在")
-
-      const updatedApps = [...apps]
-      updatedApps[appIndex] = {
-        ...updatedApps[appIndex],
-        updatedAt: new Date().toISOString(),
-        status: "active",
-        version: publishData.version,
-        lastPublishedAt: new Date().toISOString(),
-      }
-
-      await setMetadata("app_index", JSON.stringify(updatedApps))
-
-      versionStore.clear()
-      message.success("发布成功")
       setShowPublishModal(true)
     } catch (error) {
       console.error("Error publishing app:", error)
@@ -336,37 +103,6 @@ const AppBuilder: React.FC = observer(() => {
       setIsLoading(false)
       setPublishInProgress(false)
     }
-  }
-
-  const validatePublishData = (data: PublishData) => {
-    if (!data.appCode) {
-      throw new Error("缺少应用入口代码")
-    }
-
-    if (Object.keys(data.pages).length === 0) {
-      throw new Error("至少需要一个页面")
-    }
-
-    // 验证每个页面的必需字段
-    Object.entries(data.pages).forEach(([pageId, page]) => {
-      if (!page.code || !page.title) {
-        throw new Error(`页面 ${pageId} 缺少必需的字段`)
-      }
-    })
-
-    // 验证其他类型代码的完整性
-    const validateCode = (type: string, items: Record<string, any>) => {
-      Object.entries(items || {}).forEach(([name, item]) => {
-        if (!item.code) {
-          throw new Error(`${type} ${name} 缺少代码内容`)
-        }
-      })
-    }
-
-    validateCode("Store", data.stores)
-    validateCode("Service", data.services)
-    validateCode("Module", data.modules)
-    validateCode("Schema", data.schemas)
   }
 
   const addMessage = useCallback((message: AppBuilderMessage) => {
@@ -465,14 +201,6 @@ const AppBuilder: React.FC = observer(() => {
         return
       }
       try {
-        // 执行所有模块代码
-        const moduleResults = await versionStore.executeModules(result.rawConfig)
-
-        if (moduleResults.some((r) => !r.success)) {
-          throw new Error("Failed to execute some modules")
-        }
-        debugger
-
         message.success("代码生成成功")
         refreshPreview()
       } catch (error) {
@@ -484,8 +212,9 @@ const AppBuilder: React.FC = observer(() => {
   )
 
   const renderPreview = useCallback(() => {
-    const version = versionStore.currentVersion
-    if (!version?.content) {
+    const version = appCodeStore.currentVersion
+    console.log(toJS(version))
+    if (!version?.modules[`${appId}_app_entry`]) {
       return (
         <div className='flex flex-col items-center justify-center min-h-[400px] bg-default-50'>
           <Icon icon='mdi:apps' className='w-16 h-16 text-default-300' />
@@ -602,9 +331,7 @@ const AppBuilder: React.FC = observer(() => {
           onStop={handleStop}
           showCodeTab
           previewTabName='应用预览'
-          codeItems={codeItems}
-          selectedCodeId={selectedCodeId}
-          onCodeSelect={setSelectedCodeId}
+          appId={appId}
         />
       </div>
 

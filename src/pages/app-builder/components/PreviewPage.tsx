@@ -35,7 +35,13 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
         setIsLoading(true)
         setError(null)
 
-        // 准备执行上下文
+        // 1. 先设置 appId
+        appCodeStore.setAppId(appId)
+
+        // 2. 加载应用数据
+        await appCodeStore.loadApp(appId)
+
+        // 3. 准备执行上下文
         const context = {
           wpm,
           React,
@@ -55,11 +61,11 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
           mobx,
         }
 
-        // 执行所有模块
+        // 4. 执行所有模块
         const results = appCodeStore.executeModules(context)
-
-        // 检查执行结果
-        const errors = results.filter(r => !r.success)
+        debugger
+        // 5. 检查执行结果
+        const errors = results.filter((r) => !r.success)
         if (errors.length > 0) {
           console.error("Module execution errors:", errors)
           setError("模块执行失败")
@@ -75,7 +81,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
     }
 
     initializePreview()
-  }, [appId, appCodeStore.currentIndex]) // 监听版本变化
+  }, [appId]) // 监听版本变化
 
   if (!appId) {
     return (

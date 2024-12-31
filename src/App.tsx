@@ -19,10 +19,8 @@ import AppEntry from "./pages/app-management/components/AppEntry"
 import EnterpriseLayout from "./pages/app-management/components/layouts/EnterpriseLayout"
 import WaitListPage from "./pages/WaitListPage"
 import FormCreate from "./pages/form/components/FormCreate"
-import { PermissionCheck } from "./permissions/components/PermissionCheck"
 import UnauthorizedPage from "./permissions/pages/UnauthorizedPage"
 import PagePreview from "./pages/app-management/components/PagePreview"
-import PreviewPage from "./pages/app-builder/components/PreviewPage"
 
 import { loadBMapScript } from "@/components/reports/MapComponent"
 
@@ -78,28 +76,10 @@ function App() {
               }
             />
             <Route path='/form/:formId' element={<Form />} />
-            <Route
-              path='/form-create/:templateId'
-              element={
-                <PermissionCheck
-                  resourceType='template'
-                  resourceId={location.pathname.split("/").pop() || ""}
-                  role='creator'
-                >
-                  <FormCreate />
-                </PermissionCheck>
-              }
-            />
+            <Route path='/form-create/:templateId' element={<FormCreate />} />
             <Route path='/report/:reportId' element={<Report />} />
             <Route path='/apps/:appId/*' element={<AppEntry />}>
-              <Route
-                path='enterprise/*'
-                element={
-                  <PermissionCheck resourceType='app' resourceId={location.pathname.split("/")[2]}>
-                    <EnterpriseLayout />
-                  </PermissionCheck>
-                }
-              />
+              <Route path='enterprise/*' element={<EnterpriseLayout />} />
             </Route>
             <Route
               path='/forms/analysis'

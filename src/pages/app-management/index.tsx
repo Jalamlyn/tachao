@@ -7,7 +7,7 @@ import { AppGallery } from "./components/AppGallery"
 import { CreateAppModal } from "./components/CreateAppModal"
 import { PageList } from "./components/PageList"
 import { AppIndex, useAppStore } from "./store/useAppStore"
-import { versionStore } from "../app-builder/store/versionStore"
+import { appCodeStore } from "../app-builder/store/appCodeStore"
 
 const AppManagement: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()
@@ -48,7 +48,7 @@ const AppManagement: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (!appToDelete) return
     await deleteApp(appToDelete.id)
-    versionStore.clear()
+    appCodeStore.clear()
     setDeleteModalOpen(false)
   }
 
@@ -64,12 +64,7 @@ const AppManagement: React.FC = () => {
         <AppGallery apps={apps} isLoading={isLoading} onDevelopClick={handleDevelopClick} />
       </div>
 
-      <CreateAppModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onSubmit={createApp}
-        isLoading={isCreating}
-      />
+      <CreateAppModal isOpen={isCreateModalOpen} onClose={() => setCreateModalOpen(false)} isLoading={isCreating} />
 
       <PageList isOpen={!!selectedApp} onClose={() => setSelectedApp(null)} app={selectedApp!} />
 
