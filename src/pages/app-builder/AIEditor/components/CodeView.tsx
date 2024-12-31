@@ -12,11 +12,7 @@ interface CodeViewProps {
   selectedTab: string
 }
 
-export const CodeView: React.FC<CodeViewProps> = ({
-  appId,
-  showCodeTab,
-  selectedTab,
-}) => {
+export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selectedTab }) => {
   const [selectedCodeId, setSelectedCodeId] = useState<string>("app_entry")
   const [editedCode, setEditedCode] = useState("")
   const [isEditing, setIsEditing] = useState(false)
@@ -39,7 +35,7 @@ export const CodeView: React.FC<CodeViewProps> = ({
           title: "应用入口 (App Entry)",
           type: "app",
           code: entryModule.data.code,
-          updatedAt: entryModule.updatedAt
+          updatedAt: entryModule.updatedAt,
         })
       }
     }
@@ -54,7 +50,7 @@ export const CodeView: React.FC<CodeViewProps> = ({
           type: moduleData.type,
           name: moduleData.name,
           code: moduleData.code,
-          updatedAt: moduleWrapper.updatedAt
+          updatedAt: moduleWrapper.updatedAt,
         })
       }
     })
@@ -68,9 +64,7 @@ export const CodeView: React.FC<CodeViewProps> = ({
       const currentVersion = appCodeStore.currentVersion
       if (!currentVersion) return
 
-      const moduleId = selectedCodeId === "app_entry" 
-        ? `${appId}_app_entry` 
-        : selectedCodeId
+      const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
 
       const moduleWrapper = currentVersion.modules[moduleId]
       if (moduleWrapper) {
@@ -87,34 +81,33 @@ export const CodeView: React.FC<CodeViewProps> = ({
   }, [updateCodeItems, appCodeStore.currentVersion])
 
   // 处理代码选择
-  const handleCodeSelect = useCallback((moduleId: string) => {
-    setSelectedCodeId(moduleId)
-    
-    const currentVersion = appCodeStore.currentVersion
-    if (!currentVersion) return
+  const handleCodeSelect = useCallback(
+    (moduleId: string) => {
+      setSelectedCodeId(moduleId)
 
-    const actualModuleId = moduleId === "app_entry" 
-      ? `${appId}_app_entry` 
-      : moduleId
+      const currentVersion = appCodeStore.currentVersion
+      if (!currentVersion) return
 
-    const moduleWrapper = currentVersion.modules[actualModuleId]
-    if (moduleWrapper) {
-      setEditedCode(moduleWrapper.data.code || "")
-      setIsEditing(false)
-    }
-  }, [appId])
+      const actualModuleId = moduleId === "app_entry" ? `${appId}_app_entry` : moduleId
+
+      const moduleWrapper = currentVersion.modules[actualModuleId]
+      if (moduleWrapper) {
+        setEditedCode(moduleWrapper.data.code || "")
+        setIsEditing(false)
+      }
+    },
+    [appId]
+  )
 
   // 保存代码
   const handleSaveEdit = async () => {
     try {
       if (!selectedCodeId) return
 
-      const moduleId = selectedCodeId === "app_entry" 
-        ? `${appId}_app_entry` 
-        : selectedCodeId
+      const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
 
       const newVersion = await appCodeStore.addModules({
-        [moduleId]: editedCode
+        [moduleId]: editedCode,
       })
       debugger
       appCodeStore.addVersion(newVersion)
@@ -132,9 +125,7 @@ export const CodeView: React.FC<CodeViewProps> = ({
     const currentVersion = appCodeStore.currentVersion
     if (!currentVersion || !selectedCodeId) return
 
-    const moduleId = selectedCodeId === "app_entry" 
-      ? `${appId}_app_entry` 
-      : selectedCodeId
+    const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
 
     const moduleWrapper = currentVersion.modules[moduleId]
     if (moduleWrapper) {
@@ -146,24 +137,31 @@ export const CodeView: React.FC<CodeViewProps> = ({
   // 获取代码类型图标
   const getCodeTypeIcon = (type: string) => {
     switch (type) {
-      case "app": return "mdi:application"
-      case "page": return "mdi:file-code"
-      case "store": return "mdi:database"
-      case "service": return "mdi:api"
-      case "module": return "mdi:puzzle"
-      case "schema": return "mdi:json"
-      default: return "mdi:code-tags"
+      case "app":
+        return "mdi:application"
+      case "page":
+        return "mdi:file-code"
+      case "store":
+        return "mdi:database"
+      case "service":
+        return "mdi:api"
+      case "module":
+        return "mdi:puzzle"
+      case "schema":
+        return "mdi:json"
+      default:
+        return "mdi:code-tags"
     }
   }
 
   if (!showCodeTab || selectedTab !== "code") return null
 
   return (
-    <div className="relative h-[calc(100vh-260px)] rounded-lg overflow-hidden mt-2">
-      <div className="absolute top-2 left-2 right-2 z-10 flex justify-between items-center">
+    <div className='relative h-[calc(100vh-260px)] rounded-lg overflow-hidden mt-2'>
+      <div className='absolute top-2 left-2 right-2 z-10 flex justify-between items-center'>
         <Select
-          size="sm"
-          className="max-w-xs bg-white/80 backdrop-blur-sm"
+          size='sm'
+          className='max-w-xs bg-white/80 backdrop-blur-sm'
           selectedKeys={selectedCodeId ? [selectedCodeId] : []}
           onChange={(e) => handleCodeSelect(e.target.value)}
         >
@@ -171,51 +169,51 @@ export const CodeView: React.FC<CodeViewProps> = ({
             <SelectItem
               key={item.id}
               value={item.id}
-              startContent={<Icon icon={getCodeTypeIcon(item.type)} className="w-4 h-4" />}
+              startContent={<Icon icon={getCodeTypeIcon(item.type)} className='w-4 h-4' />}
             >
               {item.title}
               {item.type !== "app" && item.type !== "page" && item.name && (
-                <span className="ml-2 text-xs text-default-400">({item.name})</span>
+                <span className='ml-2 text-xs text-default-400'>({item.name})</span>
               )}
             </SelectItem>
           ))}
         </Select>
 
         {isEditing ? (
-          <div className="space-x-2">
+          <div className='space-x-2'>
             <Button
-              size="sm"
-              color="primary"
+              size='sm'
+              color='primary'
               onClick={handleSaveEdit}
-              startContent={<Icon icon="mdi:content-save" className="w-4 h-4" />}
+              startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
             >
               保存
             </Button>
             <Button
-              size="sm"
-              variant="flat"
+              size='sm'
+              variant='flat'
               onClick={handleCancelEdit}
-              startContent={<Icon icon="mdi:close" className="w-4 h-4" />}
+              startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
             >
               取消
             </Button>
           </div>
         ) : (
           <Button
-            size="sm"
-            color="primary"
+            size='sm'
+            color='primary'
             onClick={() => setIsEditing(true)}
-            startContent={<Icon icon="mdi:pencil" className="w-4 h-4" />}
+            startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
           >
             编辑
           </Button>
         )}
       </div>
-      <div className="h-full pt-14 pb-2 px-2">
+      <div className='h-full pt-14 pb-2 px-2'>
         <Editor
-          height="100%"
-          width="100%"
-          language="javascript"
+          height='100%'
+          width='100%'
+          language='javascript'
           value={editedCode}
           options={{
             readOnly: !isEditing,
@@ -225,7 +223,7 @@ export const CodeView: React.FC<CodeViewProps> = ({
             wordWrap: "on",
             automaticLayout: true,
           }}
-          theme="vs-dark"
+          theme='vs-dark'
           onChange={(value) => {
             if (isEditing) {
               setEditedCode(value || "")
