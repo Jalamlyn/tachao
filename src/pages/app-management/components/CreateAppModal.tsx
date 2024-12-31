@@ -135,9 +135,8 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   const handleSubmit = async () => {
     if (!title.trim()) return
     try {
-      const { app, initialVersion } = await appCodeStore.createApp(title.trim(), selectedTemplate)
-      appCodeStore.addVersion(initialVersion)
-      setNewAppId(app.id)
+      const appId = await appCodeStore.createApp(title.trim(), selectedTemplate)
+      setNewAppId(appId)
       setTitle("")
       onClose()
 

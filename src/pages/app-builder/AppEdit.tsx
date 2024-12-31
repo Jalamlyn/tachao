@@ -10,6 +10,7 @@ import { AppBuilderMessage, CodeItem } from "./types"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { appCodeStore } from "./store/appCodeStore"
+
 const ErrorPrompt = ({ error, onFix }) => {
   // 解析错误信息
   const parseError = (error) => {
@@ -287,9 +288,9 @@ const AppBuilder: React.FC = observer(() => {
     }
 
     return (
-      <div className='relative'>
+      <div className='relative h-full flex flex-col'>
         {/* 浏览器风格的工具栏 */}
-        <div className='absolute top-0 left-0 right-0 z-10 bg-default-100 border-b border-default-200 rounded-t-lg px-4 py-2'>
+        <div className='sticky top-0 left-0 right-0 z-10 bg-default-100 border-b border-default-200 rounded-t-lg px-4 py-2'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
               {/* 浏览器装饰点 */}
@@ -337,13 +338,13 @@ const AppBuilder: React.FC = observer(() => {
         </div>
 
         {/* iframe 容器 */}
-        <div className='rounded-lg overflow-hidden border border-default-200 shadow-lg pt-12'>
+        <div className='flex-1 overflow-hidden rounded-b-lg border border-default-200 shadow-lg'>
           <iframe
             ref={iframeRef}
             src={`/app-preview/${appId}`}
             style={{
               width: "100%",
-              height: "600px",
+              height: "100%",
               border: "none",
             }}
             title='App Preview'

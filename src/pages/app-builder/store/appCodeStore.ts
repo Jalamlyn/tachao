@@ -507,7 +507,7 @@ class AppCodeStore {
   }
 
   // 修改现有方法以使用新的处理逻辑
-  async handleAIGeneration(aiResponse: string): Promise<Version> {
+  async handleAIGeneration(aiResponse: string, name = "New App"): Promise<Version> {
     if (!this.appId) {
       throw new Error("AppId not set")
     }
@@ -524,7 +524,7 @@ class AppCodeStore {
           timestamp: Date.now(),
           app: {
             id: this.appId,
-            name: "New App",
+            name,
             version: Date.now(),
             updatedAt: new Date().toISOString(),
             modules: Object.keys(moduleDataMap).reduce(
@@ -652,7 +652,7 @@ class AppCodeStore {
   }
 
   // 创建新的App
-  async createApp(name: string, templateId: string = "basic"): Promise<{ app: App; initialVersion: Version }> {
+  async createApp(name: string, templateId: string = "basic"): Promise<any> {
     const appId = this.generateId()
     this.setAppId(appId)
 
@@ -662,68 +662,11 @@ class AppCodeStore {
       if (!selectedTemplate) {
         throw new Error("Template not found")
       }
+      const firstVersion = await this.handleAIGeneration(selectedTemplate.template(), name)
+      this.addVersion(firstVersion)
+      await this.publishToServer({ useLatest: true })
 
-      // 2. 创建入口模块数据
-      const entryModule: ModuleData = {
-        id: `${appId}_app_entry`,
-        type: "app",
-        name: "entry",
-        title: name,
-        code: selectedTemplate.template(),
-        compiledCode: await this.compileCode(selectedTemplate.template()),
-      }
-
-      // 3. 创建App对象
-      const app: App = {
-        id: appId,
-        name,
-        version: Date.now(),
-        updatedAt: new Date().toISOString(),
-        modules: {
-          [`${appId}_app_entry`]: {
-            id: `${appId}_app_entry`,
-            type: "app",
-            name: "entry",
-            title: name,
-          },
-        },
-      }
-
-      // 4. 创建初始版本
-      const initialVersion: Version = {
-        timestamp: Date.now(),
-        app,
-        modules: {
-          [entryModule.id]: {
-            metadata: JSON.stringify(entryModule),
-            data: entryModule,
-            updatedAt: new Date().toISOString(),
-          },
-        },
-      }
-
-      // 5. 保存所有数据
-      await Promise.all([
-        setMetadata(
-          `${appId}`,
-          JSON.stringify({
-            app,
-            version: initialVersion.app.version,
-            updatedAt: initialVersion.app.updatedAt,
-          })
-        ),
-        setMetadata(entryModule.id, JSON.stringify(entryModule)),
-        this.updateAppIndex(app, name),
-      ])
-
-      // 6. 设置初始版本
-      this.versions = [initialVersion]
-      this.currentIndex = 0
-
-      // 7. 保存到本地存储
-      this.saveToStorage()
-
-      return { app, initialVersion }
+      return appId
     } catch (error) {
       console.error("Error creating app:", error)
       this.clear()
