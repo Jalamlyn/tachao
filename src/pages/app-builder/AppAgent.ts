@@ -40,19 +40,19 @@ class AppAgent {
       const enhancedCommand = `<project>
       
 1. 应用入口代码：
-${appCodeStore.currentVersion?.app?.modules || "需要先创建应用入口代码，包含基础路由配置"}
+${appCodeStore.currentVersion?.modules[`${appId}_app_entry`]?.data?.code || "需要先创建应用入口代码，包含基础路由配置"}
 
 2. 页面代码：
 ${
   appCodeStore.currentVersion?.modules
     ? Object.entries(appCodeStore.currentVersion.modules)
-        .filter(([_, module]) => module.type === "page")
+        .filter(([_, module]) => module.data.type === "page")
         .map(
           ([id, module]) => `
 页面ID: ${id}
-标题: ${module.title}
+标题: ${module.data.title || module.data.name}
 代码:
-${module.code}
+${module.data.code}
 `
         )
         .join("\n---\n")
@@ -63,12 +63,12 @@ ${module.code}
 ${
   appCodeStore.currentVersion?.modules
     ? Object.entries(appCodeStore.currentVersion.modules)
-        .filter(([_, module]) => module.type === "store")
+        .filter(([_, module]) => module.data.type === "store")
         .map(
           ([id, module]) => `
-Store名称: ${module.name}
+Store名称: ${module.data.name}
 代码:
-${module.code}
+${module.data.code}
 `
         )
         .join("\n---\n")
@@ -79,12 +79,12 @@ ${module.code}
 ${
   appCodeStore.currentVersion?.modules
     ? Object.entries(appCodeStore.currentVersion.modules)
-        .filter(([_, module]) => module.type === "service")
+        .filter(([_, module]) => module.data.type === "service")
         .map(
           ([id, module]) => `
-Service名称: ${module.name}
+Service名称: ${module.data.name}
 代码:
-${module.code}
+${module.data.code}
 `
         )
         .join("\n---\n")
@@ -95,12 +95,12 @@ ${module.code}
 ${
   appCodeStore.currentVersion?.modules
     ? Object.entries(appCodeStore.currentVersion.modules)
-        .filter(([_, module]) => module.type === "module")
+        .filter(([_, module]) => module.data.type === "module")
         .map(
           ([id, module]) => `
-Module名称: ${module.name}
+Module名称: ${module.data.name}
 代码:
-${module.code}
+${module.data.code}
 `
         )
         .join("\n---\n")
@@ -111,12 +111,12 @@ ${module.code}
 ${
   appCodeStore.currentVersion?.modules
     ? Object.entries(appCodeStore.currentVersion.modules)
-        .filter(([_, module]) => module.type === "schema")
+        .filter(([_, module]) => module.data.type === "schema")
         .map(
           ([id, module]) => `
-Schema名称: ${module.name}
+Schema名称: ${module.data.name}
 定义:
-${module.code}
+${module.data.code}
 `
         )
         .join("\n---\n")
