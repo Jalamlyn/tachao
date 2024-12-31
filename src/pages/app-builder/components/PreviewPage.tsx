@@ -5,68 +5,77 @@ import message from "@/components/Message"
 import { Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
 import { PermissionCheck } from "@/permissions/components/PermissionCheck"
+import wpm from "@wpm-js/core"
+import * as ReactRouterDom from "react-router-dom"
+import * as FramerMotion from "framer-motion"
+import { ai } from "@/service/ai"
+import * as NextUI from "@nextui-org/react"
+import { observer } from "mobx-react-lite"
+import * as mobx from "mobx"
 import { Icon } from "@iconify/react"
+import { appCodeStore } from "../store/appCodeStore"
 
 interface PreviewPageProps {
   appId: string
 }
 
-const PreviewPage: React.FC<PreviewPageProps> = ({ appId }) => {
-  const [appCode, setAppCode] = useState<string | null>(null)
+const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   const [isLoading, setIsLoading] = useState(true)
-  const [stores, setStores] = useState<Record<string, any>>({})
-  const [services, setServices] = useState<Record<string, any>>({})
-  const [modules, setModules] = useState<Record<string, any>>({})
-  const [schemas, setSchemas] = useState<Record<string, any>>({})
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!appId) {
-      message.error("无效的应用ID")
+      setError("无效的应用ID")
+      setIsLoading(false)
       return
     }
 
-    // 获取父窗口引用 - 支持 iframe 和新窗口场景
-    const parentWindow = window.opener || window.parent
-    
-    // 向父窗口发送ready消息
-    parentWindow.postMessage({ 
-      type: "preview_ready", 
-      appId 
-    }, "*")
+    const initializePreview = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
 
-    // 监听来自父窗口的消息
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === "update_preview" && event.data.appId === appId) {
-        setAppCode(event.data.code)
-        setStores(event.data.stores || {})
-        setServices(event.data.services || {})
-        setModules(event.data.modules || {})
-        setSchemas(event.data.schemas || {})
+        // 准备执行上下文
+        const context = {
+          wpm,
+          React,
+          observer,
+          Icon,
+          NextUI,
+          ReactRouterDom,
+          FramerMotion,
+          message,
+          appId,
+          api: {
+            getMetadata: async () => ({ data: [] }),
+            setMetadata: async () => true,
+            getPublicMetadata: async () => ({ data: [] }),
+          },
+          ai,
+          mobx,
+        }
+
+        // 执行所有模块
+        const results = appCodeStore.executeModules(context)
+
+        // 检查执行结果
+        const errors = results.filter(r => !r.success)
+        if (errors.length > 0) {
+          console.error("Module execution errors:", errors)
+          setError("模块执行失败")
+          return
+        }
+
+        setIsLoading(false)
+      } catch (error) {
+        console.error("Error initializing preview:", error)
+        setError(error instanceof Error ? error.message : "初始化预览失败")
         setIsLoading(false)
       }
     }
 
-    window.addEventListener("message", handleMessage)
-
-    return () => {
-      window.removeEventListener("message", handleMessage)
-    }
-  }, [appId])
-
-  // 预览专用上下文
-  const previewContext = {
-    mockData: {},
-    api: {
-      getMetadata: async () => ({ data: [] }),
-      setMetadata: async () => true,
-      getPublicMetadata: async () => ({ data: [] }),
-    },
-    stores,
-    services,
-    modules,
-    schemas,
-    appId,
-  }
+    initializePreview()
+  }, [appId, appCodeStore.currentIndex]) // 监听版本变化
 
   if (!appId) {
     return (
@@ -76,7 +85,7 @@ const PreviewPage: React.FC<PreviewPageProps> = ({ appId }) => {
     )
   }
 
-  if (isLoading || !appCode) {
+  if (isLoading) {
     return (
       <div className='flex items-center justify-center min-h-screen'>
         <Spinner label='加载中...' />
@@ -84,15 +93,23 @@ const PreviewPage: React.FC<PreviewPageProps> = ({ appId }) => {
     )
   }
 
+  if (error) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='p-4 bg-danger-50 rounded-lg'>
+          <p className='text-danger'>{error}</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <Provider>
       <PermissionCheck resourceType='app' resourceId={appId}>
-        <AppContext.Provider value={{ appId, runtimeContext: previewContext }}>
+        <AppContext.Provider value={{ appId }}>
           <AppRender
             appId={appId}
             basename={`/app-preview/${appId}`}
-            code={appCode}
-            context={previewContext}
             onError={(error) => {
               console.error("Preview error:", error)
               message.error(`预览错误: ${error.message}`)
@@ -102,6 +119,6 @@ const PreviewPage: React.FC<PreviewPageProps> = ({ appId }) => {
       </PermissionCheck>
     </Provider>
   )
-}
+})
 
 export default PreviewPage
