@@ -109,7 +109,7 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
       const newVersion = await appCodeStore.addModules({
         [moduleId]: editedCode,
       })
-      debugger
+      
       appCodeStore.addVersion(newVersion)
 
       setIsEditing(false)
@@ -162,7 +162,7 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
         <Select
           size='sm'
           className='max-w-xs bg-white/80 backdrop-blur-sm'
-          selectedKeys={selectedCodeId ? [selectedCodeId] : []}
+          selectedKeys={[selectedCodeId]}
           onChange={(e) => handleCodeSelect(e.target.value)}
         >
           {codeItems?.map((item) => (
@@ -173,7 +173,9 @@ export const CodeView: React.FC<CodeViewProps> = ({ appId, showCodeTab, selected
             >
               {item.title}
               {item.type !== "app" && item.type !== "page" && item.name && (
-                <span className='ml-2 text-xs text-default-400'>({item.name})</span>
+                <span className='ml-2 text-xs text-default-400'>
+                  ({item.name})
+                </span>
               )}
             </SelectItem>
           ))}
