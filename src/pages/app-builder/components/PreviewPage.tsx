@@ -15,6 +15,7 @@ import * as mobx from "mobx"
 import { Icon } from "@iconify/react"
 import { appCodeStore } from "../store/appCodeStore"
 import { getMetadata, getPublicMetaData, setMetadata } from "@/service/apis/metadata"
+import * as recharts from "recharts"
 
 interface PreviewPageProps {
   appId: string
@@ -53,6 +54,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
           FramerMotion,
           message,
           appId,
+          recharts,
           api: {
             getMetadata,
             setMetadata,

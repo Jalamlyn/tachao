@@ -665,7 +665,21 @@ class AppCodeStore {
       const firstVersion = await this.handleAIGeneration(selectedTemplate.template(), name)
       this.addVersion(firstVersion)
       await this.publishToServer({ useLatest: true })
-
+      const app: App = {
+        id: appId,
+        name,
+        version: Date.now(),
+        updatedAt: new Date().toISOString(),
+        modules: {
+          [`${appId}_app_entry`]: {
+            id: `${appId}_app_entry`,
+            type: "app",
+            name: "entry",
+            title: name,
+          },
+        },
+      }
+      this.updateAppIndex(app, name)
       return appId
     } catch (error) {
       console.error("Error creating app:", error)

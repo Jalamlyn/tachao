@@ -122,7 +122,7 @@
     "react-to-print": "^3.0.2",
     "react-tsparticles": "^2.12.2",
     "react-virtuoso": "^4.10.2",
-    "recharts": "^2.13.0",
+    "recharts": "^2.15.0",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.0",
     "remark-mermaidjs": "^7.0.0",
