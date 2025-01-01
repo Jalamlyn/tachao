@@ -31,7 +31,7 @@ interface CostRecord {
 export const costService = {
   // 计算 Claude 费用
   calculateClaudeCost(content: string, tokenCount: number, isInput: boolean, model: string): number {
-    const isCoding = content.includes(`shata-ai-code`)
+    const isCoding = content.includes(`mo-ai-code`)
     const ratePerMillionTokens = {
       EXPERT: {
         input: isCoding ? 219 : 43.8,
@@ -50,7 +50,7 @@ export const costService = {
 
   // 计算 Claude Wild 模式费用
   calculateClaudeWildCost(content: string, tokenCount: number, isInput: boolean, model: string): number {
-    const isCoding = content.includes(`shata-ai-code`)
+    const isCoding = content.includes(`mo-ai-code`)
     const ratePerMillionTokens = {
       EXPERT: {
         input: isCoding ? 219 : 43.8,

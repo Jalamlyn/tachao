@@ -208,15 +208,15 @@ ${imageAnalysis}
       ${extractShataAIFormContent(codeStore.code)}
       </code>
       <代码生成规范 用户不可见>
-      如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码, 不允许用注释省略代码, 生成的结果中只能包含一份<shata-ai-code>, 代码的返回格式如下:
+      如果修改代码, 要返回修改后的完整代码,不能省略任何代码和逻辑,必须是完整的代码, 不允许用注释省略代码, 生成的结果中只能包含一份<mo-ai-code>, 代码的返回格式如下:
       """
       \`\`\`mo
-      <shata-ai-code>
-        //这里可定义你需要的函数, 并实现, 但不能使用 import 引入其他代码, 只能使用在<shata-ai-code>内定义的函数
+      <mo-ai-code>
+        //这里可定义你需要的函数, 并实现, 但不能使用 import 引入其他代码, 只能使用在<mo-ai-code>内定义的函数
         export default (props)=>{
           ...你生成的代码,代码必须完整, 不能使用 //其他... 之类的注释省略原来的代码, 必须返回所有的完整代码
         }
-      </shata-ai-code>
+      </mo-ai-code>
       \`\`\`
       """
       包裹起来, 在 watch 中编写逻辑,必须遵循 ${guide} 的规则, 除了上下文中的依赖, 代码中不允许使用任何外部代码, 使用的任何函数方法必须先声明, 不能省略任何逻辑, 必须完整返回所有代码
@@ -301,7 +301,7 @@ ${imageAnalysis}
       imageStore.images = []
       excelStore.cachedExcel = null
 
-      if (response.includes("<shata-ai-error>")) {
+      if (response.includes("<mo-ai-error>")) {
         return {
           success: false,
           config: undefined,
@@ -309,7 +309,7 @@ ${imageAnalysis}
         }
       }
 
-      if (response.includes("<shata-ai-code>")) {
+      if (response.includes("<mo-ai-code>")) {
         const parsedConfig = await this.parseConfig(response)
         if (parsedConfig) {
           this.setRawConfig(response)

@@ -46,7 +46,7 @@ ${systemStatusPrompt}
 
 示例代码：
 """
-<shata-ai-code>
+<mo-ai-code>
 export default (props) => {
   const {React, NextUI, FramerMotion, Icon, api, ReactRouterDom} = context
   const {useNavigate} = ReactRouterDom
@@ -127,7 +127,7 @@ export default (props) => {
     </Container>
   )
 }
-</shata-ai-code>
+</mo-ai-code>
 """
 
 注意事项：

@@ -96,7 +96,7 @@ const parseConfigObject = (jsCode: string): any => {
  */
 export const parseResourceOperations = async (content: string): Promise<any> => {
   try {
-    const result = await parseAICode(content, "shata-ai-resource")
+    const result = await parseAICode(content, "mo-ai-resource")
     return result.operations || result
   } catch (error) {
     aiLog.error(error as Error)
@@ -112,7 +112,7 @@ export const parseFormEditOperations = async (
   content: string
 ): Promise<(config: any, set: Function, React: any) => void> => {
   try {
-    const regex = /<shata-ai-edit>([\s\S]*?)<\/shata-ai-edit>/
+    const regex = /<mo-ai-edit>([\s\S]*?)<\/mo-ai-edit>/
     const match = content.match(regex)
     if (!match) {
       throw new Error("No valid edit operations found")
@@ -138,7 +138,7 @@ export const parseFormEditOperations = async (
 export const parseFormConfig = async (content: string) => {
   try {
     // 1. 提取代码
-    const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
+    const regex = /<mo-ai-code>([\s\S]*?)<\/mo-ai-code>/
     const match = content?.match(regex)
     if (!match) {
       throw new Error("No valid code found")

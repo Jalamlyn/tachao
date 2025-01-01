@@ -8,7 +8,7 @@ let systemMsg
 
 // 计算 Claude 费用的函数
 function calculateClaudeCost(fullContent, tokenCount: number, isInput: boolean, model: string): number {
-  const isCoding = fullContent.includes(`shata-ai-code`)
+  const isCoding = fullContent.includes(`mo-ai-code`)
   const ratePerMillionTokens = {
     EXPERT: {
       input: isCoding ? 219 : 43.8,

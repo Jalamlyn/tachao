@@ -162,46 +162,46 @@ const MessageCard = React.memo(
                     )
                   }
                   // if (match && match[1] == "jsx") {
-                  //   if (children && children.toString().includes("</shata-ai-reflection>")) {
+                  //   if (children && children.toString().includes("</mo-ai-reflection>")) {
                   //     return "✔️ 深度思考完成"
                   //   }
-                  //   if (children && children.toString().startsWith("<shata-ai-reflection>")) {
+                  //   if (children && children.toString().startsWith("<mo-ai-reflection>")) {
                   //     return "我正在深度思考..."
                   //   }
-                  //   if (children && children.toString().includes("</shata-ai-think>")) {
+                  //   if (children && children.toString().includes("</mo-ai-think>")) {
                   //     return "✔️ 思考完成"
                   //   }
-                  //   if (children && children.toString().startsWith("<shata-ai-think>")) {
+                  //   if (children && children.toString().startsWith("<mo-ai-think>")) {
                   //     return "我正在思考..."
                   //   }
-                  //   if (children && children.toString().includes("</shata-ai-scene>")) {
+                  //   if (children && children.toString().includes("</mo-ai-scene>")) {
                   //     return "✔️ 用户意图分析完成"
                   //   }
-                  //   if (children && children.toString().startsWith("<shata-ai-scene>")) {
+                  //   if (children && children.toString().startsWith("<mo-ai-scene>")) {
                   //     return "分析用户意图..."
                   //   }
-                  //   if (children && children.toString().includes("</shata-ai-error>")) {
+                  //   if (children && children.toString().includes("</mo-ai-error>")) {
                   //     return "❌ 错误信息"
                   //   }
-                  //   if (children && children.toString().startsWith("<shata-ai-error>")) {
+                  //   if (children && children.toString().startsWith("<mo-ai-error>")) {
                   //     return "检测到错误..."
                   //   }
-                  //   if (children && children.toString().includes("</shata-ai-response>")) {
+                  //   if (children && children.toString().includes("</mo-ai-response>")) {
                   //     return "✔️ 响应完成"
                   //   }
-                  //   if (children && children.toString().startsWith("<shata-ai-response>")) {
+                  //   if (children && children.toString().startsWith("<mo-ai-response>")) {
                   //     return "正在生成响应..."
                   //   }
-                  //   // if (children && children.toString().includes("</shata-ai-code>")) {
+                  //   // if (children && children.toString().includes("</mo-ai-code>")) {
                   //   //   return "✔️ 代码生成完成"
                   //   // }
-                  //   // if (children && children.toString().startsWith("<shata-ai-code>")) {
+                  //   // if (children && children.toString().startsWith("<mo-ai-code>")) {
                   //   //   return "正在生成代码..."
                   //   // }
-                  //   if (children && children.toString().includes("</shata-ai-intent>")) {
+                  //   if (children && children.toString().includes("</mo-ai-intent>")) {
                   //     return "✔️ 理解用户意图完成"
                   //   }
-                  //   if (children && children.toString().startsWith("<shata-ai-intent>")) {
+                  //   if (children && children.toString().startsWith("<mo-ai-intent>")) {
                   //     return "正在理解用户意图..."
                   //   }
 

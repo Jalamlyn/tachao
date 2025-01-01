@@ -34,7 +34,7 @@ export const SCENE_RECOGNITION_TEMPLATE = `
 请首先进行场景识别并输出分析：
 
 \`\`\`mo
-<shata-ai-scene>
+<mo-ai-scene>
 1. 分析类型：
    - 主要类型：[数据概览/趋势分析/对比分析/预测分析/异常检测]
    - 分析深度：[基础/进阶/专业]
@@ -59,7 +59,7 @@ export const SCENE_RECOGNITION_TEMPLATE = `
    - 复杂度：[低/中/高]
    - 性能要求：[低/中/高]
    - 可实现性：[完全可行/部分可行/需要调整]
-</shata-ai-scene>
+</mo-ai-scene>
 \`\`\`
 `
 
@@ -69,7 +69,7 @@ export const THINKING_PROCESS_TEMPLATE = `
 进行深入分析和思考：
 
 \`\`\`mo
-<shata-ai-think>
+<mo-ai-think>
 1. 数据评估
    - 数据质量：[1-5分]
    - 数据完整性：[1-5分]
@@ -99,7 +99,7 @@ export const THINKING_PROCESS_TEMPLATE = `
    - 预期效果：[效果描述]
    - 优化建议：[具体建议]
    - 注意事项：[具体事项]
-</shata-ai-think>
+</mo-ai-think>
 \`\`\`
 `
 
@@ -109,7 +109,7 @@ export const REFLECTION_TEMPLATE = `
 对分析过程和结果进行反思：
 
 \`\`\`mo
-<shata-ai-reflection>
+<mo-ai-reflection>
 1. 数据理解
    - 业务含义：[描述]
    - 数据特征：[描述]
@@ -139,7 +139,7 @@ export const REFLECTION_TEMPLATE = `
    - 存在问题：[总结]
    - 解决方案：[总结]
    - 未来展望：[总结]
-</shata-ai-reflection>
+</mo-ai-reflection>
 \`\`\`
 `
 
@@ -151,7 +151,7 @@ export const RETURN_STRUCTURE_REQUIREMENTS = `
 
 ✅ 正确示例 - 完整的组件格式:
 \`\`\`mo
-<shata-ai-code>
+<mo-ai-code>
 export default () => {
   // 1. 在组件内部构建分析配置
   const analysis = {
@@ -169,12 +169,12 @@ export default () => {
   // 2. 返回 AnalysisResult 组件
   return <AnalysisResult analysis={analysis} />
 }
-</shata-ai-code> 
+</mo-ai-code> 
 \`\`\`
 
 2. 完整示例:
 \`\`\`mo
-<shata-ai-code>
+<mo-ai-code>
 export default () => {
   // 1. 获取数据源信息
   const firstGroup = data.groups[Object.keys(data.groups)[0]]
@@ -225,7 +225,7 @@ export default () => {
   // 3. 返回分析结果组件
   return <AnalysisResult analysis={analysis} />
 }
-</shata-ai-code>
+</mo-ai-code>
 \`\`\`
 
 注意事项:
@@ -243,7 +243,7 @@ export const DATA_SOURCE_REQUIREMENTS = `
 
 1. 组件格式示例:
 \`\`\`mo
-<shata-ai-code>
+<mo-ai-code>
 export default () => {
   // 1. 数据源配置
   const sources = Object.entries(data.groups).reduce((acc, [templateId, group]) => {
@@ -296,7 +296,7 @@ export default () => {
   // 3. 返回分析结果组件
   return <AnalysisResult analysis={analysis} />
 }
-</shata-ai-code>
+</mo-ai-code>
 \`\`\`
 
 注意事项:

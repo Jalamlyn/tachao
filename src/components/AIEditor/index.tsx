@@ -12,13 +12,13 @@ export const extractShataAIFormContent = (content: string): string => {
   if (!content) {
     return "尚未编写任何代码"
   }
-  const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
+  const regex = /<mo-ai-code>([\s\S]*?)<\/mo-ai-code>/
   const match = content?.match(regex)
   return match ? match[1].trim() : content
 }
 
 const wrapWithShataAIForm = (content: string): string => {
-  return `<shata-ai-code>\n${content}\n</shata-ai-code>`
+  return `<mo-ai-code>\n${content}\n</mo-ai-code>`
 }
 
 const AIEditor: React.FC<AIEditorProps> = ({

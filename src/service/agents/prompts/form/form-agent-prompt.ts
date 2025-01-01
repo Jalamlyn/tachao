@@ -200,14 +200,14 @@ ${doc}
    - 是否有特殊的业务规则？
 
 我将按照以下格式输出思考过程：
-<shata-ai-think>
+<mo-ai-think>
 [对用户输入的思考过程]
-</shata-ai-think>
+</mo-ai-think>
 
 我将按照以下格式输出思考后的反思：
-<shata-ai-reflection>
+<mo-ai-reflection>
 [对思考过程进行反思]
-</shata-ai-reflection>
+</mo-ai-reflection>
 
 我将按照以下格式的例子输出的方案：
 <分析模板>

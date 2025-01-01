@@ -76,11 +76,11 @@ export class AIReportAgent {
         * 对于业务相关问题：进行分析并给出建议
         * 对于间接相关问题：提供参考信息和最佳实践
         * 对于完全无关问题：礼貌建议咨询其他专业助手
-        * 一次只生成一份 <shata-ai-code></shata-ai-code>
+        * 一次只生成一份 <mo-ai-code></mo-ai-code>
         * [格式要求:所有代码必须使用 
-        <shata-ai-code>
+        <mo-ai-code>
         代码
-        </shata-ai-code>
+        </mo-ai-code>
         包裹, 必须返回完整代码, 不要使用注释来省略任何代码或逻辑]`
 
       const enhancedCommand = rawConfig
@@ -139,7 +139,7 @@ export class AIReportAgent {
 
   private async parseComponentCode(code: string): Promise<string | null> {
     try {
-      const regex = /<shata-ai-code>([\s\S]*?)<\/shata-ai-code>/
+      const regex = /<mo-ai-code>([\s\S]*?)<\/mo-ai-code>/
       const match = code?.match(regex)
       if (match) {
         return match[1].trim()

@@ -1,7 +1,7 @@
 import { makeAutoObservable } from "mobx"
 import { transform } from "@/utils/moduleLoader"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
-import { templates } from "../templates"
+import { templates } from "../../../prompts/templates"
 import wpm from "@wpm-js/core"
 
 // 类型定义
@@ -376,7 +376,7 @@ class AppCodeStore {
   extractShataAICodes(content: string): ShataAICode[] {
     try {
       const results: ShataAICode[] = []
-      const codeBlocks = content.match(/<shata-ai-code[^>]*>([\s\S]*?)<\/shata-ai-code>/g)
+      const codeBlocks = content.match(/<mo-ai-code[^>]*>([\s\S]*?)<\/mo-ai-code>/g)
 
       if (!codeBlocks) return results
 
@@ -388,7 +388,7 @@ class AppCodeStore {
           const type = typeMatch[1] as ShataAICode["type"]
 
           // 提取代码内容
-          const codeMatch = block.match(/<shata-ai-code[^>]*>([\s\S]*?)<\/shata-ai-code>/)
+          const codeMatch = block.match(/<mo-ai-code[^>]*>([\s\S]*?)<\/mo-ai-code>/)
           if (!codeMatch) continue
 
           const code = codeMatch[1].trim()

@@ -2,7 +2,7 @@ export const COMPONENT_PROMPTS = {
   appEntry: `3. 应用入口组件示例：
 
 \`\`\`jsx
-<shata-ai-code type="app">
+<mo-ai-code type="app">
 // 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
 const { 
   wpm, 
@@ -71,12 +71,12 @@ const App = () => {
 
 // 重要：入口模块必须使用 context.appId 作为模块名
 wpm.export(appId, App);
-</shata-ai-code>
+</mo-ai-code>
 \`\`\``,
 
-  pageComponent: `4. 页面组件使用 <shata-ai-code type="page" pageid="page_xxx" title="xxx"></shata-ai-code> 包裹：
+  pageComponent: `4. 页面组件使用 <mo-ai-code type="page" pageid="page_xxx" title="xxx"></mo-ai-code> 包裹：
 \`\`\`jsx
-<shata-ai-code type="page" pageid="page_xxx" title="页面标题">
+<mo-ai-code type="page" pageid="page_xxx" title="页面标题">
 // 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
 const { 
   wpm, 
@@ -110,12 +110,12 @@ const PageComponent = observer(() => {
 
 // 重要：必须导出页面组件，否则其他模块无法导入
 wpm.export('page_xxx', PageComponent);
-</shata-ai-code>
+</mo-ai-code>
 \`\`\``,
 
-  storeTemplate: `5. Store 代码使用 <shata-ai-code type="store" name="store_xxx"></shata-ai-code> 包裹：
+  storeTemplate: `5. Store 代码使用 <mo-ai-code type="store" name="store_xxx"></mo-ai-code> 包裹：
 \`\`\`jsx
-<shata-ai-code type="store" name="store_todo">
+<mo-ai-code type="store" name="store_todo">
 // 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
 const { 
   wpm, 
@@ -159,12 +159,12 @@ class TodoStore {
 const store = new TodoStore();
 // 重要：必须导出 store 实例，否则其他模块无法导入
 wpm.export('store_todo', store);
-</shata-ai-code>
+</mo-ai-code>
 \`\`\``,
 
-  serviceTemplate: `6. Service 代码使用 <shata-ai-code type="service" name="service_xxx"></shata-ai-code> 包裹：
+  serviceTemplate: `6. Service 代码使用 <mo-ai-code type="service" name="service_xxx"></mo-ai-code> 包裹：
 \`\`\`jsx
-<shata-ai-code type="service" name="service_todo">
+<mo-ai-code type="service" name="service_todo">
 // 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
 const { 
   wpm, 
@@ -199,12 +199,12 @@ const service = {
 
 // 重要：必须导出 service 实例，否则其他模块无法导入
 wpm.export('service_todo', service);
-</shata-ai-code>
+</mo-ai-code>
 \`\`\``,
 
-  moduleTemplate: `7. Module 代码使用 <shata-ai-code type="module" name="module_xxx"></shata-ai-code> 包裰：
+  moduleTemplate: `7. Module 代码使用 <mo-ai-code type="module" name="module_xxx"></mo-ai-code> 包裰：
 \`\`\`jsx
-<shata-ai-code type="module" name="module_todo">
+<mo-ai-code type="module" name="module_todo">
 // 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
 const { 
   wpm,
@@ -236,12 +236,12 @@ const module = {
 
 // 重要：必须导出 module 实例，否则其他模块无法导入
 wpm.export('module_todo', module);
-</shata-ai-code>
+</mo-ai-code>
 \`\`\``,
 
-  schemaTemplate: `8. Schema 代码使用 <shata-ai-code type="schema" name="schema_xxx"></shata-ai-code> 包裹：
+  schemaTemplate: `8. Schema 代码使用 <mo-ai-code type="schema" name="schema_xxx"></mo-ai-code> 包裹：
 \`\`\`jsx
-<shata-ai-code type="schema" name="schema_todo">
+<mo-ai-code type="schema" name="schema_todo">
 // 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
 const {
   wpm,
@@ -280,7 +280,7 @@ const schema = {
 // 重要：必须导出 schema 定义，否则其他模块无法导入
 wpm.export('schema_todo', schema);
 
-</shata-ai-code>
+</mo-ai-code>
 \`\`\``,
 
   componentRules: `9. 技术要求：

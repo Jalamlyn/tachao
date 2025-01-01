@@ -17,7 +17,7 @@ import { Icon } from "@iconify/react"
 import confetti from "canvas-confetti"
 import { message } from "antd"
 import { appCodeStore } from "@/pages/app-builder/store/appCodeStore"
-import { templates } from "@/pages/app-builder/templates"
+import { templates } from "@/prompts/templates"
 
 interface CreateAppModalProps {
   isOpen: boolean

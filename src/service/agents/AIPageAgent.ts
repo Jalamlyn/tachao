@@ -29,7 +29,7 @@ export class AIPageAgent {
 
   public async parseCode(code: string) {
     try {
-      if (!code.includes("<shata-ai-code>")) {
+      if (!code.includes("<mo-ai-code>")) {
         throw new Error("Invalid code format")
       }
       return {
@@ -96,7 +96,7 @@ ${command},从设计师角度
 """
 下面是完整代码实现:
 \`\`\`jsx
-<shata-ai-code type="page">
+<mo-ai-code type="page">
 export default (props) => {
   const {React, NextUI, FramerMotion, Icon, api, ReactRouterDom} = context
   const {useNavigate} = ReactRouterDom
@@ -124,7 +124,7 @@ export default (props) => {
        </div>
      )
    }
-</shata-ai-code>
+</mo-ai-code>
 \`\`\`
 """
 生成代码只能是 js 不能是 ts, 禁止使用类型
@@ -169,14 +169,14 @@ export default (props) => {
       // 清理图片缓存
       imageStore.images = []
 
-      if (response.includes("<shata-ai-error>")) {
+      if (response.includes("<mo-ai-error>")) {
         return {
           success: false,
           error: "生成失败，请重试",
         }
       }
 
-      if (response.includes("<shata-ai-code>")) {
+      if (response.includes("<mo-ai-code>")) {
         this.setRawCode(response)
         return {
           success: true,

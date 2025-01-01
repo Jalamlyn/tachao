@@ -1,6 +1,6 @@
 // 业务应用模板 - 面向非技术用户的示例
 export const basicTemplate = () => `
-<shata-ai-code type="app" >
+<mo-ai-code type="app" >
 const {
   React, 
   wpm, 
@@ -75,7 +75,7 @@ const AppLayout = observer(() => {
         </NavbarContent>
       </Navbar>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="mx-auto px-4 py-8">
         <Routes>
           <Route path="" element={<HomePage />} />
           <Route path="customers" element={<ListPage />} />
@@ -98,8 +98,8 @@ const App = () => {
 };
 
 wpm.export(appId, App);
-</shata-ai-code>
-<shata-ai-code type="page" pageid="page_form" title="新增客户">
+</mo-ai-code>
+<mo-ai-code type="page" pageid="page_form" title="新增客户">
 const { 
   wpm, 
   React, 
@@ -283,8 +283,8 @@ const FormPage = observer(() => {
 });
 
 wpm.export('page_form', FormPage);
-</shata-ai-code>
-<shata-ai-code type="page" pageid="page_home" title="首页">
+</mo-ai-code>
+<mo-ai-code type="page" pageid="page_home" title="首页">
 const { 
   wpm, 
   React, 
@@ -500,9 +500,9 @@ const HomePage = observer(() => {
 });
 
 wpm.export('page_home', HomePage);
-</shata-ai-code>
+</mo-ai-code>
 
-<shata-ai-code type="page" pageid="page_list" title="客户列表">
+<mo-ai-code type="page" pageid="page_list" title="客户列表">
 const { 
   wpm, 
   React, 
@@ -687,9 +687,9 @@ const ListPage = observer(() => {
 });
 
 wpm.export('page_list', ListPage);
-</shata-ai-code>
+</mo-ai-code>
 
-<shata-ai-code type="page" pageid="page_detail" title="客户详情">
+<mo-ai-code type="page" pageid="page_detail" title="客户详情">
 const { 
   wpm, 
   React, 
@@ -851,9 +851,9 @@ const DetailPage = observer(() => {
 });
 
 wpm.export('page_detail', DetailPage);
-</shata-ai-code>
+</mo-ai-code>
 
-<shata-ai-code type="store" name="store_data">
+<mo-ai-code type="store" name="store_data">
 const { 
   wpm, 
   mobx,
@@ -925,9 +925,9 @@ class DataStore {
 
 const store = new DataStore();
 wpm.export('store_data', store);
-</shata-ai-code>
+</mo-ai-code>
 
-<shata-ai-code type="service" name="service_data">
+<mo-ai-code type="service" name="service_data">
 const { 
   wpm,
   api,
@@ -955,7 +955,7 @@ const service = {
 };
 
 wpm.export('service_data', service);
-</shata-ai-code>
+</mo-ai-code>
 `
 
 export const templates = [
