@@ -1,4 +1,3 @@
-```jsx
 <mo-ai-code type="app" >
 const {
   React,
@@ -198,4 +197,3 @@ const App = () => {
 
 wpm.export(appId, App);
 </mo-ai-code>
-```
