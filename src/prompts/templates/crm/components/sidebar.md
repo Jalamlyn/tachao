@@ -1,3 +1,4 @@
+```jsx
 <mo-ai-code type="page" pageid="page_component_sidebar">
 const {
   wpm,
@@ -82,3 +83,4 @@ Sidebar.displayName = "Sidebar";
 
 wpm.export('page_component_sidebar', Sidebar);
 </mo-ai-code>
+```

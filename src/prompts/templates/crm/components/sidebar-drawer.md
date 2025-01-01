@@ -1,3 +1,4 @@
+```jsx
 <mo-ai-code type="page" pageid="page_component_sidebar_drawer">
 const {
   wpm,
@@ -57,7 +58,7 @@ const SidebarDrawer = React.forwardRef(({
         classNames={{
           ...classNames,
           wrapper: `!w-[var(--sidebar-width)] ${classNames?.wrapper} ${
-            sidebarPlacement === "left" 
+            sidebarPlacement === "left"
               ? "!items-start !justify-start"
               : "!items-end !justify-end"
           }`,
@@ -93,3 +94,4 @@ SidebarDrawer.displayName = "SidebarDrawer";
 
 wpm.export('page_component_sidebar_drawer', SidebarDrawer);
 </mo-ai-code>
+```
