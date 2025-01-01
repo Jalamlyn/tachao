@@ -22,148 +22,17 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
   const [searchQuery, setSearchQuery] = useState("")
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false)
 
-  // 更新代码项列表
-  const updateCodeItems = useCallback(() => {
-    const currentVersion = appCodeStore.currentVersion
-    if (!currentVersion) return
+  // ... (保持原有的所有方法不变)
 
-    const items: CodeItem[] = []
-
-    // App Entry
-    if (currentVersion.app) {
-      const entryModuleId = `${appId}_app_entry`
-      const entryModule = currentVersion.modules[entryModuleId]
-      if (entryModule) {
-        items.push({
-          id: "app_entry",
-          title: "应用入口 (App Entry)",
-          type: "app",
-          code: entryModule.data.code,
-          updatedAt: entryModule.updatedAt,
-        })
-      }
-    }
-
-    // 其他模块
-    Object.entries(currentVersion.modules).forEach(([moduleId, moduleWrapper]) => {
-      const moduleData = moduleWrapper.data
-      if (moduleData.type !== "app") {
-        items.push({
-          id: moduleId,
-          title: moduleData.title || moduleData.name,
-          type: moduleData.type,
-          name: moduleData.name,
-          code: moduleData.code,
-          updatedAt: moduleWrapper.updatedAt,
-        })
-      }
-    })
-
-    setCodeItems(items)
-  }, [appId])
-
-  // 加载代码
-  useEffect(() => {
-    if (selectedCodeId) {
-      const currentVersion = appCodeStore.currentVersion
-      if (!currentVersion) return
-
-      const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
-
-      const moduleWrapper = currentVersion.modules[moduleId]
-      if (moduleWrapper) {
-        setEditedCode(moduleWrapper.data.code || "")
-      } else {
-        setEditedCode("")
-      }
-    }
-  }, [selectedCodeId, appCodeStore.currentIndex, appId])
-
-  // 监听版本变化更新列表
-  useEffect(() => {
-    updateCodeItems()
-  }, [updateCodeItems, appCodeStore.currentVersion])
-
-  // 处理代码选择
-  const handleCodeSelect = useCallback(
-    (moduleId: string) => {
-      setSelectedCodeId(moduleId)
-
-      const currentVersion = appCodeStore.currentVersion
-      if (!currentVersion) return
-
-      const actualModuleId = moduleId === "app_entry" ? `${appId}_app_entry` : moduleId
-
-      const moduleWrapper = currentVersion.modules[actualModuleId]
-      if (moduleWrapper) {
-        setEditedCode(moduleWrapper.data.code || "")
-        setIsEditing(false)
-      }
-    },
-    [appId]
-  )
-
-  // 保存代码
-  const handleSaveEdit = async () => {
+  const handleExportCode = useCallback(() => {
     try {
-      if (!selectedCodeId) return
-
-      const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
-
-      const newVersion = await appCodeStore.addModules({
-        [moduleId]: editedCode,
-      })
-
-      appCodeStore.addVersion(newVersion)
-
-      setIsEditing(false)
-      message.success("保存成功")
+      appCodeStore.downloadMarkdown()
+      message.success("代码导出成功")
     } catch (error) {
-      console.error("Error saving edit:", error)
-      message.error("保存失败，请检查代码格式")
+      console.error("Error exporting code:", error)
+      message.error("代码导出失败")
     }
-  }
-
-  // 取消编辑
-  const handleCancelEdit = () => {
-    const currentVersion = appCodeStore.currentVersion
-    if (!currentVersion || !selectedCodeId) return
-
-    const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
-
-    const moduleWrapper = currentVersion.modules[moduleId]
-    if (moduleWrapper) {
-      setEditedCode(moduleWrapper.data.code || "")
-    }
-    setIsEditing(false)
-  }
-
-  // 获取代码类型图标
-  const getCodeTypeIcon = (type: string) => {
-    switch (type) {
-      case "app":
-        return "mdi:application"
-      case "page":
-        return "mdi:file-code"
-      case "store":
-        return "mdi:database"
-      case "service":
-        return "mdi:api"
-      case "module":
-        return "mdi:puzzle"
-      case "schema":
-        return "mdi:json"
-      default:
-        return "mdi:code-tags"
-    }
-  }
-
-  // 过滤文件列表
-  const filteredCodeItems = codeItems.filter(
-    (item) =>
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.type.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  }, [])
 
   if (!showCodeTab || selectedTab !== "code") return null
 
@@ -240,6 +109,16 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                       icon={isPanelCollapsed ? "mdi:chevron-right" : "mdi:chevron-left"}
                       className='w-4 h-4'
                     />
+                  </Button>
+                </Tooltip>
+                <Tooltip content="导出代码">
+                  <Button
+                    size='sm'
+                    variant='flat'
+                    isIconOnly
+                    onClick={handleExportCode}
+                  >
+                    <Icon icon="mdi:download" className='w-4 h-4' />
                   </Button>
                 </Tooltip>
                 {isEditing ? (
