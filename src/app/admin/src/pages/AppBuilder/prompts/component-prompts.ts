@@ -239,6 +239,43 @@ wpm.export('module_todo', module);
 </mo-ai-code>
 \`\`\``,
 
+  componentTemplate: `8. Component 代码使用 <mo-ai-code type="component" name="comp_xxx"></mo-ai-code> 包裹：
+\`\`\`jsx
+<mo-ai-code type="component" name="comp_button">
+// 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
+const { 
+  wpm,
+  React, 
+  observer, 
+  Icon, 
+  NextUI,
+  ReactRouterDom,
+  FramerMotion,
+  message,
+  api,
+  ai,
+  mobx,
+  appId 
+} = context;
+
+const { Button } = NextUI;
+
+const CustomButton = observer(({ children, icon, ...props }) => {
+  return (
+    <Button 
+      {...props}
+      startContent={icon && <Icon icon={icon} className="w-4 h-4" />}
+    >
+      {children}
+    </Button>
+  );
+});
+
+// 重要：必须导出组件，否则其他模块无法导入
+wpm.export('comp_button', CustomButton);
+</mo-ai-code>
+\`\`\``,
+
   componentRules: `9. 技术要求：
    - 入口模块(type="app")必须使用 context.appId 作为模块名
    - 非组件模块使用 await wpm.import 直接导入
@@ -251,6 +288,10 @@ wpm.export('module_todo', module);
    - Store 必须使用 MobX
    - Service 必须使用 appId 前缀
    - Module 只能包含纯函数
+   - Component 必须使用 comp_ 前缀
+   - Component 应该是独立可复用的
+   - Component 不应包含业务逻辑
+   - Component 通过 props 接收数据和回调
    - 使用 wpm.export 导出自定义模块
    - 使用 wpm.import 导入自定义模块,不能导入三方模块
    - 所有依赖都从 context 中获取, 不允许直接引入

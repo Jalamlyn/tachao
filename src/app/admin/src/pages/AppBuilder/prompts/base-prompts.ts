@@ -28,13 +28,29 @@ export const BASE_PROMPTS = {
    - 严禁使用 wpm.import 导入未导出的模块
    - 必须先确保模块通过 wpm.export 导出后才能导入
    - 每个页面组件必须使用 wpm.export 导出
-   - 所有 store/service/module 都必须导出后才能使用
+   - 所有 store/service/module/component 都必须导出后才能使用
 
 3. 代码生成规则
    - 生成完整代码，不使用省略符号
    - 包含所有必要的导入语句
    - 完整的错误处理
-   - 清晰的代码结构`,
+   - 清晰的代码结构
+
+4. 模块类型说明
+   - app: 应用入口模块
+   - page: 页面组件
+   - component: 可复用组件
+   - store: 状态管理
+   - service: 服务
+   - module: 工具模块
+
+5. 组件开发规范
+   - component 类型必须使用 comp_ 前缀
+   - component 应该是独立可复用的
+   - component 不应包含业务逻辑
+   - component 通过 props 接收数据和回调
+   - 保持组件的单一职责
+   - 支持自定义样式和主题`,
 
   thoughtChain: `作为一个专业的需求分析专家，请按照以下步骤分析用户需求并提供完整实现：
 
