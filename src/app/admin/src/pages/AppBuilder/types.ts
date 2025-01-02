@@ -27,20 +27,12 @@ export interface AppModules {
   }
 }
 
-export interface AppSchemas {
-  [name: string]: {
-    code: string
-    updatedAt: string
-  }
-}
-
 export interface AppCache {
   [appId: string]: {
     pages: AppPages
     stores: AppStores
     services: AppServices
     modules: AppModules
-    schemas: AppSchemas
     appCode: string
     version: number
     updatedAt: string
@@ -62,7 +54,6 @@ export interface AppBuilderVersion {
   stores?: AppStores
   services?: AppServices
   modules?: AppModules
-  schemas?: AppSchemas
   timestamp: string
   version: number
   updatedAt: string
@@ -71,7 +62,7 @@ export interface AppBuilderVersion {
 export interface CodeItem {
   id: string
   title: string
-  type: "app" | "page" | "store" | "service" | "module" | "schema"
+  type: "app" | "page" | "store" | "service" | "module"
   code: string
   updatedAt?: string
   name?: string
@@ -84,7 +75,6 @@ export interface PublishData {
   stores: AppStores
   services: AppServices
   modules: AppModules
-  schemas: AppSchemas
   version: number
   updatedAt: string
 }
@@ -99,5 +89,4 @@ export interface VersionInfo {
   version: number
   updatedAt: string
   lastPublishedAt?: string
-  status: "draft" | "published"
 }

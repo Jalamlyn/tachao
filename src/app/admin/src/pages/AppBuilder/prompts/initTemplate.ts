@@ -65,7 +65,8 @@ const {
   appId 
 } = context;
 
-const { Card, CardBody, CardHeader, Button, Divider, Navbar, NavbarBrand, NavbarContent, NavbarItem, Link } = NextUI;
+const { Card, CardBody, CardHeader, Button, Divider, Navbar, NavbarBrand, NavbarContent, NavbarItem } = NextUI;
+const { Link } = ReactRouterDom;
 const { motion } = FramerMotion;
 
 const logos = [
@@ -161,17 +162,17 @@ const HomePage = observer(() => {
         </NavbarBrand>
         <NavbarContent className="hidden sm:flex gap-4" justify="center">
           <NavbarItem>
-            <Link color="foreground" href="#">
+            <Link to="#" color="foreground">
               产品特性
             </Link>
           </NavbarItem>
           <NavbarItem>
-            <Link color="foreground" href="#">
+            <Link to="#" color="foreground">
               开发文档
             </Link>
           </NavbarItem>
           <NavbarItem>
-            <Link color="foreground" href="#">
+            <Link to="#" color="foreground">
               技术支持
             </Link>
           </NavbarItem>

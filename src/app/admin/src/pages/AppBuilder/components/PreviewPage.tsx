@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { AppRender } from "@/components/AppRender"
+import { AppRender } from "@/app/admin/src/pages/AppBuilder/AppRender"
 import { Spinner } from "@nextui-org/react"
 import message from "@/components/Message"
 import { Provider } from "@/provider"

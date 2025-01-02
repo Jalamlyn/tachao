@@ -29,12 +29,6 @@ export const TECH_PROMPTS = {
 - 统一使用 JSON 格式
 - 处理数据验证和错误`,
 
-  schema: `JSON Schema 规范:
-- 使用 draft-07 版本
-- 完整的字段描述
-- 合理的验证规则
-- 清晰的数据结构`,
-
   wpm: `Web Package Manager (WPM) 使用规范:
 - 模块导入规范:
   * 使用 await wpm.import(moduleName) 导入模块

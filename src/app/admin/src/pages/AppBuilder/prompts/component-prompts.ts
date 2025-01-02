@@ -239,50 +239,6 @@ wpm.export('module_todo', module);
 </mo-ai-code>
 \`\`\``,
 
-  schemaTemplate: `8. Schema 代码使用 <mo-ai-code type="schema" name="schema_xxx"></mo-ai-code> 包裹：
-\`\`\`jsx
-<mo-ai-code type="schema" name="schema_todo">
-// 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
-const {
-  wpm,
-  React, 
-  observer, 
-  Icon, 
-  NextUI,
-  ReactRouterDom,
-  FramerMotion,
-  message,
-  api,
-  ai,
-  mobx,
-  appId
-} = context;
-
-const schema = {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "properties": {
-    "id": {
-      "type": "string"
-    },
-    "title": {
-      "type": "string",
-      "minLength": 3
-    },
-    "completed": {
-      "type": "boolean",
-      "default": false
-    }
-  },
-  "required": ["id", "title"]
-}
-
-// 重要：必须导出 schema 定义，否则其他模块无法导入
-wpm.export('schema_todo', schema);
-
-</mo-ai-code>
-\`\`\``,
-
   componentRules: `9. 技术要求：
    - 入口模块(type="app")必须使用 context.appId 作为模块名
    - 非组件模块使用 await wpm.import 直接导入
@@ -295,7 +251,6 @@ wpm.export('schema_todo', schema);
    - Store 必须使用 MobX
    - Service 必须使用 appId 前缀
    - Module 只能包含纯函数
-   - Schema 使用标准的 JSON Schema
    - 使用 wpm.export 导出自定义模块
    - 使用 wpm.import 导入自定义模块,不能导入三方模块
    - 所有依赖都从 context 中获取, 不允许直接引入

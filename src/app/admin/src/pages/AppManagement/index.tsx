@@ -5,7 +5,6 @@ import PageLayout from "@/app/admin/src/component/PageLayout"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { AppGallery } from "./components/AppGallery"
 import { CreateAppModal } from "./components/CreateAppModal"
-import { PageList } from "./components/PageList"
 import { AppIndex, useAppStore } from "./store/useAppStore"
 import { appCodeStore } from "../AppBuilder/store/appCodeStore"
 
@@ -65,8 +64,6 @@ const AppManagement: React.FC = () => {
       </div>
 
       <CreateAppModal isOpen={isCreateModalOpen} onClose={() => setCreateModalOpen(false)} isLoading={isCreating} />
-
-      <PageList isOpen={!!selectedApp} onClose={() => setSelectedApp(null)} app={selectedApp!} />
 
       <Modal
         isOpen={isDeleteModalOpen}
