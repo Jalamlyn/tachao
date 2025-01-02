@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { AppRender } from "@/app/admin/src/pages/AppBuilder/AppRender"
-import { Spinner } from "@nextui-org/react"
+import { Spinner, Card, CardBody, CardHeader, Button } from "@nextui-org/react"
 import message from "@/components/Message"
 import { Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
@@ -25,6 +25,42 @@ interface PreviewPageProps {
 const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId, onAIFix }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [errorDetails, setErrorDetails] = useState<any>(null)
+
+  useEffect(() => {
+    // 添加全局错误处理
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Unhandled promise rejection:', event.reason)
+      setError(`未处理的异步错误: ${event.reason?.message || '未知错误'}`)
+      setErrorDetails(event.reason)
+    }
+
+    const handleGlobalError = (event: ErrorEvent) => {
+      console.error('Global error:', event.error)
+      setError(`全局错误: ${event.error?.message || '未知错误'}`)
+      setErrorDetails(event.error)
+    }
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection)
+    window.addEventListener('error', handleGlobalError)
+
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection)
+      window.removeEventListener('error', handleGlobalError)
+    }
+  }, [])
+
+  const handleError = (error: Error) => {
+    setError(error.message)
+    setErrorDetails(error)
+    message.error(`预览错误: ${error.message}`)
+  }
+
+  const handleModuleError = (error: Error) => {
+    setError(`模块执行错误: ${error.message}`)
+    setErrorDetails(error)
+    message.error(error.message)
+  }
 
   useEffect(() => {
     if (!appId) {
@@ -37,6 +73,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId, onAIFix }) =>
       try {
         setIsLoading(true)
         setError(null)
+        setErrorDetails(null)
 
         // 1. 先设置 appId
         appCodeStore.setAppId(appId)
@@ -67,24 +104,90 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId, onAIFix }) =>
 
         // 4. 执行所有模块
         const results = await appCodeStore.executeModules(context)
-        // 5. 检查执行结果
-        const errors = results.filter((r) => !r.success)
-        if (errors.length > 0) {
-          console.error("Module execution errors:", errors)
-          setError("模块执行失败")
-          return
+          .catch(handleModuleError)
+
+        if (results) {
+          const errors = results.filter((r) => !r.success)
+          if (errors.length > 0) {
+            const errorMessages = errors
+              .map(e => `${e.name}: ${e.error}`)
+              .join('\n')
+            handleError(new Error(errorMessages))
+            return
+          }
         }
 
         setIsLoading(false)
       } catch (error) {
         console.error("Error initializing preview:", error)
-        setError(error instanceof Error ? error.message : "初始化预览失败")
-        setIsLoading(false)
+        handleError(error instanceof Error ? error : new Error("初始化预览失败"))
       }
     }
 
     initializePreview()
-  }, [appId]) // 监听版本变化
+  }, [appId])
+
+  const renderErrorUI = () => (
+    <div className="p-4">
+      <Card>
+        <CardHeader className="bg-danger-50">
+          <div className="flex items-center gap-2">
+            <Icon icon="mdi:alert-circle" className="text-danger w-6 h-6"/>
+            <div>
+              <h3 className="text-lg font-semibold">应用加载失败</h3>
+              <p className="text-sm text-danger">{error}</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardBody>
+          <div className="space-y-4">
+            <p className="text-sm">
+              应用在加载过程中遇到错误。这可能是由于：
+            </p>
+            <ul className="list-disc pl-4 text-sm">
+              <li>模块加载失败</li>
+              <li>代码执行错误</li>
+              <li>缺少必要的依赖</li>
+            </ul>
+            {errorDetails?.stack && (
+              <div className="mt-4">
+                <p className="text-sm font-semibold mb-2">错误详情：</p>
+                <pre className="text-xs bg-danger-50 p-4 rounded-lg overflow-auto max-h-[200px]">
+                  {errorDetails.stack}
+                </pre>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Button 
+                color="primary"
+                onClick={() => window.location.reload()}
+                startContent={<Icon icon="mdi:refresh" className="w-4 h-4" />}
+              >
+                重新加载
+              </Button>
+              {onAIFix && (
+                <Button
+                  variant="flat"
+                  color="secondary"
+                  onClick={() => onAIFix({
+                    message: error,
+                    stack: errorDetails?.stack,
+                    context: {
+                      route: window.location.pathname,
+                      appId
+                    }
+                  })}
+                  startContent={<Icon icon="mdi:robot" className="w-4 h-4" />}
+                >
+                  AI 修复
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardBody>
+      </Card>
+    </div>
+  )
 
   if (!appId) {
     return (
@@ -103,13 +206,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId, onAIFix }) =>
   }
 
   if (error) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='p-4 bg-danger-50 rounded-lg'>
-          <p className='text-danger'>{error}</p>
-        </div>
-      </div>
-    )
+    return renderErrorUI()
   }
 
   return (
@@ -138,10 +235,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId, onAIFix }) =>
               mobx,
               recharts,
             }}
-            onError={(error) => {
-              console.error("Preview error:", error)
-              message.error(`预览错误: ${error.message}`)
-            }}
+            onError={handleError}
             onAIFix={onAIFix}
           />
         </AppContext.Provider>
