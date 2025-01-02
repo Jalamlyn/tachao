@@ -4,8 +4,7 @@ import { NextUIProvider } from "@nextui-org/react"
 import { useTranslation } from "react-i18next"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { getCurrentLanguage } from "./i18n"
-import WeChatLoginPage from "./pages/LoginPage"
-import ExternalLoginPage from "./pages/external-login"
+import LoginPage from "./pages/login"
 import { Toaster } from "./components/ui/toaster"
 import { loadBMapScript } from "@/components/reports/MapComponent"
 import LandingPage from "./app/landing/App"
@@ -39,8 +38,8 @@ function App() {
         <div className='min-h-screen'>
           <Routes>
             <Route path='/' element={<LandingPage />} />
-            <Route path='/login' element={<WeChatLoginPage />} />
-            <Route path='/external-login' element={<ExternalLoginPage />} />
+            <Route path='/login' element={<LoginPage />} />
+            <Route path='/external-login' element={<LoginPage />} />
             {AdminRouter()}
           </Routes>
           <Toaster />
