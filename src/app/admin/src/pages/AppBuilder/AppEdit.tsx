@@ -11,14 +11,14 @@ import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { appCodeStore } from "./store/appCodeStore"
 
+// 改进的错误提示组件
 const ErrorPrompt = ({ error, onFix }) => {
   // 解析错误信息
   const parseError = (error) => {
-    const match = error.message.match(/Module (.*?) depends on non-existent module (.*?)$/)
-    if (match) {
+    if (error.moduleErrors) {
       return {
-        dependentModule: match[1],
-        missingModule: match[2],
+        missingModules: error.moduleErrors.missingModules,
+        dependentModules: error.moduleErrors.dependentModules
       }
     }
     return null
@@ -34,12 +34,18 @@ const ErrorPrompt = ({ error, onFix }) => {
         <div className='flex-1'>
           <h4 className='font-medium text-danger'>检测到缺失模块</h4>
           <div className='mt-2 space-y-1 text-sm text-danger-600'>
-            <p>
-              缺失模块: <code>{errorInfo.missingModule}</code>
-            </p>
-            <p>
-              依赖此模块的组件: <code>{errorInfo.dependentModule}</code>
-            </p>
+            <p>缺失模块:</p>
+            <ul className="list-disc pl-4">
+              {errorInfo.missingModules.map((module, index) => (
+                <li key={index}><code>{module}</code></li>
+              ))}
+            </ul>
+            <p>依赖这些模块的组件:</p>
+            <ul className="list-disc pl-4">
+              {errorInfo.dependentModules.map((module, index) => (
+                <li key={index}><code>{module}</code></li>
+              ))}
+            </ul>
           </div>
           <Button
             color='primary'
@@ -203,9 +209,14 @@ const AppBuilder: React.FC = observer(() => {
     accumulatedTextRef.current = ""
     currentMessageIdRef.current = null
   }
+
+  // 改进的错误修复处理函数
   const handleFix = (errorInfo) => {
+    const missingModules = errorInfo.missingModules.join(", ")
+    const dependentModules = errorInfo.dependentModules.join(", ")
+    
     // 构造修复指令
-    const fixCommand = `请帮我创建缺失的 ${errorInfo.missingModule} 模块，它被 ${errorInfo.dependentModule} 组件依赖。`
+    const fixCommand = `请帮我创建以下缺失的模块: ${missingModules}。这些模块被以下组件依赖: ${dependentModules}。请确保生成的模块符合项目规范并包含必要的功能。`
 
     // 添加用户消息
     const userMessage = {
@@ -224,6 +235,7 @@ const AppBuilder: React.FC = observer(() => {
     // 触发AI处理
     processCommand(fixCommand)
   }
+
   const processCommand = async (command: string) => {
     const userMessage: AppBuilderMessage = {
       role: "user",
@@ -247,17 +259,25 @@ const AppBuilder: React.FC = observer(() => {
 
     try {
       const result = await AppAgent.processCommand(appId, messages, command, handleChunk)
+      
+      // 处理结果
+      if (result.success) {
+        message.success("代码生成成功")
+        refreshPreview()
+      } else if (result.version) {
+        // 如果有版本但有错误,设置错误状态但仍然使用生成的代码
+        setModuleError(result)
+        message.warning("代码已生成,但存在一些问题需要修复")
+        refreshPreview()
+      }
+      
       return result
     } catch (error) {
-      if (error.message.includes("Module dependency validation failed")) {
-        setModuleError(error)
-      } else {
-        updateLastMessage({
-          content: error instanceof Error ? error.message : "处理过程中发生错误",
-          status: "error",
-        })
-        throw error
-      }
+      updateLastMessage({
+        content: error instanceof Error ? error.message : "处理过程中发生错误",
+        status: "error",
+      })
+      throw error
     } finally {
       currentMessageIdRef.current = null
     }
@@ -266,7 +286,11 @@ const AppBuilder: React.FC = observer(() => {
   const handleCommandResult = useCallback(
     async (result: any) => {
       try {
-        message.success("代码生成成功")
+        if (result.success) {
+          message.success("代码生成成功")
+        } else if (result.version) {
+          message.warning("代码已生成,但存在一些问题需要修复")
+        }
         refreshPreview()
       } catch (error) {
         console.error("Error handling command result:", error)
@@ -341,6 +365,7 @@ const AppBuilder: React.FC = observer(() => {
         <div className='flex-1 overflow-hidden rounded-b-lg border border-default-200 shadow-lg'>
           <iframe
             ref={iframeRef}
+            sandbox='allow-scripts allow-same-origin allow-forms'
             src={`/app-preview/${appId}`}
             style={{
               width: "100%",
