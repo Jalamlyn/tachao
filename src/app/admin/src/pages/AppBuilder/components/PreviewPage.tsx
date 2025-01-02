@@ -19,10 +19,10 @@ import * as recharts from "recharts"
 
 interface PreviewPageProps {
   appId: string
-  onAIFix?: (errorInfo: any) => void
+  onAIFix?: (errorInfo: any) => void // 保留但标记为可选
 }
 
-const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId, onAIFix }) => {
+const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [errorDetails, setErrorDetails] = useState<any>(null)
@@ -30,23 +30,15 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId, onAIFix }) =>
   useEffect(() => {
     // 添加全局错误处理
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      console.error('Unhandled promise rejection:', event.reason)
-      setError(`未处理的异步错误: ${event.reason?.message || '未知错误'}`)
+      console.error("Unhandled promise rejection:", event.reason)
+      setError(`未处理的异步错误: ${event.reason?.message || "未知错误"}`)
       setErrorDetails(event.reason)
     }
 
-    const handleGlobalError = (event: ErrorEvent) => {
-      console.error('Global error:', event.error)
-      setError(`全局错误: ${event.error?.message || '未知错误'}`)
-      setErrorDetails(event.error)
-    }
-
-    window.addEventListener('unhandledrejection', handleUnhandledRejection)
-    window.addEventListener('error', handleGlobalError)
+    window.addEventListener("unhandledrejection", handleUnhandledRejection)
 
     return () => {
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection)
-      window.removeEventListener('error', handleGlobalError)
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection)
     }
   }, [])
 
@@ -54,12 +46,39 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId, onAIFix }) =>
     setError(error.message)
     setErrorDetails(error)
     message.error(`预览错误: ${error.message}`)
+
+    // 发送错误信息到父窗口
+    window.parent.postMessage({
+      type: 'AI_FIX_REQUEST',
+      payload: {
+        error: error.message,
+        stack: error.stack,
+        context: {
+          route: window.location.pathname,
+          appId
+        }
+      }
+    }, '*')
   }
 
   const handleModuleError = (error: Error) => {
     setError(`模块执行错误: ${error.message}`)
     setErrorDetails(error)
     message.error(error.message)
+
+    // 发送模块错误信息到父窗口
+    window.parent.postMessage({
+      type: 'AI_FIX_REQUEST',
+      payload: {
+        error: error.message,
+        stack: error.stack,
+        context: {
+          route: window.location.pathname,
+          appId,
+          type: 'module_error'
+        }
+      }
+    }, '*')
   }
 
   useEffect(() => {
@@ -103,15 +122,12 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId, onAIFix }) =>
         }
 
         // 4. 执行所有模块
-        const results = await appCodeStore.executeModules(context)
-          .catch(handleModuleError)
+        const results = await appCodeStore.executeModules(context).catch(handleModuleError)
 
         if (results) {
           const errors = results.filter((r) => !r.success)
           if (errors.length > 0) {
-            const errorMessages = errors
-              .map(e => `${e.name}: ${e.error}`)
-              .join('\n')
+            const errorMessages = errors.map((e) => `${e.name}: ${e.error}`).join("\n")
             handleError(new Error(errorMessages))
             return
           }
@@ -128,60 +144,61 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId, onAIFix }) =>
   }, [appId])
 
   const renderErrorUI = () => (
-    <div className="p-4">
+    <div className='p-4'>
       <Card>
-        <CardHeader className="bg-danger-50">
-          <div className="flex items-center gap-2">
-            <Icon icon="mdi:alert-circle" className="text-danger w-6 h-6"/>
+        <CardHeader className='bg-danger-50'>
+          <div className='flex items-center gap-2'>
+            <Icon icon='mdi:alert-circle' className='text-danger w-6 h-6' />
             <div>
-              <h3 className="text-lg font-semibold">应用加载失败</h3>
-              <p className="text-sm text-danger">{error}</p>
+              <h3 className='text-lg font-semibold'>应用加载失败</h3>
+              <p className='text-sm text-danger'>{error}</p>
             </div>
           </div>
         </CardHeader>
         <CardBody>
-          <div className="space-y-4">
-            <p className="text-sm">
-              应用在加载过程中遇到错误。这可能是由于：
-            </p>
-            <ul className="list-disc pl-4 text-sm">
+          <div className='space-y-4'>
+            <p className='text-sm'>应用在加载过程中遇到错误。这可能是由于：</p>
+            <ul className='list-disc pl-4 text-sm'>
               <li>模块加载失败</li>
               <li>代码执行错误</li>
               <li>缺少必要的依赖</li>
             </ul>
             {errorDetails?.stack && (
-              <div className="mt-4">
-                <p className="text-sm font-semibold mb-2">错误详情：</p>
-                <pre className="text-xs bg-danger-50 p-4 rounded-lg overflow-auto max-h-[200px]">
+              <div className='mt-4'>
+                <p className='text-sm font-semibold mb-2'>错误详情：</p>
+                <pre className='text-xs bg-danger-50 p-4 rounded-lg overflow-auto max-h-[200px]'>
                   {errorDetails.stack}
                 </pre>
               </div>
             )}
-            <div className="flex gap-2">
-              <Button 
-                color="primary"
+            <div className='flex gap-2'>
+              <Button
+                color='primary'
                 onClick={() => window.location.reload()}
-                startContent={<Icon icon="mdi:refresh" className="w-4 h-4" />}
+                startContent={<Icon icon='mdi:refresh' className='w-4 h-4' />}
               >
                 重新加载
               </Button>
-              {onAIFix && (
-                <Button
-                  variant="flat"
-                  color="secondary"
-                  onClick={() => onAIFix({
-                    message: error,
-                    stack: errorDetails?.stack,
-                    context: {
-                      route: window.location.pathname,
-                      appId
+              <Button
+                variant='flat'
+                color='secondary'
+                onClick={() => {
+                  window.parent.postMessage({
+                    type: 'AI_FIX_REQUEST',
+                    payload: {
+                      error: error,
+                      stack: errorDetails?.stack,
+                      context: {
+                        route: window.location.pathname,
+                        appId,
+                      },
                     }
-                  })}
-                  startContent={<Icon icon="mdi:robot" className="w-4 h-4" />}
-                >
-                  AI 修复
-                </Button>
-              )}
+                  }, '*')
+                }}
+                startContent={<Icon icon='mdi:robot' className='w-4 h-4' />}
+              >
+                AI 修复
+              </Button>
             </div>
           </div>
         </CardBody>
@@ -236,7 +253,6 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId, onAIFix }) =>
               recharts,
             }}
             onError={handleError}
-            onAIFix={onAIFix}
           />
         </AppContext.Provider>
       </PermissionCheck>

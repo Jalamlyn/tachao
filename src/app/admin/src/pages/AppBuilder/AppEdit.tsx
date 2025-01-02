@@ -90,6 +90,35 @@ const AppBuilder: React.FC = observer(() => {
     ])
   }, [])
 
+  // 添加消息监听
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'AI_FIX_REQUEST') {
+        const errorInfo = event.data.payload;
+        
+        const fixPrompt = `请帮我修复以下错误:
+          错误信息: ${errorInfo.error}
+          路由路径: ${errorInfo.context?.route}
+          堆栈信息: ${errorInfo.stack}
+          ${errorInfo.context?.type === 'module_error' ? '这是一个模块执行错误。' : ''}
+          
+          请分析错误原因并生成修复后的代码。`;
+        
+        const userMessage = {
+          role: "user",
+          content: fixPrompt,
+          id: Date.now().toString(),
+          timestamp: new Date().toLocaleTimeString(),
+        };
+        addMessage(userMessage);
+        processCommand(fixPrompt);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   useEffect(() => {
     const initEditor = async () => {
       if (!appId) return
