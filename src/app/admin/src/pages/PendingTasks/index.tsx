@@ -2,7 +2,7 @@ import React, { useEffect } from "react"
 import { Card, CardBody, Chip, Button, Spinner, Tabs, Tab, ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import PageLayout from "@/app/admin/src/component/PageLayout"
-import { usePendingTasksStore } from "@/pages/pending-tasks/store/usePendingTasksStore"
+import { usePendingTasksStore } from "@/app/admin/src/pages/PendingTasks/store/usePendingTasksStore"
 import { motion, AnimatePresence } from "framer-motion"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 

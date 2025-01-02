@@ -8,7 +8,7 @@ import WeChatLoginPage from "./pages/LoginPage"
 import ExternalLoginPage from "./pages/external-login"
 import { Toaster } from "./components/ui/toaster"
 import { loadBMapScript } from "@/components/reports/MapComponent"
-import LandingPage from "./app/landing"
+import LandingPage from "./app/landing/App"
 import AdminRouter from "./app/admin/router"
 
 setTimeout(() => {

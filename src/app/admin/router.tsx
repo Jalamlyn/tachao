@@ -1,15 +1,15 @@
 import { Route } from "react-router-dom"
-import AdminPage from "./src/App"
+import AdminPage from "./App"
 import EnterpriseSettings from "./src/pages/EnterpriseSettings"
 import Dashboard from "./src/pages/Dashboard"
-import AppManagement from "@/app/admin/src/pages/AppManagement"
-import PendingTasks from "@/pages/pending-tasks"
+import AppManagement from "./src/pages/AppManagement"
+import PendingTasks from "./src/pages/PendingTasks"
 import FileManager from "./src/pages/FileManager"
-import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
-import PageEditor from "@/app/admin/src/pages/AppManagement/components/PageEditor"
-import AppBuilder from "@/app/admin/src/pages/AppBuilder/AppEdit"
+import { PermissionCheck } from "./src/permissions/components/PermissionCheck"
+import PageEditor from "./src/pages/AppManagement/components/PageEditor"
+import AppBuilder from "./src/pages/AppBuilder/AppEdit"
 
-export default function renderWeChatApp() {
+export default function renderRouter() {
   return (
     <Route
       path='/admin'

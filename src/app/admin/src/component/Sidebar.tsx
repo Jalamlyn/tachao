@@ -13,7 +13,6 @@ import React, { useEffect, useState } from "react"
 import { Listbox, Tooltip, ListboxItem, ListboxSection } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { cn } from "@nextui-org/react"
-import { useStore } from "@/stores/StoreProvider"
 
 export enum SidebarItemType {
   Nest = "nest",
@@ -61,7 +60,6 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
     ref
   ) => {
     const [selected, setSelected] = React.useState<React.Key>(defaultSelectedKey)
-    const { balanceStore } = useStore()
 
     const sectionClasses = {
       ...sectionClassesProp,
