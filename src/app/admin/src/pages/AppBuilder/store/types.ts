@@ -56,13 +56,14 @@ export interface ShataAICode {
 
 // 为 AppCodeStore 定义公共接口
 export interface AppCodeStore {
-  versions: Version[]
-  currentIndex: number
-  currentVersion: Version | null
-  latestVersion: Version | null
-  isViewingHistory: boolean
-  canRollback: boolean
-  canForward: boolean
+  readonly appId: string | null  // 添加只读的 appId 属性
+  readonly versions: Version[]
+  readonly currentIndex: number
+  readonly currentVersion: Version | null
+  readonly latestVersion: Version | null
+  readonly isViewingHistory: boolean
+  readonly canRollback: boolean
+  readonly canForward: boolean
 
   // 方法声明
   compileCode(code: string): Promise<string>
