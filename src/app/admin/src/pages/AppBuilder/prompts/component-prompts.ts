@@ -276,6 +276,233 @@ wpm.export('comp_button', CustomButton);
 </mo-ai-code>
 \`\`\``,
 
+  utilsTemplate: `9. Utils 代码使用 <mo-ai-code type="util" name="util_xxx"></mo-ai-code> 包裹：
+\`\`\`jsx
+<mo-ai-code type="util" name="util_date">
+// 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
+const { 
+  wpm,
+  React, 
+  observer, 
+  Icon, 
+  NextUI,
+  ReactRouterDom,
+  FramerMotion,
+  message,
+  api,
+  ai,
+  mobx,
+  appId 
+} = context;
+
+/**
+ * @description 日期工具函数集合
+ * @namespace DateUtils
+ */
+const utils = {
+  /**
+   * 格式化日期
+   * @param {Date|string|number} date - 要格式化的日期
+   * @param {string} format - 格式模板，例如 'YYYY-MM-DD HH:mm:ss'
+   * @returns {string} 格式化后的日期字符串
+   */
+  formatDate(date, format = 'YYYY-MM-DD') {
+    const d = new Date(date)
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const hours = String(d.getHours()).padStart(2, '0')
+    const minutes = String(d.getMinutes()).padStart(2, '0')
+    const seconds = String(d.getSeconds()).padStart(2, '0')
+
+    return format
+      .replace('YYYY', year.toString())
+      .replace('MM', month)
+      .replace('DD', day)
+      .replace('HH', hours)
+      .replace('mm', minutes)
+      .replace('ss', seconds)
+  },
+
+  /**
+   * 获取相对时间描述
+   * @param {Date|string|number} date - 要计算的日期
+   * @returns {string} 相对时间描述
+   */
+  getRelativeTime(date) {
+    const now = new Date()
+    const target = new Date(date)
+    const diff = now.getTime() - target.getTime()
+    
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+
+    if (minutes < 1) return '刚刚'
+    if (minutes < 60) return \`\${minutes}分钟前\`
+    if (hours < 24) return \`\${hours}小时前\`
+    if (days < 30) return \`\${days}天前\`
+    
+    return this.formatDate(date)
+  },
+
+  /**
+   * 判断是否为同一天
+   * @param {Date|string|number} date1 - 第一个日期
+   * @param {Date|string|number} date2 - 第二个日期
+   * @returns {boolean} 是否为同一天
+   */
+  isSameDay(date1, date2) {
+    const d1 = new Date(date1)
+    const d2 = new Date(date2)
+    return (
+      d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate()
+    )
+  }
+};
+
+// 重要：必须导出工具函数，否则其他模块无法导入
+wpm.export('util_date', utils);
+</mo-ai-code>
+\`\`\``,
+
+  constantsTemplate: `10. Constants 代码使用 <mo-ai-code type="constant" name="constant_xxx"></mo-ai-code> 包裹：
+\`\`\`jsx
+<mo-ai-code type="constant" name="constant_app">
+// 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
+const { 
+  wpm,
+  React, 
+  observer, 
+  Icon, 
+  NextUI,
+  ReactRouterDom,
+  FramerMotion,
+  message,
+  api,
+  ai,
+  mobx,
+  appId 
+} = context;
+
+/**
+ * @description 应用全局常量配置
+ * @namespace AppConstants
+ */
+const constants = {
+  // API相关常量
+  API: {
+    // 接口超时时间（毫秒）
+    TIMEOUT: 30000,
+    
+    // 响应状态码
+    STATUS: {
+      SUCCESS: 200,
+      CREATED: 201,
+      BAD_REQUEST: 400,
+      UNAUTHORIZED: 401,
+      FORBIDDEN: 403,
+      NOT_FOUND: 404,
+      SERVER_ERROR: 500
+    },
+    
+    // 错误消息
+    ERROR_MESSAGES: {
+      NETWORK_ERROR: '网络连接失败，请检查网络设置',
+      TIMEOUT_ERROR: '请求超时，请稍后重试',
+      SERVER_ERROR: '服务器错误，请稍后重试',
+      AUTH_ERROR: '认证失败，请重新登录'
+    }
+  },
+
+  // 业务状态常量
+  BUSINESS: {
+    // 数据状态
+    STATUS: {
+      DRAFT: 'draft',
+      PENDING: 'pending',
+      ACTIVE: 'active',
+      INACTIVE: 'inactive',
+      ARCHIVED: 'archived'
+    },
+    
+    // 用户角色
+    ROLES: {
+      ADMIN: 'admin',
+      USER: 'user',
+      GUEST: 'guest'
+    },
+    
+    // 操作类型
+    ACTIONS: {
+      CREATE: 'create',
+      UPDATE: 'update',
+      DELETE: 'delete',
+      PUBLISH: 'publish',
+      ARCHIVE: 'archive'
+    }
+  },
+
+  // UI相关常量
+  UI: {
+    // 主题
+    THEME: {
+      LIGHT: 'light',
+      DARK: 'dark',
+      SYSTEM: 'system'
+    },
+    
+    // 响应式断点
+    BREAKPOINTS: {
+      XS: 320,
+      SM: 640,
+      MD: 768,
+      LG: 1024,
+      XL: 1280,
+      XXL: 1536
+    },
+    
+    // 动画时长
+    ANIMATION: {
+      FAST: 200,
+      NORMAL: 300,
+      SLOW: 500
+    },
+    
+    // 分页配置
+    PAGINATION: {
+      DEFAULT_PAGE_SIZE: 10,
+      PAGE_SIZE_OPTIONS: [10, 20, 50, 100]
+    }
+  },
+
+  // 验证规则
+  VALIDATION: {
+    // 密码规则
+    PASSWORD: {
+      MIN_LENGTH: 8,
+      MAX_LENGTH: 20,
+      PATTERN: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
+      ERROR_MESSAGE: '密码必须包含大小写字母和数字，长度8-20位'
+    },
+    
+    // 用户名规则
+    USERNAME: {
+      MIN_LENGTH: 3,
+      MAX_LENGTH: 20,
+      PATTERN: /^[a-zA-Z0-9_-]{3,20}$/,
+      ERROR_MESSAGE: '用户名只能包含字母、数字、下划线和连字符，长度3-20位'
+    }
+  }
+};
+
+// 重要：必须导出常量，否则其他模块无法导入
+wpm.export('constant_app', constants);
+</mo-ai-code>
+\`\`\``,
+
   componentRules: `9. 技术要求：
    - 入口模块(type="app")必须使用 context.appId 作为模块名
    - 非组件模块使用 await wpm.import 直接导入
