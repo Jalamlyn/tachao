@@ -2,10 +2,10 @@ import React, { useEffect, Suspense } from "react"
 import { motion, useAnimation } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { Helmet } from "react-helmet"
-import Hero from "@/pages/landing/Hero"
-import Footer from "@/pages/landing/Footer"
-import ScrollProgress from "@/pages/landing/ScrollProgress"
-import PricingSection from "@/pages/landing/PricingSection"
+import Hero from "./Hero"
+import Footer from "./Footer"
+import ScrollProgress from "./ScrollProgress"
+import PricingSection from "./PricingSection"
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate()

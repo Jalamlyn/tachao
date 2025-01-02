@@ -22,7 +22,7 @@ const Dashboard: React.FC = () => {
   const [showTutorial, setShowTutorial] = useState(false)
 
   useEffect(() => {
-    updateBreadcrumbs([{ label: "首页", href: "/we-chat-app/admin" }])
+    updateBreadcrumbs([{ label: "首页", href: "/admin" }])
   }, [])
 
   useEffect(() => {
@@ -68,11 +68,11 @@ const Dashboard: React.FC = () => {
     {
       label: "创建表单",
       icon: "solar:document-outline",
-      path: "/we-chat-app/admin/forms",
+      path: "/admin/forms",
     },
-    { label: "查看报表", icon: "mdi:chart-box-outline", path: "/we-chat-app/admin/reports" },
-    { label: "资料表格管理", icon: "mdi:file-document", path: "/we-chat-app/admin/resources" },
-    { label: "企业设置", icon: "solar:settings-outline", path: "/we-chat-app/admin/settings" },
+    { label: "查看报表", icon: "mdi:chart-box-outline", path: "/admin/reports" },
+    { label: "资料表格管理", icon: "mdi:file-document", path: "/admin/resources" },
+    { label: "企业设置", icon: "solar:settings-outline", path: "/admin/settings" },
   ]
 
   return (
@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
                         color='primary'
                         size='sm'
                         endContent={<Icon icon='solar:arrow-right-linear' />}
-                        onPress={() => navigate("/we-chat-app/admin/pending-tasks")}
+                        onPress={() => navigate("/admin/pending-tasks")}
                       >
                         查看更多
                       </Button>

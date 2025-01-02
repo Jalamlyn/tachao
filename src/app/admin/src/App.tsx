@@ -109,7 +109,7 @@ export default function Component() {
               }}
               items={items}
               selectedKeys={[location.pathname.split("/")[3] || "applications"]}
-              onSelectionChange={(key) => navigate(`/we-chat-app/admin/${key}`)}
+              onSelectionChange={(key) => navigate(`/admin/${key}`)}
             />
 
             <Spacer y={8} />

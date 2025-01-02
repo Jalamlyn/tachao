@@ -119,7 +119,7 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
             color='primary'
             onPress={() => {
               onClose()
-              navigate(`/we-chat-app/admin/forms?templateId=${templateId}`)
+              navigate(`/admin/forms?templateId=${templateId}`)
             }}
             className='min-w-[120px]'
           >
@@ -138,7 +138,7 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
           color='primary'
           onPress={() => {
             onClose()
-            navigate(`/we-chat-app/admin/reports/ai/create/${templateId}`)
+            navigate(`/admin/reports/ai/create/${templateId}`)
           }}
           className='min-w-[120px]'
         >
@@ -148,7 +148,7 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
           color='secondary'
           onPress={() => {
             onClose()
-            navigate(`/we-chat-app/admin/ai-assistant`)
+            navigate(`/admin/ai-assistant`)
           }}
           className='min-w-[120px]'
         >
@@ -176,7 +176,7 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
                 .filter((t) => t.formCount === 0)
                 .map((t) => t.id)
                 .join(",")
-              navigate(`/we-chat-app/admin/forms?templateIds=${emptyIds}`)
+              navigate(`/admin/forms?templateIds=${emptyIds}`)
             }}
             className='min-w-[120px]'
           >
@@ -190,7 +190,7 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
                 onClose()
                 // 继续创建报表,使用所有选中的模板
                 const templateIds = templates.map((t) => t.id).join(",")
-                navigate(`/we-chat-app/admin/reports/ai/create?templateIds=${templateIds}`)
+                navigate(`/admin/reports/ai/create?templateIds=${templateIds}`)
               }}
               className='min-w-[120px]'
             >
@@ -200,7 +200,7 @@ export function GuideModal({ isOpen, onClose, formCount, templateId, templates, 
               color='secondary'
               onPress={() => {
                 onClose()
-                navigate("/we-chat-app/admin/ai-assistant")
+                navigate("/admin/ai-assistant")
               }}
               className='min-w-[120px]'
             >

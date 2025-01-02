@@ -32,7 +32,7 @@ export const getRenderEmptyState = (selectedTags, tagsIndex, handleClearTags, na
       description='创建你的第一个表单模板，AI 助手会帮助你快速生成专业的表单'
       action={{
         text: "去创建",
-        onClick: () => navigate("/we-chat-app/admin/documents/create"),
+        onClick: () => navigate("/admin/documents/create"),
       }}
     />
   )

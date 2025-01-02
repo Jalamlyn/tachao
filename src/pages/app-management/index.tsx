@@ -36,8 +36,8 @@ const AppManagement: React.FC = () => {
 
   useEffect(() => {
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "应用管理", href: "/we-chat-app/admin/apps" },
+      { label: "首页", href: "/admin" },
+      { label: "应用管理", href: "/admin/apps" },
     ])
   }, [])
 

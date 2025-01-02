@@ -82,8 +82,8 @@ const AccountManagement: React.FC = () => {
 
     // 更新面包屑
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "企业设置", href: "/we-chat-app/admin/settings" },
+      { label: "首页", href: "/admin" },
+      { label: "企业设置", href: "/admin/settings" },
     ])
   }, [])
 

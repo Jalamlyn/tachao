@@ -26,7 +26,7 @@ const WelcomeCard = ({ appsCount, setShowTutorial }) => {
                   className='bg-white text-primary-900 font-medium'
                   size='lg'
                   startContent={<Icon icon='solar:rocket-linear' />}
-                  onPress={() => navigate("/we-chat-app/admin/apps")}
+                  onPress={() => navigate("/admin/apps")}
                 >
                   开始创建应用
                 </Button>
@@ -63,7 +63,7 @@ const WelcomeCard = ({ appsCount, setShowTutorial }) => {
           </div>
           <Button
             startContent={<Icon icon='solar:rocket-linear' className='text-xl' />}
-            onPress={() => navigate("/we-chat-app/admin/documents/create")}
+            onPress={() => navigate("/admin/documents/create")}
           >
             创建表单模板
           </Button>

@@ -28,8 +28,8 @@ const ReportManagement: React.FC = () => {
 
   useEffect(() => {
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "报表管理", href: "/we-chat-app/admin/Reports" },
+      { label: "首页", href: "/admin" },
+      { label: "报表管理", href: "/admin/Reports" },
     ])
   }, [])
 
@@ -105,11 +105,11 @@ const ReportManagement: React.FC = () => {
     try {
       if (selectedTemplates.length === 1) {
         // 单模板场景 - 保持原有路由格式
-        navigate(`/we-chat-app/admin/reports/ai/create/${selectedTemplates[0]}`)
+        navigate(`/admin/reports/ai/create/${selectedTemplates[0]}`)
       } else {
         // 多模板场景 - 使用查询参数
         const templateIds = selectedTemplates.join(',')
-        navigate(`/we-chat-app/admin/reports/ai/create?templateIds=${templateIds}`)
+        navigate(`/admin/reports/ai/create?templateIds=${templateIds}`)
       }
       handleCreateModalClose()
     } catch (error) {

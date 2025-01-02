@@ -16,21 +16,21 @@ const EnterpriseSettings = () => {
 
   // 处理 tab 变化
   const handleTabChange = (key: string) => {
-    navigate(`/we-chat-app/admin/settings?tab=${key}`, { replace: true })
+    navigate(`/admin/settings?tab=${key}`, { replace: true })
   }
 
   useEffect(() => {
     // 更新面包屑
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "企业设置", href: "/we-chat-app/admin/settings" },
+      { label: "首页", href: "/admin" },
+      { label: "企业设置", href: "/admin/settings" },
     ])
   }, [])
 
   // 初始化时设置默认 tab
   useEffect(() => {
     if (!searchParams.get("tab")) {
-      navigate(`/we-chat-app/admin/settings?tab=accounts`, { replace: true })
+      navigate(`/admin/settings?tab=accounts`, { replace: true })
     }
   }, [])
 

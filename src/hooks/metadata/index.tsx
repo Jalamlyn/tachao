@@ -228,7 +228,7 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
                   color='primary'
                   size='sm'
                   as='a'
-                  href='/we-chat-app/admin/forms?templateId=${id}'
+                  href='/admin/forms?templateId=${id}'
                   target='_blank'
                 >
                   <span>查看使用此模板的表单</span>

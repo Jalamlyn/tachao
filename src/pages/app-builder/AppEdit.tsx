@@ -78,8 +78,8 @@ const AppBuilder: React.FC = observer(() => {
 
   useEffect(() => {
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "应用管理", href: "/we-chat-app/admin/apps" },
+      { label: "首页", href: "/admin" },
+      { label: "应用管理", href: "/admin/apps" },
       { label: "应用开发", href: "" },
     ])
   }, [])

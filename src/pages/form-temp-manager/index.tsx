@@ -13,13 +13,13 @@ const FormManager: React.FC = () => {
 
   useEffect(() => {
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "表单模板管理", href: "/we-chat-app/admin/documents" },
+      { label: "首页", href: "/admin" },
+      { label: "表单模板管理", href: "/admin/documents" },
     ])
   }, [])
 
   const handleCreateTemplate = () => {
-    navigate("/we-chat-app/admin/documents/create")
+    navigate("/admin/documents/create")
   }
 
   const handleTemplateSelect = (templateId: string) => {

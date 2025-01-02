@@ -26,8 +26,8 @@ const ResourceManagement: React.FC = () => {
 
   useEffect(() => {
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "资料表格管理", href: "/we-chat-app/admin/resources" },
+      { label: "首页", href: "/admin" },
+      { label: "资料表格管理", href: "/admin/resources" },
     ])
   }, [])
 

@@ -109,9 +109,9 @@ const FormTemplateSelect: React.FC = () => {
 
   React.useEffect(() => {
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "表单模板管理", href: "/we-chat-app/admin/documents" },
-      { label: "选择表单模板", href: "/we-chat-app/admin/documents/create" },
+      { label: "首页", href: "/admin" },
+      { label: "表单模板管理", href: "/admin/documents" },
+      { label: "选择表单模板", href: "/admin/documents/create" },
     ])
   }, [updateBreadcrumbs])
 
@@ -121,7 +121,7 @@ const FormTemplateSelect: React.FC = () => {
       return
     }
 
-    navigate(`/we-chat-app/admin/documents/create/${template.id}`, {
+    navigate(`/admin/documents/create/${template.id}`, {
       state: {
         templateType: template.type,
         templateTitle: template.title,

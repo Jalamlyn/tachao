@@ -19,8 +19,8 @@ const ResourceDetail: React.FC = () => {
 
   useEffect(() => {
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "资料表格管理", href: "/we-chat-app/admin/resources" },
+      { label: "首页", href: "/admin" },
+      { label: "资料表格管理", href: "/admin/resources" },
     ])
   }, [])
 
@@ -61,7 +61,7 @@ const ResourceDetail: React.FC = () => {
         <Icon icon='carbon:warning' className='w-16 h-16 text-danger mb-4' />
         <p className='text-xl font-medium text-danger'>{error || "资源不存在"}</p>
         <button
-          onClick={() => navigate("/we-chat-app/admin/resources")}
+          onClick={() => navigate("/admin/resources")}
           className='mt-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark transition-colors'
         >
           返回资料表格列表

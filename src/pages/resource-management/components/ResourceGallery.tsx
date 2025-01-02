@@ -90,7 +90,7 @@ const ResourceGallery = forwardRef<ResourceGalleryRef, ResourceGalleryProps>(
     const handleCardClick = (resource: Resource) => {
       const type = resource.indexFields?.type?.toLowerCase()
       if (type === "excel") {
-        navigate(`/we-chat-app/admin/resources/${resource.id}`)
+        navigate(`/admin/resources/${resource.id}`)
       } else {
         message.info("暂不支持该类型资源的预览")
       }

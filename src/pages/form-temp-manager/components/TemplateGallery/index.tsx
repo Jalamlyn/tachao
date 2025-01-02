@@ -105,7 +105,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   }
 
   const handleAIEditClick = async (template: Template, e: React.MouseEvent) => {
-    navigate(`/we-chat-app/admin/documents/edit/${template.id}`, { state: { title: template.title } })
+    navigate(`/admin/documents/edit/${template.id}`, { state: { title: template.title } })
   }
 
   const handleRenameClick = (template: Template, e: React.MouseEvent) => {
@@ -124,7 +124,7 @@ const TemplateGallery: React.FC<TemplateGalleryProps> = ({ onTemplateSelect, cla
   }
 
   const handleDataManageClick = (template: Template, e: React.MouseEvent) => {
-    navigate(`/we-chat-app/admin/documents/data/${template.id}`, { state: { title: template.title } })
+    navigate(`/admin/documents/data/${template.id}`, { state: { title: template.title } })
   }
 
   const handleRename = async (newTitle: string) => {

@@ -79,7 +79,7 @@ const TutorialModal = ({ isOpen, onClose }) => {
               <Button
                 color='primary'
                 startContent={<Icon icon='solar:rocket-linear' />}
-                onPress={() => navigate("/we-chat-app/admin/apps")}
+                onPress={() => navigate("/admin/apps")}
               >
                 开始创建
               </Button>

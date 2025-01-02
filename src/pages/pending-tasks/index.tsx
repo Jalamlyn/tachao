@@ -20,8 +20,8 @@ const PendingTasks: React.FC = () => {
 
   useEffect(() => {
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "待我处理", href: "/we-chat-app/admin/pending-tasks" },
+      { label: "首页", href: "/admin" },
+      { label: "待我处理", href: "/admin/pending-tasks" },
     ])
   }, [])
 

@@ -9,8 +9,8 @@ const FileManager: React.FC = () => {
 
   useEffect(() => {
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "企业网盘", href: "/we-chat-app/admin/file-manager" },
+      { label: "首页", href: "/admin" },
+      { label: "企业网盘", href: "/admin/file-manager" },
     ])
   }, [])
 

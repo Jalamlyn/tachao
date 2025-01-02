@@ -139,7 +139,7 @@ export const useLoadData = (
       } catch (error) {
         console.error("[loadData] Error loading data:", error)
         message.error("数据加载失败")
-        navigate("/we-chat-app/admin/reports")
+        navigate("/admin/reports")
       }
     }
 

@@ -95,8 +95,8 @@ const FormManager: React.FC = () => {
 
   useEffect(() => {
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "表单管理", href: "/we-chat-app/admin/forms" },
+      { label: "首页", href: "/admin" },
+      { label: "表单管理", href: "/admin/forms" },
     ])
   }, [])
 

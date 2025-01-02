@@ -58,7 +58,7 @@ export const getUnauthorizedContent = (
         },
         secondary: {
           label: "返回模板列表",
-          action: () => navigate("/we-chat-app/admin/documents"),
+          action: () => navigate("/admin/documents"),
         },
       },
       metadata: {

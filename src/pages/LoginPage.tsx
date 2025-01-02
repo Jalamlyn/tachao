@@ -86,7 +86,7 @@ export default function WeChatLoginPage() {
         if (callback) {
           window.location.href = callback
         } else {
-          window.location.href = "/we-chat-app/admin"
+          window.location.href = "/admin"
         }
       } else {
         message.error(t("login_failed"))

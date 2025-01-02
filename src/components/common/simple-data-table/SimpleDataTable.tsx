@@ -176,7 +176,7 @@ export function SimpleDataTable<T>({
   }
 
   const handleConfirmNavigation = () => {
-    window.open(`/we-chat-app/admin/resources/${resourceId}`, "_blank")
+    window.open(`/admin/resources/${resourceId}`, "_blank")
     setIsConfirmOpen(false)
   }
 

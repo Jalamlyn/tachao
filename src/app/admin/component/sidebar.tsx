@@ -13,10 +13,7 @@ import React, { useEffect, useState } from "react"
 import { Listbox, Tooltip, ListboxItem, ListboxSection } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { cn } from "@nextui-org/react"
-import { subscriptionService } from "@/permissions/utils/permissionUtils"
 import { useStore } from "@/stores/StoreProvider"
-import message from "@/components/Message"
-import globalStore from "@/globalStore"
 
 export enum SidebarItemType {
   Nest = "nest",

@@ -127,7 +127,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   }
 
   const handleNavigate = () => {
-    navigate(`/we-chat-app/admin/apps/${newAppId}/builder`, {
+    navigate(`/admin/apps/${newAppId}/builder`, {
       state: { isHome: true },
     })
   }

@@ -86,7 +86,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
             size='sm'
             color='primary'
             startContent={<Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' />}
-            onPress={() => navigate(`/we-chat-app/admin/apps/${app.id}/builder`)}
+            onPress={() => navigate(`/admin/apps/${app.id}/builder`)}
           >
             开发应用
           </Button>

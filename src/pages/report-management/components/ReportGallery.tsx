@@ -107,7 +107,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
 
   const handleAIAnalysisClick = async (report: Report, e: React.MouseEvent) => {
     
-    navigate(`/we-chat-app/admin/reports/ai/${report.id}`, {
+    navigate(`/admin/reports/ai/${report.id}`, {
       state: {
         title: report.title,
       },
@@ -332,7 +332,7 @@ const ReportGallery: React.FC<ReportGalleryProps> = ({ onReportSelect, onCreateR
             }
             action={{
               text: hasTemplates ? "去创建" : "去创建模板",
-              onClick: hasTemplates ? onCreateReport : () => navigate("/we-chat-app/admin/documents"),
+              onClick: hasTemplates ? onCreateReport : () => navigate("/admin/documents"),
             }}
           />
         }

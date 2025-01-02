@@ -118,8 +118,8 @@ const FormAnalysis: React.FC = () => {
     fetchData()
 
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "AI 数据分析", href: "/we-chat-app/admin/ai-assistant" },
+      { label: "首页", href: "/admin" },
+      { label: "AI 数据分析", href: "/admin/ai-assistant" },
     ])
   }, [])
 

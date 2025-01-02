@@ -136,15 +136,15 @@ const AIFormEditor: React.FC = () => {
               })
             } else {
               message.error("模板解析失败")
-              navigate("/we-chat-app/admin/documents")
+              navigate("/admin/documents")
             }
           } else {
             message.error("模板加载失败")
-            navigate("/we-chat-app/admin/documents")
+            navigate("/admin/documents")
           }
         } catch (error) {
           handleError(error)
-          navigate("/we-chat-app/admin/documents")
+          navigate("/admin/documents")
         } finally {
           setIsLoadingTemplate(false)
         }
@@ -154,11 +154,11 @@ const AIFormEditor: React.FC = () => {
     loadTemplateData()
 
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "表单模板管理", href: "/we-chat-app/admin/documents" },
+      { label: "首页", href: "/admin" },
+      { label: "表单模板管理", href: "/admin/documents" },
       {
         label: isEditMode ? "编辑表单模板" : "创建表单模板",
-        href: isEditMode ? `/we-chat-app/admin/documents/edit/${templateId}` : "/we-chat-app/admin/documents/create",
+        href: isEditMode ? `/admin/documents/edit/${templateId}` : "/admin/documents/create",
       },
     ])
   }, [templateId, isEditMode])
@@ -214,11 +214,11 @@ const AIFormEditor: React.FC = () => {
     }
   }
   const handleConfigApp = () => {
-    navigate("/we-chat-app/admin/apps")
+    navigate("/admin/apps")
   }
 
   const handleGoToTemplates = () => {
-    navigate("/we-chat-app/admin/documents")
+    navigate("/admin/documents")
   }
 
   const handleCommandResult = (result: any) => {

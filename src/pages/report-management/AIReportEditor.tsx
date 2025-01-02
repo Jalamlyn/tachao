@@ -150,9 +150,9 @@ const AIReportEditor: React.FC = () => {
 
   useEffect(() => {
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "报表管理", href: "/we-chat-app/admin/reports" },
-      { label: "AI 报表开发", href: `/we-chat-app/admin/reports/ai/${reportId || templateId}` },
+      { label: "首页", href: "/admin" },
+      { label: "报表管理", href: "/admin/reports" },
+      { label: "AI 报表开发", href: `/admin/reports/ai/${reportId || templateId}` },
     ])
   }, [])
 
@@ -230,7 +230,7 @@ const AIReportEditor: React.FC = () => {
   }
 
   const handleGoToReports = () => {
-    navigate("/we-chat-app/admin/reports")
+    navigate("/admin/reports")
   }
 
   // 新增：处理版本选择确认

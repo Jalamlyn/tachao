@@ -6,23 +6,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { getCurrentLanguage } from "./i18n"
 import WeChatLoginPage from "./pages/LoginPage"
 import ExternalLoginPage from "./pages/external-login"
-import AnalysisPage from "./pages/AnalysisPage"
 import { Toaster } from "./components/ui/toaster"
-import LandingPage from "./pages/landing"
 import AIHomePage from "./pages/AIHomePage"
-import renderWeChatApp from "./apps/we-chat-app-admin/renderWeChatApp"
 import FormPreview from "./pages/form-temp-manager/components/FormPreview"
-import Form from "@/pages/form"
-import Report from "@/pages/report"
-import ResourceDataTable from "./components/common/data-table/ResourceDataTable"
-import AppEntry from "./pages/app-management/components/AppEntry"
-import EnterpriseLayout from "./pages/app-management/components/layouts/EnterpriseLayout"
-import WaitListPage from "./pages/WaitListPage"
-import FormCreate from "./pages/form/components/FormCreate"
-import UnauthorizedPage from "./permissions/pages/UnauthorizedPage"
-import PagePreview from "./pages/app-management/components/PagePreview"
-
 import { loadBMapScript } from "@/components/reports/MapComponent"
+import LandingPage from "./app/landing"
+import AdminRouter from "./app/admin/router"
 
 setTimeout(() => {
   loadBMapScript()
@@ -75,27 +64,7 @@ function App() {
                 </div>
               }
             />
-            <Route path='/form/:formId' element={<Form />} />
-            <Route path='/form-create/:templateId' element={<FormCreate />} />
-            <Route path='/report/:reportId' element={<Report />} />
-            <Route path='/apps/:appId/*' element={<AppEntry />}>
-              <Route path='enterprise/*' element={<EnterpriseLayout />} />
-            </Route>
-            <Route
-              path='/forms/analysis'
-              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <AnalysisPage />}
-            />
-            <Route
-              path='/resources/view/:id'
-              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <ResourceDataTable />}
-            />
-            <Route path='/unauthorized' element={<UnauthorizedPage />} />
-            <Route
-              path='/operations/wait-list'
-              element={shouldRedirectToLogin() ? <Navigate to='/login' /> : <WaitListPage />}
-            />
-            {renderWeChatApp()}
-            <Route path='/apps/:appId/pages/:pageId' element={<PagePreview />} />
+            {AdminRouter()}
           </Routes>
           <Toaster />
         </div>

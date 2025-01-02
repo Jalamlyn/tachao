@@ -32,7 +32,7 @@ class BalanceStore {
           </div>
         ),
         onOk: () => {
-          window.open("/we-chat-app/admin/settings?tab=finance", "_blank")
+          window.open("/admin/settings?tab=finance", "_blank")
         },
         okText: isNegative ? "去补缴" : "去充值",
         cancelText: "取消",
@@ -64,7 +64,7 @@ class BalanceStore {
           </div>
         ),
         onOk: () => {
-          window.open("/we-chat-app/admin/settings?tab=finance", "_blank")
+          window.open("/admin/settings?tab=finance", "_blank")
         },
         okText: subscription.status === "expired" ? "去续费" : "去购买套餐",
         cancelText: "取消",

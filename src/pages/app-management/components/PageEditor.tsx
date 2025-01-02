@@ -97,8 +97,8 @@ const PageEditor: React.FC = () => {
 
   useEffect(() => {
     updateBreadcrumbs([
-      { label: "首页", href: "/we-chat-app/admin" },
-      { label: "应用管理", href: "/we-chat-app/admin/apps" },
+      { label: "首页", href: "/admin" },
+      { label: "应用管理", href: "/admin/apps" },
       { label: app?.title || "应用", href: "" },
       { label: isHome ? "创建首页" : pageId ? "编辑页面" : "创建页面", href: "" },
     ])
@@ -236,7 +236,7 @@ const PageEditor: React.FC = () => {
   const handleEditConfirm = (confirmed: boolean) => {
     setIsConfirmModalOpen(false)
     if (confirmed && savedPageId) {
-      navigate(`/we-chat-app/admin/apps/${appId}/pages/${savedPageId}/edit`)
+      navigate(`/admin/apps/${appId}/pages/${savedPageId}/edit`)
     }
   }
 
