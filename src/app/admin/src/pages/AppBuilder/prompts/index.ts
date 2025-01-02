@@ -4,6 +4,7 @@ import { COMPONENT_PROMPTS } from './component-prompts'
 import { TECH_PROMPTS } from './tech-prompts'
 import { ENV_PROMPTS } from './env-prompts'
 import { API_PROMPTS } from './api-prompts'
+import { EXPERIENCE_PROMPTS } from './experience-prompts'
 
 export const PROMPTS = {
   ...BASE_PROMPTS,
@@ -11,7 +12,8 @@ export const PROMPTS = {
   ...COMPONENT_PROMPTS,
   ...TECH_PROMPTS,
   ...ENV_PROMPTS,
-  ...API_PROMPTS
+  ...API_PROMPTS,
+  ...EXPERIENCE_PROMPTS
 }
 
 // 提示词组合器
@@ -26,6 +28,10 @@ ${BASE_PROMPTS.reflection}
 ${BASE_PROMPTS.codeGeneration}
 
 ${API_PROMPTS.multimodal}
+
+${EXPERIENCE_PROMPTS.apiExperience.metadata}
+
+${EXPERIENCE_PROMPTS.apiExperience.aiApi}
 
 1. 代码生成顺序：
    - 如果应用入口代码不存在，必须先生成入口代码
