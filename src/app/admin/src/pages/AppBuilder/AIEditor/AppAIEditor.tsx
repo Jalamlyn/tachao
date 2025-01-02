@@ -4,7 +4,7 @@ import MessageCard from "@/components/MessageCard"
 import AICommandInput from "./components/AICommandInput"
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
-import { Tabs, Tab, Button, ScrollShadow } from "@nextui-org/react"
+import { Tabs, Tab, Button, ScrollShadow, Avatar } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { ResizablePanel } from "@/components/ui/resizable"
 import { cn } from "@/lib/utils"
@@ -32,6 +32,64 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     // 在应用开发场景中，始终使用专家模型
     const selectedAILevel: keyof typeof AI_LEVELS = "EXPERT"
 
+    // 新增：渲染单个消息
+    const renderMessage = (message: any) => {
+      const isUser = message.role === "user"
+      const isStreaming = message.status === "streaming"
+      const hasError = message.status === "error"
+
+      return (
+        <div key={message.id} className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""} mb-4`}>
+          <Avatar
+            src={isUser ? user : mo2}
+            className="flex-shrink-0"
+          />
+          <div
+            className={cn(
+              "flex max-w-[80%] rounded-lg p-3",
+              isUser ? "bg-primary text-primary-foreground" : "bg-content2",
+              hasError && "bg-danger-50 border border-danger-200"
+            )}
+          >
+            {message.status === "thinking" ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                思考中...
+              </div>
+            ) : (
+              <div className="whitespace-pre-wrap text-sm">
+                {typeof message.content === "string" ? (
+                  message.content
+                ) : (
+                  React.isValidElement(message.content) ? message.content : String(message.content)
+                )}
+              </div>
+            )}
+
+            {isStreaming && (
+              <div className="flex items-center gap-2 mt-2">
+                <div className="animate-pulse">生成中...</div>
+                <Button
+                  size="sm"
+                  color="danger"
+                  variant="light"
+                  onClick={onStop}
+                >
+                  停止生成
+                </Button>
+              </div>
+            )}
+
+            {hasError && (
+              <div className="text-danger mt-2">
+                发生错误: {message.error || "未知错误"}
+              </div>
+            )}
+          </div>
+        </div>
+      )
+    }
+
     return (
       <ResizablePanelGroup direction='horizontal'>
         <ResizablePanel defaultSize={30} className='resizable-panel'>
@@ -49,19 +107,8 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               </Button>
             </div>
             <ScrollShadow className='flex-1 overflow-y-auto pb-9'>
-              <div className='space-y-4'>
-                {messages.map((message) => (
-                  <div key={message.id}>
-                    <MessageCard
-                      avatar={message.role === "assistant" ? mo2 : user}
-                      message={message.content}
-                      role={message.role}
-                      status={message.status || "success"}
-                      className='message-card max-w-[90%]'
-                      aiLevel={message.aiLevel}
-                    />
-                  </div>
-                ))}
+              <div className='space-y-4 p-4'>
+                {messages.map((message) => renderMessage(message))}
               </div>
             </ScrollShadow>
 
