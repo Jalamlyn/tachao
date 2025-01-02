@@ -11,7 +11,7 @@ import { getMetadata, setMetadata } from "./service/apis/metadata"
 import { useStore } from "./stores/StoreProvider"
 import globalStore from "./globalStore"
 import { observer } from "mobx-react-lite"
-import { subscriptionService } from "./permissions/utils/permissionUtils"
+import { subscriptionService } from "./app/admin/src/permissions/utils/permissionUtils"
 import { motion } from "framer-motion"
 
 const LogoAnimation = () => {

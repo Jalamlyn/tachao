@@ -18,7 +18,7 @@ import { observer } from "mobx-react-lite"
 import { useStore } from "@/stores/StoreProvider"
 import { products, orders, pagePay } from "@/service/apis/pay"
 import { Icon } from "@iconify/react"
-import { subscriptionService } from "@/permissions/utils/permissionUtils"
+import { subscriptionService } from "@/app/admin/src/permissions/utils/permissionUtils"
 import message from "@/components/Message"
 import globalStore from "@/globalStore"
 

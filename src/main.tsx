@@ -12,8 +12,8 @@ import "./tools"
 import { configure } from "mobx"
 import { StoreProvider } from "./stores/StoreProvider"
 import RechargeModal from "./components/RechargeModal"
-import PreviewPage from "./pages/app-builder/components/PreviewPage"
-import AppRuntime from "./pages/app-builder/components/AppRuntime"
+import PreviewPage from "./app/admin/src/pages/AppBuilder/components/PreviewPage"
+import AppRuntime from "./app/admin/src/pages/AppBuilder/components/AppRuntime"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
 const queryClient = new QueryClient({

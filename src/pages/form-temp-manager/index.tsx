@@ -5,7 +5,7 @@ import { Icon } from "@iconify/react"
 
 import TemplateGallery from "./components/TemplateGallery"
 import { useBreadcrumb } from "../../contexts/BreadcrumbContext"
-import PageLayout from "@/components/PageLayout"
+import PageLayout from "@/app/admin/src/component/PageLayout"
 
 const FormManager: React.FC = () => {
   const navigate = useNavigate()

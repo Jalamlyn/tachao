@@ -4,7 +4,7 @@ import { Spinner, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useMetadata } from "@/hooks/useMetadata"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
-import PageLayout from "@/components/PageLayout"
+import PageLayout from "@/app/admin/src/component/PageLayout"
 import ResourceDataTable from "@/components/common/data-table/ResourceDataTable"
 import message from "@/components/Message"
 

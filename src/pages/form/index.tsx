@@ -13,7 +13,7 @@ import ShareModal from "./components/ShareModal"
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
-import { PermissionCheck } from "@/permissions/components/PermissionCheck"
+import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
 
 const NewForm: React.FC = () => {
   const { formId } = useParams<{ formId: string }>()

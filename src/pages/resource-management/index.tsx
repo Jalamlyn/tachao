@@ -5,7 +5,7 @@ import { Tabs, Tab, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Bu
 import CreateResourceButton from "./components/CreateResourceButton"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { useMetadata } from "@/hooks/useMetadata"
-import PageLayout from "@/components/PageLayout"
+import PageLayout from "@/app/admin/src/component/PageLayout"
 import ResourceGallery from "./components/ResourceGallery"
 import { resourceTypes } from "./config/resourceTypes"
 import message from "@/components/Message"

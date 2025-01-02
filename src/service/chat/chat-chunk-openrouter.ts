@@ -3,7 +3,7 @@ import { blog, fetchController, jsonParse, jsonStringify } from "@/utils"
 import { localDB } from "@/utils/localDB"
 import { events } from "fetch-event-stream"
 import { costService } from "@/utils/costService"
-import { aiControllerStore } from "@/pages/app-builder/AIEditor/components/AIControllerStore"
+import { aiControllerStore } from "@/app/admin/src/pages/AppBuilder/AIEditor/components/AIControllerStore"
 
 export default async function chatChunkOpenAIOffice(
   messages,
