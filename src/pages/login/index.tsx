@@ -4,7 +4,7 @@ import { Checkbox } from "@nextui-org/checkbox"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { login } from "@/service/apis/api"
-import EnterpriseList from "@/components/EnterpriseList"
+import EnterpriseList from "@/pages/login/EnterpriseList"
 import { message } from "@/components/Message"
 import { useTranslation } from "react-i18next"
 import { jsonParse, jsonStringify } from "@/utils"
@@ -280,11 +280,7 @@ export default function LoginPage() {
                       }}
                     />
                     <div className='flex items-center justify-between px-1 py-2'>
-                      <Checkbox
-                        isSelected={rememberMe}
-                        onValueChange={setRememberMe}
-                        size='sm'
-                      >
+                      <Checkbox isSelected={rememberMe} onValueChange={setRememberMe} size='sm'>
                         {t("remember_me")}
                       </Checkbox>
                     </div>
