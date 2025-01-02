@@ -19,9 +19,10 @@ import * as recharts from "recharts"
 
 interface PreviewPageProps {
   appId: string
+  onAIFix?: (errorInfo: any) => void
 }
 
-const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
+const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId, onAIFix }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -118,10 +119,30 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
           <AppRender
             appId={appId}
             basename={`/app-preview/${appId}`}
+            context={{
+              wpm,
+              React,
+              observer,
+              Icon,
+              NextUI,
+              ReactRouterDom,
+              FramerMotion,
+              message,
+              appId,
+              api: {
+                getMetadata,
+                setMetadata,
+                getPublicMetaData,
+              },
+              ai,
+              mobx,
+              recharts,
+            }}
             onError={(error) => {
               console.error("Preview error:", error)
               message.error(`预览错误: ${error.message}`)
             }}
+            onAIFix={onAIFix}
           />
         </AppContext.Provider>
       </PermissionCheck>
