@@ -9,10 +9,13 @@ import {
   Button,
   ScrollShadow,
   Avatar,
+  Tooltip,
+  Textarea,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import chatChunkDeepseek from "@/service/chat/chat-deepseek"
 import message from "@/components/Message"
+import { cn } from "@nextui-org/react"
 
 interface Message {
   role: "user" | "assistant"
@@ -81,7 +84,6 @@ const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose, systemPrompt = default
     scrollToBottom()
   }, [messages])
 
-  // 当对话框打开时,显示系统提示词
   useEffect(() => {
     if (isOpen && messages.length === 0) {
       setMessages([{ role: "assistant", content: systemPrompt }])
@@ -137,7 +139,6 @@ const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose, systemPrompt = default
 
   const handleClose = () => {
     onClose()
-    // 清空消息历史
     setMessages([])
   }
 
@@ -146,7 +147,7 @@ const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose, systemPrompt = default
       <DrawerContent>
         <DrawerHeader className='flex items-center gap-2 border-b'>
           <Icon icon='solar:bot-linear' className='w-6 h-6 text-primary' />
-          <span className='text-lg font-semibold'>AI 助手</span>
+          <span className='text-lg font-semibold'>即想AI 助手, 有任何问题都可以问我</span>
         </DrawerHeader>
         <DrawerBody>
           <ScrollShadow ref={scrollRef} className='h-full'>
@@ -154,11 +155,7 @@ const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose, systemPrompt = default
               {messages.map((msg, index) => (
                 <div key={index} className={`flex gap-3 ${msg.role === "assistant" ? "" : "flex-row-reverse"}`}>
                   <Avatar
-                    src={
-                      msg.role === "assistant"
-                        ? "/ai-avatar.png"
-                        : "https://avatars.githubusercontent.com/u/30373425?v=4"
-                    }
+                    src={msg.role === "assistant" ? "https://avatars.githubusercontent.com/u/30373425?v=3" : ""}
                     className='flex-shrink-0'
                   />
                   <div
@@ -180,26 +177,68 @@ const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose, systemPrompt = default
           </ScrollShadow>
         </DrawerBody>
         <DrawerFooter className='border-t'>
-          <div className='flex w-full gap-2'>
-            <Input
+          <form className='flex w-full items-start gap-2'>
+            <Textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder='输入消息...'
+              minRows={2}
               variant='bordered'
               disabled={isLoading}
+              classNames={{
+                label: "text-black/50 dark:text-white/90",
+                input: [
+                  "bg-transparent",
+                  "text-black/90 dark:text-white/90",
+                  "placeholder:text-default-700/50 dark:placeholder:text-white/60",
+                ],
+                innerWrapper: "bg-transparent",
+                inputWrapper: [
+                  "shadow-xl",
+                  "bg-default-200/50",
+                  "dark:bg-default/60",
+                  "backdrop-blur-xl",
+                  "backdrop-saturate-200",
+                  "hover:bg-default-200/70",
+                  "dark:hover:bg-default/70",
+                  "group-data-[focus=true]:bg-default-200/50",
+                  "dark:group-data-[focus=true]:bg-default/60",
+                  "!cursor-text",
+                ],
+              }}
               endContent={
-                isLoading ? (
-                  <Button isIconOnly variant='light' color='danger' onClick={() => abortControllerRef.current?.()}>
-                    <Icon icon='solar:close-circle-bold' className='w-5 h-5' />
-                  </Button>
-                ) : null
+                <div className='flex gap-2'>
+                  {isLoading ? (
+                    <Button isIconOnly variant='light' color='danger' onClick={() => abortControllerRef.current?.()}>
+                      <Icon icon='solar:close-circle-bold' className='w-5 h-5' />
+                    </Button>
+                  ) : (
+                    <Tooltip showArrow content='发送消息'>
+                      <Button
+                        isIconOnly
+                        color={!inputValue ? "default" : "primary"}
+                        isDisabled={!inputValue}
+                        radius='full'
+                        size='sm'
+                        variant={!inputValue ? "flat" : "solid"}
+                        onClick={handleSend}
+                      >
+                        <Icon
+                          className={cn(
+                            "[&>path]:stroke-[2px]",
+                            !inputValue ? "text-default-500" : "text-primary-foreground"
+                          )}
+                          icon='solar:arrow-up-linear'
+                          width={20}
+                        />
+                      </Button>
+                    </Tooltip>
+                  )}
+                </div>
               }
             />
-            <Button isIconOnly color='primary' onClick={handleSend} isLoading={isLoading} variant='solid'>
-              <Icon icon='solar:arrow-right-linear' className='w-5 h-5' />
-            </Button>
-          </div>
+          </form>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

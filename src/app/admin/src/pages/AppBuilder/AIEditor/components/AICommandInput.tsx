@@ -199,7 +199,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
               </Button>
             </Tooltip>
             <div className='flex items-end gap-2'>
-              <p className='py-1 text-tiny text-default-400'>{input.length}/2000</p>
               {isLoading ? (
                 <Tooltip showArrow content='停止生成'>
                   <Button

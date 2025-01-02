@@ -1,6 +1,7 @@
 import { makeAutoObservable } from "mobx"
 import { transform } from "@/utils/moduleLoader"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { initialAIResponse } from "../prompts/initTemplate"
 
 // 类型定义
 export interface App {

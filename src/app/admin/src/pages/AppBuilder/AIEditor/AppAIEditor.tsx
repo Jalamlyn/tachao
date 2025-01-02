@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react"
 import { ResizableHandle, ResizablePanelGroup } from "@/components/ui/resizable"
-import MessageCard from "@/components/MessageCard"
 import AICommandInput from "./components/AICommandInput"
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
@@ -40,10 +39,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
 
       return (
         <div key={message.id} className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""} mb-4`}>
-          <Avatar
-            src={isUser ? user : mo2}
-            className="flex-shrink-0"
-          />
+          <Avatar src={isUser ? user : mo2} className='flex-shrink-0' />
           <div
             className={cn(
               "flex max-w-[80%] rounded-lg p-3",
@@ -52,39 +48,21 @@ const AIEditor: React.FC<AIEditorProps> = observer(
             )}
           >
             {message.status === "thinking" ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              <div className='flex items-center gap-2'>
+                <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-primary'></div>
                 思考中...
               </div>
             ) : (
-              <div className="whitespace-pre-wrap text-sm">
-                {typeof message.content === "string" ? (
-                  message.content
-                ) : (
-                  React.isValidElement(message.content) ? message.content : String(message.content)
-                )}
+              <div className='whitespace-pre-wrap text-sm'>
+                {typeof message.content === "string"
+                  ? message.content
+                  : React.isValidElement(message.content)
+                    ? message.content
+                    : String(message.content)}
               </div>
             )}
 
-            {isStreaming && (
-              <div className="flex items-center gap-2 mt-2">
-                <div className="animate-pulse">生成中...</div>
-                <Button
-                  size="sm"
-                  color="danger"
-                  variant="light"
-                  onClick={onStop}
-                >
-                  停止生成
-                </Button>
-              </div>
-            )}
-
-            {hasError && (
-              <div className="text-danger mt-2">
-                发生错误: {message.error || "未知错误"}
-              </div>
-            )}
+            {hasError && <div className='text-danger mt-2'>发生错误: {message.error || "未知错误"}</div>}
           </div>
         </div>
       )
@@ -107,9 +85,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               </Button>
             </div>
             <ScrollShadow className='flex-1 overflow-y-auto pb-9'>
-              <div className='space-y-4 p-4'>
-                {messages.map((message) => renderMessage(message))}
-              </div>
+              <div className='space-y-4 p-4'>{messages.map((message) => renderMessage(message))}</div>
             </ScrollShadow>
 
             <div className='p-2'>
