@@ -1,246 +1,9 @@
-```jsx
-<mo-ai-code type="store" name="store_checkout">
-const { 
-  wpm, 
-  mobx,
-  React, 
-  observer, 
-  Icon, 
-  NextUI,
-  ReactRouterDom,
-  FramerMotion,
-  message,
-  api,
-  ai,
-  appId 
-} = context;
-
-const { makeAutoObservable, runInAction } = mobx;
-
-// 导入服务
-const checkoutService = await wpm.import('service_checkout');
-const checkoutModule = await wpm.import('module_checkout');
-
-class CheckoutStore {
-  cartItems = []
-  loading = false
-  currentStep = 0
-  shippingInfo = null
-  paymentMethods = []
-  selectedPaymentMethod = null
-  
-  constructor() {
-    makeAutoObservable(this)
-  }
-
-  setCurrentStep(step) {
-    this.currentStep = step
-  }
-
-  async loadCartItems() {
-    this.loading = true
-    try {
-      const items = await checkoutService.getCartItems()
-      runInAction(() => {
-        this.cartItems = items
-      })
-    } catch (error) {
-      message.error('加载购物车失败')
-    } finally {
-      this.loading = false
-    }
-  }
-
-  async saveShippingInfo(info) {
-    this.loading = true
-    try {
-      await checkoutService.saveShippingInfo(info)
-      runInAction(() => {
-        this.shippingInfo = info
-      })
-      return true
-    } catch (error) {
-      message.error('保存配送信息失败')
-      return false
-    } finally {
-      this.loading = false
-    }
-  }
-
-  async loadPaymentMethods() {
-    this.loading = true
-    try {
-      const methods = await checkoutService.getPaymentMethods()
-      runInAction(() => {
-        this.paymentMethods = methods
-      })
-    } catch (error) {
-      message.error('加载支付方式失败')
-    } finally {
-      this.loading = false
-    }
-  }
-
-  setSelectedPaymentMethod(method) {
-    this.selectedPaymentMethod = method
-  }
-
-  async placeOrder() {
-    if (!this.shippingInfo || !this.selectedPaymentMethod) {
-      message.error('请完善订单信息')
-      return false
-    }
-
-    this.loading = true
-    try {
-      const order = checkoutModule.createOrderData({
-        items: this.cartItems,
-        shipping: this.shippingInfo,
-        payment: this.selectedPaymentMethod
-      })
-      
-      await checkoutService.placeOrder(order)
-      message.success('下单成功')
-      return true
-    } catch (error) {
-      message.error('下单失败')
-      return false
-    } finally {
-      this.loading = false
-    }
-  }
-
-  get subtotal() {
-    return this.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  }
-
-  get shipping() {
-    return 0
-  }
-
-  get tax() {
-    return this.subtotal * 0.15
-  }
-
-  get discount() {
-    return 10.99
-  }
-
-  get total() {
-    return this.subtotal + this.shipping + this.tax - this.discount
-  }
-}
-
-const store = new CheckoutStore()
-wpm.export('store_checkout', store)
-</mo-ai-code>
-
-<mo-ai-code type="service" name="service_checkout">
-const { 
-  wpm, 
-  api,
-  React, 
-  observer, 
-  Icon, 
-  NextUI,
-  ReactRouterDom,
-  FramerMotion,
-  message,
-  ai,
-  mobx,
-  appId 
-} = context;
-
-const { getMetadata, setMetadata } = api;
-
-const service = {
-  async getCartItems() {
-    const result = await getMetadata([`${appId}_cart_items`])
-    return result.data?.[0]?.value ? JSON.parse(result.data[0].value) : []
-  },
-
-  async saveShippingInfo(info) {
-    await setMetadata(`${appId}_shipping_info`, info)
-  },
-
-  async getPaymentMethods() {
-    const result = await getMetadata([`${appId}_payment_methods`])
-    return result.data?.[0]?.value ? JSON.parse(result.data[0].value) : []
-  },
-
-  async placeOrder(order) {
-    await setMetadata(`${appId}_order_${Date.now()}`, order)
-    // 清空购物车
-    await setMetadata(`${appId}_cart_items`, [])
-  }
-}
-
-wpm.export('service_checkout', service)
-</mo-ai-code>
-
-<mo-ai-code type="module" name="module_checkout">
-const { 
-  wpm,
-  React, 
-  observer, 
-  Icon, 
-  NextUI,
-  ReactRouterDom,
-  FramerMotion,
-  message,
-  api,
-  ai,
-  mobx,
-  appId 
-} = context;
-
-const module = {
-  createOrderData({ items, shipping, payment }) {
-    return {
-      id: Date.now().toString(),
-      items: items.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity
-      })),
-      shipping: {
-        name: `${shipping.firstName} ${shipping.lastName}`,
-        address: shipping.address,
-        city: shipping.city,
-        country: shipping.country,
-        postalCode: shipping.postalCode,
-        phone: shipping.phone
-      },
-      payment: {
-        method: payment.type,
-        last4: payment.last4,
-        expiryDate: payment.expiryDate
-      },
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    }
-  },
-
-  validateShippingInfo(info) {
-    const required = ['firstName', 'lastName', 'address', 'city', 'country', 'postalCode', 'phone']
-    return required.every(field => info[field])
-  },
-
-  validatePaymentMethod(method) {
-    return method && method.type
-  }
-}
-
-wpm.export('module_checkout', module)
-</mo-ai-code>
-
 <mo-ai-code type="app">
-const { 
-  wpm, 
-  React, 
-  ReactRouterDom, 
-  observer, 
+const {
+  wpm,
+  React,
+  ReactRouterDom,
+  observer,
   NextUI,
   Icon,
   FramerMotion,
@@ -248,17 +11,38 @@ const {
   api,
   ai,
   mobx,
-  appId 
+  appId
 } = context;
 
 const { useState, useEffect, useMemo, useCallback, useRef } = React;
 const { AnimatePresence, LazyMotion, m, domAnimation } = FramerMotion;
 const { Progress, Button, Image, Link, Badge, Accordion, AccordionItem, RadioGroup, Radio, Chip, Input, Autocomplete, AutocompleteItem, Avatar, Tooltip, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Divider } = NextUI;
+const { Routes, Route, Navigate } = ReactRouterDom;
 
 // 导入 store 和模块
 const checkoutStore = await wpm.import('store_checkout');
 const checkoutModule = await wpm.import('module_checkout');
 
+// 主应用组件
+const App = observer(() => {
+  return (
+    <Routes>
+      {/* 默认路由重定向到结账页面 */}
+      <Route 
+        path="/" 
+        element={<Navigate to="checkout" replace />} 
+      />
+
+      {/* 结账页面路由 */}
+      <Route
+        path="checkout"
+        element={<CheckoutApp />}
+      />
+    </Routes>
+  );
+});
+
+// 结账页面组件
 const CheckoutApp = observer(() => {
   const [[page, direction], setPage] = useState([0, 0]);
   const [isLoading, setIsLoading] = useState(false);
@@ -295,7 +79,7 @@ const CheckoutApp = observer(() => {
 
   const paginate = async (newDirection) => {
     if (page + newDirection < 0 || page + newDirection > 2) return;
-    
+
     // 验证当前步骤
     if (page === 0 && newDirection > 0) {
       if (checkoutStore.cartItems.length === 0) {
@@ -303,7 +87,7 @@ const CheckoutApp = observer(() => {
         return;
       }
     }
-    
+
     if (page === 1 && newDirection > 0) {
       if (!checkoutStore.shippingInfo) {
         message.error('请填写配送信息');
@@ -334,7 +118,7 @@ const CheckoutApp = observer(() => {
 
   const ctaLabel = useMemo(() => {
     if (isLoading) return "处理中...";
-    
+
     switch (page) {
       case 0:
         return "继续";
@@ -406,7 +190,7 @@ const CheckoutApp = observer(() => {
                         key={method.id}
                         classNames={paymentRadioClasses}
                         description={`过期时间: ${method.expiryDate}`}
-                        icon={method.type === 'visa' ? <VisaIcon height={30} width={30} /> : 
+                        icon={method.type === 'visa' ? <VisaIcon height={30} width={30} /> :
                               method.type === 'mastercard' ? <MasterCardIcon height={30} width={30} /> :
                               <PayPalIcon height={30} width={30} />}
                         label={`${method.type === 'paypal' ? 'PayPal' : `${method.type} 尾号 ${method.last4}`}`}
@@ -676,7 +460,7 @@ const ShippingForm = observer(({variant = "flat", className, hideTitle}) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
-    
+
     if (!checkoutModule.validateShippingInfo(data)) {
       message.error('请填写完整的配送信息');
       return;
@@ -805,7 +589,7 @@ const PaymentForm = observer(({variant = "flat", className}) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
-    
+
     // 这里应该调用支付方式保存的逻辑
     message.success('支付方式已保存');
   };
@@ -926,5 +710,5 @@ const countries = [
   {name: "澳大利亚", code: "AU"},
 ];
 
-wpm.export('nextui_checkout_complete', CheckoutApp);
+wpm.export('nextui_checkout_complete', App);
 </mo-ai-code>
