@@ -76,32 +76,76 @@ const logos = [
   { icon: "logos:mobx", name: "MobX" }
 ];
 
-const features = [
+const featuresCategories = [
   {
+    key: "ai",
+    title: "AI能力",
     icon: "mdi:brain-circuit",
-    title: "AI智能开发",
-    description: "企业应用开发成本直降80%，效率提升10倍",
-    color: "success"
+    color: "success",
+    descriptions: [
+      "企业应用开发成本直降80%，效率提升10倍",
+      "智能代码生成和优化建议",
+      "自然语言需求转换",
+    ]
   },
   {
+    key: "enterprise",
+    title: "企业特性",
     icon: "mdi:shield-check",
-    title: "企业级品质",
-    description: "符合企业标准的代码质量，快速部署上线",
-    color: "warning"
+    color: "warning",
+    descriptions: [
+      "符合企业标准的代码质量",
+      "快速部署上线",
+      "完整的开发文档支持",
+    ]
   },
   {
-    icon: "mdi:chart-box",
+    key: "analysis",
     title: "数据分析",
-    description: "内置智能数据分析，助力企业决策",
-    color: "primary"
+    icon: "mdi:chart-box",
+    color: "primary",
+    descriptions: [
+      "内置智能数据分析",
+      "可视化数据展示",
+      "辅助企业决策制定",
+    ]
   },
   {
+    key: "security",
+    title: "安全保障",
     icon: "mdi:security",
-    title: "安全可靠",
-    description: "企业级安全保障，数据隐私保护",
-    color: "secondary"
+    color: "secondary",
+    descriptions: [
+      "企业级安全保障",
+      "数据隐私保护",
+      "完整的权限管理",
+    ]
   }
 ];
+
+// 特性卡片组件
+const FeatureCard = ({ title, icon, color, descriptions }) => {
+  return (
+    <Card className={\`bg-\${color}-50/50\`}>
+      <CardBody className="flex gap-4">
+        <div className={\`p-3 rounded-xl bg-\${color}-100\`}>
+          <Icon icon={icon} className={\`w-6 h-6 text-\${color}-500\`} />
+        </div>
+        <div>
+          <h3 className="text-xl font-semibold mb-2">{title}</h3>
+          <ul className="space-y-2">
+            {descriptions.map((desc, index) => (
+              <li key={index} className="text-default-600 flex items-center gap-2">
+                <Icon icon="mdi:check-circle" className={\`w-4 h-4 text-\${color}-500\`} />
+                {desc}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </CardBody>
+    </Card>
+  );
+};
 
 const HomePage = observer(() => {
   return (
@@ -218,25 +262,15 @@ const HomePage = observer(() => {
 
         {/* 特性展示 */}
         <div className="py-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {features.map((feature, index) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+            {featuresCategories.map((feature, index) => (
               <motion.div
-                key={feature.title}
+                key={feature.key}
                 initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.2 }}
               >
-                <Card className={\`bg-\${feature.color}-50/50\`}>
-                  <CardBody className="flex gap-4">
-                    <div className={\`p-3 rounded-xl bg-\${feature.color}-100\`}>
-                      <Icon icon={feature.icon} className={\`w-6 h-6 text-\${feature.color}-500\`} />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                      <p className="text-default-600">{feature.description}</p>
-                    </div>
-                  </CardBody>
-                </Card>
+                <FeatureCard {...feature} />
               </motion.div>
             ))}
           </div>
