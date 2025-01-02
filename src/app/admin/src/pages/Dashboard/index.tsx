@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react"
-import { Card, CardBody, CardHeader, Button, Chip, ScrollShadow } from "@nextui-org/react"
+import { Card, CardBody, Chip, Button, Spinner, Tabs, Tab, ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { useNavigate } from "react-router-dom"
-import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
-import { motion, AnimatePresence } from "framer-motion"
-import { useMetadata } from "@/hooks/metadata"
+import PageLayout from "@/app/admin/src/component/PageLayout"
 import { usePendingTasksStore } from "@/app/admin/src/pages/PendingTasks/store/usePendingTasksStore"
-import { apiService } from "@/service/apis/api"
+import { motion, AnimatePresence } from "framer-motion"
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import TutorialModal from "./TutorialModal"
 import StatsSection from "./StatsSection"
 import WelcomeCard from "./WelcomeCard"
+import AIChat from "@/app/admin/src/component/AIChat"
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
@@ -19,6 +18,42 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [showTutorial, setShowTutorial] = useState(false)
   const [fileCount, setFileCount] = useState(0)
+  const [showAIChat, setShowAIChat] = useState(false)
+
+  // AI助手提示词
+  const aiHelpContent = `您好!我是即想 AI 助手,我可以帮您:
+
+1. 功能概览
+- 应用管理:创建和管理企业应用
+- 待处理任务:处理权限申请等待办事项
+- 企业网盘:管理企业文件资源
+- 企业设置:管理账号、费用等企业配置
+
+2. 常见问题指南
+
+A. 应用管理相关:
+- "如何创建一个新应用?"
+- "如何使用 AI 开发应用?"
+- "如何管理应用权限?"
+- "如何发布和更新应用?"
+
+B. 待处理任务相关:
+- "如何处理权限申请?"
+- "如何查看历史处理记录?"
+- "如何设置任务优先级?"
+
+C. 企业网盘相关:
+- "如何上传和管理文件?"
+- "如何设置文件访问权限?"
+- "如何共享文件给其他用户?"
+
+D. 企业设置相关:
+- "如何创建和管理账号?"
+- "如何查看费用明细?"
+- "如何管理订阅和续费?"
+- "如何设置角色和权限?"
+
+您可以直接问我任何关于系统使用的问题,我会为您提供详细的解答和操作指导。`
 
   useEffect(() => {
     updateBreadcrumbs([{ label: "首页", href: "/admin" }])
@@ -80,7 +115,7 @@ const Dashboard: React.FC = () => {
       value: "立即体验",
       icon: "solar:chat-square-code-linear",
       color: "success",
-      onClick: () => navigate("/admin/apps/ai-chat"),
+      onClick: () => setShowAIChat(true),
     },
   ]
 
@@ -235,6 +270,30 @@ const Dashboard: React.FC = () => {
       )}
 
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
+      
+      <AIChat 
+        isOpen={showAIChat} 
+        onClose={() => setShowAIChat(false)}
+        initialMessage={aiHelpContent}
+      />
+
+      {/* 悬浮的 AI 助手按钮 */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1 }}
+        className="fixed bottom-6 right-6"
+      >
+        <Button
+          isIconOnly
+          color="primary"
+          size="lg"
+          className="rounded-full shadow-lg hover:shadow-xl transition-shadow"
+          onPress={() => setShowAIChat(true)}
+        >
+          <Icon icon="solar:bot-linear" className="w-6 h-6" />
+        </Button>
+      </motion.div>
     </div>
   )
 }
