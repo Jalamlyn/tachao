@@ -63,9 +63,10 @@ const WelcomeCard = ({ appsCount, setShowTutorial }) => {
           </div>
           <Button
             startContent={<Icon icon='solar:rocket-linear' className='text-xl' />}
-            onPress={() => navigate("/admin/documents/create")}
+            onPress={() => navigate("/admin/apps")}
+            className='bg-white text-primary-900'
           >
-            创建表单模板
+            创建应用
           </Button>
         </div>
         <div className='absolute right-0 bottom-0 opacity-10'>

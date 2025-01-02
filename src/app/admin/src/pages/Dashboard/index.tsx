@@ -13,9 +13,6 @@ import WelcomeCard from "./WelcomeCard"
 const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { updateBreadcrumbs } = useBreadcrumb()
-  const { items: forms, load: loadForms } = useMetadata("form")
-  const { items: reports, load: loadReports } = useMetadata("report")
-  const { items: resources, load: loadResources } = useMetadata("resource")
   const { items: apps, load: loadApps } = useMetadata("app")
   const { tasks, loadTasks } = usePendingTasksStore()
   const [isLoading, setIsLoading] = useState(true)
@@ -29,50 +26,62 @@ const Dashboard: React.FC = () => {
     const loadData = async () => {
       setIsLoading(true)
       try {
-        await Promise.all([loadForms(), loadReports(), loadResources(), loadApps(), loadTasks()])
+        await Promise.all([loadApps(), loadTasks()])
       } finally {
         setIsLoading(false)
       }
     }
     loadData()
-  }, [loadForms, loadReports, loadResources, loadApps, loadTasks])
+  }, [loadApps, loadTasks])
 
   const stats = [
     {
-      label: "总表单数",
-      value: forms.length.toString(),
-      icon: "solar:document-text-linear",
+      label: "应用总数",
+      value: apps.length.toString(),
+      icon: "solar:widget-linear",
       color: "primary",
     },
     {
-      label: "报表数量",
-      value: reports.length.toString(),
-      icon: "solar:chart-2-linear",
-      color: "success",
-    },
-    {
-      label: "资料表格数量",
-      value: resources.length.toString(),
-      icon: "solar:folder-with-files-linear",
+      label: "待处理任务",
+      value: tasks.length.toString(),
+      icon: "solar:list-check-linear",
       color: "warning",
     },
     {
-      label: "应用数量",
-      value: apps.length.toString(),
-      icon: "solar:widget-linear",
+      label: "企业网盘",
+      value: "点击查看",
+      icon: "solar:folder-with-files-linear",
       color: "secondary",
+    },
+    {
+      label: "AI 对话",
+      value: "立即体验",
+      icon: "solar:chat-square-code-linear",
+      color: "success",
     },
   ]
 
   const quickActions = [
     {
-      label: "创建表单",
-      icon: "solar:document-outline",
-      path: "/admin/forms",
+      label: "创建应用",
+      icon: "solar:widget-add-linear",
+      path: "/admin/apps",
     },
-    { label: "查看报表", icon: "mdi:chart-box-outline", path: "/admin/reports" },
-    { label: "资料表格管理", icon: "mdi:file-document", path: "/admin/resources" },
-    { label: "企业设置", icon: "solar:settings-outline", path: "/admin/settings" },
+    {
+      label: "待处理任务",
+      icon: "solar:list-check-linear",
+      path: "/admin/pending-tasks",
+    },
+    {
+      label: "企业网盘",
+      icon: "solar:folder-with-files-linear",
+      path: "/admin/file-manager",
+    },
+    {
+      label: "企业设置",
+      icon: "solar:settings-linear",
+      path: "/admin/settings",
+    },
   ]
 
   return (
