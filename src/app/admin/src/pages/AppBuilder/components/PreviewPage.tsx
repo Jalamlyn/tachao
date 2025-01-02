@@ -19,7 +19,7 @@ import * as recharts from "recharts"
 
 interface PreviewPageProps {
   appId: string
-  onAIFix?: (errorInfo: any) => void // 保留但标记为可选
+  onAIFix?: (errorInfo: any) => void
 }
 
 const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
@@ -46,39 +46,12 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
     setError(error.message)
     setErrorDetails(error)
     message.error(`预览错误: ${error.message}`)
-
-    // 发送错误信息到父窗口
-    window.parent.postMessage({
-      type: 'AI_FIX_REQUEST',
-      payload: {
-        error: error.message,
-        stack: error.stack,
-        context: {
-          route: window.location.pathname,
-          appId
-        }
-      }
-    }, '*')
   }
 
   const handleModuleError = (error: Error) => {
     setError(`模块执行错误: ${error.message}`)
     setErrorDetails(error)
     message.error(error.message)
-
-    // 发送模块错误信息到父窗口
-    window.parent.postMessage({
-      type: 'AI_FIX_REQUEST',
-      payload: {
-        error: error.message,
-        stack: error.stack,
-        context: {
-          route: window.location.pathname,
-          appId,
-          type: 'module_error'
-        }
-      }
-    }, '*')
   }
 
   useEffect(() => {
@@ -146,42 +119,36 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   const renderErrorUI = () => (
     <div className='p-4'>
       <Card>
-        <CardHeader className='bg-danger-50'>
+        <CardHeader className='bg-warning-50'>
           <div className='flex items-center gap-2'>
-            <Icon icon='mdi:alert-circle' className='text-danger w-6 h-6' />
+            <div className='relative'>
+              <Icon icon='mdi:alert-circle' className='w-8 h-8 text-warning' />
+              <div
+                className='absolute inset-0 animate-pulse'
+                style={{
+                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                }}
+              >
+                <Icon icon='mdi:alert-circle' className='w-8 h-8 text-warning opacity-75' />
+              </div>
+            </div>
             <div>
               <h3 className='text-lg font-semibold'>应用加载失败</h3>
-              <p className='text-sm text-danger'>{error}</p>
+              <p className='text-sm text-warning-600'>{error}</p>
             </div>
           </div>
         </CardHeader>
         <CardBody>
           <div className='space-y-4'>
-            <p className='text-sm'>应用在加载过程中遇到错误。这可能是由于：</p>
-            <ul className='list-disc pl-4 text-sm'>
-              <li>模块加载失败</li>
-              <li>代码执行错误</li>
-              <li>缺少必要的依赖</li>
-            </ul>
-            {errorDetails?.stack && (
-              <div className='mt-4'>
-                <p className='text-sm font-semibold mb-2'>错误详情：</p>
-                <pre className='text-xs bg-danger-50 p-4 rounded-lg overflow-auto max-h-[200px]'>
-                  {errorDetails.stack}
-                </pre>
-              </div>
-            )}
-            <div className='flex gap-2'>
+            <p className='text-center text-sm text-default-600'>
+              别担心,AI助手可以帮您快速修复这个问题
+            </p>
+            <div className='flex justify-center'>
               <Button
+                size='lg'
                 color='primary'
-                onClick={() => window.location.reload()}
-                startContent={<Icon icon='mdi:refresh' className='w-4 h-4' />}
-              >
-                重新加载
-              </Button>
-              <Button
-                variant='flat'
-                color='secondary'
+                className='px-8 font-medium shadow-lg'
+                startContent={<Icon icon='mdi:robot' className='w-5 h-5' />}
                 onClick={() => {
                   window.parent.postMessage({
                     type: 'AI_FIX_REQUEST',
@@ -195,11 +162,13 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
                     }
                   }, '*')
                 }}
-                startContent={<Icon icon='mdi:robot' className='w-4 h-4' />}
               >
-                AI 修复
+                一键修复问题
               </Button>
             </div>
+            <p className='text-center text-xs text-default-400'>
+              点击上方按钮,AI助手将立即分析并修复问题
+            </p>
           </div>
         </CardBody>
       </Card>
