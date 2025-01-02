@@ -1,0 +1,80 @@
+import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { AppCodeStore, Version, AppIndexItem } from "../types"
+
+export async function publishToServer(this: AppCodeStore, { useLatest = false } = {}) {
+  if (!this.appId) {
+    throw new Error("No app id")
+  }
+
+  try {
+    const versionToPublish = useLatest ? this.latestVersion : this.currentVersion
+    if (!versionToPublish) {
+      throw new Error("No version to publish")
+    }
+
+    const publishInfo = {
+      hasNewerVersion: !useLatest && this.isViewingHistory,
+      versionDate: new Date(versionToPublish.timestamp).toLocaleString(),
+    }
+
+    await setMetadata(
+      this.appId,
+      JSON.stringify({
+        app: versionToPublish.app,
+        version: versionToPublish.app.version,
+        updatedAt: new Date().toISOString(),
+      })
+    )
+
+    const modulePromises = Object.entries(versionToPublish.modules).map(([moduleId, moduleWrapper]) => {
+      return setMetadata(moduleId, JSON.stringify(moduleWrapper.data))
+    })
+    await Promise.all(modulePromises)
+
+    const appIndexResult = await getMetadata(["app_index"])
+    const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
+
+    const appIndex = apps.find((app) => app.id === this.appId)
+    if (appIndex) {
+      appIndex.status = "active"
+      appIndex.lastPublishedAt = new Date().toISOString()
+      appIndex.version = versionToPublish.app.version
+      appIndex.updatedAt = new Date().toISOString()
+
+      await setMetadata("app_index", JSON.stringify(apps))
+    }
+
+    return {
+      success: true,
+      publishInfo,
+      version: versionToPublish.app.version,
+      publishedAt: new Date().toISOString(),
+    }
+  } catch (error) {
+    console.error("Error publishing app:", error)
+    throw new Error(error instanceof Error ? error.message : "Failed to publish app")
+  }
+}
+
+export async function updateAppIndex(this: AppCodeStore, app: any, name: string): Promise<void> {
+  try {
+    const appIndexResult = await getMetadata(["app_index"])
+    const apps: AppIndexItem[] = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
+
+    const newAppIndex: AppIndexItem = {
+      id: app.id,
+      title: name,
+      status: "draft",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      version: app.version,
+    }
+
+    const updatedApps = [...apps, newAppIndex]
+
+    await setMetadata("app_index", JSON.stringify(updatedApps))
+  } catch (error) {
+    console.error("Error updating app index:", error)
+    throw new Error("Failed to update app index")
+  }
+}

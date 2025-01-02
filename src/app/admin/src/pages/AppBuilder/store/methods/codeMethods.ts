@@ -1,7 +1,7 @@
 import { transform } from "@/utils/moduleLoader"
-import { ModuleData, ShataAICode } from "../types"
+import { AppCodeStore, ModuleData, ShataAICode, Version } from "../types"
 
-export function compileCode(code: string): Promise<string> {
+export function compileCode(this: AppCodeStore, code: string): Promise<string> {
   try {
     const { code: compiledCode } = transform(
       `export default async () => {
@@ -86,7 +86,7 @@ export function extractShataAICodes(content: string): ShataAICode[] {
   }
 }
 
-export async function processAIResponse(aiResponse: string): Promise<Record<string, ModuleData>> {
+export async function processAIResponse(this: AppCodeStore, aiResponse: string): Promise<Record<string, ModuleData>> {
   if (!this.appId) throw new Error("AppId not set")
 
   try {
@@ -110,5 +110,124 @@ export async function processAIResponse(aiResponse: string): Promise<Record<stri
   } catch (error) {
     console.error("Error processing AI response:", error)
     throw new Error("Failed to process AI response")
+  }
+}
+
+export async function executeModules(this: AppCodeStore, context: any) {
+  if (!this.currentVersion) return []
+
+  const results: Array<{
+    success: boolean
+    moduleId: string
+    type: string
+    name: string
+    executionTime?: number
+    error?: string
+    result?: any
+  }> = []
+
+  const version = this.currentVersion
+
+  try {
+    for (const [moduleId, moduleWrapper] of Object.entries(version.modules)) {
+      const startTime = performance.now()
+
+      try {
+        const moduleData = moduleWrapper.data
+
+        if (!moduleData || !moduleData.compiledCode) {
+          throw new Error(`Invalid module data for ${moduleId}`)
+        }
+
+        const moduleFunction = new Function(
+          "context",
+          `
+          ${moduleData.compiledCode.replace(/export default/, "return")}
+        `
+        )
+        const getResult = moduleFunction(context)
+        getResult()
+
+        results.push({
+          success: true,
+          moduleId,
+          type: moduleData.type,
+          name: moduleData.name,
+          executionTime: performance.now() - startTime,
+        })
+      } catch (error) {
+        console.error(`Error executing module ${moduleId}:`, error)
+        results.push({
+          success: false,
+          moduleId,
+          type: moduleWrapper.data?.type || "unknown",
+          name: moduleWrapper.data?.name || moduleId,
+          executionTime: performance.now() - startTime,
+          error: error instanceof Error ? error.message : "Unknown error",
+        })
+      }
+    }
+
+    return results
+  } catch (error) {
+    console.error("Error executing modules:", error)
+    return [
+      {
+        success: false,
+        moduleId: "unknown",
+        type: "unknown",
+        name: "unknown",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+    ]
+  }
+}
+
+export async function addModules(
+  this: AppCodeStore,
+  updates: Record<string, string>
+): Promise<Version> {
+  if (!this.currentVersion) {
+    throw new Error("No current version")
+  }
+
+  try {
+    const updatedModules: Record<string, any> = {}
+
+    for (const [moduleId, newCode] of Object.entries(updates)) {
+      const existingModule = this.currentVersion.modules[moduleId]
+      if (!existingModule) {
+        throw new Error(`Module ${moduleId} not found`)
+      }
+
+      const compiledCode = await this.compileCode(newCode)
+
+      updatedModules[moduleId] = {
+        data: {
+          ...existingModule.data,
+          code: newCode,
+          compiledCode,
+        },
+        updatedAt: new Date().toISOString(),
+      }
+    }
+
+    const newVersion: Version = {
+      timestamp: Date.now(),
+      app: {
+        ...this.currentVersion.app,
+        version: Date.now(),
+        updatedAt: new Date().toISOString(),
+      },
+      modules: {
+        ...this.currentVersion.modules,
+        ...updatedModules,
+      },
+    }
+
+    return newVersion
+  } catch (error) {
+    console.error("Error adding modules:", error)
+    throw error
   }
 }

@@ -1,6 +1,6 @@
-import { Version } from "../types"
+import { AppCodeStore, Version } from "../types"
 
-export function validateModuleExports(version: Version): string[] {
+export function validateModuleExports(this: AppCodeStore, version: Version): string[] {
   const errors: string[] = []
   const exportedModules = new Set<string>()
 
@@ -31,7 +31,10 @@ export function validateModuleExports(version: Version): string[] {
   return errors
 }
 
-export function processModuleErrors(errors: string[]): { missingModules: string[]; dependentModules: string[] } {
+export function processModuleErrors(
+  this: AppCodeStore,
+  errors: string[]
+): { missingModules: string[]; dependentModules: string[] } {
   const missingModules: string[] = []
   const dependentModules: string[] = []
 
@@ -47,4 +50,30 @@ export function processModuleErrors(errors: string[]): { missingModules: string[
     missingModules: [...new Set(missingModules)],
     dependentModules: [...new Set(dependentModules)],
   }
+}
+
+export function validateModuleDependencies(this: AppCodeStore, version: Version): string[] {
+  const errors: string[] = []
+  const moduleIds = new Set(Object.keys(version.modules))
+
+  for (const [moduleId, moduleWrapper] of Object.entries(version.modules)) {
+    const code = moduleWrapper.data.code
+    const importRegex = /wpm\.import\(['"](.*?)['"]\)/g
+    let match
+
+    while ((match = importRegex.exec(code)) !== null) {
+      const dependencyId = match[1]
+
+      if (!moduleIds.has(dependencyId)) {
+        errors.push(`Module ${moduleId} depends on non-existent module ${dependencyId}`)
+      }
+
+      const dependencyCode = version.modules[dependencyId]?.data.code
+      if (dependencyCode?.includes(`wpm.import('${moduleId}')`)) {
+        errors.push(`Circular dependency detected between ${moduleId} and ${dependencyId}`)
+      }
+    }
+  }
+
+  return errors
 }

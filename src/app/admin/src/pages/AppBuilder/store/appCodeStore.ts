@@ -4,14 +4,14 @@ import { initialAIResponse } from "../prompts/initTemplate"
 import { Version, AIGenerationResult } from "./types"
 
 // 导入拆分的方法
-import { compileCode, extractShataAICodes, processAIResponse } from "./methods/codeMethods"
+import { compileCode, extractShataAICodes, processAIResponse, executeModules, addModules } from "./methods/codeMethods"
 import { saveToStorage, loadFromStorage, clearStorage } from "./methods/storageMethods"
 import { addVersion, rollback, forward, clear } from "./methods/versionMethods"
 import { exportToMarkdown, downloadMarkdown } from "./methods/exportMethods"
-import { validateModuleExports, processModuleErrors } from "./methods/validationMethods"
+import { validateModuleExports, processModuleErrors, validateModuleDependencies } from "./methods/validationMethods"
+import { publishToServer, updateAppIndex } from "./methods/serverMethods"
 
 class AppCodeStore {
-  // 基础状态
   private appId: string | null = null
   private versions: Version[] = []
   public currentIndex: number = -1
@@ -23,6 +23,8 @@ class AppCodeStore {
     this.compileCode = compileCode.bind(this)
     this.extractShataAICodes = extractShataAICodes.bind(this)
     this.processAIResponse = processAIResponse.bind(this)
+    this.executeModules = executeModules.bind(this)
+    this.addModules = addModules.bind(this)
     this.saveToStorage = saveToStorage.bind(this)
     this.loadFromStorage = loadFromStorage.bind(this)
     this.clearStorage = clearStorage.bind(this)
@@ -34,12 +36,17 @@ class AppCodeStore {
     this.downloadMarkdown = downloadMarkdown.bind(this)
     this.validateModuleExports = validateModuleExports.bind(this)
     this.processModuleErrors = processModuleErrors.bind(this)
+    this.validateModuleDependencies = validateModuleDependencies.bind(this)
+    this.publishToServer = publishToServer.bind(this)
+    this.updateAppIndex = updateAppIndex.bind(this)
   }
 
   // 方法声明
   compileCode!: typeof compileCode
   extractShataAICodes!: typeof extractShataAICodes
   processAIResponse!: typeof processAIResponse
+  executeModules!: typeof executeModules
+  addModules!: typeof addModules
   saveToStorage!: typeof saveToStorage
   loadFromStorage!: typeof loadFromStorage
   clearStorage!: typeof clearStorage
@@ -51,6 +58,9 @@ class AppCodeStore {
   downloadMarkdown!: typeof downloadMarkdown
   validateModuleExports!: typeof validateModuleExports
   processModuleErrors!: typeof processModuleErrors
+  validateModuleDependencies!: typeof validateModuleDependencies
+  publishToServer!: typeof publishToServer
+  updateAppIndex!: typeof updateAppIndex
 
   // Getters
   get currentVersion(): Version | null {
@@ -267,6 +277,8 @@ class AppCodeStore {
       }
 
       this.addVersion(result.version)
+      await this.publishToServer({ useLatest: true })
+      await this.updateAppIndex(result.version.app, name)
       return appId
     } catch (error) {
       console.error("Error creating app:", error)
