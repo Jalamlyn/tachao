@@ -6,6 +6,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { motion, AnimatePresence } from "framer-motion"
 import { useMetadata } from "@/hooks/metadata"
 import { usePendingTasksStore } from "@/app/admin/src/pages/PendingTasks/store/usePendingTasksStore"
+import { apiService } from "@/service/apis/api"
 import TutorialModal from "./TutorialModal"
 import StatsSection from "./StatsSection"
 import WelcomeCard from "./WelcomeCard"
@@ -17,6 +18,7 @@ const Dashboard: React.FC = () => {
   const { tasks, loadTasks } = usePendingTasksStore()
   const [isLoading, setIsLoading] = useState(true)
   const [showTutorial, setShowTutorial] = useState(false)
+  const [fileCount, setFileCount] = useState(0)
 
   useEffect(() => {
     updateBreadcrumbs([{ label: "首页", href: "/admin" }])
@@ -27,12 +29,31 @@ const Dashboard: React.FC = () => {
       setIsLoading(true)
       try {
         await Promise.all([loadApps(), loadTasks()])
+        // 获取文件列表数据
+        const fileResponse = await apiService.post(
+          "/public/data/file/activitiess/find",
+          {},
+          {
+            params: { display: "paginate" },
+          }
+        )
+        // 计算所有activities中的文件总数
+        const totalFiles = fileResponse.data.data.reduce((total, activity) => {
+          return total + (activity.files?.length || 0)
+        }, 0)
+        setFileCount(totalFiles)
+      } catch (error) {
+        console.error("Load dashboard data error:", error)
+        setFileCount(0)
       } finally {
         setIsLoading(false)
       }
     }
     loadData()
   }, [loadApps, loadTasks])
+
+  // 只统计待处理(pending)状态的任务
+  const pendingTasksCount = tasks.filter(task => task.status === 'pending').length
 
   const stats = [
     {
@@ -43,21 +64,23 @@ const Dashboard: React.FC = () => {
     },
     {
       label: "待处理任务",
-      value: tasks.length.toString(),
+      value: pendingTasksCount.toString(),
       icon: "solar:list-check-linear",
       color: "warning",
     },
     {
       label: "企业网盘",
-      value: "点击查看",
+      value: `${fileCount} 个文件`,
       icon: "solar:folder-with-files-linear",
       color: "secondary",
+      onClick: () => navigate("/admin/file-manager"),
     },
     {
       label: "AI 对话",
       value: "立即体验",
       icon: "solar:chat-square-code-linear",
       color: "success",
+      onClick: () => navigate("/admin/apps/ai-chat"),
     },
   ]
 
@@ -164,7 +187,7 @@ const Dashboard: React.FC = () => {
                     <CardBody className='max-h-60'>
                       <ScrollShadow>
                         <AnimatePresence>
-                          {tasks.slice(0, 3).map((task, index) => (
+                          {tasks.filter(task => task.status === 'pending').slice(0, 3).map((task, index) => (
                             <motion.div
                               key={index}
                               initial={{ opacity: 0, y: 10 }}
@@ -195,7 +218,7 @@ const Dashboard: React.FC = () => {
                               </div>
                             </motion.div>
                           ))}
-                          {tasks.length === 0 && (
+                          {tasks.filter(task => task.status === 'pending').length === 0 && (
                             <div className='flex items-center justify-center py-8 text-default-400'>
                               <p>暂无待处理事项</p>
                             </div>
