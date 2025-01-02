@@ -31,7 +31,6 @@ export default function LoginPage() {
     enterpriseName: "",
   })
 
-  const navigate = useNavigate()
   const { hasOidParam } = useOid(loginData)
 
   useEffect(() => {
@@ -149,22 +148,19 @@ export default function LoginPage() {
         >
           <Card className='bg-white/20 border bg-white border-white/30 shadow-2xl backdrop-blur-sm'>
             <CardBody className='gap-4 p-8'>
-              <motion.div
+              <motion.p
                 initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className='text-center'
+                animate={{ opacity: sloganVisible ? 1 : 0 }}
+                transition={{ duration: 1 }}
+                className='text-lg drop-shadow'
               >
-                <h2 className='text-2xl font-bold mb-2 drop-shadow-lg'>欢迎登录</h2>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: sloganVisible ? 1 : 0 }}
-                  transition={{ duration: 1 }}
-                  className='text-lg mb-6 drop-shadow'
-                >
-                  即想智能, 将你的创意转化为现实代码
-                </motion.p>
-              </motion.div>
+                <p className='text-left text-3xl font-semibold'>
+                  登录
+                  <span aria-label='emoji' className='ml-2' role='img'>
+                    👋
+                  </span>
+                </p>
+              </motion.p>
 
               <Tabs
                 selectedKey={selectedTab}

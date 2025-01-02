@@ -39,7 +39,6 @@ function App() {
           <Routes>
             <Route path='/' element={<LandingPage />} />
             <Route path='/login' element={<LoginPage />} />
-            <Route path='/external-login' element={<LoginPage />} />
             {AdminRouter()}
           </Routes>
           <Toaster />

@@ -211,7 +211,7 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
   }
 
   useEffect(() => {
-    if (location.pathname === "/" || location.pathname === "/external-login") {
+    if (location.pathname === "/") {
       setIsInit(true)
       setAppIdReady(true)
       return
@@ -239,10 +239,9 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
 
   const shouldRenderChildren = () => {
     const isLoginPage = location.pathname.includes("/login")
-    const isExternalLoginPage = location.pathname === "/external-login"
     const isRootPath = location.pathname === "/"
 
-    if (isLoginPage || isExternalLoginPage || isRootPath) {
+    if (isLoginPage || isRootPath) {
       return isInit && modulesLoaded && !isTransitioning
     }
 
