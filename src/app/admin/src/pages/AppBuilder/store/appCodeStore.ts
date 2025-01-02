@@ -1,7 +1,5 @@
 import { makeAutoObservable } from "mobx"
-import { getMetadata } from "@/service/apis/metadata"
-import { initialAIResponse } from "../prompts/initTemplate"
-import { Version, AIGenerationResult } from "./types"
+import { Version } from "./types"
 
 // 导入拆分的方法
 import { compileCode, extractShataAICodes, processAIResponse, executeModules, addModules } from "./methods/codeMethods"
@@ -13,9 +11,9 @@ import { publishToServer, updateAppIndex } from "./methods/serverMethods"
 import { handleAIGeneration, loadApp, createApp } from "./methods/generationMethods"
 
 class AppCodeStore {
-  private appId: string | null = null
-  private versions: Version[] = []
-  public currentIndex: number = -1
+  #appId: string | null = null
+  versions: Version[] = []
+  currentIndex: number = -1
 
   constructor() {
     makeAutoObservable(this, {}, { autoBind: true })
@@ -92,7 +90,12 @@ class AppCodeStore {
 
   // 设置appId
   setAppId(appId: string) {
-    this.appId = appId
+    this.#appId = appId
+  }
+
+  // 获取appId
+  get appId(): string | null {
+    return this.#appId
   }
 
   // 生成ID

@@ -54,9 +54,8 @@ export interface ShataAICode {
   pageid?: string
 }
 
-// 为 AppCodeStore 定义 this 类型
+// 为 AppCodeStore 定义公共接口
 export interface AppCodeStore {
-  private appId: string | null
   versions: Version[]
   currentIndex: number
   currentVersion: Version | null
