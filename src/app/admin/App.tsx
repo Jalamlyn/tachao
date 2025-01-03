@@ -205,7 +205,7 @@ export default function Component() {
 
         <div className='w-full max-h-screen overflow-hidden md:max-w-[calc(100%-40px)] flex-1 p-4'>
           <GlobalBreadcrumb />
-          <div className='content-container'>
+          <div className='px-4'>
             <Outlet />
           </div>
         </div>

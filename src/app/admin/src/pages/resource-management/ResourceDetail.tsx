@@ -4,7 +4,6 @@ import { Spinner, Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useMetadata } from "@/hooks/useMetadata"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
-import PageLayout from "@/app/admin/src/component/PageLayout"
 import ResourceDataTable from "@/components/common/data-table/ResourceDataTable"
 import message from "@/components/Message"
 
@@ -21,6 +20,7 @@ const ResourceDetail: React.FC = () => {
     updateBreadcrumbs([
       { label: "首页", href: "/admin" },
       { label: "资料表格管理", href: "/admin/resources" },
+      { label: "资料表格详情", href: "" },
     ])
   }, [])
 

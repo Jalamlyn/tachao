@@ -34,31 +34,28 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
       window.removeEventListener("unhandledrejection", handleUnhandledRejection)
     }
   }, [])
+  const handleAIFix = (errorInfo: any) => {
+    window.parent.postMessage(
+      {
+        type: "AI_FIX_REQUEST",
+        payload: {
+          error: errorInfo.message || errorInfo,
+          stack: errorInfo.stack,
+          context: {
+            route: window.location.pathname,
+            appId,
+          },
+        },
+      },
+      "*"
+    )
+  }
 
   const handleError = (error: Error) => {
     const errorContent = (
       <div className='flex items-center gap-2'>
         <div>{error.message}</div>
-        <Button
-          size='sm'
-          color='primary'
-          onClick={() => {
-            // 触发AI修复
-            window.parent.postMessage(
-              {
-                type: "AI_FIX_REQUEST",
-                payload: {
-                  error: error.message,
-                  context: {
-                    route: window.location.pathname,
-                    appId,
-                  },
-                },
-              },
-              "*"
-            )
-          }}
-        >
+        <Button size='sm' color='primary' onClick={handleAIFix}>
           AI修复
         </Button>
       </div>
@@ -197,7 +194,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
     <Provider>
       <PermissionCheck resourceType='app' resourceId={appId}>
         <AppContext.Provider value={{ appId }}>
-          <AppRender appId={appId} basename={`/app-preview/${appId}`} onError={handleError} />
+          <AppRender onAIFix={handleAIFix} appId={appId} basename={`/app-preview/${appId}`} onError={handleError} />
         </AppContext.Provider>
       </PermissionCheck>
     </Provider>

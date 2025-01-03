@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react"
 import { BrowserRouter } from "react-router-dom"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import wpm from "@wpm-js/core"
-import Table from "./table/table-with-filters (2)/index"
 
 interface AppRenderProps {
   appId: string

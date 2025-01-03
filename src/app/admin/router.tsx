@@ -7,6 +7,8 @@ import PendingTasks from "./src/pages/PendingTasks"
 import FileManager from "./src/pages/FileManager"
 import { PermissionCheck } from "./src/permissions/components/PermissionCheck"
 import AppBuilder from "./src/pages/AppBuilder/AppEdit"
+import ResourceManagement from "./src/pages/resource-management"
+import ResourceDetail from "./src/pages/resource-management/ResourceDetail"
 
 export default function renderRouter() {
   return (
@@ -24,6 +26,8 @@ export default function renderRouter() {
       <Route path='pending-tasks' element={<PendingTasks />} />
       <Route path='file-manager' element={<FileManager />} />
       <Route path='apps/:appId/builder' element={<AppBuilder />} />
+      <Route path='resources' element={<ResourceManagement />} />
+      <Route path='resources/:resourceId' element={<ResourceDetail />} />
     </Route>
   )
 }

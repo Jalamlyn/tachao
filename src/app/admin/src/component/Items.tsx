@@ -1,11 +1,15 @@
-import { type SidebarItem } from "./Sidebar"
-
-export const items: SidebarItem[] = [
+export const items = [
   {
     key: "apps",
     href: "/admin/apps",
     icon: "mdi:apps",
     title: "应用管理",
+  },
+  {
+    key: "resources",
+    href: "/admin/resources",
+    icon: "mdi:file-document",
+    title: "资料表格管理",
   },
   {
     key: "pending-tasks",

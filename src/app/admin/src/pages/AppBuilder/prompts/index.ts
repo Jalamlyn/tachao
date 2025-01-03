@@ -26,6 +26,10 @@ ${BASE_PROMPTS.reflection}
 ${BASE_PROMPTS.codeGeneration}
 
 ${EXPERIENCE_PROMPTS.apiExperience.metadata}
+${EXPERIENCE_PROMPTS.uiExperience.nextui_checkout_complete}}
+${EXPERIENCE_PROMPTS.uiExperience.nextui_expense_tracker}
+${EXPERIENCE_PROMPTS.uiExperience.nextui_table_with_filters}
+
 
 
 1. 代码生成顺序：

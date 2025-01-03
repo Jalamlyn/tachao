@@ -16,7 +16,7 @@ const { Routes, Route, Navigate } = ReactRouterDom;
 // 导入首页模块
 const HomePage = await wpm.import('page_home')
 
-const App = () => {
+const App = observer(() => {
   return (
     <Routes>
       {/* 默认路由重定向到首页 */}
@@ -32,7 +32,7 @@ const App = () => {
       />
     </Routes>
   );
-};
+});
 
 // 导出应用入口
 wpm.export(appId, App);
