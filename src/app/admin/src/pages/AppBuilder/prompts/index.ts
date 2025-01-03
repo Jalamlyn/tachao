@@ -4,6 +4,7 @@ import { COMPONENT_PROMPTS } from "./component-prompts"
 import { TECH_PROMPTS } from "./tech-prompts"
 import { ENV_PROMPTS } from "./env-prompts"
 import { EXPERIENCE_PROMPTS } from "./experience-prompts"
+import { UI_DESIGN_PROMPTS } from "./ui-design-prompts"
 
 export const PROMPTS = {
   ...BASE_PROMPTS,
@@ -12,6 +13,7 @@ export const PROMPTS = {
   ...TECH_PROMPTS,
   ...ENV_PROMPTS,
   ...EXPERIENCE_PROMPTS,
+  ...UI_DESIGN_PROMPTS,
 }
 
 // 提示词组合器
@@ -34,7 +36,15 @@ ${EXPERIENCE_PROMPTS.uiExperience.nextui_table_with_filters}
 ${EXPERIENCE_PROMPTS.uiExperience.nextui_sidebar_with_nested}
 </experience-nextui>
 
-
+<ui-design-principles>
+${UI_DESIGN_PROMPTS.designPrinciples}
+${UI_DESIGN_PROMPTS.interactionDesign}
+${UI_DESIGN_PROMPTS.userExperience}
+${UI_DESIGN_PROMPTS.componentDesign}
+${UI_DESIGN_PROMPTS.designSystem}
+${UI_DESIGN_PROMPTS.motionDesign}
+${UI_DESIGN_PROMPTS.designAnalysis}
+</ui-design-principles>
 
 1. 代码生成顺序：
    - 如果应用入口代码不存在，必须先生成入口代码
@@ -101,4 +111,14 @@ ${TECH_PROMPTS.metadata}`
 ${ENV_PROMPTS.routing}
 ${ENV_PROMPTS.basePath}`
   },
+
+  getUIDesignPrompt() {
+    return `${UI_DESIGN_PROMPTS.designPrinciples}
+${UI_DESIGN_PROMPTS.interactionDesign}
+${UI_DESIGN_PROMPTS.userExperience}
+${UI_DESIGN_PROMPTS.componentDesign}
+${UI_DESIGN_PROMPTS.designSystem}
+${UI_DESIGN_PROMPTS.motionDesign}
+${UI_DESIGN_PROMPTS.designAnalysis}`
+  }
 }
