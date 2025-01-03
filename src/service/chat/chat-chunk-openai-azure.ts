@@ -52,9 +52,10 @@ export default async function chatChunkOpenAIOffice(
   onCancel,
   isFirst = true,
   temperature = 0,
-  overFlag = "YES"
+  overFlag = "YES",
+  onResult?: (result: string) => void
 ) {
-  const baseModel = sessionStorage.getItem("aiLevel") || "ADVANCED"
+  const baseModel = sessionStorage.getItem("aiLevel") || "EXPERT"
   console.log("[ChatService] Using model:", baseModel)
 
   let _messages = messages
@@ -139,7 +140,8 @@ export default async function chatChunkOpenAIOffice(
               onCancel,
               false,
               temperature,
-              overFlag
+              overFlag,
+              onResult
             )
             return
           }
@@ -149,6 +151,10 @@ export default async function chatChunkOpenAIOffice(
       } else {
         outputTokenCount = countTokens(fullContent)
         localDB.setItem("chat-chunk-over", overFlag)
+        // 在完成时调用onResult回调
+        if (onResult) {
+          onResult(fullContent)
+        }
       }
     }
 
