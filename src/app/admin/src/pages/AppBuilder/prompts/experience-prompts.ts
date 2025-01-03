@@ -1,5 +1,6 @@
 import nextui_checkout_complete from "./nextui/nextui_checkout_complete"
 import nextui_table_with_filters from "./nextui/nextui_table_with_filters"
+import nextui_expense_tracker from "./nextui/nextui_expense_tracker"
 
 export const EXPERIENCE_PROMPTS = {
   // API 使用最佳实践
@@ -63,112 +64,11 @@ export const EXPERIENCE_PROMPTS = {
     }
     \`\`\`
     `,
-
-    // AI API示例
-    aiApi: `
-    以下是使用AI能力的最佳实践:
-
-    1. 基础使用(非流式):
-    \`\`\`javascript
-    try {
-      await context.ai.chat([
-        { role: 'user', content: '你好,请介绍一下自己' }
-      ], {
-        onResult: (result) => {
-          console.log('完整结果:', result);
-        },
-        onError: (error) => {
-          context.message.error('AI处理失败');
-          console.error('错误:', error);
-        }
-      });
-    } catch (error) {
-      // 处理错误
-      console.error('Chat failed:', error);
-    }
-    \`\`\`
-
-    2. 流式处理:
-    \`\`\`javascript
-    try {
-      let content = '';
-      await context.ai.chat([
-        { role: 'user', content: '请生成一段代码' }
-      ], {
-        onChunk: (chunk) => {
-          // 处理每个文本块
-          content += chunk;
-          // 实时更新UI
-          updateUI(content);
-        },
-        onResult: (fullText) => {
-          // 处理完整结果
-          console.log('生成完成:', fullText);
-        },
-        onError: (error) => {
-          context.message.error('生成失败');
-          console.error('错误:', error);
-        }
-      });
-    } catch (error) {
-      // 处理错误
-      console.error('Stream chat failed:', error);
-    }
-    \`\`\`
-
-    3. 会话管理:
-    \`\`\`javascript
-    const chatManager = {
-      messages: [],
-      
-      async sendMessage(content) {
-        try {
-          // 添加用户消息
-          this.messages.push({
-            role: 'user',
-            content
-          });
-          
-          let response = '';
-          await context.ai.chat(
-            this.messages,
-            {
-              onChunk: (chunk) => {
-                response += chunk;
-                // 实时更新UI
-                updateUI(response);
-              },
-              onResult: (fullResponse) => {
-                // 添加AI响应到消息历史
-                this.messages.push({
-                  role: 'assistant',
-                  content: fullResponse
-                });
-                // 更新完整响应
-                updateFullResponse(fullResponse);
-              },
-              onError: (error) => {
-                context.message.error('发送消息失败');
-                console.error('Chat error:', error);
-              }
-            }
-          );
-        } catch (error) {
-          context.message.error('发送消息失败');
-          throw error;
-        }
-      },
-      
-      clearHistory() {
-        this.messages = [];
-      }
-    }
-    \`\`\`
-    `,
   },
   uiExperience: {
     nextui_checkout_complete,
     nextui_table_with_filters,
+    nextui_expense_tracker,
   },
 }
 
