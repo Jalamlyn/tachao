@@ -1,6 +1,7 @@
 import nextui_checkout_complete from "./nextui/nextui_checkout_complete"
 import nextui_table_with_filters from "./nextui/nextui_table_with_filters"
 import nextui_expense_tracker from "./nextui/nextui_expense_tracker"
+import nextui_sidebar_with_nested from "./nextui/nextui_sidebar_with_nested"
 
 export const EXPERIENCE_PROMPTS = {
   // API 使用最佳实践
@@ -69,6 +70,7 @@ export const EXPERIENCE_PROMPTS = {
     nextui_checkout_complete,
     nextui_table_with_filters,
     nextui_expense_tracker,
+    nextui_sidebar_with_nested
   },
 }
 

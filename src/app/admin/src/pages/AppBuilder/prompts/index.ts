@@ -26,9 +26,13 @@ ${BASE_PROMPTS.reflection}
 ${BASE_PROMPTS.codeGeneration}
 
 ${EXPERIENCE_PROMPTS.apiExperience.metadata}
+
+<experience-nextui>
 ${EXPERIENCE_PROMPTS.uiExperience.nextui_checkout_complete}}
 ${EXPERIENCE_PROMPTS.uiExperience.nextui_expense_tracker}
 ${EXPERIENCE_PROMPTS.uiExperience.nextui_table_with_filters}
+${EXPERIENCE_PROMPTS.uiExperience.nextui_sidebar_with_nested}
+</experience-nextui>
 
 
 
