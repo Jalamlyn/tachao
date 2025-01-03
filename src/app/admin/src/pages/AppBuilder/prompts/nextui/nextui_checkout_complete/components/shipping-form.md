@@ -5,14 +5,15 @@ const {
   React,
   observer,
   NextUI,
-  message
+  message,
+  cn
 } = context;
+const checkoutStore = await wpm.import('store_checkout');
+const checkoutModule = await wpm.import('module_checkout');
 
 const { Input, Button, Autocomplete, AutocompleteItem, Avatar } = NextUI;
 
 const ShippingForm = observer(({variant = "flat", className, hideTitle}) => {
-  const checkoutStore = await wpm.import('store_checkout');
-  const checkoutModule = await wpm.import('module_checkout');
 
   const handleSubmit = async (e) => {
     e.preventDefault();

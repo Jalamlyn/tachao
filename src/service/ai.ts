@@ -27,6 +27,13 @@ interface AIResponse {
   error?: string
 }
 
+interface ChatOptions {
+  onChunk?: (chunk: string) => void
+  onResult?: (result: string) => void
+  onError?: (error: Error) => void
+  temperature?: number
+}
+
 class AIService {
   private static instance: AIService
   private baseUrl = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release"
@@ -39,99 +46,29 @@ class AIService {
     }
     return AIService.instance
   }
+  // 新的统一chat方法
+  async chat(messages: any[], options: ChatOptions = {}): Promise<void> {
+    const { onChunk, onResult, onError, temperature = 0 } = options
 
-  // 非流式处理方法
-  async process(params: { text: string; images?: string[]; temperature?: number }): Promise<AIResponse> {
-    const baseModel = "ADVANCED"
-    const { text, images = [], temperature = 0 } = params
+    let fullContent = ""
 
     try {
-      const messages = [
-        {
-          role: "user",
-          content: [
-            { type: "text", text },
-            ...images.map((img) => ({ type: "image_url", image_url: { url: img, detail: "high" } })),
-          ],
-        },
-      ]
-
-      const payload = {
+      await chatChunk(
         messages,
-        temperature,
-        max_tokens: 2000,
-        model: baseModel,
-      }
-
-      const response = await fetch(`${this.baseUrl}/chat-a`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+        (chunk: string) => {
+          fullContent += chunk
+          onChunk?.(chunk)
         },
-        body: jsonStringify(payload),
-      })
+        () => {}, // onCancel callback
+        true, // isStream
+        temperature
+      )
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
-
-      // 计算token使用量和费用
-      const inputTokens = countTokens(text)
-      const outputTokens = countTokens(result.content)
-
-      const inputCost = calculateCost(inputTokens, true, baseModel)
-      const outputCost = calculateCost(outputTokens, false, baseModel)
-
-      // 记录费用
-      try {
-        const costRecords = await getMetadata(["ai-cost-records"])
-        const existingRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
-
-        const newRecord = {
-          id: Date.now(),
-          timestamp: new Date().toISOString(),
-          type: "token_usage",
-          totalCost: inputCost + outputCost,
-          detail: {
-            tokenUsage: {
-              promptTokenCount: inputTokens,
-              candidatesTokenCount: outputTokens,
-              inputCost,
-              outputCost,
-              model: baseModel,
-            },
-          },
-        }
-
-        await setMetadata("ai-cost-records", [...existingRecords, newRecord])
-      } catch (e) {
-        console.error("Error storing cost records:", e)
-      }
-
-      return {
-        success: true,
-        data: result.content,
-      }
+      onResult?.(fullContent)
     } catch (error) {
-      console.error("AI process error:", error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "处理失败",
-      }
+      onError?.(error)
+      throw error
     }
-  }
-
-  // 流式处理方法
-  async chat(
-    messages: any[],
-    onChunk: (chunk: string) => void,
-    onCancel: (cancel: () => void) => void,
-    isStream = true,
-    temperature = 0
-  ): Promise<void> {
-    await chatChunk(messages, onChunk, onCancel, isStream, temperature)
   }
 }
 

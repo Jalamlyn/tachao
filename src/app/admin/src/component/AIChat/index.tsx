@@ -28,7 +28,7 @@ interface AIChatProps {
   systemPrompt?: string
 }
 
-const defaultSystemPrompt = `我是即想 AI 助手,一个专门协助您使用即想平台的智能助手。我可以:
+const defaultSystemPrompt = `我是即想 AI 工程师,一个专门协助您使用即想平台的智能助手。我可以:
 
 1. 功能咨询和指导
 - 解答系统功能相关问题
@@ -147,7 +147,7 @@ const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose, systemPrompt = default
       <DrawerContent>
         <DrawerHeader className='flex items-center gap-2 border-b'>
           <Icon icon='solar:bot-linear' className='w-6 h-6 text-primary' />
-          <span className='text-lg font-semibold'>即想AI 助手, 有任何问题都可以问我</span>
+          <span className='text-lg font-semibold'>即想AI 工程师, 有任何问题都可以问我</span>
         </DrawerHeader>
         <DrawerBody>
           <ScrollShadow ref={scrollRef} className='h-full'>

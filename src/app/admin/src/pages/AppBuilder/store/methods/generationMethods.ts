@@ -57,7 +57,7 @@ export async function handleAIGeneration(
           moduleErrors: this.processModuleErrors(exportErrors),
         }
       }
-
+      this.addVersion(newVersion)
       return {
         success: true,
         version: newVersion,
@@ -102,7 +102,7 @@ export async function handleAIGeneration(
         moduleErrors: this.processModuleErrors(exportErrors),
       }
     }
-
+    this.addVersion(newVersion)
     return {
       success: true,
       version: newVersion,

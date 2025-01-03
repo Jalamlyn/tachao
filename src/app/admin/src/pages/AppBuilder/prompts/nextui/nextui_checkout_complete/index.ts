@@ -5,9 +5,9 @@ import { markdown as shippingForm } from "./components/shipping-form.md"
 import { markdown as paymentForm } from "./components/payment-form.md"
 import { markdown as paymentMethodRadio } from "./components/payment-method-radio.md"
 import { markdown as store } from "./store.md"
-import { markdown as module } from "./module.md"
+import { markdown as modules } from "./module.md"
 
-export const nextui_checkout_complete = `
+export default `
 ${app}
 
 ${checkoutPage}
@@ -22,5 +22,5 @@ ${paymentMethodRadio}
 
 ${store}
 
-${module}
+${modules}
 `

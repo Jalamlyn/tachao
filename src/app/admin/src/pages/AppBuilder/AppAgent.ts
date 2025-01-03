@@ -151,7 +151,6 @@ ${module.data.code}
 
       // 使用appCodeStore处理AI响应
       const version = await appCodeStore.handleAIGeneration(response)
-      appCodeStore.addVersion(version)
       return {
         success: true,
         version,

@@ -1,6 +1,7 @@
-import { Version } from "../types"
+import { AppCodeStore, Version } from "../types"
 
-export function addVersion(version: Version) {
+export function addVersion(this: AppCodeStore, version: Version) {
+  debugger
   this.versions = this.versions.slice(0, this.currentIndex + 1)
   this.versions.push(version)
   this.currentIndex = this.versions.length - 1
@@ -8,7 +9,7 @@ export function addVersion(version: Version) {
   return version
 }
 
-export function rollback(): Version | null {
+export function rollback(this: AppCodeStore): Version | null {
   if (this.canRollback) {
     this.currentIndex--
     return this.currentVersion
@@ -16,7 +17,7 @@ export function rollback(): Version | null {
   return null
 }
 
-export function forward(): Version | null {
+export function forward(this: AppCodeStore): Version | null {
   if (this.canForward) {
     this.currentIndex++
     return this.currentVersion
@@ -24,9 +25,8 @@ export function forward(): Version | null {
   return null
 }
 
-export function clear() {
+export function clear(this: AppCodeStore) {
   this.versions = []
   this.currentIndex = -1
   this.clearStorage()
-  this.appId = null
 }

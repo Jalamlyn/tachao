@@ -37,12 +37,20 @@ const eventEmitter = new EventEmitter()
 export const localDB = {
   setAppId: ({ id, organizationId }) => {
     currentAppId = id
+    localStorage.setItem("@@appId", id)
     globalStore.organizationId = organizationId
     globalStore.appId = id
   },
 
   getAppId: () => {
-    return currentAppId
+    if (currentAppId) {
+      return currentAppId
+    } else {
+      if (localStorage.getItem("@@appId")) {
+        return localStorage.getItem("@@appId")
+      }
+    }
+    return null
   },
 
   notifyChange: (key, value) => {

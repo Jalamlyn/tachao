@@ -56,14 +56,14 @@ export interface ShataAICode {
 
 // 为 AppCodeStore 定义公共接口
 export interface AppCodeStore {
-  readonly appId: string | null  // 添加只读的 appId 属性
-  readonly versions: Version[]
-  readonly currentIndex: number
-  readonly currentVersion: Version | null
-  readonly latestVersion: Version | null
-  readonly isViewingHistory: boolean
-  readonly canRollback: boolean
-  readonly canForward: boolean
+  appId: any
+  versions: Version[]
+  currentIndex: number
+  currentVersion: Version | null
+  latestVersion: Version | null
+  isViewingHistory: boolean
+  canRollback: boolean
+  canForward: boolean
 
   // 方法声明
   compileCode(code: string): Promise<string>
@@ -78,8 +78,6 @@ export interface AppCodeStore {
   clear(): void
   exportToMarkdown(): string
   downloadMarkdown(): void
-  validateModuleExports(version: Version): string[]
-  processModuleErrors(errors: string[]): { missingModules: string[]; dependentModules: string[] }
   setAppId(appId: string): void
   generateId(): string
 }

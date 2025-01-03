@@ -236,7 +236,7 @@ const Dashboard: React.FC = () => {
 
       <AIChat isOpen={showAIChat} onClose={() => setShowAIChat(false)} />
 
-      {/* 悬浮的 AI 助手按钮 */}
+      {/* 悬浮的 AI 工程师按钮 */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}

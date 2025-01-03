@@ -5,17 +5,10 @@ import message from "@/components/Message"
 import { Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
 import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
-import wpm from "@wpm-js/core"
-import * as ReactRouterDom from "react-router-dom"
-import * as FramerMotion from "framer-motion"
-import { ai } from "@/service/ai"
-import * as NextUI from "@nextui-org/react"
 import { observer } from "mobx-react-lite"
-import * as mobx from "mobx"
 import { Icon } from "@iconify/react"
 import { appCodeStore } from "../store/appCodeStore"
-import { getMetadata, getPublicMetaData, setMetadata } from "@/service/apis/metadata"
-import * as recharts from "recharts"
+import { context } from "./functionContext"
 
 interface PreviewPageProps {
   appId: string
@@ -43,9 +36,35 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   }, [])
 
   const handleError = (error: Error) => {
-    setError(error.message)
-    setErrorDetails(error)
-    message.error(`预览错误: ${error.message}`)
+    const errorContent = (
+      <div className='flex items-center gap-2'>
+        <div>{error.message}</div>
+        <Button
+          size='sm'
+          color='primary'
+          onClick={() => {
+            // 触发AI修复
+            window.parent.postMessage(
+              {
+                type: "AI_FIX_REQUEST",
+                payload: {
+                  error: error.message,
+                  context: {
+                    route: window.location.pathname,
+                    appId,
+                  },
+                },
+              },
+              "*"
+            )
+          }}
+        >
+          AI修复
+        </Button>
+      </div>
+    )
+
+    message.error(errorContent)
   }
 
   const handleModuleError = (error: Error) => {
@@ -73,29 +92,8 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
         // 2. 加载应用数据
         await appCodeStore.loadApp(appId)
 
-        // 3. 准备执行上下文
-        const context = {
-          wpm,
-          React,
-          observer,
-          Icon,
-          NextUI,
-          ReactRouterDom,
-          FramerMotion,
-          message,
-          appId,
-          recharts,
-          api: {
-            getMetadata,
-            setMetadata,
-            getPublicMetaData,
-          },
-          ai,
-          mobx,
-        }
-
         // 4. 执行所有模块
-        const results = await appCodeStore.executeModules(context).catch(handleModuleError)
+        const results = await appCodeStore.executeModules(context(appId)).catch(handleModuleError)
 
         if (results) {
           const errors = results.filter((r) => !r.success)
@@ -109,6 +107,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
         setIsLoading(false)
       } catch (error) {
         console.error("Error initializing preview:", error)
+        setError(error instanceof Error ? error.message : "初始化预览失败")
         handleError(error instanceof Error ? error : new Error("初始化预览失败"))
       }
     }
@@ -126,7 +125,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
               <div
                 className='absolute inset-0 animate-pulse'
                 style={{
-                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                  animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
                 }}
               >
                 <Icon icon='mdi:alert-circle' className='w-8 h-8 text-warning opacity-75' />
@@ -140,9 +139,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
         </CardHeader>
         <CardBody>
           <div className='space-y-4'>
-            <p className='text-center text-sm text-default-600'>
-              别担心,AI助手可以帮您快速修复这个问题
-            </p>
+            <p className='text-center text-sm text-default-600'>别担心,AI助手可以帮您快速修复这个问题</p>
             <div className='flex justify-center'>
               <Button
                 size='lg'
@@ -150,25 +147,26 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
                 className='px-8 font-medium shadow-lg'
                 startContent={<Icon icon='mdi:robot' className='w-5 h-5' />}
                 onClick={() => {
-                  window.parent.postMessage({
-                    type: 'AI_FIX_REQUEST',
-                    payload: {
-                      error: error,
-                      stack: errorDetails?.stack,
-                      context: {
-                        route: window.location.pathname,
-                        appId,
+                  window.parent.postMessage(
+                    {
+                      type: "AI_FIX_REQUEST",
+                      payload: {
+                        error: error,
+                        stack: errorDetails?.stack,
+                        context: {
+                          route: window.location.pathname,
+                          appId,
+                        },
                       },
-                    }
-                  }, '*')
+                    },
+                    "*"
+                  )
                 }}
               >
                 一键修复问题
               </Button>
             </div>
-            <p className='text-center text-xs text-default-400'>
-              点击上方按钮,AI助手将立即分析并修复问题
-            </p>
+            <p className='text-center text-xs text-default-400'>点击上方按钮,AI助手将立即分析并修复问题</p>
           </div>
         </CardBody>
       </Card>
@@ -199,30 +197,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
     <Provider>
       <PermissionCheck resourceType='app' resourceId={appId}>
         <AppContext.Provider value={{ appId }}>
-          <AppRender
-            appId={appId}
-            basename={`/app-preview/${appId}`}
-            context={{
-              wpm,
-              React,
-              observer,
-              Icon,
-              NextUI,
-              ReactRouterDom,
-              FramerMotion,
-              message,
-              appId,
-              api: {
-                getMetadata,
-                setMetadata,
-                getPublicMetaData,
-              },
-              ai,
-              mobx,
-              recharts,
-            }}
-            onError={handleError}
-          />
+          <AppRender appId={appId} basename={`/app-preview/${appId}`} onError={handleError} />
         </AppContext.Provider>
       </PermissionCheck>
     </Provider>

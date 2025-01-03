@@ -88,9 +88,9 @@ export default async function chatChunkDeepseek(
           }
         } catch (error) {
           console.error("Error parsing JSON:", error)
+          throw error
         }
       } else {
-        // 记录 token 使用情况```mo
         await costService.recordTokenUsage({
           promptTokenCount: inputTokens,
           candidatesTokenCount: outputTokens,

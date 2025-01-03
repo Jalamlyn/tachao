@@ -1,6 +1,6 @@
-import { Version } from "../types"
+import { AppCodeStore, Version } from "../types"
 
-export function exportToMarkdown(): string {
+export function exportToMarkdown(this: AppCodeStore): string {
   if (!this.currentVersion) {
     throw new Error("No current version")
   }
@@ -49,7 +49,7 @@ export function exportToMarkdown(): string {
   return markdown
 }
 
-export function downloadMarkdown(): void {
+export function downloadMarkdown(this: AppCodeStore): void {
   try {
     const markdown = this.exportToMarkdown()
     const blob = new Blob([markdown], { type: "text/markdown" })

@@ -10,7 +10,7 @@ export const EmptyAnalysisState: React.FC = () => {
         </div>
       </div>
       <h3 className='text-xl font-medium text-foreground mb-2'>开始分析您的数据</h3>
-      <p className='text-default-500 mb-8 text-center max-w-md'>使用左侧的 AI 助手来分析您的数据，生成图表和洞察报告</p>
+      <p className='text-default-500 mb-8 text-center max-w-md'>使用左侧的 AI 工程师来分析您的数据，生成图表和洞察报告</p>
       <div className='flex flex-col gap-4 items-center'>
         <div className='p-4 bg-primary/5 rounded-lg'>
           <p className='text-sm text-default-600'>示例提示语:</p>
@@ -35,7 +35,7 @@ export const EmptyCodeState: React.FC = () => {
         </div>
       </div>
       <h3 className='text-xl font-medium text-foreground mb-2'>等待生成分析代码</h3>
-      <p className='text-default-500 mb-4 text-center max-w-md'>当 AI 助手生成分析结果后，这里会显示相应的代码</p>
+      <p className='text-default-500 mb-4 text-center max-w-md'>当 AI 工程师生成分析结果后，这里会显示相应的代码</p>
     </div>
   )
 }

@@ -6,7 +6,8 @@ import { compileCode, extractShataAICodes, processAIResponse, executeModules, ad
 import { saveToStorage, loadFromStorage, clearStorage } from "./methods/storageMethods"
 import { addVersion, rollback, forward, clear } from "./methods/versionMethods"
 import { exportToMarkdown, downloadMarkdown } from "./methods/exportMethods"
-import { validateModuleExports, processModuleErrors, validateModuleDependencies } from "./methods/validationMethods"
+import { importFromMarkdown } from "./methods/importMethods"
+import { validateModuleExports, processModuleErrors } from "./methods/validationMethods"
 import { publishToServer, updateAppIndex } from "./methods/serverMethods"
 import { handleAIGeneration, loadApp, createApp } from "./methods/generationMethods"
 
@@ -33,9 +34,9 @@ class AppCodeStore {
     this.clear = clear.bind(this)
     this.exportToMarkdown = exportToMarkdown.bind(this)
     this.downloadMarkdown = downloadMarkdown.bind(this)
+    this.importFromMarkdown = importFromMarkdown.bind(this)
     this.validateModuleExports = validateModuleExports.bind(this)
     this.processModuleErrors = processModuleErrors.bind(this)
-    this.validateModuleDependencies = validateModuleDependencies.bind(this)
     this.publishToServer = publishToServer.bind(this)
     this.updateAppIndex = updateAppIndex.bind(this)
     this.handleAIGeneration = handleAIGeneration.bind(this)
@@ -58,6 +59,7 @@ class AppCodeStore {
   clear!: typeof clear
   exportToMarkdown!: typeof exportToMarkdown
   downloadMarkdown!: typeof downloadMarkdown
+  importFromMarkdown!: typeof importFromMarkdown
   validateModuleExports!: typeof validateModuleExports
   processModuleErrors!: typeof processModuleErrors
   validateModuleDependencies!: typeof validateModuleDependencies

@@ -29,7 +29,7 @@ export const getRenderEmptyState = (selectedTags, tagsIndex, handleClearTags, na
     <EmptyState
       type='no-data'
       title='还没有表单模板'
-      description='创建你的第一个表单模板，AI 助手会帮助你快速生成专业的表单'
+      description='创建你的第一个表单模板，AI 工程师会帮助你快速生成专业的表单'
       action={{
         text: "去创建",
         onClick: () => navigate("/admin/documents/create"),

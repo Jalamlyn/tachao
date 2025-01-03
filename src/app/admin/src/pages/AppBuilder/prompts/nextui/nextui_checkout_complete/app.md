@@ -36,6 +36,7 @@ const App = observer(() => {
   );
 });
 
-wpm.export('nextui_checkout_complete', App);
+wpm.export(appId, App);
 </mo-ai-code>
 ```
+

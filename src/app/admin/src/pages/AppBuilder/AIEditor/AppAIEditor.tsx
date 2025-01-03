@@ -3,7 +3,7 @@ import { ResizableHandle, ResizablePanelGroup } from "@/components/ui/resizable"
 import AICommandInput from "./components/AICommandInput"
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
-import { Tabs, Tab, Button, ScrollShadow, Avatar } from "@nextui-org/react"
+import { Tabs, Tab, Button, ScrollShadow, Avatar, Spinner } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { ResizablePanel } from "@/components/ui/resizable"
 import { cn } from "@/lib/utils"
@@ -34,7 +34,6 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     // 新增：渲染单个消息
     const renderMessage = (message: any) => {
       const isUser = message.role === "user"
-      const isStreaming = message.status === "streaming"
       const hasError = message.status === "error"
 
       return (
@@ -44,16 +43,19 @@ const AIEditor: React.FC<AIEditorProps> = observer(
             className={cn(
               "flex max-w-[80%] rounded-lg p-3",
               isUser ? "bg-primary text-primary-foreground" : "bg-content2",
-              hasError && "bg-danger-50 border border-danger-200"
+              hasError && "bg-danger-50 border border-danger-200",
+              "overflow-hidden" // 添加overflow控制
             )}
           >
             {message.status === "thinking" ? (
               <div className='flex items-center gap-2'>
-                <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-primary'></div>
+                <Spinner size='sm'></Spinner>
                 思考中...
               </div>
             ) : (
-              <div className='whitespace-pre-wrap text-sm'>
+              <div className='whitespace-pre-wrap text-sm break-words w-full'>
+                {" "}
+                {/* 添加break-words和w-full */}
                 {typeof message.content === "string"
                   ? message.content
                   : React.isValidElement(message.content)
@@ -61,8 +63,6 @@ const AIEditor: React.FC<AIEditorProps> = observer(
                     : String(message.content)}
               </div>
             )}
-
-            {hasError && <div className='text-danger mt-2'>发生错误: {message.error || "未知错误"}</div>}
           </div>
         </div>
       )

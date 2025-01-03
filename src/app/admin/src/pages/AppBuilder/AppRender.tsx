@@ -6,21 +6,11 @@ import wpm from "@wpm-js/core"
 interface AppRenderProps {
   appId: string
   basename: string
-  context: any
   onError?: (error: Error) => void
-  onAIFix?: (errorInfo: {
-    message: string
-    stack?: string
-    componentStack?: string
-    context?: {
-      componentName?: string
-      props?: any
-      route?: string
-    }
-  }) => void
+  onAIFix?: (errorInfo: { message: string; stack?: string; componentStack?: string }) => void
 }
 
-export const AppRender: React.FC<AppRenderProps> = ({ appId, basename, context, onError, onAIFix }) => {
+export const AppRender: React.FC<AppRenderProps> = ({ appId, basename, onError, onAIFix }) => {
   const [App, setApp] = useState(() => <div></div>)
 
   useEffect(() => {

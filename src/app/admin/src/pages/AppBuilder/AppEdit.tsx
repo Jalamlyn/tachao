@@ -18,7 +18,7 @@ const ErrorPrompt = ({ error, onFix }) => {
     if (error.moduleErrors) {
       return {
         missingModules: error.moduleErrors.missingModules,
-        dependentModules: error.moduleErrors.dependentModules
+        dependentModules: error.moduleErrors.dependentModules,
       }
     }
     return null
@@ -35,15 +35,19 @@ const ErrorPrompt = ({ error, onFix }) => {
           <h4 className='font-medium text-danger'>检测到缺失模块</h4>
           <div className='mt-2 space-y-1 text-sm text-danger-600'>
             <p>缺失模块:</p>
-            <ul className="list-disc pl-4">
+            <ul className='list-disc pl-4'>
               {errorInfo.missingModules.map((module, index) => (
-                <li key={index}><code>{module}</code></li>
+                <li key={index}>
+                  <code>{module}</code>
+                </li>
               ))}
             </ul>
             <p>依赖这些模块的组件:</p>
-            <ul className="list-disc pl-4">
+            <ul className='list-disc pl-4'>
               {errorInfo.dependentModules.map((module, index) => (
-                <li key={index}><code>{module}</code></li>
+                <li key={index}>
+                  <code>{module}</code>
+                </li>
               ))}
             </ul>
           </div>
@@ -93,31 +97,24 @@ const AppBuilder: React.FC = observer(() => {
   // 添加消息监听
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'AI_FIX_REQUEST') {
-        const errorInfo = event.data.payload;
-        
+      if (event.data.type === "AI_FIX_REQUEST") {
+        const errorInfo = event.data.payload
+
         const fixPrompt = `请帮我修复以下错误:
           错误信息: ${errorInfo.error}
           路由路径: ${errorInfo.context?.route}
           堆栈信息: ${errorInfo.stack}
-          ${errorInfo.context?.type === 'module_error' ? '这是一个模块执行错误。' : ''}
+          ${errorInfo.context?.type === "module_error" ? "这是一个模块执行错误。" : ""}
           
-          请分析错误原因并生成修复后的代码。`;
-        
-        const userMessage = {
-          role: "user",
-          content: fixPrompt,
-          id: Date.now().toString(),
-          timestamp: new Date().toLocaleTimeString(),
-        };
-        addMessage(userMessage);
-        processCommand(fixPrompt);
-      }
-    };
+          请分析错误原因并生成修复后的完整代码, 每个模块的代码都必须完整, 不能省略任何部分。`
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
+        processCommand(fixPrompt) // 直接调用即可,processCommand内部会处理消息添加
+      }
+    }
+
+    window.addEventListener("message", handleMessage)
+    return () => window.removeEventListener("message", handleMessage)
+  }, [])
 
   useEffect(() => {
     const initEditor = async () => {
@@ -243,7 +240,7 @@ const AppBuilder: React.FC = observer(() => {
   const handleFix = (errorInfo) => {
     const missingModules = errorInfo.missingModules.join(", ")
     const dependentModules = errorInfo.dependentModules.join(", ")
-    
+
     // 构造修复指令
     const fixCommand = `请帮我创建以下缺失的模块: ${missingModules}。这些模块被以下组件依赖: ${dependentModules}。请确保生成的模块符合项目规范并包含必要的功能。`
 
@@ -288,7 +285,7 @@ const AppBuilder: React.FC = observer(() => {
 
     try {
       const result = await AppAgent.processCommand(appId, messages, command, handleChunk)
-      
+
       // 处理结果
       if (result.success) {
         message.success("代码生成成功")
@@ -299,7 +296,7 @@ const AppBuilder: React.FC = observer(() => {
         message.warning("代码已生成,但存在一些问题需要修复")
         refreshPreview()
       }
-      
+
       return result
     } catch (error) {
       updateLastMessage({

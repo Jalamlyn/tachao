@@ -34,7 +34,7 @@ const EmptyState: React.FC = () => {
       </div>
       <h3 className='text-lg md:text-xl font-medium text-foreground mb-2'>还没有分析数据</h3>
       <p className='text-default-500 mb-4 text-center max-w-md text-sm md:text-base'>
-        使用 AI 助手来分析您的数据，生成图表和洞察报告
+        使用 AI 工程师来分析您的数据，生成图表和洞察报告
       </p>
     </motion.div>
   )

@@ -23,7 +23,7 @@ const services = [
   {
     icon: "solar:widget-5-bold-duotone",
     title: "企业专属 AI 智能体",
-    description: "打造符合企业特色的 AI 助手，提供智能化的业务支持",
+    description: "打造符合企业特色的 AI 工程师，提供智能化的业务支持",
     color: "text-success",
     gradient: "from-success-400 to-success-600",
   },

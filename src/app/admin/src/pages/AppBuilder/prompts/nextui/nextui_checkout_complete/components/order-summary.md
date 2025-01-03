@@ -6,8 +6,9 @@ const {
   observer,
   NextUI,
   Icon
+  cn,
 } = context;
-
+const checkoutStore = await wpm.import('store_checkout');
 const { Link, Button, Image, Tooltip, Divider, Input } = NextUI;
 
 const OrderSummaryItem = observer(({name, href, price, color, size, quantity, imageSrc, className}) => {
@@ -47,7 +48,6 @@ const OrderSummaryItem = observer(({name, href, price, color, size, quantity, im
 });
 
 const OrderSummary = observer(({hideTitle, items}) => {
-  const checkoutStore = await wpm.import('store_checkout');
   
   return (
     <div>

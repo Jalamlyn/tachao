@@ -91,7 +91,7 @@ export default {
   feature_3_title: "自定义 AI 智能体",
   feature_3_description: "创建和定制 AI 智能体，以满足您特定的开发需求和工作流程。",
   feature_3_sub_1: "个性化助手",
-  feature_3_sub_1_desc: "设计适合您独特开发风格和需求的 AI 助手。",
+  feature_3_sub_1_desc: "设计适合您独特开发风格和需求的 AI 工程师。",
   feature_3_sub_2: "领域特定知识",
   feature_3_sub_2_desc: "为您的 AI 智能体注入与您的行业或技术栈相关的专业知识。",
   feature_3_sub_3: "可定制工作流",

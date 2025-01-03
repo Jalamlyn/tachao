@@ -7,6 +7,7 @@ const {
   NextUI,
   Icon,
   message
+  cn,
 } = context;
 
 const { Input, Button } = NextUI;

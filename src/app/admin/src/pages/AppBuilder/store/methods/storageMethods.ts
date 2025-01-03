@@ -1,8 +1,8 @@
-import { Version } from "../types"
+import { AppCodeStore, Version } from "../types"
 
 const STORAGE_KEY = "appCode"
 
-export function saveToStorage() {
+export function saveToStorage(this: AppCodeStore) {
   try {
     const appId = this.appId
     if (!appId) return
@@ -28,7 +28,7 @@ export function saveToStorage() {
   }
 }
 
-export function loadFromStorage(): Version | null {
+export function loadFromStorage(this: AppCodeStore): Version | null {
   try {
     const appId = this.appId
     if (!appId) return null
@@ -62,7 +62,7 @@ export function loadFromStorage(): Version | null {
   }
 }
 
-export function clearStorage() {
+export function clearStorage(this: AppCodeStore) {
   if (!this.appId) return
 
   const keys = Object.keys(localStorage)

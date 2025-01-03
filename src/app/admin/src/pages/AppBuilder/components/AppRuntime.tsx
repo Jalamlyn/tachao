@@ -5,17 +5,9 @@ import message from "@/components/Message"
 import { Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
 import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
-import wpm from "@wpm-js/core"
-import * as ReactRouterDom from "react-router-dom"
-import * as FramerMotion from "framer-motion"
-import { ai } from "@/service/ai"
-import * as NextUI from "@nextui-org/react"
 import { observer } from "mobx-react-lite"
-import * as mobx from "mobx"
-import { Icon } from "@iconify/react"
 import { appCodeStore } from "../store/appCodeStore"
-import { getMetadata, getPublicMetaData, setMetadata } from "@/service/apis/metadata"
-import * as recharts from "recharts"
+import { context } from "./functionContext"
 
 interface PreviewPageProps {
   appId: string
@@ -44,28 +36,9 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
         await appCodeStore.loadApp(appId)
 
         // 3. 准备执行上下文
-        const context = {
-          wpm,
-          React,
-          observer,
-          Icon,
-          NextUI,
-          ReactRouterDom,
-          FramerMotion,
-          message,
-          appId,
-          api: {
-            getMetadata,
-            setMetadata,
-            getPublicMetaData,
-          },
-          ai,
-          mobx,
-          recharts,
-        }
 
         // 4. 执行所有模块
-        const results = await appCodeStore.executeModules(context)
+        const results = await appCodeStore.executeModules(context(appId))
         // 5. 检查执行结果
         const errors = results.filter((r) => !r.success)
         if (errors.length > 0) {

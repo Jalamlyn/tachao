@@ -61,102 +61,61 @@ export const EXPERIENCE_PROMPTS = {
       }
     }
     \`\`\`
-
-    4. 数据版本控制:
-    \`\`\`javascript
-    // 正确的方式 - 实现数据版本控制
-    const saveVersionedData = async (data) => {
-      try {
-        const timestamp = Date.now();
-        await context.api.setMetadata(\`\${context.appId}_data_\${timestamp}\`, {
-          data,
-          version: timestamp,
-          createdAt: new Date().toISOString()
-        });
-        return timestamp;
-      } catch (error) {
-        context.message.error('版本保存失败');
-        throw error;
-      }
-    }
-    \`\`\`
     `,
 
     // AI API示例
     aiApi: `
     以下是使用AI能力的最佳实践:
 
-    1. 流式输出处理:
+    1. 基础使用(非流式):
     \`\`\`javascript
-    const handleStream = async (messages, onChunk) => {
-      const abortController = new AbortController();
-      
-      try {
-        let accumulatedText = '';
-        
-        const handleChunk = (chunk) => {
-          accumulatedText += chunk;
-          onChunk?.(chunk);
-        };
-
-        await context.ai.chat(
-          messages,
-          handleChunk,
-          () => abortController.abort(),
-          true // 使用流式输出
-        );
-
-        return accumulatedText;
-      } catch (error) {
-        if (error.name === 'AbortError') {
-          console.log('Stream aborted');
+    try {
+      await context.ai.chat([
+        { role: 'user', content: '你好,请介绍一下自己' }
+      ], {
+        onResult: (result) => {
+          console.log('完整结果:', result);
+        },
+        onError: (error) => {
+          context.message.error('AI处理失败');
+          console.error('错误:', error);
         }
-        throw error;
-      }
+      });
+    } catch (error) {
+      // 处理错误
+      console.error('Chat failed:', error);
     }
     \`\`\`
 
-    2. 图片分析处理:
+    2. 流式处理:
     \`\`\`javascript
-    const analyzeImage = async (base64Image) => {
-      try {
-        const response = await context.ai.process({
-          text: "分析这张图片的内容",
-          images: [base64Image],
-          temperature: 0.7
-        });
-        return response;
-      } catch (error) {
-        context.message.error('图片分析失败');
-        throw error;
-      }
+    try {
+      let content = '';
+      await context.ai.chat([
+        { role: 'user', content: '请生成一段代码' }
+      ], {
+        onChunk: (chunk) => {
+          // 处理每个文本块
+          content += chunk;
+          // 实时更新UI
+          updateUI(content);
+        },
+        onResult: (fullText) => {
+          // 处理完整结果
+          console.log('生成完成:', fullText);
+        },
+        onError: (error) => {
+          context.message.error('生成失败');
+          console.error('错误:', error);
+        }
+      });
+    } catch (error) {
+      // 处理错误
+      console.error('Stream chat failed:', error);
     }
     \`\`\`
 
-    3. 多模态输入处理:
-    \`\`\`javascript
-    const handleMultiModal = async (text, images) => {
-      try {
-        const response = await context.ai.process({
-          text,
-          images: images.map(img => ({
-            type: 'image_url',
-            image_url: {
-              url: img,
-              detail: 'high'
-            }
-          })),
-          temperature: 0.7
-        });
-        return response;
-      } catch (error) {
-        context.message.error('处理失败');
-        throw error;
-      }
-    }
-    \`\`\`
-
-    4. AI 会话管理:
+    3. 会话管理:
     \`\`\`javascript
     const chatManager = {
       messages: [],
@@ -172,20 +131,27 @@ export const EXPERIENCE_PROMPTS = {
           let response = '';
           await context.ai.chat(
             this.messages,
-            (chunk) => {
-              response += chunk;
-            },
-            () => {},
-            true
+            {
+              onChunk: (chunk) => {
+                response += chunk;
+                // 实时更新UI
+                updateUI(response);
+              },
+              onResult: (fullResponse) => {
+                // 添加AI响应到消息历史
+                this.messages.push({
+                  role: 'assistant',
+                  content: fullResponse
+                });
+                // 更新完整响应
+                updateFullResponse(fullResponse);
+              },
+              onError: (error) => {
+                context.message.error('发送消息失败');
+                console.error('Chat error:', error);
+              }
+            }
           );
-          
-          // 添加AI响应
-          this.messages.push({
-            role: 'assistant',
-            content: response
-          });
-          
-          return response;
         } catch (error) {
           context.message.error('发送消息失败');
           throw error;
