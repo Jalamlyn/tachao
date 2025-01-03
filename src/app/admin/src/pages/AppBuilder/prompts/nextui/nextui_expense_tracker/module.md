@@ -24,13 +24,22 @@ class ExpenseModule {
       const messages = [
         {
           role: 'system',
-          content: `你是一个记账助手,请从用户输入中提取以下信息:
-            - 金额(amount)
-            - 类别(category): 可选值 food/shopping/transport/entertainment/other
-            - 日期(date): YYYY-MM-DD格式
-            - 描述(description)
-            - 支付方式(paymentMethod): 可选值 cash/alipay/wechat/card
-            请以JSON格式返回结果`
+          content: `你是一个记账助手,请从用户输入中提取信息并以下列格式返回:
+<mo-ai-code type="json">
+{
+  "amount": "数字",
+  "category": "food/shopping/transport/entertainment/other 中的一个",
+  "date": "YYYY-MM-DD格式的日期",
+  "description": "字符串描述",
+  "paymentMethod": "cash/alipay/wechat/card 中的一个"
+}
+</mo-ai-code>
+
+注意事项:
+1. 必须使用<mo-ai-code>标签包装返回内容
+2. 不要使用\`\`\`json这样的标记
+3. type属性必须指定为json
+4. 返回的JSON必须符合上述格式和字段类型要求`
         },
         {
           role: 'user',
@@ -41,7 +50,13 @@ class ExpenseModule {
       await ai.chat(messages, {
         onResult: (result) => {
           try {
-            const parsedResult = JSON.parse(result);
+            // 使用正则表达式提取<mo-ai-code>标签中的内容
+            const match = result.match(/<mo-ai-code type="json">([\s\S]*?)<\/mo-ai-code>/);
+            if (!match) {
+              throw new Error('Invalid response format');
+            }
+            const jsonContent = match[1];
+            const parsedResult = JSON.parse(jsonContent);
             expenseStore.setCurrentExpense(parsedResult);
             message.success('已识别消费信息');
           } catch (e) {
@@ -69,13 +84,22 @@ class ExpenseModule {
       const messages = [
         {
           role: 'system',
-          content: `你是一个票据识别助手,请从上传的小票图片中提取以下信息:
-            - 金额(amount)
-            - 类别(category): 可选值 food/shopping/transport/entertainment/other
-            - 日期(date): YYYY-MM-DD格式
-            - 商家信息(description)
-            - 支付方式(paymentMethod): 可选值 cash/alipay/wechat/card
-            请以JSON格式返回结果`
+          content: `你是一个票据识别助手,请从上传的小票图片中提取信息并以下列格式返回:
+<mo-ai-code type="json">
+{
+  "amount": "数字",
+  "category": "food/shopping/transport/entertainment/other 中的一个",
+  "date": "YYYY-MM-DD格式的日期",
+  "description": "字符串描述",
+  "paymentMethod": "cash/alipay/wechat/card 中的一个"
+}
+</mo-ai-code>
+
+注意事项:
+1. 必须使用<mo-ai-code>标签包装返回内容
+2. 不要使用\`\`\`json这样的标记
+3. type属性必须指定为json
+4. 返回的JSON必须符合上述格式和字段类型要求`
         },
         {
           role: 'user',
@@ -95,7 +119,13 @@ class ExpenseModule {
       await ai.chat(messages, {
         onResult: (result) => {
           try {
-            const parsedResult = JSON.parse(result);
+            // 使用正则表达式提取<mo-ai-code>标签中的内容
+            const match = result.match(/<mo-ai-code type="json">([\s\S]*?)<\/mo-ai-code>/);
+            if (!match) {
+              throw new Error('Invalid response format');
+            }
+            const jsonContent = match[1];
+            const parsedResult = JSON.parse(jsonContent);
             expenseStore.setCurrentExpense(parsedResult);
             message.success('已识别小票信息');
           } catch (e) {
