@@ -1,3 +1,5 @@
+import nextui_checkout_complete from "./nextui/nextui_checkout_complete"
+
 export const EXPERIENCE_PROMPTS = {
   // API 使用最佳实践
   apiExperience: {
@@ -195,8 +197,11 @@ export const EXPERIENCE_PROMPTS = {
       }
     }
     \`\`\`
-    `
-  }
-};
+    `,
+  },
+  uiExperience: {
+    nextui_checkout_complete,
+  },
+}
 
-export default EXPERIENCE_PROMPTS;
+export default EXPERIENCE_PROMPTS

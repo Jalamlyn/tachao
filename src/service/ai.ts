@@ -1,8 +1,7 @@
-import { message } from "@/components/Message"
 import { jsonParse, jsonStringify } from "@/utils"
 import { countTokens } from "@/utils/moduleLoader"
 import { setMetadata, getMetadata } from "@/service/apis/metadata"
-import chatChunk from "@/service/chat/chat-chunk-openai-azure"
+import chatChunk from "@/service/chat/chat-deepseek"
 
 // 计算费用的函数
 function calculateCost(tokenCount: number, isInput: boolean, model: string): number {
@@ -62,10 +61,9 @@ class AIService {
         temperature,
         max_tokens: 2000,
         model: baseModel,
-        stream: false,
       }
 
-      const response = await fetch(`${this.baseUrl}/chat-azure`, {
+      const response = await fetch(`${this.baseUrl}/chat-a`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -7,7 +7,7 @@ import { costService } from "@/utils/costService"
 export default async function chatChunkDeepseek(
   messages,
   onChunk,
-  onCancel,
+  onCancel = () => {},
   isFirst = true,
   temperature = 0,
   overFlag = "YES"
