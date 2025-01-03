@@ -11,7 +11,7 @@ import * as recharts from "recharts"
 import { cn } from "@/theme/cn"
 import React from "react"
 import message from "@/components/Message"
-
+import * as XLSX from 'xlsx'
 
 const docker = {
   AppEntry: () => {},
@@ -36,4 +36,5 @@ export const context = (appId) => ({
   recharts,
   cn,
   docker,
+  xlsx: XLSX,
 })

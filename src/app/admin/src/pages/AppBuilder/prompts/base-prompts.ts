@@ -20,6 +20,7 @@ export const BASE_PROMPTS = {
      * mobx - 状态管理
      * appId - 应用ID
      * utils - 工具库
+     * xlsx - Excel 文件操作库
    - 禁止直接导入这些依赖，必须从 context 中获取
 
 2. 模块导入导出规则
@@ -50,7 +51,20 @@ export const BASE_PROMPTS = {
    - component 不应包含业务逻辑
    - component 通过 props 接收数据和回调
    - 保持组件的单一职责
-   - 支持自定义样式和主题`,
+   - 支持自定义样式和主题
+
+6. Excel 操作规范
+   - 使用 context.xlsx 进行 Excel 文件操作
+   - 支持的功能包括：
+     * 读取 Excel 文件（.xlsx, .xls, .csv）
+     * 写入 Excel 文件
+     * 创建工作表
+     * 格式化单元格
+     * 导出数据到 Excel
+   - Excel 操作应该在异步函数中进行
+   - 处理大文件时需要考虑性能优化
+   - 必须包含适当的错误处理
+   - 提供用户友好的进度反馈`,
 
   thoughtChain: `作为一个专业的需求分析专家，请按照以下步骤分析用户需求并提供完整实现：
 
