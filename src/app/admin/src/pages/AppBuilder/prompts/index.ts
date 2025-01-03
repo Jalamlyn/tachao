@@ -4,7 +4,6 @@ import { COMPONENT_PROMPTS } from "./component-prompts"
 import { TECH_PROMPTS } from "./tech-prompts"
 import { ENV_PROMPTS } from "./env-prompts"
 import { EXPERIENCE_PROMPTS } from "./experience-prompts"
-import { markdown as nextui_table_with_filters } from "./nextui/nextui_table_with_filters.md"
 
 export const PROMPTS = {
   ...BASE_PROMPTS,
@@ -13,7 +12,6 @@ export const PROMPTS = {
   ...TECH_PROMPTS,
   ...ENV_PROMPTS,
   ...EXPERIENCE_PROMPTS,
-  nextui_table_with_filters,
 }
 
 // 提示词组合器

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react"
 import { BrowserRouter } from "react-router-dom"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import wpm from "@wpm-js/core"
+import Table from "./table/table-with-filters (2)/index"
 
 interface AppRenderProps {
   appId: string
@@ -10,8 +11,12 @@ interface AppRenderProps {
   onAIFix?: (errorInfo: { message: string; stack?: string; componentStack?: string }) => void
 }
 
+const AppEntry = ({ children }) => {
+  return <>{children}</>
+}
+
 export const AppRender: React.FC<AppRenderProps> = ({ appId, basename, onError, onAIFix }) => {
-  const [App, setApp] = useState(() => <div></div>)
+  const [App, setApp] = useState(null)
 
   useEffect(() => {
     const init = async () => {
@@ -23,7 +28,13 @@ export const AppRender: React.FC<AppRenderProps> = ({ appId, basename, onError, 
 
   return (
     <ErrorBoundary onError={onError} onAIFix={onAIFix}>
-      <BrowserRouter basename={basename}>{App}</BrowserRouter>
+      <BrowserRouter basename={basename}>
+        {App && (
+          <AppEntry>
+            <App></App>
+          </AppEntry>
+        )}
+      </BrowserRouter>
     </ErrorBoundary>
   )
 }

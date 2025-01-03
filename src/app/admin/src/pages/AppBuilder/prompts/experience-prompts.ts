@@ -1,4 +1,5 @@
 import nextui_checkout_complete from "./nextui/nextui_checkout_complete"
+import nextui_table_with_filters from "./nextui/nextui_table_with_filters"
 
 export const EXPERIENCE_PROMPTS = {
   // API 使用最佳实践
@@ -167,6 +168,7 @@ export const EXPERIENCE_PROMPTS = {
   },
   uiExperience: {
     nextui_checkout_complete,
+    nextui_table_with_filters,
   },
 }
 

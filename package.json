@@ -32,7 +32,7 @@
     "@nextui-org/link": "2.0.32",
     "@nextui-org/modal": "^2.2.5",
     "@nextui-org/navbar": "2.0.33",
-    "@nextui-org/react": "^2.6.8",
+    "@nextui-org/react": "latest",
     "@nextui-org/select": "^2.4.7",
     "@nextui-org/snippet": "2.0.38",
     "@nextui-org/switch": "2.0.31",

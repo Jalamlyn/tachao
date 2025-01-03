@@ -23,6 +23,14 @@ const TableContent = observer(({
   onEdit,
   onDelete
 }) => {
+  // 根据visibleColumns过滤columns
+  const filteredColumns = React.useMemo(() => {
+    if (visibleColumns === "all") return columns;
+    return columns.filter((column) => 
+      Array.from(visibleColumns).includes(column.key)
+    );
+  }, [visibleColumns]);
+
   const renderCell = (item, columnKey) => {
     const cellValue = item[columnKey];
 
@@ -76,7 +84,7 @@ const TableContent = observer(({
       onSelectionChange={onSelectionChange}
       onSortChange={onSortChange}
     >
-      <TableHeader columns={columns}>
+      <TableHeader columns={filteredColumns}>
         {(column) => (
           <TableColumn
             key={column.key}

@@ -24,11 +24,10 @@ export const BASE_PROMPTS = {
 2. 模块导入导出规则
    - 入口模块(type="app")必须使用 context.appId 作为模块名
    - 模块使用 await wpm.import('xxx') 导入
+   - wpm.import 必须在代码的最开始导入，禁止在函数或条件语句中使用
    - 所有模块必须使用 wpm.export 导出
    - 严禁使用 wpm.import 导入未导出的模块
    - 必须先确保模块通过 wpm.export 导出后才能导入
-   - 每个页面组件必须使用 wpm.export 导出
-   - 所有 store/service/module/component 都必须导出后才能使用
 
 3. 代码生成规则
    - 生成完整代码，不使用省略符号
@@ -151,5 +150,5 @@ export const BASE_PROMPTS = {
    - 处理模块导入失败的情况
    - 在使用 wpm.import 前必须确保模块已经导出
    - 检查所有导入模块的存在性
-   - 按正确顺序创建和导出模块`
+   - 按正确顺序创建和导出模块`,
 }

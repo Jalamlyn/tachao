@@ -1,3 +1,4 @@
+```jsx
 <mo-ai-code type="app">
 const {
   wpm,
@@ -22,18 +23,21 @@ const TablePage = await wpm.import('page_table');
 // 主应用组件
 const App = observer(() => {
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={<Navigate to="table" replace />}
-      />
-      <Route
-        path="table"
-        element={<TablePage />}
-      />
-    </Routes>
+    <div className="px-4 py-6">
+      <Routes>
+        <Route
+          path="/"
+          element={<Navigate to="table" replace />}
+        />
+        <Route
+          path="table"
+          element={<TablePage />}
+        />
+      </Routes>
+    </div>
   );
 });
 
 wpm.export(appId, App);
 </mo-ai-code>
+```

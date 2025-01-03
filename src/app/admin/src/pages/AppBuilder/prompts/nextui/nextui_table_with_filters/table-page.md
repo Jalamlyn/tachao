@@ -1,3 +1,4 @@
+```jsx
 <mo-ai-code type="page" pageid="page_table" title="表格页面">
 const {
   wpm,
@@ -166,3 +167,4 @@ const TablePage = observer(() => {
 
 wpm.export('page_table', TablePage);
 </mo-ai-code>
+```

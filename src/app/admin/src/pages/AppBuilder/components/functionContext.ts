@@ -11,6 +11,10 @@ import * as recharts from "recharts"
 import { cn } from "@/theme/cn"
 import React from "react"
 import message from "@/components/Message"
+
+const docker = {
+  AppEntry: () => {},
+}
 export const context = (appId) => ({
   wpm,
   React,
@@ -30,4 +34,5 @@ export const context = (appId) => ({
   mobx,
   recharts,
   cn,
+  docker,
 })

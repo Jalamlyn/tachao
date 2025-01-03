@@ -94,6 +94,25 @@ const TableToolbar = observer(({
             </DropdownMenu>
           </Dropdown>
 
+          {(selectedKeys === "all" || selectedKeys.size > 0) && (
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  endContent={<Icon className="text-small" icon="solar:alt-arrow-down-linear" />}
+                  variant="flat"
+                >
+                  批量操作
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="批量操作选项">
+                <DropdownItem key="batch-edit">批量编辑</DropdownItem>
+                <DropdownItem key="batch-delete" className="text-danger" color="danger">批量删除</DropdownItem>
+                <DropdownItem key="batch-export">导出选中</DropdownItem>
+                <DropdownItem key="batch-status">修改状态</DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          )}
+
           <Button color="primary" endContent={<Icon icon="solar:add-circle-bold" />}>
             新建
           </Button>

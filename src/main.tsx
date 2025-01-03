@@ -103,4 +103,4 @@ const AppSelector: React.FC = () => {
   )
 }
 
-ReactDOM.createRoot(document.getElementById("root")!).render(<AppSelector />)
+ReactDOM.createRoot(document.getElementById("root")!).render(<AppSelector></AppSelector>)
