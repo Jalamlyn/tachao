@@ -391,7 +391,6 @@ const AppBuilder: React.FC = observer(() => {
         <div className='flex-1 overflow-hidden rounded-b-lg border border-default-200 shadow-lg'>
           <iframe
             ref={iframeRef}
-            sandbox='allow-scripts allow-same-origin allow-forms'
             src={`/app-preview/${appId}`}
             style={{
               width: "100%",

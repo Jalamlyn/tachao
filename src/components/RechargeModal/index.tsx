@@ -402,7 +402,6 @@ const RechargeModal = observer(() => {
                 <iframe
                   srcDoc={paymentForm}
                   style={{ width: "100%", height: "600px", border: "none" }}
-                  sandbox='allow-forms allow-scripts allow-same-origin allow-popups'
                 />
               </ModalBody>
             </>
