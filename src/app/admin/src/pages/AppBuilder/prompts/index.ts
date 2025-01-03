@@ -5,6 +5,7 @@ import { TECH_PROMPTS } from "./tech-prompts"
 import { ENV_PROMPTS } from "./env-prompts"
 import { EXPERIENCE_PROMPTS } from "./experience-prompts"
 import { UI_DESIGN_PROMPTS } from "./ui-design-prompts"
+import { RESOURCE_PROMPTS } from "./resource-prompts"
 
 export const PROMPTS = {
   ...BASE_PROMPTS,
@@ -14,11 +15,15 @@ export const PROMPTS = {
   ...ENV_PROMPTS,
   ...EXPERIENCE_PROMPTS,
   ...UI_DESIGN_PROMPTS,
+  ...RESOURCE_PROMPTS,
 }
 
 // 提示词组合器
 export const promptsComposer = {
-  getSystemPrompt() {
+  async getSystemPrompt() {
+    // 获取资源提示词
+    const resourcePrompt = await RESOURCE_PROMPTS.resourcePrompt.getResourcePrompt()
+
     return `${BASE_PROMPTS.systemRole}
 
 ${BASE_PROMPTS.thoughtChain}
@@ -30,7 +35,6 @@ ${BASE_PROMPTS.codeGeneration}
 ${EXPERIENCE_PROMPTS.apiExperience.metadata}
 
 <experience-nextui>
-${EXPERIENCE_PROMPTS.uiExperience.nextui_checkout_complete}}
 ${EXPERIENCE_PROMPTS.uiExperience.nextui_expense_tracker}
 ${EXPERIENCE_PROMPTS.uiExperience.nextui_table_with_filters}
 ${EXPERIENCE_PROMPTS.uiExperience.nextui_sidebar_with_nested}
@@ -45,6 +49,10 @@ ${UI_DESIGN_PROMPTS.designSystem}
 ${UI_DESIGN_PROMPTS.motionDesign}
 ${UI_DESIGN_PROMPTS.designAnalysis}
 </ui-design-principles>
+
+<business-resources>
+${resourcePrompt}
+</business-resources>
 
 1. 代码生成顺序：
    - 如果应用入口代码不存在，必须先生成入口代码
@@ -120,5 +128,5 @@ ${UI_DESIGN_PROMPTS.componentDesign}
 ${UI_DESIGN_PROMPTS.designSystem}
 ${UI_DESIGN_PROMPTS.motionDesign}
 ${UI_DESIGN_PROMPTS.designAnalysis}`
-  }
+  },
 }
