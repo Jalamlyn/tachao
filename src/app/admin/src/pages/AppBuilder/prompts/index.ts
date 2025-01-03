@@ -1,10 +1,10 @@
-import { BASE_PROMPTS } from './base-prompts'
-import { ROUTER_PROMPTS } from './router-prompts'
-import { COMPONENT_PROMPTS } from './component-prompts'
-import { TECH_PROMPTS } from './tech-prompts'
-import { ENV_PROMPTS } from './env-prompts'
-import { API_PROMPTS } from './api-prompts'
-import { EXPERIENCE_PROMPTS } from './experience-prompts'
+import { BASE_PROMPTS } from "./base-prompts"
+import { ROUTER_PROMPTS } from "./router-prompts"
+import { COMPONENT_PROMPTS } from "./component-prompts"
+import { TECH_PROMPTS } from "./tech-prompts"
+import { ENV_PROMPTS } from "./env-prompts"
+import { EXPERIENCE_PROMPTS } from "./experience-prompts"
+import nextui_table_with_filters from "./nextui/nextui_table_with_filters"
 
 export const PROMPTS = {
   ...BASE_PROMPTS,
@@ -12,8 +12,8 @@ export const PROMPTS = {
   ...COMPONENT_PROMPTS,
   ...TECH_PROMPTS,
   ...ENV_PROMPTS,
-  ...API_PROMPTS,
-  ...EXPERIENCE_PROMPTS
+  ...EXPERIENCE_PROMPTS,
+  nextui_table_with_filters
 }
 
 // 提示词组合器
@@ -27,11 +27,11 @@ ${BASE_PROMPTS.reflection}
 
 ${BASE_PROMPTS.codeGeneration}
 
-${API_PROMPTS.multimodal}
-
 ${EXPERIENCE_PROMPTS.apiExperience.metadata}
 
 ${EXPERIENCE_PROMPTS.apiExperience.aiApi}
+${EXPERIENCE_PROMPTS.uiExperience.nextui_checkout_complete}
+${nextui_table_with_filters}
 
 1. 代码生成顺序：
    - 如果应用入口代码不存在，必须先生成入口代码
@@ -47,13 +47,11 @@ ${COMPONENT_PROMPTS.pageComponent}
 ${COMPONENT_PROMPTS.storeTemplate}
 ${COMPONENT_PROMPTS.serviceTemplate}
 ${COMPONENT_PROMPTS.moduleTemplate}
-${COMPONENT_PROMPTS.schemaTemplate}
 
 4. 技术规范：
 ${COMPONENT_PROMPTS.componentRules}
 ${TECH_PROMPTS.mobx}
 ${TECH_PROMPTS.metadata}
-${TECH_PROMPTS.schema}
 
 5. 环境说明：
 ${ENV_PROMPTS.preview}
@@ -70,7 +68,7 @@ ${ENV_PROMPTS.preview}
 9. Module 只能包含纯函数
 10. Schema 必须使用标准的 JSON Schema`
   },
-  
+
   getCodeGenerationPrompt() {
     return `${BASE_PROMPTS.codeGeneration}
 ${COMPONENT_PROMPTS.appEntry}
@@ -78,7 +76,7 @@ ${COMPONENT_PROMPTS.pageComponent}
 ${COMPONENT_PROMPTS.storeTemplate}
 ${COMPONENT_PROMPTS.serviceTemplate}
 ${COMPONENT_PROMPTS.moduleTemplate}
-${COMPONENT_PROMPTS.schemaTemplate}`
+`
   },
 
   getRouterPrompt() {
@@ -92,13 +90,12 @@ ${ROUTER_PROMPTS.navigationSystem}`
 ${TECH_PROMPTS.tailwind}
 ${TECH_PROMPTS.framerMotion}
 ${TECH_PROMPTS.mobx}
-${TECH_PROMPTS.metadata}
-${TECH_PROMPTS.schema}`
+${TECH_PROMPTS.metadata}`
   },
 
   getEnvPrompt() {
     return `${ENV_PROMPTS.preview}
 ${ENV_PROMPTS.routing}
 ${ENV_PROMPTS.basePath}`
-  }
+  },
 }
