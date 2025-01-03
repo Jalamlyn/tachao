@@ -83,6 +83,7 @@ export default async function chatChunkOpenAIOffice(
     temperature,
     max_tokens: 16000,
     model: baseModel,
+    stream: true,
   }
 
   // 使用清理后的消息计算token

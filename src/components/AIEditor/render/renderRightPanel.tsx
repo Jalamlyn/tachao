@@ -22,7 +22,7 @@ export const renderRightPanel = (
 ) => {
   return (
     <ResizablePanel defaultSize={70} className='resizable-panel bg-slate-50'>
-      <div className='relative h-full flex flex-col'>
+      <div className='relative h-full flex flex-col p-4'>
         <div className='version-control-wrapper absolute -top-2 right-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-2 transition-all duration-200 hover:bg-white'>
           <div className='flex items-center gap-3'>
             <div className='version-controls flex items-center gap-1'>
@@ -65,16 +65,16 @@ export const renderRightPanel = (
         <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => onTabChange(key.toString())}>
           {showDataTab && <Tab key='data' title='数据源' />}
           <Tab key='preview' title={previewTabName}>
-            <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderPreview(currentVersion)}</div>
+            <div className='h-[calc(100vh-200px)] overflow-auto p-2'>{renderPreview(currentVersion)}</div>
           </Tab>
           {showCodeTab && <Tab key='code' title='代码视图' />}
         </Tabs>
 
         {selectedTab === "data" && showDataTab && (
-          <div className='h-[calc(100vh-260px)] overflow-auto p-2'>{renderDataView?.()}</div>
+          <div className='h-[calc(100vh-200px)] overflow-auto p-2'>{renderDataView?.()}</div>
         )}
         {selectedTab === "code" && showCodeTab && (
-          <div className='relative h-[calc(100vh-260px)] rounded-lg overflow-auto mt-2'>
+          <div className='relative h-[calc(100vh-200px)] rounded-lg overflow-auto mt-2'>
             <>
               {renderCodeEditor(isEditing ? editedCode : currentVersion?.rawConfig || "", isEditing)}
               {isEditing ? (

@@ -1,4 +1,4 @@
-```jsx
+、```jsx
 <mo-ai-code type="component" name="comp_expense_form">
 const {
   wpm,

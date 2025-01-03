@@ -24,8 +24,10 @@ class ExpenseModule {
       const messages = [
         {
           role: 'system',
-          content: `你是一个记账助手,请从用户输入中提取信息并以下列格式返回:
-<mo-ai-code type="json">
+          content: [{
+            type: 'text',
+            text: `你是一个记账助手,请从用户输入中提取信息并以下列格式返回:
+<mo-ai-script type="json">
 {
   "amount": "数字",
   "category": "food/shopping/transport/entertainment/other 中的一个",
@@ -33,13 +35,14 @@ class ExpenseModule {
   "description": "字符串描述",
   "paymentMethod": "cash/alipay/wechat/card 中的一个"
 }
-</mo-ai-code>
+</mo-ai-script>
 
 注意事项:
-1. 必须使用<mo-ai-code>标签包装返回内容
+1. 必须使用<mo-ai-script>标签包装返回内容
 2. 不要使用\`\`\`json这样的标记
 3. type属性必须指定为json
 4. 返回的JSON必须符合上述格式和字段类型要求`
+          }]
         },
         {
           role: 'user',
@@ -50,8 +53,8 @@ class ExpenseModule {
       await ai.chat(messages, {
         onResult: (result) => {
           try {
-            // 使用正则表达式提取<mo-ai-code>标签中的内容
-            const match = result.match(/<mo-ai-code type="json">([\s\S]*?)<\/mo-ai-code>/);
+            // 使用正则表达式提取<mo-ai-script>标签中的内容
+            const match = result.match(/<mo-ai-script type="json">([\s\S]*?)<\/mo-ai-script>/);
             if (!match) {
               throw new Error('Invalid response format');
             }
@@ -84,8 +87,10 @@ class ExpenseModule {
       const messages = [
         {
           role: 'system',
-          content: `你是一个票据识别助手,请从上传的小票图片中提取信息并以下列格式返回:
-<mo-ai-code type="json">
+          content: [{
+            type: 'text',
+            text: `你是一个票据识别助手,请从上传的小票图片中提取信息并以下列格式返回:
+<mo-ai-script type="json">
 {
   "amount": "数字",
   "category": "food/shopping/transport/entertainment/other 中的一个",
@@ -93,34 +98,27 @@ class ExpenseModule {
   "description": "字符串描述",
   "paymentMethod": "cash/alipay/wechat/card 中的一个"
 }
-</mo-ai-code>
+</mo-ai-script>
 
 注意事项:
-1. 必须使用<mo-ai-code>标签包装返回内容
+1. 必须使用<mo-ai-script>标签包装返回内容
 2. 不要使用\`\`\`json这样的标记
 3. type属性必须指定为json
 4. 返回的JSON必须符合上述格式和字段类型要求`
+          }]
         },
         {
           role: 'user',
-          content: [
-            {
-              type: 'image',
-              data: base64Image
-            },
-            {
-              type: 'text',
-              data: '请识别这张小票的信息'
-            }
-          ]
+          content: '请识别这张小票的信息',
+          images: [base64Image]
         }
       ];
 
       await ai.chat(messages, {
         onResult: (result) => {
           try {
-            // 使用正则表达式提取<mo-ai-code>标签中的内容
-            const match = result.match(/<mo-ai-code type="json">([\s\S]*?)<\/mo-ai-code>/);
+            // 使用正则表达式提取<mo-ai-script>标签中的内容
+            const match = result.match(/<mo-ai-script type="json">([\s\S]*?)<\/mo-ai-script>/);
             if (!match) {
               throw new Error('Invalid response format');
             }

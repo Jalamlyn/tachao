@@ -245,7 +245,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
   if (!showCodeTab || selectedTab !== "code") return null
 
   return (
-    <div className='relative h-[calc(100vh-260px)] rounded-lg overflow-hidden mt-2'>
+    <div className='relative h-[calc(100vh-200px)] rounded-lg overflow-hidden mt-2'>
       <div className='absolute top-2 left-2 right-2 z-10 flex justify-between items-center'>
         <motion.div
           initial={false}

@@ -1,6 +1,7 @@
 import { getMetadata } from "@/service/apis/metadata"
 // import { initialAIResponse } from "../../prompts/initTemplate"
-import initialAIResponse from "../../prompts/nextui/nextui_table_with_filters"
+// import initialAIResponse from "../../prompts/nextui/nextui_table_with_filters"
+import initialAIResponse from "../../prompts/nextui/nextui_expense_tracker"
 import { AppCodeStore, Version, AIGenerationResult } from "../types"
 
 export async function handleAIGeneration(

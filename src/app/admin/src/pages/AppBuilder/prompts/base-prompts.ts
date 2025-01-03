@@ -19,6 +19,7 @@ export const BASE_PROMPTS = {
      * ai - AI 能力
      * mobx - 状态管理
      * appId - 应用ID
+     * utils - 工具库
    - 禁止直接导入这些依赖，必须从 context 中获取
 
 2. 模块导入导出规则

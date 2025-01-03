@@ -27,9 +27,6 @@ ${BASE_PROMPTS.codeGeneration}
 
 ${EXPERIENCE_PROMPTS.apiExperience.metadata}
 
-${EXPERIENCE_PROMPTS.apiExperience.aiApi}
-${EXPERIENCE_PROMPTS.uiExperience.nextui_checkout_complete}
-${nextui_table_with_filters}
 
 1. 代码生成顺序：
    - 如果应用入口代码不存在，必须先生成入口代码
