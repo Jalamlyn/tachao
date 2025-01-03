@@ -2,6 +2,7 @@ import { jsonParse, jsonStringify } from "@/utils"
 import { countTokens } from "@/utils/moduleLoader"
 import { setMetadata, getMetadata } from "@/service/apis/metadata"
 import chatChunk from "@/service/chat/chat-deepseek"
+import chatChunkWithImage from "@/service/chat/chat-chunk-openai-azure"
 
 // 计算费用的函数
 function calculateCost(tokenCount: number, isInput: boolean, model: string): number {
@@ -46,28 +47,69 @@ class AIService {
     }
     return AIService.instance
   }
-  // 新的统一chat方法
-  async chat(messages: any[], options: ChatOptions = {}): Promise<void> {
-    const { onChunk, onResult, onError, temperature = 0 } = options
 
-    let fullContent = ""
+  // 检查消息是否包含图片
+  private hasImageContent(messages: any[]): boolean {
+    return messages.some(msg => {
+      // 检查数组形式的content
+      if (Array.isArray(msg.content)) {
+        return msg.content.some(item => 
+          item.type === 'image' || 
+          item.type === 'image_url' ||
+          (item.type === 'text' && item.images && item.images.length > 0)
+        );
+      }
+      // 检查对象形式的content
+      if (typeof msg.content === 'object' && msg.content !== null) {
+        return msg.content.type === 'image' || 
+               msg.content.type === 'image_url' ||
+               (msg.content.images && msg.content.images.length > 0);
+      }
+      // 检查消息中的images字段
+      return msg.images && msg.images.length > 0;
+    });
+  }
+
+  // 统一的chat方法
+  async chat(messages: any[], options: ChatOptions = {}): Promise<void> {
+    const { onChunk, onResult, onError, temperature = 0 } = options;
+    let fullContent = "";
 
     try {
-      await chatChunk(
-        messages,
-        (chunk: string) => {
-          fullContent += chunk
-          onChunk?.(chunk)
-        },
-        () => {}, // onCancel callback
-        true, // isStream
-        temperature
-      )
+      // 检查消息是否包含图片
+      const containsImage = this.hasImageContent(messages);
 
-      onResult?.(fullContent)
+      // 根据消息类型选择合适的接口
+      if (containsImage) {
+        // 使用支持图片的Azure接口
+        await chatChunkWithImage(
+          messages,
+          (chunk: string) => {
+            fullContent += chunk;
+            onChunk?.(chunk);
+          },
+          () => {}, // onCancel callback
+          true, // isStream
+          temperature
+        );
+      } else {
+        // 使用Deepseek接口处理纯文本消息
+        await chatChunk(
+          messages,
+          (chunk: string) => {
+            fullContent += chunk;
+            onChunk?.(chunk);
+          },
+          () => {}, // onCancel callback
+          true, // isStream
+          temperature
+        );
+      }
+
+      onResult?.(fullContent);
     } catch (error) {
-      onError?.(error)
-      throw error
+      onError?.(error);
+      throw error;
     }
   }
 }
