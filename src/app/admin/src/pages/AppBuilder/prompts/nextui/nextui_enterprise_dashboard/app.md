@@ -1,3 +1,4 @@
+```jsx
 <mo-ai-code type="app">
 const {
   wpm,
@@ -40,7 +41,7 @@ const App = observer(() => {
 
   return (
     <NextUI.NextUIProvider navigate={navigate}>
-      <div className="flex h-screen w-full">
+      <div className="flex h-screen w-full p-2">
         {/* 侧边栏 */}
         <SidebarDrawer
           className={cn("min-w-[288px] rounded-lg", {"min-w-[76px]": isCollapsed})}
@@ -98,6 +99,11 @@ const App = observer(() => {
               isCompact={isCollapsed}
               items={[
                 {
+                  key: "data",
+                  title: "数据管理",
+                  href: "/data"
+                },
+                {
                   key: "settings",
                   title: "系统设置",
                   icon: "solar:settings-bold-duotone",
@@ -146,7 +152,7 @@ const App = observer(() => {
               {isCollapsed && (
                 <Button
                   isIconOnly
-                  className="flex h-10 w-10 text-default-600"
+                  className="flex h-10 w-10 min-w-5 text-default-600"
                   size="sm"
                   variant="light"
                 >
@@ -224,8 +230,8 @@ const App = observer(() => {
         </SidebarDrawer>
 
         {/* 内容区域 */}
-        <div className="flex-1 overflow-auto">
-          <div className="w-full max-w-[1024px] p-4">
+        <div className="flex-1 overflow-auto p-6">
+          <div className="w-full">
               <Routes>
                 <Route path="/" element={<Navigate to="/data" replace />} />
                 <Route path="/data" element={<DataManage />} />
@@ -244,3 +250,4 @@ const App = observer(() => {
 
 wpm.export(appId, App);
 </mo-ai-code>
+```

@@ -36,7 +36,7 @@ const TeamSetting = observer(({className, ...props}) => (
     <Card className="mt-4 bg-default-100" shadow="none">
       <CardBody className="px-4">
         <div className="flex items-start justify-between pb-3">
-          <pclassName="mt-1.5 text-sm font-medium text-default-700">
+          <p className="mt-1.5 text-sm font-medium text-default-700">
             通过邮箱地址邀请新成员
           </p>
           <Button

@@ -6,10 +6,12 @@ const {
   observer,
   NextUI,
   Icon,
+  ReactRouterDom,
   cn
 } = context;
 
 const { Accordion, AccordionItem, Listbox, Tooltip, ListboxItem, ListboxSection } = NextUI;
+const { useLocation, useNavigate } = ReactRouterDom;
 
 // 使用普通对象替代 enum
 const SidebarItemType = {
@@ -29,17 +31,39 @@ const Sidebar = observer(({
   className,
   ...props
 }) => {
-  const [selected, setSelected] = React.useState(defaultSelectedKey);
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // 根据当前路由路径确定选中的菜单项
+  const getSelectedKeyFromPath = () => {
+    const path = location.pathname;
+    let selectedKey = defaultSelectedKey;
+    
+    // 遍历所有菜单项查找匹配的路由
+    const findMatchingItem = (items) => {
+      for (const item of items) {
+        if (item.href && path.startsWith(item.href)) {
+          selectedKey = item.key;
+          return true;
+        }
+        if (item.items) {
+          const found = findMatchingItem(item.items);
+          if (found) return true;
+        }
+      }
+      return false;
+    };
+    
+    findMatchingItem(items);
+    return selectedKey;
+  };
 
-  // 添加日志打印
+  const [selected, setSelected] = React.useState(getSelectedKeyFromPath());
+
+  // 监听路由变化更新选中状态
   React.useEffect(() => {
-    console.log('[Sidebar] Initial props:', {
-      items,
-      isCompact,
-      defaultSelectedKey,
-      hideEndContent
-    });
-  }, []);
+    setSelected(getSelectedKeyFromPath());
+  }, [location.pathname]);
 
   const sectionClasses = {
     ...sectionClassesProp,
@@ -63,14 +87,6 @@ const Sidebar = observer(({
 
   const renderNestItem = React.useCallback(
     (item) => {
-      // 添加日志打印
-      console.log('[Sidebar] Rendering nest item:', {
-        key: item.key,
-        title: item.title,
-        type: item.type,
-        hasItems: Boolean(item.items?.length)
-      });
-
       const isNestType =
         item.items && item.items?.length > 0 && item?.type === SidebarItemType.Nest;
 
@@ -182,13 +198,6 @@ const Sidebar = observer(({
 
   const renderItem = React.useCallback(
     (item) => {
-      // 添加日志打印
-      console.log('[Sidebar] Rendering item:', {
-        key: item.key,
-        title: item.title,
-        type: item.type
-      });
-
       const isNestType =
         item.items && item.items?.length > 0 && item?.type === SidebarItemType.Nest;
 
@@ -242,14 +251,29 @@ const Sidebar = observer(({
     [isCompact, hideEndContent, iconClassName, itemClasses?.base],
   );
 
-  // 添加选择变更日志
   const handleSelectionChange = (keys) => {
     const key = Array.from(keys)[0];
-    console.log('[Sidebar] Selection changed:', {
-      previousKey: selected,
-      newKey: key
-    });
     setSelected(key);
+    
+    // 查找选中项的路由并导航
+    const findItemByKey = (items, key) => {
+      for (const item of items) {
+        if (item.key === key) {
+          return item;
+        }
+        if (item.items) {
+          const found = findItemByKey(item.items, key);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    
+    const selectedItem = findItemByKey(items, key);
+    if (selectedItem?.href) {
+      navigate(selectedItem.href);
+    }
+    
     onSelect?.(key);
   };
 
@@ -283,13 +307,6 @@ const Sidebar = observer(({
       {...props}
     >
       {(item) => {
-        // 添加日志打印
-        console.log('[Sidebar] Processing item:', {
-          key: item.key,
-          hasItems: Boolean(item.items?.length),
-          type: item.type
-        });
-
         return item.items && item.items?.length > 0 && item?.type === SidebarItemType.Nest ? (
           renderNestItem(item)
         ) : item.items && item.items?.length > 0 ? (
