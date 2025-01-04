@@ -12,42 +12,31 @@ class ProductAgent {
     return ProductAgent.instance
   }
 
-  private systemPrompt = `我是一位专业的产品经理，我的职责是帮助用户明确他们的需求，并确保这些需求可以被开发团队实现。
+  private systemPrompt = `我是一位专注于产品需求分析的AI产品经理。请告诉我您想要开发什么产品,我会帮您分析:
 
-我了解我们的技术栈和限制：
+1. 产品定位
+- 解决什么问题?
+- 目标用户是谁?
+- 核心价值是什么?
 
-1. 前端技术栈：
-   - React 框架
-   - NextUI 2.6.0 组件库
-   - MobX 状态管理
-   - Tailwind CSS 样式
-   - Framer Motion 动画
+2. 功能规划
+- 核心功能有哪些?
+- 用户操作流程?
+- 关键数据和状态?
 
-2. 可用组件和功能：
-   - NextUI 提供的所有 2.6.0 版本组件
-   - 自定义组件需要使用 comp_ 前缀
-   - 支持的数据操作：getMetadata 和 setMetadata
-   - 支持的路由功能：React Router
+3. 界面要求
+- 页面布局结构
+- 交互设计要点
+- 视觉风格建议
 
-3. 架构约束：
-   - 模块化开发，使用 wpm 管理模块
-   - 组件必须是独立可复用的
-   - 状态管理必须使用 MobX
-   - 样式必须使用 Tailwind CSS
+我会基于您的描述,输出清晰的产品需求文档,包含:
+1. 产品定位与价值
+2. 功能需求清单
+3. 用户界面规范
+4. 数据与规则
+5. 验收标准
 
-4. 需求分析原则：
-   - 确保需求符合技术栈能力范围
-   - 将复杂需求拆分为可实现的小模块
-   - 考虑性能和用户体验
-   - 提供清晰的交互流程描述
-
-我会遵循以下工作流程：
-1. 深入理解用户需求
-2. 评估技术可行性
-3. 提供符合技术约束的解决方案
-4. 生成标准格式的需求文档
-
-让我们开始对话吧！请告诉我您想要开发什么样的应用？`
+让我们开始吧,请描述您想要开发的产品。`
 
   public async chat(messages: Array<{ role: string; content: string }>, onChunk?: (chunk: string) => void) {
     const allMessages = [{ role: "system", content: this.systemPrompt }, ...messages]
@@ -68,38 +57,30 @@ class ProductAgent {
   }
 
   public formatRequirementForAppAgent(conversation: Array<{ role: string; content: string }>): string {
-    // 过滤出用户的需求描述和产品经理的建议
     const requirements = conversation
       .filter((msg) => msg.role === "user" || msg.role === "assistant")
       .map((msg) => {
         if (msg.role === "user") {
           return `用户需求：${msg.content}`
         } else {
-          return `需求分析：
-1. 功能描述：
-${msg.content}
+          return `产品需求规格：
 
-2. 技术要点：
-- 使用的UI组件：[具体列出需要使用的 NextUI 组件]
-- 状态管理：[描述需要的 MobX store]
-- 数据存储：[描述需要使用的 metadata 存储结构]
-- 路由设计：[描述需要的路由配置]
+1. 产品定位与价值
+[产品定位、目标用户、核心价值]
 
-3. 交互流程：
-[详细描述用户交互流程]
+2. 功能需求清单
+[核心功能列表、操作流程、数据规则]
 
-4. 注意事项：
-[列出实现时需要注意的技术细节]`
+3. 界面规范
+[页面布局、交互设计、视觉风格]
+
+4. 验收标准
+[功能验收条件、界面要求、数据规则]`
         }
       })
       .join("\n\n")
 
-    return `基于我们的需求讨论：\n${requirements}\n\n请基于以上需求分析，使用我们的技术栈实现这个应用，生成完整的代码。注意：
-1. 使用 NextUI 2.6.0 的组件
-2. 使用 Tailwind CSS 进行样式设计
-3. 使用 MobX 进行状态管理
-4. 确保所有模块都正确导出后再导入
-5. 遵循项目的代码规范和最佳实践`
+    return `基于产品需求分析：\n${requirements}\n\n请按照需求规格开发。`
   }
 }
 

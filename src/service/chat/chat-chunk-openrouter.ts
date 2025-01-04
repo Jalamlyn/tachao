@@ -89,9 +89,8 @@ export default async function chatChunkOpenAIOffice(
               true // 使用 wild 模式的计费标准
             )
           }
-
           // 检查停止原因
-          if (parsed?.choices[0]?.finish_reason === "length") {
+          if (parsed?.choices[0]?.finish_reason === "max_tokens") {
             // 如果停止原因是 length，则继续调用
             const lastTenChars = fullContent.slice(-10)
             await chatChunkOpenAIOffice(

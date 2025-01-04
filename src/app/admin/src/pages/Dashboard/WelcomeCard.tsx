@@ -30,15 +30,6 @@ const WelcomeCard = ({ appsCount, setShowProductManager }) => {
                 >
                   开始创建应用
                 </Button>
-                <Button
-                  className='bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-medium'
-                  size='lg'
-                  variant='ghost'
-                  startContent={<Icon icon='solar:chat-square-code-linear' />}
-                  onPress={() => setShowProductManager(true)}
-                >
-                  与产品经理对话
-                </Button>
               </div>
             </div>
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className='hidden lg:block'>

@@ -9,8 +9,6 @@ import {
   Input,
   Card,
   CardBody,
-  RadioGroup,
-  Radio,
 } from "@nextui-org/react"
 import { useNavigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
@@ -152,13 +150,35 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
     }
   }
 
+  const getTemplateIcon = (template?: string) => {
+    switch (template) {
+      case "enterprise":
+        return "mdi:building"
+      case "dashboard":
+        return "mdi:view-dashboard-outline"
+      default:
+        return "mdi:view-grid-outline"
+    }
+  }
+
+  const getTemplateColor = (template?: string) => {
+    switch (template) {
+      case "enterprise":
+        return "text-blue-500"
+      case "dashboard":
+        return "text-secondary"
+      default:
+        return "text-primary"
+    }
+  }
+
   return (
     <>
       <Modal
         isOpen={isOpen}
         onClose={onClose}
         classNames={{
-          base: "max-w-md",
+          base: "max-w-3xl",
           header: "border-b",
           body: "py-6",
           footer: "border-t",
@@ -166,7 +186,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
       >
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>创建应用</ModalHeader>
-          <ModalBody className="gap-4">
+          <ModalBody className="gap-6">
             <Input
               label='应用名称'
               value={title}
@@ -176,26 +196,56 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
               isRequired
             />
             
-            <RadioGroup
-              label="选择模板"
-              value={selectedTemplate}
-              onChange={(value) => setSelectedTemplate(value)}
-            >
-              <Radio value="">空白模板</Radio>
-              {Object.entries(templates).map(([id, template]) => (
-                <Radio key={id} value={id}>
-                  <div className="flex items-center gap-2">
-                    <Icon icon={template.icon} />
-                    <div>
-                      <div>{template.name}</div>
-                      <div className="text-small text-default-500">
-                        {template.description}
+            <div className="space-y-3">
+              <h3 className="text-foreground-600 text-sm font-medium">选择模板</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 空白模板卡片 */}
+                <Card 
+                  isPressable 
+                  isHoverable
+                  className={`border-2 transition-all duration-200 ${selectedTemplate === '' ? 'border-primary' : 'border-transparent'}`}
+                  onPress={() => setSelectedTemplate('')}
+                >
+                  <CardBody className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 rounded-lg bg-primary/10">
+                        <Icon icon="mdi:view-grid-outline" className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="text-base font-semibold">空白模板</h4>
+                        <p className="text-sm text-default-500">从零开始构建您的应用</p>
                       </div>
                     </div>
-                  </div>
-                </Radio>
-              ))}
-            </RadioGroup>
+                  </CardBody>
+                </Card>
+
+                {/* 其他模板卡片 */}
+                {Object.entries(templates).map(([id, template]) => (
+                  <Card
+                    key={id}
+                    isPressable
+                    isHoverable
+                    className={`border-2 transition-all duration-200 ${selectedTemplate === id ? 'border-primary' : 'border-transparent'}`}
+                    onPress={() => setSelectedTemplate(id)}
+                  >
+                    <CardBody className="p-4">
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-lg ${selectedTemplate === id ? 'bg-primary/10' : 'bg-default-100'}`}>
+                          <Icon 
+                            icon={getTemplateIcon(id)} 
+                            className={`w-6 h-6 ${getTemplateColor(id)}`} 
+                          />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-semibold">{template.name}</h4>
+                          <p className="text-sm text-default-500">{template.description}</p>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                ))}
+              </div>
+            </div>
           </ModalBody>
           <ModalFooter>
             <Button variant='light' onPress={onClose}>
