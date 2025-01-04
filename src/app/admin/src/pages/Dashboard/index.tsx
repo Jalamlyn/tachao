@@ -4,7 +4,7 @@ import { Icon } from "@iconify/react"
 import { usePendingTasksStore } from "@/app/admin/src/pages/PendingTasks/store/usePendingTasksStore"
 import { motion, AnimatePresence } from "framer-motion"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
-import TutorialModal from "./TutorialModal"
+import ProductManagerModal from "./ProductManagerModal"
 import StatsSection from "./StatsSection"
 import WelcomeCard from "./WelcomeCard"
 import AIChat from "@/app/admin/src/component/AIChat"
@@ -18,7 +18,7 @@ const Dashboard: React.FC = () => {
   const { items: apps, load: loadApps } = useMetadata("app")
   const { tasks, loadTasks } = usePendingTasksStore()
   const [isLoading, setIsLoading] = useState(true)
-  const [showTutorial, setShowTutorial] = useState(false)
+  const [showProductManager, setShowProductManager] = useState(false)
   const [fileCount, setFileCount] = useState(0)
   const [showAIChat, setShowAIChat] = useState(false)
 
@@ -31,7 +31,6 @@ const Dashboard: React.FC = () => {
       setIsLoading(true)
       try {
         await Promise.all([loadApps(), loadTasks()])
-        // 获取文件列表数据
         const fileResponse = await apiService.post(
           "/public/data/file/activitiess/find",
           {},
@@ -39,7 +38,6 @@ const Dashboard: React.FC = () => {
             params: { display: "paginate" },
           }
         )
-        // 计算所有activities中的文件总数
         const totalFiles = fileResponse.data.data.reduce((total, activity) => {
           return total + (activity.files?.length || 0)
         }, 0)
@@ -54,7 +52,6 @@ const Dashboard: React.FC = () => {
     loadData()
   }, [loadApps, loadTasks])
 
-  // 只统计待处理(pending)状态的任务
   const pendingTasksCount = tasks.filter((task) => task.status === "pending").length
 
   const stats = [
@@ -110,7 +107,7 @@ const Dashboard: React.FC = () => {
         </div>
       ) : (
         <>
-          <WelcomeCard setShowTutorial={setShowTutorial} appsCount={apps.length} />
+          <WelcomeCard setShowProductManager={setShowProductManager} appsCount={apps.length} />
           <StatsSection stats={stats} appsCount={apps.length} />
 
           {apps.length > 0 && (
@@ -232,11 +229,10 @@ const Dashboard: React.FC = () => {
         </>
       )}
 
-      <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
+      <ProductManagerModal isOpen={showProductManager} onClose={() => setShowProductManager(false)} />
 
       <AIChat isOpen={showAIChat} onClose={() => setShowAIChat(false)} />
 
-      {/* 悬浮的 AI 工程师按钮 */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}

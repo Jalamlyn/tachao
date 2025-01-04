@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import welcome from "./welcome.png"
 
-const WelcomeCard = ({ appsCount, setShowTutorial }) => {
+const WelcomeCard = ({ appsCount, setShowProductManager }) => {
   const navigate = useNavigate()
 
   if (appsCount === 0) {
@@ -20,7 +20,7 @@ const WelcomeCard = ({ appsCount, setShowTutorial }) => {
                 </motion.div>
                 <h1 className='text-3xl font-bold'>欢迎开启您的数字化之旅</h1>
               </div>
-              <p className='text-white/80 text-lg mb-6'>让我们从创建第一个应用开始，AI助手将全程指导您完成开发</p>
+              <p className='text-white/80 text-lg mb-6'>让我们从创建第一个应用开始，AI产品经理将帮助您梳理需求</p>
               <div className='flex items-center gap-4'>
                 <Button
                   className='bg-white text-primary-900 font-medium'
@@ -34,10 +34,10 @@ const WelcomeCard = ({ appsCount, setShowTutorial }) => {
                   className='bg-white/10 text-white font-medium'
                   size='lg'
                   variant='ghost'
-                  startContent={<Icon icon='solar:play-circle-linear' />}
-                  onPress={() => setShowTutorial(true)}
+                  startContent={<Icon icon='solar:chat-square-code-linear' />}
+                  onPress={() => setShowProductManager(true)}
                 >
-                  查看教程
+                  与产品经理对话
                 </Button>
               </div>
             </div>
