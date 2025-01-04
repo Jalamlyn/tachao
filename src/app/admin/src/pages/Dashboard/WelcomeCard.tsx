@@ -31,7 +31,7 @@ const WelcomeCard = ({ appsCount, setShowProductManager }) => {
                   开始创建应用
                 </Button>
                 <Button
-                  className='bg-white/10 text-white font-medium'
+                  className='bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-medium'
                   size='lg'
                   variant='ghost'
                   startContent={<Icon icon='solar:chat-square-code-linear' />}
