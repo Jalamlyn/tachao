@@ -17,12 +17,13 @@ import { Icon } from "@iconify/react"
 import confetti from "canvas-confetti"
 import { message } from "antd"
 import { appCodeStore } from "@/app/admin/src/pages/AppBuilder/store/appCodeStore"
-import { templates } from "@/prompts/templates"
+import { templates } from "@/app/admin/src/pages/AppBuilder/prompts/templates"
 
 interface CreateAppModalProps {
   isOpen: boolean
   onClose: () => void
   isLoading?: boolean
+  onSuccess?: () => void
 }
 
 interface SuccessDialogProps {
@@ -111,8 +112,9 @@ const SuccessDialog: React.FC<SuccessDialogProps> = ({ isOpen, onClose, onConfir
   )
 }
 
-export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose, isLoading }) => {
+export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose, isLoading, onSuccess }) => {
   const [title, setTitle] = useState("")
+  const [selectedTemplate, setSelectedTemplate] = useState("")
   const [showSuccess, setShowSuccess] = useState(false)
   const [newAppId, setNewAppId] = useState<string>("")
   const navigate = useNavigate()
@@ -126,17 +128,20 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   }
 
   const handleNavigate = () => {
-    navigate(`/admin/apps/${newAppId}/builder`, {
-      state: { isHome: true },
-    })
+    if (onSuccess) {
+      onSuccess()
+    } else {
+      navigate(`/admin/apps/${newAppId}/builder`)
+    }
   }
 
   const handleSubmit = async () => {
     if (!title.trim()) return
     try {
-      const appId = await appCodeStore.createApp(title.trim())
+      const appId = await appCodeStore.createApp(title.trim(), selectedTemplate)
       setNewAppId(appId)
       setTitle("")
+      setSelectedTemplate("")
       onClose()
 
       triggerConfetti()
@@ -161,7 +166,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
       >
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>创建应用</ModalHeader>
-          <ModalBody>
+          <ModalBody className="gap-4">
             <Input
               label='应用名称'
               value={title}
@@ -170,6 +175,27 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
               variant='bordered'
               isRequired
             />
+            
+            <RadioGroup
+              label="选择模板"
+              value={selectedTemplate}
+              onChange={(value) => setSelectedTemplate(value)}
+            >
+              <Radio value="">空白模板</Radio>
+              {Object.entries(templates).map(([id, template]) => (
+                <Radio key={id} value={id}>
+                  <div className="flex items-center gap-2">
+                    <Icon icon={template.icon} />
+                    <div>
+                      <div>{template.name}</div>
+                      <div className="text-small text-default-500">
+                        {template.description}
+                      </div>
+                    </div>
+                  </div>
+                </Radio>
+              ))}
+            </RadioGroup>
           </ModalBody>
           <ModalFooter>
             <Button variant='light' onPress={onClose}>

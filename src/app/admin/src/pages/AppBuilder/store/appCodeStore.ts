@@ -1,5 +1,6 @@
 import { makeAutoObservable } from "mobx"
 import { Version } from "./types"
+import { templates } from "../prompts/templates"
 
 // 导入拆分的方法
 import { compileCode, extractShataAICodes, processAIResponse, executeModules, addModules } from "./methods/codeMethods"
@@ -9,7 +10,7 @@ import { exportToMarkdown, downloadMarkdown } from "./methods/exportMethods"
 import { importFromMarkdown } from "./methods/importMethods"
 import { validateModuleExports, processModuleErrors } from "./methods/validationMethods"
 import { publishToServer, updateAppIndex } from "./methods/serverMethods"
-import { handleAIGeneration, loadApp, createApp } from "./methods/generationMethods"
+import { handleAIGeneration, loadApp } from "./methods/generationMethods"
 
 class AppCodeStore {
   #appId: string | null = null
@@ -41,7 +42,7 @@ class AppCodeStore {
     this.updateAppIndex = updateAppIndex.bind(this)
     this.handleAIGeneration = handleAIGeneration.bind(this)
     this.loadApp = loadApp.bind(this)
-    this.createApp = createApp.bind(this)
+    this.createApp = this.createApp.bind(this)
   }
 
   // 方法声明
@@ -62,12 +63,10 @@ class AppCodeStore {
   importFromMarkdown!: typeof importFromMarkdown
   validateModuleExports!: typeof validateModuleExports
   processModuleErrors!: typeof processModuleErrors
-  validateModuleDependencies!: typeof validateModuleDependencies
   publishToServer!: typeof publishToServer
   updateAppIndex!: typeof updateAppIndex
   handleAIGeneration!: typeof handleAIGeneration
   loadApp!: typeof loadApp
-  createApp!: typeof createApp
 
   // Getters
   get currentVersion(): Version | null {
@@ -105,6 +104,37 @@ class AppCodeStore {
     const timestamp = Date.now()
     const random = Math.random().toString(36).substring(2, 8)
     return `app_${timestamp}_${random}`
+  }
+
+  // 创建应用
+  async createApp(name: string, templateId: string = ''): Promise<string> {
+    const appId = this.generateId()
+    this.setAppId(appId)
+
+    try {
+      let aiResponse
+      if (templateId && templates[templateId]) {
+        // 使用选择的模板代码
+        aiResponse = templates[templateId].code
+      } else {
+        // 使用默认的初始化代码
+        aiResponse = initialAIResponse
+      }
+
+      const result = await this.handleAIGeneration(aiResponse, name)
+      if (!result.success || !result.version) {
+        throw new Error("Failed to create app")
+      }
+
+      this.addVersion(result.version)
+      await this.publishToServer({ useLatest: true })
+      await this.updateAppIndex(result.version.app, name)
+      return appId
+    } catch (error) {
+      console.error("Error creating app:", error)
+      this.clear()
+      throw error
+    }
   }
 }
 
