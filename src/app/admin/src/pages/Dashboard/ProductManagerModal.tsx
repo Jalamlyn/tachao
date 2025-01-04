@@ -8,13 +8,17 @@ import {
   Avatar,
   ScrollShadow,
   Textarea,
+  Tooltip,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { useState, useRef, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import ProductAgent from "./ProductAgent"
 import message from "@/components/Message"
 import appAgent from "@/app/admin/src/pages/AppBuilder/AppAgent"
+
+const MAX_INPUT_LENGTH = 2000
 
 const ProductManagerModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate()
@@ -25,7 +29,6 @@ const ProductManagerModal = ({ isOpen, onClose }) => {
   const [isWaitingResponse, setIsWaitingResponse] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // 自动滚动到底部
   const scrollToBottom = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -92,7 +95,6 @@ const ProductManagerModal = ({ isOpen, onClose }) => {
     try {
       const requirement = ProductAgent.formatRequirementForAppAgent(messages)
 
-      // 创建一个新的应用并处理需求
       const result = await appAgent.processCommand("app_" + Date.now(), [], requirement, (chunk) => {
         console.log("Processing chunk:", chunk)
       })
@@ -119,85 +121,165 @@ const ProductManagerModal = ({ isOpen, onClose }) => {
       size='3xl'
       classNames={{
         base: "h-[80vh]",
+        backdrop: "backdrop-blur-sm",
       }}
     >
       <ModalContent>
-        <ModalHeader className='flex flex-col gap-1'>
-          <div className='flex items-center gap-2'>
-            <Avatar src='https://avatars.githubusercontent.com/u/30373425?v=4' className='w-8 h-8' />
-            <div>
-              <h3 className='text-xl font-bold'>AI产品经理</h3>
-              <p className='text-sm text-default-500'>让我们一起讨论您的应用需求</p>
-            </div>
-          </div>
-        </ModalHeader>
-        <ModalBody>
+        {(onClose) => (
           <div className='flex flex-col h-full'>
-            <ScrollShadow ref={scrollRef} className='flex-1 space-y-4 p-4 max-h-[50vh]'>
-              {messages.map((msg, index) => (
-                <div key={index} className={`flex gap-3 ${msg.role === "assistant" ? "" : "flex-row-reverse"}`}>
+            <ModalHeader className='flex flex-col gap-1 border-b'>
+              <div className='flex items-center gap-3'>
+                <div className='relative'>
                   <Avatar
-                    src={msg.role === "assistant" ? "https://avatars.githubusercontent.com/u/30373425?v=4" : ""}
-                    className='flex-shrink-0'
+                    src='https://avatars.githubusercontent.com/u/30373425?v=4'
+                    className='w-10 h-10 border-2 border-primary'
                   />
-                  <div
-                    className={`flex max-w-[80%] rounded-lg p-3 ${
-                      msg.role === "assistant" ? "bg-content2" : "bg-primary text-primary-foreground"
-                    }`}
-                  >
-                    <p className='whitespace-pre-wrap text-sm'>{msg.content}</p>
-                  </div>
+                  <div className='absolute -bottom-1 -right-1 bg-success rounded-full w-4 h-4 border-2 border-white' />
                 </div>
-              ))}
-              {isWaitingResponse && (
-                <div className='flex items-center gap-2 text-sm text-default-400'>
-                  <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-primary'></div>
-                  正在思考...
+                <div>
+                  <h3 className='text-xl font-bold'>AI产品经理</h3>
+                  <p className='text-sm text-default-500'>专业需求分析 | 产品规划 | 用户体验</p>
                 </div>
-              )}
-            </ScrollShadow>
+              </div>
+            </ModalHeader>
 
-            <div className='p-4 border-t'>
-              <form className='flex items-end gap-2'>
-                <Textarea
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder='输入您的需求描述...'
-                  minRows={2}
-                  maxRows={5}
-                  variant='bordered'
-                  disabled={isSending}
-                  classNames={{
-                    input: "resize-none",
-                  }}
-                />
-                <Button
-                  isIconOnly
-                  color={!inputValue ? "default" : "primary"}
-                  isDisabled={!inputValue || isSending}
-                  onPress={handleSend}
-                >
-                  <Icon icon='solar:arrow-up-linear' className='w-5 h-5' />
-                </Button>
-              </form>
+            <div className='flex-1 min-h-0 flex flex-col'>
+              <ScrollShadow ref={scrollRef} className='flex-1 space-y-6 p-6 overflow-y-auto'>
+                <AnimatePresence initial={false}>
+                  {messages.map((msg, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className={`flex gap-3 ${msg.role === "assistant" ? "" : "flex-row-reverse"}`}
+                    >
+                      <div className='flex-shrink-0 pt-1'>
+                        <Avatar
+                          src={msg.role === "assistant" ? "https://avatars.githubusercontent.com/u/30373425?v=4" : ""}
+                          className={`w-8 h-8 ${msg.role === "user" ? "bg-primary text-white" : ""}`}
+                          fallback={
+                            msg.role === "user" ? (
+                              <Icon icon='solar:user-circle-linear' className='w-6 h-6' />
+                            ) : undefined
+                          }
+                        />
+                      </div>
+                      <div className={`flex max-w-[80%] flex-col gap-1`}>
+                        <span className='text-xs text-default-400'>
+                          {msg.role === "assistant" ? "AI产品经理" : "您"}
+                        </span>
+                        <div
+                          className={`rounded-xl p-4 ${
+                            msg.role === "assistant" ? "bg-content2 shadow-sm" : "bg-primary text-primary-foreground"
+                          }`}
+                        >
+                          <p className='whitespace-pre-wrap text-sm leading-relaxed'>{msg.content}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                  {isWaitingResponse && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className='flex items-center gap-2 text-sm text-default-400'
+                    >
+                      <div className='animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent'></div>
+                      正在思考...
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </ScrollShadow>
+
+              <div className='p-4 border-t bg-content1'>
+                <form className='flex flex-col items-start rounded-medium bg-default-100 transition-colors hover:bg-default-200/70'>
+                  <Textarea
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder='请描述您的需求，例如：我想开发一个电商平台...'
+                    minRows={3}
+                    maxRows={5}
+                    variant='flat'
+                    radius='lg'
+                    disabled={isSending}
+                    maxLength={MAX_INPUT_LENGTH}
+                    classNames={{
+                      inputWrapper: "!bg-transparent shadow-none",
+                      innerWrapper: "relative",
+                      input: "pt-1 pl-2 pb-6 !pr-10 text-medium",
+                    }}
+                    endContent={
+                      <div className='flex items-end gap-2 absolute bottom-2 right-2'>
+                        <Tooltip showArrow content='发送消息'>
+                          <Button
+                            isIconOnly
+                            color={!inputValue.trim() ? "default" : "primary"}
+                            isDisabled={!inputValue.trim() || isSending}
+                            radius='lg'
+                            size='sm'
+                            variant='solid'
+                            onPress={handleSend}
+                          >
+                            <Icon
+                              className={!inputValue.trim() ? "text-default-600" : "text-primary-foreground"}
+                              icon='solar:arrow-up-linear'
+                              width={20}
+                            />
+                          </Button>
+                        </Tooltip>
+                      </div>
+                    }
+                  />
+                  <div className='flex w-full flex-wrap items-center justify-between gap-2 px-4 pb-4'>
+                    <div className='flex flex-wrap gap-3'>
+                      <Button
+                        size='sm'
+                        startContent={<Icon className='text-default-500' icon='solar:soundwave-linear' width={18} />}
+                        variant='flat'
+                      >
+                        语音输入
+                      </Button>
+                      <Button
+                        size='sm'
+                        startContent={<Icon className='text-default-500' icon='solar:notes-linear' width={18} />}
+                        variant='flat'
+                      >
+                        需求模板
+                      </Button>
+                    </div>
+                    <p className='py-1 text-tiny text-default-400'>
+                      {inputValue.length}/{MAX_INPUT_LENGTH}
+                    </p>
+                  </div>
+                </form>
+              </div>
             </div>
+
+            <ModalFooter className='border-t bg-content1'>
+              <Button
+                color='primary'
+                variant='light'
+                onPress={onClose}
+                startContent={<Icon icon='solar:close-circle-linear' className='w-4 h-4' />}
+              >
+                稍后再说
+              </Button>
+              <Button
+                color='primary'
+                startContent={<Icon icon='solar:rocket-linear' className='w-4 h-4' />}
+                endContent={messages.length < 2 ? undefined : <span>({messages.length}条对话)</span>}
+                onPress={handleConfirmRequirement}
+                isLoading={isConfirming}
+                isDisabled={messages.length < 2 || isConfirming}
+              >
+                确认需求并创建应用
+              </Button>
+            </ModalFooter>
           </div>
-        </ModalBody>
-        <ModalFooter>
-          <Button color='primary' variant='light' onPress={onClose}>
-            稍后再说
-          </Button>
-          <Button
-            color='primary'
-            startContent={<Icon icon='solar:rocket-linear' />}
-            onPress={handleConfirmRequirement}
-            isLoading={isConfirming}
-            isDisabled={messages.length < 2 || isConfirming}
-          >
-            确认需求并创建应用
-          </Button>
-        </ModalFooter>
+        )}
       </ModalContent>
     </Modal>
   )
