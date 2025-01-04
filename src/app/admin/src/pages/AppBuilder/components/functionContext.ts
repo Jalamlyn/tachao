@@ -12,10 +12,13 @@ import { cn } from "@/theme/cn"
 import React from "react"
 import message from "@/components/Message"
 import * as XLSX from 'xlsx'
+import { getCurrentPosition, getAddressFromLocation } from "@/components/common/DynamicForm/components/FormFields/renders/ClockIn/utils/locationUtils"
+import { getLocationPermissionGuide } from "@/components/common/DynamicForm/components/FormFields/renders/ClockIn/utils/browserUtils"
 
 const docker = {
   AppEntry: () => {},
 }
+
 export const context = (appId) => ({
   wpm,
   React,
@@ -30,6 +33,12 @@ export const context = (appId) => ({
     getMetadata,
     setMetadata,
     getPublicMetaData,
+    // 添加位置服务API
+    location: {
+      getCurrentPosition,
+      getAddressFromLocation,
+      getBrowserPermissionGuide
+    }
   },
   ai,
   mobx,
