@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, useLocation } from "react-router-dom"
 import { Button, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
@@ -71,6 +71,7 @@ const MAX_MESSAGES = 4
 
 const AppBuilder: React.FC = observer(() => {
   const { appId } = useParams<{ appId: string }>()
+  const location = useLocation()
   const [isLoading, setIsLoading] = useState(true)
   const [messages, setMessages] = useState<AppBuilderMessage[]>([])
   const [selectedTab, setSelectedTab] = useState("preview")
@@ -94,6 +95,25 @@ const AppBuilder: React.FC = observer(() => {
     ])
   }, [])
 
+  // 处理从产品经理对话传递过来的初始提示
+  useEffect(() => {
+    if (location.state?.initialPrompt && location.state?.fromProductManager) {
+      const initialMessage: AppBuilderMessage = {
+        role: "user",
+        content: location.state.initialPrompt,
+        id: Date.now().toString(),
+        timestamp: new Date().toLocaleTimeString(),
+      }
+      setMessages([initialMessage])
+      
+      // 自动处理初始提示
+      processCommand(location.state.initialPrompt)
+      
+      // 清除 location state 以防止刷新时重复处理
+      window.history.replaceState({}, document.title)
+    }
+  }, [])
+
   // 添加消息监听
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -108,7 +128,7 @@ const AppBuilder: React.FC = observer(() => {
           
           请分析错误原因并生成修复后的完整代码, 每个模块的代码都必须完整, 不能省略任何部分。`
 
-        processCommand(fixPrompt) // 直接调用即可,processCommand内部会处理消息添加
+        processCommand(fixPrompt)
       }
     }
 
@@ -465,6 +485,7 @@ const AppBuilder: React.FC = observer(() => {
                   startContent={<Icon icon='mdi:open-in-new' className='w-4 h-4' />}
                 >
                   查看应用
+                </Button>
                 </Button>
               </div>
             </ModalBody>

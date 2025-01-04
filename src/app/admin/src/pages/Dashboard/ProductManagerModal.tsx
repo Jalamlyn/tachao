@@ -94,18 +94,18 @@ const ProductManagerModal = ({ isOpen, onClose }) => {
     setIsConfirming(true)
     try {
       const requirement = ProductAgent.formatRequirementForAppAgent(messages)
-
-      const result = await appAgent.processCommand("app_" + Date.now(), [], requirement, (chunk) => {
-        console.log("Processing chunk:", chunk)
+      
+      // 使用 navigate 跳转到应用开发界面,通过 state 传递对话内容
+      navigate(`/admin/apps/create`, {
+        state: {
+          initialPrompt: requirement,
+          messages: messages,
+          fromProductManager: true
+        }
       })
-
-      if (result.success) {
-        message.success("需求已确认，正在为您创建应用...")
-        onClose()
-        navigate(`/admin/apps/${result.version.appId}/builder`)
-      } else {
-        throw new Error(result.error || "处理需求时发生错误")
-      }
+      
+      onClose()
+      message.success("需求已确认，正在为您跳转到应用开发界面...")
     } catch (error) {
       console.error("Error processing requirement:", error)
       message.error(error instanceof Error ? error.message : "处理需求时发生错误")
