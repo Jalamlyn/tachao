@@ -12,6 +12,15 @@ const {
 } = context;
 
 const { Routes, Route, Navigate } = ReactRouterDom;
+const {
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+  Card, CardHeader, CardBody, CardFooter
+} = NextUI
 
 // 导入首页模块
 const HomePage = await wpm.import('page_home')

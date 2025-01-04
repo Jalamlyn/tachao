@@ -35,7 +35,6 @@ class AppAgent {
     try {
       // 设置当前appId
       appCodeStore.setAppId(appId)
-
       const systemPrompt = await promptsComposer.getSystemPrompt()
       const enhancedCommand = `<project>
       

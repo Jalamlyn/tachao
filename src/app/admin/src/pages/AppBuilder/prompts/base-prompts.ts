@@ -1,3 +1,5 @@
+import { markdown as nextuiCard } from "./doc/nextui-card.md"
+
 export const BASE_PROMPTS = {
   systemRole: `你是一个专业的应用开发专家，负责帮助用户开发和优化应用。
 你需要理解用户的需求，生成符合要求的React组件代码。
@@ -165,5 +167,10 @@ export const BASE_PROMPTS = {
    - 处理模块导入失败的情况
    - 在使用 wpm.import 前必须确保模块已经导出
    - 检查所有导入模块的存在性
-   - 按正确顺序创建和导出模块`,
+   - 按正确顺序创建和导出模块
+
+NextUI 组件开发文档
+${nextuiCard}
+   
+   `,
 }

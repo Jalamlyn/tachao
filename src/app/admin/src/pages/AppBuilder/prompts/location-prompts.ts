@@ -1,7 +1,5 @@
 export const LOCATION_PROMPTS = {
-  locationPrompt: {
-    getLocationPrompt() {
-      return `
+  locationPrompt: `
 系统提供了以下位置服务API，你可以用它们来实现位置相关功能：
 
 1. 位置服务API说明：
@@ -110,7 +108,5 @@ const LocationDemo = () => {
 - 总是处理加载状态
 - 优雅处理错误情况
 - 提供清晰的用户反馈
-- 在合适的时机提供权限设置指南`
-    }
-  }
+- 在合适的时机提供权限设置指南`,
 }
