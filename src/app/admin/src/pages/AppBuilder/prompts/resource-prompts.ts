@@ -1,4 +1,5 @@
 import { getMetadata } from "@/service/apis/metadata"
+import { jsonStringify } from "@/utils"
 
 export const RESOURCE_PROMPTS = {
   resourcePrompt: {
@@ -6,17 +7,19 @@ export const RESOURCE_PROMPTS = {
       try {
         const result = await getMetadata(["resource_index"])
         const resources = JSON.parse(result.data?.[0]?.value || "[]")
-        
-        const resourceDescription = resources.map(resource => {
-          const { id, title, indexFields } = resource
-          const structure = indexFields.rawData || indexFields.rowData || {}
-          
-          return `
+
+        const resourceDescription = resources
+          .map((resource) => {
+            const { id, title, indexFields } = resource
+            const structure = indexFields.rawData || indexFields.rowData || {}
+
+            return `
 资源ID: ${id}
 资源标题: ${title}
 数据结构:
-${Object.keys(structure).map(field => `- ${field}`).join('\n')}`
-        }).join('\n\n')
+${jsonStringify(structure)}`
+          })
+          .join("\n\n")
 
         return `
 系统中存在以下业务数据资源，你可以参考这些信息来理解用户的业务场景：
@@ -105,9 +108,9 @@ async function getResourceDetails(resourceId) {
 3. 根据数据结构生成相应的代码或回答
 4. 注意处理异常情况和数据验证`
       } catch (error) {
-        console.error('Failed to get resource prompt:', error)
-        return ''
+        console.error("Failed to get resource prompt:", error)
+        return ""
       }
-    }
-  }
+    },
+  },
 }

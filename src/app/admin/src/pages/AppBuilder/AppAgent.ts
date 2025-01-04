@@ -36,87 +36,24 @@ class AppAgent {
       // 设置当前appId
       appCodeStore.setAppId(appId)
 
-      const systemPrompt = promptsComposer.getSystemPrompt()
-
+      const systemPrompt = await promptsComposer.getSystemPrompt()
+      debugger
       const enhancedCommand = `<project>
       
 1. 应用入口代码：
 ${appCodeStore.currentVersion?.modules[`${appId}_app_entry`]?.data?.code || "需要先创建应用入口代码，包含基础路由配置"}
 
-2. 页面代码：
+2. 所有模块代码：
 ${
   appCodeStore.currentVersion?.modules
     ? Object.entries(appCodeStore.currentVersion.modules)
-        .filter(([_, module]) => module.data.type === "page")
         .map(
           ([id, module]) => `
-页面ID: ${id}
-标题: ${module.data.title || module.data.name}
-代码:
-${module.data.code}
-`
-        )
-        .join("\n---\n")
-    : ""
-}
-
-3. Store 代码：
-${
-  appCodeStore.currentVersion?.modules
-    ? Object.entries(appCodeStore.currentVersion.modules)
-        .filter(([_, module]) => module.data.type === "store")
-        .map(
-          ([id, module]) => `
-Store名称: ${module.data.name}
-代码:
-${module.data.code}
-`
-        )
-        .join("\n---\n")
-    : ""
-}
-
-4. Service 代码：
-${
-  appCodeStore.currentVersion?.modules
-    ? Object.entries(appCodeStore.currentVersion.modules)
-        .filter(([_, module]) => module.data.type === "service")
-        .map(
-          ([id, module]) => `
-Service名称: ${module.data.name}
-代码:
-${module.data.code}
-`
-        )
-        .join("\n---\n")
-    : ""
-}
-
-5. Module 代码：
-${
-  appCodeStore.currentVersion?.modules
-    ? Object.entries(appCodeStore.currentVersion.modules)
-        .filter(([_, module]) => module.data.type === "module")
-        .map(
-          ([id, module]) => `
-Module名称: ${module.data.name}
-代码:
-${module.data.code}
-`
-        )
-        .join("\n---\n")
-    : ""
-}
-
-6. Schema 定义：
-${
-  appCodeStore.currentVersion?.modules
-    ? Object.entries(appCodeStore.currentVersion.modules)
-        .filter(([_, module]) => module.data.type === "schema")
-        .map(
-          ([id, module]) => `
-Schema名称: ${module.data.name}
-定义:
+模块ID: ${id}
+模块名称: ${module.data.name}
+模块标题: ${module.data.title}
+模块类型: ${module.data.type}
+模块代码:
 ${module.data.code}
 `
         )
@@ -125,7 +62,6 @@ ${module.data.code}
 }
 </project>, <project> 里是现有代码, 你修改现有代码的时候必须每次都返回修改后的完整代码, 不允许有省略和注释任何一行代码, 如果代码中用 wpm.import 了某个模块, 那必须同时生成这个模块,并 wpm.export, 不允许 wpm.import 还没有被 wpm.export 的模块, 生成所有代码都必须包裹在\`\`\`jsx<mo-ai-code type="xxx">生成的代码</mo-ai-code>\`\`\`标签中,你需要先列出要生成或者修改的模块名称,然后再开始生成代码,所有列出的模块都必须生成, ui交互要从设计师的角度思考, <experience-nextui>里有示例代码
 <我的输入>${command}</我的输入>`
-
       const allMessages = [
         { role: "system", content: systemPrompt },
         ...messages,
