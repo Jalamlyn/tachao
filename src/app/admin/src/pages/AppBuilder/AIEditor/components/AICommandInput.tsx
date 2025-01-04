@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { imageStore } from "./ImageStore"
 import { aiControllerStore } from "./AIControllerStore"
 import message from "@/components/Message"
+import { AITutorialModal } from "./AITutorialModal"
 
 interface AIAgent {
   processCommand: (
@@ -31,6 +32,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   const [isRecording, setIsRecording] = useState(false)
   const [recordingError, setRecordingError] = useState<string>("")
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false)
+  const [showTutorial, setShowTutorial] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const lastTranscriptRef = useRef<string>("")
@@ -50,9 +52,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
 
     try {
       setIsLoading(true)
-      // 构造包含图片的消息
       const result = await agent.processCommand(input)
-
       onResult?.(result)
       setInput("")
     } catch (error) {
@@ -66,7 +66,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   const handleStop = useCallback(() => {
     aiControllerStore.abort()
     setIsLoading(false)
-    onStop?.() // 调用onStop回调通知父组件更新消息状态
+    onStop?.()
   }, [onStop])
 
   // 处理按键事件
@@ -145,7 +145,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       reader.onloadend = async () => {
         const base64 = reader.result as string
 
-        // 清除之前的图片
         if (preview) {
           imageStore.removeImage(preview)
         }
@@ -182,14 +181,14 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       }
 
       const recognition = new SpeechRecognition()
-      recognition.continuous = false // 修改为单次识别
-      recognition.interimResults = false // 只要最终结果
+      recognition.continuous = false
+      recognition.interimResults = false
       recognition.lang = "zh-CN"
 
       recognition.onstart = () => {
         setIsRecording(true)
         setRecordingError("")
-        lastTranscriptRef.current = "" // 重置上次识别结果
+        lastTranscriptRef.current = ""
       }
 
       recognition.onend = () => {
@@ -197,11 +196,9 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       }
 
       recognition.onresult = (event) => {
-        // 只取最后一个结果
         const lastResult = event.results[event.results.length - 1]
         const transcript = lastResult[0].transcript
 
-        // 如果与上次结果相同，则不更新
         if (transcript === lastTranscriptRef.current) {
           return
         }
@@ -242,151 +239,158 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   }
 
   return (
-    <form className='flex w-full flex-col gap-2 rounded-medium bg-default-100 transition-colors hover:bg-default-200/70'>
-      <input
-        type='file'
-        ref={fileInputRef}
-        className='hidden'
-        accept='image/jpeg,image/png,image/gif'
-        onChange={handleImageUpload}
-      />
+    <>
+      <form className='flex w-full flex-col gap-2 rounded-medium bg-default-100 transition-colors hover:bg-default-200/70'>
+        <input
+          type='file'
+          ref={fileInputRef}
+          className='hidden'
+          accept='image/jpeg,image/png,image/gif'
+          onChange={handleImageUpload}
+        />
 
-      <div className='group flex gap-2 px-4 pt-4'>
-        {preview && (
-          <Badge
-            isOneChar
-            className='opacity-0 group-hover:opacity-100 transition-opacity duration-200'
-            content={
-              <Button
-                isIconOnly
-                radius='full'
-                size='sm'
-                variant='light'
-                onClick={() => {
-                  setPreview("")
-                  imageStore.removeImage(preview)
-                  if (fileInputRef.current) {
-                    fileInputRef.current.value = ""
-                  }
-                }}
-                className='bg-white/80 backdrop-blur-sm hover:bg-danger-50'
-              >
-                <Icon icon='mdi:close' className='w-3 h-3 text-danger' />
-              </Button>
-            }
-          >
-            <img
-              src={preview}
-              alt='Preview'
-              className='w-16 h-16 object-cover rounded-small border-small border-default-200/50 transition-transform duration-200 hover:scale-105 cursor-pointer'
-              onClick={() => setIsPreviewModalOpen(true)}
-            />
-          </Badge>
-        )}
-      </div>
+        <div className='group flex gap-2 px-4 pt-4'>
+          {preview && (
+            <Badge
+              isOneChar
+              className='opacity-0 group-hover:opacity-100 transition-opacity duration-200'
+              content={
+                <Button
+                  isIconOnly
+                  radius='full'
+                  size='sm'
+                  variant='light'
+                  onClick={() => {
+                    setPreview("")
+                    imageStore.removeImage(preview)
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = ""
+                    }
+                  }}
+                  className='bg-white/80 backdrop-blur-sm hover:bg-danger-50'
+                >
+                  <Icon icon='mdi:close' className='w-3 h-3 text-danger' />
+                </Button>
+              }
+            >
+              <img
+                src={preview}
+                alt='Preview'
+                className='w-16 h-16 object-cover rounded-small border-small border-default-200/50 transition-transform duration-200 hover:scale-105 cursor-pointer'
+                onClick={() => setIsPreviewModalOpen(true)}
+              />
+            </Badge>
+          )}
+        </div>
 
-      <Textarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyPress={handleKeyPress}
-        onPaste={handlePaste}
-        ref={textareaRef}
-        placeholder='请输入您的问题,AI 将帮您处理...'
-        classNames={{
-          inputWrapper: "!bg-transparent shadow-none",
-          innerWrapper: "relative",
-          input: "pt-1 pb-6 !pr-10 text-medium",
-        }}
-        minRows={3}
-        radius='lg'
-        startContent={
-          <div className='flex gap-2'>
-            <Tooltip showArrow content='添加图片'>
-              <Button
-                isIconOnly
-                radius='full'
-                size='sm'
-                variant='light'
-                onClick={handleImageClick}
-                isDisabled={isUploading}
-                className='hover:bg-default-200'
-              >
-                {isUploading ? (
-                  <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
+        <Textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyPress={handleKeyPress}
+          onPaste={handlePaste}
+          ref={textareaRef}
+          placeholder='请输入您的问题,AI 将帮您处理...'
+          classNames={{
+            inputWrapper: "!bg-transparent shadow-none",
+            innerWrapper: "relative",
+            input: "pt-1 pb-6 !pr-10 text-medium",
+          }}
+          minRows={3}
+          radius='lg'
+        />
+
+        <div className='flex w-full flex-wrap items-center justify-between gap-2 px-4 pb-4'>
+          <div className='flex flex-wrap gap-3'>
+            <Button
+              size='sm'
+              variant='flat'
+              startContent={
+                isUploading ? (
+                  <Icon className='animate-spin' icon='eos-icons:loading' width={18} />
                 ) : (
-                  <Icon className='text-default-500' icon='solar:gallery-minimalistic-linear' width={20} />
-                )}
-              </Button>
-            </Tooltip>
-          </div>
-        }
-        endContent={
-          <div className='absolute right-0 flex h-full flex-col items-end justify-between gap-2'>
-            <Tooltip showArrow content={isRecording ? "停止录音" : "语音输入"}>
-              <Button 
-                isIconOnly 
-                radius='full' 
-                size='sm' 
-                variant={isRecording ? "solid" : "light"}
-                className={cn(
-                  "hover:bg-default-200",
-                  isRecording && "animate-pulse bg-primary text-white"
-                )}
-                onClick={handleVoiceInput}
-              >
+                  <Icon className='text-default-500' icon='solar:gallery-minimalistic-linear' width={18} />
+                )
+              }
+              onClick={handleImageClick}
+            >
+              图片
+            </Button>
+
+            <Button
+              size='sm'
+              variant='flat'
+              startContent={
                 <Icon 
                   className={cn(
                     "text-default-500",
-                    isRecording && "text-white"
+                    isRecording && "text-primary"
                   )} 
-                  icon={isRecording ? "solar:microphone-3-bold" : "solar:microphone-3-linear"} 
-                  width={20} 
+                  icon='solar:soundwave-linear' 
+                  width={18} 
                 />
-              </Button>
-            </Tooltip>
-            <div className='flex items-end gap-2'>
-              {isLoading ? (
-                <Tooltip showArrow content='停止生成'>
-                  <Button
-                    isIconOnly
-                    color='danger'
-                    radius='lg'
-                    size='sm'
-                    variant='flat'
-                    onClick={handleStop}
-                    className='transition-transform active:scale-95'
-                  >
-                    <Icon icon='mdi:stop' width={20} />
-                  </Button>
-                </Tooltip>
-              ) : (
-                <Tooltip showArrow content='发送消息'>
-                  <Button
-                    isIconOnly
-                    color={!input || isLoading ? "default" : "primary"}
-                    isDisabled={!input || isLoading}
-                    radius='lg'
-                    size='sm'
-                    variant={!input || isLoading ? "flat" : "solid"}
-                    onClick={handleSend}
-                    className='transition-transform active:scale-95'
-                  >
-                    {isLoading ? (
-                      <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
-                    ) : (
-                      <Icon
-                        className={cn("[&>path]:stroke-[2px]", !input ? "text-default-600" : "text-primary-foreground")}
-                        icon='solar:arrow-up-linear'
-                        width={20}
-                      />
-                    )}
-                  </Button>
-                </Tooltip>
-              )}
-            </div>
+              }
+              onClick={handleVoiceInput}
+            >
+              语音
+            </Button>
+
+            <Button
+              size='sm'
+              variant='flat'
+              startContent={
+                <Icon className='text-default-500' icon='solar:question-circle-linear' width={18} />
+              }
+              onClick={() => setShowTutorial(true)}
+            >
+              教程
+            </Button>
           </div>
-        }
-      />
+
+          <div className='flex items-center gap-3'>
+            <p className='py-1 text-tiny text-default-400'>
+              {input.length}/2000
+            </p>
+            
+            {isLoading ? (
+              <Button
+                isIconOnly
+                color='danger'
+                radius='lg'
+                size='sm'
+                variant='flat'
+                onClick={handleStop}
+                className='transition-transform active:scale-95'
+              >
+                <Icon icon='mdi:stop' width={20} />
+              </Button>
+            ) : (
+              <Button
+                isIconOnly
+                color={!input || isLoading ? "default" : "primary"}
+                isDisabled={!input || isLoading}
+                radius='lg'
+                size='sm'
+                variant={!input || isLoading ? "flat" : "solid"}
+                onClick={handleSend}
+                className='transition-transform active:scale-95'
+              >
+                {isLoading ? (
+                  <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
+                ) : (
+                  <Icon
+                    className={cn(
+                      "[&>path]:stroke-[2px]",
+                      !input ? "text-default-600" : "text-primary-foreground"
+                    )}
+                    icon='solar:arrow-up-linear'
+                    width={20}
+                  />
+                )}
+              </Button>
+            )}
+          </div>
+        </div>
+      </form>
 
       {/* 图片预览Modal */}
       <Modal 
@@ -416,7 +420,13 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
           </div>
         </ModalContent>
       </Modal>
-    </form>
+
+      {/* 教程Modal */}
+      <AITutorialModal
+        isOpen={showTutorial}
+        onClose={() => setShowTutorial(false)}
+      />
+    </>
   )
 })
 
