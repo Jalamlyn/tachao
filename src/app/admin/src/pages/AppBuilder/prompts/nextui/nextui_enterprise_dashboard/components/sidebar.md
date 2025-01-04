@@ -1,17 +1,14 @@
+```jsx
 <mo-ai-code type="component" name="comp_sidebar">
 const {
   wpm,
   React,
   observer,
   NextUI,
-  Icon,
-  ReactRouterDom,
-  appId,
-  cn
+  Icon
 } = context;
 
 const { Accordion, AccordionItem, Listbox, Tooltip, ListboxItem, ListboxSection } = NextUI;
-const { Link, useLocation } = ReactRouterDom;
 
 // 使用普通对象替代 enum
 const SidebarItemType = {
@@ -32,7 +29,16 @@ const Sidebar = observer(({
   ...props
 }) => {
   const [selected, setSelected] = React.useState(defaultSelectedKey);
-  const location = useLocation();
+
+  // 添加日志打印
+  React.useEffect(() => {
+    console.log('[Sidebar] Initial props:', {
+      items,
+      isCompact,
+      defaultSelectedKey,
+      hideEndContent
+    });
+  }, []);
 
   const sectionClasses = {
     ...sectionClassesProp,
@@ -56,6 +62,14 @@ const Sidebar = observer(({
 
   const renderNestItem = React.useCallback(
     (item) => {
+      // 添加日志打印
+      console.log('[Sidebar] Rendering nest item:', {
+        key: item.key,
+        title: item.title,
+        type: item.type,
+        hasItems: Boolean(item.items?.length)
+      });
+
       const isNestType =
         item.items && item.items?.length > 0 && item?.type === SidebarItemType.Nest;
 
@@ -63,7 +77,7 @@ const Sidebar = observer(({
         delete item.href;
       }
 
-      const itemContent = (
+      return (
         <ListboxItem
           {...item}
           key={item.key}
@@ -161,26 +175,19 @@ const Sidebar = observer(({
           ) : null}
         </ListboxItem>
       );
-
-      if (item.href) {
-        return (
-          <Link 
-            key={item.key}
-            to={`/app-run/${appId}${item.href}`}
-            className="no-underline"
-          >
-            {itemContent}
-          </Link>
-        );
-      }
-
-      return itemContent;
     },
-    [isCompact, hideEndContent, iconClassName, items, appId],
+    [isCompact, hideEndContent, iconClassName, items],
   );
 
   const renderItem = React.useCallback(
     (item) => {
+      // 添加日志打印
+      console.log('[Sidebar] Rendering item:', {
+        key: item.key,
+        title: item.title,
+        type: item.type
+      });
+
       const isNestType =
         item.items && item.items?.length > 0 && item?.type === SidebarItemType.Nest;
 
@@ -188,7 +195,7 @@ const Sidebar = observer(({
         return renderNestItem(item);
       }
 
-      const itemContent = (
+      return (
         <ListboxItem
           {...item}
           key={item.key}
@@ -230,23 +237,20 @@ const Sidebar = observer(({
           ) : null}
         </ListboxItem>
       );
-
-      if (item.href) {
-        return (
-          <Link 
-            key={item.key}
-            to={`/app-run/${appId}${item.href}`}
-            className="no-underline"
-          >
-            {itemContent}
-          </Link>
-        );
-      }
-
-      return itemContent;
     },
-    [isCompact, hideEndContent, iconClassName, itemClasses?.base, appId],
+    [isCompact, hideEndContent, iconClassName, itemClasses?.base],
   );
+
+  // 添加选择变更日志
+  const handleSelectionChange = (keys) => {
+    const key = Array.from(keys)[0];
+    console.log('[Sidebar] Selection changed:', {
+      previousKey: selected,
+      newKey: key
+    });
+    setSelected(key);
+    onSelect?.(key);
+  };
 
   return (
     <Listbox
@@ -274,14 +278,17 @@ const Sidebar = observer(({
       selectedKeys={[selected]}
       selectionMode="single"
       variant="flat"
-      onSelectionChange={(keys) => {
-        const key = Array.from(keys)[0];
-        setSelected(key);
-        onSelect?.(key);
-      }}
+      onSelectionChange={handleSelectionChange}
       {...props}
     >
       {(item) => {
+        // 添加日志打印
+        console.log('[Sidebar] Processing item:', {
+          key: item.key,
+          hasItems: Boolean(item.items?.length),
+          type: item.type
+        });
+
         return item.items && item.items?.length > 0 && item?.type === SidebarItemType.Nest ? (
           renderNestItem(item)
         ) : item.items && item.items?.length > 0 ? (
