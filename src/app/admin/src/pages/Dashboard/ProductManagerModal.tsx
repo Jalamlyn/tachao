@@ -1,8 +1,17 @@
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Card } from "@nextui-org/react"
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  Avatar,
+  ScrollShadow,
+  Textarea,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
-import { useState } from "react"
-import AIChat from "@/app/admin/src/component/AIChat"
+import { useState, useRef, useEffect } from "react"
 import ProductAgent from "./ProductAgent"
 import message from "@/components/Message"
 import appAgent from "@/app/admin/src/pages/AppBuilder/AppAgent"
@@ -10,8 +19,58 @@ import appAgent from "@/app/admin/src/pages/AppBuilder/AppAgent"
 const ProductManagerModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate()
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([])
+  const [inputValue, setInputValue] = useState("")
   const [isConfirming, setIsConfirming] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [isSending, setIsSending] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // 自动滚动到底部
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const handleSend = async () => {
+    if (!inputValue.trim() || isSending) return
+
+    const userMessage = { role: "user", content: inputValue }
+    setMessages((prev) => [...prev, userMessage])
+    setInputValue("")
+    setIsSending(true)
+
+    try {
+      let currentResponse = ""
+      await ProductAgent.chat([...messages, userMessage], (chunk) => {
+        currentResponse += chunk
+        setMessages((prev) => {
+          const newMessages = [...prev]
+          if (newMessages[newMessages.length - 1]?.role === "assistant") {
+            newMessages[newMessages.length - 1].content = currentResponse
+          } else {
+            newMessages.push({ role: "assistant", content: currentResponse })
+          }
+          return newMessages
+        })
+      })
+    } catch (error) {
+      console.error("Chat error:", error)
+      message.error("对话出错了，请重试")
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
 
   const handleConfirmRequirement = async () => {
     if (messages.length < 2) {
@@ -24,19 +83,13 @@ const ProductManagerModal = ({ isOpen, onClose }) => {
       const requirement = ProductAgent.formatRequirementForAppAgent(messages)
 
       // 创建一个新的应用并处理需求
-      const result = await appAgent.processCommand(
-        "app_" + Date.now(), // 生成新的appId
-        [],
-        requirement,
-        (chunk) => {
-          console.log("Processing chunk:", chunk)
-        }
-      )
+      const result = await appAgent.processCommand("app_" + Date.now(), [], requirement, (chunk) => {
+        console.log("Processing chunk:", chunk)
+      })
 
       if (result.success) {
         message.success("需求已确认，正在为您创建应用...")
         onClose()
-        // 导航到新创建的应用
         navigate(`/admin/apps/${result.version.appId}/builder`)
       } else {
         throw new Error(result.error || "处理需求时发生错误")
@@ -54,26 +107,71 @@ const ProductManagerModal = ({ isOpen, onClose }) => {
       isOpen={isOpen}
       onClose={onClose}
       size='3xl'
-      scrollBehavior='inside'
       classNames={{
         base: "h-[80vh]",
       }}
     >
       <ModalContent>
         <ModalHeader className='flex flex-col gap-1'>
-          <h3 className='text-xl font-bold'>与AI产品经理对话</h3>
-          <p className='text-sm text-default-500'>让我们一起讨论您的应用需求</p>
+          <div className='flex items-center gap-2'>
+            <Avatar src='https://avatars.githubusercontent.com/u/30373425?v=4' className='w-8 h-8' />
+            <div>
+              <h3 className='text-xl font-bold'>AI产品经理</h3>
+              <p className='text-sm text-default-500'>让我们一起讨论您的应用需求</p>
+            </div>
+          </div>
         </ModalHeader>
         <ModalBody>
-          <div className='h-full'>
-            <AIChat
-              isOpen={true}
-              onClose={() => {}}
-              systemPrompt=''
-              agent={ProductAgent}
-              onMessagesChange={setMessages}
-              hideCloseButton
-            />
+          <div className='flex flex-col h-full'>
+            <ScrollShadow ref={scrollRef} className='flex-1 space-y-4 p-4'>
+              {messages.map((msg, index) => (
+                <div key={index} className={`flex gap-3 ${msg.role === "assistant" ? "" : "flex-row-reverse"}`}>
+                  <Avatar
+                    src={msg.role === "assistant" ? "https://avatars.githubusercontent.com/u/30373425?v=4" : ""}
+                    className='flex-shrink-0'
+                  />
+                  <div
+                    className={`flex max-w-[80%] rounded-lg p-3 ${
+                      msg.role === "assistant" ? "bg-content2" : "bg-primary text-primary-foreground"
+                    }`}
+                  >
+                    <p className='whitespace-pre-wrap text-sm'>{msg.content}</p>
+                  </div>
+                </div>
+              ))}
+              {isSending && (
+                <div className='flex items-center gap-2 text-sm text-default-400'>
+                  <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-primary'></div>
+                  正在思考...
+                </div>
+              )}
+            </ScrollShadow>
+
+            <div className='p-4 border-t'>
+              <form className='flex items-end gap-2'>
+                <Textarea
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder='输入您的需求描述...'
+                  minRows={2}
+                  maxRows={5}
+                  variant='bordered'
+                  disabled={isSending}
+                  classNames={{
+                    input: "resize-none",
+                  }}
+                />
+                <Button
+                  isIconOnly
+                  color={!inputValue ? "default" : "primary"}
+                  isDisabled={!inputValue || isSending}
+                  onPress={handleSend}
+                >
+                  <Icon icon='solar:arrow-up-linear' className='w-5 h-5' />
+                </Button>
+              </form>
+            </div>
           </div>
         </ModalBody>
         <ModalFooter>
