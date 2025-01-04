@@ -54,6 +54,22 @@ export interface ShataAICode {
   pageid?: string
 }
 
+export interface ViewState {
+  selectedCodeId: string | null
+  editedCode: string
+  isEditing: boolean
+  isPanelCollapsed: boolean
+  searchQuery: string
+  searchContent: string
+  searchResults: Array<{moduleId: string, matches: number}>
+  showImportModal: boolean
+  showConfirmModal: boolean
+  showVersionInfo: boolean
+  importContent: string
+  isImporting: boolean
+  pendingImportContent: string
+}
+
 // 为 AppCodeStore 定义公共接口
 export interface AppCodeStore {
   appId: any
@@ -64,6 +80,7 @@ export interface AppCodeStore {
   isViewingHistory: boolean
   canRollback: boolean
   canForward: boolean
+  viewState: ViewState
 
   // 方法声明
   compileCode(code: string): Promise<string>

@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx"
-import { Version } from "./types"
+import { Version, ViewState } from "./types"
 
 // 导入拆分的方法
 import { compileCode, extractShataAICodes, processAIResponse, executeModules, addModules } from "./methods/codeMethods"
@@ -10,13 +10,30 @@ import { importFromMarkdown } from "./methods/importMethods"
 import { validateModuleExports, processModuleErrors } from "./methods/validationMethods"
 import { publishToServer, updateAppIndex } from "./methods/serverMethods"
 import { handleAIGeneration, loadApp, createApp } from "./methods/generationMethods"
+import { 
+  initViewState,
+  handleCodeSelect,
+  handleSearch,
+  handleSaveEdit,
+  getCodeItems,
+  getFilteredCodeItems,
+  setSearchQuery,
+  setSearchContent,
+  togglePanelCollapse,
+  setEditMode,
+  updateEditedCode,
+  handleCancelEdit
+} from "./methods/viewMethods"
 
 class AppCodeStore {
   #appId: string | null = null
   versions: Version[] = []
   currentIndex: number = -1
+  viewState: ViewState
 
   constructor() {
+    this.viewState = initViewState()
+    
     makeAutoObservable(this, {}, { autoBind: true })
 
     // 绑定所有方法到实例
@@ -42,6 +59,19 @@ class AppCodeStore {
     this.handleAIGeneration = handleAIGeneration.bind(this)
     this.loadApp = loadApp.bind(this)
     this.createApp = createApp.bind(this)
+
+    // 绑定视图相关方法
+    this.handleCodeSelect = handleCodeSelect.bind(this)
+    this.handleSearch = handleSearch.bind(this)
+    this.handleSaveEdit = handleSaveEdit.bind(this)
+    this.getCodeItems = getCodeItems.bind(this)
+    this.getFilteredCodeItems = getFilteredCodeItems.bind(this)
+    this.setSearchQuery = setSearchQuery.bind(this)
+    this.setSearchContent = setSearchContent.bind(this)
+    this.togglePanelCollapse = togglePanelCollapse.bind(this)
+    this.setEditMode = setEditMode.bind(this)
+    this.updateEditedCode = updateEditedCode.bind(this)
+    this.handleCancelEdit = handleCancelEdit.bind(this)
   }
 
   // 方法声明
@@ -67,6 +97,19 @@ class AppCodeStore {
   handleAIGeneration!: typeof handleAIGeneration
   loadApp!: typeof loadApp
   createApp!: typeof createApp
+
+  // 视图相关方法声明
+  handleCodeSelect!: typeof handleCodeSelect
+  handleSearch!: typeof handleSearch
+  handleSaveEdit!: typeof handleSaveEdit
+  getCodeItems!: typeof getCodeItems
+  getFilteredCodeItems!: typeof getFilteredCodeItems
+  setSearchQuery!: typeof setSearchQuery
+  setSearchContent!: typeof setSearchContent
+  togglePanelCollapse!: typeof togglePanelCollapse
+  setEditMode!: typeof setEditMode
+  updateEditedCode!: typeof updateEditedCode
+  handleCancelEdit!: typeof handleCancelEdit
 
   // Getters
   get currentVersion(): Version | null {
