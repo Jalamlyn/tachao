@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react"
-import { Button, Tabs, Tab, Tooltip, ScrollShadow, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Textarea, Chip, Divider } from "@nextui-org/react"
+import React, { useState, useEffect, useCallback, useMemo } from "react"
+import { Button, Tabs, Tab, Tooltip, ScrollShadow, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Textarea, Chip, Divider, Input } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import Editor from "@monaco-editor/react"
 import { appCodeStore } from "../../store/appCodeStore"
@@ -7,6 +7,7 @@ import message from "@/components/Message"
 import { CodeItem } from "../type"
 import { observer } from "mobx-react-lite"
 import { motion, AnimatePresence } from "framer-motion"
+import { useHotkeys } from "react-hotkeys-hook"
 
 interface CodeViewProps {
   appId: string
@@ -20,6 +21,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
   const [isEditing, setIsEditing] = useState(false)
   const [codeItems, setCodeItems] = useState<CodeItem[]>([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [searchContent, setSearchContent] = useState("")
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [importContent, setImportContent] = useState("")
@@ -27,7 +29,21 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [pendingImportContent, setPendingImportContent] = useState("")
   const [showVersionInfo, setShowVersionInfo] = useState(false)
+  const [searchResults, setSearchResults] = useState<{moduleId: string, matches: number}[]>([])
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const searchInputRef = React.useRef<HTMLInputElement>(null)
+
+  // 添加快捷键支持
+  useHotkeys('ctrl+f, cmd+f', (e) => {
+    e.preventDefault()
+    searchInputRef.current?.focus()
+  })
+
+  useHotkeys('esc', () => {
+    setSearchQuery("")
+    setSearchContent("")
+    setSearchResults([])
+  })
 
   const handleExportCode = useCallback(() => {
     try {
@@ -128,6 +144,45 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
 
     setCodeItems(items)
   }, [appId])
+
+  // 全局搜索逻辑
+  const handleSearch = useCallback(() => {
+    const results: {moduleId: string, matches: number}[] = []
+    
+    codeItems.forEach(item => {
+      let matches = 0
+      const searchContentLower = searchContent.toLowerCase()
+      const codeLower = item.code.toLowerCase()
+      
+      // 搜索代码内容
+      if (searchContent) {
+        const contentMatches = (codeLower.match(new RegExp(searchContentLower, 'g')) || []).length
+        matches += contentMatches
+      }
+      
+      // 搜索文件名/标题
+      if (searchQuery) {
+        const titleMatches = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ? 1 : 0
+        matches += titleMatches
+      }
+      
+      if (matches > 0) {
+        results.push({moduleId: item.id, matches})
+      }
+    })
+    
+    // 按匹配数量排序
+    results.sort((a, b) => b.matches - a.matches)
+    setSearchResults(results)
+    
+    if (results.length > 0) {
+      setSelectedCodeId(results[0].moduleId)
+    }
+  }, [searchQuery, searchContent, codeItems])
+
+  useEffect(() => {
+    handleSearch()
+  }, [handleSearch, searchQuery, searchContent])
 
   useEffect(() => {
     if (selectedCodeId) {
@@ -236,11 +291,14 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
     }
   }
 
-  const filteredCodeItems = codeItems.filter(
-    (item) =>
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.type.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredCodeItems = useMemo(() => {
+    return searchResults.length > 0 
+      ? codeItems.filter(item => searchResults.some(result => result.moduleId === item.id))
+      : codeItems.filter(item => 
+          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.type.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+  }, [codeItems, searchQuery, searchResults])
 
   if (!showCodeTab || selectedTab !== "code") return null
 
@@ -257,23 +315,34 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
               {!isPanelCollapsed && (
                 <motion.div
                   initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: "250px", opacity: 1 }}
+                  animate={{ width: "300px", opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   className='border-r'
                 >
                   <div className='p-2'>
-                    <div className='relative mb-2'>
-                      <input
+                    <div className='space-y-2 mb-2'>
+                      <Input
+                        ref={searchInputRef}
                         type='text'
-                        placeholder='搜索文件...'
+                        placeholder='搜索文件名称...'
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className='w-full px-3 py-1.5 pr-8 rounded-md bg-default-100 border-none focus:ring-2 focus:ring-primary'
+                        startContent={<Icon icon='mdi:magnify' className='text-default-400' />}
+                        className='w-full'
                       />
-                      <Icon
-                        icon='mdi:magnify'
-                        className='absolute right-2 top-1/2 transform -translate-y-1/2 text-default-400'
+                      <Input
+                        type='text'
+                        placeholder='搜索代码内容... (Ctrl+F)'
+                        value={searchContent}
+                        onChange={(e) => setSearchContent(e.target.value)}
+                        startContent={<Icon icon='mdi:code-search' className='text-default-400' />}
+                        className='w-full'
                       />
+                      {searchResults.length > 0 && (
+                        <div className='text-xs text-default-500 pl-2'>
+                          找到 {searchResults.length} 个匹配结果
+                        </div>
+                      )}
                     </div>
                     <ScrollShadow className='h-[calc(100vh-400px)]'>
                       <div className='space-y-1'>
@@ -291,20 +360,22 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                             onClick={() => handleCodeSelect(item.id)}
                           >
                             <Icon icon={getCodeTypeIcon(item.type)} className='w-4 h-4 flex-shrink-0' />
-                            <div className='flex flex-col flex-1 min-w-0'>
-                              <div className='flex items-center gap-2'>
-                                <span className='text-sm truncate'>{item.title}</span>
-                                <Chip
-                                  size="sm"
-                                  variant="flat"
-                                  color={getCodeTypeColor(item.type)}
-                                  className='text-[10px] h-4'
-                                >
-                                  {item.type}
-                                </Chip>
+                            <Tooltip content={item.title} placement="right">
+                              <div className='flex flex-col flex-1 min-w-0'>
+                                <div className='flex items-center gap-2'>
+                                  <span className='text-sm truncate max-w-[150px]'>{item.title}</span>
+                                  <Chip
+                                    size="sm"
+                                    variant="flat"
+                                    color={getCodeTypeColor(item.type)}
+                                    className='text-[10px] h-4'
+                                  >
+                                    {item.type}
+                                  </Chip>
+                                </div>
+                                <span className='text-xs opacity-70'>{new Date(item.updatedAt).toLocaleString()}</span>
                               </div>
-                              <span className='text-xs opacity-70'>{new Date(item.updatedAt).toLocaleString()}</span>
-                            </div>
+                            </Tooltip>
                           </motion.div>
                         ))}
                       </div>
@@ -395,6 +466,11 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                     cursorSmoothCaretAnimation: true,
                     formatOnPaste: true,
                     formatOnType: true,
+                    find: {
+                      addExtraSpaceOnTop: false,
+                      autoFindInSelection: "never",
+                      seedSearchStringFromSelection: "never",
+                    },
                   }}
                   theme='vs-dark'
                   onChange={(value) => {
