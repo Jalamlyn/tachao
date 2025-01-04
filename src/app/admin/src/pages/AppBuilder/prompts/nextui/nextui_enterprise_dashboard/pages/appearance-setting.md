@@ -1,4 +1,3 @@
-```jsx
 <mo-ai-code type="page" pageid="page_appearance_setting" title="外观设置">
 const {
   wpm,
@@ -14,35 +13,35 @@ const ThemeCustomRadio = await wpm.import('comp_theme_custom_radio');
 const SwitchCell = await wpm.import('comp_switch_cell');
 
 const fontSizeOptions = [
-  {label: "Small", value: "small", description: "font size 14px"},
-  {label: "Medium", value: "medium", description: "font size 16px"},
-  {label: "Large", value: "large", description: "font size 18px"},
+  {label: "小", value: "small", description: "字体大小 14px"},
+  {label: "中", value: "medium", description: "字体大小 16px"},
+  {label: "大", value: "large", description: "字体大小 18px"},
 ];
 
 const AppearanceSetting = observer(({className, ...props}) => (
   <div className={cn("p-2", className)} {...props}>
-    {/* Theme */}
+    {/* 主题 */}
     <div>
-      <p className="text-base font-medium text-default-700">Theme</p>
+      <p className="text-base font-medium text-default-700">主题</p>
       <p className="mt-1 text-sm font-normal text-default-400">
-        Change the appearance of the web.
+        更改系统界面的外观主题。
       </p>
-      {/* Theme radio group */}
+      {/* 主题选择 */}
       <RadioGroup className="mt-4 flex-wrap" orientation="horizontal">
-        <ThemeCustomRadio value="free" variant="light">
-          Light
+        <ThemeCustomRadio value="light" variant="light">
+          浅色
         </ThemeCustomRadio>
-        <ThemeCustomRadio value="pro" variant="dark">
-          Dark
+        <ThemeCustomRadio value="dark" variant="dark">
+          深色
         </ThemeCustomRadio>
       </RadioGroup>
     </div>
     <Spacer y={4} />
-    {/* Font size */}
+    {/* 字体大小 */}
     <div className="flex items-start justify-between gap-2 py-2">
       <div>
-        <p className="text-base font-medium text-default-700">Font size</p>
-        <p className="mt-1 text-sm font-normal text-default-400">Adjust the web font size.</p>
+        <p className="text-base font-medium text-default-700">字体大小</p>
+        <p className="mt-1 text-sm font-normal text-default-400">调整系统界面的字体大小。</p>
       </div>
       <Select className="max-w-[200px]" defaultSelectedKeys={["large"]}>
         {fontSizeOptions.map((fontSizeOption) => (
@@ -53,28 +52,27 @@ const AppearanceSetting = observer(({className, ...props}) => (
       </Select>
     </div>
     <Spacer y={4} />
-    {/* Translucent UI */}
+    {/* 半透明界面 */}
     <SwitchCell
       classNames={{
         base: "bg-transparent p-0",
       }}
       color="foreground"
-      description="Use transparency in UI elements like the sidebar and modal dialogs."
-      label="Translucent UI"
+      description="在侧边栏和弹窗等界面元素中使用透明效果。"
+      label="半透明界面"
     />
     <Spacer y={6} />
-    {/* Use pointer cursor */}
+    {/* 使用指针光标 */}
     <SwitchCell
       classNames={{
         base: "bg-transparent p-0",
       }}
       color="foreground"
-      description="Change the cursor to a pointer when hovering"
-      label="Use pointer cursor"
+      description="鼠标悬停时显示手型指针"
+      label="使用指针光标"
     />
   </div>
 ));
 
 wpm.export('page_appearance_setting', AppearanceSetting);
 </mo-ai-code>
-```

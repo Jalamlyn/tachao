@@ -1,4 +1,3 @@
-```jsx
 <mo-ai-code type="component" name="comp_team_manage_table">
 const {
   wpm,
@@ -30,32 +29,32 @@ const {
 } = NextUI;
 
 const columns = [
-  {name: "NAME", uid: "name", sortable: true},
-  {name: "ROLE", uid: "role", sortable: true},
-  {name: "STATUS", uid: "status", sortable: true},
-  {name: "ACTIONS", uid: "actions"},
+  {name: "姓名", uid: "name", sortable: true},
+  {name: "角色", uid: "role", sortable: true},
+  {name: "状态", uid: "status", sortable: true},
+  {name: "操作", uid: "actions"},
 ];
 
 const users = [
   {
     id: 1,
-    name: "Tony Reichert",
-    role: "Owner",
-    team: "Management",
+    name: "张三",
+    role: "所有者",
+    team: "管理",
     status: "active",
     age: "29",
     avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-    email: "tony.reichert@acme.com",
+    email: "zhangsan@example.com",
   },
   {
     id: 2,
-    name: "Zoey Lang",
-    role: "Member",
-    team: "Development",
+    name: "李四",
+    role: "成员",
+    team: "开发",
     status: "pending",
     age: "25",
     avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-    email: "zoey.lang@acme.com",
+    email: "lisi@example.com",
   },
 ];
 
@@ -120,7 +119,7 @@ const TeamManageTable = observer(() => {
       case "status":
         return (
           <Chip className="capitalize" color={statusColorMap[user.status]} size="sm" variant="flat">
-            {cellValue}
+            {cellValue === 'active' ? '活跃' : cellValue === 'pending' ? '待定' : cellValue}
           </Chip>
         );
       case "actions":
@@ -133,9 +132,9 @@ const TeamManageTable = observer(() => {
                 </Button>
               </DropdownTrigger>
               <DropdownMenu>
-                <DropdownItem>View</DropdownItem>
-                <DropdownItem>Edit</DropdownItem>
-                <DropdownItem>Delete</DropdownItem>
+                <DropdownItem>查看</DropdownItem>
+                <DropdownItem>编辑</DropdownItem>
+                <DropdownItem>删除</DropdownItem>
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -164,7 +163,7 @@ const TeamManageTable = observer(() => {
           <Input
             isClearable
             className="w-full"
-            placeholder="Search by name..."
+            placeholder="搜索成员..."
             startContent={<Icon icon="solar:magnifier-linear" width={20} />}
             value={filterValue}
             onClear={() => onClear()}
@@ -174,7 +173,7 @@ const TeamManageTable = observer(() => {
             <Dropdown>
               <DropdownTrigger>
                 <Button endContent={<Icon icon="solar:alt-arrow-down-linear" width={20} />} variant="flat">
-                  All Team Roles
+                  团队角色
                 </Button>
               </DropdownTrigger>
               <DropdownMenu
@@ -185,8 +184,8 @@ const TeamManageTable = observer(() => {
                 selectionMode="multiple"
                 onSelectionChange={setRolesFilter}
               >
-                <DropdownItem key="owner" className="capitalize">Owner</DropdownItem>
-                <DropdownItem key="member" className="capitalize">Member</DropdownItem>
+                <DropdownItem key="owner" className="capitalize">所有者</DropdownItem>
+                <DropdownItem key="member" className="capitalize">成员</DropdownItem>
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -203,8 +202,8 @@ const TeamManageTable = observer(() => {
             }
           }}
         >
-          <Tab key="members" title="Members" />
-          <Tab key="pending-invitations" title="Pending Invitations" />
+          <Tab key="members" title="成员" />
+          <Tab key="pending-invitations" title="待定邀请" />
         </Tabs>
       </div>
     );
@@ -216,7 +215,7 @@ const TeamManageTable = observer(() => {
         <Table
           hideHeader
           isHeaderSticky
-          aria-label="Team Manage Table"
+          aria-label="团队管理表格"
           checkboxesProps={{
             classNames: {
               wrapper: ["after:bg-foreground after:text-background text-background"],
@@ -242,7 +241,7 @@ const TeamManageTable = observer(() => {
               </TableColumn>
             )}
           </TableHeader>
-          <TableBody emptyContent={"No users found"} items={filteredItems}>
+          <TableBody emptyContent={"没有找到成员"} items={filteredItems}>
             {(item) => (
               <TableRow key={item.id}>
                 {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
@@ -257,4 +256,3 @@ const TeamManageTable = observer(() => {
 
 wpm.export('comp_team_manage_table', TeamManageTable);
 </mo-ai-code>
-```

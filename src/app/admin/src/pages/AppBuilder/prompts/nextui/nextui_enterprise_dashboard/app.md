@@ -1,4 +1,3 @@
-```jsx
 <mo-ai-code type="app">
 const {
   wpm,
@@ -42,7 +41,7 @@ const App = observer(() => {
   return (
     <NextUI.NextUIProvider navigate={navigate}>
       <div className="flex h-screen w-full">
-        {/* Sidebar */}
+        {/* 侧边栏 */}
         <SidebarDrawer
           className={cn("min-w-[288px] rounded-lg", {"min-w-[76px]": isCollapsed})}
           hideCloseButton={true}
@@ -86,8 +85,8 @@ const App = observer(() => {
                 src="https://i.pravatar.cc/150?u=a042581f4e29026024d"
               />
               <div className={cn("flex max-w-full flex-col", {hidden: isCollapsed})}>
-                <p className="text-small font-medium text-foreground">Kate Moore</p>
-                <p className="text-tiny font-medium text-default-400">Customer Support</p>
+                <p className="text-small font-medium text-foreground">张三</p>
+                <p className="text-tiny font-medium text-default-400">技术支持</p>
               </div>
             </div>
 
@@ -160,7 +159,7 @@ const App = observer(() => {
                   />
                 </Button>
               )}
-              <NextUI.Tooltip content="Support" isDisabled={!isCollapsed} placement="right">
+              <NextUI.Tooltip content="帮助支持" isDisabled={!isCollapsed} placement="right">
                 <Button
                   fullWidth
                   className={cn(
@@ -188,11 +187,11 @@ const App = observer(() => {
                       width={24}
                     />
                   ) : (
-                    "Support"
+                    "帮助支持"
                   )}
                 </Button>
               </NextUI.Tooltip>
-              <NextUI.Tooltip content="Log Out" isDisabled={!isCollapsed} placement="right">
+              <NextUI.Tooltip content="退出登录" isDisabled={!isCollapsed} placement="right">
                 <Button
                   className={cn("justify-start text-default-500 data-[hover=true]:text-foreground", {
                     "justify-center": isCollapsed,
@@ -216,7 +215,7 @@ const App = observer(() => {
                       width={24}
                     />
                   ) : (
-                    "Log Out"
+                    "退出登录"
                   )}
                 </Button>
               </NextUI.Tooltip>
@@ -224,10 +223,9 @@ const App = observer(() => {
           </div>
         </SidebarDrawer>
 
-        {/* Content */}
+        {/* 内容区域 */}
         <div className="flex-1 overflow-auto">
           <div className="w-full max-w-[1024px] p-4">
-
               <Routes>
                 <Route path="/" element={<Navigate to="/data" replace />} />
                 <Route path="/data" element={<DataManage />} />
@@ -237,7 +235,6 @@ const App = observer(() => {
                 <Route path="/settings/billing" element={<BillingSetting />} />
                 <Route path="/settings/team" element={<TeamSetting />} />
               </Routes>
-
           </div>
         </div>
       </div>
@@ -247,4 +244,3 @@ const App = observer(() => {
 
 wpm.export(appId, App);
 </mo-ai-code>
-```

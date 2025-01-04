@@ -1,4 +1,3 @@
-```jsx
 <mo-ai-code type="page" pageid="page_billing_setting" title="账单设置">
 const {
   wpm,
@@ -15,31 +14,41 @@ const PlanCustomRadio = await wpm.import('comp_plan_custom_radio');
 
 const addressOptions = [
   {
-    label: "Buenos Aires",
-    value: "buenos-aires",
-    description: "Buenos Aires",
+    label: "北京",
+    value: "beijing",
+    description: "北京市",
+  },
+  {
+    label: "上海",
+    value: "shanghai",
+    description: "上海市",
+  },
+  {
+    label: "广州",
+    value: "guangzhou",
+    description: "广州市",
   },
 ];
 
 const countryOptions = [
   {
-    label: "Argentina",
-    value: "ar",
-    description: "Argentina",
+    label: "中国",
+    value: "cn",
+    description: "中华人民共和国",
   },
 ];
 
 const BillingSetting = observer(({className, ...props}) => (
   <div className={cn("p-2", className)} {...props}>
-    {/* Payment Method */}
+    {/* 支付方式 */}
     <div>
       <div className="rounded-large bg-default-100">
         <div className="flex items-center justify-between gap-2 px-4 py-3">
           <div className="flex items-center gap-3">
             <Icon className="h-6 w-6 text-default-500" icon="solar:card-outline" />
             <div>
-              <p className="text-sm font-medium text-default-600">Payment method</p>
-              <p className="text-xs text-default-400">MasterCard credit card ending in ***3456</p>
+              <p className="text-sm font-medium text-default-600">支付方式</p>
+              <p className="text-xs text-default-400">银联信用卡 尾号***3456</p>
             </div>
           </div>
           <Button
@@ -48,19 +57,19 @@ const BillingSetting = observer(({className, ...props}) => (
             size="sm"
             variant="shadow"
           >
-            Update
+            更新
           </Button>
         </div>
       </div>
     </div>
     <Spacer y={4} />
-    {/* Current Plan */}
+    {/* 当前套餐 */}
     <div>
-      <p className="text-base font-medium text-default-700">Current Plan</p>
+      <p className="text-base font-medium text-default-700">当前套餐</p>
       <p className="mt-1 text-sm font-normal text-default-400">
-        Your free trial ends in <span className="text-default-500">8 days.</span>
+        您的免费试用期还剩 <span className="text-default-500">8 天</span>。
       </p>
-      {/* Plan radio group */}
+      {/* 套餐选择 */}
       <RadioGroup
         className="mt-4"
         classNames={{
@@ -73,21 +82,21 @@ const BillingSetting = observer(({className, ...props}) => (
           classNames={{
             label: "text-default-500 font-medium",
           }}
-          description="Pro Monthly"
+          description="专业版月付"
           value="pro-monthly"
         >
           <div className="mt-2">
             <p className="pt-2">
               <span className="text-[30px] font-semibold leading-7 text-default-foreground">
-                $12
+                ¥79
               </span>
-              &nbsp;<span className="text-xs font-medium text-default-400">/per month</span>
+              &nbsp;<span className="text-xs font-medium text-default-400">/月</span>
             </p>
             <ul className="list-inside list-disc text-xs font-normal text-default-500">
-              <li>Unlimited users</li>
-              <li>All features</li>
-              <li>Support via email and chat</li>
-              <li>Billed monthly, cancel any time</li>
+              <li>无限用户数</li>
+              <li>所有功能</li>
+              <li>邮件和在线客服支持</li>
+              <li>按月付费，随时可取消</li>
             </ul>
           </div>
         </PlanCustomRadio>
@@ -95,52 +104,52 @@ const BillingSetting = observer(({className, ...props}) => (
           classNames={{
             label: "text-default-500 font-medium",
           }}
-          description="Pro Yearly"
+          description="专业版年付"
           value="pro-yearly"
         >
           <div className="mt-2">
             <p className="pt-2">
               <span className="text-[30px] font-semibold leading-7 text-default-foreground">
-                $72
+                ¥799
               </span>
-              &nbsp;<span className="text-xs font-medium text-default-400">/per year</span>
+              &nbsp;<span className="text-xs font-medium text-default-400">/年</span>
             </p>
             <ul className="list-inside list-disc text-xs font-normal text-default-500">
-              <li>Unlimited users</li>
-              <li>All features</li>
-              <li>Support via email and chat</li>
-              <li>Billed monthly, cancel any time</li>
+              <li>无限用户数</li>
+              <li>所有功能</li>
+              <li>邮件和在线客服支持</li>
+              <li>年付优惠，约省2个月费用</li>
             </ul>
           </div>
         </PlanCustomRadio>
       </RadioGroup>
     </div>
     <Spacer y={4} />
-    {/* Billing Address */}
+    {/* 账单地址 */}
     <div>
-      {/*  Title */}
+      {/*  标题 */}
       <div>
-        <p className="text-base font-medium text-default-700">Billing Address</p>
+        <p className="text-base font-medium text-default-700">账单地址</p>
         <p className="mt-1 text-sm font-normal text-default-400">
-          If you&apos;d like to add a postal address to every invoice, enter it here.
+          如果您需要在发票上添加邮寄地址，请在此填写。
         </p>
       </div>
     </div>
     <div className="mt-2 space-y-2">
-      <Input placeholder="Address Line 1" />
-      <Input placeholder="Address Line 2" />
-      <Input placeholder="City" />
+      <Input placeholder="详细地址 1" />
+      <Input placeholder="详细地址 2" />
+      <Input placeholder="城市" />
       <div className="flex items-center gap-2">
-        <Select defaultSelectedKeys={["buenos-aires"]}>
+        <Select defaultSelectedKeys={["beijing"]}>
           {addressOptions.map((addressOption) => (
             <SelectItem key={addressOption.value} value={addressOption.value}>
               {addressOption.label}
             </SelectItem>
           ))}
         </Select>
-        <Input placeholder="Postal Code" />
+        <Input placeholder="邮政编码" />
       </div>
-      <Select defaultSelectedKeys={["ar"]}>
+      <Select defaultSelectedKeys={["cn"]}>
         {countryOptions.map((countryOption) => (
           <SelectItem key={countryOption.value} value={countryOption.value}>
             {countryOption.label}
@@ -149,11 +158,10 @@ const BillingSetting = observer(({className, ...props}) => (
       </Select>
     </div>
     <Button className="mt-5 bg-default-foreground text-background" size="sm">
-      Save
+      保存
     </Button>
   </div>
 ));
 
 wpm.export('page_billing_setting', BillingSetting);
 </mo-ai-code>
-```
