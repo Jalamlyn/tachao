@@ -22,6 +22,7 @@ const ProductManagerModal = ({ isOpen, onClose }) => {
   const [inputValue, setInputValue] = useState("")
   const [isConfirming, setIsConfirming] = useState(false)
   const [isSending, setIsSending] = useState(false)
+  const [isWaitingResponse, setIsWaitingResponse] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   // 自动滚动到底部
@@ -42,17 +43,25 @@ const ProductManagerModal = ({ isOpen, onClose }) => {
     setMessages((prev) => [...prev, userMessage])
     setInputValue("")
     setIsSending(true)
+    setIsWaitingResponse(true)
 
     try {
       let currentResponse = ""
+      let hasStartedResponse = false
+
       await ProductAgent.chat([...messages, userMessage], (chunk) => {
+        if (!hasStartedResponse) {
+          hasStartedResponse = true
+          setIsWaitingResponse(false)
+          setMessages((prev) => [...prev, { role: "assistant", content: "" }])
+        }
+
         currentResponse += chunk
         setMessages((prev) => {
           const newMessages = [...prev]
-          if (newMessages[newMessages.length - 1]?.role === "assistant") {
-            newMessages[newMessages.length - 1].content = currentResponse
-          } else {
-            newMessages.push({ role: "assistant", content: currentResponse })
+          newMessages[newMessages.length - 1] = {
+            role: "assistant",
+            content: currentResponse,
           }
           return newMessages
         })
@@ -62,6 +71,7 @@ const ProductManagerModal = ({ isOpen, onClose }) => {
       message.error("对话出错了，请重试")
     } finally {
       setIsSending(false)
+      setIsWaitingResponse(false)
     }
   }
 
@@ -123,7 +133,7 @@ const ProductManagerModal = ({ isOpen, onClose }) => {
         </ModalHeader>
         <ModalBody>
           <div className='flex flex-col h-full'>
-            <ScrollShadow ref={scrollRef} className='flex-1 space-y-4 p-4'>
+            <ScrollShadow ref={scrollRef} className='flex-1 space-y-4 p-4 max-h-[50vh]'>
               {messages.map((msg, index) => (
                 <div key={index} className={`flex gap-3 ${msg.role === "assistant" ? "" : "flex-row-reverse"}`}>
                   <Avatar
@@ -139,7 +149,7 @@ const ProductManagerModal = ({ isOpen, onClose }) => {
                   </div>
                 </div>
               ))}
-              {isSending && (
+              {isWaitingResponse && (
                 <div className='flex items-center gap-2 text-sm text-default-400'>
                   <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-primary'></div>
                   正在思考...
