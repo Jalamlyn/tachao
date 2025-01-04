@@ -16,20 +16,6 @@ interface CodeViewProps {
 }
 
 export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab, selectedTab }) => {
-  const [selectedCodeId, setSelectedCodeId] = useState<string>("app_entry")
-  const [editedCode, setEditedCode] = useState("")
-  const [isEditing, setIsEditing] = useState(false)
-  const [codeItems, setCodeItems] = useState<CodeItem[]>([])
-  const [searchQuery, setSearchQuery] = useState("")
-  const [searchContent, setSearchContent] = useState("")
-  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false)
-  const [showImportModal, setShowImportModal] = useState(false)
-  const [importContent, setImportContent] = useState("")
-  const [isImporting, setIsImporting] = useState(false)
-  const [showConfirmModal, setShowConfirmModal] = useState(false)
-  const [pendingImportContent, setPendingImportContent] = useState("")
-  const [showVersionInfo, setShowVersionInfo] = useState(false)
-  const [searchResults, setSearchResults] = useState<{moduleId: string, matches: number}[]>([])
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const searchInputRef = React.useRef<HTMLInputElement>(null)
 
@@ -40,9 +26,8 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
   })
 
   useHotkeys('esc', () => {
-    setSearchQuery("")
-    setSearchContent("")
-    setSearchResults([])
+    appCodeStore.setSearchQuery("")
+    appCodeStore.setSearchContent("")
   })
 
   const handleExportCode = useCallback(() => {
@@ -66,7 +51,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
 
     try {
       const content = await file.text()
-      setImportContent(content)
+      appCodeStore.viewState.importContent = content
     } catch (error) {
       console.error("Error reading file:", error)
       message.error("读取文件失败")
@@ -74,25 +59,24 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
   }
 
   const handleImport = async () => {
-    if (!importContent.trim()) {
+    if (!appCodeStore.viewState.importContent.trim()) {
       message.error("请输入或上传要导入的代码")
       return
     }
 
-    setPendingImportContent(importContent)
-    setShowConfirmModal(true)
+    appCodeStore.viewState.pendingImportContent = appCodeStore.viewState.importContent
+    appCodeStore.viewState.showConfirmModal = true
   }
 
   const handleConfirmImport = async () => {
-    setIsImporting(true)
+    appCodeStore.viewState.isImporting = true
     try {
-      const result = await appCodeStore.importFromMarkdown(pendingImportContent)
+      const result = await appCodeStore.importFromMarkdown(appCodeStore.viewState.pendingImportContent)
       if (result.success) {
         message.success("代码导入成功")
-        setShowImportModal(false)
-        setShowConfirmModal(false)
-        updateCodeItems()
-        setSelectedCodeId("app_entry")
+        appCodeStore.viewState.showImportModal = false
+        appCodeStore.viewState.showConfirmModal = false
+        appCodeStore.handleCodeSelect("app_entry")
       } else {
         message.error("导入失败: " + (result.errors || []).join(", "))
       }
@@ -100,159 +84,10 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
       console.error("Error importing code:", error)
       message.error("导入失败: " + (error instanceof Error ? error.message : "未知错误"))
     } finally {
-      setIsImporting(false)
-      setImportContent("")
-      setPendingImportContent("")
+      appCodeStore.viewState.isImporting = false
+      appCodeStore.viewState.importContent = ""
+      appCodeStore.viewState.pendingImportContent = ""
     }
-  }
-
-  const updateCodeItems = useCallback(() => {
-    const currentVersion = appCodeStore.currentVersion
-    if (!currentVersion) return
-
-    const items: CodeItem[] = []
-
-    // App Entry
-    if (currentVersion.app) {
-      const entryModuleId = `${appId}_app_entry`
-      const entryModule = currentVersion.modules[entryModuleId]
-      if (entryModule) {
-        items.push({
-          id: "app_entry",
-          title: "应用入口 (App Entry)",
-          type: "app",
-          code: entryModule.data.code,
-          updatedAt: entryModule.updatedAt,
-        })
-      }
-    }
-
-    // 其他模块
-    Object.entries(currentVersion.modules).forEach(([moduleId, moduleWrapper]) => {
-      const moduleData = moduleWrapper.data
-      if (moduleData.type !== "app") {
-        items.push({
-          id: moduleId,
-          title: moduleData.title || moduleData.name,
-          type: moduleData.type,
-          name: moduleData.name,
-          code: moduleData.code,
-          updatedAt: moduleWrapper.updatedAt,
-        })
-      }
-    })
-
-    setCodeItems(items)
-  }, [appId])
-
-  // 全局搜索逻辑
-  const handleSearch = useCallback(() => {
-    const results: {moduleId: string, matches: number}[] = []
-    
-    codeItems.forEach(item => {
-      let matches = 0
-      const searchContentLower = searchContent.toLowerCase()
-      const codeLower = item.code.toLowerCase()
-      
-      // 搜索代码内容
-      if (searchContent) {
-        const contentMatches = (codeLower.match(new RegExp(searchContentLower, 'g')) || []).length
-        matches += contentMatches
-      }
-      
-      // 搜索文件名/标题
-      if (searchQuery) {
-        const titleMatches = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ? 1 : 0
-        matches += titleMatches
-      }
-      
-      if (matches > 0) {
-        results.push({moduleId: item.id, matches})
-      }
-    })
-    
-    // 按匹配数量排序
-    results.sort((a, b) => b.matches - a.matches)
-    setSearchResults(results)
-    
-    if (results.length > 0) {
-      setSelectedCodeId(results[0].moduleId)
-    }
-  }, [searchQuery, searchContent, codeItems])
-
-  useEffect(() => {
-    handleSearch()
-  }, [handleSearch, searchQuery, searchContent])
-
-  useEffect(() => {
-    if (selectedCodeId) {
-      const currentVersion = appCodeStore.currentVersion
-      if (!currentVersion) return
-
-      const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
-
-      const moduleWrapper = currentVersion.modules[moduleId]
-      if (moduleWrapper) {
-        setEditedCode(moduleWrapper.data.code || "")
-      } else {
-        setEditedCode("")
-      }
-    }
-  }, [selectedCodeId, appCodeStore.currentIndex, appId])
-
-  useEffect(() => {
-    updateCodeItems()
-  }, [updateCodeItems, appCodeStore.currentVersion])
-
-  const handleCodeSelect = useCallback(
-    (moduleId: string) => {
-      setSelectedCodeId(moduleId)
-
-      const currentVersion = appCodeStore.currentVersion
-      if (!currentVersion) return
-
-      const actualModuleId = moduleId === "app_entry" ? `${appId}_app_entry` : moduleId
-
-      const moduleWrapper = currentVersion.modules[actualModuleId]
-      if (moduleWrapper) {
-        setEditedCode(moduleWrapper.data.code || "")
-        setIsEditing(false)
-      }
-    },
-    [appId]
-  )
-
-  const handleSaveEdit = async () => {
-    try {
-      if (!selectedCodeId) return
-
-      const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
-
-      const newVersion = await appCodeStore.addModules({
-        [moduleId]: editedCode,
-      })
-
-      appCodeStore.addVersion(newVersion)
-
-      setIsEditing(false)
-      message.success("保存成功")
-    } catch (error) {
-      console.error("Error saving edit:", error)
-      message.error("保存失败，请检查代码格式")
-    }
-  }
-
-  const handleCancelEdit = () => {
-    const currentVersion = appCodeStore.currentVersion
-    if (!currentVersion || !selectedCodeId) return
-
-    const moduleId = selectedCodeId === "app_entry" ? `${appId}_app_entry` : selectedCodeId
-
-    const moduleWrapper = currentVersion.modules[moduleId]
-    if (moduleWrapper) {
-      setEditedCode(moduleWrapper.data.code || "")
-    }
-    setIsEditing(false)
   }
 
   const getCodeTypeIcon = (type: string) => {
@@ -291,15 +126,6 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
     }
   }
 
-  const filteredCodeItems = useMemo(() => {
-    return searchResults.length > 0 
-      ? codeItems.filter(item => searchResults.some(result => result.moduleId === item.id))
-      : codeItems.filter(item => 
-          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.type.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-  }, [codeItems, searchQuery, searchResults])
-
   if (!showCodeTab || selectedTab !== "code") return null
 
   return (
@@ -307,12 +133,12 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
       <div className='absolute top-2 left-2 right-2 z-10 flex justify-between items-center'>
         <motion.div
           initial={false}
-          animate={{ width: isPanelCollapsed ? "40px" : "calc(100% - 120px)" }}
+          animate={{ width: appCodeStore.viewState.isPanelCollapsed ? "40px" : "calc(100% - 120px)" }}
           className='bg-white/80 backdrop-blur-sm rounded-lg shadow-sm'
         >
           <div className='flex h-full'>
             <AnimatePresence>
-              {!isPanelCollapsed && (
+              {!appCodeStore.viewState.isPanelCollapsed && (
                 <motion.div
                   initial={{ width: 0, opacity: 0 }}
                   animate={{ width: "300px", opacity: 1 }}
@@ -325,39 +151,39 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                         ref={searchInputRef}
                         type='text'
                         placeholder='搜索文件名称...'
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        value={appCodeStore.viewState.searchQuery}
+                        onChange={(e) => appCodeStore.setSearchQuery(e.target.value)}
                         startContent={<Icon icon='mdi:magnify' className='text-default-400' />}
                         className='w-full'
                       />
                       <Input
                         type='text'
                         placeholder='搜索代码内容... (Ctrl+F)'
-                        value={searchContent}
-                        onChange={(e) => setSearchContent(e.target.value)}
+                        value={appCodeStore.viewState.searchContent}
+                        onChange={(e) => appCodeStore.setSearchContent(e.target.value)}
                         startContent={<Icon icon='mdi:code-search' className='text-default-400' />}
                         className='w-full'
                       />
-                      {searchResults.length > 0 && (
+                      {appCodeStore.viewState.searchResults.length > 0 && (
                         <div className='text-xs text-default-500 pl-2'>
-                          找到 {searchResults.length} 个匹配结果
+                          找到 {appCodeStore.viewState.searchResults.length} 个匹配结果
                         </div>
                       )}
                     </div>
                     <ScrollShadow className='h-[calc(100vh-400px)]'>
                       <div className='space-y-1'>
-                        {filteredCodeItems.map((item) => (
+                        {appCodeStore.getFilteredCodeItems().map((item) => (
                           <motion.div
                             key={item.id}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             whileHover={{ x: 5 }}
                             className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
-                              selectedCodeId === item.id
+                              appCodeStore.viewState.selectedCodeId === item.id
                                 ? "bg-primary text-white"
                                 : "hover:bg-default-100 text-default-600"
                             }`}
-                            onClick={() => handleCodeSelect(item.id)}
+                            onClick={() => appCodeStore.handleCodeSelect(item.id)}
                           >
                             <Icon icon={getCodeTypeIcon(item.type)} className='w-4 h-4 flex-shrink-0' />
                             <Tooltip content={item.title} placement="right">
@@ -387,9 +213,9 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
 
             <div className='flex-1 relative'>
               <div className='absolute top-2 left-2 z-20 flex items-center gap-2'>
-                <Tooltip content={isPanelCollapsed ? "展开文件面板" : "收起文件面板"}>
-                  <Button size='sm' variant='flat' isIconOnly onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}>
-                    <Icon icon={isPanelCollapsed ? "mdi:chevron-right" : "mdi:chevron-left"} className='w-4 h-4' />
+                <Tooltip content={appCodeStore.viewState.isPanelCollapsed ? "展开文件面板" : "收起文件面板"}>
+                  <Button size='sm' variant='flat' isIconOnly onClick={() => appCodeStore.togglePanelCollapse()}>
+                    <Icon icon={appCodeStore.viewState.isPanelCollapsed ? "mdi:chevron-right" : "mdi:chevron-left"} className='w-4 h-4' />
                   </Button>
                 </Tooltip>
                 <Divider orientation="vertical" className="h-6" />
@@ -399,7 +225,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                   </Button>
                 </Tooltip>
                 <Tooltip content='导入代码'>
-                  <Button size='sm' variant='flat' isIconOnly onClick={() => setShowImportModal(true)}>
+                  <Button size='sm' variant='flat' isIconOnly onClick={() => appCodeStore.viewState.showImportModal = true}>
                     <Icon icon='mdi:upload' className='w-4 h-4' />
                   </Button>
                 </Tooltip>
@@ -409,18 +235,18 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                     size='sm' 
                     variant='flat' 
                     isIconOnly 
-                    onClick={() => setShowVersionInfo(true)}
+                    onClick={() => appCodeStore.viewState.showVersionInfo = true}
                   >
                     <Icon icon='mdi:history' className='w-4 h-4' />
                   </Button>
                 </Tooltip>
                 <Divider orientation="vertical" className="h-6" />
-                {isEditing ? (
+                {appCodeStore.viewState.isEditing ? (
                   <div className='space-x-2'>
                     <Button
                       size='sm'
                       color='primary'
-                      onClick={handleSaveEdit}
+                      onClick={() => appCodeStore.handleSaveEdit()}
                       startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
                     >
                       保存
@@ -428,7 +254,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                     <Button
                       size='sm'
                       variant='flat'
-                      onClick={handleCancelEdit}
+                      onClick={() => appCodeStore.handleCancelEdit()}
                       startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
                     >
                       取消
@@ -438,9 +264,9 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                   <Button
                     size='sm'
                     color='primary'
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => appCodeStore.setEditMode(true)}
                     startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
-                    isDisabled={!selectedCodeId}
+                    isDisabled={!appCodeStore.viewState.selectedCodeId}
                   >
                     编辑
                   </Button>
@@ -452,9 +278,9 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                   height='100%'
                   width='100%'
                   language='javascript'
-                  value={editedCode}
+                  value={appCodeStore.viewState.editedCode}
                   options={{
-                    readOnly: !isEditing,
+                    readOnly: !appCodeStore.viewState.isEditing,
                     minimap: { enabled: true },
                     fontSize: 14,
                     lineNumbers: "on",
@@ -474,8 +300,8 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                   }}
                   theme='vs-dark'
                   onChange={(value) => {
-                    if (isEditing) {
-                      setEditedCode(value || "")
+                    if (appCodeStore.viewState.isEditing) {
+                      appCodeStore.updateEditedCode(value || "")
                     }
                   }}
                 />
@@ -487,10 +313,10 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
 
       {/* 导入 Modal */}
       <Modal 
-        isOpen={showImportModal} 
+        isOpen={appCodeStore.viewState.showImportModal} 
         onClose={() => {
-          setShowImportModal(false)
-          setImportContent("")
+          appCodeStore.viewState.showImportModal = false
+          appCodeStore.viewState.importContent = ""
         }}
         size="2xl"
       >
@@ -523,8 +349,8 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
               <Textarea
                 label="粘贴 Markdown 内容"
                 placeholder="在此粘贴要导入的 Markdown 内容..."
-                value={importContent}
-                onChange={(e) => setImportContent(e.target.value)}
+                value={appCodeStore.viewState.importContent}
+                onChange={(e) => appCodeStore.viewState.importContent = e.target.value}
                 minRows={10}
               />
             </div>
@@ -533,8 +359,8 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
             <Button
               variant="flat"
               onPress={() => {
-                setShowImportModal(false)
-                setImportContent("")
+                appCodeStore.viewState.showImportModal = false
+                appCodeStore.viewState.importContent = ""
               }}
             >
               取消
@@ -542,7 +368,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
             <Button
               color="primary"
               onPress={handleImport}
-              isLoading={isImporting}
+              isLoading={appCodeStore.viewState.isImporting}
             >
               导入
             </Button>
@@ -552,8 +378,8 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
 
       {/* 确认对话框 */}
       <Modal 
-        isOpen={showConfirmModal} 
-        onClose={() => setShowConfirmModal(false)}
+        isOpen={appCodeStore.viewState.showConfirmModal} 
+        onClose={() => appCodeStore.viewState.showConfirmModal = false}
         size="sm"
       >
         <ModalContent>
@@ -569,14 +395,14 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
           <ModalFooter>
             <Button
               variant="flat"
-              onPress={() => setShowConfirmModal(false)}
+              onPress={() => appCodeStore.viewState.showConfirmModal = false}
             >
               取消
             </Button>
             <Button
               color="danger"
               onPress={handleConfirmImport}
-              isLoading={isImporting}
+              isLoading={appCodeStore.viewState.isImporting}
             >
               确认覆盖
             </Button>
@@ -586,8 +412,8 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
 
       {/* 版本信息 Modal */}
       <Modal 
-        isOpen={showVersionInfo} 
-        onClose={() => setShowVersionInfo(false)}
+        isOpen={appCodeStore.viewState.showVersionInfo} 
+        onClose={() => appCodeStore.viewState.showVersionInfo = false}
         size="lg"
       >
         <ModalContent>
@@ -647,7 +473,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
           <ModalFooter>
             <Button
               variant="flat"
-              onPress={() => setShowVersionInfo(false)}
+              onPress={() => appCodeStore.viewState.showVersionInfo = false}
             >
               关闭
             </Button>
