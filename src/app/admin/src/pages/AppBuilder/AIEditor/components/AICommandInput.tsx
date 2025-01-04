@@ -1,5 +1,5 @@
 import React, { memo, useState, useCallback, useRef } from "react"
-import { Button, Textarea, Tooltip, Progress, Badge, ScrollShadow } from "@nextui-org/react"
+import { Button, Textarea, Tooltip, Progress, Badge, ScrollShadow, Modal, ModalContent } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import debounce from "lodash/debounce"
 
@@ -30,9 +30,11 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   const [isUploading, setIsUploading] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [recordingError, setRecordingError] = useState<string>("")
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const lastTranscriptRef = useRef<string>("")
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // 使用防抖处理输入更新
   const debouncedSetInput = useCallback(
@@ -77,6 +79,49 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     },
     [handleSend]
   )
+
+  // 处理剪贴板粘贴
+  const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+
+    for (const item of items) {
+      if (item.type.indexOf('image') !== -1) {
+        e.preventDefault()
+        const file = item.getAsFile()
+        if (file) {
+          if (file.size > 5 * 1024 * 1024) {
+            message.error("图片大小不能超过5MB")
+            return
+          }
+
+          setIsUploading(true)
+          try {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              const base64 = reader.result as string
+              if (preview) {
+                imageStore.removeImage(preview)
+              }
+              setPreview(base64)
+              imageStore.addImage(base64)
+              setIsUploading(false)
+              message.success("图片粘贴成功")
+            }
+            reader.onerror = () => {
+              message.error("图片读取失败")
+              setIsUploading(false)
+            }
+            reader.readAsDataURL(file)
+          } catch (error) {
+            console.error("Error processing pasted image:", error)
+            message.error("图片处理失败")
+            setIsUploading(false)
+          }
+        }
+      }
+    }
+  }, [preview])
 
   // 处理图片上传
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -233,7 +278,8 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
             <img
               src={preview}
               alt='Preview'
-              className='w-16 h-16 object-cover rounded-small border-small border-default-200/50 transition-transform duration-200 hover:scale-105'
+              className='w-16 h-16 object-cover rounded-small border-small border-default-200/50 transition-transform duration-200 hover:scale-105 cursor-pointer'
+              onClick={() => setIsPreviewModalOpen(true)}
             />
           </Badge>
         )}
@@ -243,6 +289,8 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyPress={handleKeyPress}
+        onPaste={handlePaste}
+        ref={textareaRef}
         placeholder='请输入您的问题,AI 将帮您处理...'
         classNames={{
           inputWrapper: "!bg-transparent shadow-none",
@@ -339,6 +387,35 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
           </div>
         }
       />
+
+      {/* 图片预览Modal */}
+      <Modal 
+        isOpen={isPreviewModalOpen} 
+        onClose={() => setIsPreviewModalOpen(false)}
+        size="4xl"
+        classNames={{
+          wrapper: "items-center",
+        }}
+      >
+        <ModalContent>
+          <div className="relative">
+            <img
+              src={preview}
+              alt="Preview"
+              className="w-full h-full object-contain max-h-[80vh]"
+            />
+            <Button
+              isIconOnly
+              className="absolute top-2 right-2"
+              color="danger"
+              variant="light"
+              onClick={() => setIsPreviewModalOpen(false)}
+            >
+              <Icon icon="mdi:close" className="w-6 h-6" />
+            </Button>
+          </div>
+        </ModalContent>
+      </Modal>
     </form>
   )
 })
