@@ -1,29 +1,21 @@
-```jsx
 <mo-ai-code type="component" name="comp_sidebar">
 const {
   wpm,
   React,
   observer,
   NextUI,
-  Icon
+  Icon,
+  ReactRouterDom,
+  appId,
+  cn
 } = context;
 
 const { Accordion, AccordionItem, Listbox, Tooltip, ListboxItem, ListboxSection } = NextUI;
+const { Link, useLocation } = ReactRouterDom;
 
-export enum SidebarItemType {
-  Nest = "nest",
-}
-
-export type SidebarItem = {
-  key: string;
-  title: string;
-  icon?: string;
-  href?: string;
-  type?: SidebarItemType.Nest;
-  startContent?: React.ReactNode;
-  endContent?: React.ReactNode;
-  items?: SidebarItem[];
-  className?: string;
+// 使用普通对象替代 enum
+const SidebarItemType = {
+  Nest: "nest"
 };
 
 const Sidebar = observer(({
@@ -40,6 +32,7 @@ const Sidebar = observer(({
   ...props
 }) => {
   const [selected, setSelected] = React.useState(defaultSelectedKey);
+  const location = useLocation();
 
   const sectionClasses = {
     ...sectionClassesProp,
@@ -70,7 +63,7 @@ const Sidebar = observer(({
         delete item.href;
       }
 
-      return (
+      const itemContent = (
         <ListboxItem
           {...item}
           key={item.key}
@@ -168,8 +161,22 @@ const Sidebar = observer(({
           ) : null}
         </ListboxItem>
       );
+
+      if (item.href) {
+        return (
+          <Link 
+            key={item.key}
+            to={`/app-run/${appId}${item.href}`}
+            className="no-underline"
+          >
+            {itemContent}
+          </Link>
+        );
+      }
+
+      return itemContent;
     },
-    [isCompact, hideEndContent, iconClassName, items],
+    [isCompact, hideEndContent, iconClassName, items, appId],
   );
 
   const renderItem = React.useCallback(
@@ -181,7 +188,7 @@ const Sidebar = observer(({
         return renderNestItem(item);
       }
 
-      return (
+      const itemContent = (
         <ListboxItem
           {...item}
           key={item.key}
@@ -223,8 +230,22 @@ const Sidebar = observer(({
           ) : null}
         </ListboxItem>
       );
+
+      if (item.href) {
+        return (
+          <Link 
+            key={item.key}
+            to={`/app-run/${appId}${item.href}`}
+            className="no-underline"
+          >
+            {itemContent}
+          </Link>
+        );
+      }
+
+      return itemContent;
     },
-    [isCompact, hideEndContent, iconClassName, itemClasses?.base],
+    [isCompact, hideEndContent, iconClassName, itemClasses?.base, appId],
   );
 
   return (
@@ -282,4 +303,3 @@ const Sidebar = observer(({
 
 wpm.export('comp_sidebar', Sidebar);
 </mo-ai-code>
-```

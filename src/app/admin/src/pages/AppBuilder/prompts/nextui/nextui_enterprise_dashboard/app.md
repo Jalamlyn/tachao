@@ -1,4 +1,3 @@
-```jsx
 <mo-ai-code type="app">
 const {
   wpm,
@@ -10,9 +9,9 @@ const {
   FramerMotion,
   message,
   api,
-  ai,
   mobx,
-  appId
+  appId,
+  cn
 } = context;
 
 const { Routes, Route, Navigate } = ReactRouterDom;
@@ -39,7 +38,7 @@ const App = observer(() => {
   }, []);
 
   return (
-    <div className="flex h-dvh w-full gap-4">
+    <div className="flex h-screen w-full">
       {/* Sidebar */}
       <SidebarDrawer
         className={cn("min-w-[288px] rounded-lg", {"min-w-[76px]": isCollapsed})}
@@ -60,15 +59,17 @@ const App = observer(() => {
               "justify-center gap-0 pl-0": isCollapsed,
             })}
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground">
-              <AcmeIcon className="text-background" />
-            </div>
+            <Icon
+              className={cn("text-default-500", {hidden: isCollapsed})}
+              icon="solar:buildings-2-bold-duotone"
+              width={24}
+            />
             <span
               className={cn("w-full text-small font-bold uppercase opacity-100", {
                 "w-0 opacity-0": isCollapsed,
               })}
             >
-              Acme
+              模本科技
             </span>
             <div className={cn("flex-end flex", {hidden: isCollapsed})}>
               <Icon
@@ -231,16 +232,18 @@ const App = observer(() => {
       </SidebarDrawer>
 
       {/* Content */}
-      <div className="w-full max-w-[1024px] flex-1 p-4">
-        <Routes>
-          <Route path="/" element={<Navigate to="/data" replace />} />
-          <Route path="/data" element={<DataManage />} />
-          <Route path="/settings/profile" element={<ProfileSetting />} />
-          <Route path="/settings/appearance" element={<AppearanceSetting />} />
-          <Route path="/settings/account" element={<AccountSetting />} />
-          <Route path="/settings/billing" element={<BillingSetting />} />
-          <Route path="/settings/team" element={<TeamSetting />} />
-        </Routes>
+      <div className="flex-1 overflow-auto">
+        <div className="w-full max-w-[1024px] p-4">
+          <Routes>
+            <Route path="/" element={<Navigate to="/data" replace />} />
+            <Route path="/data" element={<DataManage />} />
+            <Route path="/settings/profile" element={<ProfileSetting />} />
+            <Route path="/settings/appearance" element={<AppearanceSetting />} />
+            <Route path="/settings/account" element={<AccountSetting />} />
+            <Route path="/settings/billing" element={<BillingSetting />} />
+            <Route path="/settings/team" element={<TeamSetting />} />
+          </Routes>
+        </div>
       </div>
     </div>
   );
@@ -248,4 +251,3 @@ const App = observer(() => {
 
 wpm.export(appId, App);
 </mo-ai-code>
-```

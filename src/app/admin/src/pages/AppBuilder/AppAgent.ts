@@ -37,7 +37,6 @@ class AppAgent {
       appCodeStore.setAppId(appId)
 
       const systemPrompt = await promptsComposer.getSystemPrompt()
-      debugger
       const enhancedCommand = `<project>
       
 1. 应用入口代码：

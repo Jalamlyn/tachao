@@ -5,7 +5,8 @@ const {
   React,
   observer,
   NextUI,
-  Icon
+  Icon,
+  cn
 } = context;
 
 const {

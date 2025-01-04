@@ -4,10 +4,18 @@ const {
   wpm,
   React,
   NextUI,
-  FramerMotion
+  observer,
+  FramerMotion,
+  cn
 } = context;
 
-const { TRANSITION_EASINGS } = FramerMotion;
+// 自定义过渡动画常量
+const TRANSITION_EASINGS = {
+  easeOut: [0.4, 0, 0.2, 1],
+  easeIn: [0.4, 0, 1, 1],
+  easeInOut: [0.4, 0, 0.2, 1]
+};
+
 const { Drawer, DrawerBody, DrawerContent } = NextUI;
 
 const SidebarDrawer = observer(({

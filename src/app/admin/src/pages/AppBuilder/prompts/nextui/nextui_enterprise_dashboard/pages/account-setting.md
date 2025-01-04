@@ -4,7 +4,8 @@ const {
   wpm,
   React,
   observer,
-  NextUI
+  NextUI,
+  cn
 } = context;
 
 const { Button, Input, Select, SelectItem, Spacer } = NextUI;
