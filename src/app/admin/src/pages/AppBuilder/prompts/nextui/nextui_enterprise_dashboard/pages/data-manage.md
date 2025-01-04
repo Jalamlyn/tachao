@@ -6,7 +6,8 @@ const {
   observer,
   NextUI,
   message,
-  api
+  api,
+  appId,
 } = context;
 
 const { useState, useEffect } = React;

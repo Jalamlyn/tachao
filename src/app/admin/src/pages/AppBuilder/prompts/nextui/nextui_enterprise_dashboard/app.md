@@ -1,3 +1,4 @@
+```jsx
 <mo-ai-code type="app">
 const {
   wpm,
@@ -14,7 +15,7 @@ const {
   cn
 } = context;
 
-const { Routes, Route, Navigate } = ReactRouterDom;
+const { Routes, Route, Navigate, useNavigate } = ReactRouterDom;
 const { ScrollShadow, Spacer, Avatar, Button, useDisclosure, Tabs, Tab } = NextUI;
 
 // 导入组件
@@ -32,6 +33,7 @@ const App = observer(() => {
   const {isOpen, onOpenChange} = useDisclosure();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const isMobile = window.innerWidth <= 768;
+  const navigate = useNavigate();
 
   const onToggle = React.useCallback(() => {
     setIsCollapsed((prev) => !prev);
@@ -59,11 +61,6 @@ const App = observer(() => {
               "justify-center gap-0 pl-0": isCollapsed,
             })}
           >
-            <Icon
-              className={cn("text-default-500", {hidden: isCollapsed})}
-              icon="solar:buildings-2-bold-duotone"
-              width={24}
-            />
             <span
               className={cn("w-full text-small font-bold uppercase opacity-100", {
                 "w-0 opacity-0": isCollapsed,
@@ -100,11 +97,6 @@ const App = observer(() => {
             iconClassName="group-data-[selected=true]:text-default-50"
             isCompact={isCollapsed}
             items={[
-              {
-                key: "data",
-                title: "数据管理",
-                icon: "solar:database-bold-duotone"
-              },
               {
                 key: "settings",
                 title: "系统设置",
@@ -234,15 +226,17 @@ const App = observer(() => {
       {/* Content */}
       <div className="flex-1 overflow-auto">
         <div className="w-full max-w-[1024px] p-4">
-          <Routes>
-            <Route path="/" element={<Navigate to="/data" replace />} />
-            <Route path="/data" element={<DataManage />} />
-            <Route path="/settings/profile" element={<ProfileSetting />} />
-            <Route path="/settings/appearance" element={<AppearanceSetting />} />
-            <Route path="/settings/account" element={<AccountSetting />} />
-            <Route path="/settings/billing" element={<BillingSetting />} />
-            <Route path="/settings/team" element={<TeamSetting />} />
-          </Routes>
+          <NextUI.NextUIProvider navigate={navigate}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/data" replace />} />
+              <Route path="/data" element={<DataManage />} />
+              <Route path="/settings/profile" element={<ProfileSetting />} />
+              <Route path="/settings/appearance" element={<AppearanceSetting />} />
+              <Route path="/settings/account" element={<AccountSetting />} />
+              <Route path="/settings/billing" element={<BillingSetting />} />
+              <Route path="/settings/team" element={<TeamSetting />} />
+            </Routes>
+          <NextUI.NextUIProvider>
         </div>
       </div>
     </div>
@@ -251,3 +245,4 @@ const App = observer(() => {
 
 wpm.export(appId, App);
 </mo-ai-code>
+```
