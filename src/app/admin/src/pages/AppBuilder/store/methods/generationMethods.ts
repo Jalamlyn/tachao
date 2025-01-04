@@ -1,7 +1,6 @@
 import { getMetadata } from "@/service/apis/metadata"
 import { initialAIResponse } from "../../prompts/initTemplate"
-// import initialAIResponse from "../../prompts/nextui/nextui_table_with_filters"
-// import initialAIResponse from "../../prompts/nextui/nextui_expense_tracker"
+import { templates } from "../../prompts/templates"
 import { AppCodeStore, Version, AIGenerationResult } from "../types"
 
 export async function handleAIGeneration(
@@ -178,12 +177,21 @@ export async function loadApp(this: AppCodeStore, appId: string) {
   }
 }
 
-export async function createApp(this: AppCodeStore, name: string): Promise<string> {
+export async function createApp(this: AppCodeStore, name: string, templateId: string = ''): Promise<string> {
   const appId = this.generateId()
   this.setAppId(appId)
 
   try {
-    const result = await this.handleAIGeneration(initialAIResponse, name)
+    let aiResponse
+    if (templateId && templates[templateId]) {
+      // 使用选择的模板代码
+      aiResponse = templates[templateId].code
+    } else {
+      // 使用默认的初始化代码
+      aiResponse = initialAIResponse
+    }
+
+    const result = await this.handleAIGeneration(aiResponse, name)
     if (!result.success || !result.version) {
       throw new Error("Failed to create app")
     }
