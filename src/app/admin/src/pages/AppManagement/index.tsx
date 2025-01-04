@@ -63,7 +63,11 @@ const AppManagement: React.FC = () => {
         <AppGallery apps={apps} isLoading={isLoading} onDevelopClick={handleDevelopClick} />
       </div>
 
-      <CreateAppModal isOpen={isCreateModalOpen} onClose={() => setCreateModalOpen(false)} isLoading={isCreating} />
+      <CreateAppModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        isLoading={isCreating}
+      />
 
       <Modal
         isOpen={isDeleteModalOpen}

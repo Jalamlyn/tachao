@@ -16,6 +16,7 @@ import confetti from "canvas-confetti"
 import { message } from "antd"
 import { appCodeStore } from "@/app/admin/src/pages/AppBuilder/store/appCodeStore"
 import { templates } from "@/app/admin/src/pages/AppBuilder/prompts/templates"
+import { useAppStore } from "../store/useAppStore"
 
 interface CreateAppModalProps {
   isOpen: boolean
@@ -115,7 +116,10 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   const [selectedTemplate, setSelectedTemplate] = useState("")
   const [showSuccess, setShowSuccess] = useState(false)
   const [newAppId, setNewAppId] = useState<string>("")
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { useApps } = useAppStore()
+  const { refetch } = useApps()
 
   const triggerConfetti = () => {
     confetti({
@@ -136,17 +140,24 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   const handleSubmit = async () => {
     if (!title.trim()) return
     try {
+      setLoading(true)
       const appId = await appCodeStore.createApp(title.trim(), selectedTemplate)
       setNewAppId(appId)
       setTitle("")
       setSelectedTemplate("")
       onClose()
 
+      // 触发刷新
+      await refetch()
+
       triggerConfetti()
       setShowSuccess(true)
+      setLoading(false)
     } catch (error) {
       console.error("Error creating app:", error)
-      message.error("创建应用失败")
+      message.error(error.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -186,7 +197,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
       >
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>创建应用</ModalHeader>
-          <ModalBody className="gap-6">
+          <ModalBody className='gap-6'>
             <Input
               label='应用名称'
               value={title}
@@ -195,25 +206,25 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
               variant='bordered'
               isRequired
             />
-            
-            <div className="space-y-3">
-              <h3 className="text-foreground-600 text-sm font-medium">选择模板</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className='space-y-3'>
+              <h3 className='text-foreground-600 text-sm font-medium'>选择模板</h3>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 {/* 空白模板卡片 */}
-                <Card 
-                  isPressable 
+                <Card
+                  isPressable
                   isHoverable
-                  className={`border-2 transition-all duration-200 ${selectedTemplate === '' ? 'border-primary' : 'border-transparent'}`}
-                  onPress={() => setSelectedTemplate('')}
+                  className={`border-2 transition-all duration-200 ${selectedTemplate === "" ? "border-primary" : "border-transparent"}`}
+                  onPress={() => setSelectedTemplate("")}
                 >
-                  <CardBody className="p-4">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-lg bg-primary/10">
-                        <Icon icon="mdi:view-grid-outline" className="w-6 h-6 text-primary" />
+                  <CardBody className='p-4'>
+                    <div className='flex items-center gap-4'>
+                      <div className='p-3 rounded-lg bg-primary/10'>
+                        <Icon icon='mdi:view-grid-outline' className='w-6 h-6 text-primary' />
                       </div>
                       <div>
-                        <h4 className="text-base font-semibold">空白模板</h4>
-                        <p className="text-sm text-default-500">从零开始构建您的应用</p>
+                        <h4 className='text-base font-semibold'>空白模板</h4>
+                        <p className='text-sm text-default-500'>从零开始构建您的应用</p>
                       </div>
                     </div>
                   </CardBody>
@@ -225,20 +236,19 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
                     key={id}
                     isPressable
                     isHoverable
-                    className={`border-2 transition-all duration-200 ${selectedTemplate === id ? 'border-primary' : 'border-transparent'}`}
+                    className={`border-2 transition-all duration-200 ${selectedTemplate === id ? "border-primary" : "border-transparent"}`}
                     onPress={() => setSelectedTemplate(id)}
                   >
-                    <CardBody className="p-4">
-                      <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-lg ${selectedTemplate === id ? 'bg-primary/10' : 'bg-default-100'}`}>
-                          <Icon 
-                            icon={getTemplateIcon(id)} 
-                            className={`w-6 h-6 ${getTemplateColor(id)}`} 
-                          />
+                    <CardBody className='p-4'>
+                      <div className='flex items-center gap-4'>
+                        <div
+                          className={`p-3 rounded-lg ${selectedTemplate === id ? "bg-primary/10" : "bg-default-100"}`}
+                        >
+                          <Icon icon={getTemplateIcon(id)} className={`w-6 h-6 ${getTemplateColor(id)}`} />
                         </div>
                         <div>
-                          <h4 className="text-base font-semibold">{template.name}</h4>
-                          <p className="text-sm text-default-500">{template.description}</p>
+                          <h4 className='text-base font-semibold'>{template.name}</h4>
+                          <p className='text-sm text-default-500'>{template.description}</p>
                         </div>
                       </div>
                     </CardBody>
@@ -251,7 +261,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
             <Button variant='light' onPress={onClose}>
               取消
             </Button>
-            <Button color='primary' onPress={handleSubmit} isLoading={isLoading} isDisabled={!title.trim()}>
+            <Button color='primary' onPress={handleSubmit} isLoading={loading} isDisabled={!title.trim()}>
               创建
             </Button>
           </ModalFooter>

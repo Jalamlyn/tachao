@@ -1,5 +1,15 @@
 import React from "react"
-import { Card, CardBody, CardFooter, Button, Chip, useDisclosure } from "@nextui-org/react"
+import {
+  Card,
+  CardBody,
+  CardFooter,
+  Button,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  useDisclosure,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { AppIndex, useAppStore } from "../store/useAppStore"
@@ -59,38 +69,38 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
 
   return (
     <>
-      <Card 
+      <Card
         className='w-full group hover:shadow-lg transition-all duration-300 border border-default-200'
-        role="article"
+        role='article'
         aria-label={`应用卡片: ${app.title}`}
       >
         <CardBody className='p-5'>
           <div className='flex items-center gap-5'>
-            <div className={`p-4 rounded-xl bg-gradient-to-br ${getTemplateGradient(app.template)} transform group-hover:scale-105 transition-all duration-300`}>
-              <Icon 
-                icon={getTemplateIcon(app.template)} 
+            <div
+              className={`p-4 rounded-xl bg-gradient-to-br ${getTemplateGradient(app.template)} transform group-hover:scale-105 transition-all duration-300`}
+            >
+              <Icon
+                icon={getTemplateIcon(app.template)}
                 className={`w-8 h-8 ${getTemplateColor(app.template)}`}
-                aria-hidden="true"
+                aria-hidden='true'
               />
             </div>
             <div className='flex-1 min-w-0'>
               <h3 className='text-xl font-bold tracking-tight truncate mb-1'>{app.title}</h3>
-              <p className='text-small text-default-500'>
-                创建于 {new Date(app.createdAt).toLocaleDateString()}
-              </p>
+              <p className='text-small text-default-500'>创建于 {new Date(app.createdAt).toLocaleDateString()}</p>
             </div>
           </div>
         </CardBody>
-        <CardFooter className='px-5 py-4 gap-2 border-t border-default-200'>
+        <CardFooter className='px-5 py-4 gap-3 border-t border-default-200'>
           <Button
             size='sm'
             variant='flat'
-            className='group-hover:bg-default-100 transition-colors duration-200'
+            className='flex-1 group-hover:bg-default-100 transition-colors duration-200'
             startContent={
-              <Icon 
-                icon='mdi:eye' 
-                className='w-4 h-4 transform group-hover:scale-110 transition-transform duration-200' 
-                aria-hidden="true"
+              <Icon
+                icon='mdi:eye'
+                className='w-4 h-4 transform group-hover:scale-110 transition-transform duration-200'
+                aria-hidden='true'
               />
             }
             onPress={() => window.open(`/app-run/${app.id}`, "_blank")}
@@ -100,50 +110,38 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
           <Button
             size='sm'
             color='primary'
-            className='transform hover:scale-105 transition-transform duration-200'
-            startContent={
-              <Icon 
-                icon='hugeicons:ai-chat-02' 
-                className='w-4 h-4' 
-                aria-hidden="true"
-              />
-            }
+            className='flex-1 transform hover:scale-105 transition-transform duration-200'
+            startContent={<Icon icon='hugeicons:ai-chat-02' className='w-4 h-4' aria-hidden='true' />}
             onPress={() => navigate(`/admin/apps/${app.id}/builder`)}
           >
             开发应用
           </Button>
-          <Button
-            size='sm'
-            variant='light'
-            color='secondary'
-            className='group-hover:bg-secondary-50 transition-colors duration-200'
-            startContent={
-              <Icon 
-                icon='mdi:shield-account' 
-                className='w-4 h-4' 
-                aria-hidden="true"
-              />
-            }
-            onPress={onPermissionModalOpen}
-          >
-            权限管理
-          </Button>
-          <Button
-            size='sm'
-            variant='light'
-            color='danger'
-            className='group-hover:bg-danger-50 transition-colors duration-200'
-            startContent={
-              <Icon 
-                icon='mdi:delete' 
-                className='w-4 h-4' 
-                aria-hidden="true"
-              />
-            }
-            onPress={handleDelete}
-          >
-            删除
-          </Button>
+
+          <Dropdown>
+            <DropdownTrigger>
+              <Button size='sm' variant='light' isIconOnly className='group-hover:bg-default-100'>
+                <Icon icon='mdi:dots-vertical' className='w-5 h-5' />
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu aria-label='应用操作'>
+              <DropdownItem
+                key='permissions'
+                startContent={<Icon icon='mdi:shield-account' className='w-4 h-4' />}
+                onPress={onPermissionModalOpen}
+              >
+                权限管理
+              </DropdownItem>
+              <DropdownItem
+                key='delete'
+                className='text-danger'
+                color='danger'
+                startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
+                onPress={handleDelete}
+              >
+                删除应用
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
         </CardFooter>
       </Card>
 

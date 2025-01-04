@@ -2,6 +2,12 @@ import { getMetadata } from "@/service/apis/metadata"
 import { initialAIResponse } from "../../prompts/initTemplate"
 import { templates } from "../../prompts/templates"
 import { AppCodeStore, Version, AIGenerationResult } from "../types"
+import message from "@/components/Message"
+async function checkAppNameExists(name: string): Promise<boolean> {
+  const appIndexResult = await getMetadata(["app_index"])
+  const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
+  return apps.some((app) => app.title === name)
+}
 
 export async function handleAIGeneration(
   this: AppCodeStore,
@@ -177,7 +183,12 @@ export async function loadApp(this: AppCodeStore, appId: string) {
   }
 }
 
-export async function createApp(this: AppCodeStore, name: string, templateId: string = ''): Promise<string> {
+export async function createApp(this: AppCodeStore, name: string, templateId: string = ""): Promise<string> {
+  // 先检查名称是否存在
+  const exists = await checkAppNameExists(name)
+  if (exists) {
+    throw new Error(`应用名称 "${name}" 已存在`)
+  }
   const appId = this.generateId()
   this.setAppId(appId)
 
