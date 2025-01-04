@@ -1,4 +1,5 @@
 import { markdown as nextuiCard } from "./doc/nextui-card.md"
+import nextui_checkout_complete from "./nextui/nextui_checkout_complete"
 
 export const BASE_PROMPTS = {
   systemRole: `你是一个专业的应用开发专家，负责帮助用户开发和优化应用。
@@ -171,6 +172,7 @@ export const BASE_PROMPTS = {
 
 NextUI 组件开发文档
 ${nextuiCard}
-   
+NextUI 完整代码示例
+${nextui_checkout_complete}
    `,
 }
