@@ -1,6 +1,7 @@
 import React, { memo, useState, useCallback, useRef } from "react"
 import { Button, Textarea, Tooltip, Progress, Badge, ScrollShadow } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
+import debounce from "lodash/debounce"
 
 import { cn } from "@/lib/utils"
 import { imageStore } from "./ImageStore"
@@ -31,6 +32,15 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   const [recordingError, setRecordingError] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const lastTranscriptRef = useRef<string>("")
+
+  // 使用防抖处理输入更新
+  const debouncedSetInput = useCallback(
+    debounce((text: string) => {
+      setInput(text)
+    }, 300),
+    []
+  )
 
   // 处理发送消息
   const handleSend = useCallback(async () => {
@@ -127,13 +137,14 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       }
 
       const recognition = new SpeechRecognition()
-      recognition.continuous = true
-      recognition.interimResults = true
+      recognition.continuous = false // 修改为单次识别
+      recognition.interimResults = false // 只要最终结果
       recognition.lang = "zh-CN"
 
       recognition.onstart = () => {
         setIsRecording(true)
         setRecordingError("")
+        lastTranscriptRef.current = "" // 重置上次识别结果
       }
 
       recognition.onend = () => {
@@ -141,11 +152,17 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       }
 
       recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0].transcript)
-          .join("")
-        
-        setInput(prev => prev + transcript)
+        // 只取最后一个结果
+        const lastResult = event.results[event.results.length - 1]
+        const transcript = lastResult[0].transcript
+
+        // 如果与上次结果相同，则不更新
+        if (transcript === lastTranscriptRef.current) {
+          return
+        }
+
+        lastTranscriptRef.current = transcript
+        debouncedSetInput(transcript)
       }
 
       recognition.onerror = (event) => {
