@@ -101,7 +101,7 @@ export default async function chatChunkOpenAIOffice(
                   content: [
                     {
                       type: "text",
-                      text: `继续生成，从"""${lastTenChars}"""后面开始生成，开头和结尾都不要解释和说明，也不要有\`\`\`和这样的标记`,
+                      text: `继续生成，从"""${lastTenChars}"""后面开始生成，但是不要包含从"""${lastTenChars}""",开头和结尾都不要解释和说明，也不要有\`\`\`和这样的标记`,
                     },
                   ],
                 },

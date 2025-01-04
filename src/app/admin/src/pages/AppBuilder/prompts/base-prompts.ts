@@ -10,7 +10,7 @@ export const BASE_PROMPTS = {
      * wpm - 模块管理器
      * React - React 核心库
      * observer - MobX observer
-     * Icon - @iconify/react 图标组件
+     * Icon - @iconify/react 图标组件, 优先使用 solar 系列图标
      * NextUI - UI 组件库
      * ReactRouterDom - 路由
      * FramerMotion - 动画库
