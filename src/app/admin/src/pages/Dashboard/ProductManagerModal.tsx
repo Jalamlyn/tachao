@@ -233,27 +233,6 @@ const ProductManagerModal = ({ isOpen, onClose }) => {
                       </div>
                     }
                   />
-                  <div className='flex w-full flex-wrap items-center justify-between gap-2 px-4 pb-4'>
-                    <div className='flex flex-wrap gap-3'>
-                      <Button
-                        size='sm'
-                        startContent={<Icon className='text-default-500' icon='solar:soundwave-linear' width={18} />}
-                        variant='flat'
-                      >
-                        语音输入
-                      </Button>
-                      <Button
-                        size='sm'
-                        startContent={<Icon className='text-default-500' icon='solar:notes-linear' width={18} />}
-                        variant='flat'
-                      >
-                        需求模板
-                      </Button>
-                    </div>
-                    <p className='py-1 text-tiny text-default-400'>
-                      {inputValue.length}/{MAX_INPUT_LENGTH}
-                    </p>
-                  </div>
                 </form>
               </div>
             </div>
