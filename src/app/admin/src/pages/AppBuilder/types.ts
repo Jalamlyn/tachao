@@ -1,5 +1,5 @@
 export interface AppPages {
-  [pageId: string]: {
+  [name: string]: {
     code: string
     title: string
     updatedAt: string

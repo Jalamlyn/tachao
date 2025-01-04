@@ -1,5 +1,5 @@
 ```jsx
-<mo-ai-code type="page" pageid="page_data_manage" title="数据管理">
+<mo-ai-code type="page" name="page_data_manage" title="数据管理">
 const {
   wpm,
   React,

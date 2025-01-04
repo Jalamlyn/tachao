@@ -1,4 +1,4 @@
-<mo-ai-code type="page" pageid="page_home">
+<mo-ai-code type="page" name="page_home">
 const { 
   wpm, 
   React, 

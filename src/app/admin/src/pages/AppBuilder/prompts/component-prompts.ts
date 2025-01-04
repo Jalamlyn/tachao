@@ -74,9 +74,9 @@ wpm.export(appId, App);
 </mo-ai-code>
 \`\`\``,
 
-  pageComponent: `4. 页面组件使用 <mo-ai-code type="page" pageid="page_xxx" title="xxx"></mo-ai-code> 包裹：
+  pageComponent: `4. 页面组件使用 <mo-ai-code type="page" name="page_xxx" title="xxx"></mo-ai-code> 包裹：
 \`\`\`jsx
-<mo-ai-code type="page" pageid="page_xxx" title="页面标题">
+<mo-ai-code type="page" name="page_xxx" title="页面标题">
 // 解构所有可用的 context 依赖，即使暂时不使用也要保留，以便后续扩展
 const { 
   wpm, 

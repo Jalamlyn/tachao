@@ -81,47 +81,50 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   )
 
   // 处理剪贴板粘贴
-  const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
-    const items = e.clipboardData?.items
-    if (!items) return
+  const handlePaste = useCallback(
+    async (e: React.ClipboardEvent) => {
+      const items = e.clipboardData?.items
+      if (!items) return
 
-    for (const item of items) {
-      if (item.type.indexOf('image') !== -1) {
-        e.preventDefault()
-        const file = item.getAsFile()
-        if (file) {
-          if (file.size > 5 * 1024 * 1024) {
-            message.error("图片大小不能超过5MB")
-            return
-          }
+      for (const item of items) {
+        if (item.type.indexOf("image") !== -1) {
+          e.preventDefault()
+          const file = item.getAsFile()
+          if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+              message.error("图片大小不能超过5MB")
+              return
+            }
 
-          setIsUploading(true)
-          try {
-            const reader = new FileReader()
-            reader.onloadend = () => {
-              const base64 = reader.result as string
-              if (preview) {
-                imageStore.removeImage(preview)
+            setIsUploading(true)
+            try {
+              const reader = new FileReader()
+              reader.onloadend = () => {
+                const base64 = reader.result as string
+                if (preview) {
+                  imageStore.removeImage(preview)
+                }
+                setPreview(base64)
+                imageStore.addImage(base64)
+                setIsUploading(false)
+                message.success("图片粘贴成功")
               }
-              setPreview(base64)
-              imageStore.addImage(base64)
+              reader.onerror = () => {
+                message.error("图片读取失败")
+                setIsUploading(false)
+              }
+              reader.readAsDataURL(file)
+            } catch (error) {
+              console.error("Error processing pasted image:", error)
+              message.error("图片处理失败")
               setIsUploading(false)
-              message.success("图片粘贴成功")
             }
-            reader.onerror = () => {
-              message.error("图片读取失败")
-              setIsUploading(false)
-            }
-            reader.readAsDataURL(file)
-          } catch (error) {
-            console.error("Error processing pasted image:", error)
-            message.error("图片处理失败")
-            setIsUploading(false)
           }
         }
       }
-    }
-  }, [preview])
+    },
+    [preview]
+  )
 
   // 处理图片上传
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -320,13 +323,10 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
               size='sm'
               variant='flat'
               startContent={
-                <Icon 
-                  className={cn(
-                    "text-default-500",
-                    isRecording && "text-primary"
-                  )} 
-                  icon='solar:soundwave-linear' 
-                  width={18} 
+                <Icon
+                  className={cn("text-default-500", isRecording && "text-primary")}
+                  icon='solar:soundwave-linear'
+                  width={18}
                 />
               }
               onClick={handleVoiceInput}
@@ -337,9 +337,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
             <Button
               size='sm'
               variant='flat'
-              startContent={
-                <Icon className='text-default-500' icon='solar:question-circle-linear' width={18} />
-              }
+              startContent={<Icon className='text-default-500' icon='solar:question-circle-linear' width={18} />}
               onClick={() => setShowTutorial(true)}
             >
               教程
@@ -347,10 +345,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
           </div>
 
           <div className='flex items-center gap-3'>
-            <p className='py-1 text-tiny text-default-400'>
-              {input.length}/2000
-            </p>
-            
             {isLoading ? (
               <Button
                 isIconOnly
@@ -378,10 +372,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
                   <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
                 ) : (
                   <Icon
-                    className={cn(
-                      "[&>path]:stroke-[2px]",
-                      !input ? "text-default-600" : "text-primary-foreground"
-                    )}
+                    className={cn("[&>path]:stroke-[2px]", !input ? "text-default-600" : "text-primary-foreground")}
                     icon='solar:arrow-up-linear'
                     width={20}
                   />
@@ -393,39 +384,32 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       </form>
 
       {/* 图片预览Modal */}
-      <Modal 
-        isOpen={isPreviewModalOpen} 
+      <Modal
+        isOpen={isPreviewModalOpen}
         onClose={() => setIsPreviewModalOpen(false)}
-        size="4xl"
+        size='4xl'
         classNames={{
           wrapper: "items-center",
         }}
       >
         <ModalContent>
-          <div className="relative">
-            <img
-              src={preview}
-              alt="Preview"
-              className="w-full h-full object-contain max-h-[80vh]"
-            />
+          <div className='relative'>
+            <img src={preview} alt='Preview' className='w-full h-full object-contain max-h-[80vh]' />
             <Button
               isIconOnly
-              className="absolute top-2 right-2"
-              color="danger"
-              variant="light"
+              className='absolute top-2 right-2'
+              color='danger'
+              variant='light'
               onClick={() => setIsPreviewModalOpen(false)}
             >
-              <Icon icon="mdi:close" className="w-6 h-6" />
+              <Icon icon='mdi:close' className='w-6 h-6' />
             </Button>
           </div>
         </ModalContent>
       </Modal>
 
       {/* 教程Modal */}
-      <AITutorialModal
-        isOpen={showTutorial}
-        onClose={() => setShowTutorial(false)}
-      />
+      <AITutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
     </>
   )
 })

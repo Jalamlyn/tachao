@@ -1,4 +1,4 @@
-<mo-ai-code type="page" pageid="page_billing_setting" title="账单设置">
+<mo-ai-code type="page" name="page_billing_setting" title="账单设置">
 const {
   wpm,
   React,

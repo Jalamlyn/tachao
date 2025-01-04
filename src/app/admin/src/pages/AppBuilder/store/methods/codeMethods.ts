@@ -53,25 +53,11 @@ export function extractShataAICodes(content: string): ShataAICode[] {
         const titleMatch = block.match(/title="([^"]+)"/)
         const title = titleMatch ? titleMatch[1] : undefined
 
-        const pageIdMatch = block.match(/pageid="([^"]+)"/)
-        const pageid = pageIdMatch ? pageIdMatch[1] : undefined
-
-        if (type === "page" && !pageid) {
-          console.warn("Page type requires pageid attribute")
-          continue
-        }
-
-        if (type !== "page" && !name) {
-          console.warn(`${type} type requires name attribute`)
-          continue
-        }
-
         results.push({
           type,
           code,
-          name: type === "page" ? pageid : name,
+          name,
           title,
-          ...(type === "page" && { pageid }),
         })
       } catch (blockError) {
         console.error("Error processing code block:", blockError)
@@ -183,10 +169,7 @@ export async function executeModules(this: AppCodeStore, context: any) {
   }
 }
 
-export async function addModules(
-  this: AppCodeStore,
-  updates: Record<string, string>
-): Promise<Version> {
+export async function addModules(this: AppCodeStore, updates: Record<string, string>): Promise<Version> {
   if (!this.currentVersion) {
     throw new Error("No current version")
   }

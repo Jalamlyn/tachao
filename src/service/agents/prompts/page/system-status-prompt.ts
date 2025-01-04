@@ -83,7 +83,7 @@ ${status.reports
 
 1. 页面渲染：
    const {PageRenderer} = context
-   使用方法：<PageRenderer pageId="page_id" />
+   使用方法：<PageRenderer name="page_id" />
    
 2. 表单渲染：
    const {FormRenderer} = context
@@ -96,13 +96,13 @@ ${status.reports
 页面导航：
 1. 应用内导航：
    const navigate = useNavigate()
-   navigate(\`/apps/\${appId}/pages/\${pageId}\`)
+   navigate(\`/apps/\${appId}/pages/\${name}\`)
 
 2. 应用间跳转：
    navigate(\`/apps/\${targetAppId}\`)
 
 3. 新窗口打开：
-   window.open(\`/apps/\${appId}/pages/\${pageId}\`, '_blank')
+   window.open(\`/apps/\${appId}/pages/\${name}\`, '_blank')
 
 注意事项：
 1. 每个应用都有自己的页面集合

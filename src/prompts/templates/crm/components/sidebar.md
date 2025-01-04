@@ -1,5 +1,5 @@
 ```jsx
-<mo-ai-code type="page" pageid="page_component_sidebar">
+<mo-ai-code type="page" name="page_component_sidebar">
 const {
   wpm,
   React,

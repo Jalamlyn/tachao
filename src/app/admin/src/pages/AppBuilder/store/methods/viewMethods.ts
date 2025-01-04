@@ -1,5 +1,4 @@
 import { AppCodeStore, ViewState } from "../types"
-import { computed } from "mobx"
 import message from "@/components/Message"
 
 export function initViewState(): ViewState {
@@ -16,7 +15,7 @@ export function initViewState(): ViewState {
     showVersionInfo: false,
     importContent: "",
     isImporting: false,
-    pendingImportContent: ""
+    pendingImportContent: "",
   }
 }
 
@@ -34,32 +33,32 @@ export function handleCodeSelect(this: AppCodeStore, moduleId: string) {
 }
 
 export function handleSearch(this: AppCodeStore) {
-  const results: {moduleId: string, matches: number}[] = []
+  const results: { moduleId: string; matches: number }[] = []
   const codeItems = this.getCodeItems()
-  
-  codeItems.forEach(item => {
+
+  codeItems.forEach((item) => {
     let matches = 0
     const searchContentLower = this.viewState.searchContent.toLowerCase()
     const codeLower = item.code.toLowerCase()
-    
+
     if (this.viewState.searchContent) {
-      const contentMatches = (codeLower.match(new RegExp(searchContentLower, 'g')) || []).length
+      const contentMatches = (codeLower.match(new RegExp(searchContentLower, "g")) || []).length
       matches += contentMatches
     }
-    
+
     if (this.viewState.searchQuery) {
       const titleMatches = item.title.toLowerCase().includes(this.viewState.searchQuery.toLowerCase()) ? 1 : 0
       matches += titleMatches
     }
-    
+
     if (matches > 0) {
-      results.push({moduleId: item.id, matches})
+      results.push({ moduleId: item.id, matches })
     }
   })
-  
+
   results.sort((a, b) => b.matches - a.matches)
   this.viewState.searchResults = results
-  
+
   if (results.length > 0) {
     this.viewState.selectedCodeId = results[0].moduleId
   }
@@ -69,9 +68,8 @@ export async function handleSaveEdit(this: AppCodeStore) {
   try {
     if (!this.viewState.selectedCodeId) return
 
-    const moduleId = this.viewState.selectedCodeId === "app_entry" 
-      ? `${this.appId}_app_entry` 
-      : this.viewState.selectedCodeId
+    const moduleId =
+      this.viewState.selectedCodeId === "app_entry" ? `${this.appId}_app_entry` : this.viewState.selectedCodeId
 
     const newVersion = await this.addModules({
       [moduleId]: this.viewState.editedCode,
@@ -128,11 +126,12 @@ export function getFilteredCodeItems(this: AppCodeStore) {
   const items = this.getCodeItems()
   const { searchResults, searchQuery } = this.viewState
 
-  return searchResults.length > 0 
-    ? items.filter(item => searchResults.some(result => result.moduleId === item.id))
-    : items.filter(item => 
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.type.toLowerCase().includes(searchQuery.toLowerCase())
+  return searchResults.length > 0
+    ? items.filter((item) => searchResults.some((result) => result.moduleId === item.id))
+    : items.filter(
+        (item) =>
+          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.type.toLowerCase().includes(searchQuery.toLowerCase())
       )
 }
 
@@ -161,9 +160,8 @@ export function updateEditedCode(this: AppCodeStore, code: string) {
 export function handleCancelEdit(this: AppCodeStore) {
   if (!this.currentVersion || !this.viewState.selectedCodeId) return
 
-  const moduleId = this.viewState.selectedCodeId === "app_entry" 
-    ? `${this.appId}_app_entry` 
-    : this.viewState.selectedCodeId
+  const moduleId =
+    this.viewState.selectedCodeId === "app_entry" ? `${this.appId}_app_entry` : this.viewState.selectedCodeId
 
   const moduleWrapper = this.currentVersion.modules[moduleId]
   if (moduleWrapper) {

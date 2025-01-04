@@ -1,4 +1,4 @@
-<mo-ai-code type="page" pageid="page_team_setting" title="团队设置">
+<mo-ai-code type="page" name="page_team_setting" title="团队设置">
 const {
   wpm,
   React,

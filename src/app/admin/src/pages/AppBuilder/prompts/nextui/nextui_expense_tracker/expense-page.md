@@ -1,5 +1,5 @@
 ```jsx
-<mo-ai-code type="page" pageid="page_expense" title="智能记账助手">
+<mo-ai-code type="page" name="page_expense" title="智能记账助手">
 const {
   wpm,
   React,

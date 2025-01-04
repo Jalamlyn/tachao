@@ -54,7 +54,7 @@ export interface AppNavigation {
     key: string
     title: string
     icon: string
-    pageId: string
+    name: string
   }>
 }
 

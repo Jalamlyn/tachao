@@ -138,7 +138,7 @@ export const flattenData = (data: any[]) => {
  * 从内容中提取 mo-ai-code 标签中的代码
  * 支持以下格式:
  * 1. 简单标签: <mo-ai-code>code</mo-ai-code>
- * 2. 带参数标签: <mo-ai-code type="page" pageid="xxx" title="xxx">code</mo-ai-code>
+ * 2. 带参数标签: <mo-ai-code type="page" name="xxx" title="xxx">code</mo-ai-code>
  * 3. 带参数标签: <mo-ai-code type="store" name="xxx">code</mo-ai-code>
  * @param content 包含代码的字符串
  * @returns 提取的代码内容

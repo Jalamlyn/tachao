@@ -30,8 +30,6 @@ export function exportToMarkdown(this: AppCodeStore): string {
         let tagAttributes = `type="${type}"`
         if (type === "app") {
           // app类型不需要额外属性
-        } else if (type === "page") {
-          tagAttributes += ` pageid="${data.name}" title="${data.title || data.name}"`
         } else {
           tagAttributes += ` name="${data.name}"`
           if (data.title) {

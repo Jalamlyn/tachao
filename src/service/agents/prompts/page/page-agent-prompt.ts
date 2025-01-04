@@ -71,14 +71,14 @@ export default (props) => {
   }, [])
 
   // 页面导航处理
-  const handleNavigateToPage = React.useCallback((appId: string, pageId: string) => {
+  const handleNavigateToPage = React.useCallback((appId: string, name: string) => {
     // 同应用内跳转
-    navigate(\`/apps/\${appId}/pages/\${pageId}\`)
+    navigate(\`/apps/\${appId}/pages/\${name}\`)
   }, [navigate])
 
-  const handleOpenInNewTab = React.useCallback((appId: string, pageId: string) => {
+  const handleOpenInNewTab = React.useCallback((appId: string, name: string) => {
     // 新标签页打开
-    window.open(\`/apps/\${appId}/pages/\${pageId}\`, '_blank')
+    window.open(\`/apps/\${appId}/pages/\${name}\`, '_blank')
   }, [])
 
   // 3. 渲染逻辑

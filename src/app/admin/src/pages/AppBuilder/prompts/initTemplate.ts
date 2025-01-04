@@ -47,7 +47,7 @@ const App = observer(() => {
 wpm.export(appId, App);
 </mo-ai-code>
 
-<mo-ai-code type="page" pageid="page_home" title="欢迎页面">
+<mo-ai-code type="page" name="page_home" title="欢迎页面">
 const { 
   wpm, 
   React, 

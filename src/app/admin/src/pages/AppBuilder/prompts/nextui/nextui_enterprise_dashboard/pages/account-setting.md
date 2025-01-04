@@ -1,4 +1,4 @@
-<mo-ai-code type="page" pageid="page_account_setting" title="账户设置">
+<mo-ai-code type="page" name="page_account_setting" title="账户设置">
 const {
   wpm,
   React,

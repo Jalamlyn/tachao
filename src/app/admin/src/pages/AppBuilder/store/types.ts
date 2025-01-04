@@ -51,7 +51,6 @@ export interface ShataAICode {
   code: string
   name?: string
   title?: string
-  pageid?: string
 }
 
 export interface ViewState {
@@ -61,7 +60,7 @@ export interface ViewState {
   isPanelCollapsed: boolean
   searchQuery: string
   searchContent: string
-  searchResults: Array<{moduleId: string, matches: number}>
+  searchResults: Array<{ moduleId: string; matches: number }>
   showImportModal: boolean
   showConfirmModal: boolean
   showVersionInfo: boolean

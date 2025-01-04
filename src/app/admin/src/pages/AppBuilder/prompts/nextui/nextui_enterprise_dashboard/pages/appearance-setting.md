@@ -1,4 +1,4 @@
-<mo-ai-code type="page" pageid="page_appearance_setting" title="外观设置">
+<mo-ai-code type="page" name="page_appearance_setting" title="外观设置">
 const {
   wpm,
   React,

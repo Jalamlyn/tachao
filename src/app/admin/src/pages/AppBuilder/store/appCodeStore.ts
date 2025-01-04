@@ -10,7 +10,7 @@ import { importFromMarkdown } from "./methods/importMethods"
 import { validateModuleExports, processModuleErrors } from "./methods/validationMethods"
 import { publishToServer, updateAppIndex } from "./methods/serverMethods"
 import { handleAIGeneration, loadApp, createApp } from "./methods/generationMethods"
-import { 
+import {
   initViewState,
   handleCodeSelect,
   handleSearch,
@@ -22,7 +22,7 @@ import {
   togglePanelCollapse,
   setEditMode,
   updateEditedCode,
-  handleCancelEdit
+  handleCancelEdit,
 } from "./methods/viewMethods"
 
 class AppCodeStore {
@@ -33,7 +33,7 @@ class AppCodeStore {
 
   constructor() {
     this.viewState = initViewState()
-    
+
     makeAutoObservable(this, {}, { autoBind: true })
 
     // 绑定所有方法到实例

@@ -1,4 +1,4 @@
-<mo-ai-code type="page" pageid="page_customer_list">
+<mo-ai-code type="page" name="page_customer_list">
 const { 
   wpm, 
   React, 

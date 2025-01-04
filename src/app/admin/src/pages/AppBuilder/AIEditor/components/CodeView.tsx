@@ -1,5 +1,20 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react"
-import { Button, Tabs, Tab, Tooltip, ScrollShadow, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Textarea, Chip, Divider, Input } from "@nextui-org/react"
+import {
+  Button,
+  Tabs,
+  Tab,
+  Tooltip,
+  ScrollShadow,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Textarea,
+  Chip,
+  Divider,
+  Input,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import Editor from "@monaco-editor/react"
 import { appCodeStore } from "../../store/appCodeStore"
@@ -20,12 +35,12 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
   const searchInputRef = React.useRef<HTMLInputElement>(null)
 
   // 添加快捷键支持
-  useHotkeys('ctrl+f, cmd+f', (e) => {
+  useHotkeys("ctrl+f, cmd+f", (e) => {
     e.preventDefault()
     searchInputRef.current?.focus()
   })
 
-  useHotkeys('esc', () => {
+  useHotkeys("esc", () => {
     appCodeStore.setSearchQuery("")
     appCodeStore.setSearchContent("")
   })
@@ -44,7 +59,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
     const file = event.target.files?.[0]
     if (!file) return
 
-    if (!file.name.endsWith('.md')) {
+    if (!file.name.endsWith(".md")) {
       message.error("请上传 Markdown 文件")
       return
     }
@@ -148,17 +163,8 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                   <div className='p-2'>
                     <div className='space-y-2 mb-2'>
                       <Input
-                        ref={searchInputRef}
                         type='text'
-                        placeholder='搜索文件名称...'
-                        value={appCodeStore.viewState.searchQuery}
-                        onChange={(e) => appCodeStore.setSearchQuery(e.target.value)}
-                        startContent={<Icon icon='mdi:magnify' className='text-default-400' />}
-                        className='w-full'
-                      />
-                      <Input
-                        type='text'
-                        placeholder='搜索代码内容... (Ctrl+F)'
+                        placeholder='搜索代码内容...'
                         value={appCodeStore.viewState.searchContent}
                         onChange={(e) => appCodeStore.setSearchContent(e.target.value)}
                         startContent={<Icon icon='mdi:code-search' className='text-default-400' />}
@@ -186,13 +192,13 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                             onClick={() => appCodeStore.handleCodeSelect(item.id)}
                           >
                             <Icon icon={getCodeTypeIcon(item.type)} className='w-4 h-4 flex-shrink-0' />
-                            <Tooltip content={item.title} placement="right">
+                            <Tooltip content={item.title} placement='right'>
                               <div className='flex flex-col flex-1 min-w-0'>
                                 <div className='flex items-center gap-2'>
                                   <span className='text-sm truncate max-w-[150px]'>{item.title}</span>
                                   <Chip
-                                    size="sm"
-                                    variant="flat"
+                                    size='sm'
+                                    variant='flat'
                                     color={getCodeTypeColor(item.type)}
                                     className='text-[10px] h-4'
                                   >
@@ -215,32 +221,40 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
               <div className='absolute top-2 left-2 z-20 flex items-center gap-2'>
                 <Tooltip content={appCodeStore.viewState.isPanelCollapsed ? "展开文件面板" : "收起文件面板"}>
                   <Button size='sm' variant='flat' isIconOnly onClick={() => appCodeStore.togglePanelCollapse()}>
-                    <Icon icon={appCodeStore.viewState.isPanelCollapsed ? "mdi:chevron-right" : "mdi:chevron-left"} className='w-4 h-4' />
+                    <Icon
+                      icon={appCodeStore.viewState.isPanelCollapsed ? "mdi:chevron-right" : "mdi:chevron-left"}
+                      className='w-4 h-4'
+                    />
                   </Button>
                 </Tooltip>
-                <Divider orientation="vertical" className="h-6" />
+                <Divider orientation='vertical' className='h-6' />
                 <Tooltip content='导出代码'>
                   <Button size='sm' variant='flat' isIconOnly onClick={handleExportCode}>
                     <Icon icon='mdi:download' className='w-4 h-4' />
                   </Button>
                 </Tooltip>
                 <Tooltip content='导入代码'>
-                  <Button size='sm' variant='flat' isIconOnly onClick={() => appCodeStore.viewState.showImportModal = true}>
+                  <Button
+                    size='sm'
+                    variant='flat'
+                    isIconOnly
+                    onClick={() => (appCodeStore.viewState.showImportModal = true)}
+                  >
                     <Icon icon='mdi:upload' className='w-4 h-4' />
                   </Button>
                 </Tooltip>
-                <Divider orientation="vertical" className="h-6" />
+                <Divider orientation='vertical' className='h-6' />
                 <Tooltip content='版本信息'>
-                  <Button 
-                    size='sm' 
-                    variant='flat' 
-                    isIconOnly 
-                    onClick={() => appCodeStore.viewState.showVersionInfo = true}
+                  <Button
+                    size='sm'
+                    variant='flat'
+                    isIconOnly
+                    onClick={() => (appCodeStore.viewState.showVersionInfo = true)}
                   >
                     <Icon icon='mdi:history' className='w-4 h-4' />
                   </Button>
                 </Tooltip>
-                <Divider orientation="vertical" className="h-6" />
+                <Divider orientation='vertical' className='h-6' />
                 {appCodeStore.viewState.isEditing ? (
                   <div className='space-x-2'>
                     <Button
@@ -312,52 +326,42 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
       </div>
 
       {/* 导入 Modal */}
-      <Modal 
-        isOpen={appCodeStore.viewState.showImportModal} 
+      <Modal
+        isOpen={appCodeStore.viewState.showImportModal}
         onClose={() => {
           appCodeStore.viewState.showImportModal = false
           appCodeStore.viewState.importContent = ""
         }}
-        size="2xl"
+        size='2xl'
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            导入代码
-          </ModalHeader>
+          <ModalHeader className='flex flex-col gap-1'>导入代码</ModalHeader>
           <ModalBody>
-            <div className="flex flex-col gap-4">
-              <div className="flex justify-center">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept=".md"
-                  onChange={handleFileUpload}
-                />
+            <div className='flex flex-col gap-4'>
+              <div className='flex justify-center'>
+                <input type='file' ref={fileInputRef} className='hidden' accept='.md' onChange={handleFileUpload} />
                 <Button
-                  color="primary"
-                  variant="flat"
-                  startContent={<Icon icon="mdi:file-upload" className="w-4 h-4" />}
+                  color='primary'
+                  variant='flat'
+                  startContent={<Icon icon='mdi:file-upload' className='w-4 h-4' />}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   上传 Markdown 文件
                 </Button>
               </div>
-              <div className="text-center text-small text-default-500">
-                或者
-              </div>
+              <div className='text-center text-small text-default-500'>或者</div>
               <Textarea
-                label="粘贴 Markdown 内容"
-                placeholder="在此粘贴要导入的 Markdown 内容..."
+                label='粘贴 Markdown 内容'
+                placeholder='在此粘贴要导入的 Markdown 内容...'
                 value={appCodeStore.viewState.importContent}
-                onChange={(e) => appCodeStore.viewState.importContent = e.target.value}
+                onChange={(e) => (appCodeStore.viewState.importContent = e.target.value)}
                 minRows={10}
               />
             </div>
           </ModalBody>
           <ModalFooter>
             <Button
-              variant="flat"
+              variant='flat'
               onPress={() => {
                 appCodeStore.viewState.showImportModal = false
                 appCodeStore.viewState.importContent = ""
@@ -365,11 +369,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
             >
               取消
             </Button>
-            <Button
-              color="primary"
-              onPress={handleImport}
-              isLoading={appCodeStore.viewState.isImporting}
-            >
+            <Button color='primary' onPress={handleImport} isLoading={appCodeStore.viewState.isImporting}>
               导入
             </Button>
           </ModalFooter>
@@ -377,33 +377,24 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
       </Modal>
 
       {/* 确认对话框 */}
-      <Modal 
-        isOpen={appCodeStore.viewState.showConfirmModal} 
-        onClose={() => appCodeStore.viewState.showConfirmModal = false}
-        size="sm"
+      <Modal
+        isOpen={appCodeStore.viewState.showConfirmModal}
+        onClose={() => (appCodeStore.viewState.showConfirmModal = false)}
+        size='sm'
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            确认导入
-          </ModalHeader>
+          <ModalHeader className='flex flex-col gap-1'>确认导入</ModalHeader>
           <ModalBody>
-            <div className="flex flex-col gap-2">
-              <p className="text-danger">警告：导入将会覆盖当前所有代码！</p>
-              <p className="text-default-500">此操作不可撤销，是否确认继续？</p>
+            <div className='flex flex-col gap-2'>
+              <p className='text-danger'>警告：导入将会覆盖当前所有代码！</p>
+              <p className='text-default-500'>此操作不可撤销，是否确认继续？</p>
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button
-              variant="flat"
-              onPress={() => appCodeStore.viewState.showConfirmModal = false}
-            >
+            <Button variant='flat' onPress={() => (appCodeStore.viewState.showConfirmModal = false)}>
               取消
             </Button>
-            <Button
-              color="danger"
-              onPress={handleConfirmImport}
-              isLoading={appCodeStore.viewState.isImporting}
-            >
+            <Button color='danger' onPress={handleConfirmImport} isLoading={appCodeStore.viewState.isImporting}>
               确认覆盖
             </Button>
           </ModalFooter>
@@ -411,38 +402,33 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
       </Modal>
 
       {/* 版本信息 Modal */}
-      <Modal 
-        isOpen={appCodeStore.viewState.showVersionInfo} 
-        onClose={() => appCodeStore.viewState.showVersionInfo = false}
-        size="lg"
+      <Modal
+        isOpen={appCodeStore.viewState.showVersionInfo}
+        onClose={() => (appCodeStore.viewState.showVersionInfo = false)}
+        size='lg'
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            版本信息
-          </ModalHeader>
+          <ModalHeader className='flex flex-col gap-1'>版本信息</ModalHeader>
           <ModalBody>
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
+            <div className='flex flex-col gap-4'>
+              <div className='flex items-center justify-between'>
                 <div>
-                  <p className="text-small font-semibold">当前版本</p>
-                  <p className="text-tiny text-default-500">
+                  <p className='text-small font-semibold'>当前版本</p>
+                  <p className='text-tiny text-default-500'>
                     {appCodeStore.currentVersion?.timestamp
                       ? new Date(appCodeStore.currentVersion.timestamp).toLocaleString()
                       : "无"}
                   </p>
                 </div>
-                <Chip
-                  color={appCodeStore.isViewingHistory ? "warning" : "success"}
-                  variant="flat"
-                >
+                <Chip color={appCodeStore.isViewingHistory ? "warning" : "success"} variant='flat'>
                   {appCodeStore.isViewingHistory ? "历史版本" : "最新版本"}
                 </Chip>
               </div>
               <Divider />
               <div>
-                <p className="text-small font-semibold mb-2">版本历史</p>
-                <ScrollShadow className="h-[300px]">
-                  <div className="space-y-2">
+                <p className='text-small font-semibold mb-2'>版本历史</p>
+                <ScrollShadow className='h-[300px]'>
+                  <div className='space-y-2'>
                     {appCodeStore.versions.map((version, index) => (
                       <div
                         key={version.timestamp}
@@ -452,16 +438,12 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                             : "bg-default-100 hover:bg-default-200"
                         }`}
                       >
-                        <div className="flex items-center justify-between">
+                        <div className='flex items-center justify-between'>
                           <div>
-                            <p className="text-small">版本 {index + 1}</p>
-                            <p className="text-tiny opacity-80">
-                              {new Date(version.timestamp).toLocaleString()}
-                            </p>
+                            <p className='text-small'>版本 {index + 1}</p>
+                            <p className='text-tiny opacity-80'>{new Date(version.timestamp).toLocaleString()}</p>
                           </div>
-                          {index === appCodeStore.currentIndex && (
-                            <Icon icon="mdi:check-circle" className="w-5 h-5" />
-                          )}
+                          {index === appCodeStore.currentIndex && <Icon icon='mdi:check-circle' className='w-5 h-5' />}
                         </div>
                       </div>
                     ))}
@@ -471,10 +453,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button
-              variant="flat"
-              onPress={() => appCodeStore.viewState.showVersionInfo = false}
-            >
+            <Button variant='flat' onPress={() => (appCodeStore.viewState.showVersionInfo = false)}>
               关闭
             </Button>
           </ModalFooter>

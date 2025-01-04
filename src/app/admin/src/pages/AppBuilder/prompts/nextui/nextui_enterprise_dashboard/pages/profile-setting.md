@@ -1,4 +1,4 @@
-<mo-ai-code type="page" pageid="page_profile_setting" title="个人资料设置">
+<mo-ai-code type="page" name="page_profile_setting" title="个人资料设置">
 const {
   wpm,
   React,

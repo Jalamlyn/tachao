@@ -1,5 +1,5 @@
 ```jsx
-<mo-ai-code type="page" pageid="page_checkout" title="结账页面">
+<mo-ai-code type="page" name="page_checkout" title="结账页面">
 const {
   wpm,
   React,
