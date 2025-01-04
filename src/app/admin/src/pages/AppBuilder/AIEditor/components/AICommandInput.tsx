@@ -27,7 +27,10 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   const [isLoading, setIsLoading] = useState(false)
   const [preview, setPreview] = useState<string>("")
   const [isUploading, setIsUploading] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingError, setRecordingError] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
 
   // 处理发送消息
   const handleSend = useCallback(async () => {
@@ -115,6 +118,67 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     fileInputRef.current?.click()
   }
 
+  // 初始化语音识别
+  const initSpeechRecognition = () => {
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+      if (!SpeechRecognition) {
+        throw new Error("浏览器不支持语音识别")
+      }
+
+      const recognition = new SpeechRecognition()
+      recognition.continuous = true
+      recognition.interimResults = true
+      recognition.lang = "zh-CN"
+
+      recognition.onstart = () => {
+        setIsRecording(true)
+        setRecordingError("")
+      }
+
+      recognition.onend = () => {
+        setIsRecording(false)
+      }
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join("")
+        
+        setInput(prev => prev + transcript)
+      }
+
+      recognition.onerror = (event) => {
+        setRecordingError(event.error)
+        setIsRecording(false)
+        message.error("语音识别出错: " + event.error)
+      }
+
+      recognitionRef.current = recognition
+    } catch (error) {
+      console.error("Error initializing speech recognition:", error)
+      message.error("初始化语音识别失败")
+    }
+  }
+
+  // 处理语音输入
+  const handleVoiceInput = () => {
+    if (!recognitionRef.current) {
+      initSpeechRecognition()
+    }
+
+    if (isRecording) {
+      recognitionRef.current?.stop()
+    } else {
+      try {
+        recognitionRef.current?.start()
+      } catch (error) {
+        console.error("Error starting speech recognition:", error)
+        message.error("启动语音识别失败")
+      }
+    }
+  }
+
   return (
     <form className='flex w-full flex-col gap-2 rounded-medium bg-default-100 transition-colors hover:bg-default-200/70'>
       <input
@@ -193,9 +257,26 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
         }
         endContent={
           <div className='absolute right-0 flex h-full flex-col items-end justify-between gap-2'>
-            <Tooltip showArrow content='语音输入'>
-              <Button isIconOnly radius='full' size='sm' variant='light' className='hover:bg-default-200'>
-                <Icon className='text-default-500' icon='solar:microphone-3-linear' width={20} />
+            <Tooltip showArrow content={isRecording ? "停止录音" : "语音输入"}>
+              <Button 
+                isIconOnly 
+                radius='full' 
+                size='sm' 
+                variant={isRecording ? "solid" : "light"}
+                className={cn(
+                  "hover:bg-default-200",
+                  isRecording && "animate-pulse bg-primary text-white"
+                )}
+                onClick={handleVoiceInput}
+              >
+                <Icon 
+                  className={cn(
+                    "text-default-500",
+                    isRecording && "text-white"
+                  )} 
+                  icon={isRecording ? "solar:microphone-3-bold" : "solar:microphone-3-linear"} 
+                  width={20} 
+                />
               </Button>
             </Tooltip>
             <div className='flex items-end gap-2'>
