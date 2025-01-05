@@ -18,6 +18,7 @@ import {
 } from "@/components/common/DynamicForm/components/FormFields/renders/ClockIn/utils/locationUtils"
 import { getLocationPermissionGuide } from "@/components/common/DynamicForm/components/FormFields/renders/ClockIn/utils/browserUtils"
 import { apiService } from "@/service/apis/api"
+import { esm } from "https://esm.sh/build"
 
 // 上传文件相关API
 const uploadAPI = {
@@ -151,10 +152,6 @@ const uploadAPI = {
   },
 }
 
-const docker = {
-  AppEntry: () => {},
-}
-
 export const context = (appId) => ({
   wpm,
   React,
@@ -182,6 +179,6 @@ export const context = (appId) => ({
   mobx,
   recharts,
   cn,
-  docker,
   xlsx: XLSX,
+  esm,
 })
