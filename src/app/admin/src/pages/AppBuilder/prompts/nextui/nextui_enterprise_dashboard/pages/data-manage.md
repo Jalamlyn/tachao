@@ -10,7 +10,7 @@ const {
 } = context;
 
 const { useState, useEffect } = React;
-const { Card, CardBody, Tabs, Tab } = NextUI;
+const { Card, CardBody, Tabs, Tab, Select, SelectItem } = NextUI;
 const tableStore = await context.wpm.import('store_table');
 
 // 导入组件
@@ -22,10 +22,13 @@ const TablePagination = await context.wpm.import('comp_table_pagination');
 const { Line } = await context.wpm.import('@ant-design/plots');
 
 const DataManage = observer(() => {
-  // 保留原有状态管理代码...
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState(new Set([]));
-  const [visibleColumns, setVisibleColumns] = useState(new Set(["id", "name", "product", "workshop", "planQuantity", "finishQuantity", "qualifiedQuantity", "status", "actions"]));
+  const [visibleColumns, setVisibleColumns] = useState(new Set([
+    "id", "name", "product", "productCode", "workshop", "workshopCode", 
+    "planQuantity", "finishQuantity", "qualifiedQuantity", "unit", "status", 
+    "startDate", "endDate", "planCode", "actions"
+  ]));
   const [rowsPerPage] = useState(10);
   const [page, setPage] = useState(1);
   const [sortDescriptor, setSortDescriptor] = useState({
@@ -36,8 +39,10 @@ const DataManage = observer(() => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("table");
+  const [selectedPlan, setSelectedPlan] = useState("all");
+  const [selectedProduct, setSelectedProduct] = useState("all");
+  const [selectedWorkshop, setSelectedWorkshop] = useState("all");
 
-  // 保留原有数据加载代码...
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -53,10 +58,8 @@ const DataManage = observer(() => {
     loadData();
   }, []);
 
-  // 获取统计数据
   const statistics = tableStore.getStatistics();
 
-  // 保留原有过滤和排序代码...
   const filteredItems = () => {
     let filteredData = [...tableStore.items];
 
@@ -70,6 +73,18 @@ const DataManage = observer(() => {
 
     if (statusFilter !== "all") {
       filteredData = filteredData.filter((item) => item.status === statusFilter);
+    }
+
+    if (selectedPlan !== "all") {
+      filteredData = filteredData.filter((item) => item.name === selectedPlan);
+    }
+
+    if (selectedProduct !== "all") {
+      filteredData = filteredData.filter((item) => item.product === selectedProduct);
+    }
+
+    if (selectedWorkshop !== "all") {
+      filteredData = filteredData.filter((item) => item.workshop === selectedWorkshop);
     }
 
     if (dateFilter !== "all") {
@@ -100,7 +115,6 @@ const DataManage = observer(() => {
     });
   };
 
-  // 处理导出
   const handleExport = () => {
     try {
       const data = filteredItems();
@@ -117,7 +131,6 @@ const DataManage = observer(() => {
     }
   };
 
-  // 图表配置
   const chartConfig = {
     data: tableStore.getChartData(),
     xField: 'date',
@@ -135,7 +148,6 @@ const DataManage = observer(() => {
     },
   };
 
-  // 保留原有编辑和删除处理代码...
   const handleEdit = async (id) => {
     try {
       message.success("编辑成功");
@@ -167,6 +179,11 @@ const DataManage = observer(() => {
     }
   };
 
+  // 获取唯一的计划、产品和工序选项
+  const planOptions = [...new Set(tableStore.items.map(item => item.name))];
+  const productOptions = [...new Set(tableStore.items.map(item => item.product))];
+  const workshopOptions = [...new Set(tableStore.items.map(item => item.workshop))];
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -178,13 +195,51 @@ const DataManage = observer(() => {
         </div>
       </div>
 
-      {/* 统计卡片 */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="flex flex-wrap gap-4">
+        <Select 
+          label="生产计划名称" 
+          className="max-w-xs"
+          value={selectedPlan}
+          onChange={(e) => setSelectedPlan(e.target.value)}
+        >
+          <SelectItem key="all" value="all">全部</SelectItem>
+          {planOptions.map(plan => (
+            <SelectItem key={plan} value={plan}>{plan}</SelectItem>
+          ))}
+        </Select>
+
+        <Select 
+          label="产品名称" 
+          className="max-w-xs"
+          value={selectedProduct}
+          onChange={(e) => setSelectedProduct(e.target.value)}
+        >
+          <SelectItem key="all" value="all">全部</SelectItem>
+          {productOptions.map(product => (
+            <SelectItem key={product} value={product}>{product}</SelectItem>
+          ))}
+        </Select>
+
+        <Select 
+          label="工序名称" 
+          className="max-w-xs"
+          value={selectedWorkshop}
+          onChange={(e) => setSelectedWorkshop(e.target.value)}
+        >
+          <SelectItem key="all" value="all">全部</SelectItem>
+          {workshopOptions.map(workshop => (
+            <SelectItem key={workshop} value={workshop}>{workshop}</SelectItem>
+          ))}
+        </Select>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
         <Card>
           <CardBody>
             <div className="flex flex-col">
               <span className="text-small text-default-500">工序计划委外数量</span>
               <span className="text-xl font-semibold">{statistics.totalPlan}</span>
+              <span className="text-tiny text-default-400">单位：件</span>
             </div>
           </CardBody>
         </Card>
@@ -193,6 +248,16 @@ const DataManage = observer(() => {
             <div className="flex flex-col">
               <span className="text-small text-default-500">委外派工数量</span>
               <span className="text-xl font-semibold">{statistics.totalFinish}</span>
+              <span className="text-tiny text-default-400">单位：件</span>
+            </div>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardBody>
+            <div className="flex flex-col">
+              <span className="text-small text-default-500">委外完工数量</span>
+              <span className="text-xl font-semibold">{statistics.totalFinish}</span>
+              <span className="text-tiny text-default-400">单位：件</span>
             </div>
           </CardBody>
         </Card>
@@ -201,6 +266,7 @@ const DataManage = observer(() => {
             <div className="flex flex-col">
               <span className="text-small text-default-500">委外合格数量</span>
               <span className="text-xl font-semibold">{statistics.totalQualified}</span>
+              <span className="text-tiny text-default-400">单位：件</span>
             </div>
           </CardBody>
         </Card>
@@ -216,7 +282,7 @@ const DataManage = observer(() => {
           <CardBody>
             <div className="flex flex-col">
               <span className="text-small text-default-500">委外工序目标完成率</span>
-              <span className="text-xl font-semibold">{statistics.finishRate}%</span>
+              <span className="text-xl font-semibold">{statistics.targetCompletionRate}%</span>
             </div>
           </CardBody>
         </Card>

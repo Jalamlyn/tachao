@@ -18,42 +18,53 @@ class TableStore {
         id: "PLAN-001",
         name: "第10月生产计划2023.10B05",
         product: "镀锡铜覆钢圆钢 BH-GW-R8",
+        productCode: "A001",
         workshop: "抛光",
+        workshopCode: "GX005",
         planQuantity: 2000,
         finishQuantity: 1850,
         qualifiedQuantity: 1850,
+        unit: "百米",
         status: "completed",
         startDate: "2023-10-01",
-        endDate: "2023-10-31"
+        endDate: "2023-10-31",
+        planCode: "SCJH-231017-06"
       },
       {
         id: "PLAN-002", 
         name: "第9月生产计划2023.09B02",
         product: "镀锡铜覆钢圆钢 BH-GW-R10",
+        productCode: "A002",
         workshop: "抛光",
+        workshopCode: "GX005",
         planQuantity: 1500,
         finishQuantity: 1200,
         qualifiedQuantity: 1150,
+        unit: "百米",
         status: "processing",
         startDate: "2023-09-26",
-        endDate: "2023-11-02"
+        endDate: "2023-11-02",
+        planCode: "SCJH-231017-07"
       },
       {
         id: "PLAN-003",
         name: "第8月生产计划2023.08B01", 
         product: "镀锡铜覆钢圆钢 BH-GW-R12",
+        productCode: "A003",
         workshop: "抛光",
+        workshopCode: "GX005",
         planQuantity: 1000,
         finishQuantity: 0,
         qualifiedQuantity: 0,
+        unit: "百米",
         status: "pending",
         startDate: "2023-08-15",
-        endDate: "2023-09-15"
+        endDate: "2023-09-15",
+        planCode: "SCJH-231017-08"
       }
     ];
   }
 
-  // 保留原有方法
   setItems(items) {
     this.items = items;
   }
@@ -83,36 +94,44 @@ class TableStore {
       totalFinish: finished,
       totalQualified: qualified,
       finishRate: total ? (finished / total * 100).toFixed(2) : 0,
-      qualifiedRate: finished ? (qualified / finished * 100).toFixed(2) : 0
+      qualifiedRate: finished ? (qualified / finished * 100).toFixed(2) : 0,
+      targetCompletionRate: total ? ((qualified / total) * 100).toFixed(2) : 0
     };
   }
 
-  // 新增导出方法
   exportToCSV(data) {
     const headers = [
       '计划编号',
       '计划名称',
       '产品名称',
+      '产品编码',
       '工序名称',
+      '工序编码',
       '计划数量',
       '完成数量',
       '合格数量',
+      '单位',
       '状态',
       '开始日期',
-      '结束日期'
+      '结束日期',
+      '计划编码'
     ];
 
     const rows = data.map(item => [
       item.id,
       item.name,
       item.product,
+      item.productCode,
       item.workshop,
+      item.workshopCode,
       item.planQuantity,
       item.finishQuantity,
       item.qualifiedQuantity,
+      item.unit,
       this.getStatusText(item.status),
       item.startDate,
-      item.endDate
+      item.endDate,
+      item.planCode
     ]);
 
     return [
@@ -121,7 +140,6 @@ class TableStore {
     ].join('\n');
   }
 
-  // 获取状态文本
   getStatusText(status) {
     const statusMap = {
       pending: '待计划',
@@ -132,7 +150,6 @@ class TableStore {
     return statusMap[status] || status;
   }
 
-  // 获取图表数据
   getChartData() {
     const chartData = [];
     

@@ -62,7 +62,7 @@ const App = observer(() => {
                   "w-0 opacity-0": isCollapsed,
                 })}
               >
-                委外数据统计
+                委外加工管理
               </span>
               <div className={cn("flex-end flex", {hidden: isCollapsed})}>
                 <Icon
