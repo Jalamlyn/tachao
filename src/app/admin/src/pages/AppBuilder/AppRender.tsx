@@ -16,7 +16,6 @@ const AppEntry = ({ children }) => {
 
 export const AppRender: React.FC<AppRenderProps> = ({ appId, basename, onError, onAIFix }) => {
   const [App, setApp] = useState(null)
-
   useEffect(() => {
     const init = async () => {
       const AppComp = await wpm.import(appId)

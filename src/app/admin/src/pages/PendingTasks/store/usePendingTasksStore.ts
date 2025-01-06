@@ -188,7 +188,7 @@ export const usePendingTasksStore = create<PendingTasksStore>((set) => ({
         // 1. 创建RAM账号
         const accountRes = await createRamAccount({
           account: `wb_${phone}`,
-          name: phone,
+          name: `wb_${phone}`,
           password: phone,
         })
 

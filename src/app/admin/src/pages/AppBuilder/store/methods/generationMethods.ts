@@ -2,7 +2,6 @@ import { getMetadata } from "@/service/apis/metadata"
 import { initialAIResponse } from "../../prompts/initTemplate"
 import { templates } from "../../prompts/templates"
 import { AppCodeStore, Version, AIGenerationResult } from "../types"
-import message from "@/components/Message"
 async function checkAppNameExists(name: string): Promise<boolean> {
   const appIndexResult = await getMetadata(["app_index"])
   const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
@@ -17,7 +16,7 @@ export async function handleAIGeneration(
   if (!this.appId) {
     throw new Error("AppId not set")
   }
-
+  debugger
   try {
     const moduleDataMap = await this.processAIResponse(aiResponse)
 
@@ -182,31 +181,95 @@ export async function loadApp(this: AppCodeStore, appId: string) {
     throw error
   }
 }
+ export async function generateInitialVersion(
+  this: AppCodeStore,
+  aiResponse: string,
+  name = "New App"
+): Promise<AIGenerationResult> {
+  if (!this.appId) {
+    throw new Error("AppId not set")
+  }
 
+  try {
+    const moduleDataMap = await this.processAIResponse(aiResponse)
+
+    const newVersion: Version = {
+      timestamp: Date.now(),
+      app: {
+        id: this.appId,
+        name,
+        version: Date.now(),
+        updatedAt: new Date().toISOString(),
+        modules: Object.keys(moduleDataMap).reduce(
+          (acc, moduleId) => ({
+            ...acc,
+            [moduleId]: {
+              id: moduleId,
+              type: moduleDataMap[moduleId].type,
+              name: moduleDataMap[moduleId].name,
+              title: moduleDataMap[moduleId].title,
+            },
+          }),
+          {}
+        ),
+      },
+      modules: Object.entries(moduleDataMap).reduce(
+        (acc, [moduleId, moduleData]) => ({
+          ...acc,
+          [moduleId]: {
+            metadata: JSON.stringify(moduleData),
+            data: moduleData,
+            updatedAt: new Date().toISOString(),
+          },
+        }),
+        {}
+      ),
+    }
+
+    const exportErrors = this.validateModuleExports(newVersion)
+    if (exportErrors.length > 0) {
+      return {
+        success: false,
+        version: newVersion,
+        errors: exportErrors,
+        moduleErrors: this.processModuleErrors(exportErrors),
+      }
+    }
+
+    return {
+      success: true,
+      version: newVersion,
+    }
+  } catch (error) {
+    console.error("Error generating initial version:", error)
+    return {
+      success: false,
+      errors: [error instanceof Error ? error.message : "Failed to generate initial version"],
+    }
+  }
+}
 export async function createApp(this: AppCodeStore, name: string, templateId: string = ""): Promise<string> {
-  // 先检查名称是否存在
   const exists = await checkAppNameExists(name)
   if (exists) {
     throw new Error(`应用名称 "${name}" 已存在`)
   }
   const appId = this.generateId()
   this.setAppId(appId)
-
   try {
     let aiResponse
     if (templateId && templates[templateId]) {
-      // 使用选择的模板代码
       aiResponse = templates[templateId].code
     } else {
-      // 使用默认的初始化代码
       aiResponse = initialAIResponse
     }
 
-    const result = await this.handleAIGeneration(aiResponse, name)
+    // 使用新的方法替代handleAIGeneration
+    const result = await this.generateInitialVersion(aiResponse, name)
     if (!result.success || !result.version) {
       throw new Error("Failed to create app")
     }
 
+    // 只在这里执行一次addVersion
     this.addVersion(result.version)
     await this.publishToServer({ useLatest: true })
     await this.updateAppIndex(result.version.app, name)

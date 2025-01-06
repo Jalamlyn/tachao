@@ -9,7 +9,7 @@ import { exportToMarkdown, downloadMarkdown } from "./methods/exportMethods"
 import { importFromMarkdown } from "./methods/importMethods"
 import { validateModuleExports, processModuleErrors } from "./methods/validationMethods"
 import { publishToServer, updateAppIndex } from "./methods/serverMethods"
-import { handleAIGeneration, loadApp, createApp } from "./methods/generationMethods"
+import { handleAIGeneration, loadApp, createApp, generateInitialVersion } from "./methods/generationMethods"
 import {
   initViewState,
   handleCodeSelect,
@@ -59,6 +59,7 @@ class AppCodeStore {
     this.handleAIGeneration = handleAIGeneration.bind(this)
     this.loadApp = loadApp.bind(this)
     this.createApp = createApp.bind(this)
+    this.generateInitialVersion = generateInitialVersion.bind(this)
 
     // 绑定视图相关方法
     this.handleCodeSelect = handleCodeSelect.bind(this)
@@ -97,6 +98,7 @@ class AppCodeStore {
   handleAIGeneration!: typeof handleAIGeneration
   loadApp!: typeof loadApp
   createApp!: typeof createApp
+  generateInitialVersion!: typeof generateInitialVersion
 
   // 视图相关方法声明
   handleCodeSelect!: typeof handleCodeSelect

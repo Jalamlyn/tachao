@@ -67,7 +67,7 @@ const ErrorPrompt = ({ error, onFix }) => {
   )
 }
 
-const MAX_MESSAGES = 4
+const MAX_MESSAGES = 2
 
 const AppBuilder: React.FC = observer(() => {
   const { appId } = useParams<{ appId: string }>()

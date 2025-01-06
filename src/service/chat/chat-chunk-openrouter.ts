@@ -36,7 +36,6 @@ export default async function chatChunkOpenAIOffice(
   const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-openrouter"
 
   const payload = {
-    model: "free",
     messages: _messages,
     stream: true,
   }

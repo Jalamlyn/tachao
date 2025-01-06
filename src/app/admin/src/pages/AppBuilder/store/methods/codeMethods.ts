@@ -101,7 +101,6 @@ export async function processAIResponse(this: AppCodeStore, aiResponse: string):
 
 export async function executeModules(this: AppCodeStore, context: any) {
   if (!this.currentVersion) return []
-
   const results: Array<{
     success: boolean
     moduleId: string
