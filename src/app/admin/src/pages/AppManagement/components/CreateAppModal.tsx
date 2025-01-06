@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Modal,
   ModalContent,
@@ -9,6 +9,8 @@ import {
   Input,
   Card,
   CardBody,
+  Tabs,
+  Tab,
 } from "@nextui-org/react"
 import { useNavigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
@@ -17,6 +19,7 @@ import { message } from "antd"
 import { appCodeStore } from "@/app/admin/src/pages/AppBuilder/store/appCodeStore"
 import { templates } from "@/app/admin/src/pages/AppBuilder/prompts/templates"
 import { useAppStore } from "../store/useAppStore"
+import { getPlatMetaData } from "@/service/apis/metadata"
 
 interface CreateAppModalProps {
   isOpen: boolean
@@ -117,9 +120,28 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   const [showSuccess, setShowSuccess] = useState(false)
   const [newAppId, setNewAppId] = useState<string>("")
   const [loading, setLoading] = useState(false)
+  const [selectedTab, setSelectedTab] = useState("official")
+  const [platformTemplates, setPlatformTemplates] = useState([])
   const navigate = useNavigate()
   const { useApps } = useAppStore()
   const { refetch } = useApps()
+
+  useEffect(() => {
+    if (selectedTab === "platform") {
+      loadPlatformTemplates()
+    }
+  }, [selectedTab])
+
+  const loadPlatformTemplates = async () => {
+    try {
+      const result = await getPlatMetaData(["plat_template_index"])
+      const templates = result.data?.[0]?.values[0]?.value ? JSON.parse(result.data?.[0]?.values[0]?.value) : []
+      setPlatformTemplates(templates)
+    } catch (error) {
+      console.error("Error loading platform templates:", error)
+      message.error("加载平台模板失败")
+    }
+  }
 
   const triggerConfetti = () => {
     confetti({
@@ -188,6 +210,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
       <Modal
         isOpen={isOpen}
         onClose={onClose}
+        size='3xl'
         classNames={{
           base: "max-w-3xl",
           header: "border-b",
@@ -208,53 +231,110 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
             />
 
             <div className='space-y-3'>
-              <h3 className='text-foreground-600 text-sm font-medium'>选择模板</h3>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                {/* 空白模板卡片 */}
-                <Card
-                  isPressable
-                  isHoverable
-                  className={`border-2 transition-all duration-200 ${selectedTemplate === "" ? "border-primary" : "border-transparent"}`}
-                  onPress={() => setSelectedTemplate("")}
-                >
-                  <CardBody className='p-4'>
-                    <div className='flex items-center gap-4'>
-                      <div className='p-3 rounded-lg bg-primary/10'>
-                        <Icon icon='mdi:view-grid-outline' className='w-6 h-6 text-primary' />
-                      </div>
-                      <div>
-                        <h4 className='text-base font-semibold'>空白模板</h4>
-                        <p className='text-sm text-default-500'>从零开始构建您的应用</p>
-                      </div>
+              <Tabs
+                selectedKey={selectedTab}
+                onSelectionChange={(key) => setSelectedTab(key.toString())}
+                color='primary'
+                variant='underlined'
+                classNames={{
+                  tabList: "gap-6",
+                  cursor: "w-full",
+                }}
+              >
+                <Tab
+                  key='official'
+                  title={
+                    <div className='flex items-center gap-2'>
+                      <Icon icon='solar:star-bold' className='w-4 h-4' />
+                      <span>官方模板</span>
                     </div>
-                  </CardBody>
-                </Card>
+                  }
+                >
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    {/* 空白模板卡片 */}
+                    <Card
+                      isPressable
+                      isHoverable
+                      className={`border-2 transition-all duration-200 ${selectedTemplate === "" ? "border-primary" : "border-transparent"}`}
+                      onPress={() => setSelectedTemplate("")}
+                    >
+                      <CardBody className='p-4'>
+                        <div className='flex items-center gap-4'>
+                          <div className='p-3 rounded-lg bg-primary/10'>
+                            <Icon icon='mdi:view-grid-outline' className='w-6 h-6 text-primary' />
+                          </div>
+                          <div>
+                            <h4 className='text-base font-semibold'>空白模板</h4>
+                            <p className='text-sm text-default-500'>从零开始构建您的应用</p>
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
 
-                {/* 其他模板卡片 */}
-                {Object.entries(templates).map(([id, template]) => (
-                  <Card
-                    key={id}
-                    isPressable
-                    isHoverable
-                    className={`border-2 transition-all duration-200 ${selectedTemplate === id ? "border-primary" : "border-transparent"}`}
-                    onPress={() => setSelectedTemplate(id)}
-                  >
-                    <CardBody className='p-4'>
-                      <div className='flex items-center gap-4'>
-                        <div
-                          className={`p-3 rounded-lg ${selectedTemplate === id ? "bg-primary/10" : "bg-default-100"}`}
-                        >
-                          <Icon icon={getTemplateIcon(id)} className={`w-6 h-6 ${getTemplateColor(id)}`} />
-                        </div>
-                        <div>
-                          <h4 className='text-base font-semibold'>{template.name}</h4>
-                          <p className='text-sm text-default-500'>{template.description}</p>
-                        </div>
-                      </div>
-                    </CardBody>
-                  </Card>
-                ))}
-              </div>
+                    {/* 其他模板卡片 */}
+                    {Object.entries(templates).map(([id, template]) => (
+                      <Card
+                        key={id}
+                        isPressable
+                        isHoverable
+                        className={`border-2 transition-all duration-200 ${selectedTemplate === id ? "border-primary" : "border-transparent"}`}
+                        onPress={() => setSelectedTemplate(id)}
+                      >
+                        <CardBody className='p-4'>
+                          <div className='flex items-center gap-4'>
+                            <div
+                              className={`p-3 rounded-lg ${selectedTemplate === id ? "bg-primary/10" : "bg-default-100"}`}
+                            >
+                              <Icon icon={getTemplateIcon(id)} className={`w-6 h-6 ${getTemplateColor(id)}`} />
+                            </div>
+                            <div>
+                              <h4 className='text-base font-semibold'>{template.name}</h4>
+                              <p className='text-sm text-default-500'>{template.description}</p>
+                            </div>
+                          </div>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </div>
+                </Tab>
+                <Tab
+                  key='platform'
+                  title={
+                    <div className='flex items-center gap-2'>
+                      <Icon icon='solar:cloud-bold' className='w-4 h-4' />
+                      <span>平台模板</span>
+                    </div>
+                  }
+                >
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    {platformTemplates.map((template) => (
+                      <Card
+                        key={template.id}
+                        isPressable
+                        isHoverable
+                        className={`border-2 transition-all duration-200 ${selectedTemplate === template.id ? "border-primary" : "border-transparent"}`}
+                        onPress={() => setSelectedTemplate(template.id)}
+                      >
+                        <CardBody className='p-4'>
+                          <div className='flex items-center gap-4'>
+                            <div
+                              className={`p-3 rounded-lg ${selectedTemplate === template.id ? "bg-primary/10" : "bg-default-100"}`}
+                            >
+                              <Icon icon='mdi:cloud-outline' className='w-6 h-6 text-primary' />
+                            </div>
+                            <div>
+                              <h4 className='text-base font-semibold'>{template.name}</h4>
+                              <p className='text-sm text-default-500'>
+                                更新于: {new Date(template.updatedAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </div>
+                </Tab>
+              </Tabs>
             </div>
           </ModalBody>
           <ModalFooter>

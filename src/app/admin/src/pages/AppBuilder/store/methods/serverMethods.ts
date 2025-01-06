@@ -80,7 +80,7 @@ export async function publishTemplate(this: AppCodeStore, { useLatest = false } 
 
     // 更新带有 plat_ 前缀的模板索引
     const templateIndex = {
-      id: this.appId,
+      id: `plat_template_${this.appId}`,
       name: versionToPublish.app.name,
       version: versionToPublish.app.version,
       updatedAt: new Date().toISOString()

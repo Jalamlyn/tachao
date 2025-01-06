@@ -119,6 +119,7 @@ export const setPlatMetaData = async ({ name, value }) => {
 
 export const getPlatMetaData = async (names = [], limit = 1) => {
   const res = await apiService.post(`/global/metadata/PLUGIN/queryByNames`, {
+    names,
     limit,
     offset: 0,
   })
