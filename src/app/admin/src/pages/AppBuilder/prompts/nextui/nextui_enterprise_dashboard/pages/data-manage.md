@@ -1,4 +1,3 @@
-```jsx
 <mo-ai-code type="page" name="page_data_manage" title="数据管理">
 const {
   wpm,
@@ -11,6 +10,7 @@ const {
 } = context;
 
 const { useState, useEffect } = React;
+const { Card, CardBody } = NextUI;
 const tableStore = await context.wpm.import('store_table');
 
 // 导入组件
@@ -22,7 +22,7 @@ const DataManage = observer(() => {
   // 状态管理
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState(new Set([]));
-  const [visibleColumns, setVisibleColumns] = useState(new Set(["id", "name", "status", "createdAt", "actions"]));
+  const [visibleColumns, setVisibleColumns] = useState(new Set(["id", "name", "product", "workshop", "planQuantity", "finishQuantity", "qualifiedQuantity", "status", "actions"]));
   const [rowsPerPage] = useState(10);
   const [page, setPage] = useState(1);
   const [sortDescriptor, setSortDescriptor] = useState({
@@ -49,13 +49,18 @@ const DataManage = observer(() => {
     loadData();
   }, []);
 
+  // 获取统计数据
+  const statistics = tableStore.getStatistics();
+
   // 过滤处理
   const filteredItems = () => {
     let filteredData = [...tableStore.items];
 
     if (filterValue) {
       filteredData = filteredData.filter((item) =>
-        item.name.toLowerCase().includes(filterValue.toLowerCase())
+        item.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+        item.product.toLowerCase().includes(filterValue.toLowerCase()) ||
+        item.workshop.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
 
@@ -69,7 +74,7 @@ const DataManage = observer(() => {
       cutoff.setDate(cutoff.getDate() - days);
 
       filteredData = filteredData.filter((item) =>
-        new Date(item.createdAt) >= cutoff
+        new Date(item.startDate) >= cutoff
       );
     }
 
@@ -133,11 +138,55 @@ const DataManage = observer(() => {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold leading-9 text-default-foreground">数据管理</h1>
+          <h1 className="text-3xl font-bold leading-9 text-default-foreground">委外数据统计</h1>
           <h2 className="mt-2 text-small text-default-500">
-            管理和维护系统数据，支持筛选、排序和批量操作。
+            管理和统计委外生产数据，支持筛选、排序和导出。
           </h2>
         </div>
+      </div>
+
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Card>
+          <CardBody>
+            <div className="flex flex-col">
+              <span className="text-small text-default-500">工序计划委外数量</span>
+              <span className="text-xl font-semibold">{statistics.totalPlan}</span>
+            </div>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardBody>
+            <div className="flex flex-col">
+              <span className="text-small text-default-500">委外派工数量</span>
+              <span className="text-xl font-semibold">{statistics.totalFinish}</span>
+            </div>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardBody>
+            <div className="flex flex-col">
+              <span className="text-small text-default-500">委外合格数量</span>
+              <span className="text-xl font-semibold">{statistics.totalQualified}</span>
+            </div>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardBody>
+            <div className="flex flex-col">
+              <span className="text-small text-default-500">委外工序合格率</span>
+              <span className="text-xl font-semibold">{statistics.qualifiedRate}%</span>
+            </div>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardBody>
+            <div className="flex flex-col">
+              <span className="text-small text-default-500">委外工序目标完成率</span>
+              <span className="text-xl font-semibold">{statistics.finishRate}%</span>
+            </div>
+          </CardBody>
+        </Card>
       </div>
 
       <TableToolbar
@@ -177,4 +226,3 @@ const DataManage = observer(() => {
 
 context.wpm.export('page_data_manage', DataManage);
 </mo-ai-code>
-```

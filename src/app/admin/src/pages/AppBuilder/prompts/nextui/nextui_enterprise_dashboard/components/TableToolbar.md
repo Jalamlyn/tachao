@@ -28,7 +28,7 @@ const TableToolbar = observer(({
         <Input
           isClearable
           className="w-full sm:max-w-[44%]"
-          placeholder="搜索..."
+          placeholder="搜索计划名称、产品名称或工序..."
           startContent={<Icon icon="solar:magnifer-linear" />}
           value={filterValue}
           onClear={() => onFilterChange("")}
@@ -52,13 +52,14 @@ const TableToolbar = observer(({
                   onValueChange={onStatusFilterChange}
                 >
                   <Radio value="all">全部</Radio>
-                  <Radio value="active">活跃</Radio>
-                  <Radio value="paused">暂停</Radio>
-                  <Radio value="deleted">已删除</Radio>
+                  <Radio value="pending">待计划</Radio>
+                  <Radio value="processing">进行中</Radio>
+                  <Radio value="completed">已完成</Radio>
+                  <Radio value="cancelled">已取消</Radio>
                 </RadioGroup>
 
                 <RadioGroup
-                  label="创建时间"
+                  label="日期范围"
                   value={dateFilter}
                   onValueChange={onDateFilterChange}
                 >
@@ -77,7 +78,7 @@ const TableToolbar = observer(({
                 endContent={<Icon className="text-small" icon="solar:columns-line-bold" />}
                 variant="flat"
               >
-                列
+                显示列
               </Button>
             </DropdownTrigger>
             <DropdownMenu
@@ -107,14 +108,14 @@ const TableToolbar = observer(({
               <DropdownMenu aria-label="批量操作选项">
                 <DropdownItem key="batch-edit">批量编辑</DropdownItem>
                 <DropdownItem key="batch-delete" className="text-danger" color="danger">批量删除</DropdownItem>
-                <DropdownItem key="batch-export">导出选中</DropdownItem>
+                <DropdownItem key="batch-export">导出数据</DropdownItem>
                 <DropdownItem key="batch-status">修改状态</DropdownItem>
               </DropdownMenu>
             </Dropdown>
           )}
 
           <Button color="primary" endContent={<Icon icon="solar:add-circle-bold" />}>
-            新建
+            新建计划
           </Button>
         </div>
       </div>
