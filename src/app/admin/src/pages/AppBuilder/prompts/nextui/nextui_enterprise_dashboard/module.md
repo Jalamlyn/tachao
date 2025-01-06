@@ -1,4 +1,3 @@
-```jsx
 <mo-ai-code type="module" name="module_table_constants">
 const {
   wpm
@@ -8,19 +7,43 @@ const {
 const columns = [
   {
     key: "id",
-    label: "ID"
+    label: "计划编号"
   },
   {
-    key: "name",
-    label: "名称"
+    key: "name", 
+    label: "计划名称"
+  },
+  {
+    key: "product",
+    label: "产品名称"
+  },
+  {
+    key: "workshop",
+    label: "工序名称" 
+  },
+  {
+    key: "planQuantity",
+    label: "计划数量"
+  },
+  {
+    key: "finishQuantity", 
+    label: "完成数量"
+  },
+  {
+    key: "qualifiedQuantity",
+    label: "合格数量"
   },
   {
     key: "status",
     label: "状态"
   },
   {
-    key: "createdAt",
-    label: "创建时间"
+    key: "startDate",
+    label: "开始日期"
+  },
+  {
+    key: "endDate", 
+    label: "结束日期"
   },
   {
     key: "actions",
@@ -30,9 +53,10 @@ const columns = [
 
 // 状态颜色映射
 const statusColorMap = {
-  active: "success",
-  paused: "warning",
-  deleted: "danger"
+  pending: "warning",
+  processing: "primary",
+  completed: "success",
+  cancelled: "danger"
 };
 
 const constants = {
@@ -42,4 +66,3 @@ const constants = {
 
 context.wpm.export('module_table_constants', constants);
 </mo-ai-code>
-```

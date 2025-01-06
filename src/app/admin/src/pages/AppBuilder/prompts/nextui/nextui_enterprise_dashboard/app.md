@@ -1,4 +1,3 @@
-```jsx
 <mo-ai-code type="app">
 const {
   wpm,
@@ -20,11 +19,7 @@ const { ScrollShadow, Spacer, Avatar, Button, useDisclosure, Tabs, Tab } = NextU
 
 // 导入组件
 const DataManage = await context.wpm.import('page_data_manage');
-const ProfileSetting = await context.wpm.import('page_profile_setting');
 const AppearanceSetting = await context.wpm.import('page_appearance_setting');
-const AccountSetting = await context.wpm.import('page_account_setting');
-const BillingSetting = await context.wpm.import('page_billing_setting');
-const TeamSetting = await context.wpm.import('page_team_setting');
 const Sidebar = await context.wpm.import('comp_sidebar');
 const SidebarDrawer = await context.wpm.import('comp_sidebar_drawer');
 const AcmeIcon = await context.wpm.import('comp_acme_icon');
@@ -67,7 +62,7 @@ const App = observer(() => {
                   "w-0 opacity-0": isCollapsed,
                 })}
               >
-                模本科技
+                委外数据统计
               </span>
               <div className={cn("flex-end flex", {hidden: isCollapsed})}>
                 <Icon
@@ -79,19 +74,6 @@ const App = observer(() => {
               </div>
             </div>
             <Spacer y={6} />
-            <div className="flex items-center gap-3 px-3">
-              <Avatar
-                isBordered
-                size="sm"
-                src="https://i.pravatar.cc/150?u=a042581f4e29026024d"
-              />
-              <div className={cn("flex max-w-full flex-col", {hidden: isCollapsed})}>
-                <p className="text-small font-medium text-foreground">张三</p>
-                <p className="text-tiny font-medium text-default-400">技术支持</p>
-              </div>
-            </div>
-
-            <Spacer y={6} />
 
             <Sidebar
               defaultSelectedKey="data"
@@ -100,8 +82,9 @@ const App = observer(() => {
               items={[
                 {
                   key: "data",
-                  title: "数据管理",
-                  href: "/data"
+                  title: "委外数据统计",
+                  href: "/data",
+                  icon: "solar:chart-2-bold-duotone"
                 },
                 {
                   key: "settings",
@@ -109,29 +92,9 @@ const App = observer(() => {
                   icon: "solar:settings-bold-duotone",
                   items: [
                     {
-                      key: "profile",
-                      title: "个人资料",
-                      href: "/settings/profile"
-                    },
-                    {
                       key: "appearance",
                       title: "外观设置",
                       href: "/settings/appearance"
-                    },
-                    {
-                      key: "account",
-                      title: "账户设置",
-                      href: "/settings/account"
-                    },
-                    {
-                      key: "billing",
-                      title: "账单管理",
-                      href: "/settings/billing"
-                    },
-                    {
-                      key: "team",
-                      title: "团队管理",
-                      href: "/settings/team"
                     }
                   ]
                 }
@@ -197,34 +160,6 @@ const App = observer(() => {
                   )}
                 </Button>
               </NextUI.Tooltip>
-              <NextUI.Tooltip content="退出登录" isDisabled={!isCollapsed} placement="right">
-                <Button
-                  className={cn("justify-start text-default-500 data-[hover=true]:text-foreground", {
-                    "justify-center": isCollapsed,
-                  })}
-                  isIconOnly={isCollapsed}
-                  startContent={
-                    isCollapsed ? null : (
-                      <Icon
-                        className="flex-none rotate-180 text-default-500"
-                        icon="solar:minus-circle-line-duotone"
-                        width={24}
-                      />
-                    )
-                  }
-                  variant="light"
-                >
-                  {isCollapsed ? (
-                    <Icon
-                      className="rotate-180 text-default-500"
-                      icon="solar:minus-circle-line-duotone"
-                      width={24}
-                    />
-                  ) : (
-                    "退出登录"
-                  )}
-                </Button>
-              </NextUI.Tooltip>
             </div>
           </div>
         </SidebarDrawer>
@@ -235,11 +170,7 @@ const App = observer(() => {
               <Routes>
                 <Route path="/" element={<Navigate to="/data" replace />} />
                 <Route path="/data" element={<DataManage />} />
-                <Route path="/settings/profile" element={<ProfileSetting />} />
                 <Route path="/settings/appearance" element={<AppearanceSetting />} />
-                <Route path="/settings/account" element={<AccountSetting />} />
-                <Route path="/settings/billing" element={<BillingSetting />} />
-                <Route path="/settings/team" element={<TeamSetting />} />
               </Routes>
           </div>
         </div>
@@ -250,4 +181,3 @@ const App = observer(() => {
 
 context.wpm.export(appId, App);
 </mo-ai-code>
-```
