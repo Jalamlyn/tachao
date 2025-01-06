@@ -1,4 +1,4 @@
-import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { getMetadata, setMetadata, setPlatMetaData, getPlatMetaData } from "@/service/apis/metadata"
 import { AppCodeStore, Version, AppIndexItem } from "../types"
 
 export async function publishToServer(this: AppCodeStore, { useLatest = false } = {}) {
@@ -53,6 +53,60 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
   } catch (error) {
     console.error("Error publishing app:", error)
     throw new Error(error instanceof Error ? error.message : "Failed to publish app")
+  }
+}
+
+export async function publishTemplate(this: AppCodeStore, { useLatest = false } = {}) {
+  if (!this.appId) {
+    throw new Error("No app id")
+  }
+
+  try {
+    const versionToPublish = useLatest ? this.latestVersion : this.currentVersion
+    if (!versionToPublish) {
+      throw new Error("No version to publish")
+    }
+
+    // 使用 plat_ 前缀存储模板详情
+    await setPlatMetaData({
+      name: `plat_template_${this.appId}`,
+      value: JSON.stringify({
+        app: versionToPublish.app,
+        version: versionToPublish.app.version,
+        updatedAt: new Date().toISOString(),
+        modules: versionToPublish.modules
+      })
+    })
+
+    // 更新带有 plat_ 前缀的模板索引
+    const templateIndex = {
+      id: this.appId,
+      name: versionToPublish.app.name,
+      version: versionToPublish.app.version,
+      updatedAt: new Date().toISOString()
+    }
+
+    // 获取现有索引，使用 plat_ 前缀
+    const indexResult = await getPlatMetaData(['plat_template_index'])
+    const currentIndex = indexResult.data?.[0]?.value ? JSON.parse(indexResult.data[0].value) : []
+    
+    // 更新索引
+    const newIndex = currentIndex.filter(t => t.id !== this.appId)
+    newIndex.push(templateIndex)
+
+    await setPlatMetaData({
+      name: 'plat_template_index',
+      value: JSON.stringify(newIndex)
+    })
+
+    return {
+      success: true,
+      version: versionToPublish.app.version,
+      publishedAt: new Date().toISOString()
+    }
+  } catch (error) {
+    console.error("Error publishing template:", error)
+    throw new Error(error instanceof Error ? error.message : "Failed to publish template")
   }
 }
 

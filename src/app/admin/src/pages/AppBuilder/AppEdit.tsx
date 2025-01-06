@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useLocation } from "react-router-dom"
-import { Button, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
+import { Button, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, ButtonGroup } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
 import PageLayout from "@/app/admin/src/component/PageLayout"
@@ -78,6 +78,7 @@ const AppBuilder: React.FC = observer(() => {
   const [appTitle, setAppTitle] = useState("")
   const { updateBreadcrumbs } = useBreadcrumb()
   const [showPublishModal, setShowPublishModal] = useState(false)
+  const [showPublishTemplateModal, setShowPublishTemplateModal] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [publishInProgress, setPublishInProgress] = useState(false)
@@ -176,6 +177,30 @@ const AppBuilder: React.FC = observer(() => {
       setShowPublishModal(true)
     } catch (error) {
       console.error("Error publishing app:", error)
+      setPublishError(error instanceof Error ? error.message : "发布失败")
+      message.error(error instanceof Error ? error.message : "发布失败")
+    } finally {
+      setIsLoading(false)
+      setPublishInProgress(false)
+    }
+  }
+
+  const handlePublishTemplate = async () => {
+    if (!appId) return
+    try {
+      setIsLoading(true)
+      setPublishInProgress(true)
+      setPublishError(null)
+
+      // 使用appCodeStore发布模板
+      const result = await appCodeStore.publishTemplate({
+        useLatest: !appCodeStore.isViewingHistory,
+      })
+
+      message.success("模板发布成功")
+      setShowPublishTemplateModal(true)
+    } catch (error) {
+      console.error("Error publishing template:", error)
       setPublishError(error instanceof Error ? error.message : "发布失败")
       message.error(error instanceof Error ? error.message : "发布失败")
     } finally {
@@ -418,15 +443,26 @@ const AppBuilder: React.FC = observer(() => {
   }
 
   const pageActions = (
-    <Button
-      color='primary'
-      onClick={handlePublish}
-      isDisabled={isLoading || publishInProgress}
-      isLoading={publishInProgress}
-      startContent={<Icon icon='mdi:rocket-launch' className='w-4 h-4' />}
-    >
-      发布应用
-    </Button>
+    <ButtonGroup>
+      <Button
+        color='primary'
+        onClick={handlePublishTemplate}
+        isDisabled={isLoading || publishInProgress}
+        isLoading={publishInProgress}
+        startContent={<Icon icon='mdi:template' className='w-4 h-4' />}
+      >
+        发布模板
+      </Button>
+      <Button
+        color='primary'
+        onClick={handlePublish}
+        isDisabled={isLoading || publishInProgress}
+        isLoading={publishInProgress}
+        startContent={<Icon icon='mdi:rocket-launch' className='w-4 h-4' />}
+      >
+        发布应用
+      </Button>
+    </ButtonGroup>
   )
 
   return (
@@ -471,6 +507,20 @@ const AppBuilder: React.FC = observer(() => {
             </ModalBody>
             <ModalFooter>
               <Button color='primary' onPress={() => setShowPublishModal(false)}>
+                关闭
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        <Modal isOpen={showPublishTemplateModal} onClose={() => setShowPublishTemplateModal(false)}>
+          <ModalContent>
+            <ModalHeader className='flex flex-col gap-1'>发布模板成功</ModalHeader>
+            <ModalBody>
+              <p>模板已成功发布到平台！其他用户现在可以使用此模板创建新应用。</p>
+            </ModalBody>
+            <ModalFooter>
+              <Button color='primary' onPress={() => setShowPublishTemplateModal(false)}>
                 关闭
               </Button>
             </ModalFooter>
