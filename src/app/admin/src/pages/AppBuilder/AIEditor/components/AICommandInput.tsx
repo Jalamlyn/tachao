@@ -27,11 +27,12 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   // 内部状态管理
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [preview, setPreview] = useState<string>("")
+  const [previews, setPreviews] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [recordingError, setRecordingError] = useState<string>("")
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false)
+  const [selectedPreview, setSelectedPreview] = useState<string>("")
   const [showTutorial, setShowTutorial] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
@@ -52,7 +53,10 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
 
     try {
       setIsLoading(true)
-      const result = await agent.processCommand(input)
+      const result = await agent.processCommand({
+        content: input,
+        images: previews
+      })
       onResult?.(result)
       setInput("")
     } catch (error) {
@@ -60,7 +64,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     } finally {
       setIsLoading(false)
     }
-  }, [input, isLoading, agent, onResult, preview])
+  }, [input, isLoading, agent, onResult, previews])
 
   // 处理停止生成
   const handleStop = useCallback(() => {
@@ -101,10 +105,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
               const reader = new FileReader()
               reader.onloadend = () => {
                 const base64 = reader.result as string
-                if (preview) {
-                  imageStore.removeImage(preview)
-                }
-                setPreview(base64)
+                setPreviews(prev => [...prev, base64])
                 imageStore.addImage(base64)
                 setIsUploading(false)
                 message.success("图片粘贴成功")
@@ -123,56 +124,66 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
         }
       }
     },
-    [preview]
+    []
   )
 
   // 处理图片上传
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = e.target.files
+    if (!files || files.length === 0) return
 
-    if (file.size > 5 * 1024 * 1024) {
-      message.error("图片大小不能超过5MB")
-      return
-    }
-
+    const maxSize = 5 * 1024 * 1024 // 5MB
     const allowedTypes = ["image/jpeg", "image/png", "image/gif"]
-    if (!allowedTypes.includes(file.type)) {
-      message.error("只支持 JPG, PNG, GIF 格式")
-      return
+
+    for (const file of files) {
+      if (file.size > maxSize) {
+        message.error(`图片 ${file.name} 大小不能超过5MB`)
+        continue
+      }
+
+      if (!allowedTypes.includes(file.type)) {
+        message.error(`图片 ${file.name} 格式不支持，只支持 JPG, PNG, GIF`)
+        continue
+      }
+
+      setIsUploading(true)
+      try {
+        const reader = new FileReader()
+        reader.onloadend = async () => {
+          const base64 = reader.result as string
+          setPreviews(prev => [...prev, base64])
+          imageStore.addImage(base64)
+          setIsUploading(false)
+          message.success(`图片 ${file.name} 上传成功`)
+        }
+        reader.onerror = () => {
+          message.error(`图片 ${file.name} 读取失败`)
+          setIsUploading(false)
+        }
+        reader.readAsDataURL(file)
+      } catch (error) {
+        console.error("Error uploading image:", error)
+        message.error(`图片 ${file.name} 上传失败`)
+        setIsUploading(false)
+      }
     }
 
-    setIsUploading(true)
-    try {
-      const reader = new FileReader()
-      reader.onloadend = async () => {
-        const base64 = reader.result as string
-
-        if (preview) {
-          imageStore.removeImage(preview)
-        }
-
-        setPreview(base64)
-        imageStore.addImage(base64)
-
-        setIsUploading(false)
-        message.success("图片上传成功")
-      }
-      reader.onerror = () => {
-        message.error("图片读取失败")
-        setIsUploading(false)
-      }
-      reader.readAsDataURL(file)
-    } catch (error) {
-      console.error("Error uploading image:", error)
-      message.error("图片上传失败")
-      setIsUploading(false)
+    // 清空文件输入以支持重复上传相同文件
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
     }
   }
 
   // 触发文件选择
   const handleImageClick = () => {
     fileInputRef.current?.click()
+  }
+
+  // 删除单张图片
+  const handleDeleteImage = (imageToDelete: string) => {
+    setPreviews(prev => prev.filter(img => img !== imageToDelete))
+    imageStore.removeImage(imageToDelete)
+    message.success("图片删除成功")
   }
 
   // 初始化语音识别
@@ -250,26 +261,22 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
           className='hidden'
           accept='image/jpeg,image/png,image/gif'
           onChange={handleImageUpload}
+          multiple
         />
 
-        <div className='group flex gap-2 px-4 pt-4'>
-          {preview && (
+        <div className='group flex flex-wrap gap-2 px-4 pt-4'>
+          {previews.map((preview, index) => (
             <Badge
+              key={index}
               isOneChar
-              className='opacity-0 group-hover:opacity-100 transition-opacity duration-200'
+              className='opacity-100 transition-opacity duration-200'
               content={
                 <Button
                   isIconOnly
                   radius='full'
                   size='sm'
                   variant='light'
-                  onClick={() => {
-                    setPreview("")
-                    imageStore.removeImage(preview)
-                    if (fileInputRef.current) {
-                      fileInputRef.current.value = ""
-                    }
-                  }}
+                  onClick={() => handleDeleteImage(preview)}
                   className='bg-white/80 backdrop-blur-sm hover:bg-danger-50'
                 >
                   <Icon icon='mdi:close' className='w-3 h-3 text-danger' />
@@ -278,12 +285,15 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
             >
               <img
                 src={preview}
-                alt='Preview'
+                alt={`Preview ${index + 1}`}
                 className='w-16 h-16 object-cover rounded-small border-small border-default-200/50 transition-transform duration-200 hover:scale-105 cursor-pointer'
-                onClick={() => setIsPreviewModalOpen(true)}
+                onClick={() => {
+                  setSelectedPreview(preview)
+                  setIsPreviewModalOpen(true)
+                }}
               />
             </Badge>
-          )}
+          ))}
         </div>
 
         <Textarea
@@ -386,7 +396,10 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       {/* 图片预览Modal */}
       <Modal
         isOpen={isPreviewModalOpen}
-        onClose={() => setIsPreviewModalOpen(false)}
+        onClose={() => {
+          setIsPreviewModalOpen(false)
+          setSelectedPreview("")
+        }}
         size='4xl'
         classNames={{
           wrapper: "items-center",
@@ -394,13 +407,16 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       >
         <ModalContent>
           <div className='relative'>
-            <img src={preview} alt='Preview' className='w-full h-full object-contain max-h-[80vh]' />
+            <img src={selectedPreview} alt='Preview' className='w-full h-full object-contain max-h-[80vh]' />
             <Button
               isIconOnly
               className='absolute top-2 right-2'
               color='danger'
               variant='light'
-              onClick={() => setIsPreviewModalOpen(false)}
+              onClick={() => {
+                setIsPreviewModalOpen(false)
+                setSelectedPreview("")
+              }}
             >
               <Icon icon='mdi:close' className='w-6 h-6' />
             </Button>
