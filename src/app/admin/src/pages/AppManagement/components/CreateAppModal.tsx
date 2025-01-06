@@ -120,17 +120,19 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   const [showSuccess, setShowSuccess] = useState(false)
   const [newAppId, setNewAppId] = useState<string>("")
   const [loading, setLoading] = useState(false)
-  const [selectedTab, setSelectedTab] = useState("official")
+  const [selectedTab, setSelectedTab] = useState("start-from-scratch")
+  const [officialTemplateTab, setOfficialTemplateTab] = useState("form")
   const [platformTemplates, setPlatformTemplates] = useState([])
+  const [templateSource, setTemplateSource] = useState("official")
   const navigate = useNavigate()
   const { useApps } = useAppStore()
   const { refetch } = useApps()
 
   useEffect(() => {
-    if (selectedTab === "platform") {
+    if (templateSource === "platform") {
       loadPlatformTemplates()
     }
-  }, [selectedTab])
+  }, [templateSource])
 
   const loadPlatformTemplates = async () => {
     try {
@@ -169,7 +171,6 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
       setSelectedTemplate("")
       onClose()
 
-      // 触发刷新
       await refetch()
 
       triggerConfetti()
@@ -205,6 +206,151 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
     }
   }
 
+  const renderStartFromScratch = () => (
+    <Card
+      isPressable
+      isHoverable
+      className={`border-2 transition-all duration-200 ${selectedTemplate === "" ? "border-primary" : "border-transparent"}`}
+      onPress={() => setSelectedTemplate("")}
+    >
+      <CardBody className='p-4'>
+        <div className='flex items-center gap-4'>
+          <div className='p-3 rounded-lg bg-primary/10'>
+            <Icon icon='mdi:view-grid-outline' className='w-6 h-6 text-primary' />
+          </div>
+          <div>
+            <h4 className='text-base font-semibold'>从零开始</h4>
+            <p className='text-sm text-default-500'>从零开始构建您的应用</p>
+          </div>
+        </div>
+      </CardBody>
+    </Card>
+  )
+
+  const renderTemplateContent = () => (
+    <Tabs
+      selectedKey={templateSource}
+      onSelectionChange={(key) => setTemplateSource(key.toString())}
+      color='primary'
+      variant='underlined'
+      classNames={{
+        tabList: "gap-6",
+        cursor: "w-full",
+      }}
+    >
+      <Tab
+        key='official'
+        title={
+          <div className='flex items-center gap-2'>
+            <Icon icon='solar:star-bold' className='w-4 h-4' />
+            <span>官方模板</span>
+          </div>
+        }
+      >
+        <div className='mt-4'>
+          <Tabs
+            selectedKey={officialTemplateTab}
+            onSelectionChange={(key) => setOfficialTemplateTab(key.toString())}
+            variant='light'
+            color='primary'
+            classNames={{
+              tabList: "gap-4",
+              cursor: "w-full",
+            }}
+          >
+            <Tab key='form' title='表单应用'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
+                {Object.entries(templates)
+                  .filter(([_, template]) => template.type === 'form')
+                  .map(([id, template]) => (
+                    <Card
+                      key={id}
+                      isPressable
+                      isHoverable
+                      className={`border-2 transition-all duration-200 ${selectedTemplate === id ? "border-primary" : "border-transparent"}`}
+                      onPress={() => setSelectedTemplate(id)}
+                    >
+                      <CardBody className='p-4'>
+                        <div className='flex items-center gap-4'>
+                          <div className={`p-3 rounded-lg ${selectedTemplate === id ? "bg-primary/10" : "bg-default-100"}`}>
+                            <Icon icon={template.icon} className={`w-6 h-6 ${getTemplateColor(id)}`} />
+                          </div>
+                          <div>
+                            <h4 className='text-base font-semibold'>{template.name}</h4>
+                            <p className='text-sm text-default-500'>{template.description}</p>
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  ))}
+              </div>
+            </Tab>
+            <Tab key='ai' title='智能应用'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
+                {Object.entries(templates)
+                  .filter(([_, template]) => template.type === 'ai')
+                  .map(([id, template]) => (
+                    <Card
+                      key={id}
+                      isPressable
+                      isHoverable
+                      className={`border-2 transition-all duration-200 ${selectedTemplate === id ? "border-primary" : "border-transparent"}`}
+                      onPress={() => setSelectedTemplate(id)}
+                    >
+                      <CardBody className='p-4'>
+                        <div className='flex items-center gap-4'>
+                          <div className={`p-3 rounded-lg ${selectedTemplate === id ? "bg-primary/10" : "bg-default-100"}`}>
+                            <Icon icon={template.icon} className={`w-6 h-6 ${getTemplateColor(id)}`} />
+                          </div>
+                          <div>
+                            <h4 className='text-base font-semibold'>{template.name}</h4>
+                            <p className='text-sm text-default-500'>{template.description}</p>
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  ))}
+              </div>
+            </Tab>
+          </Tabs>
+        </div>
+      </Tab>
+      <Tab
+        key='platform'
+        title={
+          <div className='flex items-center gap-2'>
+            <Icon icon='solar:cloud-bold' className='w-4 h-4' />
+            <span>平台模板</span>
+          </div>
+        }
+      >
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
+          {platformTemplates.map((template) => (
+            <Card
+              key={template.id}
+              isPressable
+              isHoverable
+              className={`border-2 transition-all duration-200 ${selectedTemplate === template.id ? "border-primary" : "border-transparent"}`}
+              onPress={() => setSelectedTemplate(template.id)}
+            >
+              <CardBody className='p-4'>
+                <div className='flex items-center gap-4'>
+                  <div className={`p-3 rounded-lg ${selectedTemplate === template.id ? "bg-primary/10" : "bg-default-100"}`}>
+                    <Icon icon='mdi:cloud-outline' className='w-6 h-6 text-primary' />
+                  </div>
+                  <div>
+                    <h4 className='text-base font-semibold'>{template.name}</h4>
+                    <p className='text-sm text-default-500'>更新于: {new Date(template.updatedAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          ))}
+        </div>
+      </Tab>
+    </Tabs>
+  )
+
   return (
     <>
       <Modal
@@ -235,104 +381,34 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
                 selectedKey={selectedTab}
                 onSelectionChange={(key) => setSelectedTab(key.toString())}
                 color='primary'
-                variant='underlined'
+                variant='bordered'
                 classNames={{
                   tabList: "gap-6",
                   cursor: "w-full",
+                  tab: "flex-1",
                 }}
               >
                 <Tab
-                  key='official'
+                  key='start-from-scratch'
                   title={
-                    <div className='flex items-center gap-2'>
-                      <Icon icon='solar:star-bold' className='w-4 h-4' />
-                      <span>官方模板</span>
+                    <div className='flex items-center gap-2 justify-center'>
+                      <Icon icon='mdi:file-outline' className='w-4 h-4' />
+                      <span>从零开始</span>
                     </div>
                   }
                 >
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                    {/* 空白模板卡片 */}
-                    <Card
-                      isPressable
-                      isHoverable
-                      className={`border-2 transition-all duration-200 ${selectedTemplate === "" ? "border-primary" : "border-transparent"}`}
-                      onPress={() => setSelectedTemplate("")}
-                    >
-                      <CardBody className='p-4'>
-                        <div className='flex items-center gap-4'>
-                          <div className='p-3 rounded-lg bg-primary/10'>
-                            <Icon icon='mdi:view-grid-outline' className='w-6 h-6 text-primary' />
-                          </div>
-                          <div>
-                            <h4 className='text-base font-semibold'>空白模板</h4>
-                            <p className='text-sm text-default-500'>从零开始构建您的应用</p>
-                          </div>
-                        </div>
-                      </CardBody>
-                    </Card>
-
-                    {/* 其他模板卡片 */}
-                    {Object.entries(templates).map(([id, template]) => (
-                      <Card
-                        key={id}
-                        isPressable
-                        isHoverable
-                        className={`border-2 transition-all duration-200 ${selectedTemplate === id ? "border-primary" : "border-transparent"}`}
-                        onPress={() => setSelectedTemplate(id)}
-                      >
-                        <CardBody className='p-4'>
-                          <div className='flex items-center gap-4'>
-                            <div
-                              className={`p-3 rounded-lg ${selectedTemplate === id ? "bg-primary/10" : "bg-default-100"}`}
-                            >
-                              <Icon icon={getTemplateIcon(id)} className={`w-6 h-6 ${getTemplateColor(id)}`} />
-                            </div>
-                            <div>
-                              <h4 className='text-base font-semibold'>{template.name}</h4>
-                              <p className='text-sm text-default-500'>{template.description}</p>
-                            </div>
-                          </div>
-                        </CardBody>
-                      </Card>
-                    ))}
-                  </div>
+                  <div className='mt-4'>{renderStartFromScratch()}</div>
                 </Tab>
                 <Tab
-                  key='platform'
+                  key='start-from-template'
                   title={
-                    <div className='flex items-center gap-2'>
-                      <Icon icon='solar:cloud-bold' className='w-4 h-4' />
-                      <span>平台模板</span>
+                    <div className='flex items-center gap-2 justify-center'>
+                      <Icon icon='mdi:template-outline' className='w-4 h-4' />
+                      <span>从模板开始</span>
                     </div>
                   }
                 >
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                    {platformTemplates.map((template) => (
-                      <Card
-                        key={template.id}
-                        isPressable
-                        isHoverable
-                        className={`border-2 transition-all duration-200 ${selectedTemplate === template.id ? "border-primary" : "border-transparent"}`}
-                        onPress={() => setSelectedTemplate(template.id)}
-                      >
-                        <CardBody className='p-4'>
-                          <div className='flex items-center gap-4'>
-                            <div
-                              className={`p-3 rounded-lg ${selectedTemplate === template.id ? "bg-primary/10" : "bg-default-100"}`}
-                            >
-                              <Icon icon='mdi:cloud-outline' className='w-6 h-6 text-primary' />
-                            </div>
-                            <div>
-                              <h4 className='text-base font-semibold'>{template.name}</h4>
-                              <p className='text-sm text-default-500'>
-                                更新于: {new Date(template.updatedAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        </CardBody>
-                      </Card>
-                    ))}
-                  </div>
+                  <div className='mt-4'>{renderTemplateContent()}</div>
                 </Tab>
               </Tabs>
             </div>
