@@ -147,7 +147,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
     <div className='relative h-[calc(100vh-200px)] rounded-lg overflow-hidden mt-2'>
       <motion.div
         initial={false}
-        animate={{ width: appCodeStore.viewState.isPanelCollapsed ? "40px" : "calc(100%)" }}
+        animate={{ width: appCodeStore.viewState.isPanelCollapsed ? "40px" : "calc(100%-80px)" }}
         className='bg-white/80 backdrop-blur-sm rounded-lg shadow-sm h-full'
       >
         <div className='flex h-full'>
