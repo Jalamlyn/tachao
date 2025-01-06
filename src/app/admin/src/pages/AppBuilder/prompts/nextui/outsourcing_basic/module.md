@@ -7,31 +7,43 @@ const {
 const columns = [
   {
     key: "id",
-    label: "计划编号"
+    label: "加工单号"
   },
   {
     key: "name", 
-    label: "计划名称"
+    label: "加工单名称"
   },
   {
     key: "product",
-    label: "产品名称"
+    label: "加工产品"
   },
   {
-    key: "workshop",
-    label: "工序名称" 
+    key: "supplier",
+    label: "加工商"
+  },
+  {
+    key: "process",
+    label: "加工工序"
   },
   {
     key: "planQuantity",
-    label: "计划数量"
+    label: "计划加工数量"
   },
   {
-    key: "finishQuantity", 
-    label: "完成数量"
+    key: "processedQuantity", 
+    label: "已加工数量"
   },
   {
     key: "qualifiedQuantity",
     label: "合格数量"
+  },
+  {
+    key: "price",
+    label: "加工单价"
+  },
+  {
+    key: "amount",
+    label: "加工金额"
   },
   {
     key: "status",
@@ -43,7 +55,7 @@ const columns = [
   },
   {
     key: "endDate", 
-    label: "结束日期"
+    label: "完成日期"
   },
   {
     key: "actions",
@@ -53,15 +65,26 @@ const columns = [
 
 // 状态颜色映射
 const statusColorMap = {
-  pending: "warning",
-  processing: "primary",
-  completed: "success",
-  cancelled: "danger"
+  pending: "warning", // 待发货
+  processing: "primary", // 加工中
+  inspecting: "secondary", // 质检中
+  completed: "success", // 已完成
+  rejected: "danger" // 已退回
+};
+
+// 状态文本映射
+const statusTextMap = {
+  pending: "待发货",
+  processing: "加工中",
+  inspecting: "质检中",
+  completed: "已完成",
+  rejected: "已退回"
 };
 
 const constants = {
   columns,
-  statusColorMap
+  statusColorMap,
+  statusTextMap
 };
 
 context.wpm.export('module_table_constants', constants);

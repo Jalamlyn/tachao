@@ -15,37 +15,46 @@ class TableStore {
     // 初始化示例数据
     this.items = [
       {
-        id: "PLAN-001",
-        name: "第10月生产计划2023.10B05",
+        id: "OEM-001",
+        name: "10月抛光加工计划",
         product: "镀锡铜覆钢圆钢 BH-GW-R8",
-        workshop: "抛光",
+        supplier: "常州金属加工厂",
+        process: "抛光",
         planQuantity: 2000,
-        finishQuantity: 1850,
-        qualifiedQuantity: 1850,
+        processedQuantity: 1850,
+        qualifiedQuantity: 1800,
+        price: 2.5,
+        amount: 4625,
         status: "completed",
         startDate: "2023-10-01",
         endDate: "2023-10-31"
       },
       {
-        id: "PLAN-002", 
-        name: "第9月生产计划2023.09B02",
+        id: "OEM-002", 
+        name: "9月抛光加工计划",
         product: "镀锡铜覆钢圆钢 BH-GW-R10",
-        workshop: "抛光",
+        supplier: "苏州精密加工厂",
+        process: "抛光",
         planQuantity: 1500,
-        finishQuantity: 1200,
+        processedQuantity: 1200,
         qualifiedQuantity: 1150,
+        price: 3.0,
+        amount: 3600,
         status: "processing",
         startDate: "2023-09-26",
         endDate: "2023-11-02"
       },
       {
-        id: "PLAN-003",
-        name: "第8月生产计划2023.08B01", 
+        id: "OEM-003",
+        name: "8月抛光加工计划", 
         product: "镀锡铜覆钢圆钢 BH-GW-R12",
-        workshop: "抛光",
+        supplier: "无锡金属制品厂",
+        process: "抛光",
         planQuantity: 1000,
-        finishQuantity: 0,
+        processedQuantity: 0,
         qualifiedQuantity: 0,
+        price: 3.5,
+        amount: 0,
         status: "pending",
         startDate: "2023-08-15",
         endDate: "2023-09-15"
@@ -74,16 +83,58 @@ class TableStore {
 
   getStatistics() {
     const total = this.items.reduce((acc, item) => acc + item.planQuantity, 0);
-    const finished = this.items.reduce((acc, item) => acc + item.finishQuantity, 0);
+    const processed = this.items.reduce((acc, item) => acc + item.processedQuantity, 0);
     const qualified = this.items.reduce((acc, item) => acc + item.qualifiedQuantity, 0);
+    const totalAmount = this.items.reduce((acc, item) => acc + item.amount, 0);
     
     return {
       totalPlan: total,
-      totalFinish: finished,
+      totalProcessed: processed,
       totalQualified: qualified,
-      finishRate: total ? (finished / total * 100).toFixed(2) : 0,
-      qualifiedRate: finished ? (qualified / finished * 100).toFixed(2) : 0
+      totalAmount: totalAmount,
+      processRate: total ? (processed / total * 100).toFixed(2) : 0,
+      qualifiedRate: processed ? (qualified / processed * 100).toFixed(2) : 0
     };
+  }
+
+  // 获取供应商统计
+  getSupplierStats() {
+    const stats = {};
+    this.items.forEach(item => {
+      if (!stats[item.supplier]) {
+        stats[item.supplier] = {
+          totalQuantity: 0,
+          totalAmount: 0,
+          qualifiedRate: 0
+        };
+      }
+      stats[item.supplier].totalQuantity += item.processedQuantity;
+      stats[item.supplier].totalAmount += item.amount;
+      if (item.processedQuantity > 0) {
+        stats[item.supplier].qualifiedRate = (item.qualifiedQuantity / item.processedQuantity * 100).toFixed(2);
+      }
+    });
+    return stats;
+  }
+
+  // 获取工序统计
+  getProcessStats() {
+    const stats = {};
+    this.items.forEach(item => {
+      if (!stats[item.process]) {
+        stats[item.process] = {
+          totalQuantity: 0,
+          totalAmount: 0,
+          averagePrice: 0
+        };
+      }
+      stats[item.process].totalQuantity += item.processedQuantity;
+      stats[item.process].totalAmount += item.amount;
+      if (stats[item.process].totalQuantity > 0) {
+        stats[item.process].averagePrice = (stats[item.process].totalAmount / stats[item.process].totalQuantity).toFixed(2);
+      }
+    });
+    return stats;
   }
 }
 
