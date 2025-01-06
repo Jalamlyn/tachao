@@ -2,6 +2,7 @@ import { getMetadata } from "@/service/apis/metadata"
 import { initialAIResponse } from "../../prompts/initTemplate"
 import { templates } from "../../prompts/templates"
 import { AppCodeStore, Version, AIGenerationResult } from "../types"
+
 async function checkAppNameExists(name: string): Promise<boolean> {
   const appIndexResult = await getMetadata(["app_index"])
   const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
@@ -125,62 +126,95 @@ export async function loadApp(this: AppCodeStore, appId: string) {
   this.setAppId(appId)
 
   try {
-    let version: Version | null = null
-    const cached = this.loadFromStorage()
-
-    if (cached) {
-      version = cached
-    } else {
-      const appResult = await getMetadata([`${appId}`])
-      if (!appResult.data?.[0]?.value) {
-        throw new Error("App not found")
-      }
-
-      const appData = JSON.parse(appResult.data[0].value)
-      const { app } = appData
-
-      const moduleIds = Object.keys(app.modules)
-      const moduleResults = await Promise.all(moduleIds.map((moduleId) => getMetadata([moduleId])))
-
-      const modules = {}
-      moduleResults.forEach((result, index) => {
-        const moduleId = moduleIds[index]
-        if (result.data?.[0]?.value) {
-          const moduleData = JSON.parse(result.data[0].value)
-          modules[moduleId] = {
-            metadata: result.data[0].value,
-            data: moduleData,
-            updatedAt: new Date().toISOString(),
-          }
-        }
-      })
-
-      version = {
-        timestamp: Date.now(),
-        app,
-        modules,
-      }
-
-      this.saveToStorage()
+    // 1. 首先获取服务器端的应用元数据
+    const appResult = await getMetadata([`${appId}`])
+    if (!appResult.data?.[0]?.value) {
+      throw new Error("App not found")
     }
 
-    if (version) {
-      for (const [moduleId, moduleWrapper] of Object.entries(version.modules)) {
+    const serverAppData = JSON.parse(appResult.data[0].value)
+    const serverVersion = serverAppData.app.version
+
+    // 2. 检查本地缓存
+    const cached = this.loadFromStorage()
+    const now = Date.now()
+    const CACHE_EXPIRE_TIME = 60 * 60 * 1000 // 1小时过期
+
+    // 3. 判断是否可以使用缓存
+    const canUseCache = cached && 
+      cached.serverVersion === serverVersion && 
+      cached.lastSyncTime && 
+      (now - cached.lastSyncTime) < CACHE_EXPIRE_TIME
+
+    if (canUseCache) {
+      // 使用缓存数据
+      console.log("Using cached data")
+      for (const [moduleId, moduleWrapper] of Object.entries(cached.modules)) {
         if (!moduleWrapper.data.compiledCode) {
           moduleWrapper.data.compiledCode = await this.compileCode(moduleWrapper.data.code)
         }
       }
-
-      this.addVersion(version)
+      this.addVersion(cached)
+      return cached
     }
 
-    return version
+    // 4. 从服务器加载完整数据
+    console.log("Loading from server")
+    const moduleIds = Object.keys(serverAppData.app.modules)
+    const moduleResults = await Promise.all(
+      moduleIds.map((moduleId) => getMetadata([moduleId]))
+    )
+
+    const modules = {}
+    moduleResults.forEach((result, index) => {
+      const moduleId = moduleIds[index]
+      if (result.data?.[0]?.value) {
+        const moduleData = JSON.parse(result.data[0].value)
+        modules[moduleId] = {
+          metadata: result.data[0].value,
+          data: moduleData,
+          updatedAt: new Date().toISOString(),
+        }
+      }
+    })
+
+    // 5. 创建新版本
+    const newVersion: Version = {
+      timestamp: now,
+      app: serverAppData.app,
+      modules,
+      serverVersion,
+      lastSyncTime: now
+    }
+
+    // 6. 编译代码
+    for (const [moduleId, moduleWrapper] of Object.entries(newVersion.modules)) {
+      if (!moduleWrapper.data.compiledCode) {
+        moduleWrapper.data.compiledCode = await this.compileCode(moduleWrapper.data.code)
+      }
+    }
+
+    // 7. 保存到缓存
+    this.addVersion(newVersion)
+    this.saveToStorage()
+
+    return newVersion
   } catch (error) {
     console.error("Error in loadApp:", error)
+    
+    // 8. 错误处理：如果服务器请求失败但有缓存，使用缓存
+    const cached = this.loadFromStorage()
+    if (cached) {
+      console.warn("Using cached data due to server error")
+      this.addVersion(cached)
+      return cached
+    }
+    
     throw error
   }
 }
- export async function generateInitialVersion(
+
+export async function generateInitialVersion(
   this: AppCodeStore,
   aiResponse: string,
   name = "New App"
@@ -247,6 +281,7 @@ export async function loadApp(this: AppCodeStore, appId: string) {
     }
   }
 }
+
 export async function createApp(this: AppCodeStore, name: string, templateId: string = ""): Promise<string> {
   const exists = await checkAppNameExists(name)
   if (exists) {
@@ -278,4 +313,17 @@ export async function createApp(this: AppCodeStore, name: string, templateId: st
     this.clear()
     throw error
   }
+}
+
+// 添加手动刷新方法
+export async function refreshApp(this: AppCodeStore) {
+  if (!this.appId) {
+    throw new Error("No app id")
+  }
+
+  // 清除缓存
+  this.clearStorage()
+  
+  // 重新加载
+  return this.loadApp(this.appId)
 }

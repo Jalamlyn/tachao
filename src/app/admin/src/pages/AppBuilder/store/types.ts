@@ -34,6 +34,8 @@ export interface Version {
   timestamp: number
   app: App
   modules: Record<string, ModuleWrapper>
+  serverVersion?: number  // 添加服务器版本号
+  lastSyncTime?: number  // 添加最后同步时间
 }
 
 export interface AIGenerationResult {
