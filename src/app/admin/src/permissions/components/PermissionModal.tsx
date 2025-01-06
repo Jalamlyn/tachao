@@ -6,9 +6,7 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Input,
   Chip,
-  useDisclosure,
   Select,
   SelectItem,
   Spinner,
@@ -43,7 +41,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   const [accounts, setAccounts] = useState<any[]>([])
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false)
   const [selectedRoles, setSelectedRoles] = useState<string[]>([])
-  const [isPublic, setIsPublic] = useState(false)
+  const [isPublic, setIsPublic] = useState(true) // 默认为公开访问
 
   useEffect(() => {
     if (isOpen) {
@@ -68,7 +66,8 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   const loadPermissions = async () => {
     const data = await getPermissions(resourceId)
     setPermissions(data)
-    setIsPublic(data?.isPublic || false)
+    // 如果没有明确设置isPublic，则默认为true
+    setIsPublic(data?.isPublic !== false)
   }
 
   const handleAddPermission = async () => {
@@ -83,9 +82,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
     }
 
     try {
-      // 如果是模板资源，使用多角色权限
       if (resourceType === "template") {
-        // 确保权限的包含关系
         const roles = new Set(selectedRoles)
         if (roles.has("creator")) {
           roles.add("editor")
@@ -95,7 +92,6 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
         }
         await grantPermission(resourceId, newAccountId, Array.from(roles))
       } else {
-        // 保持原有逻辑兼容性
         await grantPermission(resourceId, newAccountId, "viewer")
       }
       await loadPermissions()
@@ -126,7 +122,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
     } catch (error) {
       console.error("Error setting public access:", error)
       message.error("设置公开访问状态失败")
-      setIsPublic(!isChecked) // 恢复状态
+      setIsPublic(!isChecked)
     }
   }
 
@@ -135,28 +131,23 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
       const newRoles = new Set(prev)
 
       if (role === "creator") {
-        // 如果选中creator，自动添加editor和viewer
         if (newRoles.has(role)) {
           newRoles.delete(role)
-          // 保留editor和viewer权限
         } else {
           newRoles.add(role)
           newRoles.add("editor")
           newRoles.add("viewer")
         }
       } else if (role === "editor") {
-        // 如果有creator权限，不允许取消editor
         if (!newRoles.has("creator")) {
           if (newRoles.has(role)) {
             newRoles.delete(role)
-            // 保留viewer权限
           } else {
             newRoles.add(role)
             newRoles.add("viewer")
           }
         }
       } else if (role === "viewer") {
-        // 如果有editor或creator权限，不允许取消viewer
         if (!newRoles.has("editor") && !newRoles.has("creator")) {
           if (newRoles.has(role)) {
             newRoles.delete(role)
@@ -170,7 +161,6 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
     })
   }
 
-  // 过滤掉已经有权限的账号
   const availableAccounts = accounts.filter(
     (account) => !permissions?.accounts.some((perm) => perm.accountId === account.id)
   )
@@ -237,7 +227,6 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
             <ModalHeader className='flex flex-col gap-1'>管理访问权限 - {resourceTitle}</ModalHeader>
             <ModalBody>
               <div className='space-y-4'>
-                {/* 公开访问开关 */}
                 <div className='flex justify-between items-center p-3 rounded-lg border border-default-200'>
                   <div>
                     <h3 className='text-medium font-semibold'>公开访问</h3>

@@ -29,7 +29,16 @@ export const getResourcePermissions = async (resourceType: ResourceType): Promis
   try {
     const result = await getMetadata([key])
     const data = result.data?.[0]?.value
-    return data ? JSON.parse(data) : {}
+    const permissions = data ? JSON.parse(data) : {}
+    
+    // 确保每个资源都有默认的权限设置
+    Object.keys(permissions).forEach(resourceId => {
+      if (!permissions[resourceId].hasOwnProperty('isPublic')) {
+        permissions[resourceId].isPublic = true // 设置默认为公开访问
+      }
+    })
+    
+    return permissions
   } catch (error) {
     console.error("Error fetching permissions:", error)
     return {}
@@ -42,6 +51,12 @@ export const setResourcePermissions = async (
 ): Promise<void> => {
   const key = getPermissionMetadataKey(resourceType)
   try {
+    // 确保新添加的资源默认为公开访问
+    Object.keys(permissions).forEach(resourceId => {
+      if (!permissions[resourceId].hasOwnProperty('isPublic')) {
+        permissions[resourceId].isPublic = true
+      }
+    })
     await setMetadata(key, JSON.stringify(permissions))
   } catch (error) {
     console.error("Error setting permissions:", error)
@@ -64,12 +79,17 @@ export const hasPermission = async (resourceType: ResourceType, resourceId: stri
   const permissions = await getResourcePermissions(resourceType)
   const resourcePermission = permissions[resourceId]
 
-  // 3. 检查是否公开访问
-  if (resourcePermission?.isPublic) {
+  // 3. 如果资源不存在权限设置，默认为公开访问
+  if (!resourcePermission) {
     return true
   }
 
-  // 4. 检查具体权限
+  // 4. 检查是否公开访问（如果没有设置isPublic，默认为true）
+  if (resourcePermission.isPublic !== false) {
+    return true
+  }
+
+  // 5. 检查具体权限
   return resourcePermission?.accounts.some((acc) => acc.accountId === accountId) || false
 }
 
@@ -86,11 +106,11 @@ export const hasTemplatePermission = async (
   const templatePermission = permissions[templateId]
 
   if (!templatePermission) {
-    return false
+    return true // 默认公开访问
   }
 
-  // 检查是否公开访问
-  if (templatePermission.isPublic) {
+  // 检查是否公开访问（如果没有设置isPublic，默认为true）
+  if (templatePermission.isPublic !== false) {
     return true
   }
 
@@ -139,7 +159,7 @@ export const addPermission = async (
       resourceType,
       resourceId,
       accounts: [],
-      isPublic: false,
+      isPublic: true, // 新建资源默认公开访问
     }
   }
 
@@ -221,7 +241,6 @@ export const checkPermissionRequestStatus = async (resourceType: string, resourc
   )
 }
 
-// 新增: 设置资源的公开访问状态
 export const setResourcePublicAccess = async (
   resourceType: ResourceType,
   resourceId: string,
@@ -234,7 +253,7 @@ export const setResourcePublicAccess = async (
       resourceType,
       resourceId,
       accounts: [],
-      isPublic: false,
+      isPublic: true, // 新建资源默认公开访问
     }
   }
 
@@ -242,9 +261,7 @@ export const setResourcePublicAccess = async (
   await setResourcePermissions(resourceType, permissions)
 }
 
-// 新增订阅相关方法
 export const subscriptionService = {
-  // 获取订阅信息
   async getSubscription(orgId: string): Promise<Subscription | null> {
     try {
       const result = await getMetadata([METADATA_KEYS.SUBSCRIPTION(orgId)])
@@ -255,20 +272,16 @@ export const subscriptionService = {
     }
   },
 
-  // 更新订阅信息
   async updateSubscription(orgId: string, subscription: Subscription): Promise<void> {
     try {
-      // 获取当前订阅信息
       const currentSubscription = await this.getSubscription(orgId)
 
-      // 如果存在当前订阅且未过期，则累加时间
       if (currentSubscription && new Date(currentSubscription.expireDate) > new Date()) {
         const currentExpireDate = new Date(currentSubscription.expireDate)
-        const oneMonth = 30 * 24 * 60 * 60 * 1000 // 30天的毫秒数
+        const oneMonth = 30 * 24 * 60 * 60 * 1000
         subscription.expireDate = new Date(currentExpireDate.getTime() + oneMonth).toISOString()
       }
 
-      // 记录订阅历史
       await this.addSubscriptionHistory(orgId, {
         type: subscription.type,
         price: subscription.price,
@@ -276,10 +289,8 @@ export const subscriptionService = {
         expireDate: subscription.expireDate,
       })
 
-      // 更新订阅信息
       await setMetadata(METADATA_KEYS.SUBSCRIPTION(orgId), JSON.stringify(subscription))
 
-      // 记录购买费用
       const costRecords = await getMetadata(["ai-cost-records"])
       const existingRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
 
@@ -291,7 +302,7 @@ export const subscriptionService = {
         detail: {
           subscription: {
             plan: subscription.type === "personal" ? "个人版" : "企业版",
-            duration: 1, // 月数
+            duration: 1,
             features: subscription.features,
           },
         },
@@ -304,7 +315,6 @@ export const subscriptionService = {
     }
   },
 
-  // 获取账号使用情况
   async getAccountUsage(orgId: string): Promise<AccountUsage | null> {
     try {
       const result = await getMetadata([METADATA_KEYS.ACCOUNT_USAGE(orgId)])
@@ -315,7 +325,6 @@ export const subscriptionService = {
     }
   },
 
-  // 更新账号使用情况
   async updateAccountUsage(orgId: string, usage: AccountUsage): Promise<void> {
     try {
       await setMetadata(METADATA_KEYS.ACCOUNT_USAGE(orgId), JSON.stringify(usage))
@@ -325,7 +334,6 @@ export const subscriptionService = {
     }
   },
 
-  // 添加订阅历史记录
   async addSubscriptionHistory(orgId: string, record: SubscriptionHistory): Promise<void> {
     try {
       const result = await getMetadata([METADATA_KEYS.SUBSCRIPTION_HISTORY(orgId)])
@@ -338,7 +346,6 @@ export const subscriptionService = {
     }
   },
 
-  // 检查订阅状态
   async checkSubscriptionStatus(orgId: string): Promise<{
     status: "active" | "expired" | "warning"
     message?: string
