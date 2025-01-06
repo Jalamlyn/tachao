@@ -107,6 +107,6 @@ const SidebarDrawer = observer(({
   );
 });
 
-wpm.export('comp_sidebar_drawer', SidebarDrawer);
+context.wpm.export('comp_sidebar_drawer', SidebarDrawer);
 </mo-ai-code>
 ```

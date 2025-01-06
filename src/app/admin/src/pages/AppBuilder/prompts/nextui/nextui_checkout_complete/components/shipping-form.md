@@ -8,8 +8,8 @@ const {
   message,
   cn
 } = context;
-const checkoutStore = await wpm.import('store_checkout');
-const checkoutModule = await wpm.import('module_checkout');
+const checkoutStore = await context.wpm.import('store_checkout');
+const checkoutModule = await context.wpm.import('module_checkout');
 
 const { Input, Button, Autocomplete, AutocompleteItem, Avatar } = NextUI;
 
@@ -156,6 +156,6 @@ const ShippingForm = observer(({variant = "flat", className, hideTitle}) => {
   );
 });
 
-wpm.export('comp_shipping_form', ShippingForm);
+context.wpm.export('comp_shipping_form', ShippingForm);
 </mo-ai-code>
 ```

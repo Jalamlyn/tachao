@@ -11,6 +11,6 @@ const AcmeIcon = ({ size = 32, className, ...props }) => (
   </div>
 );
 
-wpm.export('comp_acme_icon', AcmeIcon);
+context.wpm.export('comp_acme_icon', AcmeIcon);
 </mo-ai-code>
 ```

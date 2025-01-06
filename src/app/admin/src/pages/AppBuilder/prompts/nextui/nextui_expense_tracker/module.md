@@ -15,7 +15,7 @@ const {
   appId
 } = context;
 
-const expenseStore = await wpm.import('store_expense');
+const expenseStore = await context.wpm.import('store_expense');
 
 class ExpenseModule {
   // 处理自然语言输入
@@ -154,6 +154,6 @@ class ExpenseModule {
 }
 
 const module = new ExpenseModule();
-wpm.export('module_expense', module);
+context.wpm.export('module_expense', module);
 </mo-ai-code>
 ```

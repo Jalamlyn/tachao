@@ -34,5 +34,5 @@ const TablePagination = observer(({
   );
 });
 
-wpm.export('comp_table_pagination', TablePagination);
+context.wpm.export('comp_table_pagination', TablePagination);
 </mo-ai-code>

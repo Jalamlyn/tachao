@@ -12,7 +12,7 @@ const {
 
 const { useState } = React;
 const { Input, Button, Select, SelectItem } = NextUI;
-const expenseStore = await wpm.import('store_expense');
+const expenseStore = await context.wpm.import('store_expense');
 
 const ExpenseForm = observer(() => {
   const [saving, setSaving] = useState(false);
@@ -155,6 +155,6 @@ const ExpenseForm = observer(() => {
   );
 });
 
-wpm.export('comp_expense_form', ExpenseForm);
+context.wpm.export('comp_expense_form', ExpenseForm);
 </mo-ai-code>
 ```

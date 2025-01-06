@@ -89,5 +89,5 @@ const ProfileSetting = observer(({className, ...props}) => (
   </div>
 ));
 
-wpm.export('page_profile_setting', ProfileSetting);
+context.wpm.export('page_profile_setting', ProfileSetting);
 </mo-ai-code>

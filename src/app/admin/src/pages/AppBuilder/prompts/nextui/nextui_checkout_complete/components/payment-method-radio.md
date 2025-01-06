@@ -50,5 +50,5 @@ const PaymentMethodRadio = observer(({label, description, icon, isExpired, isRec
   );
 });
 
-wpm.export('comp_payment_method_radio', PaymentMethodRadio);
+context.wpm.export('comp_payment_method_radio', PaymentMethodRadio);
 </mo-ai-code>

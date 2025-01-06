@@ -34,6 +34,6 @@ const Status = observer(({ status }) => {
   );
 });
 
-wpm.export('comp_status', Status);
+context.wpm.export('comp_status', Status);
 </mo-ai-code>
 ```

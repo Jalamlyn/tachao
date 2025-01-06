@@ -19,7 +19,7 @@ const {
   Spacer,
 } = NextUI;
 
-const TeamManageTable = await wpm.import('comp_team_manage_table');
+const TeamManageTable = await context.wpm.import('comp_team_manage_table');
 
 const roleOptions = [
   {label: "成员", value: "member", description: "团队成员"},
@@ -115,5 +115,5 @@ const TeamSetting = observer(({className, ...props}) => (
   </div>
 ));
 
-wpm.export('page_team_setting', TeamSetting);
+context.wpm.export('page_team_setting', TeamSetting);
 </mo-ai-code>

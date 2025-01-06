@@ -23,7 +23,7 @@ const {
 } = NextUI
 
 // 导入首页模块
-const HomePage = await wpm.import('page_home')
+const HomePage = await context.wpm.import('page_home')
 
 const App = observer(() => {
   return (
@@ -44,7 +44,7 @@ const App = observer(() => {
 });
 
 // 导出应用入口
-wpm.export(appId, App);
+context.wpm.export(appId, App);
 </mo-ai-code>
 
 <mo-ai-code type="page" name="page_home" title="欢迎页面">
@@ -80,7 +80,7 @@ const HomePage = observer(() => {
 });
 
 // 导出首页组件
-wpm.export('page_home', HomePage);
+context.wpm.export('page_home', HomePage);
 </mo-ai-code>
 \`\`\`
 `

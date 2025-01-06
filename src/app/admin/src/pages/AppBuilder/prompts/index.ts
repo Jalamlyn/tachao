@@ -54,6 +54,7 @@ ${ROUTER_PROMPTS.routingSystem}
 
 3. 代码类型说明：
 ${COMPONENT_PROMPTS.appEntry}
+${COMPONENT_PROMPTS.pageComponent}
 
 4. 技术规范：
 ${COMPONENT_PROMPTS.componentRules}`

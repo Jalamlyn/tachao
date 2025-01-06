@@ -42,6 +42,6 @@ const SwitchCell = observer(({label, description, classNames, ...props}) => (
   </CustomSwitch>
 ));
 
-wpm.export('comp_switch_cell', SwitchCell);
+context.wpm.export('comp_switch_cell', SwitchCell);
 </mo-ai-code>
 ```

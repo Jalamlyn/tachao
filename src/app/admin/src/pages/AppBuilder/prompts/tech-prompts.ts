@@ -31,17 +31,17 @@ export const TECH_PROMPTS = {
 
   wpm: `Web Package Manager (WPM) 使用规范:
 - 模块导入规范:
-  * 使用 await wpm.import(moduleName) 导入模块
+  * 使用 await context.wpm.import(moduleName) 导入模块
   * 在组件或模块初始化时导入依赖
   * 处理导入失败的异常情况
-  * 在使用 wpm.import 前必须确保模块已经导出
+  * 在使用 context.wpm.import 前必须确保模块已经导出
   * 检查所有导入模块的存在性
 
 - 模块导出规范:
-  * 页面模块: wpm.export('page_xxx', PageComponent)
-  * Store模块: wpm.export('store_xxx', storeInstance)
-  * Service模块: wpm.export('service_xxx', serviceInstance)
-  * 通用模块: wpm.export('module_xxx', moduleInstance)
+  * 页面模块: context.wpm.export('page_xxx', PageComponent)
+  * Store模块: context.wpm.export('store_xxx', storeInstance)
+  * Service模块: context.wpm.export('service_xxx', serviceInstance)
+  * 通用模块: context.wpm.export('module_xxx', moduleInstance)
   * 入口模块必须使用 context.appId
 
 - 依赖管理:
@@ -52,15 +52,15 @@ export const TECH_PROMPTS = {
 
 - 错误示例:
   * ❌ 错误 - 导入未创建的模块
-    const HomePage = await wpm.import('page_home'); // 如果 page_home 未导出则会失败
+    const HomePage = await context.wpm.import('page_home'); // 如果 page_home 未导出则会失败
   
   * ✅ 正确 - 先导出再导入
     // 在 page_home.js 中
     const HomePage = () => { /* ... */ };
-    wpm.export('page_home', HomePage);
+    context.wpm.export('page_home', HomePage);
     
     // 在其他文件中
-    const HomePage = await wpm.import('page_home'); // 现在可以安全导入
+    const HomePage = await context.wpm.import('page_home'); // 现在可以安全导入
 
 - 依赖检查清单:
   * 检查所有 import 的模块是否已创建

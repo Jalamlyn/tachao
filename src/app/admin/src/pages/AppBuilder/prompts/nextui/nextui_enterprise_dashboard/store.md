@@ -57,6 +57,6 @@ class TableStore {
 }
 
 const store = new TableStore();
-wpm.export('store_table', store);
+context.wpm.export('store_table', store);
 </mo-ai-code>
 ```

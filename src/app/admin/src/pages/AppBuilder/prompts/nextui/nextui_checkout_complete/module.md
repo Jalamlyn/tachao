@@ -52,6 +52,6 @@ class CheckoutModule {
 }
 
 const module = new CheckoutModule();
-wpm.export('module_checkout', module);
+context.wpm.export('module_checkout', module);
 </mo-ai-code>
 ```

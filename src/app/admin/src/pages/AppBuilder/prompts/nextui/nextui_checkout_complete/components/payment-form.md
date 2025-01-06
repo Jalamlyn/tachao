@@ -84,6 +84,6 @@ const PaymentForm = observer(({variant = "flat", className}) => {
   );
 });
 
-wpm.export('comp_payment_form', PaymentForm);
+context.wpm.export('comp_payment_form', PaymentForm);
 </mo-ai-code>
 ```

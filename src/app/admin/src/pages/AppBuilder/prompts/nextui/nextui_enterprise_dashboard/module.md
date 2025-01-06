@@ -40,6 +40,6 @@ const constants = {
   statusColorMap
 };
 
-wpm.export('module_table_constants', constants);
+context.wpm.export('module_table_constants', constants);
 </mo-ai-code>
 ```

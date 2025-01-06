@@ -254,5 +254,5 @@ const TeamManageTable = observer(() => {
   );
 });
 
-wpm.export('comp_team_manage_table', TeamManageTable);
+context.wpm.export('comp_team_manage_table', TeamManageTable);
 </mo-ai-code>

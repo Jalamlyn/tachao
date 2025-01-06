@@ -8,7 +8,7 @@ const {
 } = context;
 
 const { Input, Button, Popover, PopoverTrigger, PopoverContent, Radio, RadioGroup, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } = NextUI;
-const { columns } = await wpm.import('module_table_constants');
+const { columns } = await context.wpm.import('module_table_constants');
 
 const TableToolbar = observer(({
   filterValue,
@@ -132,5 +132,5 @@ const TableToolbar = observer(({
   );
 });
 
-wpm.export('comp_table_toolbar', TableToolbar);
+context.wpm.export('comp_table_toolbar', TableToolbar);
 </mo-ai-code>

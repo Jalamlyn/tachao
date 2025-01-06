@@ -81,6 +81,6 @@ const ThemeCustomRadio = observer((props) => {
   );
 });
 
-wpm.export('comp_theme_custom_radio', ThemeCustomRadio);
+context.wpm.export('comp_theme_custom_radio', ThemeCustomRadio);
 </mo-ai-code>
 ```

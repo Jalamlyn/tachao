@@ -78,6 +78,6 @@ class ExpenseStore {
 }
 
 const store = new ExpenseStore();
-wpm.export('store_expense', store);
+context.wpm.export('store_expense', store);
 </mo-ai-code>
 ```

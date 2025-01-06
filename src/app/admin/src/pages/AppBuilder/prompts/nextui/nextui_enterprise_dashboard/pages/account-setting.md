@@ -73,5 +73,5 @@ const AccountSetting = observer(({className, ...props}) => (
   </div>
 ));
 
-wpm.export('page_account_setting', AccountSetting);
+context.wpm.export('page_account_setting', AccountSetting);
 </mo-ai-code>

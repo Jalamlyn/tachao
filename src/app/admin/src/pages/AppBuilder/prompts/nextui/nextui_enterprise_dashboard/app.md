@@ -19,15 +19,15 @@ const { Routes, Route, Navigate, useNavigate } = ReactRouterDom;
 const { ScrollShadow, Spacer, Avatar, Button, useDisclosure, Tabs, Tab } = NextUI;
 
 // 导入组件
-const DataManage = await wpm.import('page_data_manage');
-const ProfileSetting = await wpm.import('page_profile_setting');
-const AppearanceSetting = await wpm.import('page_appearance_setting');
-const AccountSetting = await wpm.import('page_account_setting');
-const BillingSetting = await wpm.import('page_billing_setting');
-const TeamSetting = await wpm.import('page_team_setting');
-const Sidebar = await wpm.import('comp_sidebar');
-const SidebarDrawer = await wpm.import('comp_sidebar_drawer');
-const AcmeIcon = await wpm.import('comp_acme_icon');
+const DataManage = await context.wpm.import('page_data_manage');
+const ProfileSetting = await context.wpm.import('page_profile_setting');
+const AppearanceSetting = await context.wpm.import('page_appearance_setting');
+const AccountSetting = await context.wpm.import('page_account_setting');
+const BillingSetting = await context.wpm.import('page_billing_setting');
+const TeamSetting = await context.wpm.import('page_team_setting');
+const Sidebar = await context.wpm.import('comp_sidebar');
+const SidebarDrawer = await context.wpm.import('comp_sidebar_drawer');
+const AcmeIcon = await context.wpm.import('comp_acme_icon');
 
 const App = observer(() => {
   const {isOpen, onOpenChange} = useDisclosure();
@@ -248,6 +248,6 @@ const App = observer(() => {
   );
 });
 
-wpm.export(appId, App);
+context.wpm.export(appId, App);
 </mo-ai-code>
 ```

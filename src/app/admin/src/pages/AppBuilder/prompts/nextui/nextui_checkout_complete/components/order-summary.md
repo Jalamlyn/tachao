@@ -8,7 +8,7 @@ const {
   Icon
   cn,
 } = context;
-const checkoutStore = await wpm.import('store_checkout');
+const checkoutStore = await context.wpm.import('store_checkout');
 const { Link, Button, Image, Tooltip, Divider, Input } = NextUI;
 
 const OrderSummaryItem = observer(({name, href, price, color, size, quantity, imageSrc, className}) => {
@@ -107,6 +107,6 @@ const OrderSummary = observer(({hideTitle, items}) => {
   );
 });
 
-wpm.export('comp_order_summary', OrderSummary);
+context.wpm.export('comp_order_summary', OrderSummary);
 </mo-ai-code>
 ```

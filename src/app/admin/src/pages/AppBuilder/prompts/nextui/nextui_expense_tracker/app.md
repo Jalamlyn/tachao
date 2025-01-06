@@ -18,7 +18,7 @@ const {
 const { Routes, Route, Navigate } = ReactRouterDom;
 
 // 导入页面组件
-const ExpensePage = await wpm.import('page_expense');
+const ExpensePage = await context.wpm.import('page_expense');
 
 // 主应用组件
 const App = observer(() => {
@@ -36,6 +36,6 @@ const App = observer(() => {
   );
 });
 
-wpm.export(appId, App);
+context.wpm.export(appId, App);
 </mo-ai-code>
 ```

@@ -326,5 +326,5 @@ const Sidebar = observer(({
   );
 });
 
-wpm.export('comp_sidebar', Sidebar);
+context.wpm.export('comp_sidebar', Sidebar);
 </mo-ai-code>

@@ -10,7 +10,7 @@ const {
 
 const { Button, Input, RadioGroup, Select, SelectItem, Spacer } = NextUI;
 
-const PlanCustomRadio = await wpm.import('comp_plan_custom_radio');
+const PlanCustomRadio = await context.wpm.import('comp_plan_custom_radio');
 
 const addressOptions = [
   {
@@ -163,5 +163,5 @@ const BillingSetting = observer(({className, ...props}) => (
   </div>
 ));
 
-wpm.export('page_billing_setting', BillingSetting);
+context.wpm.export('page_billing_setting', BillingSetting);
 </mo-ai-code>

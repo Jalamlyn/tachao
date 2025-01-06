@@ -9,9 +9,9 @@ const {
 } = context;
 
 const { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell, Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } = NextUI;
-const Status = await wpm.import('comp_status');
-const CopyText = await wpm.import('comp_copy_text');
-const { columns } = await wpm.import('module_table_constants');
+const Status = await context.wpm.import('comp_status');
+const CopyText = await context.wpm.import('comp_copy_text');
+const { columns } = await context.wpm.import('module_table_constants');
 
 const TableContent = observer(({
   items,
@@ -111,5 +111,5 @@ const TableContent = observer(({
   );
 });
 
-wpm.export('comp_table_content', TableContent);
+context.wpm.export('comp_table_content', TableContent);
 </mo-ai-code>

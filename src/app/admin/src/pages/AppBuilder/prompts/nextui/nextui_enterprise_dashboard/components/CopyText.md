@@ -43,6 +43,6 @@ const CopyText = observer(({ children }) => {
   );
 });
 
-wpm.export('comp_copy_text', CopyText);
+context.wpm.export('comp_copy_text', CopyText);
 </mo-ai-code>
 ```

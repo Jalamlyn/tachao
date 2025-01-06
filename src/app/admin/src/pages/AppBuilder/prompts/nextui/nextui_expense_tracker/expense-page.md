@@ -19,9 +19,9 @@ const { useState, useEffect } = React;
 const { Card, Input, Button, Spinner } = NextUI;
 
 // 导入组件和store
-const ExpenseForm = await wpm.import('comp_expense_form');
-const expenseStore = await wpm.import('store_expense');
-const expenseModule = await wpm.import('module_expense');
+const ExpenseForm = await context.wpm.import('comp_expense_form');
+const expenseStore = await context.wpm.import('store_expense');
+const expenseModule = await context.wpm.import('module_expense');
 
 const ExpensePage = observer(() => {
   const [processing, setProcessing] = useState(false);
@@ -141,6 +141,6 @@ const ExpensePage = observer(() => {
   );
 });
 
-wpm.export('page_expense', ExpensePage);
+context.wpm.export('page_expense', ExpensePage);
 </mo-ai-code>
 ```

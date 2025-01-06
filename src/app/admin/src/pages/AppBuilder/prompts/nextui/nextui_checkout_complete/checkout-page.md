@@ -20,12 +20,12 @@ const { AnimatePresence, LazyMotion, m, domAnimation } = FramerMotion;
 const { Progress, Button, Image, Badge } = NextUI;
 
 // 导入组件和 store
-const OrderSummary = await wpm.import('comp_order_summary');
-const ShippingForm = await wpm.import('comp_shipping_form');
-const PaymentForm = await wpm.import('comp_payment_form');
-const PaymentMethodRadio = await wpm.import('comp_payment_method_radio');
-const checkoutStore = await wpm.import('store_checkout');
-const checkoutModule = await wpm.import('module_checkout');
+const OrderSummary = await context.wpm.import('comp_order_summary');
+const ShippingForm = await context.wpm.import('comp_shipping_form');
+const PaymentForm = await context.wpm.import('comp_payment_form');
+const PaymentMethodRadio = await context.wpm.import('comp_payment_method_radio');
+const checkoutStore = await context.wpm.import('store_checkout');
+const checkoutModule = await context.wpm.import('module_checkout');
 
 const CheckoutPage = observer(() => {
   const [[page, direction], setPage] = useState([0, 0]);
@@ -342,6 +342,6 @@ const CheckoutPage = observer(() => {
   );
 });
 
-wpm.export('page_checkout', CheckoutPage);
+context.wpm.export('page_checkout', CheckoutPage);
 </mo-ai-code>
 ```

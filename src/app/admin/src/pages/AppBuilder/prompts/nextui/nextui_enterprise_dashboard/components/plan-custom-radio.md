@@ -61,6 +61,6 @@ const PlanCustomRadio = observer((props) => {
   );
 });
 
-wpm.export('comp_plan_custom_radio', PlanCustomRadio);
+context.wpm.export('comp_plan_custom_radio', PlanCustomRadio);
 </mo-ai-code>
 ```

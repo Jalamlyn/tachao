@@ -22,9 +22,9 @@ const {
 const { Routes, Route, Navigate } = ReactRouterDom;
 
 // 导入前必须确保这些页面模块已经创建并导出
-const HomePage = await wpm.import('page_home')
-const SettingsPage = await wpm.import('page_settings')
-const NotFoundPage = await wpm.import('page_notFound')
+const HomePage = await context.wpm.import('page_home')
+const SettingsPage = await context.wpm.import('page_settings')
+const NotFoundPage = await context.wpm.import('page_notFound')
 
 // 加载状态组件
 const LoadingFallback = () => (
@@ -70,7 +70,7 @@ const App = () => {
 };
 
 // 重要：入口模块必须使用 context.appId 作为模块名
-wpm.export(appId, App);
+context.wpm.export(appId, App);
 </mo-ai-code>
 \`\`\``,
 
@@ -96,9 +96,9 @@ const {
 const { useState, useEffect } = React;
 
 // 导入前必须确保这些模块已经创建并导出
-const SubComponent = await wpm.import('subComponent')
-const todoStore = await wpm.import('todoStore');
-const todoService = await wpm.import('todoService');
+const SubComponent = await context.wpm.import('subComponent')
+const todoStore = await context.wpm.import('todoStore');
+const todoService = await context.wpm.import('todoService');
 
 const PageComponent = observer(() => {
   return (
@@ -109,7 +109,7 @@ const PageComponent = observer(() => {
 });
 
 // 重要：必须导出页面组件，否则其他模块无法导入
-wpm.export('page_xxx', PageComponent);
+context.wpm.export('page_xxx', PageComponent);
 </mo-ai-code>
 \`\`\``,
 
@@ -135,7 +135,7 @@ const {
 const { makeAutoObservable } = mobx;
 
 // 导入前必须确保 todoService 模块已经创建并导出
-const todoService = await wpm.import('todoService');
+const todoService = await context.wpm.import('todoService');
 
 class TodoStore {
     todos = []
@@ -158,7 +158,7 @@ class TodoStore {
 
 const store = new TodoStore();
 // 重要：必须导出 store 实例，否则其他模块无法导入
-wpm.export('store_todo', store);
+context.wpm.export('store_todo', store);
 </mo-ai-code>
 \`\`\``,
 
@@ -184,7 +184,7 @@ const {
 const { getMetadata, setMetadata } = api;
 
 // 导入前必须确保 todoModule 模块已经创建并导出
-const todoModule = await wpm.import('todoModule');
+const todoModule = await context.wpm.import('todoModule');
 
 const service = {
   async getTodos() {
@@ -198,7 +198,7 @@ const service = {
 };
 
 // 重要：必须导出 service 实例，否则其他模块无法导入
-wpm.export('service_todo', service);
+context.wpm.export('service_todo', service);
 </mo-ai-code>
 \`\`\``,
 
@@ -235,7 +235,7 @@ const module = {
 };
 
 // 重要：必须导出 module 实例，否则其他模块无法导入
-wpm.export('module_todo', module);
+context.wpm.export('module_todo', module);
 </mo-ai-code>
 \`\`\``,
 
@@ -272,7 +272,7 @@ const CustomButton = observer(({ children, icon, ...props }) => {
 });
 
 // 重要：必须导出组件，否则其他模块无法导入
-wpm.export('comp_button', CustomButton);
+context.wpm.export('comp_button', CustomButton);
 </mo-ai-code>
 \`\`\``,
 
@@ -364,7 +364,7 @@ const utils = {
 };
 
 // 重要：必须导出工具函数，否则其他模块无法导入
-wpm.export('util_date', utils);
+context.wpm.export('util_date', utils);
 </mo-ai-code>
 \`\`\``,
 
@@ -499,13 +499,13 @@ const constants = {
 };
 
 // 重要：必须导出常量，否则其他模块无法导入
-wpm.export('constant_app', constants);
+context.wpm.export('constant_app', constants);
 </mo-ai-code>
 \`\`\``,
 
   componentRules: `9. 技术要求：
    - 入口模块(type="app")必须使用 context.appId 作为模块名
-   - 非组件模块使用 await wpm.import 直接导入
+   - 非组件模块使用 await context.wpm.import 直接导入
    - 只能使用 NextUI 2.6.0 版本中实际存在的组件
    - 禁止使用 Container Grid Text 这些 NextUI V1 版本中的组件
    - 使用 tailwind css 编写样式代码
@@ -519,12 +519,12 @@ wpm.export('constant_app', constants);
    - Component 应该是独立可复用的
    - Component 不应包含业务逻辑
    - Component 通过 props 接收数据和回调
-   - 使用 wpm.export 导出自定义模块
-   - 使用 wpm.import 导入自定义模块,不能导入三方模块
+   - 使用 context.wpm.export 导出自定义模块
+   - 使用 context.wpm.import 导入自定义模块,不能导入三方模块
    - 所有依赖都从 context 中获取, 不允许直接引入
    - observer 可以包裹初 type=app 以外的组件, 避免不必要的渲染
    - 避免循环依赖
-   - 在使用 wpm.import 前必须确保模块已经导出
+   - 在使用 context.wpm.import 前必须确保模块已经导出
    - 检查所有导入模块的存在性
    - 按正确顺序创建和导出模块
    - 导航组件只能用 ReactRouterDom 的组件,比如 Link, NavLink 等

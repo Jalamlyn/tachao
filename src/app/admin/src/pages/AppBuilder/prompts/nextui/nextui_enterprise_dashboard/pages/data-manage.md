@@ -11,12 +11,12 @@ const {
 } = context;
 
 const { useState, useEffect } = React;
-const tableStore = await wpm.import('store_table');
+const tableStore = await context.wpm.import('store_table');
 
 // 导入组件
-const TableToolbar = await wpm.import('comp_table_toolbar');
-const TableContent = await wpm.import('comp_table_content');
-const TablePagination = await wpm.import('comp_table_pagination');
+const TableToolbar = await context.wpm.import('comp_table_toolbar');
+const TableContent = await context.wpm.import('comp_table_content');
+const TablePagination = await context.wpm.import('comp_table_pagination');
 
 const DataManage = observer(() => {
   // 状态管理
@@ -175,6 +175,6 @@ const DataManage = observer(() => {
   );
 });
 
-wpm.export('page_data_manage', DataManage);
+context.wpm.export('page_data_manage', DataManage);
 </mo-ai-code>
 ```

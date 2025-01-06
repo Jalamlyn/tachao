@@ -9,8 +9,8 @@ const {
 
 const { RadioGroup, Select, SelectItem, Spacer } = NextUI;
 
-const ThemeCustomRadio = await wpm.import('comp_theme_custom_radio');
-const SwitchCell = await wpm.import('comp_switch_cell');
+const ThemeCustomRadio = await context.wpm.import('comp_theme_custom_radio');
+const SwitchCell = await context.wpm.import('comp_switch_cell');
 
 const fontSizeOptions = [
   {label: "小", value: "small", description: "字体大小 14px"},
@@ -74,5 +74,5 @@ const AppearanceSetting = observer(({className, ...props}) => (
   </div>
 ));
 
-wpm.export('page_appearance_setting', AppearanceSetting);
+context.wpm.export('page_appearance_setting', AppearanceSetting);
 </mo-ai-code>

@@ -150,6 +150,6 @@ class CheckoutStore {
 }
 
 const store = new CheckoutStore();
-wpm.export('store_checkout', store);
+context.wpm.export('store_checkout', store);
 </mo-ai-code>
 ```
