@@ -24,10 +24,6 @@
       "destination": "https://www.mobenai.com.cn/api/:path*"
     },
     {
-      "source": "/api/:path*",
-      "destination": "https://www.mobenai.com.cn/api/:path*"
-    },
-    {
       "source": "/((?!api|dev).*)",
       "destination": "/index.html"
     }
