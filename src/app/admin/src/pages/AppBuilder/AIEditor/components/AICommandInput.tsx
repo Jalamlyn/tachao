@@ -49,14 +49,17 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
 
   // 处理发送消息
   const handleSend = useCallback(async () => {
-    if (!input.trim() || isLoading) return
+    if (!input.trim() && previews.length === 0) return
+    if (isLoading) return
 
     try {
       setIsLoading(true)
-      const result = await agent.processCommand({
-        content: input,
+      const messageContent = {
+        content: input.trim(),
         images: previews,
-      })
+      }
+
+      const result = await agent.processCommand(messageContent)
 
       // 处理返回结果，确保它是可显示的格式
       const processedResult = typeof result === 'object' 
@@ -64,18 +67,21 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
             content: result.content || JSON.stringify(result, null, 2),
             status: result.status,
             role: result.role,
-            id: result.id
+            id: result.id,
+            images: previews // 将图片数据包含在消息中
           }
         : { 
             content: String(result),
             status: 'success',
             role: 'assistant',
-            id: Date.now().toString()
+            id: Date.now().toString(),
+            images: previews
           }
 
       onResult?.(processedResult)
       setInput("")
       setPreviews([]) // 清空预览图片
+      imageStore.clear() // 清空图片存储
     } catch (error) {
       console.error("Error in AI command:", error)
       message.error("发送消息失败：" + (error instanceof Error ? error.message : "未知错误"))
@@ -386,11 +392,11 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
             ) : (
               <Button
                 isIconOnly
-                color={!input || isLoading ? "default" : "primary"}
-                isDisabled={!input || isLoading}
+                color={(!input.trim() && previews.length === 0) || isLoading ? "default" : "primary"}
+                isDisabled={(!input.trim() && previews.length === 0) || isLoading}
                 radius='lg'
                 size='sm'
-                variant={!input || isLoading ? "flat" : "solid"}
+                variant={(!input.trim() && previews.length === 0) || isLoading ? "flat" : "solid"}
                 onClick={handleSend}
                 className='transition-transform active:scale-95'
               >
