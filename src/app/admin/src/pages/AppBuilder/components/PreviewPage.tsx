@@ -192,11 +192,11 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
 
   return (
     <Provider>
-      <PermissionCheck resourceType='app' resourceId={appId}>
+      {/* <PermissionCheck resourceType='app' resourceId={appId}> */}
         <AppContext.Provider value={{ appId }}>
           <AppRender onAIFix={handleAIFix} appId={appId} basename={`/app-preview/${appId}`} onError={handleError} />
         </AppContext.Provider>
-      </PermissionCheck>
+      {/* </PermissionCheck> */}
     </Provider>
   )
 })
