@@ -11,6 +11,7 @@ import {
   CardBody,
   Tabs,
   Tab,
+  Divider,
 } from "@nextui-org/react"
 import { useNavigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
@@ -120,19 +121,15 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   const [showSuccess, setShowSuccess] = useState(false)
   const [newAppId, setNewAppId] = useState<string>("")
   const [loading, setLoading] = useState(false)
-  const [selectedTab, setSelectedTab] = useState("start-from-scratch")
-  const [officialTemplateTab, setOfficialTemplateTab] = useState("form")
+  const [createMode, setCreateMode] = useState<"scratch" | "template">("scratch")
   const [platformTemplates, setPlatformTemplates] = useState([])
-  const [templateSource, setTemplateSource] = useState("official")
   const navigate = useNavigate()
   const { useApps } = useAppStore()
   const { refetch } = useApps()
 
   useEffect(() => {
-    if (templateSource === "platform") {
-      loadPlatformTemplates()
-    }
-  }, [templateSource])
+    loadPlatformTemplates()
+  }, [])
 
   const loadPlatformTemplates = async () => {
     try {
@@ -184,172 +181,105 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
     }
   }
 
-  const getTemplateIcon = (template?: string) => {
-    switch (template) {
-      case "enterprise":
-        return "mdi:building"
-      case "dashboard":
-        return "mdi:view-dashboard-outline"
-      default:
-        return "mdi:view-grid-outline"
-    }
-  }
-
-  const getTemplateColor = (template?: string) => {
-    switch (template) {
-      case "enterprise":
-        return "text-blue-500"
-      case "dashboard":
-        return "text-secondary"
-      default:
-        return "text-primary"
-    }
-  }
-
-  const renderStartFromScratch = () => (
-    <Card
-      isPressable
-      isHoverable
-      className={`border-2 transition-all duration-200 ${selectedTemplate === "" ? "border-primary" : "border-transparent"}`}
-      onPress={() => setSelectedTemplate("")}
-    >
-      <CardBody className='p-4'>
-        <div className='flex items-center gap-4'>
-          <div className='p-3 rounded-lg bg-primary/10'>
-            <Icon icon='mdi:view-grid-outline' className='w-6 h-6 text-primary' />
+  const renderCreateOptions = () => (
+    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+      <Card
+        isPressable
+        isHoverable
+        className={`border-2 transition-all duration-200 ${
+          createMode === "scratch" ? "border-primary" : "border-transparent"
+        }`}
+        onPress={() => {
+          setCreateMode("scratch")
+          setSelectedTemplate("")
+        }}
+      >
+        <CardBody className='p-4'>
+          <div className='flex items-center gap-4'>
+            <div className={`p-3 rounded-lg ${createMode === "scratch" ? "bg-primary/10" : "bg-default-100"}`}>
+              <Icon icon='mdi:file-outline' className='w-6 h-6 text-primary' />
+            </div>
+            <div>
+              <h4 className='text-base font-semibold'>从零开始</h4>
+              <p className='text-sm text-default-500'>从零开始构建您的应用</p>
+            </div>
           </div>
-          <div>
-            <h4 className='text-base font-semibold'>从零开始</h4>
-            <p className='text-sm text-default-500'>从零开始构建您的应用</p>
+        </CardBody>
+      </Card>
+
+      <Card
+        isPressable
+        isHoverable
+        className={`border-2 transition-all duration-200 ${
+          createMode === "template" ? "border-primary" : "border-transparent"
+        }`}
+        onPress={() => setCreateMode("template")}
+      >
+        <CardBody className='p-4'>
+          <div className='flex items-center gap-4'>
+            <div className={`p-3 rounded-lg ${createMode === "template" ? "bg-primary/10" : "bg-default-100"}`}>
+              <Icon icon='mdi:template-outline' className='w-6 h-6 text-primary' />
+            </div>
+            <div>
+              <h4 className='text-base font-semibold'>从模板开始</h4>
+              <p className='text-sm text-default-500'>使用预设模板快速创建应用</p>
+            </div>
           </div>
-        </div>
-      </CardBody>
-    </Card>
+        </CardBody>
+      </Card>
+    </div>
   )
 
-  const renderTemplateContent = () => (
-    <Tabs
-      selectedKey={templateSource}
-      onSelectionChange={(key) => setTemplateSource(key.toString())}
-      color='primary'
-      variant='underlined'
-      classNames={{
-        tabList: "gap-6",
-        cursor: "w-full",
-      }}
-    >
-      <Tab
-        key='official'
-        title={
-          <div className='flex items-center gap-2'>
-            <Icon icon='solar:star-bold' className='w-4 h-4' />
-            <span>官方模板</span>
-          </div>
-        }
-      >
-        <div className='mt-4'>
-          <Tabs
-            selectedKey={officialTemplateTab}
-            onSelectionChange={(key) => setOfficialTemplateTab(key.toString())}
-            variant='light'
-            color='primary'
-            classNames={{
-              tabList: "gap-4",
-              cursor: "w-full",
-            }}
+  const renderTemplateSection = (title: string, icon: string, templates: any[], type?: string) => (
+    <div className='space-y-4'>
+      <div className='flex items-center gap-2'>
+        <Icon icon={icon} className='w-5 h-5 text-default-500' />
+        <h3 className='text-lg font-semibold'>{title}</h3>
+      </div>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+        {templates.map((template) => (
+          <Card
+            key={template.id}
+            isPressable
+            isHoverable
+            className={`border-2 transition-all duration-200 ${
+              selectedTemplate === template.id ? "border-primary" : "border-transparent"
+            }`}
+            onPress={() => setSelectedTemplate(template.id)}
           >
-            <Tab key='form' title='表单应用'>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
-                {Object.entries(templates)
-                  .filter(([_, template]) => template.type === 'form')
-                  .map(([id, template]) => (
-                    <Card
-                      key={id}
-                      isPressable
-                      isHoverable
-                      className={`border-2 transition-all duration-200 ${selectedTemplate === id ? "border-primary" : "border-transparent"}`}
-                      onPress={() => setSelectedTemplate(id)}
-                    >
-                      <CardBody className='p-4'>
-                        <div className='flex items-center gap-4'>
-                          <div className={`p-3 rounded-lg ${selectedTemplate === id ? "bg-primary/10" : "bg-default-100"}`}>
-                            <Icon icon={template.icon} className={`w-6 h-6 ${getTemplateColor(id)}`} />
-                          </div>
-                          <div>
-                            <h4 className='text-base font-semibold'>{template.name}</h4>
-                            <p className='text-sm text-default-500'>{template.description}</p>
-                          </div>
-                        </div>
-                      </CardBody>
-                    </Card>
-                  ))}
-              </div>
-            </Tab>
-            <Tab key='ai' title='智能应用'>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
-                {Object.entries(templates)
-                  .filter(([_, template]) => template.type === 'ai')
-                  .map(([id, template]) => (
-                    <Card
-                      key={id}
-                      isPressable
-                      isHoverable
-                      className={`border-2 transition-all duration-200 ${selectedTemplate === id ? "border-primary" : "border-transparent"}`}
-                      onPress={() => setSelectedTemplate(id)}
-                    >
-                      <CardBody className='p-4'>
-                        <div className='flex items-center gap-4'>
-                          <div className={`p-3 rounded-lg ${selectedTemplate === id ? "bg-primary/10" : "bg-default-100"}`}>
-                            <Icon icon={template.icon} className={`w-6 h-6 ${getTemplateColor(id)}`} />
-                          </div>
-                          <div>
-                            <h4 className='text-base font-semibold'>{template.name}</h4>
-                            <p className='text-sm text-default-500'>{template.description}</p>
-                          </div>
-                        </div>
-                      </CardBody>
-                    </Card>
-                  ))}
-              </div>
-            </Tab>
-          </Tabs>
-        </div>
-      </Tab>
-      <Tab
-        key='platform'
-        title={
-          <div className='flex items-center gap-2'>
-            <Icon icon='solar:cloud-bold' className='w-4 h-4' />
-            <span>平台模板</span>
-          </div>
-        }
-      >
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
-          {platformTemplates.map((template) => (
-            <Card
-              key={template.id}
-              isPressable
-              isHoverable
-              className={`border-2 transition-all duration-200 ${selectedTemplate === template.id ? "border-primary" : "border-transparent"}`}
-              onPress={() => setSelectedTemplate(template.id)}
-            >
-              <CardBody className='p-4'>
-                <div className='flex items-center gap-4'>
-                  <div className={`p-3 rounded-lg ${selectedTemplate === template.id ? "bg-primary/10" : "bg-default-100"}`}>
-                    <Icon icon='mdi:cloud-outline' className='w-6 h-6 text-primary' />
-                  </div>
-                  <div>
-                    <h4 className='text-base font-semibold'>{template.name}</h4>
-                    <p className='text-sm text-default-500'>更新于: {new Date(template.updatedAt).toLocaleDateString()}</p>
-                  </div>
+            <CardBody className='p-4'>
+              <div className='flex items-center gap-4'>
+                <div
+                  className={`p-3 rounded-lg ${selectedTemplate === template.id ? "bg-primary/10" : "bg-default-100"}`}
+                >
+                  <Icon icon={template.icon} className='w-6 h-6 text-primary' />
                 </div>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-      </Tab>
-    </Tabs>
+                <div>
+                  <h4 className='text-base font-semibold'>{template.name}</h4>
+                  <p className='text-sm text-default-500'>{template.description}</p>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        ))}
+      </div>
+    </div>
   )
+
+  const renderTemplateLibrary = () => {
+    const formTemplates = Object.values(templates).filter((template) => template.type === "form")
+    const aiTemplates = Object.values(templates).filter((template) => template.type === "ai")
+
+    return (
+      <div className='space-y-6'>
+        {renderTemplateSection("表单应用", "mdi:form-select", formTemplates)}
+        <Divider />
+        {renderTemplateSection("智能应用", "mdi:robot", aiTemplates)}
+        <Divider />
+        {renderTemplateSection("平台模板", "mdi:cloud-outline", platformTemplates)}
+      </div>
+    )
+  }
 
   return (
     <>
@@ -363,6 +293,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
           body: "py-6",
           footer: "border-t",
         }}
+        scrollBehavior="inside"
       >
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>创建应用</ModalHeader>
@@ -376,41 +307,14 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
               isRequired
             />
 
-            <div className='space-y-3'>
-              <Tabs
-                selectedKey={selectedTab}
-                onSelectionChange={(key) => setSelectedTab(key.toString())}
-                color='primary'
-                variant='bordered'
-                classNames={{
-                  tabList: "gap-6",
-                  cursor: "w-full",
-                  tab: "flex-1",
-                }}
-              >
-                <Tab
-                  key='start-from-scratch'
-                  title={
-                    <div className='flex items-center gap-2 justify-center'>
-                      <Icon icon='mdi:file-outline' className='w-4 h-4' />
-                      <span>从零开始</span>
-                    </div>
-                  }
-                >
-                  <div className='mt-4'>{renderStartFromScratch()}</div>
-                </Tab>
-                <Tab
-                  key='start-from-template'
-                  title={
-                    <div className='flex items-center gap-2 justify-center'>
-                      <Icon icon='mdi:template-outline' className='w-4 h-4' />
-                      <span>从模板开始</span>
-                    </div>
-                  }
-                >
-                  <div className='mt-4'>{renderTemplateContent()}</div>
-                </Tab>
-              </Tabs>
+            <div className='space-y-6'>
+              {renderCreateOptions()}
+              {createMode === "template" && (
+                <div className='mt-6'>
+                  <Divider className='my-6' />
+                  {renderTemplateLibrary()}
+                </div>
+              )}
             </div>
           </ModalBody>
           <ModalFooter>
