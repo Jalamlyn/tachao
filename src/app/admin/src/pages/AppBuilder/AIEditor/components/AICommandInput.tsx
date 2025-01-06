@@ -57,10 +57,28 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
         content: input,
         images: previews,
       })
-      onResult?.(result)
+
+      // 处理返回结果，确保它是可显示的格式
+      const processedResult = typeof result === 'object' 
+        ? { 
+            content: result.content || JSON.stringify(result, null, 2),
+            status: result.status,
+            role: result.role,
+            id: result.id
+          }
+        : { 
+            content: String(result),
+            status: 'success',
+            role: 'assistant',
+            id: Date.now().toString()
+          }
+
+      onResult?.(processedResult)
       setInput("")
+      setPreviews([]) // 清空预览图片
     } catch (error) {
       console.error("Error in AI command:", error)
+      message.error("发送消息失败：" + (error instanceof Error ? error.message : "未知错误"))
     } finally {
       setIsLoading(false)
     }

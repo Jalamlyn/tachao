@@ -31,10 +31,31 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     // 在应用开发场景中，始终使用专家模型
     const selectedAILevel: keyof typeof AI_LEVELS = "EXPERT"
 
-    // 新增：渲染单个消息
+    // 渲染单个消息
     const renderMessage = (message: any) => {
       const isUser = message.role === "user"
       const hasError = message.status === "error"
+
+      // 格式化消息内容
+      const formatContent = (content: any) => {
+        if (typeof content === "string") {
+          return content
+        }
+        if (React.isValidElement(content)) {
+          return content
+        }
+        if (typeof content === "object") {
+          if (content.content) {
+            return content.content
+          }
+          try {
+            return JSON.stringify(content, null, 2)
+          } catch (error) {
+            return "[无法显示的内容]"
+          }
+        }
+        return String(content)
+      }
 
       return (
         <div key={message.id} className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""} mb-4`}>
@@ -44,7 +65,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               "flex max-w-[80%] rounded-lg p-3",
               isUser ? "bg-primary text-primary-foreground" : "bg-content2",
               hasError && "bg-danger-50 border border-danger-200",
-              "overflow-hidden" // 添加overflow控制
+              "overflow-hidden"
             )}
           >
             {message.status === "thinking" ? (
@@ -54,13 +75,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               </div>
             ) : (
               <div className='whitespace-pre-wrap text-sm break-words w-full'>
-                {" "}
-                {/* 添加break-words和w-full */}
-                {typeof message.content === "string"
-                  ? message.content
-                  : React.isValidElement(message.content)
-                    ? message.content
-                    : String(message.content)}
+                {formatContent(message.content)}
               </div>
             )}
           </div>
