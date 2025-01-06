@@ -1,4 +1,3 @@
-```jsx
 <mo-ai-code type="component" name="comp_copy_text">
 const {
   wpm,
@@ -26,7 +25,7 @@ const CopyText = observer(({ children }) => {
 
   return (
     <div className="flex items-center gap-2">
-      <span>{children}</span>
+      <span className="font-mono">{children}</span>
       <NextUI.Button
         isIconOnly
         size="sm"
@@ -45,4 +44,3 @@ const CopyText = observer(({ children }) => {
 
 context.wpm.export('comp_copy_text', CopyText);
 </mo-ai-code>
-```

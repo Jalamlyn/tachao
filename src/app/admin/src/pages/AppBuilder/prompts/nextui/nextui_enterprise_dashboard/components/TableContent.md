@@ -39,7 +39,17 @@ const TableContent = observer(({
         return <CopyText>{cellValue}</CopyText>;
       case "status":
         return <Status status={cellValue} />;
-      case "createdAt":
+      case "planQuantity":
+      case "finishQuantity":
+      case "qualifiedQuantity":
+        return (
+          <div className="flex items-center gap-2">
+            <span>{cellValue}</span>
+            <span className="text-xs text-default-400">件</span>
+          </div>
+        );
+      case "startDate":
+      case "endDate":
         return (
           <div className="flex items-center gap-1">
             <Icon className="text-default-400" icon="solar:calendar-linear" width={16} />
@@ -73,7 +83,7 @@ const TableContent = observer(({
 
   return (
     <Table
-      aria-label="示例表格"
+      aria-label="委外数据表格"
       isHeaderSticky
       classNames={{
         wrapper: "max-h-[382px]",
