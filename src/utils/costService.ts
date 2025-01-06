@@ -34,8 +34,8 @@ export const costService = {
     const isCoding = content.includes(`mo-ai-code`)
     const ratePerMillionTokens = {
       EXPERT: {
-        input: isCoding ? 87.6 : 17.52,
-        output: isCoding ? 43.6 : 8.72,
+        input: isCoding ? 219 : 43.8,
+        output: isCoding ? 109 : 21.8,
       },
       ADVANCED: {
         input: isCoding ? 73 : 14.6,

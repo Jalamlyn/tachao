@@ -55,7 +55,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       setIsLoading(true)
       const result = await agent.processCommand({
         content: input,
-        images: previews
+        images: previews,
       })
       onResult?.(result)
       setInput("")
@@ -85,47 +85,44 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   )
 
   // 处理剪贴板粘贴
-  const handlePaste = useCallback(
-    async (e: React.ClipboardEvent) => {
-      const items = e.clipboardData?.items
-      if (!items) return
+  const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
 
-      for (const item of items) {
-        if (item.type.indexOf("image") !== -1) {
-          e.preventDefault()
-          const file = item.getAsFile()
-          if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-              message.error("图片大小不能超过5MB")
-              return
+    for (const item of items) {
+      if (item.type.indexOf("image") !== -1) {
+        e.preventDefault()
+        const file = item.getAsFile()
+        if (file) {
+          if (file.size > 5 * 1024 * 1024) {
+            message.error("图片大小不能超过5MB")
+            return
+          }
+
+          setIsUploading(true)
+          try {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              const base64 = reader.result as string
+              setPreviews((prev) => [...prev, base64])
+              imageStore.addImage(base64)
+              setIsUploading(false)
+              message.success("图片粘贴成功")
             }
-
-            setIsUploading(true)
-            try {
-              const reader = new FileReader()
-              reader.onloadend = () => {
-                const base64 = reader.result as string
-                setPreviews(prev => [...prev, base64])
-                imageStore.addImage(base64)
-                setIsUploading(false)
-                message.success("图片粘贴成功")
-              }
-              reader.onerror = () => {
-                message.error("图片读取失败")
-                setIsUploading(false)
-              }
-              reader.readAsDataURL(file)
-            } catch (error) {
-              console.error("Error processing pasted image:", error)
-              message.error("图片处理失败")
+            reader.onerror = () => {
+              message.error("图片读取失败")
               setIsUploading(false)
             }
+            reader.readAsDataURL(file)
+          } catch (error) {
+            console.error("Error processing pasted image:", error)
+            message.error("图片处理失败")
+            setIsUploading(false)
           }
         }
       }
-    },
-    []
-  )
+    }
+  }, [])
 
   // 处理图片上传
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,7 +148,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
         const reader = new FileReader()
         reader.onloadend = async () => {
           const base64 = reader.result as string
-          setPreviews(prev => [...prev, base64])
+          setPreviews((prev) => [...prev, base64])
           imageStore.addImage(base64)
           setIsUploading(false)
           message.success(`图片 ${file.name} 上传成功`)
@@ -181,7 +178,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
 
   // 删除单张图片
   const handleDeleteImage = (imageToDelete: string) => {
-    setPreviews(prev => prev.filter(img => img !== imageToDelete))
+    setPreviews((prev) => prev.filter((img) => img !== imageToDelete))
     imageStore.removeImage(imageToDelete)
     message.success("图片删除成功")
   }
@@ -268,6 +265,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
           {previews.map((preview, index) => (
             <Badge
               key={index}
+              size='sm'
               isOneChar
               className='opacity-100 transition-opacity duration-200'
               content={

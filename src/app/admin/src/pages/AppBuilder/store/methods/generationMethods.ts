@@ -16,7 +16,6 @@ export async function handleAIGeneration(
   if (!this.appId) {
     throw new Error("AppId not set")
   }
-  debugger
   try {
     const moduleDataMap = await this.processAIResponse(aiResponse)
 

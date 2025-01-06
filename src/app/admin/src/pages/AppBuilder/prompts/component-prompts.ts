@@ -528,5 +528,6 @@ wpm.export('constant_app', constants);
    - 检查所有导入模块的存在性
    - 按正确顺序创建和导出模块
    - 导航组件只能用 ReactRouterDom 的组件,比如 Link, NavLink 等
-   - 必须在每个模块开头解构所有 context 依赖，即使暂时不使用也要保留，以便后续扩展`,
+   - 必须在每个模块开头解构所有 context 依赖，即使暂时不使用也要保留，以便后续扩展
+   - NextUI Button 使用 onPress 代替 onClick`,
 }

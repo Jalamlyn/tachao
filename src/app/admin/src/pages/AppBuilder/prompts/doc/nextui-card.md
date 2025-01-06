@@ -1,250 +1,118 @@
----
-title: "Card"
-description: "Card is a container for text, photos, and actions in the context of a single subject."
----
+```jsx
+export default function App() {
+  return (
+    <div className='bg-gradient-to-tr from-[#FFB457] to-[#FF705B] p-6 rounded-lg'>
+      {/_ Basic Card _/}
+      <Card className='max-w-[400px] mb-6'>
+        <CardHeader>
+          <h4 className='font-bold text-xl'>Basic Card</h4>
+        </CardHeader>
+        <CardBody>
+          <p>This is a basic card with some text content.</p>
+        </CardBody>
+        <CardFooter>
+          <Button color='primary'>Action</Button>
+        </CardFooter>
+      </Card>
 
-import {cardContent} from "@/content/components/card";
+      {/* Card with Divider */}
+      <Card className='max-w-[400px] mb-6'>
+        <CardHeader>
+          <h4 className='font-bold text-xl'>Card with Divider</h4>
+        </CardHeader>
+        <CardBody>
+          <p>This card has a divider between the header and body.</p>
+        </CardBody>
+        <CardFooter>
+          <Button color='primary'>Action</Button>
+        </CardFooter>
+      </Card>
 
-# Card
+      {/* Card with Image */}
+      <Card className='max-w-[400px] mb-6'>
+        <CardHeader>
+          <h4 className='font-bold text-xl'>Card with Image</h4>
+        </CardHeader>
+        <CardBody>
+          <Image src='https://nextui.org/images/card-example-4.jpeg' alt='Card image' width='100%' height='auto' />
+        </CardBody>
+        <CardFooter>
+          <Button color='primary'>Action</Button>
+        </CardFooter>
+      </Card>
 
-Card is a container for text, photos, and actions in the context of a single subject.
+      {/* Blurred Footer Card */}
+      <Card isFooterBlurred className='max-w-[400px] mb-6'>
+        <CardHeader>
+          <h4 className='font-bold text-xl'>Blurred Footer Card</h4>
+        </CardHeader>
+        <CardBody>
+          <p>This card has a blurred footer.</p>
+        </CardBody>
+        <CardFooter>
+          <Button color='primary'>Action</Button>
+        </CardFooter>
+      </Card>
 
-<ComponentLinks component="card" />
+      {/* Composition Card */}
+      <Card className='max-w-[400px] mb-6'>
+        <CardHeader>
+          <h4 className='font-bold text-xl'>Composition Card</h4>
+        </CardHeader>
+        <CardBody>
+          <p>This card uses other NextUI components inside.</p>
+        </CardBody>
+        <CardFooter>
+          <Button color='primary'>Action</Button>
+        </CardFooter>
+      </Card>
 
----
+      {/* Blurred Card */}
+      <Card isBlurred className='max-w-[400px] mb-6'>
+        <CardHeader>
+          <h4 className='font-bold text-xl'>Blurred Card</h4>
+        </CardHeader>
+        <CardBody>
+          <p>This card has a blurred background.</p>
+        </CardBody>
+        <CardFooter>
+          <Button color='primary'>Action</Button>
+        </CardFooter>
+      </Card>
 
-<CarbonAd/>
+      {/* Primary Action Card */}
+      <Card isPressable onPress={() => alert("Card pressed!")} className='max-w-[400px] mb-6'>
+        <CardHeader>
+          <h4 className='font-bold text-xl'>Primary Action Card</h4>
+        </CardHeader>
+        <CardBody>
+          <p>This card is pressable and triggers an action.</p>
+        </CardBody>
+        <CardFooter>
+          <Button color='primary'>Action</Button>
+        </CardFooter>
+      </Card>
 
-## Installation
-
-<PackageManagers
-  showGlobalInstallWarning
-  commands={{
-    cli: "npx nextui-cli@latest add card",
-    npm: "npm install @nextui-org/card",
-    yarn: "yarn add @nextui-org/card",
-    pnpm: "pnpm add @nextui-org/card",
-    bun: "bun add @nextui-org/card"
-  }}
-/>
-
-
-## Import
-
-NextUI exports 4 card-related components:
-
-- **Card**: The main component to display a card.
-- **CardHeader**: Commonly used for the title of a card.
-- **CardBody**: The content of the card.
-- **CardFooter**: Commonly used for actions.
-
-<ImportTabs
-  commands={{
-    main: 'import {Card, CardHeader, CardBody, CardFooter} from "@nextui-org/react";',
-    individual: 'import {Card, CardHeader, CardBody, CardFooter} from "@nextui-org/card";',
-  }}
-/>
-
-## Usage
-
-<CodeDemo isPreviewCentered title="Usage" files={cardContent.usage} />
-
-### With Divider
-
-<CodeDemo isPreviewCentered title="With Divider" files={cardContent.divider} />
-
-> See the [Divider](/docs/components/divider) component for more details.
-
-### With Image
-
-<CodeDemo isPreviewCentered title="With Image" files={cardContent.image} />
-
-### Blurred Footer
-
-You can pass the `isFooterBlurred` prop to the card to blur the footer.
-
-<CodeDemo isPreviewCentered title="Blurred Footer" files={cardContent.blurredFooter} />
-
-### Composition
-
-You can use other NextUI components inside the card to compose a more complex card.
-
-<CodeDemo isPreviewCentered title="Composition" files={cardContent.composition} />
-
-### Blurred Card
-
-You can pass the `isBlurred` prop to the card to blur the card. Card gets blurred properties based on its ancestor element.
-
-> **Note**: To achieve the blur effect as seen in the preview, you need to provide a suitable background (e.g., `bg-gradient-to-tr from-[#FFB457] to-[#FF705B]`) to an ancestor element of the Card component allowing the Card's blur effect to be visible.
-
-<CodeDemo isGradientBox title="Blurred Card" files={cardContent.blurred} />
-
-### Primary Action
-
-If you pass the `isPressable` prop to the card, it will be rendered as a button.
-
-<CodeDemo title="Primary Action" files={cardContent.primaryAction} />
-
-> **Note**: that the used callback function is `onPress` instead of `onClick`. Please see the [usePress](https://react-spectrum.adobe.com/react-aria/usePress.html#usepress) component for more details.
-
-### Cover Image
-
-You can use `Image` component as the cover of the card by taking it out of the `CardBody` component.
-
-<CodeDemo title="Cover Image" files={cardContent.coverImage} />
-
-<Spacer y={4} />
-
-## Slots
-
-- **base**:
-  The main container of the card, where the header, body, and footer are placed.
-- **header**:
-  The header of the card, usually used for the title.
-- **body**:
-  The body of the card, where the main content is placed.
-- **footer**:
-  The footer of the card, usually used for actions.
-
-<Spacer y={4} />
-
-## Data Attributes
-
-`Card` has the following attributes on the `base` element:
-
-- **data-hover**:
-  When the card is being hovered. Based on [useHover](https://react-spectrum.adobe.com/react-aria/useHover.html)
-- **data-focus**:
-  When the card is being focused. Based on [useFocusRing](https://react-spectrum.adobe.com/react-aria/useFocusRing.html).
-- **data-focus-visible**:
-  When the card is being focused with the keyboard. Based on [useFocusRing](https://react-spectrum.adobe.com/react-aria/useFocusRing.html).
-- **data-disabled**:
-  When the card is disabled. Based on `isDisabled` prop.
-- **data-pressed**:
-  When the card is pressed. Based on [usePress](https://react-spectrum.adobe.com/react-aria/usePress.html)
-
-<Spacer y={4} />
-
-## API
-
-### Card Props
-
-<APITable
-  data={[
-    {
-      attribute: "children",
-      type: "ReactNode | ReactNode[]",
-      description: "Usually the Card parts, `CardHeader`, `CardBody` and `CardFooter`.",
-      default: "-"
-    },
-    {
-      attribute: "shadow",
-      type: "none | sm | md | lg",
-      description: "The card shadow.",
-      default: "md"
-    },
-    {
-      attribute: "radius",
-      type: "none | sm | md | lg",
-      description: "The card border radius.",
-      default: "lg"
-    },
-    {
-      attribute: "fullWidth",
-      type: "boolean",
-      description: "Whether the card should take the full width of its parent.",
-      default: "false"
-    },
-    {
-      attribute: "isHoverable",
-      type: "boolean",
-      description: "Whether the card should change the background on hover.",
-      default: "false"
-    },
-    {
-      attribute: "isPressable",
-      type: "boolean",
-      description: "Whether the card should allow to be pressed.",
-      default: "false"
-    },
-    {
-      attribute: "isBlurred",
-      type: "boolean",
-      description: "Whether the card background should be blurred.",
-      default: "false"
-    },
-    {
-      attribute: "isFooterBlurred",
-      type: "boolean",
-      description: "Whether the card footer background should be blurred.",
-      default: "false"
-    },
-    {
-      attribute: "isDisabled",
-      type: "boolean",
-      description: "Whether the card should be disabled. The press events will be ignored.",
-      default: "false"
-    },
-    {
-      attribute: "disableAnimation",
-      type: "boolean",
-      description: "Whether to disable the animation.",
-      default: "false"
-    },
-    {
-      attribute: "disableRipple",
-      type: "boolean",
-      description: "Whether to disable ripple effect. Only when `isPressable` is true.",
-      default: "false"
-    },
-    {
-      attribute: "allowTextSelectionOnPress",
-      type: "boolean",
-      description: "Whether to allow text selection on pressing. Only when `isPressable` is true.",
-      default: "false"
-    },
-    {
-      attribute: "classNames",
-      type: "Partial<Record<'base' | 'header' | 'body' | 'footer', string>>",
-      description: "Allows to set custom class names for the card slots.",
-      default: "-"
-    }
-  ]}
-/>
-
-### Card Events
-
-<APITable
-  data={[
-    {
-      attribute: "onPress",
-      type: "(e: PressEvent) => void",
-      description: "Handler that is called when the press is released over the target.",
-      default: "-"
-    },
-    {
-      attribute: "onPressStart",
-      type: "(e: PressEvent) => void",
-      description: "Handler that is called when a press interaction starts.",
-      default: "-"
-    },
-    {
-      attribute: "onPressEnd",
-      type: "(e: PressEvent) => void",
-      description: "Handler that is called when a press interaction ends, either over the target or when the pointer leaves the target.",
-      default: "-"
-    },
-    {
-      attribute: "onPressChange",
-      type: "(isPressed: boolean) => void",
-      description: "Handler that is called when the press state changes.",
-      default: "-"
-    },
-    {
-      attribute: "onPressUp",
-      type: "(e: PressEvent) => void",
-      description: "Handler that is called when a press is released over the target, regardless of whether it started on the target or not.",
-      default: "-"
-    }
-  ]}
-/>
+      {/* Cover Image Card */}
+      <Card className='max-w-[400px] mb-6'>
+        <Image
+          src='https://nextui.org/images/card-example-4.jpeg'
+          alt='Card image'
+          width='100%'
+          height='auto'
+          className='object-cover'
+        />
+        <CardHeader>
+          <h4 className='font-bold text-xl'>Cover Image Card</h4>
+        </CardHeader>
+        <CardBody>
+          <p>This card has an image as the cover.</p>
+        </CardBody>
+        <CardFooter>
+          <Button color='primary'>Action</Button>
+        </CardFooter>
+      </Card>
+    </div>
+  )
+}
+```

@@ -36,7 +36,6 @@ const UnauthorizedPage = () => {
       // 权限申请功能已通过表单实现
     },
   })
-
   return (
     <div className='min-h-screen bg-gradient-to-b from-primary-50/50 to-background flex items-center justify-center p-4'>
       <motion.div

@@ -86,7 +86,7 @@ const AIChat = () => {
         <Button
           color="primary"
           isLoading={loading}
-          onClick={handleChat}
+          onPress={handleChat}
         >
           发送
         </Button>

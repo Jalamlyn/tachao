@@ -145,185 +145,175 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
 
   return (
     <div className='relative h-[calc(100vh-200px)] rounded-lg overflow-hidden mt-2'>
-      <div className='absolute top-2 left-2 right-2 z-10 flex justify-between items-center'>
-        <motion.div
-          initial={false}
-          animate={{ width: appCodeStore.viewState.isPanelCollapsed ? "40px" : "calc(100% - 120px)" }}
-          className='bg-white/80 backdrop-blur-sm rounded-lg shadow-sm'
-        >
-          <div className='flex h-full'>
-            <AnimatePresence>
-              {!appCodeStore.viewState.isPanelCollapsed && (
-                <motion.div
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: "300px", opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  className='border-r'
-                >
-                  <div className='p-2'>
-                    <div className='space-y-2 mb-2'>
-                      <Input
-                        type='text'
-                        placeholder='搜索代码内容...'
-                        value={appCodeStore.viewState.searchContent}
-                        onChange={(e) => appCodeStore.setSearchContent(e.target.value)}
-                        startContent={<Icon icon='mdi:code-search' className='text-default-400' />}
-                        className='w-full'
-                      />
-                      {appCodeStore.viewState.searchResults.length > 0 && (
-                        <div className='text-xs text-default-500 pl-2'>
-                          找到 {appCodeStore.viewState.searchResults.length} 个匹配结果
-                        </div>
-                      )}
-                    </div>
-                    <ScrollShadow className='h-[calc(100vh-400px)]'>
-                      <div className='space-y-1'>
-                        {appCodeStore.getFilteredCodeItems().map((item) => (
-                          <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            whileHover={{ x: 5 }}
-                            className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
-                              appCodeStore.viewState.selectedCodeId === item.id
-                                ? "bg-primary text-white"
-                                : "hover:bg-default-100 text-default-600"
-                            }`}
-                            onClick={() => appCodeStore.handleCodeSelect(item.id)}
-                          >
-                            <Icon icon={getCodeTypeIcon(item.type)} className='w-4 h-4 flex-shrink-0' />
-                            <Tooltip content={item.title} placement='right'>
-                              <div className='flex flex-col flex-1 min-w-0'>
-                                <div className='flex items-center gap-2'>
-                                  <span className='text-sm truncate max-w-[150px]'>{item.title}</span>
-                                  <Chip
-                                    size='sm'
-                                    variant='flat'
-                                    color={getCodeTypeColor(item.type)}
-                                    className='text-[10px] h-4'
-                                  >
-                                    {item.type}
-                                  </Chip>
-                                </div>
-                                <span className='text-xs opacity-70'>{new Date(item.updatedAt).toLocaleString()}</span>
-                              </div>
-                            </Tooltip>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </ScrollShadow>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div className='flex-1 relative'>
-              <div className='absolute top-2 left-2 z-20 flex items-center gap-2'>
-                <Tooltip content={appCodeStore.viewState.isPanelCollapsed ? "展开文件面板" : "收起文件面板"}>
-                  <Button size='sm' variant='flat' isIconOnly onClick={() => appCodeStore.togglePanelCollapse()}>
-                    <Icon
-                      icon={appCodeStore.viewState.isPanelCollapsed ? "mdi:chevron-right" : "mdi:chevron-left"}
-                      className='w-4 h-4'
+      <motion.div
+        initial={false}
+        animate={{ width: appCodeStore.viewState.isPanelCollapsed ? "40px" : "calc(100%)" }}
+        className='bg-white/80 backdrop-blur-sm rounded-lg shadow-sm h-full'
+      >
+        <div className='flex h-full'>
+          <AnimatePresence>
+            {!appCodeStore.viewState.isPanelCollapsed && (
+              <motion.div
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: "300px", opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                className='border-r'
+              >
+                <div className='p-2'>
+                  <div className='space-y-2 mb-2'>
+                    <Input
+                      type='text'
+                      placeholder='搜索代码内容...'
+                      value={appCodeStore.viewState.searchContent}
+                      onChange={(e) => appCodeStore.setSearchContent(e.target.value)}
+                      startContent={<Icon icon='mdi:code-search' className='text-default-400' />}
+                      className='w-full'
                     />
-                  </Button>
-                </Tooltip>
-                <Divider orientation='vertical' className='h-6' />
-                <Tooltip content='导出代码'>
-                  <Button size='sm' variant='flat' isIconOnly onClick={handleExportCode}>
-                    <Icon icon='mdi:download' className='w-4 h-4' />
-                  </Button>
-                </Tooltip>
-                <Tooltip content='导入代码'>
-                  <Button
-                    size='sm'
-                    variant='flat'
-                    isIconOnly
-                    onClick={() => (appCodeStore.viewState.showImportModal = true)}
-                  >
-                    <Icon icon='mdi:upload' className='w-4 h-4' />
-                  </Button>
-                </Tooltip>
-                <Divider orientation='vertical' className='h-6' />
-                <Tooltip content='版本信息'>
-                  <Button
-                    size='sm'
-                    variant='flat'
-                    isIconOnly
-                    onClick={() => (appCodeStore.viewState.showVersionInfo = true)}
-                  >
-                    <Icon icon='mdi:history' className='w-4 h-4' />
-                  </Button>
-                </Tooltip>
-                <Divider orientation='vertical' className='h-6' />
-                {appCodeStore.viewState.isEditing ? (
-                  <div className='space-x-2'>
-                    <Button
-                      size='sm'
-                      color='primary'
-                      onClick={() => appCodeStore.handleSaveEdit()}
-                      startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
-                    >
-                      保存
-                    </Button>
-                    <Button
-                      size='sm'
-                      variant='flat'
-                      onClick={() => appCodeStore.handleCancelEdit()}
-                      startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
-                    >
-                      取消
-                    </Button>
+                    {appCodeStore.viewState.searchResults.length > 0 && (
+                      <div className='text-xs text-default-500 pl-2'>
+                        找到 {appCodeStore.viewState.searchResults.length} 个匹配结果
+                      </div>
+                    )}
                   </div>
-                ) : (
+                  <ScrollShadow className='h-[calc(100vh-400px)]'>
+                    <div className='space-y-1'>
+                      {appCodeStore.getFilteredCodeItems().map((item) => (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          whileHover={{ x: 5 }}
+                          className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
+                            appCodeStore.viewState.selectedCodeId === item.id
+                              ? "bg-primary text-white"
+                              : "hover:bg-default-100 text-default-600"
+                          }`}
+                          onClick={() => appCodeStore.handleCodeSelect(item.id)}
+                        >
+                          <Icon icon={getCodeTypeIcon(item.type)} className='w-4 h-4 flex-shrink-0' />
+                          <Tooltip content={item.title} placement='right'>
+                            <div className='flex flex-col flex-1 min-w-0'>
+                              <div className='flex items-center gap-2'>
+                                <span className='text-sm truncate max-w-[150px]'>{item.title}</span>
+                                <Chip
+                                  size='sm'
+                                  variant='flat'
+                                  color={getCodeTypeColor(item.type)}
+                                  className='text-[10px] h-4'
+                                >
+                                  {item.type}
+                                </Chip>
+                              </div>
+                              <span className='text-xs opacity-70'>{new Date(item.updatedAt).toLocaleString()}</span>
+                            </div>
+                          </Tooltip>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </ScrollShadow>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className='flex-1 relative'>
+            <div className='absolute top-2 left-2 z-20 flex items-center gap-2'>
+              <Divider orientation='vertical' className='h-6' />
+              <Tooltip content='导出代码'>
+                <Button size='sm' variant='flat' isIconOnly onClick={handleExportCode}>
+                  <Icon icon='mdi:download' className='w-4 h-4' />
+                </Button>
+              </Tooltip>
+              <Tooltip content='导入代码'>
+                <Button
+                  size='sm'
+                  variant='flat'
+                  isIconOnly
+                  onClick={() => (appCodeStore.viewState.showImportModal = true)}
+                >
+                  <Icon icon='mdi:upload' className='w-4 h-4' />
+                </Button>
+              </Tooltip>
+              <Divider orientation='vertical' className='h-6' />
+              <Tooltip content='版本信息'>
+                <Button
+                  size='sm'
+                  variant='flat'
+                  isIconOnly
+                  onClick={() => (appCodeStore.viewState.showVersionInfo = true)}
+                >
+                  <Icon icon='mdi:history' className='w-4 h-4' />
+                </Button>
+              </Tooltip>
+              <Divider orientation='vertical' className='h-6' />
+              {appCodeStore.viewState.isEditing ? (
+                <div className='space-x-2'>
                   <Button
                     size='sm'
                     color='primary'
-                    onClick={() => appCodeStore.setEditMode(true)}
-                    startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
-                    isDisabled={!appCodeStore.viewState.selectedCodeId}
+                    onClick={() => appCodeStore.handleSaveEdit()}
+                    startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
                   >
-                    编辑
+                    保存
                   </Button>
-                )}
-              </div>
+                  <Button
+                    size='sm'
+                    variant='flat'
+                    onClick={() => appCodeStore.handleCancelEdit()}
+                    startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
+                  >
+                    取消
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  size='sm'
+                  color='primary'
+                  onClick={() => appCodeStore.setEditMode(true)}
+                  startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
+                  isDisabled={!appCodeStore.viewState.selectedCodeId}
+                >
+                  编辑
+                </Button>
+              )}
+            </div>
 
-              <div className='h-full pt-14'>
-                <Editor
-                  height='100%'
-                  width='100%'
-                  language='javascript'
-                  value={appCodeStore.viewState.editedCode}
-                  options={{
-                    readOnly: !appCodeStore.viewState.isEditing,
-                    minimap: { enabled: true },
-                    fontSize: 14,
-                    lineNumbers: "on",
-                    wordWrap: "on",
-                    automaticLayout: true,
-                    scrollBeyondLastLine: false,
-                    smoothScrolling: true,
-                    cursorBlinking: "smooth",
-                    cursorSmoothCaretAnimation: true,
-                    formatOnPaste: true,
-                    formatOnType: true,
-                    find: {
-                      addExtraSpaceOnTop: false,
-                      autoFindInSelection: "never",
-                      seedSearchStringFromSelection: "never",
-                    },
-                  }}
-                  theme='vs-dark'
-                  onChange={(value) => {
-                    if (appCodeStore.viewState.isEditing) {
-                      appCodeStore.updateEditedCode(value || "")
-                    }
-                  }}
-                />
-              </div>
+            <div className='h-full pt-14'>
+              <Editor
+                height='100%'
+                width='100%'
+                language='javascript'
+                value={appCodeStore.viewState.editedCode}
+                options={{
+                  readOnly: !appCodeStore.viewState.isEditing,
+                  minimap: { enabled: true },
+                  fontSize: 14,
+                  lineNumbers: "on",
+                  wordWrap: "on",
+                  automaticLayout: true,
+                  scrollBeyondLastLine: false,
+                  smoothScrolling: true,
+                  cursorBlinking: "smooth",
+                  cursorSmoothCaretAnimation: true,
+                  formatOnPaste: true,
+                  formatOnType: true,
+                  find: {
+                    addExtraSpaceOnTop: false,
+                    autoFindInSelection: "never",
+                    seedSearchStringFromSelection: "never",
+                  },
+                }}
+                theme='vs-dark'
+                onChange={(value) => {
+                  if (appCodeStore.viewState.isEditing) {
+                    appCodeStore.updateEditedCode(value || "")
+                  }
+                }}
+              />
             </div>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
 
       {/* 导入 Modal */}
       <Modal

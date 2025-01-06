@@ -69,7 +69,7 @@ const LocationDemo = () => {
       <Button
         color="primary"
         isLoading={loading}
-        onClick={handleGetLocation}
+        onPress={handleGetLocation}
       >
         获取当前位置
       </Button>
