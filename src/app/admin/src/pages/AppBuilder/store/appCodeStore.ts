@@ -7,7 +7,7 @@ import { saveToStorage, loadFromStorage, clearStorage } from "./methods/storageM
 import { addVersion, rollback, forward, clear } from "./methods/versionMethods"
 import { exportToMarkdown, downloadMarkdown } from "./methods/exportMethods"
 import { importFromMarkdown } from "./methods/importMethods"
-import { publishToServer, updateAppIndex } from "./methods/serverMethods"
+import { publishToServer, updateAppIndex, publishTemplate } from "./methods/serverMethods"
 import { handleAIGeneration, loadApp, createApp, generateInitialVersion } from "./methods/generationMethods"
 import {
   initViewState,
@@ -52,6 +52,7 @@ class AppCodeStore {
     this.downloadMarkdown = downloadMarkdown.bind(this)
     this.importFromMarkdown = importFromMarkdown.bind(this)
     this.publishToServer = publishToServer.bind(this)
+    this.publishTemplate = publishTemplate.bind(this)
     this.updateAppIndex = updateAppIndex.bind(this)
     this.handleAIGeneration = handleAIGeneration.bind(this)
     this.loadApp = loadApp.bind(this)
@@ -89,6 +90,7 @@ class AppCodeStore {
   downloadMarkdown!: typeof downloadMarkdown
   importFromMarkdown!: typeof importFromMarkdown
   publishToServer!: typeof publishToServer
+  publishTemplate!: typeof publishTemplate
   updateAppIndex!: typeof updateAppIndex
   handleAIGeneration!: typeof handleAIGeneration
   loadApp!: typeof loadApp
