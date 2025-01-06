@@ -15,9 +15,9 @@ export default function renderRouter() {
     <Route
       path='/admin'
       element={
-        <PermissionCheck resourceType='page' resourceId='/admin'>
-          <AdminPage />
-        </PermissionCheck>
+        // <PermissionCheck resourceType='page' resourceId='/admin'>
+        <AdminPage />
+        // </PermissionCheck>
       }
     >
       <Route index element={<Dashboard />} />
