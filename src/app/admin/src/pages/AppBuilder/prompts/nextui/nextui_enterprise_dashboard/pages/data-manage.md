@@ -10,7 +10,7 @@ const {
 } = context;
 
 const { useState, useEffect } = React;
-const { Card, CardBody } = NextUI;
+const { Card, CardBody, Tabs, Tab } = NextUI;
 const tableStore = await context.wpm.import('store_table');
 
 // 导入组件
@@ -18,8 +18,11 @@ const TableToolbar = await context.wpm.import('comp_table_toolbar');
 const TableContent = await context.wpm.import('comp_table_content');
 const TablePagination = await context.wpm.import('comp_table_pagination');
 
+// 导入图表组件
+const { Line } = await context.wpm.import('@ant-design/plots');
+
 const DataManage = observer(() => {
-  // 状态管理
+  // 保留原有状态管理代码...
   const [filterValue, setFilterValue] = useState("");
   const [selectedKeys, setSelectedKeys] = useState(new Set([]));
   const [visibleColumns, setVisibleColumns] = useState(new Set(["id", "name", "product", "workshop", "planQuantity", "finishQuantity", "qualifiedQuantity", "status", "actions"]));
@@ -32,8 +35,9 @@ const DataManage = observer(() => {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("table");
 
-  // 初始化加载数据
+  // 保留原有数据加载代码...
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -52,7 +56,7 @@ const DataManage = observer(() => {
   // 获取统计数据
   const statistics = tableStore.getStatistics();
 
-  // 过滤处理
+  // 保留原有过滤和排序代码...
   const filteredItems = () => {
     let filteredData = [...tableStore.items];
 
@@ -81,26 +85,57 @@ const DataManage = observer(() => {
     return filteredData;
   };
 
-  // 分页数据
   const paginatedItems = () => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
-
     return filteredItems().slice(start, end);
   };
 
-  // 排序数据
   const sortedItems = () => {
     return [...paginatedItems()].sort((a, b) => {
       const first = a[sortDescriptor.column];
       const second = b[sortDescriptor.column];
       const cmp = first < second ? -1 : first > second ? 1 : 0;
-
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   };
 
-  // 处理编辑
+  // 处理导出
+  const handleExport = () => {
+    try {
+      const data = filteredItems();
+      const csvContent = tableStore.exportToCSV(data);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `委外数据统计_${new Date().toLocaleDateString()}.csv`;
+      link.click();
+      message.success('导出成功');
+    } catch (error) {
+      message.error('导出失败');
+      console.error('Export failed:', error);
+    }
+  };
+
+  // 图表配置
+  const chartConfig = {
+    data: tableStore.getChartData(),
+    xField: 'date',
+    yField: 'value',
+    seriesField: 'category',
+    smooth: true,
+    animation: {
+      appear: {
+        animation: 'path-in',
+        duration: 1000,
+      },
+    },
+    legend: {
+      position: 'top',
+    },
+  };
+
+  // 保留原有编辑和删除处理代码...
   const handleEdit = async (id) => {
     try {
       message.success("编辑成功");
@@ -111,7 +146,6 @@ const DataManage = observer(() => {
     }
   };
 
-  // 处理删除
   const handleDelete = async (id) => {
     try {
       const newItems = tableStore.items.filter(item => item.id !== id);
@@ -124,7 +158,6 @@ const DataManage = observer(() => {
     }
   };
 
-  // 保存数据
   const saveData = async (data) => {
     try {
       await api.setMetadata(`${appId}_table_data`, JSON.stringify(data));
@@ -189,37 +222,57 @@ const DataManage = observer(() => {
         </Card>
       </div>
 
-      <TableToolbar
-        filterValue={filterValue}
-        onFilterChange={setFilterValue}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        dateFilter={dateFilter}
-        onDateFilterChange={setDateFilter}
-        visibleColumns={visibleColumns}
-        onVisibleColumnsChange={setVisibleColumns}
-        selectedKeys={selectedKeys}
-        totalItems={tableStore.items.length}
-      />
-      
-      <TableContent
-        items={sortedItems()}
-        sortDescriptor={sortDescriptor}
-        onSortChange={setSortDescriptor}
-        selectedKeys={selectedKeys}
-        onSelectionChange={setSelectedKeys}
-        visibleColumns={visibleColumns}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      <Tabs 
+        selectedKey={activeTab}
+        onSelectionChange={setActiveTab}
+        aria-label="数据展示方式"
+      >
+        <Tab key="table" title="表格视图">
+          <div className="flex flex-col gap-4">
+            <TableToolbar
+              filterValue={filterValue}
+              onFilterChange={setFilterValue}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              dateFilter={dateFilter}
+              onDateFilterChange={setDateFilter}
+              visibleColumns={visibleColumns}
+              onVisibleColumnsChange={setVisibleColumns}
+              selectedKeys={selectedKeys}
+              totalItems={tableStore.items.length}
+              onExport={handleExport}
+            />
+            
+            <TableContent
+              items={sortedItems()}
+              sortDescriptor={sortDescriptor}
+              onSortChange={setSortDescriptor}
+              selectedKeys={selectedKeys}
+              onSelectionChange={setSelectedKeys}
+              visibleColumns={visibleColumns}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
 
-      <TablePagination
-        page={page}
-        total={Math.ceil(filteredItems().length / rowsPerPage)}
-        selectedKeys={selectedKeys}
-        totalItems={filteredItems().length}
-        onChange={setPage}
-      />
+            <TablePagination
+              page={page}
+              total={Math.ceil(filteredItems().length / rowsPerPage)}
+              selectedKeys={selectedKeys}
+              totalItems={filteredItems().length}
+              onChange={setPage}
+            />
+          </div>
+        </Tab>
+        <Tab key="chart" title="图表视图">
+          <Card>
+            <CardBody>
+              <div className="h-[400px]">
+                <Line {...chartConfig} />
+              </div>
+            </CardBody>
+          </Card>
+        </Tab>
+      </Tabs>
     </div>
   );
 });

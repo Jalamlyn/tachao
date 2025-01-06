@@ -53,6 +53,7 @@ class TableStore {
     ];
   }
 
+  // 保留原有方法
   setItems(items) {
     this.items = items;
   }
@@ -72,7 +73,6 @@ class TableStore {
     this.items = this.items.filter(item => item.id !== id);
   }
 
-  // 获取统计数据
   getStatistics() {
     const total = this.items.reduce((acc, item) => acc + item.planQuantity, 0);
     const finished = this.items.reduce((acc, item) => acc + item.finishQuantity, 0);
@@ -85,6 +85,81 @@ class TableStore {
       finishRate: total ? (finished / total * 100).toFixed(2) : 0,
       qualifiedRate: finished ? (qualified / finished * 100).toFixed(2) : 0
     };
+  }
+
+  // 新增导出方法
+  exportToCSV(data) {
+    const headers = [
+      '计划编号',
+      '计划名称',
+      '产品名称',
+      '工序名称',
+      '计划数量',
+      '完成数量',
+      '合格数量',
+      '状态',
+      '开始日期',
+      '结束日期'
+    ];
+
+    const rows = data.map(item => [
+      item.id,
+      item.name,
+      item.product,
+      item.workshop,
+      item.planQuantity,
+      item.finishQuantity,
+      item.qualifiedQuantity,
+      this.getStatusText(item.status),
+      item.startDate,
+      item.endDate
+    ]);
+
+    return [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+  }
+
+  // 获取状态文本
+  getStatusText(status) {
+    const statusMap = {
+      pending: '待计划',
+      processing: '进行中',
+      completed: '已完成',
+      cancelled: '已取消'
+    };
+    return statusMap[status] || status;
+  }
+
+  // 获取图表数据
+  getChartData() {
+    const chartData = [];
+    
+    this.items.forEach(item => {
+      // 计划数量数据点
+      chartData.push({
+        date: new Date(item.startDate).toLocaleDateString(),
+        category: '计划数量',
+        value: item.planQuantity
+      });
+      
+      // 完成数量数据点
+      chartData.push({
+        date: new Date(item.startDate).toLocaleDateString(),
+        category: '完成数量',
+        value: item.finishQuantity
+      });
+      
+      // 合格数量数据点
+      chartData.push({
+        date: new Date(item.startDate).toLocaleDateString(),
+        category: '合格数量',
+        value: item.qualifiedQuantity
+      });
+    });
+
+    return chartData;
   }
 }
 

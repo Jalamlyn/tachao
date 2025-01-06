@@ -20,7 +20,8 @@ const TableToolbar = observer(({
   visibleColumns,
   onVisibleColumnsChange,
   selectedKeys,
-  totalItems
+  totalItems,
+  onExport
 }) => {
   return (
     <div className="flex flex-col gap-4">
@@ -108,14 +109,25 @@ const TableToolbar = observer(({
               <DropdownMenu aria-label="批量操作选项">
                 <DropdownItem key="batch-edit">批量编辑</DropdownItem>
                 <DropdownItem key="batch-delete" className="text-danger" color="danger">批量删除</DropdownItem>
-                <DropdownItem key="batch-export">导出数据</DropdownItem>
+                <DropdownItem key="batch-export" onPress={onExport}>导出数据</DropdownItem>
                 <DropdownItem key="batch-status">修改状态</DropdownItem>
               </DropdownMenu>
             </Dropdown>
           )}
 
-          <Button color="primary" endContent={<Icon icon="solar:add-circle-bold" />}>
+          <Button 
+            color="primary" 
+            endContent={<Icon icon="solar:add-circle-bold" />}
+          >
             新建计划
+          </Button>
+
+          <Button
+            variant="flat"
+            endContent={<Icon className="text-small" icon="solar:file-download-linear" />}
+            onPress={onExport}
+          >
+            导出
           </Button>
         </div>
       </div>
