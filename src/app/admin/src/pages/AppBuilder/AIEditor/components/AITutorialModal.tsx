@@ -263,7 +263,7 @@ export const AITutorialModal: React.FC<AITutorialModalProps> = ({ isOpen, onClos
                         <p>使用代码块：将代码用 ``` 包裹，可以保持代码格式</p>
                       </div>
                       <div className='flex items-start gap-2 bg-default-50 p-3 rounded-lg'>
-                        <Icon icon='solar:steps-linear' className='text-primary mt-1 flex-shrink-0' />
+                        <Icon icon='bi:bar-chart-steps' className='text-primary mt-1 flex-shrink-0' />
                         <p>分步骤提问：复杂问题可以分多次对话，逐步完善</p>
                       </div>
                       <div className='flex items-start gap-2 bg-default-50 p-3 rounded-lg'>

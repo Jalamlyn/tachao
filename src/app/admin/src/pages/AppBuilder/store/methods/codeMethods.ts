@@ -9,7 +9,8 @@ export function compileCode(this: AppCodeStore, code: string): Promise<string> {
        }
       `,
       {
-        presets: ["react"],
+        filename: "example.tsx",
+        presets: ["react", "typescript"],
       }
     )
     return Promise.resolve(compiledCode)
