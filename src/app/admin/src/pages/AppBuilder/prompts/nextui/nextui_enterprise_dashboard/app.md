@@ -15,14 +15,12 @@ const {
 } = context;
 
 const { Routes, Route, Navigate, useNavigate } = ReactRouterDom;
-const { ScrollShadow, Spacer, Avatar, Button, useDisclosure, Tabs, Tab } = NextUI;
+const { ScrollShadow, Spacer, Avatar, Button, useDisclosure } = NextUI;
 
 // 导入组件
-const DataManage = await context.wpm.import('page_data_manage');
-const AppearanceSetting = await context.wpm.import('page_appearance_setting');
+const OutsourceDashboard = await context.wpm.import('page_outsource_dashboard');
 const Sidebar = await context.wpm.import('comp_sidebar');
 const SidebarDrawer = await context.wpm.import('comp_sidebar_drawer');
-const AcmeIcon = await context.wpm.import('comp_acme_icon');
 
 const App = observer(() => {
   const {isOpen, onOpenChange} = useDisclosure();
@@ -62,7 +60,7 @@ const App = observer(() => {
                   "w-0 opacity-0": isCollapsed,
                 })}
               >
-                委外加工管理
+                委外加工管理系统
               </span>
               <div className={cn("flex-end flex", {hidden: isCollapsed})}>
                 <Icon
@@ -74,29 +72,54 @@ const App = observer(() => {
               </div>
             </div>
             <Spacer y={6} />
+            <div className="flex items-center gap-3 px-3">
+              <Avatar
+                isBordered
+                size="sm"
+                src="https://i.pravatar.cc/150?u=a042581f4e29026024d"
+              />
+              <div className={cn("flex max-w-full flex-col", {hidden: isCollapsed})}>
+                <p className="text-small font-medium text-foreground">管理员</p>
+                <p className="text-tiny font-medium text-default-400">系统管理员</p>
+              </div>
+            </div>
+
+            <Spacer y={6} />
 
             <Sidebar
-              defaultSelectedKey="data"
+              defaultSelectedKey="dashboard"
               iconClassName="group-data-[selected=true]:text-default-50"
               isCompact={isCollapsed}
               items={[
                 {
-                  key: "data",
-                  title: "委外数据统计",
-                  href: "/data",
-                  icon: "solar:chart-2-bold-duotone"
+                  key: "dashboard",
+                  title: "委外统计",
+                  icon: "solar:chart-2-bold-duotone",
+                  href: "/dashboard"
                 },
                 {
-                  key: "settings",
-                  title: "系统设置",
-                  icon: "solar:settings-bold-duotone",
-                  items: [
-                    {
-                      key: "appearance",
-                      title: "外观设置",
-                      href: "/settings/appearance"
-                    }
-                  ]
+                  key: "plan",
+                  title: "委外计划",
+                  icon: "solar:calendar-bold-duotone",
+                  href: "/plan"
+                },
+                {
+                  key: "process",
+                  title: "委外执行",
+                  icon: "solar:widget-2-bold-duotone",
+                  href: "/process"
+                },
+                {
+                  key: "supplier",
+                  title: "供应商管理",
+                  icon: "solar:users-group-rounded-bold-duotone",
+                  href: "/supplier"
+                },
+                {
+                  key: "report",
+                  title: "统计报表",
+                  icon: "solar:document-bold-duotone",
+                  href: "/report"
                 }
               ]}
               itemClasses={{
@@ -160,6 +183,34 @@ const App = observer(() => {
                   )}
                 </Button>
               </NextUI.Tooltip>
+              <NextUI.Tooltip content="退出登录" isDisabled={!isCollapsed} placement="right">
+                <Button
+                  className={cn("justify-start text-default-500 data-[hover=true]:text-foreground", {
+                    "justify-center": isCollapsed,
+                  })}
+                  isIconOnly={isCollapsed}
+                  startContent={
+                    isCollapsed ? null : (
+                      <Icon
+                        className="flex-none rotate-180 text-default-500"
+                        icon="solar:logout-3-bold-duotone"
+                        width={24}
+                      />
+                    )
+                  }
+                  variant="light"
+                >
+                  {isCollapsed ? (
+                    <Icon
+                      className="rotate-180 text-default-500"
+                      icon="solar:logout-3-bold-duotone"
+                      width={24}
+                    />
+                  ) : (
+                    "退出登录"
+                  )}
+                </Button>
+              </NextUI.Tooltip>
             </div>
           </div>
         </SidebarDrawer>
@@ -168,9 +219,8 @@ const App = observer(() => {
         <div className="flex-1 overflow-auto p-6">
           <div className="w-full">
               <Routes>
-                <Route path="/" element={<Navigate to="/data" replace />} />
-                <Route path="/data" element={<DataManage />} />
-                <Route path="/settings/appearance" element={<AppearanceSetting />} />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<OutsourceDashboard />} />
               </Routes>
           </div>
         </div>

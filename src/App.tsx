@@ -10,6 +10,7 @@ import { loadBMapScript } from "@/components/reports/MapComponent"
 import LandingPage from "./app/landing/App"
 import AdminRouter from "./app/admin/router"
 import UnauthorizedPage from "./app/admin/src/permissions/pages/UnauthorizedPage"
+import WaitListPage from "./pages/WaitListPage"
 
 setTimeout(() => {
   loadBMapScript()
@@ -41,6 +42,7 @@ function App() {
             <Route path='/' element={<LandingPage />} />
             <Route path='/login' element={<LoginPage />} />
             <Route path='/unauthorized' element={<UnauthorizedPage />} />
+            {/* <Route path='/operations/wait-list' element={<WaitListPage />} /> */}
             {AdminRouter()}
           </Routes>
           <Toaster />

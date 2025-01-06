@@ -216,11 +216,10 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
             )}
           </AnimatePresence>
 
-          <div className='flex-1 relative'>
-            <div className='absolute top-2 left-2 z-20 flex items-center gap-2'>
-              <Divider orientation='vertical' className='h-6' />
+          <div className='flex-1 relative mt-2'>
+            <div className='flex items-center gap-2'>
               <Tooltip content='导出代码'>
-                <Button size='sm' variant='flat' isIconOnly onClick={handleExportCode}>
+                <Button className='ml-2' size='sm' variant='flat' isIconOnly onPress={handleExportCode}>
                   <Icon icon='mdi:download' className='w-4 h-4' />
                 </Button>
               </Tooltip>
@@ -278,7 +277,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
               )}
             </div>
 
-            <div className='h-full pt-14'>
+            <div className='h-full pt-4'>
               <Editor
                 height='100%'
                 width='100%'

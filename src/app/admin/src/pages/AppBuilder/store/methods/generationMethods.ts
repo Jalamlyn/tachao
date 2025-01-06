@@ -54,15 +54,6 @@ export async function handleAIGeneration(
         ),
       }
 
-      const exportErrors = this.validateModuleExports(newVersion)
-      if (exportErrors.length > 0) {
-        return {
-          success: false,
-          version: newVersion,
-          errors: exportErrors,
-          moduleErrors: this.processModuleErrors(exportErrors),
-        }
-      }
       this.addVersion(newVersion)
       return {
         success: true,
@@ -99,15 +90,6 @@ export async function handleAIGeneration(
       modules: updatedModules,
     }
 
-    const exportErrors = this.validateModuleExports(newVersion)
-    if (exportErrors.length > 0) {
-      return {
-        success: false,
-        version: newVersion,
-        errors: exportErrors,
-        moduleErrors: this.processModuleErrors(exportErrors),
-      }
-    }
     this.addVersion(newVersion)
     return {
       success: true,
@@ -141,10 +123,11 @@ export async function loadApp(this: AppCodeStore, appId: string) {
     const CACHE_EXPIRE_TIME = 60 * 60 * 1000 // 1小时过期
 
     // 3. 判断是否可以使用缓存
-    const canUseCache = cached && 
-      cached.serverVersion === serverVersion && 
-      cached.lastSyncTime && 
-      (now - cached.lastSyncTime) < CACHE_EXPIRE_TIME
+    const canUseCache =
+      cached &&
+      cached.serverVersion === serverVersion &&
+      cached.lastSyncTime &&
+      now - cached.lastSyncTime < CACHE_EXPIRE_TIME
 
     if (canUseCache) {
       // 使用缓存数据
@@ -161,9 +144,7 @@ export async function loadApp(this: AppCodeStore, appId: string) {
     // 4. 从服务器加载完整数据
     console.log("Loading from server")
     const moduleIds = Object.keys(serverAppData.app.modules)
-    const moduleResults = await Promise.all(
-      moduleIds.map((moduleId) => getMetadata([moduleId]))
-    )
+    const moduleResults = await Promise.all(moduleIds.map((moduleId) => getMetadata([moduleId])))
 
     const modules = {}
     moduleResults.forEach((result, index) => {
@@ -184,7 +165,7 @@ export async function loadApp(this: AppCodeStore, appId: string) {
       app: serverAppData.app,
       modules,
       serverVersion,
-      lastSyncTime: now
+      lastSyncTime: now,
     }
 
     // 6. 编译代码
@@ -201,7 +182,7 @@ export async function loadApp(this: AppCodeStore, appId: string) {
     return newVersion
   } catch (error) {
     console.error("Error in loadApp:", error)
-    
+
     // 8. 错误处理：如果服务器请求失败但有缓存，使用缓存
     const cached = this.loadFromStorage()
     if (cached) {
@@ -209,7 +190,7 @@ export async function loadApp(this: AppCodeStore, appId: string) {
       this.addVersion(cached)
       return cached
     }
-    
+
     throw error
   }
 }
@@ -257,16 +238,6 @@ export async function generateInitialVersion(
         }),
         {}
       ),
-    }
-
-    const exportErrors = this.validateModuleExports(newVersion)
-    if (exportErrors.length > 0) {
-      return {
-        success: false,
-        version: newVersion,
-        errors: exportErrors,
-        moduleErrors: this.processModuleErrors(exportErrors),
-      }
     }
 
     return {
@@ -323,7 +294,7 @@ export async function refreshApp(this: AppCodeStore) {
 
   // 清除缓存
   this.clearStorage()
-  
+
   // 重新加载
   return this.loadApp(this.appId)
 }

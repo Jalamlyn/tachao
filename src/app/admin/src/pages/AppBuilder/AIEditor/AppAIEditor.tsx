@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react"
-import { ResizableHandle, ResizablePanelGroup } from "@/components/ui/resizable"
 import AICommandInput from "./components/AICommandInput"
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
 import { Tabs, Tab, Button, ScrollShadow, Avatar, Spinner, Modal, ModalContent } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { ResizablePanel } from "@/components/ui/resizable"
 import { cn } from "@/lib/utils"
 import { AI_LEVELS, AIEditorProps } from "./type"
 import { observer } from "mobx-react-lite"
@@ -105,8 +103,8 @@ const AIEditor: React.FC<AIEditorProps> = observer(
 
     return (
       <>
-        <ResizablePanelGroup direction='horizontal'>
-          <ResizablePanel defaultSize={30} className='resizable-panel'>
+        <div className="flex w-full h-full">
+          <div className="w-[35%] h-full">
             <div className='h-full flex flex-col'>
               <div className='flex justify-between items-center p-2 border-b mb-2'>
                 <div className='flex items-center gap-4'></div>
@@ -128,9 +126,9 @@ const AIEditor: React.FC<AIEditorProps> = observer(
                 <AICommandInput onStop={onStop} agent={agent} onResult={onCommandResult} aiLevel={selectedAILevel} />
               </div>
             </div>
-          </ResizablePanel>
-          <ResizableHandle />
-          <ResizablePanel defaultSize={70} className='resizable-panel bg-slate-50'>
+          </div>
+
+          <div className="w-[65%] h-full bg-slate-50">
             <div className='relative h-full flex flex-col p-2'>
               <div className='version-control-wrapper absolute -top-2 right-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-2 transition-all duration-200 hover:bg-white z-50'>
                 <div className='flex items-center gap-3'>
@@ -185,8 +183,8 @@ const AIEditor: React.FC<AIEditorProps> = observer(
 
               <CodeView appId={appId} showCodeTab={showCodeTab} selectedTab={selectedTab} />
             </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+          </div>
+        </div>
 
         {/* 图片预览Modal */}
         <Modal
