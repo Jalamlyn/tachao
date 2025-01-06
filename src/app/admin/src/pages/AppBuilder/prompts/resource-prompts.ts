@@ -83,7 +83,7 @@ ${resourceDescription}
 async function getResourceDetails(resourceId) {
   try {
     const result = await getMetadata([resourceId])
-    const resourceData = result.data[0]
+    const resourceData = JSON.parse(result.data?.[0]?.value)
     
     // 获取所有记录
     const records = resourceData.data
