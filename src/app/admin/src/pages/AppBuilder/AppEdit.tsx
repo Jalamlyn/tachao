@@ -261,7 +261,7 @@ const AppBuilder: React.FC = observer(() => {
   const handleStop = useCallback(() => {
     updateLastMessage({
       status: "cancelled",
-      content: accumulatedTextRef.current || "生成已停止",
+      content: accumulatedTextRef.current || "......",
     })
   }, [updateLastMessage])
 

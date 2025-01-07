@@ -34,7 +34,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     const renderMessage = (message: any) => {
       const isUser = message.role === "user"
       const hasError = message.status === "error"
-      const hasImages = message.images && message.images.length > 0
+      const hasImages = message.content.images && message.content.images.length > 0
 
       // 格式化消息内容
       const formatContent = (content: any) => {
@@ -56,7 +56,6 @@ const AIEditor: React.FC<AIEditorProps> = observer(
         }
         return String(content)
       }
-
       return (
         <div key={message.id} className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""} mb-4`}>
           <Avatar src={isUser ? user : mo2} className='flex-shrink-0' />
@@ -75,12 +74,10 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               </div>
             ) : (
               <>
-                <div className='whitespace-pre-wrap text-sm break-words w-full'>
-                  {formatContent(message.content)}
-                </div>
+                <div className='whitespace-pre-wrap text-sm break-words w-full'>{formatContent(message.content)}</div>
                 {hasImages && (
                   <div className='flex flex-wrap gap-2 mt-2'>
-                    {message.images.map((image: string, index: number) => (
+                    {message.content.images.map((image: string, index: number) => (
                       <img
                         key={index}
                         src={image}
@@ -103,8 +100,8 @@ const AIEditor: React.FC<AIEditorProps> = observer(
 
     return (
       <>
-        <div className="flex w-full h-full">
-          <div className="w-[35%] h-full">
+        <div className='flex w-full h-full'>
+          <div className='w-[35%] h-full'>
             <div className='h-full flex flex-col'>
               <div className='flex justify-between items-center p-2 border-b mb-2'>
                 <div className='flex items-center gap-4'></div>
@@ -128,7 +125,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
             </div>
           </div>
 
-          <div className="w-[65%] h-full bg-slate-50">
+          <div className='w-[65%] h-full bg-slate-50'>
             <div className='relative h-full flex flex-col p-2'>
               <div className='version-control-wrapper absolute -top-2 right-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-2 transition-all duration-200 hover:bg-white z-50'>
                 <div className='flex items-center gap-3'>

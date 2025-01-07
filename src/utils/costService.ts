@@ -43,7 +43,7 @@ export const costService = {
       },
     }
 
-    const rate = ratePerMillionTokens[model] || ratePerMillionTokens["ADVANCED"]
+    const rate = ratePerMillionTokens[model] || ratePerMillionTokens["EXPERT"]
     const tokenRate = isInput ? rate.input : rate.output
     return (tokenCount / 1000000) * tokenRate
   },
@@ -83,8 +83,6 @@ export const costService = {
       let costCalculator
       if (usage.model.startsWith("deepseek")) {
         costCalculator = this.calculateDeepSeekCost
-      } else if (isWild) {
-        costCalculator = this.calculateClaudeWildCost
       } else {
         costCalculator = this.calculateClaudeCost
       }

@@ -397,7 +397,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
                 radius='lg'
                 size='sm'
                 variant={(!input.trim() && previews.length === 0) || isLoading ? "flat" : "solid"}
-                onClick={handleSend}
+                onPress={handleSend}
                 className='transition-transform active:scale-95'
               >
                 {isLoading ? (
