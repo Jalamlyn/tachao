@@ -30,6 +30,7 @@ interface ButtonState {
 export function useAICommandButton({ input, previews, agent, onResult, onStop }: UseAICommandButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const abortTimeoutRef = useRef<NodeJS.Timeout>()
+  const lastInputRef = useRef<{ content: string; images: string[] }>({ content: "", images: [] })
 
   // 清理超时计时器
   useEffect(() => {
@@ -71,10 +72,27 @@ export function useAICommandButton({ input, previews, agent, onResult, onStop }:
 
     try {
       setIsLoading(true)
-      const messageContent = {
+      // 保存当前输入，以便发送失败时恢复
+      lastInputRef.current = {
         content: input.trim(),
-        images: previews,
+        images: [...previews],
       }
+
+      const messageContent = {
+        content: lastInputRef.current.content,
+        images: lastInputRef.current.images,
+      }
+
+      // 立即清空输入和图片
+      onResult?.({ 
+        type: 'clear',
+        content: '',
+        status: 'clear',
+        role: 'system',
+        id: Date.now().toString(),
+        images: []
+      })
+
       // 调用AI处理命令，并等待结果
       const result = await agent.processCommand(messageContent)
 
@@ -86,20 +104,30 @@ export function useAICommandButton({ input, previews, agent, onResult, onStop }:
               status: result.status,
               role: result.role,
               id: result.id,
-              images: previews,
+              images: lastInputRef.current.images,
             }
           : {
               content: String(result),
               status: "success",
               role: "assistant",
               id: Date.now().toString(),
-              images: previews,
+              images: lastInputRef.current.images,
             }
 
       onResult?.(processedResult)
     } catch (error) {
       console.error("Error in AI command:", error)
       message.error("发送消息失败：" + (error instanceof Error ? error.message : "未知错误"))
+      
+      // 发送失败时，恢复之前的输入
+      onResult?.({ 
+        type: 'restore',
+        content: lastInputRef.current.content,
+        status: 'restore',
+        role: 'system',
+        id: Date.now().toString(),
+        images: lastInputRef.current.images
+      })
     } finally {
       // 设置一个短暂的延时，确保状态正确更新
       abortTimeoutRef.current = setTimeout(() => {
