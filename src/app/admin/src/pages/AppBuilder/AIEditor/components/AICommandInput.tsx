@@ -1,13 +1,13 @@
-import React, { memo, useState, useCallback, useRef, useEffect } from "react"
+import React, { memo, useState, useCallback, useRef } from "react"
 import { Button, Textarea, Tooltip, Progress, Badge, ScrollShadow, Modal, ModalContent } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import debounce from "lodash/debounce"
 
 import { cn } from "@/lib/utils"
 import { imageStore } from "./ImageStore"
-import { aiControllerStore } from "./AIControllerStore"
 import message from "@/components/Message"
 import { AITutorialModal } from "./AITutorialModal"
+import { useAICommandButton } from "./hooks/useAICommandButton"
 
 interface AIAgent {
   processCommand: (
@@ -26,7 +26,6 @@ interface AICommandInputProps {
 const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInputProps) => {
   // 内部状态管理
   const [input, setInput] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
   const [previews, setPreviews] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
@@ -38,7 +37,20 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const lastTranscriptRef = useRef<string>("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const abortTimeoutRef = useRef<NodeJS.Timeout>()
+
+  // 使用自定义 Hook 管理按钮状态和动作
+  const { buttonState, actions } = useAICommandButton({
+    input,
+    previews,
+    agent,
+    onResult: (result) => {
+      onResult?.(result)
+      setInput("")
+      setPreviews([])
+      imageStore.clear()
+    },
+    onStop,
+  })
 
   // 使用防抖处理输入更新
   const debouncedSetInput = useCallback(
@@ -48,139 +60,39 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     []
   )
 
-  // 监听 aiControllerStore 的状态
-  useEffect(() => {
-    const checkAbortStatus = () => {
-      if (!aiControllerStore.controller) {
-        setIsLoading(false)
-      }
-    }
-
-    // 创建一个 MutationObserver 来监听 aiControllerStore 的变化
-    const observer = new MutationObserver(checkAbortStatus)
-    observer.observe(aiControllerStore, { attributes: true })
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [])
-
-  // 清理超时计时器
-  useEffect(() => {
-    return () => {
-      if (abortTimeoutRef.current) {
-        clearTimeout(abortTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  // 处理发送消息
-  const handleSend = useCallback(async () => {
-    if (!input.trim() && previews.length === 0) return
-    if (isLoading) return
-
-    try {
-      setIsLoading(true)
-      const messageContent = {
-        content: input.trim(),
-        images: previews,
-      }
-
-      const result = await agent.processCommand(messageContent)
-
-      // 处理返回结果，确保它是可显示的格式
-      const processedResult = typeof result === 'object' 
-        ? { 
-            content: result.content || JSON.stringify(result, null, 2),
-            status: result.status,
-            role: result.role,
-            id: result.id,
-            images: previews // 将图片数据包含在消息中
-          }
-        : { 
-            content: String(result),
-            status: 'success',
-            role: 'assistant',
-            id: Date.now().toString(),
-            images: previews
-          }
-
-      onResult?.(processedResult)
-      setInput("")
-      setPreviews([]) // 清空预览图片
-      imageStore.clear() // 清空图片存储
-    } catch (error) {
-      console.error("Error in AI command:", error)
-      message.error("发送消息失败：" + (error instanceof Error ? error.message : "未知错误"))
-    } finally {
-      // 设置一个短暂的延时，确保状态正确更新
-      abortTimeoutRef.current = setTimeout(() => {
-        setIsLoading(false)
-      }, 100)
-    }
-  }, [input, isLoading, agent, onResult, previews])
-
-  // 处理停止生成
-  const handleStop = useCallback(() => {
-    aiControllerStore.abort()
-    // 设置一个短暂的延时，确保状态正确更新
-    abortTimeoutRef.current = setTimeout(() => {
-      setIsLoading(false)
-      onStop?.()
-    }, 100)
-  }, [onStop])
-
   // 处理按键事件
   const handleKeyPress = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault()
-        handleSend()
+        actions.handleSend()
       }
     },
-    [handleSend]
+    [actions]
   )
 
-  // 检查是否可以发送消息
-  const canSend = Boolean(input.trim() || previews.length > 0)
-
   // 渲染发送/停止按钮
-  const renderActionButton = () => {
-    if (isLoading) {
-      return (
-        <Button
-          isIconOnly
-          color="danger"
-          radius="lg"
-          size="sm"
-          variant="flat"
-          onClick={handleStop}
-          className="transition-transform active:scale-95"
-        >
-          <Icon icon="mdi:stop" width={20} />
-        </Button>
-      )
-    }
-
-    return (
-      <Button
-        isIconOnly
-        color={canSend ? "primary" : "default"}
-        isDisabled={!canSend}
-        radius="lg"
-        size="sm"
-        variant={canSend ? "solid" : "flat"}
-        onPress={handleSend}
-        className="transition-transform active:scale-95"
-      >
-        <Icon
-          className={cn("[&>path]:stroke-[2px]", canSend ? "text-primary-foreground" : "text-default-600")}
-          icon="solar:arrow-up-linear"
-          width={20}
-        />
-      </Button>
-    )
-  }
+  const renderActionButton = () => (
+    <Button
+      isIconOnly
+      color={buttonState.color}
+      isDisabled={buttonState.disabled}
+      radius="lg"
+      size="sm"
+      variant={buttonState.variant}
+      onPress={buttonState.isLoading ? actions.handleStop : actions.handleSend}
+      className="transition-transform active:scale-95"
+    >
+      <Icon
+        className={cn(
+          "[&>path]:stroke-[2px]",
+          buttonState.color === "primary" ? "text-primary-foreground" : "text-default-600"
+        )}
+        icon={buttonState.icon}
+        width={20}
+      />
+    </Button>
+  )
 
   // 处理剪贴板粘贴
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
