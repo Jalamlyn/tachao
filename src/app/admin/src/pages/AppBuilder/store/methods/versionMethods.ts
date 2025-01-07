@@ -1,4 +1,5 @@
 import { AppCodeStore, Version } from "../types"
+import { context } from "../../../components/functionContext"
 
 export function addVersion(this: AppCodeStore, version: Version) {
   this.versions = this.versions.slice(0, this.currentIndex + 1)
@@ -8,18 +9,28 @@ export function addVersion(this: AppCodeStore, version: Version) {
   return version
 }
 
-export function rollback(this: AppCodeStore): Version | null {
+export async function rollback(this: AppCodeStore): Promise<Version | null> {
   if (this.canRollback) {
     this.currentIndex--
-    return this.currentVersion
+    const version = this.currentVersion
+    if (version && this.appId) {
+      // 执行当前版本的代码
+      await this.executeModules(context(this.appId))
+    }
+    return version
   }
   return null
 }
 
-export function forward(this: AppCodeStore): Version | null {
+export async function forward(this: AppCodeStore): Promise<Version | null> {
   if (this.canForward) {
     this.currentIndex++
-    return this.currentVersion
+    const version = this.currentVersion
+    if (version && this.appId) {
+      // 执行当前版本的代码
+      await this.executeModules(context(this.appId))
+    }
+    return version
   }
   return null
 }
