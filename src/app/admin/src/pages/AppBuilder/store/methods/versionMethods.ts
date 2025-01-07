@@ -1,5 +1,5 @@
+import { context } from "../../components/functionContext"
 import { AppCodeStore, Version } from "../types"
-import { context } from "../../../components/functionContext"
 
 export function addVersion(this: AppCodeStore, version: Version) {
   this.versions = this.versions.slice(0, this.currentIndex + 1)
