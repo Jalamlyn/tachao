@@ -7,8 +7,8 @@ import PendingTasks from "./src/pages/PendingTasks"
 import FileManager from "./src/pages/FileManager"
 import { PermissionCheck } from "./src/permissions/components/PermissionCheck"
 import AppBuilder from "./src/pages/AppBuilder/AppEdit"
-import ResourceManagement from "../../pages/resource-management"
-import ResourceDetail from "../../pages/resource-management/ResourceDetail"
+import ResourceManagement from "./src/pages/ResourceManagement"
+import ResourceDetail from "./src/pages/ResourceManagement/ResourceDetail"
 
 export default function renderRouter() {
   return (
