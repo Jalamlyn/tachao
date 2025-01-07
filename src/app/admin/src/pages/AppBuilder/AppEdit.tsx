@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useLocation } from "react-router-dom"
-import { Button, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, ButtonGroup } from "@nextui-org/react"
+import {
+  Button,
+  Spinner,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ButtonGroup,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
 import PageLayout from "@/app/admin/src/component/PageLayout"
@@ -469,7 +478,7 @@ const AppBuilder: React.FC = observer(() => {
     <>
       {moduleError && <ErrorPrompt error={moduleError} onFix={handleFix} />}
       <PageLayout title={`构建应用 - ${appTitle}`} titleIcon='mdi:tools' actions={pageActions}>
-        <div className='h-[calc(100vh-140px)] overflow-auto'>
+        <div className='h-[calc(100vh-140px)]'>
           <AIEditor
             parseConfig={async (code: string) => ({ code })}
             messages={messages}
