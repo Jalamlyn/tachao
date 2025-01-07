@@ -7,7 +7,7 @@ import { saveToStorage, loadFromStorage, clearStorage } from "./methods/storageM
 import { addVersion, rollback, forward, clear } from "./methods/versionMethods"
 import { exportToMarkdown, downloadMarkdown } from "./methods/exportMethods"
 import { importFromMarkdown } from "./methods/importMethods"
-import { publishToServer, updateAppIndex, publishTemplate } from "./methods/serverMethods"
+import { publishToServer, updateAppIndex, publishTemplate, getLastPublishedVersion, rollbackToLastPublished } from "./methods/serverMethods"
 import { handleAIGeneration, loadApp, createApp, generateInitialVersion } from "./methods/generationMethods"
 import {
   initViewState,
@@ -58,6 +58,8 @@ class AppCodeStore {
     this.loadApp = loadApp.bind(this)
     this.createApp = createApp.bind(this)
     this.generateInitialVersion = generateInitialVersion.bind(this)
+    this.getLastPublishedVersion = getLastPublishedVersion.bind(this)
+    this.rollbackToLastPublished = rollbackToLastPublished.bind(this)
 
     // 绑定视图相关方法
     this.handleCodeSelect = handleCodeSelect.bind(this)
@@ -96,6 +98,8 @@ class AppCodeStore {
   loadApp!: typeof loadApp
   createApp!: typeof createApp
   generateInitialVersion!: typeof generateInitialVersion
+  getLastPublishedVersion!: typeof getLastPublishedVersion
+  rollbackToLastPublished!: typeof rollbackToLastPublished
 
   // 视图相关方法声明
   handleCodeSelect!: typeof handleCodeSelect
@@ -129,6 +133,11 @@ class AppCodeStore {
 
   get canForward(): boolean {
     return this.currentIndex < this.versions.length - 1
+  }
+
+  // 新增 getter
+  get hasPublishedVersion(): boolean {
+    return this.versions.some(v => v.app.version > 0)
   }
 
   // 设置appId

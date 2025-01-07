@@ -9,6 +9,7 @@ import {
   ModalBody,
   ModalFooter,
   ButtonGroup,
+  Tooltip,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
@@ -88,6 +89,7 @@ const AppBuilder: React.FC = observer(() => {
   const { updateBreadcrumbs } = useBreadcrumb()
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [showPublishTemplateModal, setShowPublishTemplateModal] = useState(false)
+  const [showRollbackModal, setShowRollbackModal] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [publishInProgress, setPublishInProgress] = useState(false)
@@ -134,15 +136,12 @@ const AppBuilder: React.FC = observer(() => {
       try {
         setIsLoading(true)
 
-        // loadApp 内部会处理所有初始化逻辑
         const version = await appCodeStore.loadApp(appId)
 
-        // 只需要处理UI相关的初始化
         if (version?.app?.name) {
           setAppTitle(version.app.name)
         }
 
-        // 设置默认标签页
         if (!selectedTab) {
           setSelectedTab("preview")
         }
@@ -172,7 +171,6 @@ const AppBuilder: React.FC = observer(() => {
       setPublishInProgress(true)
       setPublishError(null)
 
-      // 使用appCodeStore发布
       const result = await appCodeStore.publishToServer({
         useLatest: !appCodeStore.isViewingHistory,
       })
@@ -201,7 +199,6 @@ const AppBuilder: React.FC = observer(() => {
       setPublishInProgress(true)
       setPublishError(null)
 
-      // 使用appCodeStore发布模板
       const result = await appCodeStore.publishTemplate({
         useLatest: !appCodeStore.isViewingHistory,
       })
@@ -215,6 +212,21 @@ const AppBuilder: React.FC = observer(() => {
     } finally {
       setIsLoading(false)
       setPublishInProgress(false)
+    }
+  }
+
+  // 新增回滚到最近发布版本的处理函数
+  const handleRollbackToLastPublished = async () => {
+    try {
+      setIsLoading(true)
+      await appCodeStore.rollbackToLastPublished()
+      message.success("已回滚到最近发布的版本")
+      refreshPreview()
+      setShowRollbackModal(false)
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : "回滚失败")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -271,29 +283,21 @@ const AppBuilder: React.FC = observer(() => {
     currentMessageIdRef.current = null
   }
 
-  // 改进的错误修复处理函数
   const handleFix = (errorInfo) => {
     const missingModules = errorInfo.missingModules.join(", ")
     const dependentModules = errorInfo.dependentModules.join(", ")
 
-    // 构造修复指令
     const fixCommand = `请帮我创建以下缺失的模块: ${missingModules}。这些模块被以下组件依赖: ${dependentModules}。请确保生成的模块符合项目规范并包含必要的功能。`
 
-    // 添加用户消息
-    const userMessage = {
+    addMessage({
       role: "user",
       content: fixCommand,
       id: Date.now().toString(),
       timestamp: new Date().toLocaleTimeString(),
-    }
+    })
 
-    // 将消息添加到对话
-    addMessage(userMessage)
-
-    // 清除错误状态
     setModuleError(null)
 
-    // 触发AI处理
     processCommand(fixCommand)
   }
 
@@ -321,12 +325,10 @@ const AppBuilder: React.FC = observer(() => {
     try {
       const result = await AppAgent.processCommand(appId, messages, command, handleChunk)
 
-      // 处理结果
       if (result.success) {
         message.success("代码生成成功")
         refreshPreview()
       } else if (result.version) {
-        // 如果有版本但有错误,设置错误状态但仍然使用生成的代码
         setModuleError(result)
         message.warning("代码已生成,但存在一些问题需要修复")
         refreshPreview()
@@ -374,11 +376,9 @@ const AppBuilder: React.FC = observer(() => {
 
     return (
       <div className='relative h-full flex flex-col'>
-        {/* 浏览器风格的工具栏 */}
         <div className='sticky top-0 left-0 right-0 z-10 bg-default-100 border-b border-default-200 rounded-t-lg px-4 py-2'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
-              {/* 浏览器装饰点 */}
               <div className='flex gap-1.5'>
                 <div className='w-3 h-3 rounded-full bg-danger'></div>
                 <div className='w-3 h-3 rounded-full bg-warning'></div>
@@ -386,7 +386,6 @@ const AppBuilder: React.FC = observer(() => {
               </div>
             </div>
             <div className='flex items-center gap-2'>
-              {/* 刷新按钮 */}
               <Button
                 size='sm'
                 variant='light'
@@ -397,7 +396,6 @@ const AppBuilder: React.FC = observer(() => {
               >
                 <Icon icon='mdi:refresh' className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
               </Button>
-              {/* 全屏按钮 */}
               <Button
                 size='sm'
                 variant='light'
@@ -422,7 +420,6 @@ const AppBuilder: React.FC = observer(() => {
           </div>
         </div>
 
-        {/* iframe 容器 */}
         <div className='flex-1 overflow-hidden rounded-b-lg border border-default-200 shadow-lg'>
           <iframe
             ref={iframeRef}
@@ -452,26 +449,44 @@ const AppBuilder: React.FC = observer(() => {
   }
 
   const pageActions = (
-    <ButtonGroup>
-      <Button
-        color='primary'
-        onClick={handlePublishTemplate}
-        isDisabled={isLoading || publishInProgress}
-        isLoading={publishInProgress}
-        startContent={<Icon icon='mdi:template' className='w-4 h-4' />}
-      >
-        发布模板
-      </Button>
-      <Button
-        color='primary'
-        onClick={handlePublish}
-        isDisabled={isLoading || publishInProgress}
-        isLoading={publishInProgress}
-        startContent={<Icon icon='mdi:rocket-launch' className='w-4 h-4' />}
-      >
-        发布应用
-      </Button>
-    </ButtonGroup>
+    <div className="flex items-center gap-2">
+      <ButtonGroup>
+        <Tooltip content="发布为模板供他人使用">
+          <Button
+            color='primary'
+            onClick={handlePublishTemplate}
+            isDisabled={isLoading || publishInProgress}
+            isLoading={publishInProgress}
+            startContent={<Icon icon='mdi:template' className='w-4 h-4' />}
+          >
+            发布模板
+          </Button>
+        </Tooltip>
+        <Tooltip content="发布应用到生产环境">
+          <Button
+            color='primary'
+            onClick={handlePublish}
+            isDisabled={isLoading || publishInProgress}
+            isLoading={publishInProgress}
+            startContent={<Icon icon='mdi:rocket-launch' className='w-4 h-4' />}
+          >
+            发布应用
+          </Button>
+        </Tooltip>
+      </ButtonGroup>
+
+      <Tooltip content="回滚到最近一次发布的版本">
+        <Button
+          color='warning'
+          variant='flat'
+          onClick={() => setShowRollbackModal(true)}
+          isDisabled={isLoading || !appCodeStore.hasPublishedVersion}
+          startContent={<Icon icon='mdi:restore' className='w-4 h-4' />}
+        >
+          回滚到最近发布
+        </Button>
+      </Tooltip>
+    </div>
   )
 
   return (
@@ -531,6 +546,23 @@ const AppBuilder: React.FC = observer(() => {
             <ModalFooter>
               <Button color='primary' onPress={() => setShowPublishTemplateModal(false)}>
                 关闭
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        <Modal isOpen={showRollbackModal} onClose={() => setShowRollbackModal(false)}>
+          <ModalContent>
+            <ModalHeader className='flex flex-col gap-1'>确认回滚</ModalHeader>
+            <ModalBody>
+              <p>确定要回滚到最近一次发布的版本吗？此操作将丢失当前未发布的更改。</p>
+            </ModalBody>
+            <ModalFooter>
+              <Button color='default' variant='light' onPress={() => setShowRollbackModal(false)}>
+                取消
+              </Button>
+              <Button color='warning' onPress={handleRollbackToLastPublished}>
+                确认回滚
               </Button>
             </ModalFooter>
           </ModalContent>

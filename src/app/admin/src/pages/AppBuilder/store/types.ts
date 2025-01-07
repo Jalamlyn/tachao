@@ -71,6 +71,13 @@ export interface ViewState {
   pendingImportContent: string
 }
 
+// 新增类型定义
+export interface PublishedVersion {
+  version: number
+  publishedAt: string
+  modules: Record<string, ModuleData>
+}
+
 // 为 AppCodeStore 定义公共接口
 export interface AppCodeStore {
   appId: any
@@ -82,6 +89,7 @@ export interface AppCodeStore {
   canRollback: boolean
   canForward: boolean
   viewState: ViewState
+  hasPublishedVersion: boolean
 
   // 方法声明
   compileCode(code: string): Promise<string>
@@ -98,4 +106,6 @@ export interface AppCodeStore {
   downloadMarkdown(): void
   setAppId(appId: string): void
   generateId(): string
+  getLastPublishedVersion(): Promise<PublishedVersion | null>
+  rollbackToLastPublished(): Promise<boolean>
 }

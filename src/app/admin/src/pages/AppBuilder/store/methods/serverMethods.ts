@@ -1,5 +1,5 @@
 import { getMetadata, setMetadata, setPlatMetaData, getPlatMetaData } from "@/service/apis/metadata"
-import { AppCodeStore, Version, AppIndexItem } from "../types"
+import { AppCodeStore, Version, AppIndexItem, PublishedVersion } from "../types"
 
 export async function publishToServer(this: AppCodeStore, { useLatest = false } = {}) {
   if (!this.appId) {
@@ -67,7 +67,6 @@ export async function publishTemplate(this: AppCodeStore, { useLatest = false } 
       throw new Error("No version to publish")
     }
 
-    // 使用 plat_ 前缀存储模板详情
     await setPlatMetaData({
       name: `plat_template_${this.appId}`,
       value: JSON.stringify({
@@ -78,7 +77,6 @@ export async function publishTemplate(this: AppCodeStore, { useLatest = false } 
       })
     })
 
-    // 更新带有 plat_ 前缀的模板索引
     const templateIndex = {
       id: `plat_template_${this.appId}`,
       name: versionToPublish.app.name,
@@ -86,11 +84,9 @@ export async function publishTemplate(this: AppCodeStore, { useLatest = false } 
       updatedAt: new Date().toISOString()
     }
 
-    // 获取现有索引，使用 plat_ 前缀
     const indexResult = await getPlatMetaData(['plat_template_index'])
     const currentIndex = indexResult.data?.[0]?.value ? JSON.parse(indexResult.data[0].value) : []
     
-    // 更新索引
     const newIndex = currentIndex.filter(t => t.id !== this.appId)
     newIndex.push(templateIndex)
 
@@ -130,5 +126,75 @@ export async function updateAppIndex(this: AppCodeStore, app: any, name: string)
   } catch (error) {
     console.error("Error updating app index:", error)
     throw new Error("Failed to update app index")
+  }
+}
+
+// 新增获取最近发布版本的方法
+export async function getLastPublishedVersion(this: AppCodeStore): Promise<PublishedVersion | null> {
+  if (!this.appId) throw new Error("No app id")
+  
+  try {
+    const appResult = await getMetadata([this.appId])
+    if (!appResult.data?.[0]?.value) return null
+    
+    const appData = JSON.parse(appResult.data[0].value)
+    
+    const moduleIds = Object.keys(appData.app.modules)
+    const moduleResults = await Promise.all(
+      moduleIds.map(moduleId => getMetadata([moduleId]))
+    )
+    
+    const modules = {}
+    moduleResults.forEach((result, index) => {
+      const moduleId = moduleIds[index]
+      if (result.data?.[0]?.value) {
+        modules[moduleId] = JSON.parse(result.data[0].value)
+      }
+    })
+    
+    return {
+      version: appData.version,
+      publishedAt: appData.updatedAt,
+      modules
+    }
+  } catch (error) {
+    console.error("Error getting last published version:", error)
+    return null
+  }
+}
+
+// 新增回滚到最近发布版本的方法
+export async function rollbackToLastPublished(this: AppCodeStore): Promise<boolean> {
+  try {
+    const publishedVersion = await this.getLastPublishedVersion()
+    if (!publishedVersion) {
+      throw new Error("No published version found")
+    }
+
+    const newVersion: Version = {
+      timestamp: Date.now(),
+      app: {
+        ...this.currentVersion!.app,
+        version: publishedVersion.version,
+        updatedAt: new Date().toISOString(),
+      },
+      modules: Object.entries(publishedVersion.modules).reduce(
+        (acc, [moduleId, moduleData]) => ({
+          ...acc,
+          [moduleId]: {
+            metadata: JSON.stringify(moduleData),
+            data: moduleData,
+            updatedAt: new Date().toISOString(),
+          },
+        }),
+        {}
+      ),
+    }
+
+    this.addVersion(newVersion)
+    return true
+  } catch (error) {
+    console.error("Error rolling back to last published version:", error)
+    throw error
   }
 }
