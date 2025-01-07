@@ -14,6 +14,10 @@ import {
   Chip,
   Divider,
   Input,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import Editor from "@monaco-editor/react"
@@ -33,6 +37,8 @@ interface CodeViewProps {
 export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab, selectedTab }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const searchInputRef = React.useRef<HTMLInputElement>(null)
+  const [isRollingBack, setIsRollingBack] = useState(false)
+  const [showRollbackConfirm, setShowRollbackConfirm] = useState(false)
 
   // 添加快捷键支持
   useHotkeys("ctrl+f, cmd+f", (e) => {
@@ -102,6 +108,47 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
       appCodeStore.viewState.isImporting = false
       appCodeStore.viewState.importContent = ""
       appCodeStore.viewState.pendingImportContent = ""
+    }
+  }
+
+  const handlePublish = async () => {
+    try {
+      const result = await appCodeStore.publishToServer()
+      if (result.success) {
+        message.success("发布成功")
+      }
+    } catch (error) {
+      console.error("Error publishing:", error)
+      message.error("发布失败: " + (error instanceof Error ? error.message : "未知错误"))
+    }
+  }
+
+  const handlePublishTemplate = async () => {
+    try {
+      const result = await appCodeStore.publishTemplate()
+      if (result.success) {
+        message.success("模板发布成功")
+      }
+    } catch (error) {
+      console.error("Error publishing template:", error)
+      message.error("模板发布失败: " + (error instanceof Error ? error.message : "未知错误"))
+    }
+  }
+
+  const handleRollback = async () => {
+    setIsRollingBack(true)
+    try {
+      // 清除本地缓存
+      appCodeStore.clearStorage()
+      // 重新加载应用
+      await appCodeStore.loadApp(appId)
+      message.success("已回滚到最近发布的版本")
+      setShowRollbackConfirm(false)
+    } catch (error) {
+      console.error("Error rolling back:", error)
+      message.error("回滚失败: " + (error instanceof Error ? error.message : "未知错误"))
+    } finally {
+      setIsRollingBack(false)
     }
   }
 
@@ -275,6 +322,42 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                   编辑
                 </Button>
               )}
+              <Divider orientation='vertical' className='h-6' />
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button
+                    size='sm'
+                    color='primary'
+                    endContent={<Icon icon='mdi:chevron-down' className='w-4 h-4' />}
+                  >
+                    发布应用
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu aria-label="发布操作">
+                  <DropdownItem
+                    key="publish"
+                    startContent={<Icon icon='mdi:cloud-upload' className='w-4 h-4' />}
+                    onPress={handlePublish}
+                  >
+                    发布最新版本
+                  </DropdownItem>
+                  <DropdownItem
+                    key="rollback"
+                    className="text-danger"
+                    startContent={<Icon icon='mdi:restore' className='w-4 h-4' />}
+                    onPress={() => setShowRollbackConfirm(true)}
+                  >
+                    回滚到已发布版本
+                  </DropdownItem>
+                  <DropdownItem
+                    key="template"
+                    startContent={<Icon icon='mdi:template' className='w-4 h-4' />}
+                    onPress={handlePublishTemplate}
+                  >
+                    发布为模板
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
             </div>
 
             <div className='h-[calc(100vh-250px)] pt-4 max-w-[500px]'>
@@ -385,6 +468,36 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
             </Button>
             <Button color='danger' onPress={handleConfirmImport} isLoading={appCodeStore.viewState.isImporting}>
               确认覆盖
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* 回滚确认对话框 */}
+      <Modal
+        isOpen={showRollbackConfirm}
+        onClose={() => setShowRollbackConfirm(false)}
+        size='sm'
+      >
+        <ModalContent>
+          <ModalHeader className='flex flex-col gap-1'>确认回滚</ModalHeader>
+          <ModalBody>
+            <div className='flex flex-col gap-2'>
+              <p className='text-danger'>警告：回滚将会清除本地未发布的修改！</p>
+              <p className='text-default-500'>此操作将恢复到最近一次发布的版本，是否继续？</p>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant='flat' onPress={() => setShowRollbackConfirm(false)}>
+              取消
+            </Button>
+            <Button 
+              color='danger' 
+              onPress={handleRollback} 
+              isLoading={isRollingBack}
+              startContent={<Icon icon='mdi:restore' className='w-4 h-4' />}
+            >
+              确认回滚
             </Button>
           </ModalFooter>
         </ModalContent>
