@@ -38,6 +38,16 @@ export const CodeView: React.FC<CodeViewProps> = observer(
     const fileInputRef = React.useRef<HTMLInputElement>(null)
     const searchInputRef = React.useRef<HTMLInputElement>(null)
 
+    // 添加内容显示状态
+    const [showContent, setShowContent] = useState(!appCodeStore.viewState.isPanelCollapsed)
+
+    // 监听面板状态变化
+    useEffect(() => {
+      if (appCodeStore.viewState.isPanelCollapsed) {
+        setShowContent(false)
+      }
+    }, [appCodeStore.viewState.isPanelCollapsed])
+
     // 添加快捷键支持
     useHotkeys("ctrl+f, cmd+f", (e) => {
       e.preventDefault()
@@ -116,16 +126,31 @@ export const CodeView: React.FC<CodeViewProps> = observer(
         <motion.div
           initial={false}
           animate={{ width: appCodeStore.viewState.isPanelCollapsed ? "40px" : "calc(100%-80px)" }}
+          transition={{ 
+            duration: 0.3,
+            ease: [0.4, 0, 0.2, 1], // 使用 ease-out 缓动函数
+            type: "tween" // 使用补间动画而不是弹簧动画
+          }}
+          onAnimationComplete={() => {
+            if (!appCodeStore.viewState.isPanelCollapsed) {
+              setShowContent(true)
+            }
+          }}
           className='bg-white/80 backdrop-blur-sm rounded-lg shadow-sm h-full'
+          layout // 添加 layout 属性以优化布局动画
         >
           <div className='flex h-full'>
-            <AnimatePresence>
-              {!appCodeStore.viewState.isPanelCollapsed && (
+            <AnimatePresence mode="wait">
+              {!appCodeStore.viewState.isPanelCollapsed && showContent && (
                 <motion.div
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: "300px", opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  className='border-r'
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ 
+                    duration: 0.2,
+                    delay: 0.1 // 等容器动画开始后再显示内容
+                  }}
+                  className='border-r w-[300px]'
                 >
                   <div className='p-2'>
                     <div className='space-y-2 mb-2'>
@@ -148,38 +173,42 @@ export const CodeView: React.FC<CodeViewProps> = observer(
                     </div>
                     <ScrollShadow className='h-[calc(100vh-400px)]'>
                       <div className='space-y-1'>
-                        {appCodeStore.getFilteredCodeItems().map((item) => (
-                          <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            whileHover={{ x: 5 }}
-                            className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
-                              appCodeStore.viewState.selectedCodeId === item.id
-                                ? "bg-primary text-white"
-                                : "hover:bg-default-100 text-default-600"
-                            }`}
-                            onClick={() => appCodeStore.handleCodeSelect(item.id)}
-                          >
-                            <Icon icon={getCodeTypeIcon(item.type)} className='w-4 h-4 flex-shrink-0' />
-                            <Tooltip content={item.title} placement='right'>
-                              <div className='flex flex-col flex-1 min-w-0'>
-                                <div className='flex items-center gap-2'>
-                                  <span className='text-sm truncate max-w-[150px]'>{item.title}</span>
-                                  <Chip
-                                    size='sm'
-                                    variant='flat'
-                                    color={getCodeTypeColor(item.type)}
-                                    className='text-[10px] h-4'
-                                  >
-                                    {item.type}
-                                  </Chip>
+                        <AnimatePresence>
+                          {appCodeStore.getFilteredCodeItems().map((item) => (
+                            <motion.div
+                              key={item.id}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: -20 }}
+                              transition={{ duration: 0.2 }}
+                              whileHover={{ x: 5 }}
+                              className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-colors ${
+                                appCodeStore.viewState.selectedCodeId === item.id
+                                  ? "bg-primary text-white"
+                                  : "hover:bg-default-100 text-default-600"
+                              }`}
+                              onClick={() => appCodeStore.handleCodeSelect(item.id)}
+                            >
+                              <Icon icon={getCodeTypeIcon(item.type)} className='w-4 h-4 flex-shrink-0' />
+                              <Tooltip content={item.title} placement='right'>
+                                <div className='flex flex-col flex-1 min-w-0'>
+                                  <div className='flex items-center gap-2'>
+                                    <span className='text-sm truncate max-w-[150px]'>{item.title}</span>
+                                    <Chip
+                                      size='sm'
+                                      variant='flat'
+                                      color={getCodeTypeColor(item.type)}
+                                      className='text-[10px] h-4'
+                                    >
+                                      {item.type}
+                                    </Chip>
+                                  </div>
+                                  <span className='text-xs opacity-70'>{new Date(item.updatedAt).toLocaleString()}</span>
                                 </div>
-                                <span className='text-xs opacity-70'>{new Date(item.updatedAt).toLocaleString()}</span>
-                              </div>
-                            </Tooltip>
-                          </motion.div>
-                        ))}
+                              </Tooltip>
+                            </motion.div>
+                          ))}
+                        </AnimatePresence>
                       </div>
                     </ScrollShadow>
                   </div>
@@ -291,7 +320,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(
           </div>
         </motion.div>
 
-        {/* 导入 Modal */}
+        {/* 其他 Modal 组件保持不变 */}
         <Modal
           isOpen={appCodeStore.viewState.showImportModal}
           onClose={() => {
@@ -342,7 +371,6 @@ export const CodeView: React.FC<CodeViewProps> = observer(
           </ModalContent>
         </Modal>
 
-        {/* 确认对话框 */}
         <Modal
           isOpen={appCodeStore.viewState.showConfirmModal}
           onClose={() => (appCodeStore.viewState.showConfirmModal = false)}
@@ -367,7 +395,6 @@ export const CodeView: React.FC<CodeViewProps> = observer(
           </ModalContent>
         </Modal>
 
-        {/* 版本信息 Modal */}
         <Modal
           isOpen={appCodeStore.viewState.showVersionInfo}
           onClose={() => (appCodeStore.viewState.showVersionInfo = false)}

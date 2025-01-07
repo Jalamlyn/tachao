@@ -33,11 +33,22 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     const [selectedImage, setSelectedImage] = useState("")
     const [isFullWidth, setIsFullWidth] = useState(false)
     const selectedAILevel: keyof typeof AI_LEVELS = "EXPERT"
+    
+    // 添加实际显示内容的状态
+    const [actualTab, setActualTab] = useState(selectedTab)
 
     // 添加消息容器的ref
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const scrollContainerRef = useRef<HTMLDivElement>(null)
     const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
+
+    // 监听选中标签变化，延迟更新实际显示的内容
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        setActualTab(selectedTab)
+      }, 500)
+      return () => clearTimeout(timer)
+    }, [selectedTab])
 
     // 滚动到底部的函数
     const scrollToBottom = useCallback(() => {
@@ -263,19 +274,21 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => onTabChange(key.toString())}>
                 {showDataTab && <Tab key='data' title='数据源' />}
                 <Tab key='preview' title={previewTabName}>
-                  <div className='h-[calc(100vh-200px)] overflow-auto p-2'>{renderPreview()}</div>
+                  {actualTab === 'preview' && (
+                    <div className='h-[calc(100vh-200px)] overflow-auto p-2'>{renderPreview()}</div>
+                  )}
                 </Tab>
                 {showCodeTab && <Tab key='code' title='代码视图' />}
               </Tabs>
 
-              {selectedTab === "data" && showDataTab && (
+              {actualTab === "data" && showDataTab && (
                 <div className='h-[calc(100vh-200px)] overflow-auto p-2'>{renderDataView?.()}</div>
               )}
 
               <CodeView
                 appId={appId}
                 showCodeTab={showCodeTab}
-                selectedTab={selectedTab}
+                selectedTab={actualTab}
                 isFullWidth={isFullWidth}
                 onFullWidthChange={setIsFullWidth}
               />
