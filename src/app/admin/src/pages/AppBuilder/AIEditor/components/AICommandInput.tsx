@@ -1,5 +1,5 @@
 import React, { memo, useState, useCallback, useRef } from "react"
-import { Button, Textarea, Tooltip, Progress, Badge, ScrollShadow, Modal, ModalContent } from "@nextui-org/react"
+import { Button, Textarea, Tooltip, Progress, Badge, ScrollShadow, Modal, ModalContent, Chip, Popover, PopoverTrigger, PopoverContent } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import debounce from "lodash/debounce"
 
@@ -23,8 +23,28 @@ interface AICommandInputProps {
   aiLevel?: string
 }
 
+// 定义可用的AI助手
+const AI_ASSISTANTS = {
+  mo: {
+    name: "Mo",
+    role: "高级工程师",
+    description: "专注于代码实现和功能开发",
+    icon: "mdi:robot",
+    color: "primary",
+    shortcut: "@mo",
+  },
+  pm: {
+    name: "PM",
+    role: "产品经理",
+    description: "帮助分析需求和解答问题",
+    icon: "mdi:account-tie",
+    color: "success",
+    shortcut: "@pm",
+  },
+}
+
 const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInputProps) => {
-  // 内部状态管理
+  // 保留原有的状态管理
   const [input, setInput] = useState("")
   const [previews, setPreviews] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
@@ -52,6 +72,18 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     onStop,
   })
 
+  // 处理@快捷输入
+  const handleAssistantShortcut = (shortcut: string) => {
+    const cursorPosition = textareaRef.current?.selectionStart || 0
+    const newInput = input.slice(0, cursorPosition) + shortcut + " " + input.slice(cursorPosition)
+    setInput(newInput)
+    setTimeout(() => {
+      textareaRef.current?.focus()
+      const newPosition = cursorPosition + shortcut.length + 1
+      textareaRef.current?.setSelectionRange(newPosition, newPosition)
+    }, 0)
+  }
+
   // 使用防抖处理输入更新
   const debouncedSetInput = useCallback(
     debounce((text: string) => {
@@ -60,7 +92,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     []
   )
 
-  // 处理按键事件
+  // 保留原有的所有处理函数...
   const handleKeyPress = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -71,30 +103,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     [actions]
   )
 
-  // 渲染发送/停止按钮
-  const renderActionButton = () => (
-    <Button
-      isIconOnly
-      color={buttonState.color}
-      isDisabled={buttonState.disabled}
-      radius="lg"
-      size="sm"
-      variant={buttonState.variant}
-      onPress={buttonState.isLoading ? actions.handleStop : actions.handleSend}
-      className="transition-transform active:scale-95"
-    >
-      <Icon
-        className={cn(
-          "[&>path]:stroke-[2px]",
-          buttonState.color === "primary" ? "text-primary-foreground" : "text-default-600"
-        )}
-        icon={buttonState.icon}
-        width={20}
-      />
-    </Button>
-  )
-
-  // 处理剪贴板粘贴
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items
     if (!items) return
@@ -134,7 +142,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     }
   }, [])
 
-  // 处理图片上传
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || files.length === 0) return
@@ -175,25 +182,21 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       }
     }
 
-    // 清空文件输入以支持重复上传相同文件
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
   }
 
-  // 触发文件选择
   const handleImageClick = () => {
     fileInputRef.current?.click()
   }
 
-  // 删除单张图片
   const handleDeleteImage = (imageToDelete: string) => {
     setPreviews((prev) => prev.filter((img) => img !== imageToDelete))
     imageStore.removeImage(imageToDelete)
     message.success("图片删除成功")
   }
 
-  // 初始化语音识别
   const initSpeechRecognition = () => {
     try {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -241,7 +244,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     }
   }
 
-  // 处理语音输入
   const handleVoiceInput = () => {
     if (!recognitionRef.current) {
       initSpeechRecognition()
@@ -304,13 +306,30 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
           ))}
         </div>
 
+        {/* AI助手选择器 */}
+        <div className='px-4 flex gap-2'>
+          {Object.entries(AI_ASSISTANTS).map(([key, assistant]) => (
+            <Tooltip key={key} content={assistant.description}>
+              <Chip
+                variant='flat'
+                color={assistant.color as any}
+                startContent={<Icon icon={assistant.icon} className='w-4 h-4' />}
+                className='cursor-pointer'
+                onClick={() => handleAssistantShortcut(assistant.shortcut)}
+              >
+                {assistant.name} ({assistant.role})
+              </Chip>
+            </Tooltip>
+          ))}
+        </div>
+
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={handleKeyPress}
           onPaste={handlePaste}
           ref={textareaRef}
-          placeholder='请输入您的问题,AI 将帮您处理...'
+          placeholder='输入 @mo 与工程师对话，或 @pm 与产品经理讨论...'
           classNames={{
             inputWrapper: "!bg-transparent shadow-none",
             innerWrapper: "relative",
@@ -363,12 +382,30 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
           </div>
 
           <div className='flex items-center gap-3'>
-            {renderActionButton()}
+            <Button
+              isIconOnly
+              color={buttonState.color}
+              isDisabled={buttonState.disabled}
+              radius="lg"
+              size="sm"
+              variant={buttonState.variant}
+              onPress={buttonState.isLoading ? actions.handleStop : actions.handleSend}
+              className="transition-transform active:scale-95"
+            >
+              <Icon
+                className={cn(
+                  "[&>path]:stroke-[2px]",
+                  buttonState.color === "primary" ? "text-primary-foreground" : "text-default-600"
+                )}
+                icon={buttonState.icon}
+                width={20}
+              />
+            </Button>
           </div>
         </div>
       </form>
 
-      {/* 图片预览Modal */}
+      {/* 保留原有的所有Modal组件 */}
       <Modal
         isOpen={isPreviewModalOpen}
         onClose={() => {
@@ -399,7 +436,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
         </ModalContent>
       </Modal>
 
-      {/* 教程Modal */}
       <AITutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
     </>
   )

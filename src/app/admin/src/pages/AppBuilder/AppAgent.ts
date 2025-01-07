@@ -108,9 +108,14 @@ ${modulesContext}
         commandImages = command.images || []
       }
 
+      // 检查是否是与产品经理对话
+      if (commandContent.toLowerCase().includes("@pm")) {
+        throw new Error("请使用代码搜索助手与产品经理对话")
+      }
+
       // 获取相关模块ID
-      // const relevantModuleIds = await this.getRelevantModuleIds(appCodeStore.currentVersion?.modules || {}, command)
-      const relevantModuleIds = []
+      const relevantModuleIds = await this.getRelevantModuleIds(appCodeStore.currentVersion?.modules || {}, command)
+      
       // 构建优化后的上下文
       const relevantModules = relevantModuleIds.length
         ? Object.entries(appCodeStore.currentVersion?.modules || {})
@@ -138,6 +143,7 @@ ${module.data.code}
 `
             )
             .join("\n---\n")
+
       const enhancedCommand = `<project>
       
 1. 应用入口代码：
@@ -145,28 +151,25 @@ ${appCodeStore.currentVersion?.modules[`${appId}_app_entry`]?.data?.code || "需
 
 2. 所有模块代码：
 ${relevantModules}
-</project>, <project> 里是现有代码,根据 <我的输入> 进行修改, 你修改现有代码的时候必须每次都返回修改后的完整代码, 不允许有省略和注释任何一行代码, 如果代码中用 wpm.import 了某个模块, 那必须同时生成这个模块,并 wpm.export, 不允许 wpm.import 还没有被 wpm.export 的模块, 生成所有代码都必须包裹在\`\`\`jsx<mo-ai-code type="xxx" name="xxx" title="xxx" des="模块一句话介绍">生成的代码</mo-ai-code>\`\`\`标签中,你需要先列出要生成或者修改的模块名称,然后再开始生成代码,所有列出的模块都必须生成, ui交互要从设计师的角度思考, <experience-nextui>里有示例代码, 不要返回没有修改的模块
-<我的输入>${commandContent}</我的输入>,4. 
-  仔细分析我的输入,考虑以下方面:
-  - 任务复杂性
-  - 上下文信息审查
-  - 执行计划制定
-  - 修改执行
-  - 修改总结
-  使用以下格式呈现您的思考过程:
-  <mo-ai-think>
-  [您的思考过程,涉及上述提到的每个考虑因素]
-  <mo-ai-context_check>
-  [检查上下文信息是否完整,考虑是否缺少任何模块或上下文，
-  检查要修改的模块是否在上下文中已经提供，如果没有提供，就停止并向用户要求添加要修改的模块]
-  </mo-ai-context_check>
-  <mo-ai-reflection>
-  [反思您的初步想法,考虑它们是否合理,是否缺少任何模块或上下文,以及是否需要改进]
-  </mo-ai-reflection>
-  </mo-ai-think>
-  <mo-ai-final_plan>
-  [列出反思后的最终计划,包括要修改哪些模块以及如何修改]
-  </mo-ai-final_plan>,如果我的输入以 "/提问" 开头就不要生成代码, 只回答我的问题, 生成代码必须是完整的代码, 不能用注释省略任何原来的代码和逻辑,确保每个模块代码不能太大, 超过 300 行的模块代码就要进行拆分`
+</project>
+
+我是高级工程师Mo，专注于代码实现和功能开发。请告诉我你的需求，我会帮你实现：
+
+<我的输入>${commandContent}</我的输入>
+
+让我仔细分析你的需求：
+1. 任务复杂性评估
+2. 代码实现方案设计
+3. 性能和可维护性考虑
+4. 代码生成和优化
+
+我会生成完整的代码实现，确保：
+- 代码质量：遵循最佳实践
+- 性能优化：高效的实现方式
+- 可维护性：清晰的结构和注释
+- 兼容性：与现有代码无缝集成
+
+所有生成的代码都会包含在 \`\`\`jsx<mo-ai-code type="xxx" name="xxx" title="xxx" des="xxx">...\`\`\` 标签中。`
 
       const allMessages = [
         { role: "system", content: systemPrompt },

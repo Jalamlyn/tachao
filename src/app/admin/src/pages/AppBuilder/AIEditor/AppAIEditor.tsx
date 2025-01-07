@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from "react"
 import AICommandInput from "./components/AICommandInput"
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
-import { Tabs, Tab, Button, ScrollShadow, Avatar, Spinner, Modal, ModalContent } from "@nextui-org/react"
+import pm from "/assets/pm.png" // 需要添加产品经理头像
+import { Tabs, Tab, Button, ScrollShadow, Avatar, Spinner, Modal, ModalContent, Chip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { cn } from "@/lib/utils"
 import { AI_LEVELS, AIEditorProps } from "./type"
@@ -66,11 +67,28 @@ const AIEditor: React.FC<AIEditorProps> = observer(
       return () => container.removeEventListener("scroll", handleScroll)
     }, [])
 
+    // 获取消息发送者的头像和角色信息
+    const getMessageSenderInfo = (message: any) => {
+      const isUser = message.role === "user"
+      if (isUser) {
+        return { avatar: user, role: "用户" }
+      }
+      
+      // 根据消息内容判断是哪个AI助手
+      const isPM = message.content.toLowerCase().includes("@pm")
+      return {
+        avatar: isPM ? pm : mo2,
+        role: isPM ? "产品经理" : "工程师",
+        roleColor: isPM ? "success" : "primary"
+      }
+    }
+
     // 渲染单个消息
     const renderMessage = (message: any) => {
       const isUser = message.role === "user"
       const hasError = message.status === "error"
       const hasImages = message.content.images && message.content.images.length > 0
+      const senderInfo = getMessageSenderInfo(message)
 
       // 格式化消息内容
       const formatContent = (content: any) => {
@@ -92,9 +110,22 @@ const AIEditor: React.FC<AIEditorProps> = observer(
         }
         return String(content)
       }
+
       return (
         <div key={message.id} className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""} mb-4`}>
-          <Avatar src={isUser ? user : mo2} className='flex-shrink-0' />
+          <div className="flex flex-col items-center gap-1">
+            <Avatar src={senderInfo.avatar} className='flex-shrink-0' />
+            {!isUser && (
+              <Chip
+                size="sm"
+                variant="flat"
+                color={senderInfo.roleColor}
+                className="text-tiny"
+              >
+                {senderInfo.role}
+              </Chip>
+            )}
+          </div>
           <div
             className={cn(
               "flex flex-col max-w-[80%] rounded-lg p-3",
@@ -174,7 +205,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               <ScrollShadow className='flex-1 overflow-y-auto pb-9' ref={scrollContainerRef}>
                 <div className='space-y-4 p-4'>
                   {messages.map((message) => renderMessage(message))}
-                  <div ref={messagesEndRef} /> {/* 添加一个空的div作为滚动目标 */}
+                  <div ref={messagesEndRef} />
                 </div>
               </ScrollShadow>
 
