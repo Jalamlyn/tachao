@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import AICommandInput from "./components/AICommandInput"
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
@@ -29,6 +29,39 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false)
     const [selectedImage, setSelectedImage] = useState("")
     const selectedAILevel: keyof typeof AI_LEVELS = "EXPERT"
+    
+    // 添加消息容器的ref
+    const messagesEndRef = useRef<HTMLDivElement>(null)
+    const scrollContainerRef = useRef<HTMLDivElement>(null)
+    const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
+
+    // 滚动到底部的函数
+    const scrollToBottom = useCallback(() => {
+      if (shouldAutoScroll && messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+      }
+    }, [shouldAutoScroll])
+
+    // 监听消息变化，自动滚动
+    useEffect(() => {
+      scrollToBottom()
+    }, [messages, scrollToBottom])
+
+    // 监听滚动事件
+    useEffect(() => {
+      const container = scrollContainerRef.current
+      if (!container) return
+
+      const handleScroll = () => {
+        const { scrollTop, scrollHeight, clientHeight } = container
+        // 如果用户向上滚动超过200px，则禁用自动滚动
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 200
+        setShouldAutoScroll(isNearBottom)
+      }
+
+      container.addEventListener("scroll", handleScroll)
+      return () => container.removeEventListener("scroll", handleScroll)
+    }, [])
 
     // 渲染单个消息
     const renderMessage = (message: any) => {
@@ -105,18 +138,36 @@ const AIEditor: React.FC<AIEditorProps> = observer(
             <div className='h-full flex flex-col'>
               <div className='flex justify-between items-center p-2 border-b mb-2'>
                 <div className='flex items-center gap-4'></div>
-                <Button
-                  size='sm'
-                  variant='light'
-                  color='primary'
-                  onClick={handleClearMessages}
-                  startContent={<Icon icon='mdi:refresh' className='w-4 h-4' />}
-                >
-                  新对话
-                </Button>
+                <div className='flex items-center gap-2'>
+                  {!shouldAutoScroll && (
+                    <Button
+                      size='sm'
+                      variant='light'
+                      onClick={() => {
+                        setShouldAutoScroll(true)
+                        scrollToBottom()
+                      }}
+                      startContent={<Icon icon='mdi:arrow-down' className='w-4 h-4' />}
+                    >
+                      滚动到底部
+                    </Button>
+                  )}
+                  <Button
+                    size='sm'
+                    variant='light'
+                    color='primary'
+                    onClick={handleClearMessages}
+                    startContent={<Icon icon='mdi:refresh' className='w-4 h-4' />}
+                  >
+                    新对话
+                  </Button>
+                </div>
               </div>
-              <ScrollShadow className='flex-1 overflow-y-auto pb-9'>
-                <div className='space-y-4 p-4'>{messages.map((message) => renderMessage(message))}</div>
+              <ScrollShadow className='flex-1 overflow-y-auto pb-9' ref={scrollContainerRef}>
+                <div className='space-y-4 p-4'>
+                  {messages.map((message) => renderMessage(message))}
+                  <div ref={messagesEndRef} /> {/* 添加一个空的div作为滚动目标 */}
+                </div>
               </ScrollShadow>
 
               <div className='p-2'>
