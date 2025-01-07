@@ -449,20 +449,20 @@ const AppBuilder: React.FC = observer(() => {
   }
 
   const pageActions = (
-    <div className="flex items-center gap-2">
+    <div className='flex items-center gap-2'>
       <ButtonGroup>
-        <Tooltip content="发布为模板供他人使用">
+        <Tooltip content='发布为模板供他人使用'>
           <Button
             color='primary'
             onClick={handlePublishTemplate}
             isDisabled={isLoading || publishInProgress}
             isLoading={publishInProgress}
-            startContent={<Icon icon='mdi:template' className='w-4 h-4' />}
+            startContent={<Icon icon='fluent:book-template-20-filled' className='w-4 h-4' />}
           >
             发布模板
           </Button>
         </Tooltip>
-        <Tooltip content="发布应用到生产环境">
+        <Tooltip content='发布应用到生产环境'>
           <Button
             color='primary'
             onClick={handlePublish}
@@ -475,7 +475,7 @@ const AppBuilder: React.FC = observer(() => {
         </Tooltip>
       </ButtonGroup>
 
-      <Tooltip content="回滚到最近一次发布的版本">
+      <Tooltip content='回滚到最近一次发布的版本'>
         <Button
           color='warning'
           variant='flat'

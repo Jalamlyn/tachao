@@ -19,6 +19,7 @@ import {
 import { getLocationPermissionGuide } from "@/components/common/DynamicForm/components/FormFields/renders/ClockIn/utils/browserUtils"
 import { apiService } from "@/service/apis/api"
 import { esm } from "https://esm.sh/build"
+import * as ReactHookForm from "react-hook-form"
 
 // 上传文件相关API
 const uploadAPI = {
@@ -159,6 +160,7 @@ export const context = (appId) => ({
   Icon,
   NextUI,
   ReactRouterDom,
+  ReactHookForm,
   FramerMotion,
   message,
   appId,
