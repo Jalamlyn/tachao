@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react"
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import {
   Button,
   Tabs,
@@ -37,6 +37,9 @@ export const CodeView: React.FC<CodeViewProps> = observer(
   ({ appId, showCodeTab, selectedTab, isFullWidth = false, onFullWidthChange }) => {
     const fileInputRef = React.useRef<HTMLInputElement>(null)
     const searchInputRef = React.useRef<HTMLInputElement>(null)
+    const editorRef = useRef<any>(null)
+    const lastClickTimeRef = useRef<number>(0)
+    const lastClickLineRef = useRef<number>(0)
 
     // 添加内容显示状态
     const [showContent, setShowContent] = useState(!appCodeStore.viewState.isPanelCollapsed)
@@ -58,6 +61,74 @@ export const CodeView: React.FC<CodeViewProps> = observer(
       appCodeStore.setSearchQuery("")
       appCodeStore.setSearchContent("")
     })
+
+    // 处理行号双击事件
+    const handleLineNumberDoubleClick = useCallback((lineNumber: number) => {
+      if (!editorRef.current) return
+
+      const model = editorRef.current.getModel()
+      if (!model) return
+
+      const line = model.getLineContent(lineNumber)
+      const indentation = line.match(/^\s*/)?.[0] || ""
+      
+      // 检查是否已有 debugger 语句
+      if (line.trim().startsWith("debugger;")) {
+        // 删除 debugger 语句
+        const range = {
+          startLineNumber: lineNumber,
+          startColumn: 1,
+          endLineNumber: lineNumber,
+          endColumn: line.length + 1
+        }
+        const newLine = line.replace(/^\s*debugger;\s*/, indentation)
+        model.pushEditOperations(
+          [],
+          [{
+            range,
+            text: newLine
+          }],
+          null
+        )
+      } else {
+        // 添加 debugger 语句
+        const range = {
+          startLineNumber: lineNumber,
+          startColumn: 1,
+          endLineNumber: lineNumber,
+          endColumn: 1
+        }
+        const debuggerLine = `${indentation}debugger;\n${indentation}`
+        model.pushEditOperations(
+          [],
+          [{
+            range,
+            text: debuggerLine
+          }],
+          null
+        )
+      }
+    }, [])
+
+    // 处理编辑器加载完成
+    const handleEditorDidMount = (editor: any) => {
+      editorRef.current = editor
+
+      // 添加行号点击事件监听
+      editor.onMouseDown((e: any) => {
+        if (e.target.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS) {
+          const lineNumber = e.target.position.lineNumber
+          const now = Date.now()
+          
+          if (now - lastClickTimeRef.current < 300 && lastClickLineRef.current === lineNumber) {
+            handleLineNumberDoubleClick(lineNumber)
+          }
+          
+          lastClickTimeRef.current = now
+          lastClickLineRef.current = lineNumber
+        }
+      })
+    }
 
     const handleExportCode = useCallback(() => {
       try {
@@ -128,8 +199,8 @@ export const CodeView: React.FC<CodeViewProps> = observer(
           animate={{ width: appCodeStore.viewState.isPanelCollapsed ? "40px" : "calc(100%-80px)" }}
           transition={{ 
             duration: 0.3,
-            ease: [0.4, 0, 0.2, 1], // 使用 ease-out 缓动函数
-            type: "tween" // 使用补间动画而不是弹簧动画
+            ease: [0.4, 0, 0.2, 1],
+            type: "tween"
           }}
           onAnimationComplete={() => {
             if (!appCodeStore.viewState.isPanelCollapsed) {
@@ -137,7 +208,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(
             }
           }}
           className='bg-white/80 backdrop-blur-sm rounded-lg shadow-sm h-full'
-          layout // 添加 layout 属性以优化布局动画
+          layout
         >
           <div className='flex h-full'>
             <AnimatePresence mode="wait">
@@ -148,10 +219,11 @@ export const CodeView: React.FC<CodeViewProps> = observer(
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ 
                     duration: 0.2,
-                    delay: 0.1 // 等容器动画开始后再显示内容
+                    delay: 0.1
                   }}
                   className='border-r w-[300px]'
                 >
+                  {/* 保持原有的文件列表部分不变 */}
                   <div className='p-2'>
                     <div className='space-y-2 mb-2'>
                       <div className='flex'>
@@ -314,13 +386,14 @@ export const CodeView: React.FC<CodeViewProps> = observer(
                       appCodeStore.updateEditedCode(value || "")
                     }
                   }}
+                  onMount={handleEditorDidMount}
                 />
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* 其他 Modal 组件保持不变 */}
+        {/* 保持所有现有的 Modal 组件不变 */}
         <Modal
           isOpen={appCodeStore.viewState.showImportModal}
           onClose={() => {
