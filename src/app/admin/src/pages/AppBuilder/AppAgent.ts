@@ -1,9 +1,8 @@
 import chatChunkExpert from "@/service/chat/chat-chunk-openrouter"
-// import chatChunkExpert from "@/service/chat/chat-deepseek"
+import chatChunkFree from "@/service/chat/chat-chunk-openrouter-free"
 import { AppBuilderMessage } from "./types"
 import { balanceStore } from "@/stores/balanceStore"
 import { appCodeStore } from "./store/appCodeStore"
-import { imageStore } from "./AIEditor/components/ImageStore"
 import { promptsComposer } from "./prompts"
 
 interface CommandInput {
@@ -21,6 +20,57 @@ class AppAgent {
       AppAgent.instance = new AppAgent()
     }
     return AppAgent.instance
+  }
+
+  private async getRelevantModuleIds(
+    modules: Record<string, any>,
+    userInput: string
+  ): Promise<string[]> {
+    const modulesContext = Object.entries(modules)
+      .map(
+        ([id, module]) => `
+模块ID: ${id}
+模块名称: ${module.data.name}
+模块标题: ${module.data.title}
+模块类型: ${module.data.type}
+模块代码:
+${module.data.code}
+`
+      )
+      .join("\n---\n")
+
+    const prompt = `分析以下项目代码和用户输入，返回与用户输入最相关的模块ID列表。
+项目代码：
+${modulesContext}
+
+用户输入：${userInput}
+
+请先分析用户输入和各个模块的关系，将分析结果输出到 mo-ai-think 标签中，然后将相关模块ID以JSON格式返回到 mo-ai-code 标签中。JSON格式为：{"moduleIds": ["id1", "id2"]}。只返回确实相关的模块ID。`
+
+    let response = ""
+    await chatChunkFree(
+      [{ role: "user", content: prompt }],
+      (chunk: string) => {
+        response += chunk
+      },
+      () => {},
+      true,
+      0
+    )
+
+    // 从响应中提取JSON
+    const match = response.match(/```jsx<mo-ai-code.*?>(.*?)<\/mo-ai-code>```/s)
+    if (!match) {
+      return []
+    }
+
+    try {
+      const json = JSON.parse(match[1])
+      return json.moduleIds || []
+    } catch (error) {
+      console.error("Error parsing module IDs:", error)
+      return []
+    }
   }
 
   public async processCommand(
@@ -53,17 +103,18 @@ class AppAgent {
         commandImages = command.images || []
       }
 
-      const enhancedCommand = `<project>
-      
-1. 应用入口代码：
-${appCodeStore.currentVersion?.modules[`${appId}_app_entry`]?.data?.code || "需要先创建应用入口代码，包含基础路由配置"}
+      // 获取相关模块ID
+      const relevantModuleIds = await this.getRelevantModuleIds(
+        appCodeStore.currentVersion?.modules || {},
+        commandContent
+      )
 
-2. 所有模块代码：
-${
-  appCodeStore.currentVersion?.modules
-    ? Object.entries(appCodeStore.currentVersion.modules)
-        .map(
-          ([id, module]) => `
+      // 构建优化后的上下文
+      const relevantModules = relevantModuleIds.length
+        ? Object.entries(appCodeStore.currentVersion?.modules || {})
+            .filter(([id]) => relevantModuleIds.includes(id))
+            .map(
+              ([id, module]) => `
 模块ID: ${id}
 模块名称: ${module.data.name}
 模块标题: ${module.data.title}
@@ -71,12 +122,30 @@ ${
 模块代码:
 ${module.data.code}
 `
-        )
-        .join("\n---\n")
-    : ""
-}
-</project>, <project> 里是现有代码,根据 <我的输入> 进行修改, 你修改现有代码的时候必须每次都返回修改后的完整代码, 不允许有省略和注释任何一行代码, 如果代码中用 wpm.import 了某个模块, 那必须同时生成这个模块,并 wpm.export, 不允许 wpm.import 还没有被 wpm.export 的模块, 生成所有代码都必须包裹在\`\`\`jsx<mo-ai-code type="xxx" name="xxx" title="xxx">生成的代码</mo-ai-code>\`\`\`标签中,你需要先列出要生成或者修改的模块名称,然后再开始生成代码,所有列出的模块都必须生成, ui交互要从设计师的角度思考, <experience-nextui>里有示例代码, 不要返回没有修改的模块
-<我的输入>${commandContent}</我的输入>,在响应的我的输入之前, 对我的输入进行思考, 并将思考过程写在<mo-ai-think>你的思考内容</mo-ai-think>,思考完成后根据我的输入的复杂性决定是否需要反思, 如果需要反思,就将反思的内容写在<mo-ai-rethink>你的反思内容</mo-ai-rethink>,响应结束后要给出总结, 并主动询问我后续的工作`
+            )
+            .join("\n---\n")
+        : Object.entries(appCodeStore.currentVersion?.modules || {})
+            .map(
+              ([id, module]) => `
+模块ID: ${id}
+模块名称: ${module.data.name}
+模块标题: ${module.data.title}
+模块类型: ${module.data.type}
+模块代码:
+${module.data.code}
+`
+            )
+            .join("\n---\n")
+
+      const enhancedCommand = `<project>
+      
+1. 应用入口代码：
+${appCodeStore.currentVersion?.modules[`${appId}_app_entry`]?.data?.code || "需要先创建应用入口代码，包含基础路由配置"}
+
+2. 所有模块代码：
+${relevantModules}
+</project>, <project> 里是现有代码,根据 <我的输入> 进行修改, 你修改现有代码的时候必须每次都返回修改后的完整代码, 不允许有省略和注释任何一行代码, 如果代码中用 wpm.import 了某个模块, 那必须同时生成这个模块,并 wpm.export, 不允许 wpm.import 还没有被 wpm.export 的模块, 生成所有代码都必须包裹在\`\`\`jsx<mo-ai-code type="xxx" name="xxx" title="xxx" des="模块一句话介绍">生成的代码</mo-ai-code>\`\`\`标签中,你需要先列出要生成或者修改的模块名称,然后再开始生成代码,所有列出的模块都必须生成, ui交互要从设计师的角度思考, <experience-nextui>里有示例代码, 不要返回没有修改的模块
+<我的输入>${commandContent}</我的输入>,如果我的输入以 "/提问" 开头就不要生成代码, 只回答我的问题, 生成代码必须是完整的代码, 不能用注释省略任何原来的代码和逻辑`
 
       const allMessages = [
         { role: "system", content: systemPrompt },
@@ -84,13 +153,12 @@ ${module.data.code}
         {
           role: "user",
           content: enhancedCommand,
-          images: commandImages, // 使用传入的图片数组
+          images: commandImages,
         },
       ]
 
       let response = ""
 
-      // 始终使用专家模型
       await chatChunkExpert(
         allMessages,
         (chunk: string) => {
@@ -102,7 +170,6 @@ ${module.data.code}
         0
       )
 
-      // 使用appCodeStore处理AI响应
       const version = await appCodeStore.handleAIGeneration(response)
       return {
         success: true,
