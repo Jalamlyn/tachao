@@ -29,7 +29,7 @@ const AI_ASSISTANTS = {
     name: "Mo",
     role: "高级工程师",
     description: "专注于代码实现和功能开发",
-    icon: "mdi:robot",
+    icon: "line-md:mastodon-filled",
     color: "primary",
     shortcut: "@mo",
   },
