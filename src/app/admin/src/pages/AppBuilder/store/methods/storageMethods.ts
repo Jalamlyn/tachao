@@ -6,7 +6,18 @@ export function saveToStorage(this: AppCodeStore) {
   try {
     const appId = this.appId
     if (!appId) return
+    const keysToRemove: string[] = []
 
+    // 遍历所有localStorage keys
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith(`${STORAGE_KEY}`)) {
+        keysToRemove.push(key)
+      }
+    }
+
+    // 删除所有相关key
+    keysToRemove.forEach((key) => localStorage.removeItem(key))
     localStorage.setItem(`${STORAGE_KEY}_${appId}_app`, JSON.stringify(this.currentVersion?.app))
 
     Object.entries(this.currentVersion?.modules || {}).forEach(([moduleId, moduleData]) => {

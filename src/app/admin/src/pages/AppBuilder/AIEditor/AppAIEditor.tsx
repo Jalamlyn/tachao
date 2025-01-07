@@ -33,7 +33,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     const [selectedImage, setSelectedImage] = useState("")
     const [isFullWidth, setIsFullWidth] = useState(false)
     const selectedAILevel: keyof typeof AI_LEVELS = "EXPERT"
-    
+
     // 添加实际显示内容的状态
     const [actualTab, setActualTab] = useState(selectedTab)
 
@@ -59,8 +59,8 @@ const AIEditor: React.FC<AIEditorProps> = observer(
 
     // 监听消息变化，自动滚动
     useEffect(() => {
-      scrollToBottom()
-    }, [messages, scrollToBottom])
+      requestAnimationFrame(scrollToBottom)
+    }, [messages.length])
 
     // 监听滚动事件
     useEffect(() => {
@@ -84,13 +84,13 @@ const AIEditor: React.FC<AIEditorProps> = observer(
       if (isUser) {
         return { avatar: user, role: "用户" }
       }
-      
+
       // 根据消息内容判断是哪个AI助手
       const isPM = message.content.toLowerCase().includes("@pm")
       return {
         avatar: isPM ? pm : mo2,
         role: isPM ? "产品经理" : "工程师",
-        roleColor: isPM ? "success" : "primary"
+        roleColor: isPM ? "success" : "primary",
       }
     }
 
@@ -124,15 +124,10 @@ const AIEditor: React.FC<AIEditorProps> = observer(
 
       return (
         <div key={message.id} className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""} mb-4`}>
-          <div className="flex flex-col items-center gap-1">
+          <div className='flex flex-col items-center gap-1'>
             <Avatar src={senderInfo.avatar} className='flex-shrink-0' />
             {!isUser && (
-              <Chip
-                size="sm"
-                variant="flat"
-                color={senderInfo.roleColor}
-                className="text-tiny"
-              >
+              <Chip size='sm' variant='flat' color={senderInfo.roleColor} className='text-tiny'>
                 {senderInfo.role}
               </Chip>
             )}
@@ -274,7 +269,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => onTabChange(key.toString())}>
                 {showDataTab && <Tab key='data' title='数据源' />}
                 <Tab key='preview' title={previewTabName}>
-                  {actualTab === 'preview' && (
+                  {actualTab === "preview" && (
                     <div className='h-[calc(100vh-200px)] overflow-auto p-2'>{renderPreview()}</div>
                   )}
                 </Tab>

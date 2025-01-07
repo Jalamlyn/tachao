@@ -326,8 +326,10 @@ const AppBuilder: React.FC = observer(() => {
       const result = await AppAgent.processCommand(appId, messages, command, handleChunk)
 
       if (result.success) {
-        message.success("代码生成成功")
-        refreshPreview()
+        if (!result.isPMMode) {
+          message.success("代码生成成功")
+          refreshPreview()
+        }
       } else if (result.version) {
         setModuleError(result)
         message.warning("代码已生成,但存在一些问题需要修复")
@@ -346,22 +348,23 @@ const AppBuilder: React.FC = observer(() => {
     }
   }
 
-  const handleCommandResult = useCallback(
-    async (result: any) => {
-      try {
-        if (result.success) {
-          message.success("代码生成成功")
-        } else if (result.version) {
-          message.warning("代码已生成,但存在一些问题需要修复")
-        }
-        refreshPreview()
-      } catch (error) {
-        console.error("Error handling command result:", error)
-        message.error("处理结果失败")
-      }
-    },
-    [refreshPreview]
-  )
+  // const handleCommandResult = useCallback(
+  //   async (result: any) => {
+  //     try {
+  //       if (result.success) {
+  //         debugger
+  //         message.success("代码生成成功")
+  //       } else if (result.version) {
+  //         message.warning("代码已生成,但存在一些问题需要修复")
+  //       }
+  //       refreshPreview()
+  //     } catch (error) {
+  //       console.error("Error handling command result:", error)
+  //       message.error("处理结果失败")
+  //     }
+  //   },
+  //   [refreshPreview]
+  // )
 
   const renderPreview = useCallback(() => {
     const version = appCodeStore.currentVersion
@@ -503,7 +506,7 @@ const AppBuilder: React.FC = observer(() => {
               processCommand,
             }}
             renderPreview={renderPreview}
-            onCommandResult={handleCommandResult}
+            // onCommandResult={handleCommandResult}
             handleClearMessages={handleClearMessages}
             onStop={handleStop}
             showCodeTab

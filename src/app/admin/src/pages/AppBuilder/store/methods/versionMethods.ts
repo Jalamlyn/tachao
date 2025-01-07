@@ -1,7 +1,7 @@
 import { AppCodeStore, Version } from "../types"
 
 // 最大版本数限制
-const MAX_VERSIONS = 10
+const MAX_VERSIONS = 5
 
 export function addVersion(this: AppCodeStore, version: Version) {
   // 检查版本数量是否超过限制

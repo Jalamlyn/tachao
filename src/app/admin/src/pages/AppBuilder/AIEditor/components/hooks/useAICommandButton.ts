@@ -75,7 +75,7 @@ export function useAICommandButton({ input, previews, agent, onResult, onStop }:
         content: input.trim(),
         images: previews,
       }
-
+      // 调用AI处理命令，并等待结果
       const result = await agent.processCommand(messageContent)
 
       // 处理返回结果，确保它是可显示的格式

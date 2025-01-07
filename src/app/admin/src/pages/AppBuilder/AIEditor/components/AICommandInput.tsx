@@ -1,5 +1,18 @@
 import React, { memo, useState, useCallback, useRef } from "react"
-import { Button, Textarea, Tooltip, Progress, Badge, ScrollShadow, Modal, ModalContent, Chip, Popover, PopoverTrigger, PopoverContent } from "@nextui-org/react"
+import {
+  Button,
+  Textarea,
+  Tooltip,
+  Progress,
+  Badge,
+  ScrollShadow,
+  Modal,
+  ModalContent,
+  Chip,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import debounce from "lodash/debounce"
 
@@ -8,7 +21,6 @@ import { imageStore } from "./ImageStore"
 import message from "@/components/Message"
 import { AITutorialModal } from "./AITutorialModal"
 import { useAICommandButton } from "./hooks/useAICommandButton"
-import ProductManagerAgent from "../../agents/ProductManagerAgent"
 
 interface AIAgent {
   processCommand: (
@@ -22,15 +34,13 @@ interface AICommandInputProps {
   onResult?: (result: any) => void
   onStop?: () => void
   aiLevel?: string
-  appId?: string
-  messages?: any[]
 }
 
 // 定义可用的AI助手
 const AI_ASSISTANTS = {
   mo: {
     name: "Mo",
-    role: "高级工程师",
+    role: "开发模式",
     description: "专注于代码实现和功能开发",
     icon: "line-md:mastodon-filled",
     color: "primary",
@@ -38,7 +48,7 @@ const AI_ASSISTANTS = {
   },
   pm: {
     name: "PM",
-    role: "产品经理",
+    role: "交流模式",
     description: "帮助分析需求和解答问题",
     icon: "mdi:account-tie",
     color: "success",
@@ -46,8 +56,8 @@ const AI_ASSISTANTS = {
   },
 }
 
-const AICommandInput = memo(({ agent, onResult, onStop, aiLevel, appId, messages = [] }: AICommandInputProps) => {
-  // 状态管理
+const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInputProps) => {
+  // 保留原有的状态管理
   const [input, setInput] = useState("")
   const [previews, setPreviews] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
@@ -56,8 +66,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel, appId, messages
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false)
   const [selectedPreview, setSelectedPreview] = useState<string>("")
   const [showTutorial, setShowTutorial] = useState(false)
-  
-  // refs
   const fileInputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const lastTranscriptRef = useRef<string>("")
@@ -68,44 +76,26 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel, appId, messages
     input,
     previews,
     agent,
-    onResult: async (result) => {
-      const isPMQuery = input.toLowerCase().includes("@pm")
-      
-      if (isPMQuery && appId) {
-        try {
-          const pmResult = await ProductManagerAgent.processCommand(
-            appId,
-            messages,
-            input,
-            (chunk) => {
-              // 处理流式响应
-              if (result.onChunk) {
-                result.onChunk(chunk)
-              }
-            }
-          )
-
-          onResult?.({
-            content: pmResult.content,
-            status: pmResult.success ? "success" : "error",
-            role: "assistant",
-            id: Date.now().toString(),
-            images: previews,
-          })
-        } catch (error) {
-          console.error("PM Agent Error:", error)
-          message.error("产品经理助手出错：" + (error instanceof Error ? error.message : "未知错误"))
-        }
-      } else {
-        onResult?.(result)
-      }
-      
+    onResult: (result) => {
+      onResult?.(result)
       setInput("")
       setPreviews([])
       imageStore.clear()
     },
     onStop,
   })
+
+  // 处理@快捷输入
+  const handleAssistantShortcut = (shortcut: string) => {
+    const cursorPosition = textareaRef.current?.selectionStart || 0
+    const newInput = input.slice(0, cursorPosition) + shortcut + " " + input.slice(cursorPosition)
+    setInput(newInput)
+    setTimeout(() => {
+      textareaRef.current?.focus()
+      const newPosition = cursorPosition + shortcut.length + 1
+      textareaRef.current?.setSelectionRange(newPosition, newPosition)
+    }, 0)
+  }
 
   // 使用防抖处理输入更新
   const debouncedSetInput = useCallback(
@@ -115,7 +105,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel, appId, messages
     []
   )
 
-  // 处理键盘事件
+  // 保留原有的所有处理函数...
   const handleKeyPress = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -126,7 +116,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel, appId, messages
     [actions]
   )
 
-  // 处理粘贴事件
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items
     if (!items) return
@@ -166,7 +155,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel, appId, messages
     }
   }, [])
 
-  // 处理图片上传
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || files.length === 0) return
@@ -212,31 +200,16 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel, appId, messages
     }
   }
 
-  // 处理图片点击
   const handleImageClick = () => {
     fileInputRef.current?.click()
   }
 
-  // 处理图片删除
   const handleDeleteImage = (imageToDelete: string) => {
     setPreviews((prev) => prev.filter((img) => img !== imageToDelete))
     imageStore.removeImage(imageToDelete)
     message.success("图片删除成功")
   }
 
-  // 处理@快捷输入
-  const handleAssistantShortcut = (shortcut: string) => {
-    const cursorPosition = textareaRef.current?.selectionStart || 0
-    const newInput = input.slice(0, cursorPosition) + shortcut + " " + input.slice(cursorPosition)
-    setInput(newInput)
-    setTimeout(() => {
-      textareaRef.current?.focus()
-      const newPosition = cursorPosition + shortcut.length + 1
-      textareaRef.current?.setSelectionRange(newPosition, newPosition)
-    }, 0)
-  }
-
-  // 语音识别相关
   const initSpeechRecognition = () => {
     try {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -426,11 +399,11 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel, appId, messages
               isIconOnly
               color={buttonState.color}
               isDisabled={buttonState.disabled}
-              radius="lg"
-              size="sm"
+              radius='lg'
+              size='sm'
               variant={buttonState.variant}
               onPress={buttonState.isLoading ? actions.handleStop : actions.handleSend}
-              className="transition-transform active:scale-95"
+              className='transition-transform active:scale-95'
             >
               <Icon
                 className={cn(
@@ -445,7 +418,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel, appId, messages
         </div>
       </form>
 
-      {/* 图片预览Modal */}
+      {/* 保留原有的所有Modal组件 */}
       <Modal
         isOpen={isPreviewModalOpen}
         onClose={() => {
