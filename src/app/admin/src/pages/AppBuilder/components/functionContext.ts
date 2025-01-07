@@ -6,7 +6,7 @@ import * as NextUI from "@nextui-org/react"
 import { observer } from "mobx-react-lite"
 import * as mobx from "mobx"
 import { Icon } from "@iconify/react"
-import { getMetadata, getPublicMetaData, setMetadata } from "@/service/apis/metadata"
+import { getMetadata, getPublicMetaData, queryMetadataHistory, setMetadata } from "@/service/apis/metadata"
 import * as recharts from "recharts"
 import { cn } from "@/theme/cn"
 import React from "react"
@@ -18,7 +18,7 @@ import {
   getAddressFromLocation,
 } from "@/components/common/DynamicForm/components/FormFields/renders/ClockIn/utils/locationUtils"
 import { getLocationPermissionGuide } from "@/components/common/DynamicForm/components/FormFields/renders/ClockIn/utils/browserUtils"
-import { apiService } from "@/service/apis/api"
+import { apiService, getCurrentAccountInfo, queryCurrentEnterPrise } from "@/service/apis/api"
 import { esm } from "https://esm.sh/build"
 import * as ReactHookForm from "react-hook-form"
 
@@ -170,6 +170,9 @@ export const context = (appId) => ({
     getMetadata,
     setMetadata,
     getPublicMetaData,
+    queryMetadataHistory,
+    getCurrentAccountInfo,
+    queryCurrentEnterPrise,
     // 位置服务API
     location: {
       getCurrentPosition,
