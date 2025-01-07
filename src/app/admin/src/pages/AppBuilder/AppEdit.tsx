@@ -77,7 +77,7 @@ const ErrorPrompt = ({ error, onFix }) => {
   )
 }
 
-const MAX_MESSAGES = 2
+const MAX_MESSAGES = 4
 
 const AppBuilder: React.FC = observer(() => {
   const { appId } = useParams<{ appId: string }>()
@@ -509,6 +509,7 @@ const AppBuilder: React.FC = observer(() => {
             showCodeTab
             previewTabName='应用预览'
             appId={appId}
+            onVersionChange={refreshPreview}
           />
         </div>
 

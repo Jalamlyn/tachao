@@ -8,17 +8,21 @@ export function addVersion(this: AppCodeStore, version: Version) {
   return version
 }
 
-export function rollback(this: AppCodeStore): Version | null {
+export function rollback(this: AppCodeStore, onVersionChange): Version | null {
   if (this.canRollback) {
     this.currentIndex--
+    this.saveToStorage()
+    onVersionChange()
     return this.currentVersion
   }
   return null
 }
 
-export function forward(this: AppCodeStore): Version | null {
+export function forward(this: AppCodeStore, onVersionChange): Version | null {
   if (this.canForward) {
     this.currentIndex++
+    this.saveToStorage()
+    onVersionChange()
     return this.currentVersion
   }
   return null

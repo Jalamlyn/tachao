@@ -27,32 +27,9 @@ interface ButtonState {
   disabled: boolean
 }
 
-export function useAICommandButton({
-  input,
-  previews,
-  agent,
-  onResult,
-  onStop,
-}: UseAICommandButtonProps) {
+export function useAICommandButton({ input, previews, agent, onResult, onStop }: UseAICommandButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const abortTimeoutRef = useRef<NodeJS.Timeout>()
-
-  // 监听 aiControllerStore 的状态
-  useEffect(() => {
-    const checkAbortStatus = () => {
-      if (!aiControllerStore.controller) {
-        setIsLoading(false)
-      }
-    }
-
-    // 创建一个 MutationObserver 来监听 aiControllerStore 的变化
-    const observer = new MutationObserver(checkAbortStatus)
-    observer.observe(aiControllerStore, { attributes: true })
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [])
 
   // 清理超时计时器
   useEffect(() => {

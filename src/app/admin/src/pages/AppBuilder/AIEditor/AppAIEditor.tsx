@@ -26,12 +26,13 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     showCodeTab = false,
     previewTabName = "预览",
     appId,
+    onVersionChange,
   }) => {
     const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false)
     const [selectedImage, setSelectedImage] = useState("")
     const [isFullWidth, setIsFullWidth] = useState(false)
     const selectedAILevel: keyof typeof AI_LEVELS = "EXPERT"
-    
+
     // 添加消息容器的ref
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -140,7 +141,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
             animate={{ width: isFullWidth ? "0%" : "35%" }}
             transition={{ duration: 0.3 }}
             className='h-full'
-            style={{ overflow: isFullWidth ? 'hidden' : 'visible' }}
+            style={{ overflow: isFullWidth ? "hidden" : "visible" }}
           >
             <div className='h-full flex flex-col'>
               <div className='flex justify-between items-center p-2 border-b mb-2'>
@@ -195,7 +196,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
                     <Button
                       size='sm'
                       variant='ghost'
-                      onClick={() => appCodeStore.rollback()}
+                      onClick={() => appCodeStore.rollback(onVersionChange)}
                       disabled={!appCodeStore.canRollback}
                       className={cn(
                         "h-8 w-8 p-0 rounded-full transition-all duration-200",
@@ -215,7 +216,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
                     <Button
                       size='sm'
                       variant='ghost'
-                      onClick={() => appCodeStore.forward()}
+                      onClick={() => appCodeStore.forward(onVersionChange)}
                       disabled={!appCodeStore.canForward}
                       className={cn(
                         "h-8 w-8 p-0 rounded-full transition-all duration-200",
@@ -240,10 +241,10 @@ const AIEditor: React.FC<AIEditorProps> = observer(
                 <div className='h-[calc(100vh-200px)] overflow-auto p-2'>{renderDataView?.()}</div>
               )}
 
-              <CodeView 
-                appId={appId} 
-                showCodeTab={showCodeTab} 
-                selectedTab={selectedTab} 
+              <CodeView
+                appId={appId}
+                showCodeTab={showCodeTab}
+                selectedTab={selectedTab}
                 isFullWidth={isFullWidth}
                 onFullWidthChange={setIsFullWidth}
               />
