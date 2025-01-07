@@ -11,6 +11,7 @@ import * as recharts from "recharts"
 import { cn } from "@/theme/cn"
 import React from "react"
 import message from "@/components/Message"
+import * as ReactToPrint from "react-to-print"
 import * as XLSX from "xlsx"
 import {
   getCurrentPosition,
@@ -161,6 +162,7 @@ export const context = (appId) => ({
   NextUI,
   ReactRouterDom,
   ReactHookForm,
+  ReactToPrint,
   FramerMotion,
   message,
   appId,
