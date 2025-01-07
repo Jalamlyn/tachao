@@ -272,7 +272,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
 
     return (
       <div className='space-y-6'>
-        {renderTemplateSection("表单应用", "solar:document-bold-duotone", formTemplates)}
+        {renderTemplateSection("企业应用", "solar:document-bold-duotone", formTemplates)}
         <Divider />
         {renderTemplateSection("智能应用", "hugeicons:ai-chat-02", aiTemplates)}
         <Divider />

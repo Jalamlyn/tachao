@@ -71,23 +71,29 @@ export const CodeView: React.FC<CodeViewProps> = observer(
 
       const line = model.getLineContent(lineNumber)
       const indentation = line.match(/^\s*/)?.[0] || ""
-      
+
       // 检查是否已有 debugger 语句
+      // 在 handleLineNumberDoubleClick 函数中修改删除逻辑
       if (line.trim().startsWith("debugger;")) {
-        // 删除 debugger 语句
+        // 删除 debugger 语句和换行符
         const range = {
           startLineNumber: lineNumber,
           startColumn: 1,
-          endLineNumber: lineNumber,
-          endColumn: line.length + 1
+          endLineNumber: lineNumber + 1, // 扩展到下一行
+          endColumn: 1, // 到下一行的开始
         }
-        const newLine = line.replace(/^\s*debugger;\s*/, indentation)
+
+        // 只保留缩进
+        const newLine = indentation
+
         model.pushEditOperations(
           [],
-          [{
-            range,
-            text: newLine
-          }],
+          [
+            {
+              range,
+              text: newLine, // 直接替换为缩进,不添加换行符
+            },
+          ],
           null
         )
       } else {
@@ -96,15 +102,17 @@ export const CodeView: React.FC<CodeViewProps> = observer(
           startLineNumber: lineNumber,
           startColumn: 1,
           endLineNumber: lineNumber,
-          endColumn: 1
+          endColumn: 1,
         }
         const debuggerLine = `${indentation}debugger;\n${indentation}`
         model.pushEditOperations(
           [],
-          [{
-            range,
-            text: debuggerLine
-          }],
+          [
+            {
+              range,
+              text: debuggerLine,
+            },
+          ],
           null
         )
       }
@@ -119,11 +127,11 @@ export const CodeView: React.FC<CodeViewProps> = observer(
         if (e.target.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS) {
           const lineNumber = e.target.position.lineNumber
           const now = Date.now()
-          
+
           if (now - lastClickTimeRef.current < 300 && lastClickLineRef.current === lineNumber) {
             handleLineNumberDoubleClick(lineNumber)
           }
-          
+
           lastClickTimeRef.current = now
           lastClickLineRef.current = lineNumber
         }
@@ -197,10 +205,10 @@ export const CodeView: React.FC<CodeViewProps> = observer(
         <motion.div
           initial={false}
           animate={{ width: appCodeStore.viewState.isPanelCollapsed ? "40px" : "calc(100%-80px)" }}
-          transition={{ 
+          transition={{
             duration: 0.3,
             ease: [0.4, 0, 0.2, 1],
-            type: "tween"
+            type: "tween",
           }}
           onAnimationComplete={() => {
             if (!appCodeStore.viewState.isPanelCollapsed) {
@@ -211,15 +219,15 @@ export const CodeView: React.FC<CodeViewProps> = observer(
           layout
         >
           <div className='flex h-full'>
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode='wait'>
               {!appCodeStore.viewState.isPanelCollapsed && showContent && (
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.2,
-                    delay: 0.1
+                    delay: 0.1,
                   }}
                   className='border-r w-[300px]'
                 >
@@ -275,7 +283,9 @@ export const CodeView: React.FC<CodeViewProps> = observer(
                                       {item.type}
                                     </Chip>
                                   </div>
-                                  <span className='text-xs opacity-70'>{new Date(item.updatedAt).toLocaleString()}</span>
+                                  <span className='text-xs opacity-70'>
+                                    {new Date(item.updatedAt).toLocaleString()}
+                                  </span>
                                 </div>
                               </Tooltip>
                             </motion.div>
