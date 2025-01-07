@@ -166,7 +166,7 @@ ${relevantModules}
   </mo-ai-think>
   <mo-ai-final_plan>
   [列出反思后的最终计划,包括要修改哪些模块以及如何修改]
-  </mo-ai-final_plan>,如果我的输入以 "/提问" 开头就不要生成代码, 只回答我的问题, 生成代码必须是完整的代码, 不能用注释省略任何原来的代码和逻辑`
+  </mo-ai-final_plan>,如果我的输入以 "/提问" 开头就不要生成代码, 只回答我的问题, 生成代码必须是完整的代码, 不能用注释省略任何原来的代码和逻辑,确保每个模块代码不能太大, 超过 300 行的模块代码就要进行拆分`
 
       const allMessages = [
         { role: "system", content: systemPrompt },
