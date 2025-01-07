@@ -9,6 +9,7 @@ import { AI_LEVELS, AIEditorProps } from "./type"
 import { observer } from "mobx-react-lite"
 import { appCodeStore } from "../store/appCodeStore"
 import { CodeView } from "./components/CodeView"
+import { motion } from "framer-motion"
 
 const AIEditor: React.FC<AIEditorProps> = observer(
   ({
@@ -28,6 +29,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
   }) => {
     const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false)
     const [selectedImage, setSelectedImage] = useState("")
+    const [isFullWidth, setIsFullWidth] = useState(false)
     const selectedAILevel: keyof typeof AI_LEVELS = "EXPERT"
     
     // 添加消息容器的ref
@@ -134,7 +136,12 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     return (
       <>
         <div className='flex w-full h-full'>
-          <div className='w-[35%] h-full'>
+          <motion.div
+            animate={{ width: isFullWidth ? "0%" : "35%" }}
+            transition={{ duration: 0.3 }}
+            className='h-full'
+            style={{ overflow: isFullWidth ? 'hidden' : 'visible' }}
+          >
             <div className='h-full flex flex-col'>
               <div className='flex justify-between items-center p-2 border-b mb-2'>
                 <div className='flex items-center gap-4'></div>
@@ -174,9 +181,13 @@ const AIEditor: React.FC<AIEditorProps> = observer(
                 <AICommandInput onStop={onStop} agent={agent} onResult={onCommandResult} aiLevel={selectedAILevel} />
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className='w-[65%] h-full bg-slate-50'>
+          <motion.div
+            animate={{ width: isFullWidth ? "100%" : "65%" }}
+            transition={{ duration: 0.3 }}
+            className='h-full bg-slate-50'
+          >
             <div className='relative h-full flex flex-col p-2'>
               <div className='version-control-wrapper absolute -top-2 right-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-2 transition-all duration-200 hover:bg-white z-50'>
                 <div className='flex items-center gap-3'>
@@ -229,9 +240,15 @@ const AIEditor: React.FC<AIEditorProps> = observer(
                 <div className='h-[calc(100vh-200px)] overflow-auto p-2'>{renderDataView?.()}</div>
               )}
 
-              <CodeView appId={appId} showCodeTab={showCodeTab} selectedTab={selectedTab} />
+              <CodeView 
+                appId={appId} 
+                showCodeTab={showCodeTab} 
+                selectedTab={selectedTab} 
+                isFullWidth={isFullWidth}
+                onFullWidthChange={setIsFullWidth}
+              />
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* 图片预览Modal */}

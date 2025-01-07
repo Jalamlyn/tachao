@@ -28,9 +28,17 @@ interface CodeViewProps {
   appId: string
   showCodeTab: boolean
   selectedTab: string
+  isFullWidth?: boolean
+  onFullWidthChange?: (isFullWidth: boolean) => void
 }
 
-export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab, selectedTab }) => {
+export const CodeView: React.FC<CodeViewProps> = observer(({ 
+  appId, 
+  showCodeTab, 
+  selectedTab,
+  isFullWidth = false,
+  onFullWidthChange 
+}) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const searchInputRef = React.useRef<HTMLInputElement>(null)
 
@@ -102,42 +110,6 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
       appCodeStore.viewState.isImporting = false
       appCodeStore.viewState.importContent = ""
       appCodeStore.viewState.pendingImportContent = ""
-    }
-  }
-
-  const getCodeTypeIcon = (type: string) => {
-    switch (type) {
-      case "app":
-        return "mdi:application"
-      case "page":
-        return "mdi:file-code"
-      case "store":
-        return "mdi:database"
-      case "service":
-        return "mdi:api"
-      case "module":
-        return "mdi:puzzle"
-      case "schema":
-        return "mdi:json"
-      default:
-        return "mdi:code-tags"
-    }
-  }
-
-  const getCodeTypeColor = (type: string) => {
-    switch (type) {
-      case "app":
-        return "primary"
-      case "page":
-        return "success"
-      case "store":
-        return "warning"
-      case "service":
-        return "danger"
-      case "module":
-        return "secondary"
-      default:
-        return "default"
     }
   }
 
@@ -242,6 +214,20 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
                   onClick={() => (appCodeStore.viewState.showVersionInfo = true)}
                 >
                   <Icon icon='mdi:history' className='w-4 h-4' />
+                </Button>
+              </Tooltip>
+              <Divider orientation='vertical' className='h-6' />
+              <Tooltip content={isFullWidth ? '退出全屏' : '全屏编辑'}>
+                <Button
+                  size='sm'
+                  variant='flat'
+                  isIconOnly
+                  onClick={() => onFullWidthChange?.(!isFullWidth)}
+                >
+                  <Icon 
+                    icon={isFullWidth ? 'mdi:fullscreen-exit' : 'mdi:fullscreen'} 
+                    className='w-4 h-4' 
+                  />
                 </Button>
               </Tooltip>
               <Divider orientation='vertical' className='h-6' />
@@ -445,9 +431,44 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
             <Button variant='flat' onPress={() => (appCodeStore.viewState.showVersionInfo = false)}>
               关闭
             </Button>
-          </ModalFooter>
-        </ModalContent>
+          </ModalFooter></ModalContent>
       </Modal>
     </div>
   )
 })
+
+const getCodeTypeIcon = (type: string) => {
+  switch (type) {
+    case "app":
+      return "mdi:application"
+    case "page":
+      return "mdi:file-code"
+    case "store":
+      return "mdi:database"
+    case "service":
+      return "mdi:api"
+    case "module":
+      return "mdi:puzzle"
+    case "schema":
+      return "mdi:json"
+    default:
+      return "mdi:code-tags"
+  }
+}
+
+const getCodeTypeColor = (type: string) => {
+  switch (type) {
+    case "app":
+      return "primary"
+    case "page":
+      return "success"
+    case "store":
+      return "warning"
+    case "service":
+      return "danger"
+    case "module":
+      return "secondary"
+    default:
+      return "default"
+  }
+}
