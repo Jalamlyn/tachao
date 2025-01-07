@@ -1,4 +1,4 @@
-import React, { memo, useState, useCallback, useRef } from "react"
+import React, { memo, useState, useCallback, useRef, useEffect } from "react"
 import { Button, Textarea, Tooltip, Progress, Badge, ScrollShadow, Modal, ModalContent } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import debounce from "lodash/debounce"
@@ -38,6 +38,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const lastTranscriptRef = useRef<string>("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const abortTimeoutRef = useRef<NodeJS.Timeout>()
 
   // 使用防抖处理输入更新
   const debouncedSetInput = useCallback(
@@ -46,6 +47,32 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     }, 300),
     []
   )
+
+  // 监听 aiControllerStore 的状态
+  useEffect(() => {
+    const checkAbortStatus = () => {
+      if (!aiControllerStore.controller) {
+        setIsLoading(false)
+      }
+    }
+
+    // 创建一个 MutationObserver 来监听 aiControllerStore 的变化
+    const observer = new MutationObserver(checkAbortStatus)
+    observer.observe(aiControllerStore, { attributes: true })
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
+
+  // 清理超时计时器
+  useEffect(() => {
+    return () => {
+      if (abortTimeoutRef.current) {
+        clearTimeout(abortTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // 处理发送消息
   const handleSend = useCallback(async () => {
@@ -86,15 +113,21 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       console.error("Error in AI command:", error)
       message.error("发送消息失败：" + (error instanceof Error ? error.message : "未知错误"))
     } finally {
-      setIsLoading(false)
+      // 设置一个短暂的延时，确保状态正确更新
+      abortTimeoutRef.current = setTimeout(() => {
+        setIsLoading(false)
+      }, 100)
     }
   }, [input, isLoading, agent, onResult, previews])
 
   // 处理停止生成
   const handleStop = useCallback(() => {
     aiControllerStore.abort()
-    setIsLoading(false)
-    onStop?.()
+    // 设置一个短暂的延时，确保状态正确更新
+    abortTimeoutRef.current = setTimeout(() => {
+      setIsLoading(false)
+      onStop?.()
+    }, 100)
   }, [onStop])
 
   // 处理按键事件
@@ -107,6 +140,47 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     },
     [handleSend]
   )
+
+  // 检查是否可以发送消息
+  const canSend = Boolean(input.trim() || previews.length > 0)
+
+  // 渲染发送/停止按钮
+  const renderActionButton = () => {
+    if (isLoading) {
+      return (
+        <Button
+          isIconOnly
+          color="danger"
+          radius="lg"
+          size="sm"
+          variant="flat"
+          onClick={handleStop}
+          className="transition-transform active:scale-95"
+        >
+          <Icon icon="mdi:stop" width={20} />
+        </Button>
+      )
+    }
+
+    return (
+      <Button
+        isIconOnly
+        color={canSend ? "primary" : "default"}
+        isDisabled={!canSend}
+        radius="lg"
+        size="sm"
+        variant={canSend ? "solid" : "flat"}
+        onPress={handleSend}
+        className="transition-transform active:scale-95"
+      >
+        <Icon
+          className={cn("[&>path]:stroke-[2px]", canSend ? "text-primary-foreground" : "text-default-600")}
+          icon="solar:arrow-up-linear"
+          width={20}
+        />
+      </Button>
+    )
+  }
 
   // 处理剪贴板粘贴
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
@@ -377,40 +451,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
           </div>
 
           <div className='flex items-center gap-3'>
-            {isLoading ? (
-              <Button
-                isIconOnly
-                color='danger'
-                radius='lg'
-                size='sm'
-                variant='flat'
-                onClick={handleStop}
-                className='transition-transform active:scale-95'
-              >
-                <Icon icon='mdi:stop' width={20} />
-              </Button>
-            ) : (
-              <Button
-                isIconOnly
-                color={(!input.trim() && previews.length === 0) || isLoading ? "default" : "primary"}
-                isDisabled={(!input.trim() && previews.length === 0) || isLoading}
-                radius='lg'
-                size='sm'
-                variant={(!input.trim() && previews.length === 0) || isLoading ? "flat" : "solid"}
-                onPress={handleSend}
-                className='transition-transform active:scale-95'
-              >
-                {isLoading ? (
-                  <Icon className='animate-spin' icon='eos-icons:loading' width={20} />
-                ) : (
-                  <Icon
-                    className={cn("[&>path]:stroke-[2px]", !input ? "text-default-600" : "text-primary-foreground")}
-                    icon='solar:arrow-up-linear'
-                    width={20}
-                  />
-                )}
-              </Button>
-            )}
+            {renderActionButton()}
           </div>
         </div>
       </form>
