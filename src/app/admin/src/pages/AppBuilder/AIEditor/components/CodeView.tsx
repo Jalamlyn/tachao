@@ -277,7 +277,7 @@ export const CodeView: React.FC<CodeViewProps> = observer(({ appId, showCodeTab,
               )}
             </div>
 
-            <div className='h-full pt-4'>
+            <div className='h-[calc(100vh-250px)] pt-4 max-w-[500px]'>
               <Editor
                 height='100%'
                 width='100%'

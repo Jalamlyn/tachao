@@ -1,5 +1,5 @@
 import expenseTrackerTemplate from "./nextui/nextui_expense_tracker"
-import enterpriseBussiness from "./nextui/nextui_bussiness"
+import enterpriseBussiness from "./nextui/nextui_delivery"
 
 export interface AppTemplate {
   id: string
@@ -23,8 +23,8 @@ export const templates: Record<string, AppTemplate> = {
   },
   enterprise_dashboard: {
     id: "enterprise_dashboard",
-    name: "委外管理表单应用",
-    description: "用于离散制造的委外加工系统",
+    name: "表单应用",
+    description: "中小企业数据采集分析智能系统，助力企业数字化转型。",
     icon: "solar:buildings-2-bold-duotone",
     category: "enterprise",
     type: "form",

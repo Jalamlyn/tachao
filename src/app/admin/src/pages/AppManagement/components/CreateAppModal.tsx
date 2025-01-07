@@ -218,7 +218,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
         <CardBody className='p-4'>
           <div className='flex items-center gap-4'>
             <div className={`p-3 rounded-lg ${createMode === "template" ? "bg-primary/10" : "bg-default-100"}`}>
-              <Icon icon='mdi:template-outline' className='w-6 h-6 text-primary' />
+              <Icon icon='hugeicons:task-add-02' className='w-6 h-6 text-primary' />
             </div>
             <div>
               <h4 className='text-base font-semibold'>从模板开始</h4>
@@ -272,11 +272,11 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
 
     return (
       <div className='space-y-6'>
-        {renderTemplateSection("表单应用", "mdi:form-select", formTemplates)}
+        {renderTemplateSection("表单应用", "solar:document-bold-duotone", formTemplates)}
         <Divider />
-        {renderTemplateSection("智能应用", "mdi:robot", aiTemplates)}
+        {renderTemplateSection("智能应用", "hugeicons:ai-chat-02", aiTemplates)}
         <Divider />
-        {renderTemplateSection("平台模板", "mdi:cloud-outline", platformTemplates)}
+        {renderTemplateSection("平台模板", "solar:cloud-storage-bold-duotone", platformTemplates)}
       </div>
     )
   }
@@ -293,7 +293,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
           body: "py-6",
           footer: "border-t",
         }}
-        scrollBehavior="inside"
+        scrollBehavior='inside'
       >
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>创建应用</ModalHeader>

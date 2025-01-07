@@ -111,7 +111,7 @@ const App = observer(() => {
                 {
                   key: "ai",
                   title: "智能助手",
-                  icon: "hugeicons:ai-brain",
+                  icon: "hugeicons:ai-search",
                   href: "/ai"
                 }
               ]}

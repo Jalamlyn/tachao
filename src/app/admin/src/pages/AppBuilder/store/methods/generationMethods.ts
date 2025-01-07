@@ -289,6 +289,21 @@ export async function createApp(this: AppCodeStore, name: string, templateId: st
         modules: newModules, // 使用更新后的modules
       }
     }
+    // 处理官方模板或空白模板
+    else {
+      let aiResponse
+      if (templateId && templates[templateId]) {
+        aiResponse = templates[templateId].code
+      } else {
+        aiResponse = initialAIResponse
+      }
+
+      const result = await this.generateInitialVersion(aiResponse, name)
+      if (!result.success || !result.version) {
+        throw new Error("Failed to create app")
+      }
+      version = result.version
+    }
 
     // 添加版本并发布
     this.addVersion(version)

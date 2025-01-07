@@ -9,7 +9,7 @@ const {
   cn
 } = context;
 
-const { Card, CardBody, Button, RadioGroup, Radio } = NextUI;
+const { Card, CardBody, Button, RadioGroup, Radio, Input } = NextUI;
 const reportStore = await context.wpm.import('store_report');
 const CustomerReport = await context.wpm.import('comp_report_customer');
 const ProductReport = await context.wpm.import('comp_report_product');

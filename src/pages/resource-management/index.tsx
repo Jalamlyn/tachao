@@ -27,7 +27,7 @@ const ResourceManagement: React.FC = () => {
   useEffect(() => {
     updateBreadcrumbs([
       { label: "首页", href: "/admin" },
-      { label: "资料表格管理", href: "/admin/resources" },
+      { label: "资料管理", href: "/admin/resources" },
     ])
   }, [])
 
@@ -89,7 +89,7 @@ const ResourceManagement: React.FC = () => {
               className="text-white"
               startContent={<Icon icon="mdi:plus" width="20" height="20" />}
             >
-              新建资料
+              新建资料表格
             </Button>
             <CreateResourceButton isDisabled={false} onSuccess={handleSuccess} />
           </div>

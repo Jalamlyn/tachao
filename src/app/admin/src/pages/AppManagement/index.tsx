@@ -59,7 +59,7 @@ const AppManagement: React.FC = () => {
 
   return (
     <PageLayout title='应用管理' titleIcon='mdi:apps' actions={pageActions}>
-      <div className='h-[calc(100vh-200px)] overflow-auto'>
+      <div className='h-[calc(100vh-140px)] overflow-auto'>
         <AppGallery apps={apps} isLoading={isLoading} onDevelopClick={handleDevelopClick} />
       </div>
 

@@ -19,7 +19,7 @@ const ResourceDetail: React.FC = () => {
   useEffect(() => {
     updateBreadcrumbs([
       { label: "首页", href: "/admin" },
-      { label: "资料表格管理", href: "/admin/resources" },
+      { label: "资料管理", href: "/admin/resources" },
       { label: "资料表格详情", href: "" },
     ])
   }, [])

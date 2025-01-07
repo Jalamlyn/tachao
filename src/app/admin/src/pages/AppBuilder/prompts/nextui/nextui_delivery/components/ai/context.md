@@ -12,7 +12,7 @@ const {
 const { Card, CardBody, Button } = NextUI;
 const deliveryStore = await context.wpm.import('store_delivery');
 
-const AIContext = observer(() => {
+
   const generateContext = () => {
     const stats = deliveryStore.getStatistics();
     const customerStats = deliveryStore.getCustomerStatistics();
@@ -25,12 +25,12 @@ const AIContext = observer(() => {
 - 已完成订单：${stats.completed}
 
 热门客户TOP3：
-${customerStats.slice(0, 3).map((customer, index) => 
+${customerStats.slice(0, 3).map((customer, index) =>
   `${index + 1}. ${customer.name} - ${customer.orderCount}单`
 ).join('\n')}
 
 热门商品TOP3：
-${productStats.slice(0, 3).map((product, index) => 
+${productStats.slice(0, 3).map((product, index) =>
   `${index + 1}. ${product.name} - 销量${product.quantity}`
 ).join('\n')}`;
   };
@@ -48,19 +48,18 @@ ${productStats.slice(0, 3).map((product, index) =>
 - 状态：${order.status === 'completed' ? '已完成' : order.status === 'delivering' ? '配送中' : '待处理'}
 
 商品明细：
-${order.items.map((item, index) => 
+${order.items.map((item, index) =>
   `${index + 1}. ${item.name} - ${item.quantity}件 - ¥${item.price}/件 - 小计：¥${item.amount}`
 ).join('\n')}
 
 总金额：¥${order.items.reduce((sum, item) => sum + item.amount, 0)}`;
   };
 
-  return {
+
+
+context.wpm.export('comp_ai_context', {
     generateContext,
     getOrderContext
-  };
-});
-
-context.wpm.export('comp_ai_context', AIContext);
+  });
 </mo-ai-code>
 ```

@@ -9,7 +9,7 @@ export const items = [
     key: "resources",
     href: "/admin/resources",
     icon: "mdi:file-document",
-    title: "资料表格管理",
+    title: "资料管理",
   },
   {
     key: "pending-tasks",

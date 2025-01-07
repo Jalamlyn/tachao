@@ -143,7 +143,7 @@ ${systemContext}
         </CardBody>
       </Card>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 p-2">
         <Input
           fullWidth
           placeholder="输入您的问题..."
@@ -168,6 +168,7 @@ ${systemContext}
                 variant={inputValue ? "solid" : "flat"}
                 onPress={handleSend}
                 disabled={!inputValue}
+                className="h-6 w-4"
               >
                 <Icon
                   className={cn(
