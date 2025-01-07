@@ -21,6 +21,33 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   const [errorDetails, setErrorDetails] = useState<any>(null)
 
   useEffect(() => {
+    // 添加消息监听
+    const handleMessage = async (event: MessageEvent) => {
+      if (event.data.type === 'VERSION_CHANGED' && event.data.appId === appId) {
+        try {
+          setIsLoading(true)
+          // 从 localStorage 加载新版本
+          const version = appCodeStore.loadFromStorage()
+          if (version) {
+            // 更新到 store
+            appCodeStore.addVersion(version)
+            // 执行新版本代码
+            await appCodeStore.executeModules(context(appId))
+          }
+        } catch (error) {
+          console.error("Error updating version:", error)
+          message.error("更新版本失败")
+        } finally {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [appId])
+
+  useEffect(() => {
     // 添加全局错误处理
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error("Unhandled promise rejection:", event.reason)
@@ -34,6 +61,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
       window.removeEventListener("unhandledrejection", handleUnhandledRejection)
     }
   }, [])
+
   const handleAIFix = (errorInfo: any) => {
     window.parent.postMessage(
       {
@@ -192,11 +220,9 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
 
   return (
     <Provider>
-      {/* <PermissionCheck resourceType='app' resourceId={appId}> */}
-        <AppContext.Provider value={{ appId }}>
-          <AppRender onAIFix={handleAIFix} appId={appId} basename={`/app-preview/${appId}`} onError={handleError} />
-        </AppContext.Provider>
-      {/* </PermissionCheck> */}
+      <AppContext.Provider value={{ appId }}>
+        <AppRender onAIFix={handleAIFix} appId={appId} basename={`/app-preview/${appId}`} onError={handleError} />
+      </AppContext.Provider>
     </Provider>
   )
 })
