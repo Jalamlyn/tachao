@@ -24,8 +24,11 @@ class AppAgent {
 
   private async getRelevantModuleIds(
     modules: Record<string, any>,
-    userInput: string
+    command: string | CommandInput
   ): Promise<string[]> {
+    const commandContent = typeof command === 'string' ? command : command.content
+    const commandImages = typeof command === 'string' ? [] : (command.images || [])
+
     const modulesContext = Object.entries(modules)
       .map(
         ([id, module]) => `
@@ -43,13 +46,17 @@ ${module.data.code}
 项目代码：
 ${modulesContext}
 
-用户输入：${userInput}
+用户输入：${commandContent}
 
 请先分析用户输入和各个模块的关系，将分析结果输出到 mo-ai-think 标签中，然后将相关模块ID以JSON格式返回到 mo-ai-code 标签中。JSON格式为：{"moduleIds": ["id1", "id2"]}。只返回确实相关的模块ID。`
 
     let response = ""
     await chatChunkFree(
-      [{ role: "user", content: prompt }],
+      [{ 
+        role: "user", 
+        content: prompt,
+        images: commandImages
+      }],
       (chunk: string) => {
         response += chunk
       },
@@ -106,7 +113,7 @@ ${modulesContext}
       // 获取相关模块ID
       const relevantModuleIds = await this.getRelevantModuleIds(
         appCodeStore.currentVersion?.modules || {},
-        commandContent
+        command
       )
 
       // 构建优化后的上下文
