@@ -8,11 +8,13 @@ import {
   Button,
   Textarea,
   ScrollShadow,
-  Avatar
+  Avatar,
+  Tooltip,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import CodeSearchAgent from "../agents/CodeSearchAgent"
+import CodeSearchAgent from "../../agents/CodeSearchAgent"
 import message from "@/components/Message"
+import { cn } from "@nextui-org/react"
 
 interface Message {
   role: "user" | "assistant"
@@ -25,11 +27,7 @@ interface CodeSearchDialogProps {
   appId: string
 }
 
-const CodeSearchDialog: React.FC<CodeSearchDialogProps> = ({
-  isOpen,
-  onClose,
-  appId
-}) => {
+const CodeSearchDialog: React.FC<CodeSearchDialogProps> = ({ isOpen, onClose, appId }) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -87,44 +85,36 @@ const CodeSearchDialog: React.FC<CodeSearchDialogProps> = ({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+    <Modal isOpen={isOpen} onClose={onClose} size='2xl'>
       <ModalContent>
-        <ModalHeader className="flex items-center gap-2">
-          <Icon icon="solar:bot-linear" className="w-6 h-6 text-primary" />
-          <span className="text-lg font-semibold">AI 代码助手</span>
+        <ModalHeader className='flex items-center gap-2'>
+          <Icon icon='solar:bot-linear' className='w-6 h-6 text-primary' />
+          <span className='text-lg font-semibold'>AI 代码助手</span>
         </ModalHeader>
         <ModalBody>
-          <ScrollShadow ref={scrollRef} className="h-[400px]">
-            <div className="flex flex-col gap-4">
+          <ScrollShadow ref={scrollRef} className='h-[400px] px-2 bg-slate-50'>
+            <div className='flex flex-col gap-4'>
               {messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`flex gap-3 ${
-                    msg.role === "assistant" ? "" : "flex-row-reverse"
-                  }`}
-                >
+                <div key={index} className={`flex gap-3 ${msg.role === "assistant" ? "" : "flex-row-reverse"}`}>
                   <Avatar
-                    src={
-                      msg.role === "assistant"
-                        ? "https://avatars.githubusercontent.com/u/30373425?v=3"
-                        : ""
-                    }
-                    className="flex-shrink-0"
+                    src={msg.role === "assistant" ? "https://avatars.githubusercontent.com/u/30373425?v=3" : ""}
+                    className='flex-shrink-0'
+                    size='sm'
                   />
                   <div
-                    className={`flex max-w-[80%] rounded-lg p-3 ${
+                    className={`flex max-w-[80%] rounded-xl p-3 ${
                       msg.role === "assistant"
-                        ? "bg-content2"
+                        ? "bg-content2/60 backdrop-blur-sm"
                         : "bg-primary text-primary-foreground"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
+                    <p className='whitespace-pre-wrap text-sm leading-relaxed'>{msg.content}</p>
                   </div>
                 </div>
               ))}
               {isLoading && (
-                <div className="flex items-center gap-2 text-sm text-default-400">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                <div className='flex items-center gap-2 text-sm text-default-400'>
+                  <div className='animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent'></div>
                   AI正在思考...
                 </div>
               )}
@@ -132,23 +122,39 @@ const CodeSearchDialog: React.FC<CodeSearchDialogProps> = ({
           </ScrollShadow>
         </ModalBody>
         <ModalFooter>
-          <div className="flex w-full gap-2">
+          <div className='flex w-full gap-2'>
             <Textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="输入问题..."
-              minRows={2}
+              placeholder='输入问题...'
+              minRows={1}
+              maxRows={4}
               disabled={isLoading}
+              classNames={{
+                input: "text-sm",
+                inputWrapper: "shadow-sm",
+              }}
             />
-            <Button
-              isIconOnly
-              color={inputValue ? "primary" : "default"}
-              isDisabled={!inputValue || isLoading}
-              onPress={handleSend}
-            >
-              <Icon icon="solar:arrow-up-linear" className="w-5 h-5" />
-            </Button>
+            <Tooltip content='发送消息' placement='top'>
+              <Button
+                isIconOnly
+                color={!inputValue ? "default" : "primary"}
+                isDisabled={!inputValue || isLoading}
+                onPress={handleSend}
+                radius='lg'
+                variant={!inputValue ? "flat" : "solid"}
+                className='h-auto'
+              >
+                <Icon
+                  icon='solar:arrow-up-linear'
+                  className={cn(
+                    "w-5 h-5 [&>path]:stroke-[2px]",
+                    !inputValue ? "text-default-600" : "text-primary-foreground"
+                  )}
+                />
+              </Button>
+            </Tooltip>
           </div>
         </ModalFooter>
       </ModalContent>

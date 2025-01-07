@@ -13,17 +13,14 @@ const CodeSearch: React.FC<CodeSearchProps> = ({ appId }) => {
   return (
     <>
       <Button
-        variant="light"
-        startContent={<Icon icon="solar:bot-linear" className="w-5 h-5" />}
+        variant='light'
+        color='secondary'
+        isIconOnly
+        startContent={<Icon icon='hugeicons:ai-chat-02' className='w-5 h-5' />}
+        className='ml-2'
         onPress={() => setIsDialogOpen(true)}
-      >
-        AI 搜索
-      </Button>
-      <CodeSearchDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        appId={appId}
-      />
+      ></Button>
+      <CodeSearchDialog isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} appId={appId} />
     </>
   )
 }

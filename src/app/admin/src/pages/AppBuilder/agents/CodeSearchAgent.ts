@@ -1,4 +1,5 @@
-import chatChunkFree from "@/service/chat/chat-chunk-openrouter-free"
+import chatChunk from "@/service/chat/chat-chunk-openrouter-free"
+// import chatChunk from "@/service/chat/chat-deepseek"
 import { appCodeStore } from "../store/appCodeStore"
 
 class CodeSearchAgent {
@@ -18,7 +19,7 @@ class CodeSearchAgent {
     try {
       // 加载应用数据
       await appCodeStore.loadApp(appId)
-      
+
       // 构建模块代码上下文
       const modules = appCodeStore.currentVersion?.modules || {}
       this.moduleContext = Object.entries(modules)
@@ -39,10 +40,7 @@ ${module.data.code}
     }
   }
 
-  public async chat(
-    question: string,
-    onChunk?: (chunk: string) => void
-  ): Promise<void> {
+  public async chat(question: string, onChunk?: (chunk: string) => void): Promise<void> {
     const systemPrompt = `你是一个专业的代码分析助手，你的主要任务是帮助用户理解和定位代码。以下是项目的所有模块代码：
 
 <project_context>
@@ -76,10 +74,10 @@ ${this.moduleContext}
 - 完整性：覆盖必要信息`
 
     try {
-      await chatChunkFree(
+      await chatChunk(
         [
           { role: "system", content: systemPrompt },
-          { role: "user", content: question }
+          { role: "user", content: question },
         ],
         onChunk || ((chunk: string) => {}),
         () => {},
