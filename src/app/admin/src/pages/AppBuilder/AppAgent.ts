@@ -137,6 +137,11 @@ ${module.data.code}
                 : "所有模块代码:"
             }
             ${modulesContext}
+
+            ${typeof command !== 'string' && command.images?.length > 0 ? `
+            3. 用户上传的图片资源：
+            ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join('\n            ')}
+            ` : ''}
             </project>
             
             ${
