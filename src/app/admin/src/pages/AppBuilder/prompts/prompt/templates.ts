@@ -1,5 +1,6 @@
 import expenseTrackerTemplate from "../nextui/nextui_expense_tracker"
 import enterpriseBussiness from "../nextui/nextui_delivery"
+import formShareTemplate from "../nextui/nextui_form_share"
 
 export interface AppTemplate {
   id: string
@@ -30,4 +31,13 @@ export const templates: Record<string, AppTemplate> = {
     type: "form",
     code: enterpriseBussiness,
   },
+  form_share: {
+    id: "form_share",
+    name: "分享表单",
+    description: "创建可分享的表单，支持在线填写和数据收集。",
+    icon: "solar:form-bold-duotone",
+    category: "form",
+    type: "form",
+    code: formShareTemplate,
+  }
 }
