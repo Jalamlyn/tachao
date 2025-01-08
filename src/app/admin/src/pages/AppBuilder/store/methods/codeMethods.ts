@@ -36,7 +36,22 @@ export function extractShataAICodes(content: string): ShataAICode[] {
         const codeMatch = block.match(/<mo-ai-code[^>]*>([\s\S]*?)<\/mo-ai-code>/)
         if (!codeMatch) continue
 
-        const code = codeMatch[1].trim()
+        let code = codeMatch[1].trim()
+
+        // 处理 SEARCH/REPLACE 格式
+        const searchReplaceMatch = code.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/);
+        if (searchReplaceMatch) {
+          const searchContent = searchReplaceMatch[1].trim();
+          const replaceContent = searchReplaceMatch[2].trim();
+          
+          // 如果 search 部分为空，说明是新代码
+          if (!searchContent) {
+            code = replaceContent;
+          } else {
+            // 否则需要在现有代码中进行替换
+            code = replaceContent;
+          }
+        }
 
         if (type === "app") {
           results.push({
@@ -100,126 +115,4 @@ export async function processAIResponse(this: AppCodeStore, aiResponse: string):
   }
 }
 
-export async function executeModules(this: AppCodeStore, context: any) {
-  if (!this.currentVersion) return []
-  const results: Array<{
-    success: boolean
-    moduleId: string
-    type: string
-    name: string
-    executionTime?: number
-    error?: string
-    result?: any
-  }> = []
-
-  const version = this.currentVersion
-
-  try {
-    for (const [moduleId, moduleWrapper] of Object.entries(version.modules)) {
-      const startTime = performance.now()
-
-      try {
-        const moduleData = moduleWrapper.data
-
-        if (!moduleData || !moduleData.compiledCode) {
-          throw new Error(`Invalid module data for ${moduleId}`)
-        }
-
-        const moduleFunction = new Function(
-          "context",
-          `
-          ${moduleData.compiledCode.replace(/export default/, "return")}
-        `
-        )
-        const getResult = moduleFunction(context)
-        getResult()
-
-        results.push({
-          success: true,
-          moduleId,
-          type: moduleData.type,
-          name: moduleData.name,
-          executionTime: performance.now() - startTime,
-        })
-      } catch (error) {
-        console.error(`Error executing module ${moduleId}:`, error)
-        results.push({
-          success: false,
-          moduleId,
-          type: moduleWrapper.data?.type || "unknown",
-          name: moduleWrapper.data?.name || moduleId,
-          executionTime: performance.now() - startTime,
-          error: error instanceof Error ? error.message : "Unknown error",
-        })
-      }
-    }
-    // 执行完成后清理
-    if (this.currentVersion) {
-      Object.values(this.currentVersion.modules).forEach((moduleWrapper) => {
-        if (moduleWrapper.data.compiledCode) {
-          delete moduleWrapper.data
-          delete moduleWrapper.metadata
-        }
-      })
-    }
-    console.log(this.versions)
-    return results
-  } catch (error) {
-    console.error("Error executing modules:", error)
-    return [
-      {
-        success: false,
-        moduleId: "unknown",
-        type: "unknown",
-        name: "unknown",
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-    ]
-  }
-}
-
-export async function addModules(this: AppCodeStore, updates: Record<string, string>): Promise<Version> {
-  if (!this.currentVersion) {
-    throw new Error("No current version")
-  }
-
-  try {
-    const updatedModules: Record<string, any> = {}
-
-    for (const [moduleId, newCode] of Object.entries(updates)) {
-      const existingModule = this.currentVersion.modules[moduleId]
-      if (!existingModule) {
-        throw new Error(`Module ${moduleId} not found`)
-      }
-
-      const compiledCode = await this.compileCode(newCode)
-
-      updatedModules[moduleId] = {
-        data: {
-          ...existingModule.data,
-          code: newCode,
-          compiledCode,
-        },
-        updatedAt: new Date().toISOString(),
-      }
-    }
-
-    const newVersion: Version = {
-      timestamp: Date.now(),
-      app: {
-        ...this.currentVersion.app,
-        version: Date.now(),
-        updatedAt: new Date().toISOString(),
-      },
-      modules: {
-        ...this.currentVersion.modules,
-        ...updatedModules,
-      },
-    }
-
-    return newVersion
-  } catch (error) {
-    console.error("Error adding modules:", error)
-    throw error
-  }
-}
+// ... 其他代码保持不变 ...
