@@ -2,6 +2,7 @@ import { transform } from "@/utils/moduleLoader"
 import { AppCodeStore, ModuleData, ShataAICode, Version } from "../types"
 
 export function compileCode(this: AppCodeStore, code: string): Promise<string> {
+  debugger
   try {
     const { code: compiledCode } = transform(
       `export default async () => {
@@ -39,17 +40,33 @@ export function extractShataAICodes(content: string): ShataAICode[] {
         let code = codeMatch[1].trim()
 
         // 处理 SEARCH/REPLACE 格式
-        const searchReplaceMatch = code.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/);
+        const searchReplaceMatch = code.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/)
         if (searchReplaceMatch) {
-          const searchContent = searchReplaceMatch[1].trim();
-          const replaceContent = searchReplaceMatch[2].trim();
-          
+          const searchContent = searchReplaceMatch[1].trim()
+          const replaceContent = searchReplaceMatch[2].trim()
+
           // 如果 search 部分为空，说明是新代码
           if (!searchContent) {
-            code = replaceContent;
+            code = replaceContent
           } else {
-            // 否则需要在现有代码中进行替换
-            code = replaceContent;
+            // 获取模块当前的代码
+            const nameMatch = block.match(/name="([^"]+)"/)
+            const moduleName = nameMatch ? nameMatch[1] : undefined
+            const moduleId = type === "app" ? `${this.appId}_app_entry` : `${this.appId}_${type}_${moduleName}`
+
+            // 获取当前模块的代码
+            let currentCode = ""
+            if (this.currentVersion?.modules[moduleId]) {
+              currentCode = this.currentVersion.modules[moduleId].data.code
+            }
+
+            if (!currentCode) {
+              // 如果找不到当前代码，直接使用替换内容
+              code = replaceContent
+            } else {
+              // 在当前代码中进行替换
+              code = currentCode.replace(searchContent, replaceContent)
+            }
           }
         }
 
@@ -115,4 +132,126 @@ export async function processAIResponse(this: AppCodeStore, aiResponse: string):
   }
 }
 
-// ... 其他代码保持不变 ...
+export async function executeModules(this: AppCodeStore, context: any) {
+  if (!this.currentVersion) return []
+  const results: Array<{
+    success: boolean
+    moduleId: string
+    type: string
+    name: string
+    executionTime?: number
+    error?: string
+    result?: any
+  }> = []
+
+  const version = this.currentVersion
+
+  try {
+    for (const [moduleId, moduleWrapper] of Object.entries(version.modules)) {
+      const startTime = performance.now()
+
+      try {
+        const moduleData = moduleWrapper.data
+
+        if (!moduleData || !moduleData.compiledCode) {
+          throw new Error(`Invalid module data for ${moduleId}`)
+        }
+
+        const moduleFunction = new Function(
+          "context",
+          `
+          ${moduleData.compiledCode.replace(/export default/, "return")}
+        `
+        )
+        const getResult = moduleFunction(context)
+        getResult()
+
+        results.push({
+          success: true,
+          moduleId,
+          type: moduleData.type,
+          name: moduleData.name,
+          executionTime: performance.now() - startTime,
+        })
+      } catch (error) {
+        console.error(`Error executing module ${moduleId}:`, error)
+        results.push({
+          success: false,
+          moduleId,
+          type: moduleWrapper.data?.type || "unknown",
+          name: moduleWrapper.data?.name || moduleId,
+          executionTime: performance.now() - startTime,
+          error: error instanceof Error ? error.message : "Unknown error",
+        })
+      }
+    }
+    // 执行完成后清理
+    if (this.currentVersion) {
+      Object.values(this.currentVersion.modules).forEach((moduleWrapper) => {
+        if (moduleWrapper.data.compiledCode) {
+          delete moduleWrapper.data
+          delete moduleWrapper.metadata
+        }
+      })
+    }
+    console.log(this.versions)
+    return results
+  } catch (error) {
+    console.error("Error executing modules:", error)
+    return [
+      {
+        success: false,
+        moduleId: "unknown",
+        type: "unknown",
+        name: "unknown",
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+    ]
+  }
+}
+
+export async function addModules(this: AppCodeStore, updates: Record<string, string>): Promise<Version> {
+  if (!this.currentVersion) {
+    throw new Error("No current version")
+  }
+
+  try {
+    const updatedModules: Record<string, any> = {}
+
+    for (const [moduleId, newCode] of Object.entries(updates)) {
+      const existingModule = this.currentVersion.modules[moduleId]
+      if (!existingModule) {
+        throw new Error(`Module ${moduleId} not found`)
+      }
+
+      const compiledCode = await this.compileCode(newCode)
+
+      updatedModules[moduleId] = {
+        data: {
+          ...existingModule.data,
+          code: newCode,
+          compiledCode,
+        },
+        updatedAt: new Date().toISOString(),
+      }
+    }
+
+    const newVersion: Version = {
+      timestamp: Date.now(),
+      app: {
+        ...this.currentVersion.app,
+        version: Date.now(),
+        updatedAt: new Date().toISOString(),
+      },
+      modules: {
+        ...this.currentVersion.modules,
+        ...updatedModules,
+      },
+    }
+
+    return newVersion
+  } catch (error) {
+    console.error("Error adding modules:", error)
+    throw error
+  }
+}

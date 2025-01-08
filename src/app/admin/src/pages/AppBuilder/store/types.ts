@@ -69,6 +69,8 @@ export interface ViewState {
   importContent: string
   isImporting: boolean
   pendingImportContent: string
+  selectedModules: string[] // 新增: 存储选中的模块ID
+  showDeleteConfirm: boolean // 新增: 控制删除确认对话框
 }
 
 // 新增类型定义
@@ -108,4 +110,5 @@ export interface AppCodeStore {
   generateId(): string
   getLastPublishedVersion(): Promise<PublishedVersion | null>
   rollbackToLastPublished(): Promise<boolean>
+  deleteModules(moduleIds: string[]): Promise<Version> // 新增: 批量删除模块方法
 }
