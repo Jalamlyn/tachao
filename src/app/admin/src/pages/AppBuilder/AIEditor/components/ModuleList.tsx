@@ -64,11 +64,14 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
     if (sectionId === "context") {
       const selectedCount = appCodeStore?.viewState?.selectedModules?.length || 0
       const totalCount = appCodeStore.getFilteredCodeItems().length
+      const isContextActive = appCodeStore.viewState.useSelectedModulesAsContext
 
       if (selectedCount === 0) {
-        message.info("已默认选择所有模块作为上下文，您也可以手动选择特定模块")
+        message.info("默认使用所有模块作为上下文，您可以手动选择特定模块")
+      } else if (!isContextActive) {
+        message.info(`已选择 ${selectedCount}/${totalCount} 个模块，点击激活按钮将其用作上下文`)
       } else {
-        message.info(`当前已选择 ${selectedCount}/${totalCount} 个模块作为上下文`)
+        message.info(`当前正在使用 ${selectedCount}/${totalCount} 个选中模块作为上下文`)
       }
     }
   }
@@ -77,20 +80,29 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
   const getContextStatus = () => {
     const selectedCount = appCodeStore?.viewState?.selectedModules?.length || 0
     const totalCount = appCodeStore.getFilteredCodeItems().length
-    const hasContext = appCodeStore.viewState.useSelectedModulesAsContext
+    const isContextActive = appCodeStore.viewState.useSelectedModulesAsContext
+    const hasSelectedModules = selectedCount > 0
 
-    if (hasContext) {
+    if (isContextActive && hasSelectedModules) {
       return {
         icon: "material-symbols:contextual-token-add",
         color: "success" as const,
-        tooltip: `已激活 ${selectedCount}/${totalCount} 个模块作为上下文`,
+        tooltip: `正在使用 ${selectedCount}/${totalCount} 个选中模块作为上下文`,
+      }
+    }
+
+    if (hasSelectedModules) {
+      return {
+        icon: "material-symbols:contextual-token-add-outline-rounded",
+        color: "primary" as const,
+        tooltip: `已选择 ${selectedCount}/${totalCount} 个模块，点击激活为上下文`,
       }
     }
 
     return {
       icon: "material-symbols:contextual-token-add-outline-rounded",
       color: "default" as const,
-      tooltip: selectedCount > 0 ? "点击使用选中模块作为上下文" : "默认使用所有模块作为上下文",
+      tooltip: "默认使用所有模块作为上下文",
     }
   }
 
@@ -117,9 +129,9 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
             <Badge
               content={appCodeStore?.viewState?.selectedModules?.length || 0}
               color={contextStatus.color}
-              size="sm"
+              size='sm'
               isInvisible={!appCodeStore?.viewState?.selectedModules?.length}
-              className="animate-pulse"
+              className='animate-pulse'
             >
               <Button
                 isIconOnly
@@ -128,9 +140,13 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                 className={`w-8 h-8 ${activeSection === "context" ? "bg-primary/10 text-primary" : ""}`}
                 onClick={() => handleNavClick("context")}
               >
-                <Icon 
-                  icon={contextStatus.icon} 
-                  className={`w-5 h-5 ${appCodeStore.viewState.useSelectedModulesAsContext ? "text-success" : ""}`}
+                <Icon
+                  icon={contextStatus.icon}
+                  className={`w-5 h-5 ${
+                    appCodeStore.viewState.useSelectedModulesAsContext && appCodeStore?.viewState?.selectedModules?.length
+                      ? "text-success"
+                      : ""
+                  }`}
                 />
               </Button>
             </Badge>
@@ -184,7 +200,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
         </div>
 
         {/* 独立的上下文区域 */}
-        {appCodeStore.viewState.useSelectedModulesAsContext && (
+        {appCodeStore.viewState.useSelectedModulesAsContext && appCodeStore?.viewState?.selectedModules?.length > 0 && (
           <div ref={contextRef} id='context' className='mb-6'>
             <Card className='bg-default-50/80 backdrop-blur-sm shadow-sm'>
               <div className='p-3'>
@@ -232,9 +248,12 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
               <Card className='bg-default-100/80 backdrop-blur-sm shadow-sm'>
                 <div className='p-3'>
                   <div className='flex flex-col items-center justify-between'>
-                    <span className='text-sm font-medium'>
+                    <div className='text-sm text-left font-medium p-2'>
                       已选择 {appCodeStore?.viewState?.selectedModules?.length} 个模块
-                    </span>
+                      {!appCodeStore.viewState.useSelectedModulesAsContext && (
+                        <span className='text-default-400 text-xs ml-2'>(尚未用作上下文)</span>
+                      )}
+                    </div>
                     <div className='flex gap-2'>
                       <Button
                         size='sm'
@@ -254,7 +273,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                         onClick={() => appCodeStore.toggleUseSelectedModulesAsContext()}
                         startContent={<Icon icon='material-symbols:contextual-token-add-rounded' className='w-4 h-4' />}
                       >
-                        用作上下文
+                        {appCodeStore.viewState.useSelectedModulesAsContext ? "取消上下文" : "用作上下文"}
                       </Button>
                     </div>
                   </div>
