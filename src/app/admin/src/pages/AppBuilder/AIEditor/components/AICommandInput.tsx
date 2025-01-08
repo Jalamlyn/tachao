@@ -36,7 +36,13 @@ interface AICommandInputProps {
   aiLevel?: string
 }
 
-// 定义可用的AI助手
+interface UploadingFile {
+  id: string
+  progress: number
+  status: 'uploading' | 'success' | 'error'
+  url?: string
+}
+
 const AI_ASSISTANTS = {
   mo: {
     name: "Mo",
@@ -57,35 +63,31 @@ const AI_ASSISTANTS = {
 }
 
 const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInputProps) => {
-  // 保留原有的状态管理
   const [input, setInput] = useState("")
-  const [previews, setPreviews] = useState<string[]>([])
-  const [isUploading, setIsUploading] = useState(false)
-  const [isRecording, setIsRecording] = useState(false)
-  const [recordingError, setRecordingError] = useState<string>("")
+  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([])
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false)
   const [selectedPreview, setSelectedPreview] = useState<string>("")
   const [showTutorial, setShowTutorial] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingError, setRecordingError] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const lastTranscriptRef = useRef<string>("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // 使用自定义 Hook 管理按钮状态和动作
   const { buttonState, actions } = useAICommandButton({
     input,
-    previews,
+    previews: uploadingFiles.filter(f => f.status === 'success').map(f => f.url!),
     agent,
     onResult: (result) => {
       onResult?.(result)
       setInput("")
-      setPreviews([])
+      setUploadingFiles([])
       imageStore.clear()
     },
     onStop,
   })
 
-  // 处理@快捷输入
   const handleAssistantShortcut = (shortcut: string) => {
     const cursorPosition = textareaRef.current?.selectionStart || 0
     const newInput = input.slice(0, cursorPosition) + shortcut + " " + input.slice(cursorPosition)
@@ -97,7 +99,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     }, 0)
   }
 
-  // 使用防抖处理输入更新
   const debouncedSetInput = useCallback(
     debounce((text: string) => {
       setInput(text)
@@ -105,7 +106,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     []
   )
 
-  // 保留原有的所有处理函数...
   const handleKeyPress = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -116,6 +116,54 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     [actions]
   )
 
+  const handleUploadFile = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      message.error("图片大小不能超过5MB")
+      return
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif"]
+    if (!allowedTypes.includes(file.type)) {
+      message.error("只支持 JPG、PNG、GIF 格式图片")
+      return
+    }
+
+    const fileId = Date.now().toString()
+    setUploadingFiles(prev => [...prev, {
+      id: fileId,
+      progress: 0,
+      status: 'uploading'
+    }])
+
+    try {
+      const result = await context.api.upload.uploadFile(file, {
+        onProgress: (percent) => {
+          setUploadingFiles(prev => prev.map(f => 
+            f.id === fileId ? { ...f, progress: percent } : f
+          ))
+        },
+        maxSize: 5 * 1024 * 1024
+      })
+
+      setUploadingFiles(prev => prev.map(f => 
+        f.id === fileId ? { 
+          ...f, 
+          status: 'success',
+          url: result.downloadUrl,
+        } : f
+      ))
+
+      imageStore.addImage(result.downloadUrl)
+      message.success("图片上传成功")
+    } catch (error) {
+      console.error("Error uploading file:", error)
+      setUploadingFiles(prev => prev.map(f => 
+        f.id === fileId ? { ...f, status: 'error' } : f
+      ))
+      message.error("图片上传失败，请重试")
+    }
+  }
+
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items
     if (!items) return
@@ -125,31 +173,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
         e.preventDefault()
         const file = item.getAsFile()
         if (file) {
-          if (file.size > 5 * 1024 * 1024) {
-            message.error("图片大小不能超过5MB")
-            return
-          }
-
-          setIsUploading(true)
-          try {
-            const reader = new FileReader()
-            reader.onloadend = () => {
-              const base64 = reader.result as string
-              setPreviews((prev) => [...prev, base64])
-              imageStore.addImage(base64)
-              setIsUploading(false)
-              message.success("图片粘贴成功")
-            }
-            reader.onerror = () => {
-              message.error("图片读取失败")
-              setIsUploading(false)
-            }
-            reader.readAsDataURL(file)
-          } catch (error) {
-            console.error("Error processing pasted image:", error)
-            message.error("图片处理失败")
-            setIsUploading(false)
-          }
+          await handleUploadFile(file)
         }
       }
     }
@@ -159,40 +183,8 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     const files = e.target.files
     if (!files || files.length === 0) return
 
-    const maxSize = 5 * 1024 * 1024 // 5MB
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif"]
-
     for (const file of files) {
-      if (file.size > maxSize) {
-        message.error(`图片 ${file.name} 大小不能超过5MB`)
-        continue
-      }
-
-      if (!allowedTypes.includes(file.type)) {
-        message.error(`图片 ${file.name} 格式不支持，只支持 JPG, PNG, GIF`)
-        continue
-      }
-
-      setIsUploading(true)
-      try {
-        const reader = new FileReader()
-        reader.onloadend = async () => {
-          const base64 = reader.result as string
-          setPreviews((prev) => [...prev, base64])
-          imageStore.addImage(base64)
-          setIsUploading(false)
-          message.success(`图片 ${file.name} 上传成功`)
-        }
-        reader.onerror = () => {
-          message.error(`图片 ${file.name} 读取失败`)
-          setIsUploading(false)
-        }
-        reader.readAsDataURL(file)
-      } catch (error) {
-        console.error("Error uploading image:", error)
-        message.error(`图片 ${file.name} 上传失败`)
-        setIsUploading(false)
-      }
+      await handleUploadFile(file)
     }
 
     if (fileInputRef.current) {
@@ -204,10 +196,24 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     fileInputRef.current?.click()
   }
 
-  const handleDeleteImage = (imageToDelete: string) => {
-    setPreviews((prev) => prev.filter((img) => img !== imageToDelete))
-    imageStore.removeImage(imageToDelete)
+  const handleDeleteImage = (fileId: string) => {
+    const file = uploadingFiles.find(f => f.id === fileId)
+    if (file?.url) {
+      imageStore.removeImage(file.url)
+    }
+    setUploadingFiles(prev => prev.filter(f => f.id !== fileId))
     message.success("图片删除成功")
+  }
+
+  const handleRetryUpload = async (fileId: string) => {
+    const file = uploadingFiles.find(f => f.id === fileId)
+    if (!file) return
+
+    setUploadingFiles(prev => prev.filter(f => f.id !== fileId))
+    const input = fileInputRef.current
+    if (input?.files?.[0]) {
+      await handleUploadFile(input.files[0])
+    }
   }
 
   const initSpeechRecognition = () => {
@@ -287,9 +293,9 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
         />
 
         <div className='group flex flex-wrap gap-2 px-4 pt-4'>
-          {previews.map((preview, index) => (
+          {uploadingFiles.map((file) => (
             <Badge
-              key={index}
+              key={file.id}
               size='sm'
               isOneChar
               className='opacity-100 transition-opacity duration-200'
@@ -299,27 +305,48 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
                   radius='full'
                   size='sm'
                   variant='light'
-                  onClick={() => handleDeleteImage(preview)}
+                  onClick={() => handleDeleteImage(file.id)}
                   className='bg-white/80 backdrop-blur-sm hover:bg-danger-50'
                 >
                   <Icon icon='mdi:close' className='w-3 h-3 text-danger' />
                 </Button>
               }
             >
-              <img
-                src={preview}
-                alt={`Preview ${index + 1}`}
-                className='w-16 h-16 object-cover rounded-small border-small border-default-200/50 transition-transform duration-200 hover:scale-105 cursor-pointer'
-                onClick={() => {
-                  setSelectedPreview(preview)
-                  setIsPreviewModalOpen(true)
-                }}
-              />
+              <div className='relative w-16 h-16'>
+                {file.status === 'uploading' && (
+                  <div className='absolute inset-0 flex items-center justify-center bg-default-100/50 backdrop-blur-sm'>
+                    <Progress
+                      size='sm'
+                      value={file.progress}
+                      color='primary'
+                      className='w-12'
+                    />
+                  </div>
+                )}
+                {file.status === 'error' && (
+                  <div 
+                    className='absolute inset-0 flex items-center justify-center bg-danger-50/50 backdrop-blur-sm cursor-pointer'
+                    onClick={() => handleRetryUpload(file.id)}
+                  >
+                    <Icon icon='mdi:refresh' className='w-6 h-6 text-danger' />
+                  </div>
+                )}
+                {file.url && (
+                  <img
+                    src={file.url}
+                    alt={`Preview ${file.id}`}
+                    className='w-full h-full object-cover rounded-small border-small border-default-200/50 transition-transform duration-200 hover:scale-105 cursor-pointer'
+                    onClick={() => {
+                      setSelectedPreview(file.url!)
+                      setIsPreviewModalOpen(true)
+                    }}
+                  />
+                )}
+              </div>
             </Badge>
           ))}
         </div>
 
-        {/* AI助手选择器 */}
         <div className='px-4 flex gap-2'>
           {Object.entries(AI_ASSISTANTS).map(([key, assistant]) => (
             <Tooltip key={key} content={assistant.description}>
@@ -354,20 +381,16 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
 
         <div className='flex w-full flex-wrap items-center justify-between gap-2 px-4 pb-4'>
           <div className='flex flex-wrap gap-3'>
-            <Button
-              size='sm'
-              variant='flat'
-              startContent={
-                isUploading ? (
-                  <Icon className='animate-spin' icon='eos-icons:loading' width={18} />
-                ) : (
-                  <Icon className='text-default-500' icon='solar:gallery-minimalistic-linear' width={18} />
-                )
-              }
-              onClick={handleImageClick}
-            >
-              图片
-            </Button>
+            <Tooltip content="支持jpg、png、gif，最大5MB">
+              <Button
+                size='sm'
+                variant='flat'
+                startContent={<Icon className='text-default-500' icon='solar:gallery-minimalistic-linear' width={18} />}
+                onClick={handleImageClick}
+              >
+                图片
+              </Button>
+            </Tooltip>
 
             <Button
               size='sm'
@@ -418,7 +441,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
         </div>
       </form>
 
-      {/* 保留原有的所有Modal组件 */}
       <Modal
         isOpen={isPreviewModalOpen}
         onClose={() => {
