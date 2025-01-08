@@ -24,7 +24,7 @@ import * as ReactHookForm from "react-hook-form"
 let esmIns = null
 
 // 上传文件相关API
-const uploadAPI = {
+export const uploadAPI = {
   // 获取签名URL
   getSignedUrl: async (fileName: string) => {
     try {

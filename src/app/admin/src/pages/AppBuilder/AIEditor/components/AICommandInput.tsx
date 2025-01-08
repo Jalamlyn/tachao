@@ -21,6 +21,7 @@ import { imageStore } from "./ImageStore"
 import message from "@/components/Message"
 import { AITutorialModal } from "./AITutorialModal"
 import { useAICommandButton } from "./hooks/useAICommandButton"
+import { uploadAPI } from "../../components/functionContext"
 
 interface AIAgent {
   processCommand: (
@@ -39,7 +40,7 @@ interface AICommandInputProps {
 interface UploadingFile {
   id: string
   progress: number
-  status: 'uploading' | 'success' | 'error'
+  status: "uploading" | "success" | "error"
   url?: string
 }
 
@@ -77,7 +78,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
 
   const { buttonState, actions } = useAICommandButton({
     input,
-    previews: uploadingFiles.filter(f => f.status === 'success').map(f => f.url!),
+    previews: uploadingFiles.filter((f) => f.status === "success").map((f) => f.url!),
     agent,
     onResult: (result) => {
       onResult?.(result)
@@ -129,37 +130,40 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     }
 
     const fileId = Date.now().toString()
-    setUploadingFiles(prev => [...prev, {
-      id: fileId,
-      progress: 0,
-      status: 'uploading'
-    }])
+    setUploadingFiles((prev) => [
+      ...prev,
+      {
+        id: fileId,
+        progress: 0,
+        status: "uploading",
+      },
+    ])
 
     try {
-      const result = await context.api.upload.uploadFile(file, {
+      const result = await uploadAPI.uploadFile(file, {
         onProgress: (percent) => {
-          setUploadingFiles(prev => prev.map(f => 
-            f.id === fileId ? { ...f, progress: percent } : f
-          ))
+          setUploadingFiles((prev) => prev.map((f) => (f.id === fileId ? { ...f, progress: percent } : f)))
         },
-        maxSize: 5 * 1024 * 1024
+        maxSize: 5 * 1024 * 1024,
       })
 
-      setUploadingFiles(prev => prev.map(f => 
-        f.id === fileId ? { 
-          ...f, 
-          status: 'success',
-          url: result.downloadUrl,
-        } : f
-      ))
+      setUploadingFiles((prev) =>
+        prev.map((f) =>
+          f.id === fileId
+            ? {
+                ...f,
+                status: "success",
+                url: result.downloadUrl,
+              }
+            : f
+        )
+      )
 
       imageStore.addImage(result.downloadUrl)
       message.success("图片上传成功")
     } catch (error) {
       console.error("Error uploading file:", error)
-      setUploadingFiles(prev => prev.map(f => 
-        f.id === fileId ? { ...f, status: 'error' } : f
-      ))
+      setUploadingFiles((prev) => prev.map((f) => (f.id === fileId ? { ...f, status: "error" } : f)))
       message.error("图片上传失败，请重试")
     }
   }
@@ -197,19 +201,19 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   }
 
   const handleDeleteImage = (fileId: string) => {
-    const file = uploadingFiles.find(f => f.id === fileId)
+    const file = uploadingFiles.find((f) => f.id === fileId)
     if (file?.url) {
       imageStore.removeImage(file.url)
     }
-    setUploadingFiles(prev => prev.filter(f => f.id !== fileId))
+    setUploadingFiles((prev) => prev.filter((f) => f.id !== fileId))
     message.success("图片删除成功")
   }
 
   const handleRetryUpload = async (fileId: string) => {
-    const file = uploadingFiles.find(f => f.id === fileId)
+    const file = uploadingFiles.find((f) => f.id === fileId)
     if (!file) return
 
-    setUploadingFiles(prev => prev.filter(f => f.id !== fileId))
+    setUploadingFiles((prev) => prev.filter((f) => f.id !== fileId))
     const input = fileInputRef.current
     if (input?.files?.[0]) {
       await handleUploadFile(input.files[0])
@@ -313,18 +317,13 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
               }
             >
               <div className='relative w-16 h-16'>
-                {file.status === 'uploading' && (
+                {file.status === "uploading" && (
                   <div className='absolute inset-0 flex items-center justify-center bg-default-100/50 backdrop-blur-sm'>
-                    <Progress
-                      size='sm'
-                      value={file.progress}
-                      color='primary'
-                      className='w-12'
-                    />
+                    <Progress size='sm' value={file.progress} color='primary' className='w-12' />
                   </div>
                 )}
-                {file.status === 'error' && (
-                  <div 
+                {file.status === "error" && (
+                  <div
                     className='absolute inset-0 flex items-center justify-center bg-danger-50/50 backdrop-blur-sm cursor-pointer'
                     onClick={() => handleRetryUpload(file.id)}
                   >
@@ -381,7 +380,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
 
         <div className='flex w-full flex-wrap items-center justify-between gap-2 px-4 pb-4'>
           <div className='flex flex-wrap gap-3'>
-            <Tooltip content="支持jpg、png、gif，最大5MB">
+            <Tooltip content='支持jpg、png、gif，最大5MB'>
               <Button
                 size='sm'
                 variant='flat'
