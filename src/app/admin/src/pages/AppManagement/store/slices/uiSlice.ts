@@ -13,6 +13,8 @@ export const createAppUISlice: StateCreator<
   selectedApp: null,
   isDeleteModalOpen: false,
   appToDelete: null,
+  isRenameModalOpen: false,
+  appToRename: null,
 
   // UI Actions
   setCreateModalOpen: (isOpen) => set({ isCreateModalOpen: isOpen }),
@@ -20,6 +22,8 @@ export const createAppUISlice: StateCreator<
   setSelectedApp: (app) => set({ selectedApp: app }),
   setDeleteModalOpen: (isOpen) => set({ isDeleteModalOpen: isOpen }),
   setAppToDelete: (app) => set({ appToDelete: app }),
+  setRenameModalOpen: (isOpen) => set({ isRenameModalOpen: isOpen }),
+  setAppToRename: (app) => set({ appToRename: app }),
   reset: () =>
     set({
       isCreateModalOpen: false,
@@ -27,5 +31,7 @@ export const createAppUISlice: StateCreator<
       selectedApp: null,
       isDeleteModalOpen: false,
       appToDelete: null,
+      isRenameModalOpen: false,
+      appToRename: null,
     }),
 })

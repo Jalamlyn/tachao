@@ -9,7 +9,6 @@ export interface AppIndex {
     templateIds: string[]
     reportIds: string[]
   }
-  // 新增页面相关字段
   pages?: Array<{
     id: string
     title?: string
@@ -32,7 +31,6 @@ export interface UpdateAppConfigInput {
   template?: "default" | "dashboard" | "enterprise"
   layout?: AppLayout
   navigation?: AppNavigation
-  // 新增页面相关配置
   pages?: Array<{
     id: string
     title?: string
@@ -41,6 +39,11 @@ export interface UpdateAppConfigInput {
     updatedAt?: string
   }>
   homePageId?: string
+}
+
+export interface RenameAppInput {
+  id: string
+  title: string
 }
 
 export interface AppLayout {
@@ -72,11 +75,15 @@ export interface AppUISlice {
   selectedApp: AppIndex | null
   isDeleteModalOpen: boolean
   appToDelete: AppIndex | null
+  isRenameModalOpen: boolean
+  appToRename: AppIndex | null
   setCreateModalOpen: (isOpen: boolean) => void
   setDevelopModalOpen: (isOpen: boolean) => void
   setSelectedApp: (app: AppIndex | null) => void
   setDeleteModalOpen: (isOpen: boolean) => void
   setAppToDelete: (app: AppIndex | null) => void
+  setRenameModalOpen: (isOpen: boolean) => void
+  setAppToRename: (app: AppIndex | null) => void
   reset: () => void
 }
 
@@ -100,6 +107,11 @@ export interface AppDataSlice {
   useDeleteApp: () => {
     deleteApp: (appId: string) => Promise<void>
     isDeleting: boolean
+    error: Error | null
+  }
+  useRenameApp: () => {
+    renameApp: (input: RenameAppInput) => Promise<void>
+    isRenaming: boolean
     error: Error | null
   }
 }

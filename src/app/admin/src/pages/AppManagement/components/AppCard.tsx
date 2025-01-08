@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import {
   Card,
   CardBody,
@@ -9,6 +9,12 @@ import {
   DropdownMenu,
   DropdownItem,
   useDisclosure,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Input,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -22,16 +28,33 @@ interface AppCardProps {
 
 export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
   const navigate = useNavigate()
-  const { setDeleteModalOpen, setAppToDelete } = useAppStore()
+  const [newTitle, setNewTitle] = useState(app.title)
+  const { setDeleteModalOpen, setAppToDelete, useRenameApp } = useAppStore()
   const {
     isOpen: isPermissionModalOpen,
     onOpen: onPermissionModalOpen,
     onClose: onPermissionModalClose,
   } = useDisclosure()
+  const {
+    isOpen: isRenameModalOpen,
+    onOpen: onRenameModalOpen,
+    onClose: onRenameModalClose,
+  } = useDisclosure()
+
+  const { renameApp, isRenaming } = useRenameApp()
 
   const handleDelete = () => {
     setAppToDelete(app)
     setDeleteModalOpen(true)
+  }
+
+  const handleRename = async () => {
+    try {
+      await renameApp({ id: app.id, title: newTitle })
+      onRenameModalClose()
+    } catch (error) {
+      console.error("Failed to rename app:", error)
+    }
   }
 
   const getTemplateIcon = (template?: string) => {
@@ -125,6 +148,13 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
             </DropdownTrigger>
             <DropdownMenu aria-label='应用操作'>
               <DropdownItem
+                key='rename'
+                startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
+                onPress={onRenameModalOpen}
+              >
+                重命名
+              </DropdownItem>
+              <DropdownItem
                 key='permissions'
                 startContent={<Icon icon='mdi:shield-account' className='w-4 h-4' />}
                 onPress={onPermissionModalOpen}
@@ -152,6 +182,43 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
         resourceId={app.id}
         resourceTitle={app.title}
       />
+
+      <Modal
+        isOpen={isRenameModalOpen}
+        onClose={onRenameModalClose}
+        classNames={{
+          base: "max-w-md",
+          header: "border-b",
+          body: "py-6",
+          footer: "border-t",
+        }}
+      >
+        <ModalContent>
+          <ModalHeader className='flex flex-col gap-1'>重命名应用</ModalHeader>
+          <ModalBody>
+            <Input
+              label='应用名称'
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              variant='bordered'
+              isRequired
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button variant='light' onPress={onRenameModalClose}>
+              取消
+            </Button>
+            <Button
+              color='primary'
+              onPress={handleRename}
+              isLoading={isRenaming}
+              isDisabled={!newTitle.trim() || newTitle.trim() === app.title}
+            >
+              确认
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   )
 }
