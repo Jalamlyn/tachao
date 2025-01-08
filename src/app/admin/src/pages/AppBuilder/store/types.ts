@@ -34,8 +34,8 @@ export interface Version {
   timestamp: number
   app: App
   modules: Record<string, ModuleWrapper>
-  serverVersion?: number  // 添加服务器版本号
-  lastSyncTime?: number  // 添加最后同步时间
+  serverVersion?: number
+  lastSyncTime?: number
 }
 
 export interface AIGenerationResult {
@@ -69,18 +69,17 @@ export interface ViewState {
   importContent: string
   isImporting: boolean
   pendingImportContent: string
-  selectedModules: string[] // 新增: 存储选中的模块ID
-  showDeleteConfirm: boolean // 新增: 控制删除确认对话框
+  selectedModules: string[]
+  showDeleteConfirm: boolean
+  useSelectedModulesAsContext: boolean // 新增：是否使用选中模块作为上下文
 }
 
-// 新增类型定义
 export interface PublishedVersion {
   version: number
   publishedAt: string
   modules: Record<string, ModuleData>
 }
 
-// 为 AppCodeStore 定义公共接口
 export interface AppCodeStore {
   appId: any
   versions: Version[]
@@ -110,5 +109,8 @@ export interface AppCodeStore {
   generateId(): string
   getLastPublishedVersion(): Promise<PublishedVersion | null>
   rollbackToLastPublished(): Promise<boolean>
-  deleteModules(moduleIds: string[]): Promise<Version> // 新增: 批量删除模块方法
+  deleteModules(moduleIds: string[]): Promise<Version>
+  getContextModules(): Record<string, ModuleWrapper> // 新增：获取当前上下文模块方法
+  toggleUseSelectedModulesAsContext(): void // 新增：切换是否使用选中模块作为上下文
+  getSelectedModulesInfo(): Array<{ id: string; name: string; title: string; type: ModuleType }> // 新增：获取选中模块信息
 }

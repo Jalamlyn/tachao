@@ -28,6 +28,9 @@ import {
   setEditMode,
   updateEditedCode,
   handleCancelEdit,
+  getContextModules,
+  toggleUseSelectedModulesAsContext,
+  getSelectedModulesInfo,
 } from "./methods/viewMethods"
 
 class AppCodeStore {
@@ -80,6 +83,9 @@ class AppCodeStore {
     this.updateEditedCode = updateEditedCode.bind(this)
     this.handleCancelEdit = handleCancelEdit.bind(this)
     this.deleteModules = deleteModules.bind(this)
+    this.getContextModules = getContextModules.bind(this)
+    this.toggleUseSelectedModulesAsContext = toggleUseSelectedModulesAsContext.bind(this)
+    this.getSelectedModulesInfo = getSelectedModulesInfo.bind(this)
   }
 
   // Getters
@@ -103,22 +109,18 @@ class AppCodeStore {
     return this.currentIndex < this.versions.length - 1
   }
 
-  // 新增 getter
   get hasPublishedVersion(): boolean {
     return this.versions.some((v) => v.app.version > 0)
   }
 
-  // 设置appId
   setAppId(appId: string) {
     this.#appId = appId
   }
 
-  // 获取appId
   get appId(): string | null {
     return this.#appId
   }
 
-  // 生成ID
   generateId(): string {
     const timestamp = Date.now()
     const random = Math.random().toString(36).substring(2, 8)

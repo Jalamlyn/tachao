@@ -65,7 +65,6 @@ ${modulesContext}
       0
     )
 
-    // 从响应中提取JSON
     const match = response.match(/```jsx<mo-ai-code.*?>(.*?)<\/mo-ai-code>```/s)
     if (!match) {
       return []
@@ -95,23 +94,17 @@ ${modulesContext}
     }
 
     try {
-      // 检查是否是 PM 对话
       const commandContent = typeof command === "string" ? command : command.content
       const isPMMode = commandContent.trim().toLowerCase().startsWith("@pm")
 
-      // 以下是原有的处理逻辑
       appCodeStore.setAppId(appId)
       const systemPrompt = await promptsComposer.getSystemPrompt()
 
-      // 获取相关模块ID
-      // const relevantModuleIds = await this.getRelevantModuleIds(appCodeStore.currentVersion?.modules || {}, command)
-      const relevantModuleIds = []
-      // 构建优化后的上下文
-      const relevantModules = relevantModuleIds.length
-        ? Object.entries(appCodeStore.currentVersion?.modules || {})
-            .filter(([id]) => relevantModuleIds.includes(id))
-            .map(
-              ([id, module]) => `
+      // 使用 appCodeStore 的 contextModules 获取当前上下文模块
+      const contextModules = appCodeStore.getContextModules()
+      const modulesContext = Object.entries(contextModules)
+        .map(
+          ([id, module]) => `
 模块ID: ${id}
 模块名称: ${module.data.name}
 模块标题: ${module.data.title}
@@ -119,20 +112,8 @@ ${modulesContext}
 模块代码:
 ${module.data.code}
 `
-            )
-            .join("\n---\n")
-        : Object.entries(appCodeStore.currentVersion?.modules || {})
-            .map(
-              ([id, module]) => `
-模块ID: ${id}
-模块名称: ${module.data.name}
-模块标题: ${module.data.title}
-模块类型: ${module.data.type}
-模块代码:
-${module.data.code}
-`
-            )
-            .join("\n---\n")
+        )
+        .join("\n---\n")
 
       const enhancedCommand = `<project>
             ${
@@ -150,8 +131,12 @@ ${module.data.code}
             1. 应用入口代码：
             ${appCodeStore.currentVersion?.modules[`${appId}_app_entry`]?.data?.code || "需要先创建应用入口代码，包含基础路由配置"}
             
-            2. 所有模块代码：
-            ${relevantModules}
+            2. ${
+              appCodeStore.viewState.useSelectedModulesAsContext
+                ? `选中的模块代码 (${Object.keys(contextModules).length}个模块):`
+                : "所有模块代码:"
+            }
+            ${modulesContext}
             </project>
             
             ${

@@ -16,8 +16,9 @@ export function initViewState(): ViewState {
     importContent: "",
     isImporting: false,
     pendingImportContent: "",
-    selectedModules: [], // 添加这一行
-    showDeleteConfirm: false, // 添加这一行
+    selectedModules: [],
+    showDeleteConfirm: false,
+    useSelectedModulesAsContext: false, // 新增：是否使用选中模块作为上下文
   }
 }
 
@@ -32,6 +33,43 @@ export function handleCodeSelect(this: AppCodeStore, moduleId: string) {
     this.viewState.editedCode = moduleWrapper.data.code || ""
     this.viewState.isEditing = false
   }
+}
+
+// 新增：获取当前上下文模块
+export function getContextModules(this: AppCodeStore) {
+  if (this.viewState.useSelectedModulesAsContext && this.viewState.selectedModules.length > 0) {
+    return Object.entries(this.currentVersion?.modules || {})
+      .filter(([moduleId]) => this.viewState.selectedModules.includes(moduleId))
+      .reduce((acc, [id, module]) => ({ ...acc, [id]: module }), {})
+  }
+  return this.currentVersion?.modules || {}
+}
+
+// 新增：切换是否使用选中模块作为上下文
+export function toggleUseSelectedModulesAsContext(this: AppCodeStore) {
+  if (this.viewState.selectedModules.length === 0 && !this.viewState.useSelectedModulesAsContext) {
+    message.warning("请先选择至少一个模块")
+    return
+  }
+  this.viewState.useSelectedModulesAsContext = !this.viewState.useSelectedModulesAsContext
+  message.success(
+    this.viewState.useSelectedModulesAsContext
+      ? `已启用选中模块上下文 (${this.viewState.selectedModules.length}个模块)`
+      : "已使用所有模块作为上下文"
+  )
+}
+
+// 新增：获取选中模块的详细信息
+export function getSelectedModulesInfo(this: AppCodeStore) {
+  return this.viewState.selectedModules.map((moduleId) => {
+    const module = this.currentVersion?.modules[moduleId]
+    return {
+      id: moduleId,
+      name: module?.data.name,
+      title: module?.data.title,
+      type: module?.data.type,
+    }
+  })
 }
 
 export function handleSearch(this: AppCodeStore) {
