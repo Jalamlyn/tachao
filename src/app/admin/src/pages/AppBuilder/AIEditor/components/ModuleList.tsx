@@ -289,18 +289,18 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                whileHover={{ x: 5, backgroundColor: "rgba(0,0,0,0.02)" }}
+                whileHover={{ x: 5 }}
                 className={`
                   group relative rounded-xl border border-transparent
                   ${
                     appCodeStore.viewState.selectedCodeId === item.id
-                      ? "bg-primary/5 border-primary/20 shadow-sm"
-                      : "hover:border-default-200"
+                      ? "bg-primary/5 border-primary/10 shadow-sm" 
+                      : "hover:border-default-100 hover:bg-default-50/50"
                   }
-                  transition-all duration-200
+                  transition-all duration-300 ease-in-out
                 `}
               >
-                <div className='flex items-center gap-3 p-3'>
+                <div className='flex items-center gap-4 px-4 py-3'>
                   {item.type !== "app" && (
                     <Checkbox
                       size='sm'
@@ -320,21 +320,31 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                   )}
 
                   <div
-                    className='flex-1 flex items-center gap-3 cursor-pointer'
+                    className='flex-1 flex items-center gap-4 cursor-pointer min-w-0'
                     onClick={() => appCodeStore.handleCodeSelect(item.id)}
                   >
-                    <div className='w-8 h-8 rounded-lg bg-default-100 flex items-center justify-center'>
+                    <div className='w-7 h-7 rounded-lg bg-default-50 flex items-center justify-center'>
                       <Icon
                         icon={getCodeTypeIcon(item.type)}
-                        className={`w-5 h-5 transition-transform group-hover:scale-110 text-${getCodeTypeColor(
+                        className={`w-4 h-4 transition-transform group-hover:scale-110 text-${getCodeTypeColor(
                           item.type
                         )}`}
                       />
                     </div>
 
                     <div className='flex flex-col flex-1 min-w-0'>
-                      <span className='text-sm font-medium truncate'>{item.title}</span>
-                      <span className='text-xs text-default-400'>{new Date(item.updatedAt).toLocaleString()}</span>
+                      <span className='text-sm font-medium truncate tracking-wide leading-snug'>
+                        {item.title}
+                      </span>
+                      <span className='text-xs text-default-300 mt-0.5'>
+                        {new Date(item.updatedAt).toLocaleString('zh-CN', {
+                          year: 'numeric',
+                          month: '2-digit', 
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
                     </div>
                   </div>
                 </div>
