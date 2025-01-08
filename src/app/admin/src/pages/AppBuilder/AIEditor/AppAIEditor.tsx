@@ -273,7 +273,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
                     <div className='h-[calc(100vh-200px)] overflow-auto p-2'>{renderPreview()}</div>
                   )}
                 </Tab>
-                {showCodeTab && <Tab key='code' title='代码视图' />}
+                {showCodeTab && <Tab key='code' title='WebIDE' />}
               </Tabs>
 
               {actualTab === "data" && showDataTab && (

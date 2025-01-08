@@ -19,8 +19,9 @@ import {
 } from "@/components/common/DynamicForm/components/FormFields/renders/ClockIn/utils/locationUtils"
 import { getLocationPermissionGuide } from "@/components/common/DynamicForm/components/FormFields/renders/ClockIn/utils/browserUtils"
 import { apiService, getCurrentAccountInfo, queryCurrentEnterPrise } from "@/service/apis/api"
-import { esm } from "https://esm.sh/build"
 import * as ReactHookForm from "react-hook-form"
+
+let esmIns = null
 
 // 上传文件相关API
 const uploadAPI = {
@@ -187,5 +188,12 @@ export const context = (appId) => ({
   recharts,
   cn,
   xlsx: XLSX,
-  esm,
+  esm: async () => {
+    if (esmIns) {
+      return esmIns.default
+    } else {
+      esmIns = await import("https://esm.sh/build")
+      return esmIns.default
+    }
+  },
 })
