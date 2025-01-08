@@ -1,11 +1,12 @@
 import React, { useRef, useEffect, useState } from "react"
-import { Input, ScrollShadow, Tooltip, Chip, Checkbox, Button, Card } from "@nextui-org/react"
+import { Input, ScrollShadow, Tooltip, Chip, Checkbox, Button, Card, Badge } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { observer } from "mobx-react-lite"
 import { appCodeStore } from "../../store/appCodeStore"
 import CodeSearch from "./CodeSearch"
 import { getCodeTypeIcon, getCodeTypeColor } from "./utils"
+import message from "@/components/Message"
 
 interface ModuleListProps {
   appId: string
@@ -58,12 +59,47 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
         behavior: "smooth",
       })
     }
+
+    // 添加上下文相关的交互提示
+    if (sectionId === "context") {
+      const selectedCount = appCodeStore?.viewState?.selectedModules?.length || 0
+      const totalCount = appCodeStore.getFilteredCodeItems().length
+
+      if (selectedCount === 0) {
+        message.info("已默认选择所有模块作为上下文，您也可以手动选择特定模块")
+      } else {
+        message.info(`当前已选择 ${selectedCount}/${totalCount} 个模块作为上下文`)
+      }
+    }
   }
+
+  // 获取上下文状态
+  const getContextStatus = () => {
+    const selectedCount = appCodeStore?.viewState?.selectedModules?.length || 0
+    const totalCount = appCodeStore.getFilteredCodeItems().length
+    const hasContext = appCodeStore.viewState.useSelectedModulesAsContext
+
+    if (hasContext) {
+      return {
+        icon: "material-symbols:contextual-token-add",
+        color: "success" as const,
+        tooltip: `已激活 ${selectedCount}/${totalCount} 个模块作为上下文`,
+      }
+    }
+
+    return {
+      icon: "material-symbols:contextual-token-add-outline-rounded",
+      color: "default" as const,
+      tooltip: selectedCount > 0 ? "点击使用选中模块作为上下文" : "默认使用所有模块作为上下文",
+    }
+  }
+
+  const contextStatus = getContextStatus()
 
   return (
     <div className='p-2 h-full flex'>
       {/* 左侧导航栏 */}
-      <div className='w-10 flex-shrink-0 border-r mr-2'>
+      <div className='w-10 flex-shrink-0 border-r pr-2 mr-2'>
         <div className='sticky top-0 pt-2 flex flex-col items-center gap-2'>
           <Tooltip content='搜索' placement='right'>
             <Button
@@ -77,16 +113,27 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
             </Button>
           </Tooltip>
 
-          <Tooltip content='上下文' placement='right'>
-            <Button
-              isIconOnly
-              size='sm'
-              variant='light'
-              className={`w-8 h-8 ${activeSection === "context" ? "bg-primary/10 text-primary" : ""}`}
-              onClick={() => handleNavClick("context")}
+          <Tooltip content={contextStatus.tooltip} placement='right'>
+            <Badge
+              content={appCodeStore?.viewState?.selectedModules?.length || 0}
+              color={contextStatus.color}
+              size="sm"
+              isInvisible={!appCodeStore?.viewState?.selectedModules?.length}
+              className="animate-pulse"
             >
-              <Icon icon='mdi:brain' className='w-5 h-5' />
-            </Button>
+              <Button
+                isIconOnly
+                size='sm'
+                variant='light'
+                className={`w-8 h-8 ${activeSection === "context" ? "bg-primary/10 text-primary" : ""}`}
+                onClick={() => handleNavClick("context")}
+              >
+                <Icon 
+                  icon={contextStatus.icon} 
+                  className={`w-5 h-5 ${appCodeStore.viewState.useSelectedModulesAsContext ? "text-success" : ""}`}
+                />
+              </Button>
+            </Badge>
           </Tooltip>
 
           <Tooltip content='模块列表' placement='right'>
@@ -148,19 +195,16 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                     color='primary'
                     variant='light'
                     onClick={() => appCodeStore.toggleUseSelectedModulesAsContext()}
-                    startContent={<Icon icon='mdi:brain' className='w-4 h-4' />}
+                    startContent={
+                      <Icon icon='material-symbols:contextual-token-add-outline-sharp' className='w-4 h-4' />
+                    }
                   >
                     清除上下文
                   </Button>
                 </div>
                 <div className='flex flex-wrap gap-1'>
                   {appCodeStore.getSelectedModulesInfo().map((module) => (
-                    <Chip
-                      key={module.id}
-                      size='sm'
-                      variant='flat'
-                      className='transition-transform hover:scale-105'
-                    >
+                    <Chip key={module.id} size='sm' variant='flat' className='transition-transform hover:scale-105'>
                       <div className='flex items-center gap-1'>
                         <Icon
                           icon={getCodeTypeIcon(module.type)}
@@ -187,7 +231,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
             >
               <Card className='bg-default-100/80 backdrop-blur-sm shadow-sm'>
                 <div className='p-3'>
-                  <div className='flex items-center justify-between'>
+                  <div className='flex flex-col items-center justify-between'>
                     <span className='text-sm font-medium'>
                       已选择 {appCodeStore?.viewState?.selectedModules?.length} 个模块
                     </span>
@@ -208,7 +252,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                         color='primary'
                         variant='flat'
                         onClick={() => appCodeStore.toggleUseSelectedModulesAsContext()}
-                        startContent={<Icon icon='mdi:brain' className='w-4 h-4' />}
+                        startContent={<Icon icon='material-symbols:contextual-token-add-rounded' className='w-4 h-4' />}
                       >
                         用作上下文
                       </Button>
