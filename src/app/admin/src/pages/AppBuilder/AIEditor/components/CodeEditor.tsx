@@ -13,75 +13,9 @@ interface CodeEditorProps {
 
 export const CodeEditor: React.FC<CodeEditorProps> = observer(({ isFullWidth, onFullWidthChange }) => {
   const editorRef = useRef<any>(null)
-  const lastClickTimeRef = useRef<number>(0)
-  const lastClickLineRef = useRef<number>(0)
-
-  const handleLineNumberDoubleClick = useCallback((lineNumber: number) => {
-    if (!editorRef.current) return
-
-    const model = editorRef.current.getModel()
-    if (!model) return
-
-    const line = model.getLineContent(lineNumber)
-    const indentation = line.match(/^\s*/)?.[0] || ""
-
-    if (line.trim().startsWith("debugger;")) {
-      const range = {
-        startLineNumber: lineNumber,
-        startColumn: 1,
-        endLineNumber: lineNumber + 1,
-        endColumn: 1,
-      }
-
-      const newLine = indentation
-
-      model.pushEditOperations(
-        [],
-        [
-          {
-            range,
-            text: newLine,
-          },
-        ],
-        null
-      )
-    } else {
-      const range = {
-        startLineNumber: lineNumber,
-        startColumn: 1,
-        endLineNumber: lineNumber,
-        endColumn: 1,
-      }
-      const debuggerLine = `${indentation}debugger;\n${indentation}`
-      model.pushEditOperations(
-        [],
-        [
-          {
-            range,
-            text: debuggerLine,
-          },
-        ],
-        null
-      )
-    }
-  }, [])
 
   const handleEditorDidMount = (editor: any) => {
     editorRef.current = editor
-
-    editor.onMouseDown((e: any) => {
-      if (e.target.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS) {
-        const lineNumber = e.target.position.lineNumber
-        const now = Date.now()
-
-        if (now - lastClickTimeRef.current < 300 && lastClickLineRef.current === lineNumber) {
-          handleLineNumberDoubleClick(lineNumber)
-        }
-
-        lastClickTimeRef.current = now
-        lastClickLineRef.current = lineNumber
-      }
-    })
   }
 
   const handleExportCode = useCallback(() => {

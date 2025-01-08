@@ -106,6 +106,12 @@ const AppBuilder: React.FC = observer(() => {
       { label: "应用开发", href: "" },
     ])
   }, [])
+  useEffect(() => {
+    return () => {
+      // 组件卸载时清理状态
+      appCodeStore.clearViewState()
+    }
+  }, [])
 
   // 添加消息监听
   useEffect(() => {

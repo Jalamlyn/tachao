@@ -120,6 +120,9 @@ class AppCodeStore {
   get appId(): string | null {
     return this.#appId
   }
+  clearViewState() {
+    this.viewState = initViewState()
+  }
 
   generateId(): string {
     const timestamp = Date.now()
