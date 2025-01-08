@@ -1,5 +1,4 @@
-import { message } from "antd"
-import { ClockInLocation } from "../types"
+import message from "@/components/Message"
 
 export const getAddressFromLocation = (latitude: number, longitude: number): Promise<string> => {
   return new Promise((resolve, reject) => {

@@ -18,8 +18,8 @@ import { Button } from "@nextui-org/react"
 import * as NextUI from "@nextui-org/react"
 import { extractShataAIFormContent } from "./AIEditor"
 import { codeStore } from "@/pages/form-temp-manager/components/codeStore"
-import { message } from "antd"
 import { Icon } from "@iconify/react"
+import message from "./Message"
 
 // UI组件映射
 const uiComponents = {

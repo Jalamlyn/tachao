@@ -5,7 +5,7 @@ import FormFieldWrapper from "../../FormFieldWrapper"
 import { getCurrentPosition, getAddressFromLocation } from "../ClockIn/utils/locationUtils"
 import { getLocationPermissionGuide } from "../ClockIn/utils/browserUtils"
 import type { LocationProps, LocationValue } from "./types"
-import { message } from "antd"
+import message from "@/components/Message"
 
 export const renderLocation = (
   field: LocationProps,

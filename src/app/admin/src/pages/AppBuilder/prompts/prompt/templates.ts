@@ -35,7 +35,7 @@ export const templates: Record<string, AppTemplate> = {
     id: "form_share",
     name: "分享表单",
     description: "创建可分享的表单，支持在线填写和数据收集。",
-    icon: "solar:form-bold-duotone",
+    icon: "fa6-solid:share",
     category: "form",
     type: "form",
     code: formShareTemplate,
