@@ -6,8 +6,14 @@ import { compileCode, extractShataAICodes, processAIResponse, executeModules, ad
 import { saveToStorage, loadFromStorage, clearStorage } from "./methods/storageMethods"
 import { addVersion, rollback, forward, clear } from "./methods/versionMethods"
 import { exportToMarkdown, downloadMarkdown } from "./methods/exportMethods"
-import { importFromMarkdown } from "./methods/importMethods"
-import { publishToServer, updateAppIndex, publishTemplate, getLastPublishedVersion, rollbackToLastPublished } from "./methods/serverMethods"
+import { deleteModules, importFromMarkdown } from "./methods/importMethods"
+import {
+  publishToServer,
+  updateAppIndex,
+  publishTemplate,
+  getLastPublishedVersion,
+  rollbackToLastPublished,
+} from "./methods/serverMethods"
 import { handleAIGeneration, loadApp, createApp, generateInitialVersion } from "./methods/generationMethods"
 import {
   initViewState,
@@ -73,86 +79,8 @@ class AppCodeStore {
     this.setEditMode = setEditMode.bind(this)
     this.updateEditedCode = updateEditedCode.bind(this)
     this.handleCancelEdit = handleCancelEdit.bind(this)
+    this.deleteModules = deleteModules.bind(this)
   }
-
-  // 新增: 批量删除模块方法
-  async deleteModules(moduleIds: string[]): Promise<Version> {
-    if (!this.currentVersion) {
-      throw new Error("No current version")
-    }
-
-    try {
-      // 创建新的modules对象,排除要删除的模块
-      const updatedModules = { ...this.currentVersion.modules }
-      const updatedAppModules = { ...this.currentVersion.app.modules }
-      
-      moduleIds.forEach(moduleId => {
-        // 检查是否为应用入口模块
-        if (moduleId === `${this.appId}_app_entry`) {
-          throw new Error("Cannot delete app entry module")
-        }
-        delete updatedModules[moduleId]
-        delete updatedAppModules[moduleId]
-      })
-
-      // 创建新版本
-      const newVersion: Version = {
-        timestamp: Date.now(),
-        app: {
-          ...this.currentVersion.app,
-          version: Date.now(),
-          updatedAt: new Date().toISOString(),
-          modules: updatedAppModules
-        },
-        modules: updatedModules
-      }
-
-      this.addVersion(newVersion)
-      return newVersion
-    } catch (error) {
-      console.error("Error deleting modules:", error)
-      throw error
-    }
-  }
-
-  // 方法声明
-  compileCode!: typeof compileCode
-  extractShataAICodes!: typeof extractShataAICodes
-  processAIResponse!: typeof processAIResponse
-  executeModules!: typeof executeModules
-  addModules!: typeof addModules
-  saveToStorage!: typeof saveToStorage
-  loadFromStorage!: typeof loadFromStorage
-  clearStorage!: typeof clearStorage
-  addVersion!: typeof addVersion
-  rollback!: typeof rollback
-  forward!: typeof forward
-  clear!: typeof clear
-  exportToMarkdown!: typeof exportToMarkdown
-  downloadMarkdown!: typeof downloadMarkdown
-  importFromMarkdown!: typeof importFromMarkdown
-  publishToServer!: typeof publishToServer
-  publishTemplate!: typeof publishTemplate
-  updateAppIndex!: typeof updateAppIndex
-  handleAIGeneration!: typeof handleAIGeneration
-  loadApp!: typeof loadApp
-  createApp!: typeof createApp
-  generateInitialVersion!: typeof generateInitialVersion
-  getLastPublishedVersion!: typeof getLastPublishedVersion
-  rollbackToLastPublished!: typeof rollbackToLastPublished
-
-  // 视图相关方法声明
-  handleCodeSelect!: typeof handleCodeSelect
-  handleSearch!: typeof handleSearch
-  handleSaveEdit!: typeof handleSaveEdit
-  getCodeItems!: typeof getCodeItems
-  getFilteredCodeItems!: typeof getFilteredCodeItems
-  setSearchQuery!: typeof setSearchQuery
-  setSearchContent!: typeof setSearchContent
-  togglePanelCollapse!: typeof togglePanelCollapse
-  setEditMode!: typeof setEditMode
-  updateEditedCode!: typeof updateEditedCode
-  handleCancelEdit!: typeof handleCancelEdit
 
   // Getters
   get currentVersion(): Version | null {
@@ -177,7 +105,7 @@ class AppCodeStore {
 
   // 新增 getter
   get hasPublishedVersion(): boolean {
-    return this.versions.some(v => v.app.version > 0)
+    return this.versions.some((v) => v.app.version > 0)
   }
 
   // 设置appId

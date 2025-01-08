@@ -16,6 +16,8 @@ export function initViewState(): ViewState {
     importContent: "",
     isImporting: false,
     pendingImportContent: "",
+    selectedModules: [], // 添加这一行
+    showDeleteConfirm: false, // 添加这一行
   }
 }
 
