@@ -84,7 +84,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       onResult?.(result)
       setInput("")
       setUploadingFiles([])
-      imageStore.clear()
+      imageStore.clear() // 在消息发送成功后清空图片存储
     },
     onStop,
   })
@@ -129,6 +129,9 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       return
     }
 
+    // 在开始新的上传前清空 ImageStore
+    imageStore.clear()
+    
     const fileId = Date.now().toString()
     setUploadingFiles((prev) => [
       ...prev,
