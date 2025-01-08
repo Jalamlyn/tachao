@@ -28,51 +28,16 @@ const isWeixinBrowser = () => {
   return /MicroMessenger/i.test(navigator.userAgent)
 }
 
+// 生成唯一的文件路径
+const generateCloudPath = (file: File) => {
+  const timestamp = Date.now()
+  const randomStr = Math.random().toString(36).substring(2, 8)
+  const ext = file.name.split(".").pop()
+  return `uploads/${timestamp}-${randomStr}.${ext}`
+}
+
 // 上传文件相关API
 export const uploadAPI = {
-  // 获取签名URL
-  getSignedUrl: async (fileName: string) => {
-    try {
-      const res = await apiService.get(`/api/file/form/upload:singed?fileName=${fileName}`)
-      return res.data
-    } catch (error) {
-      message.error("获取签名URL失败，请重试！")
-      throw error
-    }
-  },
-
-  // 创建活动数据
-  createActivity: async (fileInfo: { fileName: string; fileKey: string }) => {
-    try {
-      const response = await apiService.post("/public/data/file/activitiess", {
-        activityName: "测试",
-        activityType: "test",
-        files: [fileInfo],
-      })
-      return response.data
-    } catch (error) {
-      console.error("Create activity error:", error)
-      throw error
-    }
-  },
-
-  // 查询活动数据
-  queryActivity: async () => {
-    try {
-      const response = await apiService.post(
-        "/public/data/file/activitiess/find",
-        {},
-        {
-          params: { display: "paginate" },
-        }
-      )
-      return response.data
-    } catch (error) {
-      console.error("Query activity error:", error)
-      throw error
-    }
-  },
-
   // 上传文件
   uploadFile: async (
     file: File,
@@ -122,69 +87,35 @@ export const uploadAPI = {
 
     // 默认上传逻辑
     try {
-      const signedData = await uploadAPI.getSignedUrl(file.name)
-      const formData = new FormData()
-      formData.append("key", signedData.fileKey)
-      formData.append("OSSAccessKeyId", signedData.accessKeyId)
-      formData.append("policy", signedData.policy)
-      formData.append("Signature", signedData.signature)
-      formData.append("file", file)
+      // 第一步：匿名认证
+      const auth = app.auth()
+      await auth.signInAnonymously()
 
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable && options?.onProgress) {
-            const percent = Math.round((event.loaded * 100) / event.total)
-            options.onProgress(percent)
-          }
-        }
-
-        xhr.onload = async () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              // 创建活动数据
-              await uploadAPI.createActivity({
-                fileName: file.name,
-                fileKey: signedData.fileKey,
-              })
-
-              // 查询获取完整信息
-              const queryResult = await uploadAPI.queryActivity()
-
-              if (!queryResult?.data || !Array.isArray(queryResult.data) || queryResult.data.length === 0) {
-                throw new Error("未找到上传的文件信息")
-              }
-
-              // 获取最新的活动记录（按创建时间排序，取最新的）
-              const latestActivity = queryResult.data.sort((a, b) => Number(b.createdAt) - Number(a.createdAt))[0]
-
-              const fileInfo = latestActivity.files[0]
-
-              options?.onSuccess?.(fileInfo)
-              resolve(fileInfo)
-            } catch (error) {
-              console.error("Process file error:", error)
-              const err = error as Error
-              options?.onError?.(err)
-              reject(err)
-            }
-          } else {
-            const error = new Error(`Upload failed with status ${xhr.status}`)
-            options?.onError?.(error)
-            reject(error)
-          }
-        }
-
-        xhr.onerror = () => {
-          const error = new Error("Upload failed")
-          options?.onError?.(error)
-          reject(error)
-        }
-
-        xhr.open("POST", signedData.formUploadHost.replace("http:", ""), true)
-        xhr.send(formData)
+      // 第二步：上传文件
+      const cloudPath = generateCloudPath(file)
+      const uploadResult = await app.uploadFile({
+        cloudPath,
+        filePath: file,
       })
+
+      // 第三步：获取临时URL
+      const urlResult = await app.getTempFileURL({
+        fileList: [uploadResult.fileID],
+      })
+
+      const tempFileURL = urlResult.fileList[0]?.tempFileURL
+      if (!tempFileURL) {
+        throw new Error("获取文件访问地址失败")
+      }
+
+      const fileInfo = {
+        fileName: file.name,
+        fileUrl: tempFileURL,
+        fileID: uploadResult.fileID,
+      }
+
+      options?.onSuccess?.(fileInfo)
+      return fileInfo
     } catch (error) {
       console.error("Upload error:", error)
       options?.onError?.(error as Error)
