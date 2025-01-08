@@ -53,7 +53,7 @@ const FileList: React.FC = () => {
       queryData({ namespace: "file", modelPluralCode: "activitiess" })
       const response = await apiService.post(
         "/public/data/file/activitiess/find",
-        {},
+        { limit: 1000, offset: 0 },
         {
           params: { display: "paginate" },
         }
@@ -86,7 +86,7 @@ const FileList: React.FC = () => {
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.href = url
-      link.download = file.fileName
+      link.download = file?.fileName
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -107,9 +107,9 @@ const FileList: React.FC = () => {
 
     try {
       const { activity, file } = fileToDelete
-      const updatedFiles = activity.files.filter((f) => f.fileKey !== file.fileKey)
+      const updatedFiles = activity?.files?.filter((f) => f.fileKey !== file.fileKey)
 
-      await apiService.patch(`/public/data/file/activities/${activity.id}`, {
+      await apiService.patch(`/public/data/file/activitiess/${activity.id}`, {
         files: updatedFiles,
       })
 
@@ -139,17 +139,18 @@ const FileList: React.FC = () => {
   ]
 
   const renderCell = (activity: Activity, columnKey: string) => {
-    const file = activity.files[0] // 假设每个活动只有一个文件
+    if (!activity?.files || activity.files.length === 0) return null
+    const file = activity?.files?.[0] // 假设每个活动只有一个文件
 
     switch (columnKey) {
       case "fileName":
         return (
           <div className='flex items-center gap-2'>
             <Icon
-              icon={isImageFile(file.fileName) ? "solar:gallery-wide-bold" : "solar:document-bold"}
+              icon={isImageFile(file?.fileName) ? "solar:gallery-wide-bold" : "solar:document-bold"}
               className='w-5 h-5 text-default-500'
             />
-            <span>{file.fileName}</span>
+            <span>{file?.fileName}</span>
           </div>
         )
       case "createdAt":
@@ -157,7 +158,7 @@ const FileList: React.FC = () => {
       case "actions":
         return (
           <div className='flex gap-2'>
-            {isImageFile(file.fileName) && (
+            {isImageFile(file?.fileName) && (
               <Button isIconOnly size='sm' variant='light' onPress={() => handlePreview(file)}>
                 <Icon icon='solar:eye-bold' className='w-4 h-4' />
               </Button>
@@ -212,7 +213,7 @@ const FileList: React.FC = () => {
               <ModalHeader>{selectedFile?.fileName}</ModalHeader>
               <ModalBody>
                 {selectedFile && (
-                  <img src={selectedFile.downloadUrl} alt={selectedFile.fileName} className='max-w-full h-auto' />
+                  <img src={selectedFile.downloadUrl} alt={selectedFile?.fileName} className='max-w-full h-auto' />
                 )}
               </ModalBody>
               <ModalFooter>
@@ -234,7 +235,7 @@ const FileList: React.FC = () => {
             <>
               <ModalHeader>确认删除</ModalHeader>
               <ModalBody>
-                <p>确定要删除文件 "{fileToDelete?.file.fileName}" 吗？</p>
+                <p>确定要删除文件 "{fileToDelete?.file?.fileName}" 吗？</p>
               </ModalBody>
               <ModalFooter>
                 <Button color='default' variant='light' onPress={handleDeleteCancel}>

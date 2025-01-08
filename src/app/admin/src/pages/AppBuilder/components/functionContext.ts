@@ -23,6 +23,11 @@ import * as ReactHookForm from "react-hook-form"
 
 let esmIns = null
 
+// 检查是否是微信环境
+const isWeixinBrowser = () => {
+  return /MicroMessenger/i.test(navigator.userAgent)
+}
+
 // 上传文件相关API
 export const uploadAPI = {
   // 获取签名URL
@@ -75,83 +80,116 @@ export const uploadAPI = {
       onProgress?: (percent: number) => void
       maxSize?: number
       customRequest?: (params: { file: File; onProgress: (percent: number) => void }) => Promise<any>
+      onSuccess?: (fileInfo: any) => void
+      onError?: (error: Error) => void
+      uploadType?: string
+      cropOptions?: {
+        quality?: number
+      }
     }
   ) => {
+    // 检查是否是微信环境
+    if (isWeixinBrowser()) {
+      throw new Error("微信环境暂不支持上传功能，请使用其他浏览器")
+    }
+
     // 检查文件大小
     if (options?.maxSize && file.size > options.maxSize) {
       throw new Error(`文件大小不能超过 ${options.maxSize / 1024 / 1024}MB`)
     }
 
+    // 如果是图片且需要处理
+    if (options?.uploadType === "image" && options.cropOptions) {
+      const { quality = 0.8 } = options.cropOptions
+      // 这里可以添加图片处理逻辑
+    }
+
     // 使用自定义上传
     if (options?.customRequest) {
-      return await options.customRequest({
-        file,
-        onProgress: options.onProgress || (() => {}),
-      })
+      try {
+        const result = await options.customRequest({
+          file,
+          onProgress: options.onProgress || (() => {}),
+        })
+        options?.onSuccess?.(result)
+        return result
+      } catch (error) {
+        console.error("Custom upload error:", error)
+        options?.onError?.(error as Error)
+        throw error
+      }
     }
 
     // 默认上传逻辑
-    const signedData = await uploadAPI.getSignedUrl(file.name)
-    const formData = new FormData()
-    formData.append("key", signedData.fileKey)
-    formData.append("OSSAccessKeyId", signedData.accessKeyId)
-    formData.append("policy", signedData.policy)
-    formData.append("Signature", signedData.signature)
-    formData.append("file", file)
+    try {
+      const signedData = await uploadAPI.getSignedUrl(file.name)
+      const formData = new FormData()
+      formData.append("key", signedData.fileKey)
+      formData.append("OSSAccessKeyId", signedData.accessKeyId)
+      formData.append("policy", signedData.policy)
+      formData.append("Signature", signedData.signature)
+      formData.append("file", file)
 
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest()
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
 
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable && options?.onProgress) {
-          const percent = Math.round((event.loaded * 100) / event.total)
-          options.onProgress(percent)
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable && options?.onProgress) {
+            const percent = Math.round((event.loaded * 100) / event.total)
+            options.onProgress(percent)
+          }
         }
-      }
 
-      xhr.onload = async () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            // 创建活动数据
-            await uploadAPI.createActivity({
-              fileName: file.name,
-              fileKey: signedData.fileKey,
-            })
+        xhr.onload = async () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              // 创建活动数据
+              await uploadAPI.createActivity({
+                fileName: file.name,
+                fileKey: signedData.fileKey,
+              })
 
-            // 查询获取完整信息
-            const queryResult = await uploadAPI.queryActivity()
+              // 查询获取完整信息
+              const queryResult = await uploadAPI.queryActivity()
 
-            if (!queryResult?.data || !Array.isArray(queryResult.data) || queryResult.data.length === 0) {
-              throw new Error("未找到上传的文件信息")
+              if (!queryResult?.data || !Array.isArray(queryResult.data) || queryResult.data.length === 0) {
+                throw new Error("未找到上传的文件信息")
+              }
+
+              // 获取最新的活动记录（按创建时间排序，取最新的）
+              const latestActivity = queryResult.data.sort((a, b) => Number(b.createdAt) - Number(a.createdAt))[0]
+
+              const fileInfo = latestActivity.files[0]
+
+              options?.onSuccess?.(fileInfo)
+              resolve(fileInfo)
+            } catch (error) {
+              console.error("Process file error:", error)
+              const err = error as Error
+              options?.onError?.(err)
+              reject(err)
             }
-
-            const latestActivity = queryResult.data.sort((a, b) => Number(b.createdAt) - Number(a.createdAt))[0]
-
-            if (!latestActivity.files || !Array.isArray(latestActivity.files) || latestActivity.files.length === 0) {
-              throw new Error("文件信息不完整")
-            }
-
-            const fileInfo = latestActivity.files[0]
-            if (!fileInfo || !fileInfo.downloadUrl) {
-              throw new Error("文件下载链接不可用")
-            }
-
-            resolve(fileInfo)
-          } catch (error) {
+          } else {
+            const error = new Error(`Upload failed with status ${xhr.status}`)
+            options?.onError?.(error)
             reject(error)
           }
-        } else {
-          reject(new Error(`Upload failed with status ${xhr.status}`))
         }
-      }
 
-      xhr.onerror = () => {
-        reject(new Error("Upload failed"))
-      }
+        xhr.onerror = () => {
+          const error = new Error("Upload failed")
+          options?.onError?.(error)
+          reject(error)
+        }
 
-      xhr.open("POST", signedData.formUploadHost.replace("http:", ""), true)
-      xhr.send(formData)
-    })
+        xhr.open("POST", signedData.formUploadHost.replace("http:", ""), true)
+        xhr.send(formData)
+      })
+    } catch (error) {
+      console.error("Upload error:", error)
+      options?.onError?.(error as Error)
+      throw error
+    }
   },
 }
 

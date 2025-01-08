@@ -43,7 +43,7 @@ export const queryData = async ({
   ],
   isPublic = true,
   offset = 0,
-  limit = 10,
+  limit = 100,
 }) => {
   const res = await apiService.post(`/public/data/${namespace}/${modelPluralCode}${isPublic ? "/listpage" : "/find"}`, {
     filters: filters,

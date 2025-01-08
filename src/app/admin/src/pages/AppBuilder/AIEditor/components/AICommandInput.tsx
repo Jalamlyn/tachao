@@ -21,7 +21,6 @@ import { imageStore } from "./ImageStore"
 import message from "@/components/Message"
 import { AITutorialModal } from "./AITutorialModal"
 import { useAICommandButton } from "./hooks/useAICommandButton"
-import { uploadAPI } from "../../components/functionContext"
 
 interface AIAgent {
   processCommand: (
@@ -42,6 +41,7 @@ interface UploadingFile {
   progress: number
   status: "uploading" | "success" | "error"
   url?: string
+  fileID?: string
 }
 
 const AI_ASSISTANTS = {
@@ -61,6 +61,14 @@ const AI_ASSISTANTS = {
     color: "success",
     shortcut: "@pm",
   },
+}
+
+// 生成唯一的文件路径
+const generateCloudPath = (file: File) => {
+  const timestamp = Date.now()
+  const randomStr = Math.random().toString(36).substring(2, 8)
+  const ext = file.name.split(".").pop()
+  return `uploads/${timestamp}-${randomStr}.${ext}`
 }
 
 const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInputProps) => {
@@ -84,7 +92,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       onResult?.(result)
       setInput("")
       setUploadingFiles([])
-      imageStore.clear() // 在消息发送成功后清空图片存储
+      imageStore.clear()
     },
     onStop,
   })
@@ -129,9 +137,8 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
       return
     }
 
-    // 在开始新的上传前清空 ImageStore
     imageStore.clear()
-    
+
     const fileId = Date.now().toString()
     setUploadingFiles((prev) => [
       ...prev,
@@ -143,12 +150,30 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
     ])
 
     try {
-      const result = await uploadAPI.uploadFile(file, {
-        onProgress: (percent) => {
-          setUploadingFiles((prev) => prev.map((f) => (f.id === fileId ? { ...f, progress: percent } : f)))
-        },
-        maxSize: 5 * 1024 * 1024,
+      // 第一步：上传文件
+      const cloudPath = generateCloudPath(file)
+      const auth = app.auth()
+      await auth.signInAnonymously()
+      const uploadResult = await app.uploadFile({
+        cloudPath,
+        filePath: file,
       })
+
+      // 更新上传进度为90%
+      setUploadingFiles((prev) =>
+        prev.map((f) => (f.id === fileId ? { ...f, progress: 90, fileID: uploadResult.fileID } : f))
+      )
+
+      // 第二步：获取临时URL
+      const urlResult = await app.getTempFileURL({
+        fileList: [uploadResult.fileID],
+      })
+
+      const tempFileURL = urlResult.fileList[0]?.tempFileURL
+
+      if (!tempFileURL) {
+        throw new Error("获取临时URL失败")
+      }
 
       setUploadingFiles((prev) =>
         prev.map((f) =>
@@ -156,13 +181,15 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
             ? {
                 ...f,
                 status: "success",
-                url: result.downloadUrl,
+                progress: 100,
+                url: tempFileURL,
+                fileID: uploadResult.fileID,
               }
             : f
         )
       )
 
-      imageStore.addImage(result.downloadUrl)
+      imageStore.addImage(tempFileURL)
       message.success("图片上传成功")
     } catch (error) {
       console.error("Error uploading file:", error)
