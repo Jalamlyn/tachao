@@ -1,12 +1,12 @@
-import { BASE_PROMPTS } from "./base-prompts"
-import { ROUTER_PROMPTS } from "./router-prompts"
-import { COMPONENT_PROMPTS } from "./component-prompts"
-import { EXPERIENCE_PROMPTS } from "./experience-prompts"
-import { UI_DESIGN_PROMPTS } from "./ui-design-prompts"
-import { RESOURCE_PROMPTS } from "./resource-prompts"
-import { LOCATION_PROMPTS } from "./location-prompts"
-import { ESM_PROMPTS } from "./esm-prompts"
-import { AI_PROMPTS } from "./ai-prompts"
+import { BASE_PROMPTS } from "./prompt/base-prompts"
+import { ROUTER_PROMPTS } from "./prompt/router-prompts"
+import { COMPONENT_PROMPTS } from "./prompt/component-prompts"
+import { EXPERIENCE_PROMPTS } from "./prompt/experience-prompts"
+import { UI_DESIGN_PROMPTS } from "./prompt/ui-design-prompts"
+import { RESOURCE_PROMPTS } from "./prompt/resource-prompts"
+import { LOCATION_PROMPTS } from "./prompt/location-prompts"
+import { ESM_PROMPTS } from "./prompt/esm-prompts"
+import { AI_PROMPTS } from "./prompt/ai-prompts"
 
 // 提示词组合器
 export const promptsComposer = {

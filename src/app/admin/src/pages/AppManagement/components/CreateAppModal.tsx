@@ -18,7 +18,7 @@ import { Icon } from "@iconify/react"
 import confetti from "canvas-confetti"
 import { message } from "antd"
 import { appCodeStore } from "@/app/admin/src/pages/AppBuilder/store/appCodeStore"
-import { templates } from "@/app/admin/src/pages/AppBuilder/prompts/templates"
+import { templates } from "@/app/admin/src/pages/AppBuilder/prompts/prompt/templates"
 import { useAppStore } from "../store/useAppStore"
 import { getPlatMetaData } from "@/service/apis/metadata"
 

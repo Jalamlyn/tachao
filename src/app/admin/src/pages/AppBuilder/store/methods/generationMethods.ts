@@ -1,6 +1,6 @@
 import { getMetadata, getPlatMetaData } from "@/service/apis/metadata"
-import { initialAIResponse } from "../../prompts/initTemplate"
-import { templates } from "../../prompts/templates"
+import { initialAIResponse } from "../../prompts/nextui/initTemplate"
+import { templates } from "../../prompts/prompt/templates"
 import { AppCodeStore, Version, AIGenerationResult } from "../types"
 async function checkAppNameExists(name: string): Promise<boolean> {
   const appIndexResult = await getMetadata(["app_index"])

@@ -1,5 +1,5 @@
-import expenseTrackerTemplate from "./nextui/nextui_expense_tracker"
-import enterpriseBussiness from "./nextui/nextui_delivery"
+import expenseTrackerTemplate from "../nextui/nextui_expense_tracker"
+import enterpriseBussiness from "../nextui/nextui_delivery"
 
 export interface AppTemplate {
   id: string
