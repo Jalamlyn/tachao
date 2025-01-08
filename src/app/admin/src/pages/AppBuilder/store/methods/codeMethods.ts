@@ -37,15 +37,18 @@ export function extractShataAICodes(content: string): ShataAICode[] {
         if (!codeMatch) continue
 
         let code = codeMatch[1].trim()
-        // 处理 SEARCH/REPLACE 格式
-        const searchReplaceMatch = code.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/)
-        if (searchReplaceMatch) {
+        
+        // 处理所有的 SEARCH/REPLACE 块
+        while (true) {
+          const searchReplaceMatch = code.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/)
+          if (!searchReplaceMatch) break
+          
           const searchContent = searchReplaceMatch[1].trim()
           const replaceContent = searchReplaceMatch[2].trim()
-
+          
           // 如果 search 部分为空，说明是新代码
           if (!searchContent) {
-            code = replaceContent
+            code = code.replace(searchReplaceMatch[0], replaceContent)
           } else {
             // 获取模块当前的代码
             const nameMatch = block.match(/name="([^"]+)"/)
@@ -59,10 +62,11 @@ export function extractShataAICodes(content: string): ShataAICode[] {
 
             if (!currentCode) {
               // 如果找不到当前代码，直接使用替换内容
-              code = replaceContent
+              code = code.replace(searchReplaceMatch[0], replaceContent)
             } else {
               // 在当前代码中进行替换
-              code = currentCode.replace(searchContent, replaceContent)
+              const updatedCode = currentCode.replace(searchContent, replaceContent)
+              code = code.replace(searchReplaceMatch[0], updatedCode)
             }
           }
         }
