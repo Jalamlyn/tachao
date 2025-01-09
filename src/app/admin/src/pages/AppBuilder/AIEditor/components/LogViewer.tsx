@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react"
-import { ScrollShadow, Chip, Input, Button, Select, SelectItem, Tooltip } from "@nextui-org/react"
+import { ScrollShadow, Chip, Input, Button, Select, SelectItem, Tooltip, Card } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { logStore } from "./LogStore"
@@ -50,16 +50,51 @@ interface LogViewerProps {
   maxHeight?: string | number
 }
 
-const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "300px" }) => {
+// 新增：日志帮助提示组件
+const LogHelpTip: React.FC<{ completeness: any }> = ({ completeness }) => {
+  if (!completeness || completeness.isComplete) return null;
+
+  return (
+    <Card className="p-4 mb-4 bg-default-50">
+      <div className="flex items-start gap-2">
+        <Icon icon="solar:info-circle-linear" className="text-primary mt-1" />
+        <div className="flex-1">
+          <p className="text-sm font-medium mb-2">日志可能不完整</p>
+          <p className="text-sm text-default-600 mb-2">{completeness.summary}</p>
+          <div className="text-sm text-default-500">
+            <p>建议操作：</p>
+            <ul className="list-disc pl-4 mt-1">
+              {completeness.missingAspects.timeGaps && (
+                <li>使用时间筛选查看特定时间段的日志</li>
+              )}
+              {completeness.missingAspects.missingLevels && (
+                <li>调整日志级别筛选，确保包含所有必要的日志级别</li>
+              )}
+              {completeness.missingAspects.limitedRange && (
+                <li>导出更多日志以获取完整上下文</li>
+              )}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100vh-250px)" }) => {
   const [logs, setLogs] = useState(logStore.logs)
   const [search, setSearch] = useState("")
   const [selectedLevel, setSelectedLevel] = useState<string>("all")
   const [aiObserving, setAiObserving] = useState(true)
+  const [completeness, setCompleteness] = useState<any>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const unsubscribe = logStore.subscribe(() => {
-      setLogs([...logStore.logs])
+      const newLogs = [...logStore.logs]
+      setLogs(newLogs)
+      // 检查日志完整性
+      setCompleteness(logStore.checkLogsCompleteness(newLogs))
       setTimeout(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -103,7 +138,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "300px" })
   )
 
   return (
-    <div className={cn("flex flex-col gap-2", className)}>
+    <div className={cn("flex flex-col gap-2 h-[calc(100vh-300px)] overflow-hidden", className)}>
       <div className='flex items-center justify-between mb-2'>
         <div className='flex items-center gap-2'>
           <Input
@@ -168,6 +203,9 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "300px" })
           </Button>
         </div>
       </div>
+
+      {/* 新增：日志完整性提示 */}
+      <LogHelpTip completeness={completeness} />
 
       <ScrollShadow
         ref={scrollRef}

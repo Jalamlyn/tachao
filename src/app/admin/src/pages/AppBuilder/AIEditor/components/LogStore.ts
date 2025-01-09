@@ -6,10 +6,23 @@ interface LogEntry {
   details?: any
 }
 
+interface LogCompleteness {
+  isComplete: boolean
+  missingAspects: {
+    timeGaps: boolean
+    missingLevels: boolean
+    tooOld: boolean
+    limitedRange: boolean
+  }
+  summary: string
+}
+
 class LogStore {
   private static instance: LogStore
   private _logs: LogEntry[] = []
   private _listeners: Set<() => void> = new Set()
+  private readonly MAX_TIME_GAP = 5 * 60 * 1000 // 5分钟
+  private readonly MAX_TIME_SPAN = 60 * 60 * 1000 // 1小时
 
   private constructor() {}
 
@@ -85,6 +98,90 @@ class LogStore {
 
   export() {
     return JSON.stringify(this._logs, null, 2)
+  }
+
+  // 新增：检查日志完整性
+  checkLogsCompleteness(logs: LogEntry[] = this._logs): LogCompleteness {
+    if (logs.length === 0) {
+      return {
+        isComplete: false,
+        missingAspects: {
+          timeGaps: false,
+          missingLevels: true,
+          tooOld: false,
+          limitedRange: true
+        },
+        summary: "没有可用的日志"
+      }
+    }
+
+    const sortedLogs = [...logs].sort((a, b) => a.timestamp - b.timestamp)
+    const timeSpan = sortedLogs[sortedLogs.length - 1].timestamp - sortedLogs[0].timestamp
+    const hasGaps = this.detectTimeGaps(sortedLogs)
+    const { hasMissingLevels, missingLevels } = this.checkLogLevelsPresence(sortedLogs)
+    const isLimitedRange = logs.length >= 100 // 假设日志被限制在最新的100条
+
+    const missingAspects = {
+      timeGaps: hasGaps,
+      missingLevels: hasMissingLevels,
+      tooOld: timeSpan >= this.MAX_TIME_SPAN,
+      limitedRange: isLimitedRange
+    }
+
+    let summaryParts = []
+    if (missingAspects.timeGaps) {
+      summaryParts.push("日志存在时间间隔")
+    }
+    if (missingAspects.missingLevels) {
+      summaryParts.push(`缺少以下级别的日志：${missingLevels.join(', ')}`)
+    }
+    if (missingAspects.tooOld) {
+      summaryParts.push("日志时间跨度超过1小时")
+    }
+    if (missingAspects.limitedRange) {
+      summaryParts.push("仅显示最新的部分日志")
+    }
+
+    return {
+      isComplete: !hasGaps && !hasMissingLevels && !missingAspects.tooOld && !isLimitedRange,
+      missingAspects,
+      summary: summaryParts.length > 0 ? summaryParts.join('；') : "日志完整"
+    }
+  }
+
+  // 新增：检测日志时间间隔
+  private detectTimeGaps(logs: LogEntry[]): boolean {
+    for (let i = 1; i < logs.length; i++) {
+      if (logs[i].timestamp - logs[i-1].timestamp > this.MAX_TIME_GAP) {
+        return true
+      }
+    }
+    return false
+  }
+
+  // 新增：检查日志级别完整性
+  private checkLogLevelsPresence(logs: LogEntry[]): { hasMissingLevels: boolean; missingLevels: string[] } {
+    const expectedLevels = new Set(['info', 'warn', 'error', 'debug'])
+    const presentLevels = new Set(logs.map(log => log.level))
+    const missingLevels = Array.from(expectedLevels).filter(level => !presentLevels.has(level as LogEntry['level']))
+    
+    return {
+      hasMissingLevels: missingLevels.length > 0,
+      missingLevels
+    }
+  }
+
+  // 新增：获取特定时间范围的日志
+  getLogsInTimeRange(startTime: number, endTime: number): LogEntry[] {
+    return this._logs.filter(log => 
+      log.timestamp >= startTime && log.timestamp <= endTime
+    )
+  }
+
+  // 新增：获取最近的日志
+  getRecentLogs(duration: number = 3600000): LogEntry[] {
+    const now = Date.now()
+    return this.getLogsInTimeRange(now - duration, now)
   }
 }
 

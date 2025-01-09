@@ -83,9 +83,9 @@ ${modulesContext}
     }
   }
 
-  private getRelevantLogs(): string {
+  private getRelevantLogs(): { logs: string; completeness: any } {
     const logs = logStore.logs
-    const MAX_LOGS = 500 // 最大日志数量
+    const MAX_LOGS = 10 // 最大日志数量
     
     // 优先选择错误和警告日志
     const errorAndWarnings = logs.filter(log => 
@@ -100,12 +100,21 @@ ${modulesContext}
     // 合并日志并格式化
     const allLogs = [...errorAndWarnings, ...recentLogs]
       .sort((a, b) => a.timestamp - b.timestamp)
+    
+    // 检查日志完整性
+    const completeness = logStore.checkLogsCompleteness(allLogs)
+    
+    // 格式化日志文本
+    const logsText = allLogs
       .map(log => `[${log.level.toUpperCase()}] ${log.message}${
         log.details ? `\nDetails: ${JSON.stringify(log.details)}` : ''
       }`)
       .join('\n')
 
-    return allLogs
+    return {
+      logs: logsText,
+      completeness
+    }
   }
 
   public async processCommand(
@@ -179,8 +188,8 @@ ${module.data.code}
         )
         .join("\n---\n")
 
-      // 获取相关日志
-      const relevantLogs = this.getRelevantLogs()
+      // 获取相关日志和完整性信息
+      const { logs: relevantLogs, completeness } = this.getRelevantLogs()
 
       const enhancedCommand = `<project>
             ${
@@ -205,8 +214,18 @@ ${module.data.code}
             }
             ${modulesContext}
 
-            3. 系统日志上下文（按重要性排序的最新日志）：
+            3. 系统日志上下文（注意：这只是最近的部分日志，按重要性排序）：
             ${relevantLogs}
+
+            ${!completeness.isComplete ? `
+            注意：当前日志可能不完整：
+            ${completeness.summary}
+            
+            如果这些日志不足以分析问题，请：
+            1. 说明需要查看更多日志
+            2. 具体说明需要哪些类型的日志（例如：特定时间段、特定级别、或包含特定关键词的日志）
+            3. 建议用户使用日志查看器的过滤功能，找到并提供相关日志
+            ` : ''}
 
             ${
               typeof command !== "string" && command.images?.length > 0
