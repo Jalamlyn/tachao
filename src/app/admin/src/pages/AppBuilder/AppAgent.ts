@@ -141,18 +141,31 @@ ${modulesContext}
         relevantModules = appCodeStore.getContextModules()
         moduleSelectionMode = "manual"
       } else {
-        const relevantIds = await this.getRelevantModuleIds(allModules, command)
-        if (relevantIds.length === 0) {
+        // 添加模块数量判断逻辑
+        const moduleCount = Object.keys(allModules).length
+        if (moduleCount <= 20) {
+          // 如果模块数量小于等于20，使用所有模块
           relevantModules = allModules
           moduleSelectionMode = "all"
         } else {
-          relevantModules = relevantIds.reduce((acc, id) => {
-            if (allModules[id]) {
-              acc[id] = allModules[id]
-            }
-            return acc
-          }, {})
-          moduleSelectionMode = "smart"
+          // 如果模块数量大于20，进行动态筛选
+          const relevantIds = await this.getRelevantModuleIds(allModules, command)
+          if (relevantIds.length === 0) {
+            relevantModules = allModules
+            moduleSelectionMode = "all"
+          } else {
+            relevantModules = relevantIds.reduce((acc, id) => {
+              if (allModules[id]) {
+                acc[id] = allModules[id]
+              }
+              return acc
+            }, {})
+            moduleSelectionMode = "smart"
+          }
+          context.api.log.info("模块数量大于20，使用动态筛选", {
+            totalModules: moduleCount,
+            selectedModules: Object.keys(relevantModules).length,
+          })
         }
       }
 

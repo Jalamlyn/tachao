@@ -53,7 +53,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
 
     const scrollToBottom = useCallback(() => {
       if (shouldAutoScroll && messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+        messagesEndRef.current.scrollIntoView({ behavior: "auto" })
       }
     }, [shouldAutoScroll])
 
@@ -221,15 +221,6 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               <div className='flex justify-between items-center p-2 border-b mb-2'>
                 <div className='flex items-center gap-4'></div>
                 <div className='flex items-center gap-2'>
-                  <Button
-                    size='sm'
-                    variant='light'
-                    color='primary'
-                    onClick={() => setIsKnowledgeModalOpen(true)}
-                    startContent={<Icon icon='solar:book-linear' className='w-4 h-4' />}
-                  >
-                    知识库
-                  </Button>
                   {!shouldAutoScroll && (
                     <Button
                       size='sm'
@@ -243,6 +234,16 @@ const AIEditor: React.FC<AIEditorProps> = observer(
                       滚动到底部
                     </Button>
                   )}
+                  <Button
+                    size='sm'
+                    variant='light'
+                    color='primary'
+                    onClick={() => setIsKnowledgeModalOpen(true)}
+                    startContent={<Icon icon='solar:book-linear' className='w-4 h-4' />}
+                  >
+                    知识库
+                  </Button>
+
                   <Button
                     size='sm'
                     variant='light'

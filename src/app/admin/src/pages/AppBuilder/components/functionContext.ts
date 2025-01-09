@@ -6,7 +6,7 @@ import * as NextUI from "@nextui-org/react"
 import { observer } from "mobx-react-lite"
 import * as mobx from "mobx"
 import { Icon } from "@iconify/react"
-import { getMetadata, getPublicMetaData, queryMetadataHistory, setMetadata } from "@/service/apis/metadata"
+import { deleteMetadata, getMetadata, getPublicMetaData, queryMetadataHistory, setMetadata } from "@/service/apis/metadata"
 import * as recharts from "recharts"
 import { cn } from "@/theme/cn"
 import React from "react"
@@ -203,6 +203,7 @@ export const context = (appId) => ({
     getMetadata,
     setMetadata,
     getPublicMetaData,
+    deleteMetadata,
     queryMetadataHistory,
     getCurrentAccountInfo,
     queryCurrentEnterPrise,

@@ -59,7 +59,7 @@ const LogHelpTip: React.FC<{ completeness: any }> = ({ completeness }) => {
       <div className="flex items-start gap-2">
         <Icon icon="solar:info-circle-linear" className="text-primary mt-1" />
         <div className="flex-1">
-          <p className="text-sm font-medium mb-2">日志可能不完整</p>
+          <p className="text-sm font-medium m-2">日志可能不完整</p>
           <p className="text-sm text-default-600 mb-2">{completeness.summary}</p>
           <div className="text-sm text-default-500">
             <p>建议操作：</p>

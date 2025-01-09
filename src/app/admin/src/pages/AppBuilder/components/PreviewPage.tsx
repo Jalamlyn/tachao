@@ -143,7 +143,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
                 size='lg'
                 color='primary'
                 className='px-8 font-medium shadow-lg'
-                startContent={<Icon icon='mdi:robot' className='w-5 h-5' />}
+                startContent={<Icon icon='flowbite:fix-tables-outline' className='w-5 h-5' />}
                 onClick={() => {
                   window.parent.postMessage(
                     {

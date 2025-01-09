@@ -59,6 +59,82 @@ export const EXPERIENCE_PROMPTS = {
       }
     }
     \`\`\`
+
+    4. 删除数据示例:
+    \`\`\`javascript
+    // 正确的方式 - 删除指定版本的数据
+    const deleteOldVersion = async (name, versionCode) => {
+      try {
+        await context.api.deleteMetadata({
+          name: \`\${context.appId}_\${name}\`,
+          versionCode
+        });
+        context.message.success('删除成功');
+        
+        // 记录删除操作
+        context.api.log.info('删除旧版本数据', {
+          name,
+          versionCode
+        });
+      } catch (error) {
+        context.message.error('删除失败');
+        context.api.log.error('删除数据失败', {
+          name,
+          versionCode,
+          error: error.message
+        });
+      }
+    }
+
+    // 数据版本清理示例
+    const cleanupOldVersions = async (name, keepLatest = 5) => {
+      try {
+        // 获取历史记录
+        const history = await context.api.queryMetadataHistory({
+          names: [\`\${context.appId}_\${name}\`],
+          limit: 100 // 获取足够多的历史记录
+        });
+
+        // 按版本号排序
+        const versions = history.data
+          .sort((a, b) => b.versionCode - a.versionCode)
+          .slice(keepLatest); // 保留最新的几个版本
+
+        // 删除旧版本
+        for (const version of versions) {
+          await context.api.deleteMetadata({
+            name: version.name,
+            versionCode: version.versionCode
+          });
+        }
+
+        context.message.success(\`清理完成，保留最新的\${keepLatest}个版本\`);
+        
+        // 记录清理操作
+        context.api.log.info('清理旧版本数据', {
+          name,
+          keepLatest,
+          deletedCount: versions.length
+        });
+      } catch (error) {
+        context.message.error('清理失败');
+        context.api.log.error('清理旧版本失败', {
+          name,
+          keepLatest,
+          error: error.message
+        });
+      }
+    }
+    \`\`\`
+
+    5. 最佳实践说明:
+    - 始终使用 try-catch 处理错误
+    - 为所有操作添加适当的日志记录
+    - 使用 appId 作为命名空间前缀
+    - 定期清理旧版本数据
+    - 保持合理的版本数量
+    - 在删除前进行确认
+    - 提供用户友好的反馈
     `,
   },
   
