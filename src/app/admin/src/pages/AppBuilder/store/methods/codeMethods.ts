@@ -53,27 +53,28 @@ export function extractShataAICodes(content: string): ShataAICode[] {
             currentCode = this.currentVersion.modules[moduleId].data.code
           }
 
-          // 递归处理每个 SEARCH/REPLACE 块
-          code = searchReplaceMatches.reduce((processedCode, match) => {
+          // 修改处理逻辑，确保只保留最后一次处理的结果
+          for (const match of searchReplaceMatches) {
             const [fullMatch, searchContent, replaceContent] = match.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/) || []
             
-            if (!fullMatch) return processedCode
+            if (!fullMatch) continue
             
             // 如果 search 部分为空，说明是新代码
             if (!searchContent.trim()) {
-              return processedCode.replace(fullMatch, replaceContent)
+              code = replaceContent
+              continue
             }
 
             // 如果没有当前代码，直接使用替换内容
             if (!currentCode) {
-              return processedCode.replace(fullMatch, replaceContent)
+              code = replaceContent
+              continue
             }
 
             // 在当前代码基础上进行替换
-            const updatedCode = currentCode.replace(searchContent.trim(), replaceContent.trim())
-            currentCode = updatedCode // 更新当前代码，供下一次替换使用
-            return processedCode.replace(fullMatch, updatedCode)
-          }, code)
+            code = currentCode.replace(searchContent.trim(), replaceContent.trim())
+            currentCode = code // 更新当前代码，供下一次替换使用
+          }
         }
 
         if (type === "app") {
