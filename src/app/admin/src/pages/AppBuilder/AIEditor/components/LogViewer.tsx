@@ -95,49 +95,38 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "300px" })
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex items-center gap-2 px-3 py-1.5 bg-primary-50/30 rounded-full"
+      className='flex items-center gap-2 px-3 py-1.5 bg-primary-50/30 rounded-full'
     >
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [1, 0.8, 1],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="w-2 h-2 rounded-full bg-primary"
-      />
-      <span className="text-xs text-primary">AI 正在实时分析日志</span>
+      <motion.div className='w-2 h-2 rounded-full bg-primary' />
+      <span className='text-xs text-primary'>AI 正在实时分析日志</span>
     </motion.div>
   )
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
+      <div className='flex items-center justify-between mb-2'>
+        <div className='flex items-center gap-2'>
           <Input
-            size="sm"
-            placeholder="搜索日志..."
+            size='sm'
+            placeholder='搜索日志...'
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            startContent={<Icon icon="solar:magnifer-linear" className="text-default-400" />}
-            className="w-64"
+            startContent={<Icon icon='solar:magnifer-linear' className='text-default-400' />}
+            className='w-64'
           />
           <Select
-            size="sm"
+            size='sm'
             items={LOG_LEVEL_ITEMS}
             selectedKeys={[selectedLevel]}
             onChange={(e) => setSelectedLevel(e.target.value)}
-            className="w-32"
-            labelPlacement="outside"
+            className='w-32'
+            labelPlacement='outside'
             renderValue={(items) => {
               const item = items[0]
               if (!item) return null
 
               return (
-                <div className="flex items-center gap-2">
+                <div className='flex items-center gap-2'>
                   <Icon
                     icon={item.data?.icon || "solar:list-linear"}
                     className={`text-${item.data?.color || "default"}`}
@@ -149,7 +138,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "300px" })
           >
             {(item) => (
               <SelectItem key={item.value} textValue={item.label}>
-                <div className="flex items-center gap-2">
+                <div className='flex items-center gap-2'>
                   <Icon icon={item.icon} className={`text-${item.color}`} />
                   <span>{item.label}</span>
                 </div>
@@ -157,22 +146,22 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "300px" })
             )}
           </Select>
         </div>
-        <div className="flex items-center gap-2">
+        <div className='flex items-center gap-2'>
           <AIStatusIndicator />
           <Button
-            size="sm"
-            color="primary"
-            variant="flat"
-            startContent={<Icon icon="solar:export-line-duotone" />}
+            size='sm'
+            color='primary'
+            variant='flat'
+            startContent={<Icon icon='solar:export-line-duotone' />}
             onPress={handleExport}
           >
             导出
           </Button>
           <Button
-            size="sm"
-            color="danger"
-            variant="flat"
-            startContent={<Icon icon="solar:trash-bin-minimalistic-linear" />}
+            size='sm'
+            color='danger'
+            variant='flat'
+            startContent={<Icon icon='solar:trash-bin-minimalistic-linear' />}
             onPress={handleClear}
           >
             清除
@@ -185,9 +174,9 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "300px" })
         className={cn("w-full rounded-lg bg-default-50/50 p-4", className)}
         style={{ maxHeight }}
       >
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence mode='popLayout'>
           {filteredLogs.length === 0 ? (
-            <div className="flex items-center justify-center h-20 text-default-400">暂无日志</div>
+            <div className='flex items-center justify-center h-20 text-default-400'>暂无日志</div>
           ) : (
             filteredLogs.map((log) => (
               <motion.div
@@ -195,34 +184,34 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "300px" })
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="relative flex items-start gap-2 mb-2 last:mb-0 p-2 rounded-lg hover:bg-default-100 transition-colors group"
+                className='relative flex items-start gap-2 mb-2 last:mb-0 p-2 rounded-lg hover:bg-default-100 transition-colors group'
               >
-                <Tooltip content="AI 已分析此日志" placement="left">
+                <Tooltip content='AI 已分析此日志' placement='left'>
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: [0, 1] }}
                     transition={{ delay: 0.5 }}
-                    className="absolute right-2 top-2 text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                    className='absolute right-2 top-2 text-primary opacity-0 group-hover:opacity-100 transition-opacity'
                   >
-                    <Icon icon="solar:smart-home-angle-broken" className="w-4 h-4" />
+                    <Icon icon='solar:smart-home-angle-broken' className='w-4 h-4' />
                   </motion.div>
                 </Tooltip>
                 <Chip
-                  size="sm"
-                  variant="flat"
+                  size='sm'
+                  variant='flat'
                   color={LOG_LEVELS[log.level].color as any}
-                  startContent={<Icon icon={LOG_LEVELS[log.level].icon} className="w-3 h-3" />}
+                  startContent={<Icon icon={LOG_LEVELS[log.level].icon} className='w-3 h-3' />}
                 >
                   {LOG_LEVELS[log.level].label}
                 </Chip>
-                <div className="flex-1 text-sm">
-                  <div className="text-default-400 text-xs mb-1">{new Date(log.timestamp).toLocaleString()}</div>
-                  <div className="whitespace-pre-wrap">{log.message}</div>
+                <div className='flex-1 text-sm'>
+                  <div className='text-default-400 text-xs mb-1'>{new Date(log.timestamp).toLocaleString()}</div>
+                  <div className='whitespace-pre-wrap'>{log.message}</div>
                   {log.details && (
                     <motion.pre
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
-                      className="mt-1 p-2 rounded bg-default-100 text-xs overflow-x-auto"
+                      className='mt-1 p-2 rounded bg-default-100 text-xs overflow-x-auto'
                     >
                       {JSON.stringify(log.details, null, 2)}
                     </motion.pre>
