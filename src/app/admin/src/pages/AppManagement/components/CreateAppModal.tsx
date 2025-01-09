@@ -14,6 +14,7 @@ import {
   Divider,
   Avatar,
   Chip,
+  useDisclosure,
 } from "@nextui-org/react"
 import { useNavigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
@@ -21,7 +22,8 @@ import confetti from "canvas-confetti"
 import { appCodeStore } from "@/app/admin/src/pages/AppBuilder/store/appCodeStore"
 import { templates } from "@/app/admin/src/pages/AppBuilder/prompts/prompt/templates"
 import { useAppStore } from "../store/useAppStore"
-import { getPlatMetaData } from "@/service/apis/metadata"
+import { getPlatMetaData, setPlatMetaData } from "@/service/apis/metadata"
+import { getCurrentAccountInfo } from "@/service/apis/user"
 import message from "@/components/Message"
 
 interface CreateAppModalProps {
@@ -36,6 +38,28 @@ interface SuccessDialogProps {
   onClose: () => void
   onConfirm: () => void
   countdown: number
+}
+
+// 新增删除确认对话框组件
+const DeleteConfirmDialog = ({ isOpen, onClose, onConfirm, templateName }) => {
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size='sm'>
+      <ModalContent>
+        <ModalHeader className='flex flex-col gap-1'>确认删除模板</ModalHeader>
+        <ModalBody>
+          <p>确定要删除模板 "{templateName}" 吗？此操作不可恢复。</p>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant='light' onPress={onClose}>
+            取消
+          </Button>
+          <Button color='danger' onPress={onConfirm}>
+            确认删除
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  )
 }
 
 const SuccessDialog: React.FC<SuccessDialogProps> = ({ isOpen, onClose, onConfirm, countdown }) => {
@@ -125,13 +149,26 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   const [loading, setLoading] = useState(false)
   const [createMode, setCreateMode] = useState<"scratch" | "template">("scratch")
   const [platformTemplates, setPlatformTemplates] = useState([])
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [templateToDelete, setTemplateToDelete] = useState(null)
+  const { isOpen: isDeleteConfirmOpen, onOpen: onDeleteConfirmOpen, onClose: onDeleteConfirmClose } = useDisclosure()
   const navigate = useNavigate()
   const { useApps } = useAppStore()
   const { refetch } = useApps()
 
   useEffect(() => {
     loadPlatformTemplates()
+    checkAdminStatus()
   }, [])
+
+  const checkAdminStatus = async () => {
+    try {
+      const userInfo = await getCurrentAccountInfo()
+      setIsAdmin(userInfo.organizationId === "1" && userInfo.account === "admin")
+    } catch (error) {
+      console.error("Error checking admin status:", error)
+    }
+  }
 
   const loadPlatformTemplates = async () => {
     try {
@@ -141,6 +178,28 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
     } catch (error) {
       console.error("Error loading platform templates:", error)
       message.error("加载平台模板失败")
+    }
+  }
+
+  const handleDeleteTemplate = async (template) => {
+    setTemplateToDelete(template)
+    onDeleteConfirmOpen()
+  }
+
+  const confirmDeleteTemplate = async () => {
+    try {
+      const updatedTemplates = platformTemplates.filter((t) => t.id !== templateToDelete.id)
+      await setPlatMetaData({
+        name: "plat_template_index",
+        value: JSON.stringify(updatedTemplates),
+      })
+      setPlatformTemplates(updatedTemplates)
+      message.success("模板删除成功")
+      onDeleteConfirmClose()
+      setTemplateToDelete(null)
+    } catch (error) {
+      console.error("Error deleting template:", error)
+      message.error("删除模板失败")
     }
   }
 
@@ -244,7 +303,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
             key={template.id}
             isPressable
             isHoverable
-            className={`border-2 transition-all duration-200 ${
+            className={`border-2 transition-all duration-200 hover:shadow-lg ${
               selectedTemplate === template.id ? "border-primary" : "border-transparent"
             }`}
             onPress={() => setSelectedTemplate(template.id)}
@@ -252,24 +311,37 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
             <CardBody className='p-4'>
               <div className='flex items-center gap-4'>
                 <div
-                  className={`p-3 rounded-lg ${selectedTemplate === template.id ? "bg-primary/10" : "bg-default-100"}`}
+                  className={`p-3 rounded-lg bg-gradient-to-br ${
+                    selectedTemplate === template.id
+                      ? "from-primary/20 to-primary/10"
+                      : "from-default-100 to-default-50"
+                  }`}
                 >
-                  <Icon icon={template.icon || 'mdi:cube-outline'} className='w-6 h-6 text-primary' />
+                  <Icon
+                    icon={template.icon || "mdi:cube-outline"}
+                    className={`w-6 h-6 ${selectedTemplate === template.id ? "text-primary" : "text-default-600"}`}
+                  />
                 </div>
                 <div className='flex-1 min-w-0'>
-                  <h4 className='text-base font-semibold'>{template.name}</h4>
-                  <p className='text-sm text-default-500'>{template.description}</p>
+                  <div className='flex items-center justify-between mb-1'>
+                    <h4 className='text-base font-semibold truncate'>{template.name}</h4>
+                    {isAdmin && template.creator && (
+                      <Button
+                        size='sm'
+                        variant='light'
+                        onPress={(e) => {
+                          handleDeleteTemplate(template)
+                        }}
+                      >
+                        <Icon icon='mdi:delete' className='w-4 h-4 text-danger' />
+                      </Button>
+                    )}
+                  </div>
+                  <p className='text-sm text-default-500 line-clamp-2 mb-2'>{template.description}</p>
                   {template.creator && (
-                    <div className='flex items-center gap-2 mt-2'>
-                      <Avatar 
-                        src={template.creator.avatar} 
-                        name={template.creator.name} 
-                        size="sm"
-                      />
-                      <span className='text-xs text-default-400'>
-                        由 {template.creator.name} 创建
-                      </span>
-                      <Chip size="sm" variant="flat" className='ml-auto'>
+                    <div className='flex items-center gap-2 mt-2 pt-2 border-t border-default-100'>
+                      <span className='text-xs text-default-400'>由 {template.creator.name} 创建</span>
+                      <Chip size='sm' variant='flat' className='ml-auto bg-default-100/50 backdrop-blur-sm'>
                         {new Date(template.updatedAt).toLocaleDateString()}
                       </Chip>
                     </div>
@@ -350,6 +422,13 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
         onClose={() => setShowSuccess(false)}
         onConfirm={handleNavigate}
         countdown={5}
+      />
+
+      <DeleteConfirmDialog
+        isOpen={isDeleteConfirmOpen}
+        onClose={onDeleteConfirmClose}
+        onConfirm={confirmDeleteTemplate}
+        templateName={templateToDelete?.name}
       />
     </>
   )
