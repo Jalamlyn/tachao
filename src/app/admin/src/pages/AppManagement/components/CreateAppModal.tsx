@@ -12,6 +12,8 @@ import {
   Tabs,
   Tab,
   Divider,
+  Avatar,
+  Chip,
 } from "@nextui-org/react"
 import { useNavigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
@@ -252,11 +254,26 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
                 <div
                   className={`p-3 rounded-lg ${selectedTemplate === template.id ? "bg-primary/10" : "bg-default-100"}`}
                 >
-                  <Icon icon={template.icon} className='w-6 h-6 text-primary' />
+                  <Icon icon={template.icon || 'mdi:cube-outline'} className='w-6 h-6 text-primary' />
                 </div>
-                <div>
+                <div className='flex-1 min-w-0'>
                   <h4 className='text-base font-semibold'>{template.name}</h4>
                   <p className='text-sm text-default-500'>{template.description}</p>
+                  {template.creator && (
+                    <div className='flex items-center gap-2 mt-2'>
+                      <Avatar 
+                        src={template.creator.avatar} 
+                        name={template.creator.name} 
+                        size="sm"
+                      />
+                      <span className='text-xs text-default-400'>
+                        由 {template.creator.name} 创建
+                      </span>
+                      <Chip size="sm" variant="flat" className='ml-auto'>
+                        {new Date(template.updatedAt).toLocaleDateString()}
+                      </Chip>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardBody>
