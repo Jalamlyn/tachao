@@ -52,7 +52,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     }, [selectedTab])
 
     const scrollToBottom = useCallback(() => {
-      if (shouldAutoScroll && messagesEndRef.current) {
+      if (messagesEndRef.current) {
         messagesEndRef.current.scrollIntoView({ behavior: "auto" })
       }
     }, [shouldAutoScroll])
