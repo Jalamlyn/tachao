@@ -267,7 +267,7 @@ ${module.data.code}
             4. 调试日志 (DEBUG)：包含详细的技术信息
                context.api.log.debug("状态更新", { oldState, newState })
 
-            <我的输入>${commandContent},非 SEARCH/REPLACE 模式下禁止使用注释来省略代码和逻辑,必须返回完整的模块代码</我的输入>
+            <我的输入>${commandContent}</我的输入>
             `
             }
             
@@ -289,6 +289,9 @@ ${module.data.code}
               </mo-ai-reflection>
               </mo-ai-think>
               <mo-ai-final_plan>
+              根据以上分析，判断使用：
+              - SEARCH/REPLACE 方式，原因：[说明原因]
+              - 或完整代码生成，原因：[说明原因]
               [列出反思后的最终计划，${isPMMode ? "包括如何回答用户的问题" : "包括要修改哪些模块以及如何修改"}]
               </mo-ai-final_plan>`
 
