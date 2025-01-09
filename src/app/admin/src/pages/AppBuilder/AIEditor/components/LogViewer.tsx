@@ -250,7 +250,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
                 exit={{ opacity: 0, scale: 0.8 }}
                 className='relative flex items-start gap-2 mb-2 last:mb-0 p-2 rounded-lg hover:bg-default-100 transition-colors group'
               >
-                <Tooltip content={`AI 已分析此日志 ${log.id}`} placement='left'>
+                <Tooltip content={`AI 已分析此日志(${log.id})`} placement='left'>
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: [0, 1] }}
