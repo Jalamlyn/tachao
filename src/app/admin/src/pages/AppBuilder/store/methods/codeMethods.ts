@@ -37,38 +37,43 @@ export function extractShataAICodes(content: string): ShataAICode[] {
         if (!codeMatch) continue
 
         let code = codeMatch[1].trim()
+
+        // 获取所有 SEARCH/REPLACE 块
+        const searchReplaceMatches = code.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/g)
         
-        // 处理所有的 SEARCH/REPLACE 块
-        while (true) {
-          const searchReplaceMatch = code.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/)
-          if (!searchReplaceMatch) break
+        if (searchReplaceMatches) {
+          // 获取模块信息，用于后续处理
+          const nameMatch = block.match(/name="([^"]+)"/)
+          const moduleName = nameMatch ? nameMatch[1] : undefined
+          const moduleId = type === "app" ? `${this.appId}_app_entry` : `${this.appId}_${type}_${moduleName}`
           
-          const searchContent = searchReplaceMatch[1].trim()
-          const replaceContent = searchReplaceMatch[2].trim()
-          
-          // 如果 search 部分为空，说明是新代码
-          if (!searchContent) {
-            code = code.replace(searchReplaceMatch[0], replaceContent)
-          } else {
-            // 获取模块当前的代码
-            const nameMatch = block.match(/name="([^"]+)"/)
-            const moduleName = nameMatch ? nameMatch[1] : undefined
-            const moduleId = type === "app" ? `${this.appId}_app_entry` : `${this.appId}_${type}_${moduleName}`
-            // 获取当前模块的代码
-            let currentCode = ""
-            if (this.currentVersion?.modules[moduleId]) {
-              currentCode = this.currentVersion.modules[moduleId].data.code
+          // 获取当前模块的代码
+          let currentCode = ""
+          if (this.currentVersion?.modules[moduleId]) {
+            currentCode = this.currentVersion.modules[moduleId].data.code
+          }
+
+          // 递归处理每个 SEARCH/REPLACE 块
+          code = searchReplaceMatches.reduce((processedCode, match) => {
+            const [fullMatch, searchContent, replaceContent] = match.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/) || []
+            
+            if (!fullMatch) return processedCode
+            
+            // 如果 search 部分为空，说明是新代码
+            if (!searchContent.trim()) {
+              return processedCode.replace(fullMatch, replaceContent)
             }
 
+            // 如果没有当前代码，直接使用替换内容
             if (!currentCode) {
-              // 如果找不到当前代码，直接使用替换内容
-              code = code.replace(searchReplaceMatch[0], replaceContent)
-            } else {
-              // 在当前代码中进行替换
-              const updatedCode = currentCode.replace(searchContent, replaceContent)
-              code = code.replace(searchReplaceMatch[0], updatedCode)
+              return processedCode.replace(fullMatch, replaceContent)
             }
-          }
+
+            // 在当前代码基础上进行替换
+            const updatedCode = currentCode.replace(searchContent.trim(), replaceContent.trim())
+            currentCode = updatedCode // 更新当前代码，供下一次替换使用
+            return processedCode.replace(fullMatch, updatedCode)
+          }, code)
         }
 
         if (type === "app") {
