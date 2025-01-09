@@ -23,6 +23,7 @@ ${BASE_PROMPTS.reflection}
 ${BASE_PROMPTS.codeGeneration}
 
 ${EXPERIENCE_PROMPTS.apiExperience.metadata}
+${EXPERIENCE_PROMPTS.apiExperience.getCurrentUser}
 
 <ui-design-principles>
 ${UI_DESIGN_PROMPTS.designPrinciples}
