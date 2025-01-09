@@ -36,7 +36,7 @@ export default async function chatChunkOpenAIOffice(
   const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-openrouter"
 
   const payload = {
-    model: "anthropic/claude-3.5-haiku-20241022:beta",
+    model: "google/gemini-flash-1.5",
     messages: _messages,
     stream: true,
   }

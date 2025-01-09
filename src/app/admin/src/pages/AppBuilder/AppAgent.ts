@@ -4,7 +4,6 @@ import { AppBuilderMessage } from "./types"
 import { balanceStore } from "@/stores/balanceStore"
 import { appCodeStore } from "./store/appCodeStore"
 import { promptsComposer } from "./prompts"
-import ProductManagerAgent from "./agents/ProductManagerAgent"
 
 interface CommandInput {
   content: string
@@ -25,6 +24,11 @@ class AppAgent {
 
   private async getRelevantModuleIds(modules: Record<string, any>, command: string | CommandInput): Promise<string[]> {
     const commandContent = typeof command === "string" ? command : command.content
+    // 如果是 @pm 模式，移除 @pm 前缀再进行分析
+    const cleanContent = commandContent.trim().toLowerCase().startsWith("@pm")
+      ? commandContent.replace("@pm", "").trim()
+      : commandContent
+
     const commandImages = typeof command === "string" ? [] : command.images || []
 
     const modulesContext = Object.entries(modules)
@@ -44,7 +48,7 @@ ${module.data.code}
 项目代码：
 ${modulesContext}
 
-用户输入：${commandContent}
+用户输入：${cleanContent}
 
 请先分析用户输入和各个模块的关系，将分析结果输出到 mo-ai-think 标签中，然后将相关模块ID以JSON格式返回到 <mo-ai-code> 标签中。JSON格式为：{"moduleIds": ["id1", "id2"]}。只返回确实相关的模块ID。`
 
@@ -65,7 +69,7 @@ ${modulesContext}
       0
     )
 
-    const match = response.match(/```jsx<mo-ai-code.*?>(.*?)<\/mo-ai-code>```/s)
+    const match = response.match(/<mo-ai-code.*?>(.*?)<\/mo-ai-code>/s)
     if (!match) {
       return []
     }
@@ -100,9 +104,44 @@ ${modulesContext}
       appCodeStore.setAppId(appId)
       const systemPrompt = await promptsComposer.getSystemPrompt()
 
-      // 使用 appCodeStore 的 contextModules 获取当前上下文模块
-      const contextModules = appCodeStore.getContextModules()
-      const modulesContext = Object.entries(contextModules)
+      // 获取所有可用模块
+      const allModules = appCodeStore.currentVersion?.modules || {}
+
+      // 根据不同的选择模式获取相关模块
+      let relevantModules: Record<string, any> = {}
+      let moduleSelectionMode = "all"
+
+      if (appCodeStore.viewState.useSelectedModulesAsContext) {
+        // 如果是手动选择模式，使用已选择的模块
+        relevantModules = appCodeStore.getContextModules()
+        moduleSelectionMode = "manual"
+      } else {
+        // 使用 getRelevantModuleIds 获取相关模块，包括 @pm 模式
+        const relevantIds = await this.getRelevantModuleIds(allModules, command)
+        debugger
+        if (relevantIds.length === 0) {
+          // 如果没有找到相关模块，使用所有模块作为默认值
+          relevantModules = allModules
+          moduleSelectionMode = "all"
+        } else {
+          // 构建相关模块对象
+          relevantModules = relevantIds.reduce((acc, id) => {
+            if (allModules[id]) {
+              acc[id] = allModules[id]
+            }
+            return acc
+          }, {})
+          moduleSelectionMode = "smart"
+        }
+      }
+
+      // 确保应用入口模块总是包含在内
+      const appEntryId = `${appId}_app_entry`
+      if (allModules[appEntryId] && !relevantModules[appEntryId]) {
+        relevantModules[appEntryId] = allModules[appEntryId]
+      }
+
+      const modulesContext = Object.entries(relevantModules)
         .map(
           ([id, module]) => `
 模块ID: ${id}
@@ -127,19 +166,25 @@ ${module.data.code}
             }
             
             1. 应用入口代码：
-            ${appCodeStore.currentVersion?.modules[`${appId}_app_entry`]?.data?.code || "需要先创建应用入口代码，包含基础路由配置"}
+            ${appCodeStore.currentVersion?.modules[appEntryId]?.data?.code || "需要先创建应用入口代码，包含基础路由配置"}
             
             2. ${
-              appCodeStore.viewState.useSelectedModulesAsContext
-                ? `选中的模块代码 (${Object.keys(contextModules).length}个模块):`
-                : "所有模块代码:"
+              moduleSelectionMode === "manual"
+                ? `手动选中的模块代码 (${Object.keys(relevantModules).length}个模块):`
+                : moduleSelectionMode === "smart"
+                  ? `AI智能选择的相关模块代码 (${Object.keys(relevantModules).length}个模块):`
+                  : `所有模块代码 (${Object.keys(relevantModules).length}个模块):`
             }
             ${modulesContext}
 
-            ${typeof command !== 'string' && command.images?.length > 0 ? `
+            ${
+              typeof command !== "string" && command.images?.length > 0
+                ? `
             3. 用户上传的图片资源：
-            ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join('\n            ')}
-            ` : ''}
+            ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n            ")}
+            `
+                : ""
+            }
             </project>
             
             ${
@@ -150,7 +195,7 @@ ${module.data.code}
             `
                 : `
             <project> 里是现有代码,根据 <我的输入> ,使用 SEARCH 和 REPLACE 模式来修改或创建模块,如果代码中用 wpm.import 了某个模块, 那必须同时生成这个模块,并 wpm.export, 不允许 wpm.import 还没有被 wpm.export 的模块, 生成所有代码都必须包裹在\`\`\`jsx<mo-ai-code type="xxx" name="xxx" title="xxx" des="模块一句话介绍">生成的代码</mo-ai-code>\`\`\`标签中,你需要先列出要生成或者修改的模块名称,然后再开始生成代码,所有列出的模块都必须生成, ui交互要从设计师的角度思考, <experience-nextui>里有示例代码, 不要返回没有修改的模块
-            <我的输入>${commandContent}</我的输入>禁止使用 “ // ... 其他代码保持不变 ...” 这样的方式来修改代码, 对于大型文件可以使用 SEARCH/REPLACE 模式
+            <我的输入>${commandContent}</我的输入>禁止使用 " // ... 其他代码保持不变 ..." 这样的方式来修改代码, 对于大型文件可以使用 SEARCH/REPLACE 模式
             `
             }
             

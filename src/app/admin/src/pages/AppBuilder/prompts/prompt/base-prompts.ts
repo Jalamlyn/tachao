@@ -22,6 +22,11 @@ export const BASE_PROMPTS = {
      * utils - 工具库
      * xlsx - Excel 模块操作库
    - 禁止直接导入这些依赖，必须从 context 中获取
+   - 其他三方依赖通过 esm 引入, 在数据统计中使用
+   1. 使用 Lodash 简化基础数据处理
+   2. 使用 Decimal.js 确保金额计算准确性
+   3. 需要复杂数学计算时使用 Math.js
+   4. 考虑使用 D3.js 处理时间序列数据
 
 2. 模块导入导出规则
    - 入口模块(type="app")必须使用 context.appId 作为模块名
