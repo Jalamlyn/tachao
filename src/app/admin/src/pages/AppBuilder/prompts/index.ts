@@ -7,6 +7,7 @@ import { RESOURCE_PROMPTS } from "./prompt/resource-prompts"
 import { LOCATION_PROMPTS } from "./prompt/location-prompts"
 import { ESM_PROMPTS } from "./prompt/esm-prompts"
 import { AI_PROMPTS } from "./prompt/ai-prompts"
+import { LOG_PROMPTS } from "./prompt/log-prompts"
 
 // 提示词组合器
 export const promptsComposer = {
@@ -38,6 +39,7 @@ ${UI_DESIGN_PROMPTS.designAnalysis}
 ${LOCATION_PROMPTS.locationPrompt}
 ${ESM_PROMPTS.esmPrompt}
 ${AI_PROMPTS.aiPrompt}
+${LOG_PROMPTS.logPrompt}
 </api-doc>
 
 <business-resources>

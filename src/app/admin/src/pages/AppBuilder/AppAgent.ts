@@ -118,7 +118,6 @@ ${modulesContext}
       } else {
         // 使用 getRelevantModuleIds 获取相关模块，包括 @pm 模式
         const relevantIds = await this.getRelevantModuleIds(allModules, command)
-        debugger
         if (relevantIds.length === 0) {
           // 如果没有找到相关模块，使用所有模块作为默认值
           relevantModules = allModules
