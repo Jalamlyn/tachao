@@ -131,7 +131,7 @@ export async function processAIResponse(this: AppCodeStore, aiResponse: string):
         name: block.name!,
         title: block.title,
         code: block.code,
-        compiledCode: await this.compileCode(block.code),
+        compiledCode: block.type === "markdown" ? true : await this.compileCode(block.code),
       }
     }
 
@@ -162,6 +162,18 @@ export async function executeModules(this: AppCodeStore, context: any) {
 
       try {
         const moduleData = moduleWrapper.data
+
+        // 如果是 markdown 类型，跳过执行
+        if (moduleData.type === "markdown") {
+          results.push({
+            success: true,
+            moduleId,
+            type: moduleData.type,
+            name: moduleData.name,
+            executionTime: 0,
+          })
+          continue
+        }
 
         if (!moduleData || !moduleData.compiledCode) {
           throw new Error(`Invalid module data for ${moduleId}`)

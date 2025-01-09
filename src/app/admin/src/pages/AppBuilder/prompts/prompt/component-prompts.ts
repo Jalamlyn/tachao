@@ -503,7 +503,62 @@ context.wpm.export('constant_app', constants);
 </mo-ai-code>
 \`\`\``,
 
-  componentRules: `9. 技术要求：
+  markdownTemplate: `11. Markdown 文档使用 <mo-ai-code type="markdown" name="markdown_xxx"></mo-ai-code> 包裹：
+\`\`\`markdown
+<mo-ai-code type="markdown" name="markdown_docs" title="文档标题">
+# 标题
+
+这是一个 Markdown 文档示例。Markdown 类型的代码块:
+- 不会被编译
+- 直接作为纯文本存储
+- 适合存储文档、说明、注释等
+
+## 使用场景
+
+1. 项目文档
+2. API 说明
+3. 使用指南
+4. 开发规范
+5. 更新日志
+
+## 格式说明
+
+支持所有标准的 Markdown 语法:
+- 标题 (#)
+- 列表 (- 或 1.)
+- 链接 [文本](URL)
+- 图片 ![描述](URL)
+- 代码块 (\`\`\`)
+- 表格
+- 等等...
+
+## 最佳实践
+
+1. 使用有意义的 name 属性
+2. 添加清晰的 title 属性
+3. 保持文档结构清晰
+4. 适当使用格式化
+5. 定期更新维护
+
+## 示例代码
+
+\`\`\`javascript
+// 这里可以包含代码示例
+function example() {
+  console.log('这是一个示例');
+}
+\`\`\`
+
+## 注意事项
+
+1. markdown 类型不会被编译和执行
+2. 主要用于存储和展示文档内容
+3. 可以与其他类型的模块配合使用
+4. 支持完整的 Markdown 语法
+</mo-ai-code>
+\`\`\``,
+
+  componentRules: `12. 技术要求：
    - 入口模块(type="app")必须使用 context.appId 作为模块名
    - 非组件模块使用 await context.wpm.import 直接导入
    - 只能使用 NextUI 2.6.0 版本中实际存在的组件
@@ -529,5 +584,6 @@ context.wpm.export('constant_app', constants);
    - 按正确顺序创建和导出模块
    - 导航组件只能用 ReactRouterDom 的组件,比如 Link, NavLink 等
    - 必须在每个模块开头解构所有 context 依赖，即使暂时不使用也要保留，以便后续扩展
-   - NextUI Button 使用 onPress 代替 onClick`,
+   - NextUI Button 使用 onPress 代替 onClick
+   - markdown 类型的模块不会被编译和执行，直接存储原始内容`,
 }

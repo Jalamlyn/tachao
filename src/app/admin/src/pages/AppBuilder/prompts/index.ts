@@ -55,6 +55,14 @@ ${ROUTER_PROMPTS.routingSystem}
 3. 代码类型说明：
 ${COMPONENT_PROMPTS.appEntry}
 ${COMPONENT_PROMPTS.pageComponent}
+其他可用的模块 type 包括:
+- module
+- service
+- store
+- utils
+- markdown
+- component
+- constants
 
 4. 技术规范：
 ${COMPONENT_PROMPTS.componentRules}`
