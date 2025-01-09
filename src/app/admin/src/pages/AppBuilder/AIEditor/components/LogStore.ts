@@ -1,7 +1,7 @@
 interface LogEntry {
   id: string
   timestamp: number
-  level: 'info' | 'warn' | 'error' | 'debug'
+  level: "info" | "warn" | "error" | "debug"
   message: string
   details?: any
 }
@@ -39,7 +39,7 @@ class LogStore {
   }
 
   private notify() {
-    this._listeners.forEach(listener => listener())
+    this._listeners.forEach((listener) => listener())
   }
 
   subscribe(listener: () => void) {
@@ -49,38 +49,38 @@ class LogStore {
     }
   }
 
-  addLog(level: LogEntry['level'], message: string, details?: any) {
+  addLog(level: LogEntry["level"], message: string, details?: any) {
     const log: LogEntry = {
-      id: Date.now().toString(),
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now(),
       level,
       message,
-      details
+      details,
     }
     this._logs.push(log)
-    
+
     // 如果日志超过最大数量限制，只保留最新的日志
     if (this._logs.length > this.MAX_LOGS) {
       this._logs = this._logs.slice(-this.MAX_LOGS)
     }
-    
+
     this.notify()
   }
 
   info(message: string, details?: any) {
-    this.addLog('info', message, details)
+    this.addLog("info", message, details)
   }
 
   warn(message: string, details?: any) {
-    this.addLog('warn', message, details)
+    this.addLog("warn", message, details)
   }
 
   error(message: string, details?: any) {
-    this.addLog('error', message, details)
+    this.addLog("error", message, details)
   }
 
   debug(message: string, details?: any) {
-    this.addLog('debug', message, details)
+    this.addLog("debug", message, details)
   }
 
   clear() {
@@ -88,13 +88,8 @@ class LogStore {
     this.notify()
   }
 
-  filter(options: {
-    level?: LogEntry['level']
-    search?: string
-    startTime?: number
-    endTime?: number
-  }) {
-    return this._logs.filter(log => {
+  filter(options: { level?: LogEntry["level"]; search?: string; startTime?: number; endTime?: number }) {
+    return this._logs.filter((log) => {
       if (options.level && log.level !== options.level) return false
       if (options.search && !log.message.toLowerCase().includes(options.search.toLowerCase())) return false
       if (options.startTime && log.timestamp < options.startTime) return false
@@ -115,9 +110,9 @@ class LogStore {
           timeGaps: false,
           missingLevels: true,
           tooOld: false,
-          limitedRange: true
+          limitedRange: true,
         },
-        summary: "没有可用的日志"
+        summary: "没有可用的日志",
       }
     }
 
@@ -131,7 +126,7 @@ class LogStore {
       timeGaps: hasGaps,
       missingLevels: hasMissingLevels,
       tooOld: timeSpan >= this.MAX_TIME_SPAN,
-      limitedRange: isLimitedRange
+      limitedRange: isLimitedRange,
     }
 
     let summaryParts = []
@@ -139,7 +134,7 @@ class LogStore {
       summaryParts.push("日志存在时间间隔")
     }
     if (missingAspects.missingLevels) {
-      summaryParts.push(`缺少以下级别的日志：${missingLevels.join(', ')}`)
+      summaryParts.push(`缺少以下级别的日志：${missingLevels.join(", ")}`)
     }
     if (missingAspects.tooOld) {
       summaryParts.push("日志时间跨度超过1小时")
@@ -151,13 +146,13 @@ class LogStore {
     return {
       isComplete: !hasGaps && !hasMissingLevels && !missingAspects.tooOld && !isLimitedRange,
       missingAspects,
-      summary: summaryParts.length > 0 ? summaryParts.join('；') : "日志完整"
+      summary: summaryParts.length > 0 ? summaryParts.join("；") : "日志完整",
     }
   }
 
   private detectTimeGaps(logs: LogEntry[]): boolean {
     for (let i = 1; i < logs.length; i++) {
-      if (logs[i].timestamp - logs[i-1].timestamp > this.MAX_TIME_GAP) {
+      if (logs[i].timestamp - logs[i - 1].timestamp > this.MAX_TIME_GAP) {
         return true
       }
     }
@@ -165,20 +160,18 @@ class LogStore {
   }
 
   private checkLogLevelsPresence(logs: LogEntry[]): { hasMissingLevels: boolean; missingLevels: string[] } {
-    const expectedLevels = new Set(['info', 'warn', 'error', 'debug'])
-    const presentLevels = new Set(logs.map(log => log.level))
-    const missingLevels = Array.from(expectedLevels).filter(level => !presentLevels.has(level as LogEntry['level']))
-    
+    const expectedLevels = new Set(["info", "warn", "error", "debug"])
+    const presentLevels = new Set(logs.map((log) => log.level))
+    const missingLevels = Array.from(expectedLevels).filter((level) => !presentLevels.has(level as LogEntry["level"]))
+
     return {
       hasMissingLevels: missingLevels.length > 0,
-      missingLevels
+      missingLevels,
     }
   }
 
   getLogsInTimeRange(startTime: number, endTime: number): LogEntry[] {
-    return this._logs.filter(log => 
-      log.timestamp >= startTime && log.timestamp <= endTime
-    )
+    return this._logs.filter((log) => log.timestamp >= startTime && log.timestamp <= endTime)
   }
 
   getRecentLogs(duration: number = 3600000): LogEntry[] {
