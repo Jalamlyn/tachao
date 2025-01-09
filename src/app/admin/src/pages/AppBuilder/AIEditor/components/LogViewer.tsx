@@ -126,11 +126,12 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
   // 使用 useMemo 优化过滤逻辑
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
-      if (selectedLevel !== "all" && log.level !== selectedLevel) return false
-      if (debouncedSearch && !log.message.toLowerCase().includes(debouncedSearch.toLowerCase())) return false
-      return true
-    })
-  }, [logs, selectedLevel, debouncedSearch])
+      const matchesLevel = selectedLevel === "all" || log.level === selectedLevel;
+      const matchesSearch = !debouncedSearch || 
+        log.message.toLowerCase().includes(debouncedSearch.toLowerCase());
+      return matchesLevel && matchesSearch;
+    });
+  }, [logs, selectedLevel, debouncedSearch]);
 
   const handleClear = () => {
     logStore.clear()
@@ -175,7 +176,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
             size='sm'
             items={LOG_LEVEL_ITEMS}
             selectedKeys={[selectedLevel]}
-            onChange={(e) => setSelectedLevel(e.target.value)}
+            onSelectionChange={(keys) => setSelectedLevel(Array.from(keys)[0] as string)}
             className='w-32'
             labelPlacement='outside'
             renderValue={(items) => {
