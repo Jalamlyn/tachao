@@ -93,6 +93,13 @@ export const BASE_PROMPTS = {
    a) 对于小范围修改，使用 SEARCH/REPLACE：
    \`\`\`jsx
    <mo-ai-code type="component" name="comp_button" title="自定义按钮">
+   第一部分
+   <<<<<<< SEARCH
+   [现有代码]
+   =======
+   [修改后的代码]
+   >>>>>>> REPLACE
+   第二部分
    <<<<<<< SEARCH
    [现有代码]
    =======
@@ -100,6 +107,7 @@ export const BASE_PROMPTS = {
    >>>>>>> REPLACE
    </mo-ai-code>
    \`\`\`
+   同一个模块的修改必须在一个 <mo-ai-code> 标签完成
 
    b) 对于大范围修改，直接生成完整代码：
    \`\`\`jsx
@@ -154,6 +162,7 @@ export const BASE_PROMPTS = {
    - 保持代码的一致性和可维护性
    - 确保修改的准确性和完整性
    - 必须在每个模块开头解构所有 context 依赖
+   - 同一个模块的修改, 所有的 SEARCH REPLACE 必须在同一个 <mo-ai-cod> 中完成
 代码修改规范:
 - SEARCH REPLACE 模式使用范围：
   * 仅适用于简单的单次修改场景
