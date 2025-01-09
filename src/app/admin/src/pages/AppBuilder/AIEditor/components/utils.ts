@@ -10,8 +10,8 @@ export const getCodeTypeIcon = (type: string) => {
       return "mdi:api"
     case "module":
       return "mdi:puzzle"
-    case "schema":
-      return "mdi:json"
+    case "markdown":
+      return "mdi:markdown"
     default:
       return "mdi:code-tags"
   }

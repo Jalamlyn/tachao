@@ -14,6 +14,7 @@ import { CodeView } from "./components/CodeView"
 import { motion } from "framer-motion"
 import LogViewer from "./components/LogViewer"
 import message from "@/components/Message"
+import KnowledgeModal from "./components/KnowledgeModal"
 
 const AIEditor: React.FC<AIEditorProps> = observer(
   ({
@@ -35,6 +36,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false)
     const [selectedImage, setSelectedImage] = useState("")
     const [isFullWidth, setIsFullWidth] = useState(false)
+    const [isKnowledgeModalOpen, setIsKnowledgeModalOpen] = useState(false)
     const selectedAILevel: keyof typeof AI_LEVELS = "EXPERT"
     const [actualTab, setActualTab] = useState(selectedTab)
     const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -219,6 +221,15 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               <div className='flex justify-between items-center p-2 border-b mb-2'>
                 <div className='flex items-center gap-4'></div>
                 <div className='flex items-center gap-2'>
+                  <Button
+                    size='sm'
+                    variant='light'
+                    color='primary'
+                    onClick={() => setIsKnowledgeModalOpen(true)}
+                    startContent={<Icon icon='solar:book-linear' className='w-4 h-4' />}
+                  >
+                    知识库
+                  </Button>
                   {!shouldAutoScroll && (
                     <Button
                       size='sm'
@@ -388,6 +399,8 @@ const AIEditor: React.FC<AIEditorProps> = observer(
             </div>
           </ModalContent>
         </Modal>
+
+        <KnowledgeModal isOpen={isKnowledgeModalOpen} onClose={() => setIsKnowledgeModalOpen(false)} />
       </>
     )
   }
