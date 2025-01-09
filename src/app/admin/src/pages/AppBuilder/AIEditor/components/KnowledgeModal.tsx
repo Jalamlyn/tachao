@@ -20,6 +20,7 @@ import {
   Divider,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
+import { observer } from "mobx-react-lite"
 import { knowledgeStore } from "./KnowledgeStore"
 import message from "@/components/Message"
 
@@ -28,18 +29,19 @@ interface KnowledgeModalProps {
   onClose: () => void
 }
 
-export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ isOpen, onClose }) => {
+export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen, onClose }) => {
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [editingId, setEditingId] = useState<string | null>(null)
 
+  // 使用计算值，MobX 会自动追踪依赖
   const filteredKnowledge = useMemo(() => {
     if (!searchQuery.trim()) {
       return knowledgeStore.knowledgeList
     }
     return knowledgeStore.searchKnowledge(searchQuery)
-  }, [searchQuery, knowledgeStore.knowledge])
+  }, [searchQuery])
 
   const handleAddKnowledge = () => {
     if (!title.trim() || !content.trim()) {
@@ -242,6 +244,6 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ isOpen, onClose 
       </ModalContent>
     </Modal>
   )
-}
+})
 
 export default KnowledgeModal
