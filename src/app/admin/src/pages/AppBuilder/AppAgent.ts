@@ -85,7 +85,7 @@ ${modulesContext}
 
   private getRelevantLogs(): { logs: string; completeness: any } {
     const logs = logStore.logs
-    const MAX_LOGS = 50
+    const MAX_LOGS = 100
 
     const errorAndWarnings = logs.filter((log) => log.level === "error" || log.level === "warn").slice(-100)
 
