@@ -20,6 +20,7 @@ import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { AppIndex, useAppStore } from "../store/useAppStore"
 import { PermissionModal } from "@/app/admin/src/permissions/components/PermissionModal"
+import message from "@/components/Message"
 
 interface AppCardProps {
   app: AppIndex
@@ -54,6 +55,16 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
       onRenameModalClose()
     } catch (error) {
       console.error("Failed to rename app:", error)
+    }
+  }
+
+  const handleCopyId = async () => {
+    try {
+      await navigator.clipboard.writeText(app.id)
+      message.success("应用ID已复制到剪贴板")
+    } catch (error) {
+      console.error("Failed to copy app ID:", error)
+      message.error("复制失败")
     }
   }
 
@@ -129,6 +140,22 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
             onPress={() => window.open(`/app-run/${app.id}`, "_blank")}
           >
             访问应用
+          </Button>
+          <Button
+            size='sm'
+            variant='flat'
+            className='flex-1 group-hover:bg-default-100 transition-colors duration-200'
+            startContent={
+              <Icon
+                icon='mdi:content-copy'
+                className='w-4 h-4 transform group-hover:scale-110 transition-transform duration-200'
+                aria-hidden='true'
+              />
+            }
+            onPress={handleCopyId}
+            aria-label={`复制应用ID: ${app.id}`}
+          >
+            复制ID
           </Button>
           <Button
             size='sm'
