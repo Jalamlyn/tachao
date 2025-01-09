@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react"
+import React, { useEffect, useState, useRef, useMemo } from "react"
 import { ScrollShadow, Chip, Input, Button, Select, SelectItem, Tooltip, Card } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -50,7 +50,23 @@ interface LogViewerProps {
   maxHeight?: string | number
 }
 
-// 新增：日志帮助提示组件
+// 防抖 hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 const LogHelpTip: React.FC<{ completeness: any }> = ({ completeness }) => {
   if (!completeness || completeness.isComplete) return null;
 
@@ -88,6 +104,9 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
   const [aiObserving, setAiObserving] = useState(true)
   const [completeness, setCompleteness] = useState<any>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  
+  // 使用防抖处理搜索
+  const debouncedSearch = useDebounce(search, 300);
 
   useEffect(() => {
     const unsubscribe = logStore.subscribe(() => {
@@ -104,11 +123,14 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
     return unsubscribe
   }, [])
 
-  const filteredLogs = logs.filter((log) => {
-    if (selectedLevel !== "all" && log.level !== selectedLevel) return false
-    if (search && !log.message.toLowerCase().includes(search.toLowerCase())) return false
-    return true
-  })
+  // 使用 useMemo 优化过滤逻辑
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => {
+      if (selectedLevel !== "all" && log.level !== selectedLevel) return false
+      if (debouncedSearch && !log.message.toLowerCase().includes(debouncedSearch.toLowerCase())) return false
+      return true
+    })
+  }, [logs, selectedLevel, debouncedSearch])
 
   const handleClear = () => {
     logStore.clear()
@@ -180,6 +202,10 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
               </SelectItem>
             )}
           </Select>
+          <Chip variant="flat" size="sm" className="bg-default-100">
+            共 {logs.length} 条日志
+            {filteredLogs.length !== logs.length && ` (已筛选 ${filteredLogs.length} 条)`}
+          </Chip>
         </div>
         <div className='flex items-center gap-2'>
           <AIStatusIndicator />
@@ -204,7 +230,6 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
         </div>
       </div>
 
-      {/* 新增：日志完整性提示 */}
       <LogHelpTip completeness={completeness} />
 
       <ScrollShadow
