@@ -143,8 +143,8 @@ ${modulesContext}
       } else {
         // 添加模块数量判断逻辑
         const moduleCount = Object.keys(allModules).length
-        if (moduleCount <= 20) {
-          // 如果模块数量小于等于20，使用所有模块
+        if (moduleCount <= 15) {
+          // 如果模块数量小于等于15，使用所有模块
           relevantModules = allModules
           moduleSelectionMode = "all"
         } else {
