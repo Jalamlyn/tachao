@@ -4,6 +4,7 @@ import { AppBuilderMessage } from "./types"
 import { balanceStore } from "@/stores/balanceStore"
 import { appCodeStore } from "./store/appCodeStore"
 import { promptsComposer } from "./prompts"
+import { logStore } from "./AIEditor/components/LogStore"
 
 interface CommandInput {
   content: string
@@ -82,6 +83,31 @@ ${modulesContext}
     }
   }
 
+  private getRelevantLogs(): string {
+    const logs = logStore.logs
+    const MAX_LOGS = 500 // 最大日志数量
+    
+    // 优先选择错误和警告日志
+    const errorAndWarnings = logs.filter(log => 
+      log.level === 'error' || log.level === 'warn'
+    ).slice(-100) // 最多 100 条错误和警告
+    
+    // 然后是最新的普通日志
+    const recentLogs = logs
+      .filter(log => log.level !== 'error' && log.level !== 'warn')
+      .slice(-(MAX_LOGS - errorAndWarnings.length))
+    
+    // 合并日志并格式化
+    const allLogs = [...errorAndWarnings, ...recentLogs]
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .map(log => `[${log.level.toUpperCase()}] ${log.message}${
+        log.details ? `\nDetails: ${JSON.stringify(log.details)}` : ''
+      }`)
+      .join('\n')
+
+    return allLogs
+  }
+
   public async processCommand(
     appId: string,
     messages: AppBuilderMessage[],
@@ -153,6 +179,9 @@ ${module.data.code}
         )
         .join("\n---\n")
 
+      // 获取相关日志
+      const relevantLogs = this.getRelevantLogs()
+
       const enhancedCommand = `<project>
             ${
               isPMMode
@@ -176,10 +205,13 @@ ${module.data.code}
             }
             ${modulesContext}
 
+            3. 系统日志上下文（按重要性排序的最新日志）：
+            ${relevantLogs}
+
             ${
               typeof command !== "string" && command.images?.length > 0
                 ? `
-            3. 用户上传的图片资源：
+            4. 用户上传的图片资源：
             ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n            ")}
             `
                 : ""
@@ -189,16 +221,30 @@ ${module.data.code}
             ${
               isPMMode
                 ? `
-            请分析上述项目代码，并回答用户的问题：
+            请分析上述项目代码和系统日志，并回答用户的问题：
             <我的输入>${commandContent.replace("@pm", "").trim()}</我的输入>
             `
                 : `
-            <project> 里是现有代码,根据 <我的输入> ,使用 SEARCH 和 REPLACE 模式来修改或创建模块,如果代码中用 wpm.import 了某个模块, 那必须同时生成这个模块,并 wpm.export, 不允许 wpm.import 还没有被 wpm.export 的模块, 生成所有代码都必须包裹在\`\`\`jsx<mo-ai-code type="xxx" name="xxx" title="xxx" des="模块一句话介绍">生成的代码</mo-ai-code>\`\`\`标签中,你需要先列出要生成或者修改的模块名称,然后再开始生成代码,所有列出的模块都必须生成, ui交互要从设计师的角度思考, <experience-nextui>里有示例代码, 不要返回没有修改的模块
+            <project> 里是现有代码和系统日志,根据 <我的输入> ,使用 SEARCH 和 REPLACE 模式来修改或创建模块,如果代码中用 wpm.import 了某个模块, 那必须同时生成这个模块,并 wpm.export, 不允许 wpm.import 还没有被 wpm.export 的模块, 生成所有代码都必须包裹在\`\`\`jsx<mo-ai-code type="xxx" name="xxx" title="xxx" des="模块一句话介绍">生成的代码</mo-ai-code>\`\`\`标签中,你需要先列出要生成或者修改的模块名称,然后再开始生成代码,所有列出的模块都必须生成, ui交互要从设计师的角度思考, <experience-nextui>里有示例代码, 不要返回没有修改的模块
+
+            在生成的代码中，请使用日志 API 记录重要信息：
+            1. 错误日志 (ERROR)：表示需要立即处理的严重问题
+               context.api.log.error("操作失败", { error: error.message })
+            
+            2. 警告日志 (WARN)：表示潜在的问题或风险
+               context.api.log.warn("API响应时间过长", { responseTime: "2000ms" })
+            
+            3. 信息日志 (INFO)：记录正常的系统操作
+               context.api.log.info("用户提交表单", { formData: data })
+            
+            4. 调试日志 (DEBUG)：包含详细的技术信息
+               context.api.log.debug("状态更新", { oldState, newState })
+
             <我的输入>${commandContent}</我的输入>禁止使用 " // ... 其他代码保持不变 ..." 这样的方式来修改代码, 对于大型文件可以使用 SEARCH/REPLACE 模式
             `
             }
             
-            4. 仔细分析我的输入,考虑以下方面:
+            4. 仔细分析我的输入和系统日志,考虑以下方面:
               - 任务复杂性
               - 上下文信息审查
               - 执行计划制定
