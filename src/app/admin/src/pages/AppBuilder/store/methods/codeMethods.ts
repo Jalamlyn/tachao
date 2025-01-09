@@ -1,5 +1,6 @@
 import { transform } from "@/utils/moduleLoader"
 import { AppCodeStore, ModuleData, ShataAICode, Version } from "../types"
+import { logStore } from "../../AIEditor/components/LogStore"
 
 export function compileCode(this: AppCodeStore, code: string): Promise<string> {
   try {
@@ -15,7 +16,8 @@ export function compileCode(this: AppCodeStore, code: string): Promise<string> {
     )
     return Promise.resolve(compiledCode)
   } catch (error) {
-    console.error("Error compiling code:", error)
+    logStore.error("Error compiling code:", code)
+    console.error("Error compiling code:", code)
     throw error
   }
 }
@@ -40,13 +42,13 @@ export function extractShataAICodes(content: string): ShataAICode[] {
 
         // 获取所有 SEARCH/REPLACE 块
         const searchReplaceMatches = code.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/g)
-        
+
         if (searchReplaceMatches) {
           // 获取模块信息，用于后续处理
           const nameMatch = block.match(/name="([^"]+)"/)
           const moduleName = nameMatch ? nameMatch[1] : undefined
           const moduleId = type === "app" ? `${this.appId}_app_entry` : `${this.appId}_${type}_${moduleName}`
-          
+
           // 获取当前模块的代码
           let currentCode = ""
           if (this.currentVersion?.modules[moduleId]) {
@@ -55,10 +57,11 @@ export function extractShataAICodes(content: string): ShataAICode[] {
 
           // 修改处理逻辑，确保只保留最后一次处理的结果
           for (const match of searchReplaceMatches) {
-            const [fullMatch, searchContent, replaceContent] = match.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/) || []
-            
+            const [fullMatch, searchContent, replaceContent] =
+              match.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/) || []
+
             if (!fullMatch) continue
-            
+
             // 如果 search 部分为空，说明是新代码
             if (!searchContent.trim()) {
               code = replaceContent

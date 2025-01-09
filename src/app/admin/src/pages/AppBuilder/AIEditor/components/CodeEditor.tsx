@@ -28,9 +28,41 @@ export const CodeEditor: React.FC<CodeEditorProps> = observer(({ isFullWidth, on
     }
   }, [])
 
+  const handleCopyCode = useCallback(() => {
+    try {
+      const currentCode = appCodeStore.viewState.editedCode
+      if (!currentCode.trim()) {
+        message.warning("当前没有可复制的代码")
+        return
+      }
+      
+      navigator.clipboard.writeText(currentCode).then(() => {
+        message.success("代码已复制到剪贴板")
+      }).catch((error) => {
+        console.error("Error copying code:", error)
+        message.error("复制失败，请重试")
+      })
+    } catch (error) {
+      console.error("Error copying code:", error)
+      message.error("复制失败，请重试")
+    }
+  }, [])
+
   return (
     <div className='flex-1 relative mt-2'>
       <div className='flex items-center gap-2'>
+        <Tooltip content='复制代码'>
+          <Button 
+            className='ml-2' 
+            size='sm' 
+            variant='flat' 
+            isIconOnly 
+            onPress={handleCopyCode}
+            isDisabled={!appCodeStore.viewState.selectedCodeId}
+          >
+            <Icon icon='mdi:content-copy' className='w-4 h-4' />
+          </Button>
+        </Tooltip>
         <Tooltip content='导出代码'>
           <Button className='ml-2' size='sm' variant='flat' isIconOnly onPress={handleExportCode}>
             <Icon icon='mdi:download' className='w-4 h-4' />
