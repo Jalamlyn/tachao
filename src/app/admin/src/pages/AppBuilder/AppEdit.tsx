@@ -512,6 +512,7 @@ const AppBuilder: React.FC = observer(() => {
           <AIEditor
             parseConfig={async (code: string) => ({ code })}
             messages={messages}
+            setMessages={setMessages}
             selectedTab={selectedTab}
             onTabChange={setSelectedTab}
             agent={{
