@@ -85,30 +85,28 @@ ${modulesContext}
 
   private getRelevantLogs(): { logs: string; completeness: any } {
     const logs = logStore.logs
-    const MAX_LOGS = 10
-    
-    const errorAndWarnings = logs.filter(log => 
-      log.level === 'error' || log.level === 'warn'
-    ).slice(-100)
-    
+    const MAX_LOGS = 50
+
+    const errorAndWarnings = logs.filter((log) => log.level === "error" || log.level === "warn").slice(-100)
+
     const recentLogs = logs
-      .filter(log => log.level !== 'error' && log.level !== 'warn')
+      .filter((log) => log.level !== "error" && log.level !== "warn")
       .slice(-(MAX_LOGS - errorAndWarnings.length))
-    
-    const allLogs = [...errorAndWarnings, ...recentLogs]
-      .sort((a, b) => a.timestamp - b.timestamp)
-    
+
+    const allLogs = [...errorAndWarnings, ...recentLogs].sort((a, b) => a.timestamp - b.timestamp)
+
     const completeness = logStore.checkLogsCompleteness(allLogs)
-    
+
     const logsText = allLogs
-      .map(log => `[${log.level.toUpperCase()}] ${log.message}${
-        log.details ? `\nDetails: ${JSON.stringify(log.details)}` : ''
-      }`)
-      .join('\n')
+      .map(
+        (log) =>
+          `[${log.level.toUpperCase()}] ${log.message}${log.details ? `\nDetails: ${JSON.stringify(log.details)}` : ""}`
+      )
+      .join("\n")
 
     return {
       logs: logsText,
-      completeness
+      completeness,
     }
   }
 
@@ -207,7 +205,9 @@ ${module.data.code}
             3. 系统日志上下文（注意：这只是最近的部分日志，按重要性排序）：
             ${relevantLogs}
 
-            ${!completeness.isComplete ? `
+            ${
+              !completeness.isComplete
+                ? `
             注意：当前日志可能不完整：
             ${completeness.summary}
             
@@ -215,10 +215,12 @@ ${module.data.code}
             1. 说明需要查看更多日志
             2. 具体说明需要哪些类型的日志（例如：特定时间段、特定级别、或包含特定关键词的日志）
             3. 建议用户使用日志查看器的过滤功能，找到并提供相关日志
-            ` : ''}
+            `
+                : ""
+            }
 
             4. 知识库内容：
-            ${knowledgeContext || '暂无自定义知识内容'}
+            ${knowledgeContext || "暂无自定义知识内容"}
 
             ${
               typeof command !== "string" && command.images?.length > 0
