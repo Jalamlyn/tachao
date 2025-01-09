@@ -90,7 +90,7 @@ export const BASE_PROMPTS = {
 2. 代码输出格式：
    根据思考过程的判断，使用对应的格式：
 
-   a) 对于小范围修改，使用 SEARCH/REPLACE：
+   a) 对于大型模块的修改，使用 SEARCH/REPLACE：
    \`\`\`jsx
    <mo-ai-code type="component" name="comp_button" title="自定义按钮">
    第一部分
@@ -109,7 +109,7 @@ export const BASE_PROMPTS = {
    \`\`\`
    同一个模块的修改必须在一个 <mo-ai-code> 标签完成
 
-   b) 对于大范围修改，直接生成完整代码：
+   b) 对于超过 5处以上的修改，直接生成完整代码：
    \`\`\`jsx
    <mo-ai-code type="component" name="comp_button" title="自定义按钮">
    [完整的新代码]
