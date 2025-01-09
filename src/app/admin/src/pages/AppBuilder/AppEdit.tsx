@@ -516,7 +516,6 @@ const AppBuilder: React.FC = observer(() => {
             handleClearMessages={handleClearMessages}
             onStop={handleStop}
             showCodeTab
-            previewTabName='应用预览'
             appId={appId}
             onVersionChange={refreshPreview}
           />

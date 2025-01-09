@@ -9,20 +9,42 @@ const LOG_LEVELS = {
   info: {
     color: "primary",
     icon: "solar:info-circle-linear",
+    label: "信息",
   },
   warn: {
     color: "warning",
     icon: "solar:danger-triangle-linear",
+    label: "警告",
   },
   error: {
     color: "danger",
     icon: "solar:danger-circle-linear",
+    label: "错误",
   },
   debug: {
     color: "secondary",
     icon: "solar:bug-minimalistic-linear",
+    label: "调试",
   },
 }
+
+// 转换为 Select 使用的数据结构
+const LOG_LEVEL_ITEMS = [
+  {
+    id: "all",
+    value: "all",
+    label: "全部级别",
+    icon: "solar:list-linear",
+    color: "default",
+  },
+  ...Object.entries(LOG_LEVELS).map(([key, config]) => ({
+    id: key,
+    value: key,
+    label: config.label,
+    icon: config.icon,
+    color: config.color,
+  })),
+]
 
 interface LogViewerProps {
   className?: string
@@ -38,7 +60,6 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "300px" })
   useEffect(() => {
     const unsubscribe = logStore.subscribe(() => {
       setLogs([...logStore.logs])
-      // 自动滚动到底部
       setTimeout(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -48,7 +69,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "300px" })
     return unsubscribe
   }, [])
 
-  const filteredLogs = logs.filter(log => {
+  const filteredLogs = logs.filter((log) => {
     if (selectedLevel !== "all" && log.level !== selectedLevel) return false
     if (search && !log.message.toLowerCase().includes(search.toLowerCase())) return false
     return true
@@ -72,47 +93,60 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "300px" })
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      <div className="flex items-center gap-2">
+      <div className='flex items-center gap-2'>
         <Input
-          size="sm"
-          placeholder="搜索日志..."
+          size='sm'
+          placeholder='搜索日志...'
           value={search}
-          onChange={e => setSearch(e.target.value)}
-          startContent={<Icon icon="solar:magnifer-linear" className="text-default-400" />}
-          className="flex-1"
+          onChange={(e) => setSearch(e.target.value)}
+          startContent={<Icon icon='solar:magnifer-linear' className='text-default-400' />}
+          className='flex-1'
         />
         <Select
-          size="sm"
+          size='sm'
+          items={LOG_LEVEL_ITEMS}
           selectedKeys={[selectedLevel]}
-          onChange={e => setSelectedLevel(e.target.value)}
-          className="w-32"
+          onChange={(e) => setSelectedLevel(e.target.value)}
+          className='w-32'
+          labelPlacement='outside'
+          renderValue={(items) => {
+            const item = items[0]
+            if (!item) return null
+
+            return (
+              <div className='flex items-center gap-2'>
+                <Icon
+                  icon={item.data?.icon || "solar:list-linear"}
+                  className={`text-${item.data?.color || "default"}`}
+                />
+                <span>{item.data?.label}</span>
+              </div>
+            )
+          }}
         >
-          <SelectItem key="all" value="all">
-            全部级别
-          </SelectItem>
-          {Object.entries(LOG_LEVELS).map(([level, config]) => (
-            <SelectItem key={level} value={level}>
-              <div className="flex items-center gap-1">
-                <Icon icon={config.icon} className={`text-${config.color}`} />
-                {level.toUpperCase()}
+          {(item) => (
+            <SelectItem key={item.value} textValue={item.label}>
+              <div className='flex items-center gap-2'>
+                <Icon icon={item.icon} className={`text-${item.color}`} />
+                <span>{item.label}</span>
               </div>
             </SelectItem>
-          ))}
+          )}
         </Select>
         <Button
-          size="sm"
-          color="primary"
-          variant="flat"
-          startContent={<Icon icon="solar:export-line-duotone" />}
+          size='sm'
+          color='primary'
+          variant='flat'
+          startContent={<Icon icon='solar:export-line-duotone' />}
           onPress={handleExport}
         >
           导出
         </Button>
         <Button
-          size="sm"
-          color="danger"
-          variant="flat"
-          startContent={<Icon icon="solar:trash-bin-minimalistic-linear" />}
+          size='sm'
+          color='danger'
+          variant='flat'
+          startContent={<Icon icon='solar:trash-bin-minimalistic-linear' />}
           onPress={handleClear}
         >
           清除
@@ -124,35 +158,31 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "300px" })
         className={cn("w-full rounded-lg bg-default-50/50 p-4", className)}
         style={{ maxHeight }}
       >
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence mode='popLayout'>
           {filteredLogs.length === 0 ? (
-            <div className="flex items-center justify-center h-20 text-default-400">
-              暂无日志
-            </div>
+            <div className='flex items-center justify-center h-20 text-default-400'>暂无日志</div>
           ) : (
-            filteredLogs.map(log => (
+            filteredLogs.map((log) => (
               <motion.div
                 key={log.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="flex items-start gap-2 mb-2 last:mb-0"
+                className='flex items-start gap-2 mb-2 last:mb-0'
               >
                 <Chip
-                  size="sm"
-                  variant="flat"
+                  size='sm'
+                  variant='flat'
                   color={LOG_LEVELS[log.level].color as any}
-                  startContent={<Icon icon={LOG_LEVELS[log.level].icon} className="w-3 h-3" />}
+                  startContent={<Icon icon={LOG_LEVELS[log.level].icon} className='w-3 h-3' />}
                 >
-                  {log.level.toUpperCase()}
+                  {LOG_LEVELS[log.level].label}
                 </Chip>
-                <div className="flex-1 text-sm">
-                  <div className="text-default-400 text-xs mb-1">
-                    {new Date(log.timestamp).toLocaleString()}
-                  </div>
-                  <div className="whitespace-pre-wrap">{log.message}</div>
+                <div className='flex-1 text-sm'>
+                  <div className='text-default-400 text-xs mb-1'>{new Date(log.timestamp).toLocaleString()}</div>
+                  <div className='whitespace-pre-wrap'>{log.message}</div>
                   {log.details && (
-                    <pre className="mt-1 p-2 rounded bg-default-100 text-xs overflow-x-auto">
+                    <pre className='mt-1 p-2 rounded bg-default-100 text-xs overflow-x-auto'>
                       {JSON.stringify(log.details, null, 2)}
                     </pre>
                   )}

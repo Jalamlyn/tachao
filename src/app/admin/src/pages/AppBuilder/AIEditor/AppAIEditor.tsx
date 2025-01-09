@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react"
 import AICommandInput from "./components/AICommandInput"
 import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
-import pm from "/assets/pm.png" // 需要添加产品经理头像
+import pm from "/assets/pm.png"
 import { Tabs, Tab, Button, ScrollShadow, Avatar, Spinner, Modal, ModalContent, Chip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { cn } from "@/lib/utils"
@@ -11,6 +11,7 @@ import { observer } from "mobx-react-lite"
 import { appCodeStore } from "../store/appCodeStore"
 import { CodeView } from "./components/CodeView"
 import { motion } from "framer-motion"
+import LogViewer from "./components/LogViewer"
 
 const AIEditor: React.FC<AIEditorProps> = observer(
   ({
@@ -25,7 +26,6 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     renderDataView,
     showDataTab = false,
     showCodeTab = false,
-    previewTabName = "预览",
     appId,
     onVersionChange,
   }) => {
@@ -33,16 +33,11 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     const [selectedImage, setSelectedImage] = useState("")
     const [isFullWidth, setIsFullWidth] = useState(false)
     const selectedAILevel: keyof typeof AI_LEVELS = "EXPERT"
-
-    // 添加实际显示内容的状态
     const [actualTab, setActualTab] = useState(selectedTab)
-
-    // 添加消息容器的ref
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const scrollContainerRef = useRef<HTMLDivElement>(null)
     const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
 
-    // 监听选中标签变化，延迟更新实际显示的内容
     useEffect(() => {
       const timer = setTimeout(() => {
         setActualTab(selectedTab)
@@ -50,26 +45,22 @@ const AIEditor: React.FC<AIEditorProps> = observer(
       return () => clearTimeout(timer)
     }, [selectedTab])
 
-    // 滚动到底部的函数
     const scrollToBottom = useCallback(() => {
       if (shouldAutoScroll && messagesEndRef.current) {
         messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
       }
     }, [shouldAutoScroll])
 
-    // 监听消息变化，自动滚动
     useEffect(() => {
       requestAnimationFrame(scrollToBottom)
     }, [messages.length])
 
-    // 监听滚动事件
     useEffect(() => {
       const container = scrollContainerRef.current
       if (!container) return
 
       const handleScroll = () => {
         const { scrollTop, scrollHeight, clientHeight } = container
-        // 如果用户向上滚动超过200px，则禁用自动滚动
         const isNearBottom = scrollHeight - scrollTop - clientHeight < 200
         setShouldAutoScroll(isNearBottom)
       }
@@ -78,14 +69,12 @@ const AIEditor: React.FC<AIEditorProps> = observer(
       return () => container.removeEventListener("scroll", handleScroll)
     }, [])
 
-    // 获取消息发送者的头像和角色信息
     const getMessageSenderInfo = (message: any) => {
       const isUser = message.role === "user"
       if (isUser) {
         return { avatar: user, role: "用户" }
       }
 
-      // 根据消息内容判断是哪个AI助手
       const isPM = message.content.toLowerCase().includes("@pm")
       return {
         avatar: isPM ? pm : mo2,
@@ -94,14 +83,12 @@ const AIEditor: React.FC<AIEditorProps> = observer(
       }
     }
 
-    // 渲染单个消息
     const renderMessage = (message: any) => {
       const isUser = message.role === "user"
       const hasError = message.status === "error"
       const hasImages = message.content.images && message.content.images.length > 0
       const senderInfo = getMessageSenderInfo(message)
 
-      // 格式化消息内容
       const formatContent = (content: any) => {
         if (typeof content === "string") {
           return content
@@ -268,12 +255,45 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               </div>
               <Tabs size='sm' selectedKey={selectedTab} onSelectionChange={(key) => onTabChange(key.toString())}>
                 {showDataTab && <Tab key='data' title='数据源' />}
-                <Tab key='preview' title={previewTabName}>
+                <Tab
+                  key='preview'
+                  title={
+                    <div className='flex items-center gap-2'>
+                      <Icon icon='material-symbols:preview-outline' className='w-4 h-4' />
+                      应用预览
+                    </div>
+                  }
+                >
                   {actualTab === "preview" && (
                     <div className='h-[calc(100vh-200px)] overflow-auto p-2'>{renderPreview()}</div>
                   )}
                 </Tab>
-                {showCodeTab && <Tab key='code' title='WebIDE' />}
+                {showCodeTab && (
+                  <Tab
+                    key='code'
+                    title={
+                      <div className='flex items-center gap-2'>
+                        <Icon icon='token-branded:ride' className='w-4 h-4' />
+                        WebIDE
+                      </div>
+                    }
+                  />
+                )}
+                <Tab
+                  key='logs'
+                  title={
+                    <div className='flex items-center gap-2'>
+                      <Icon icon='mdi:console' className='w-4 h-4' />
+                      控制台
+                    </div>
+                  }
+                >
+                  {actualTab === "logs" && (
+                    <div className='h-[calc(100vh-200px)] overflow-auto p-2'>
+                      <LogViewer />
+                    </div>
+                  )}
+                </Tab>
               </Tabs>
 
               {actualTab === "data" && showDataTab && (
@@ -291,7 +311,6 @@ const AIEditor: React.FC<AIEditorProps> = observer(
           </motion.div>
         </div>
 
-        {/* 图片预览Modal */}
         <Modal
           isOpen={isImagePreviewOpen}
           onClose={() => {
