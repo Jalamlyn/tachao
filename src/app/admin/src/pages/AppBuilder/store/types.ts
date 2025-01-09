@@ -66,6 +66,7 @@ export interface ViewState {
   showImportModal: boolean
   showConfirmModal: boolean
   showVersionInfo: boolean
+  showExportModal: boolean // 新增这一行
   importContent: string
   isImporting: boolean
   pendingImportContent: string

@@ -37,6 +37,28 @@ export const CodeViewModals: React.FC = observer(() => {
     }
   }
 
+  const handleExportAll = () => {
+    try {
+      appCodeStore.downloadMarkdown()
+      message.success("代码导出成功")
+      appCodeStore.viewState.showExportModal = false
+    } catch (error) {
+      console.error("Error exporting code:", error)
+      message.error("代码导出失败")
+    }
+  }
+
+  const handleExportSelected = () => {
+    try {
+      appCodeStore.downloadMarkdown(appCodeStore.viewState.selectedModules)
+      message.success("选中模块导出成功")
+      appCodeStore.viewState.showExportModal = false
+    } catch (error) {
+      console.error("Error exporting selected code:", error)
+      message.error("导出失败")
+    }
+  }
+
   const handleImport = async () => {
     if (!appCodeStore.viewState.importContent.trim()) {
       message.error("请输入或上传要导入的代码")
@@ -85,6 +107,100 @@ export const CodeViewModals: React.FC = observer(() => {
   return (
     <>
       <input type='file' ref={fileInputRef} className='hidden' accept='.md' onChange={handleFileUpload} />
+
+      {/* 导出选择模态框 */}
+      <Modal
+        isOpen={appCodeStore.viewState.showExportModal}
+        onClose={() => (appCodeStore.viewState.showExportModal = false)}
+        size='lg'
+        classNames={{
+          base: "bg-gradient-to-b from-white to-default-50",
+          header: "border-b-1 border-default-100",
+          body: "py-6",
+          closeButton: "hover:bg-default-100",
+        }}
+      >
+        <ModalContent>
+          <ModalHeader className='flex flex-col gap-1'>
+            <div className='flex items-center gap-2'>
+              <div className='p-2 rounded-lg bg-primary/10'>
+                <Icon icon='solar:export-bold' className='w-5 h-5 text-primary' />
+              </div>
+              <div>
+                <h3 className='text-lg font-semibold'>选择导出范围</h3>
+                <p className='text-small text-default-500'>请选择要导出的模块范围</p>
+              </div>
+            </div>
+          </ModalHeader>
+          <ModalBody>
+            <div className='space-y-4 px-2'>
+              <div className='grid grid-cols-1 gap-4'>
+                {/* 导出全部选项 */}
+                <button
+                  onClick={handleExportAll}
+                  className='group relative flex items-center gap-4 p-4 rounded-xl border-2 border-default-200 hover:border-primary transition-colors duration-200'
+                >
+                  <div className='flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors'>
+                    <Icon icon='solar:documents-minimalistic-bold' className='w-6 h-6' />
+                  </div>
+                  <div className='flex-1'>
+                    <h4 className='font-medium text-foreground'>导出全部模块</h4>
+                    <p className='text-small text-default-500'>导出应用中的所有模块代码，包括入口文件</p>
+                  </div>
+                  <Icon
+                    icon='solar:alt-arrow-right-bold'
+                    className='w-5 h-5 text-default-400 group-hover:text-primary transition-colors'
+                  />
+                </button>
+
+                {/* 导出选中选项 */}
+                <button
+                  onClick={handleExportSelected}
+                  className='group relative flex items-center gap-4 p-4 rounded-xl border-2 border-default-200 hover:border-primary transition-colors duration-200'
+                >
+                  <div className='flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors'>
+                    <Icon icon='solar:checklist-minimalistic-bold' className='w-6 h-6' />
+                  </div>
+                  <div className='flex-1'>
+                    <h4 className='font-medium text-foreground'>
+                      导出选中的 {appCodeStore?.viewState?.selectedModules?.length} 个模块
+                    </h4>
+                    <p className='text-small text-default-500'>仅导出已选中的特定模块代码</p>
+                    {appCodeStore?.viewState?.selectedModules?.length > 0 && (
+                      <div className='mt-2 flex flex-wrap gap-1'>
+                        {appCodeStore.getSelectedModulesInfo().map((module) => (
+                          <Chip
+                            key={module.id}
+                            size='sm'
+                            variant='flat'
+                            color='primary'
+                            classNames={{
+                              base: "bg-primary/10 text-primary",
+                            }}
+                          >
+                            {module.title || module.name}
+                          </Chip>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <Icon
+                    icon='solar:alt-arrow-right-bold'
+                    className='w-5 h-5 text-default-400 group-hover:text-primary transition-colors'
+                  />
+                </button>
+              </div>
+
+              <div className='flex items-center gap-2 p-2 rounded-lg bg-default-100'>
+                <Icon icon='solar:info-circle-bold' className='w-4 h-4 text-default-400' />
+                <span className='text-small text-default-500'>
+                  导出的代码将以 Markdown 格式保存，可用于后续导入或分享
+                </span>
+              </div>
+            </div>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
 
       {/* 导入模态框 */}
       <Modal

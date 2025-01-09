@@ -20,8 +20,16 @@ export const CodeEditor: React.FC<CodeEditorProps> = observer(({ isFullWidth, on
 
   const handleExportCode = useCallback(() => {
     try {
-      appCodeStore.downloadMarkdown()
-      message.success("代码导出成功")
+      // 检查是否有选中的模块
+      const hasSelectedModules = appCodeStore?.viewState?.selectedModules?.length > 0
+      if (hasSelectedModules) {
+        // 如果有选中模块，显示导出选择模态框
+        appCodeStore.viewState.showExportModal = true
+      } else {
+        // 如果没有选中模块，直接导出全部
+        appCodeStore.downloadMarkdown()
+        message.success("代码导出成功")
+      }
     } catch (error) {
       console.error("Error exporting code:", error)
       message.error("代码导出失败")
@@ -35,13 +43,16 @@ export const CodeEditor: React.FC<CodeEditorProps> = observer(({ isFullWidth, on
         message.warning("当前没有可复制的代码")
         return
       }
-      
-      navigator.clipboard.writeText(currentCode).then(() => {
-        message.success("代码已复制到剪贴板")
-      }).catch((error) => {
-        console.error("Error copying code:", error)
-        message.error("复制失败，请重试")
-      })
+
+      navigator.clipboard
+        .writeText(currentCode)
+        .then(() => {
+          message.success("代码已复制到剪贴板")
+        })
+        .catch((error) => {
+          console.error("Error copying code:", error)
+          message.error("复制失败，请重试")
+        })
     } catch (error) {
       console.error("Error copying code:", error)
       message.error("复制失败，请重试")
@@ -52,11 +63,11 @@ export const CodeEditor: React.FC<CodeEditorProps> = observer(({ isFullWidth, on
     <div className='flex-1 relative mt-2'>
       <div className='flex items-center gap-2'>
         <Tooltip content='复制代码'>
-          <Button 
-            className='ml-2' 
-            size='sm' 
-            variant='flat' 
-            isIconOnly 
+          <Button
+            className='ml-2'
+            size='sm'
+            variant='flat'
+            isIconOnly
             onPress={handleCopyCode}
             isDisabled={!appCodeStore.viewState.selectedCodeId}
           >

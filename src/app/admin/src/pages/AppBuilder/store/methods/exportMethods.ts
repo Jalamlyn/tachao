@@ -1,6 +1,6 @@
 import { AppCodeStore, Version } from "../types"
 
-export function exportToMarkdown(this: AppCodeStore): string {
+export function exportToMarkdown(this: AppCodeStore, moduleIds?: string[]): string {
   if (!this.currentVersion) {
     throw new Error("No current version")
   }
@@ -9,7 +9,12 @@ export function exportToMarkdown(this: AppCodeStore): string {
   let markdown = "# 应用代码导出\n\n"
   markdown += "## All Modules\n\n"
 
-  const sortedModules = Object.entries(version.modules).sort(([idA], [idB]) => idA.localeCompare(idB))
+  // 如果提供了 moduleIds,只导出选中的模块
+  const modulesToExport = moduleIds
+    ? Object.entries(version.modules).filter(([id]) => moduleIds.includes(id))
+    : Object.entries(version.modules)
+
+  const sortedModules = modulesToExport.sort(([idA], [idB]) => idA.localeCompare(idB))
 
   sortedModules.forEach(([moduleId, module]) => {
     const { data } = module
@@ -33,14 +38,15 @@ export function exportToMarkdown(this: AppCodeStore): string {
   return markdown
 }
 
-export function downloadMarkdown(this: AppCodeStore): void {
+export function downloadMarkdown(this: AppCodeStore, moduleIds?: string[]): void {
   try {
-    const markdown = this.exportToMarkdown()
+    const markdown = this.exportToMarkdown(moduleIds)
     const blob = new Blob([markdown], { type: "text/markdown" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `${this.appId}_export_all_${new Date().toISOString().slice(0, 10)}.md`
+    const suffix = moduleIds ? "_selected" : "_all"
+    a.download = `${this.appId}_export${suffix}_${new Date().toISOString().slice(0, 10)}.md`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)

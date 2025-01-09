@@ -13,6 +13,7 @@ export function initViewState(): ViewState {
     showImportModal: false,
     showConfirmModal: false,
     showVersionInfo: false,
+    showExportModal: false, // 新增这一行
     importContent: "",
     isImporting: false,
     pendingImportContent: "",

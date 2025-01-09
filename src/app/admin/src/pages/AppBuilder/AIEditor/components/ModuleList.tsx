@@ -143,7 +143,8 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                 <Icon
                   icon={contextStatus.icon}
                   className={`w-5 h-5 ${
-                    appCodeStore.viewState.useSelectedModulesAsContext && appCodeStore?.viewState?.selectedModules?.length
+                    appCodeStore.viewState.useSelectedModulesAsContext &&
+                    appCodeStore?.viewState?.selectedModules?.length
                       ? "text-success"
                       : ""
                   }`}
@@ -294,7 +295,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                   group relative rounded-xl border border-transparent
                   ${
                     appCodeStore.viewState.selectedCodeId === item.id
-                      ? "bg-primary/5 border-primary/10 shadow-sm" 
+                      ? "bg-primary/5 border-primary/10 shadow-sm"
                       : "hover:border-default-100 hover:bg-default-50/50"
                   }
                   transition-all duration-300 ease-in-out
@@ -333,16 +334,14 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                     </div>
 
                     <div className='flex flex-col flex-1 min-w-0'>
-                      <span className='text-sm font-medium truncate tracking-wide leading-snug'>
-                        {item.title}
-                      </span>
+                      <span className='text-sm font-medium truncate tracking-wide leading-snug'>{item.title}</span>
                       <span className='text-xs text-default-300 mt-0.5'>
-                        {new Date(item.updatedAt).toLocaleString('zh-CN', {
-                          year: 'numeric',
-                          month: '2-digit', 
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit'
+                        {new Date(item.updatedAt).toLocaleString("zh-CN", {
+                          year: "numeric",
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </span>
                     </div>

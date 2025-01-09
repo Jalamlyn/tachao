@@ -103,9 +103,9 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
       case "id":
         return (
           <div className='flex items-center gap-2'>
-            <Icon icon='solar:document-text-linear' className='text-default-400' />
-            <Tooltip content="点击复制ID">
-              <span 
+            <Icon icon='solar:document-text-linear' className='text-default-400 w-5 h-5' />
+            <Tooltip content='点击复制ID'>
+              <span
                 className='text-sm cursor-pointer hover:text-primary'
                 onClick={() => {
                   navigator.clipboard.writeText(item.id)
@@ -162,12 +162,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
         </ModalHeader>
         <ModalBody>
           <div className='space-y-4'>
-            <Input 
-              label='标题' 
-              placeholder='输入标题...' 
-              value={title} 
-              onChange={(e) => setTitle(e.target.value)} 
-            />
+            <Input label='标题' placeholder='输入标题...' value={title} onChange={(e) => setTitle(e.target.value)} />
             <Textarea
               label='知识内容'
               placeholder='输入知识内容...'
@@ -213,7 +208,11 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
               <Table aria-label='知识列表'>
                 <TableHeader columns={columns}>
                   {(column) => (
-                    <TableColumn key={column.uid} align={column.uid === "actions" ? "center" : "start"}>
+                    <TableColumn
+                      className='min-w-20'
+                      key={column.uid}
+                      align={column.uid === "actions" ? "center" : "start"}
+                    >
                       {column.name}
                     </TableColumn>
                   )}
