@@ -127,20 +127,64 @@ export const uploadAPI = {
 // 日志工具
 export const logAPI = {
   info: (message: string, details?: any) => {
-    logStore.info(message, details)
+    if (window.parent && window.parent !== window) {
+      // 在 iframe 中运行时，发送日志到父窗口
+      window.parent.postMessage({
+        type: 'LOG',
+        level: 'info',
+        message,
+        details
+      }, '*')
+    } else {
+      // 在父窗口中直接使用 logStore
+      logStore.info(message, details)
+    }
   },
   warn: (message: string, details?: any) => {
-    logStore.warn(message, details)
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'LOG',
+        level: 'warn',
+        message,
+        details
+      }, '*')
+    } else {
+      logStore.warn(message, details)
+    }
   },
   error: (message: string, details?: any) => {
-    logStore.error(message, details)
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'LOG',
+        level: 'error',
+        message,
+        details
+      }, '*')
+    } else {
+      logStore.error(message, details)
+    }
   },
   debug: (message: string, details?: any) => {
-    logStore.debug(message, details)
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'LOG',
+        level: 'debug',
+        message,
+        details
+      }, '*')
+    } else {
+      logStore.debug(message, details)
+    }
   },
   clear: () => {
-    logStore.clear()
-  },
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'LOG_CLEAR'
+      }, '*')
+    } else {
+      logStore.clear()
+    }
+  }
 }
 
 export const context = (appId) => ({
@@ -168,7 +212,6 @@ export const context = (appId) => ({
       getLocationPermissionGuide,
     },
     upload: uploadAPI,
-    // 添加日志API
     log: logAPI,
   },
   ai,
