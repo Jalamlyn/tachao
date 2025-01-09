@@ -5,6 +5,7 @@ import { balanceStore } from "@/stores/balanceStore"
 import { appCodeStore } from "./store/appCodeStore"
 import { promptsComposer } from "./prompts"
 import { logStore } from "./AIEditor/components/LogStore"
+import { knowledgeStore } from "./AIEditor/components/KnowledgeStore"
 
 interface CommandInput {
   content: string
@@ -25,7 +26,6 @@ class AppAgent {
 
   private async getRelevantModuleIds(modules: Record<string, any>, command: string | CommandInput): Promise<string[]> {
     const commandContent = typeof command === "string" ? command : command.content
-    // 如果是 @pm 模式，移除 @pm 前缀再进行分析
     const cleanContent = commandContent.trim().toLowerCase().startsWith("@pm")
       ? commandContent.replace("@pm", "").trim()
       : commandContent
@@ -85,26 +85,21 @@ ${modulesContext}
 
   private getRelevantLogs(): { logs: string; completeness: any } {
     const logs = logStore.logs
-    const MAX_LOGS = 10 // 最大日志数量
+    const MAX_LOGS = 10
     
-    // 优先选择错误和警告日志
     const errorAndWarnings = logs.filter(log => 
       log.level === 'error' || log.level === 'warn'
-    ).slice(-100) // 最多 100 条错误和警告
+    ).slice(-100)
     
-    // 然后是最新的普通日志
     const recentLogs = logs
       .filter(log => log.level !== 'error' && log.level !== 'warn')
       .slice(-(MAX_LOGS - errorAndWarnings.length))
     
-    // 合并日志并格式化
     const allLogs = [...errorAndWarnings, ...recentLogs]
       .sort((a, b) => a.timestamp - b.timestamp)
     
-    // 检查日志完整性
     const completeness = logStore.checkLogsCompleteness(allLogs)
     
-    // 格式化日志文本
     const logsText = allLogs
       .map(log => `[${log.level.toUpperCase()}] ${log.message}${
         log.details ? `\nDetails: ${JSON.stringify(log.details)}` : ''
@@ -139,26 +134,20 @@ ${modulesContext}
       appCodeStore.setAppId(appId)
       const systemPrompt = await promptsComposer.getSystemPrompt()
 
-      // 获取所有可用模块
       const allModules = appCodeStore.currentVersion?.modules || {}
 
-      // 根据不同的选择模式获取相关模块
       let relevantModules: Record<string, any> = {}
       let moduleSelectionMode = "all"
 
       if (appCodeStore.viewState.useSelectedModulesAsContext) {
-        // 如果是手动选择模式，使用已选择的模块
         relevantModules = appCodeStore.getContextModules()
         moduleSelectionMode = "manual"
       } else {
-        // 使用 getRelevantModuleIds 获取相关模块，包括 @pm 模式
         const relevantIds = await this.getRelevantModuleIds(allModules, command)
         if (relevantIds.length === 0) {
-          // 如果没有找到相关模块，使用所有模块作为默认值
           relevantModules = allModules
           moduleSelectionMode = "all"
         } else {
-          // 构建相关模块对象
           relevantModules = relevantIds.reduce((acc, id) => {
             if (allModules[id]) {
               acc[id] = allModules[id]
@@ -169,7 +158,6 @@ ${modulesContext}
         }
       }
 
-      // 确保应用入口模块总是包含在内
       const appEntryId = `${appId}_app_entry`
       if (allModules[appEntryId] && !relevantModules[appEntryId]) {
         relevantModules[appEntryId] = allModules[appEntryId]
@@ -188,8 +176,10 @@ ${module.data.code}
         )
         .join("\n---\n")
 
-      // 获取相关日志和完整性信息
       const { logs: relevantLogs, completeness } = this.getRelevantLogs()
+
+      // 获取知识库内容
+      const knowledgeContext = knowledgeStore.getKnowledgeContext()
 
       const enhancedCommand = `<project>
             ${
@@ -227,10 +217,13 @@ ${module.data.code}
             3. 建议用户使用日志查看器的过滤功能，找到并提供相关日志
             ` : ''}
 
+            4. 知识库内容：
+            ${knowledgeContext || '暂无自定义知识内容'}
+
             ${
               typeof command !== "string" && command.images?.length > 0
                 ? `
-            4. 用户上传的图片资源：
+            5. 用户上传的图片资源：
             ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n            ")}
             `
                 : ""
