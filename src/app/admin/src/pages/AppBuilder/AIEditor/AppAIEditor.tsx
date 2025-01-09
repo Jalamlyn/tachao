@@ -4,6 +4,7 @@ import mo2 from "/assets/mo-2.png"
 import user from "/assets/user.png"
 import pm from "/assets/pm.png"
 import { Tabs, Tab, Button, ScrollShadow, Avatar, Spinner, Modal, ModalContent, Chip } from "@nextui-org/react"
+import { useClipboard } from "@nextui-org/use-clipboard"
 import { Icon } from "@iconify/react"
 import { cn } from "@/lib/utils"
 import { AI_LEVELS, AIEditorProps } from "./type"
@@ -12,6 +13,7 @@ import { appCodeStore } from "../store/appCodeStore"
 import { CodeView } from "./components/CodeView"
 import { motion } from "framer-motion"
 import LogViewer from "./components/LogViewer"
+import message from "@/components/Message"
 
 const AIEditor: React.FC<AIEditorProps> = observer(
   ({
@@ -19,6 +21,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     messages,
     selectedTab,
     onTabChange,
+    setMessages,
     onCommandResult,
     handleClearMessages,
     agent,
@@ -37,6 +40,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const scrollContainerRef = useRef<HTMLDivElement>(null)
     const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
+    const { copy } = useClipboard()
 
     useEffect(() => {
       const timer = setTimeout(() => {
@@ -83,6 +87,25 @@ const AIEditor: React.FC<AIEditorProps> = observer(
       }
     }
 
+    const handleCopyMessage = async (message: any) => {
+      let content = ""
+      if (typeof message.content === "string") {
+        content = message.content
+      } else if (React.isValidElement(message.content)) {
+        content = message.content.props.children?.toString() || ""
+      } else if (typeof message.content === "object") {
+        content = message.content.content || JSON.stringify(message.content, null, 2)
+      }
+
+      await copy(content)
+      message.success("已复制到剪贴板")
+    }
+
+    const handleDeleteMessage = (messageId: string) => {
+      const newMessages = messages.filter((msg) => msg.id !== messageId)
+      setMessages(newMessages)
+    }
+
     const renderMessage = (message: any) => {
       const isUser = message.role === "user"
       const hasError = message.status === "error"
@@ -110,7 +133,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
       }
 
       return (
-        <div key={message.id} className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""} mb-4`}>
+        <div key={message.id} className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""} mb-4 group`}>
           <div className='flex flex-col items-center gap-1'>
             <Avatar src={senderInfo.avatar} className='flex-shrink-0' />
             {!isUser && (
@@ -121,12 +144,35 @@ const AIEditor: React.FC<AIEditorProps> = observer(
           </div>
           <div
             className={cn(
-              "flex flex-col max-w-[80%] rounded-lg p-3",
+              "flex flex-col max-w-[600px] min-w-[200px] rounded-lg p-3 relative",
               isUser ? "bg-primary text-primary-foreground" : "bg-content2",
               hasError && "bg-danger-50 border border-danger-200",
               "overflow-hidden"
             )}
           >
+            <div className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10'>
+              <div className='flex gap-1'>
+                <Button
+                  isIconOnly
+                  size='sm'
+                  variant='light'
+                  className={isUser ? "text-white/80 hover:text-white" : ""}
+                  onClick={() => handleCopyMessage(message)}
+                >
+                  <Icon icon='mdi:content-copy' className='w-4 h-4' />
+                </Button>
+                <Button
+                  isIconOnly
+                  size='sm'
+                  variant='light'
+                  className={isUser ? "text-white/80 hover:text-white" : ""}
+                  onClick={() => handleDeleteMessage(message.id)}
+                >
+                  <Icon icon='mdi:delete' className='w-4 h-4' />
+                </Button>
+              </div>
+            </div>
+
             {message.status === "thinking" ? (
               <div className='flex items-center gap-2'>
                 <Spinner size='sm'></Spinner>
@@ -134,7 +180,9 @@ const AIEditor: React.FC<AIEditorProps> = observer(
               </div>
             ) : (
               <>
-                <div className='whitespace-pre-wrap text-sm break-words w-full'>{formatContent(message.content)}</div>
+                <div className='whitespace-pre-wrap text-sm break-words w-full pr-16'>
+                  {formatContent(message.content)}
+                </div>
                 {hasImages && (
                   <div className='flex flex-wrap gap-2 mt-2'>
                     {message.content.images.map((image: string, index: number) => (
