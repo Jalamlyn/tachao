@@ -16,7 +16,10 @@ export interface GuideCardProps {
 
 export const GuideCard: React.FC<GuideCardProps> = observer(
   ({ guideId, icon, title, content, color = "default", onClose, className = "" }) => {
-    if (!guideManager.shouldShowGuide(guideId)) {
+    // 使用响应式状态
+    const isVisible = guideManager.shouldShowGuide(guideId)
+    
+    if (!isVisible) {
       return null
     }
 
