@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import PageLayout from "@/app/admin/src/component/PageLayout"
+import PageLayout from "@/app/admin/src/components/PageLayout"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { AppGallery } from "./components/AppGallery"
 import { CreateAppModal } from "./components/CreateAppModal"

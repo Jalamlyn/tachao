@@ -16,7 +16,7 @@ import { MetadataTable } from "@/components/metadata-table"
 import { Column, Action } from "@/components/metadata-table/types"
 import { MetadataDetail } from "@/hooks/metadata/types"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
-import PageLayout from "@/app/admin/src/component/PageLayout"
+import PageLayout from "@/app/admin/src/components/PageLayout"
 import message from "@/components/Message"
 import { useQueryMetadata } from "@/hooks/react-query"
 

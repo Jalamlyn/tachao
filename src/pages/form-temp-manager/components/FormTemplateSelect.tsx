@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { useDisclosure } from "@nextui-org/react"
 import ServiceConsultModal from "./ServiceConsultModal"
-import PageLayout from "@/app/admin/src/component/PageLayout"
+import PageLayout from "@/app/admin/src/components/PageLayout"
 import { functionalTemplates, industryTemplates } from "./FormTemplatesCard"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 

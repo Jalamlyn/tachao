@@ -24,6 +24,7 @@ import { observer } from "mobx-react-lite"
 import { knowledgeStore } from "./KnowledgeStore"
 import message from "@/components/Message"
 import KnowledgeEditModal from "./KnowledgeEditModal"
+import GuideCard from "@/app/admin/src/components/GuideCard"
 
 interface KnowledgeModalProps {
   isOpen: boolean
@@ -180,35 +181,35 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
           <ModalBody>
             <div className='space-y-4'>
               {/* 数据安全说明 */}
-              <Card className='bg-default-50 p-3'>
-                <div className='flex items-start gap-2'>
-                  <Icon icon='solar:shield-keyhole-minimalistic-linear' className='text-success w-5 h-5 mt-0.5' />
-                  <div className='text-sm'>
-                    <p className='font-medium mb-1'>数据安全说明：</p>
-                    <ul className='text-default-500 space-y-1'>
-                      <li>• 所有知识内容仅存储在您的浏览器本地</li>
-                      <li>• 数据不会上传到云端，确保信息安全</li>
-                      <li>• 建议定期导出备份重要知识</li>
-                    </ul>
-                  </div>
-                </div>
-              </Card>
+              <GuideCard
+                guideId='knowledge-security-guide'
+                icon='solar:shield-keyhole-minimalistic-linear'
+                title='数据安全说明'
+                color='success'
+                content={
+                  <ul className='space-y-1'>
+                    <li>• 所有知识内容仅存储在您的浏览器本地</li>
+                    <li>• 数据不会上传到云端，确保信息安全</li>
+                    <li>• 建议定期导出备份重要知识</li>
+                  </ul>
+                }
+              />
 
               {/* 知识库使用说明 */}
-              <Card className='bg-default-50 p-3'>
-                <div className='flex items-start gap-2'>
-                  <Icon icon='solar:info-circle-linear' className='text-primary w-5 h-5 mt-0.5' />
-                  <div className='text-sm'>
-                    <p className='font-medium mb-1'>知识库使用说明：</p>
-                    <ul className='text-default-500 space-y-1'>
-                      <li>• 选中的知识将被 AI 助手实时学习和参考</li>
-                      <li>• AI 会在对话中结合这些知识提供更准确的回答</li>
-                      <li>• 您可以随时调整选中的知识来优化 AI 的表现</li>
-                      <li>• 选中状态变化时会收到即时反馈提示</li>
-                    </ul>
-                  </div>
-                </div>
-              </Card>
+              <GuideCard
+                guideId='knowledge-usage-guide'
+                icon='solar:info-circle-linear'
+                title='知识库使用说明'
+                color='primary'
+                content={
+                  <ul className='space-y-1'>
+                    <li>• 选中的知识将被 AI 助手实时学习和参考</li>
+                    <li>• AI 会在对话中结合这些知识提供更准确的回答</li>
+                    <li>• 您可以随时调整选中的知识来优化 AI 的表现</li>
+                    <li>• 选中状态变化时会收到即时反馈提示</li>
+                  </ul>
+                }
+              />
 
               <div className='flex items-center justify-between'>
                 <span className='text-lg font-medium'>知识列表</span>

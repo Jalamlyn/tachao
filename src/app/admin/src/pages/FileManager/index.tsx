@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 import { Card, CardBody, ScrollShadow } from "@nextui-org/react"
 import FileList from "./components/FileList"
-import PageLayout from "@/app/admin/src/component/PageLayout"
+import PageLayout from "@/app/admin/src/components/PageLayout"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 
 const FileManager: React.FC = () => {

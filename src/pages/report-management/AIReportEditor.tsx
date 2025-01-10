@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams, useSearchParams } from "react-rout
 import { useMetadata } from "@/hooks/useMetadata"
 import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
-import PageLayout from "@/app/admin/src/component/PageLayout"
+import PageLayout from "@/app/admin/src/components/PageLayout"
 import AIReportAgent from "@/service/agents/AIReportAgent"
 import ErrorBoundary from "@/components/ErrorBoundary"
 import { useVersionControl } from "@/hooks/useVersionControl"

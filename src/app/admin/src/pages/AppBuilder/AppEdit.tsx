@@ -8,7 +8,7 @@ import {
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
-import PageLayout from "@/app/admin/src/component/PageLayout"
+import PageLayout from "@/app/admin/src/components/PageLayout"
 import AIEditor from "./AIEditor/AppAIEditor"
 import AppAgent from "./AppAgent"
 import { AppBuilderMessage, CodeItem } from "./types"
