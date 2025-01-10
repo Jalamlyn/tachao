@@ -1,4 +1,4 @@
-import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { getMetadata, setMetadata, setPlatMetaData, getPlatMetaData } from "@/service/apis/metadata"
 import {
   Permission,
   PermissionMetadata,
@@ -246,19 +246,45 @@ export const setResourcePublicAccess = async (
   resourceId: string,
   isPublic: boolean
 ): Promise<void> => {
-  const permissions = await getResourcePermissions(resourceType)
-
-  if (!permissions[resourceId]) {
-    permissions[resourceId] = {
-      resourceType,
-      resourceId,
-      accounts: [],
-      isPublic: true, // 新建资源默认公开访问
+  try {
+    // 1. 更新权限信息
+    const permissions = await getResourcePermissions(resourceType)
+    if (!permissions[resourceId]) {
+      permissions[resourceId] = {
+        resourceType,
+        resourceId,
+        accounts: [],
+        isPublic: true,
+      }
     }
-  }
+    permissions[resourceId].isPublic = isPublic
+    await setResourcePermissions(resourceType, permissions)
 
-  permissions[resourceId].isPublic = isPublic
-  await setResourcePermissions(resourceType, permissions)
+    // 2. 如果是 app 类型,同时更新 app_index
+    if (resourceType === 'app') {
+      const appIndexResult = await getMetadata(['app_index'])
+      const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
+      
+      const updatedApps = apps.map(app => {
+        if (app.id === resourceId) {
+          return {
+            ...app,
+            accessControl: {
+              isPublic,
+              requireAuth: !isPublic && permissions[resourceId].accounts.length === 0,
+            },
+            updatedAt: new Date().toISOString(),
+          }
+        }
+        return app
+      })
+
+      await setMetadata('app_index', JSON.stringify(updatedApps))
+    }
+  } catch (error) {
+    console.error("Error setting resource public access:", error)
+    throw error
+  }
 }
 
 export const subscriptionService = {
