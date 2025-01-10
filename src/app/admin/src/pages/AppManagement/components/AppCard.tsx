@@ -15,6 +15,8 @@ import {
   ModalBody,
   ModalFooter,
   Input,
+  RadioGroup,
+  Radio,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -30,7 +32,7 @@ interface AppCardProps {
 export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
   const navigate = useNavigate()
   const [newTitle, setNewTitle] = useState(app.title)
-  const { setDeleteModalOpen, setAppToDelete, useRenameApp } = useAppStore()
+  const { setDeleteModalOpen, setAppToDelete, useRenameApp, useUpdateAppConfig } = useAppStore()
   const {
     isOpen: isPermissionModalOpen,
     onOpen: onPermissionModalOpen,
@@ -41,8 +43,20 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
     onOpen: onRenameModalOpen,
     onClose: onRenameModalClose,
   } = useDisclosure()
+  const {
+    isOpen: isAccessControlModalOpen,
+    onOpen: onAccessControlModalOpen,
+    onClose: onAccessControlModalClose,
+  } = useDisclosure()
 
   const { renameApp, isRenaming } = useRenameApp()
+  const { updateAppConfig, isUpdating } = useUpdateAppConfig()
+
+  const [selectedAccess, setSelectedAccess] = useState(() => {
+    if (app.accessControl?.isPublic) return "public"
+    if (app.accessControl?.requireAuth) return "authenticated"
+    return "specified"
+  })
 
   const handleDelete = () => {
     setAppToDelete(app)
@@ -55,6 +69,27 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
       onRenameModalClose()
     } catch (error) {
       console.error("Failed to rename app:", error)
+    }
+  }
+
+  const handleAccessControlSave = async () => {
+    try {
+      await updateAppConfig({
+        appId: app.id,
+        input: {
+          templateIds: app.indexFields?.templateIds || [],
+          reportIds: app.indexFields?.reportIds || [],
+          accessControl: {
+            isPublic: selectedAccess === "public",
+            requireAuth: selectedAccess === "authenticated",
+          },
+        },
+      })
+      message.success("访问控制设置已更新")
+      onAccessControlModalClose()
+    } catch (error) {
+      console.error("Failed to update access control:", error)
+      message.error("更新访问控制设置失败")
     }
   }
 
@@ -101,6 +136,12 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
     }
   }
 
+  const getAccessControlLabel = () => {
+    if (app.accessControl?.isPublic) return "所有用户可访问"
+    if (app.accessControl?.requireAuth) return "所有登录用户可访问"
+    return "指定用户访问"
+  }
+
   return (
     <>
       <Card
@@ -121,7 +162,12 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
             </div>
             <div className='flex-1 min-w-0'>
               <h3 className='text-xl font-bold tracking-tight truncate mb-1'>{app.title}</h3>
-              <p className='text-small text-default-500'>创建于 {new Date(app.createdAt).toLocaleDateString()}</p>
+              <div className='flex items-center gap-2'>
+                <p className='text-small text-default-500'>创建于 {new Date(app.createdAt).toLocaleDateString()}</p>
+                <Chip size='sm' variant='flat' color='default'>
+                  {getAccessControlLabel()}
+                </Chip>
+              </div>
             </div>
           </div>
         </CardBody>
@@ -180,6 +226,13 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
                 onPress={onRenameModalOpen}
               >
                 重命名
+              </DropdownItem>
+              <DropdownItem
+                key='access-control'
+                startContent={<Icon icon='mdi:shield-lock' className='w-4 h-4' />}
+                onPress={onAccessControlModalOpen}
+              >
+                访问控制
               </DropdownItem>
               <DropdownItem
                 key='permissions'
@@ -242,6 +295,61 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
               isDisabled={!newTitle.trim() || newTitle.trim() === app.title}
             >
               确认
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={isAccessControlModalOpen}
+        onClose={onAccessControlModalClose}
+        classNames={{
+          base: "max-w-md",
+          header: "border-b",
+          body: "py-6",
+          footer: "border-t",
+        }}
+      >
+        <ModalContent>
+          <ModalHeader className='flex flex-col gap-1'>
+            <div className='flex items-center gap-2'>
+              <Icon icon='mdi:shield-lock' className='w-5 h-5' />
+              <span>访问控制设置</span>
+            </div>
+          </ModalHeader>
+          <ModalBody>
+            <RadioGroup
+              label='选择访问控制方式'
+              value={selectedAccess}
+              onValueChange={setSelectedAccess}
+              description='设置谁可以访问此应用'
+            >
+              <Radio value='public'>
+                <div className='flex flex-col'>
+                  <span className='text-small font-medium'>所有用户可访问</span>
+                  <span className='text-tiny text-default-400'>任何人都可以访问此应用</span>
+                </div>
+              </Radio>
+              <Radio value='authenticated'>
+                <div className='flex flex-col'>
+                  <span className='text-small font-medium'>所有登录用户可访问</span>
+                  <span className='text-tiny text-default-400'>需要登录后才能访问此应用</span>
+                </div>
+              </Radio>
+              <Radio value='specified'>
+                <div className='flex flex-col'>
+                  <span className='text-small font-medium'>指定用户访问</span>
+                  <span className='text-tiny text-default-400'>仅允许特定用户访问此应用</span>
+                </div>
+              </Radio>
+            </RadioGroup>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant='light' onPress={onAccessControlModalClose}>
+              取消
+            </Button>
+            <Button color='primary' onPress={handleAccessControlSave} isLoading={isUpdating}>
+              保存
             </Button>
           </ModalFooter>
         </ModalContent>

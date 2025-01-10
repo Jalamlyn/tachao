@@ -49,6 +49,10 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
             reportIds: [],
           },
           pages: [],
+          accessControl: {
+            isPublic: true,  // 默认为所有用户可访问
+            requireAuth: false,
+          },
         }
 
         const result = await getMetadata(["app_index"])
@@ -114,6 +118,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
               },
               pages: input.pages || app.pages || [],
               homePageId: input.homePageId || app.homePageId,
+              accessControl: input.accessControl || app.accessControl,
               updatedAt: new Date().toISOString(),
             }
           }

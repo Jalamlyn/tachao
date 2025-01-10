@@ -17,6 +17,10 @@ export interface AppIndex {
     updatedAt?: string
   }>
   homePageId?: string
+  accessControl?: {
+    isPublic: boolean        // 所有用户可访问
+    requireAuth: boolean     // 需要登录才能访问
+  }
 }
 
 export interface CreateAppInput {
@@ -39,6 +43,10 @@ export interface UpdateAppConfigInput {
     updatedAt?: string
   }>
   homePageId?: string
+  accessControl?: {
+    isPublic: boolean
+    requireAuth: boolean
+  }
 }
 
 export interface RenameAppInput {
