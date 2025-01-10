@@ -33,6 +33,18 @@ export default function Component() {
     }
   }, [])
 
+  // 添加账号类型检查
+  useEffect(() => {
+    if (!loading && userInfo) {
+      // 检查是否是内部账号（以nb_开头）
+      const isInternalAccount = userInfo.name?.startsWith('nb_')
+      if (!isInternalAccount) {
+        // 如果不是内部账号，重定向到错误页面
+        navigate("/admin/error")
+      }
+    }
+  }, [loading, userInfo, navigate])
+
   const onToggle = React.useCallback(() => {
     setIsCollapsed((prev) => !prev)
   }, [])
@@ -51,6 +63,15 @@ export default function Component() {
     sessionStorage.clear()
     onLogoutModalClose()
     window.location.href = "/login"
+  }
+
+  // 如果正在加载或没有用户信息，显示加载状态
+  if (loading || !userInfo) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <Spinner size="lg" label="加载中..." />
+      </div>
+    )
   }
 
   return (
