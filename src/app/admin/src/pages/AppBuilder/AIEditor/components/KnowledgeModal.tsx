@@ -18,6 +18,7 @@ import {
   Divider,
   Switch,
   Progress,
+  Card,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
@@ -92,6 +93,15 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
     const success = knowledgeStore.toggleKnowledgeSelection(id)
     if (!success) {
       message.error("选择失败：添加此知识会超过100KB的大小限制")
+    } else {
+      const item = knowledgeList.find(i => i.id === id)
+      if (item) {
+        message.success(
+          item.isSelected 
+            ? "AI 已取消学习此知识" 
+            : "AI 已成功学习此知识，将在对话中参考使用"
+        )
+      }
     }
   }
 
@@ -103,7 +113,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
     { name: "内容预览", uid: "content" },
     { name: "更新时间", uid: "updatedAt" },
     { name: "大小", uid: "size" },
-    { name: "选择", uid: "select" },
+    { name: "AI学习状态", uid: "select" },
     { name: "操作", uid: "actions" },
   ]
 
@@ -137,7 +147,23 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
       case "size":
         return <div className='text-sm'>{knowledgeStore.formatSize(itemSize)}</div>
       case "select":
-        return <Switch isSelected={item.isSelected} onValueChange={() => handleToggleSelection(item.id)} size='sm' />
+        return (
+          <div className="flex items-center gap-2">
+            <Switch 
+              isSelected={item.isSelected} 
+              onValueChange={() => handleToggleSelection(item.id)} 
+              size="sm" 
+            />
+            {item.isSelected && (
+              <Tooltip content="AI 已学习此知识，将在对话中参考使用">
+                <span className="text-primary text-sm flex items-center gap-1">
+                  <Icon icon="solar:brain-linear" className="w-4 h-4" />
+                  已学习
+                </span>
+              </Tooltip>
+            )}
+          </div>
+        )
       case "actions":
         return (
           <div className='flex items-center gap-2'>
@@ -181,6 +207,22 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
         </ModalHeader>
         <ModalBody>
           <div className='space-y-4'>
+            {/* 知识库说明卡片 */}
+            <Card className="bg-default-50 p-3">
+              <div className="flex items-start gap-2">
+                <Icon icon="solar:info-circle-linear" className="text-primary w-5 h-5 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium mb-1">知识库使用说明：</p>
+                  <ul className="text-default-500 space-y-1">
+                    <li>• 选中的知识将被 AI 助手实时学习和参考</li>
+                    <li>• AI 会在对话中结合这些知识提供更准确的回答</li>
+                    <li>• 您可以随时调整选中的知识来优化 AI 的表现</li>
+                    <li>• 选中状态变化时会收到即时反馈提示</li>
+                  </ul>
+                </div>
+              </div>
+            </Card>
+
             <Input 
               label={editingId ? '编辑标题' : '标题'} 
               placeholder='输入标题...' 
@@ -231,7 +273,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
               <div className='space-y-2'>
                 <div className='flex items-center justify-between'>
                   <div className='text-sm text-default-500'>
-                    已选择大小：{knowledgeStore.formatSize(knowledgeStore.selectedKnowledgeSize)} /{" "}
+                    AI 已学习内容大小：{knowledgeStore.formatSize(knowledgeStore.selectedKnowledgeSize)} /{" "}
                     {knowledgeStore.formatSize(knowledgeStore.sizeLimit)}
                   </div>
                   <div className='w-1/2'>
@@ -244,7 +286,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
                 </div>
                 {knowledgeStore.isOverSizeLimit && (
                   <div className='text-danger text-sm'>
-                    警告：已超过大小限制（100KB），部分知识将不会被包含在上下文中
+                    警告：已超过大小限制（100KB），部分知识将不会被 AI 学习和使用
                   </div>
                 )}
               </div>
