@@ -11,6 +11,7 @@ import { jsonParse, jsonStringify } from "@/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import AccountRequest from "./AccountRequest"
 import { useOid } from "./useOid"
+import { PhoneVerification } from "@/components/PhoneVerification"
 
 export default function LoginPage() {
   const { t } = useTranslation()
@@ -20,7 +21,6 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [account, setAccount] = useState("")
   const [password, setPassword] = useState("")
-  const [phone, setPhone] = useState("")
   const [showRequest, setShowRequest] = useState(false)
   const [sloganVisible, setSloganVisible] = useState(false)
 
@@ -52,22 +52,17 @@ export default function LoginPage() {
 
   const toggleVisibility = () => setIsVisible(!isVisible)
 
-  const handleExternalLogin = async () => {
-    const trimmedPhone = phone.trim()
-    if (!trimmedPhone) {
-      return message.error(t("phone_required"))
-    }
-
+  const handleExternalLogin = async (phone: string) => {
     if (!loginData.current.organizationId) {
-      return message.error("请选择企业")
+      return message.error(t("organization_required"))
     }
 
     setLoginLoading(true)
     try {
       const organizationId = loginData.current.organizationId
       const res = await login({
-        account: `wb_${trimmedPhone}`,
-        password: trimmedPhone,
+        account: `wb_${phone}`,
+        password: phone,
         organizationId,
       })
 
@@ -200,27 +195,15 @@ export default function LoginPage() {
                     onSubmit={(e) => e.preventDefault()}
                   >
                     {!hasOidParam && <EnterpriseList loginData={loginData} />}
-                    <Input
-                      isRequired
-                      label={t("phone_number")}
-                      placeholder={t("enter_phone_number")}
-                      type='tel'
-                      variant='bordered'
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      classNames={{
-                        label: "font-medium",
+                    <PhoneVerification
+                      onSuccess={(phone) => {
+                        handleExternalLogin(phone)
+                      }}
+                      onError={(error) => {
+                        console.error("Phone verification failed:", error)
+                        message.error("手机号验证失败，请重试")
                       }}
                     />
-                    <Button
-                      color='primary'
-                      type='submit'
-                      onClick={handleExternalLogin}
-                      isLoading={loginLoading}
-                      className='w-full transition-all duration-300 font-medium shadow-lg hover:shadow-xl'
-                    >
-                      {t("login")}
-                    </Button>
                     <div className='flex items-center justify-center gap-2 mt-4'>
                       <Button
                         variant="light"
