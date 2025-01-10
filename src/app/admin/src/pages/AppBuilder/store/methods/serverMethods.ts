@@ -69,7 +69,6 @@ export async function publishTemplate(this: AppCodeStore, { useLatest = false } 
     }
 
     // 获取当前用户信息
-    debugger
     const userInfo = await getCurrentAccountInfo()
     
     // 生成唯一模板ID

@@ -38,7 +38,6 @@ export const useLoginInfo = (): LoginState => {
         // 检查平台token
         const token = localStorage.getItem(modelBaseUserToken)
         if (token) {
-          debugger
           const userInfo = await getCurrentAccountInfo()
           setLoginInfo({
             type: 'platform',

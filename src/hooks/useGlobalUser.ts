@@ -35,7 +35,6 @@ export const useGlobalUser = () => {
     try {
       setLoading(true)
       setError(null)
-      debugger
       const data = await getCurrentAccountInfo()
       updateGlobalUserInfo(data)
     } catch (err) {

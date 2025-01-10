@@ -29,7 +29,6 @@ const DynamicProcessConfirm: React.FC<DynamicProcessConfirmProps> = ({
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        debugger
         const user = await getCurrentAccountInfo()
         setCurrentUser(user)
       } catch (error) {
