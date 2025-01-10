@@ -1,6 +1,7 @@
 import expenseTrackerTemplate from "../nextui/nextui_expense_tracker"
 import enterpriseBussiness from "../nextui/nextui_delivery"
-import formShareTemplate from "../nextui/nextui_form_share"
+import intelligentFormTemplate from "../nextui/nextui_intelligent_form"
+import formAnalysisTemplate from "../nextui/nextui_form_analysis"
 
 export interface AppTemplate {
   id: string
@@ -8,8 +9,11 @@ export interface AppTemplate {
   description: string
   icon: string
   category: "blank" | "portal" | "enterprise" | "ecommerce" | "ai" | "form"
-  type: "form" | "ai" // 新增type字段用于区分表单应用和智能应用
+  type: "form" | "ai"
   code: string
+  suiteId?: string
+  suiteName?: string
+  suiteOrder?: number
 }
 
 export const templates: Record<string, AppTemplate> = {
@@ -31,13 +35,28 @@ export const templates: Record<string, AppTemplate> = {
     type: "form",
     code: enterpriseBussiness,
   },
-  form_share: {
-    id: "form_share",
-    name: "分享表单",
-    description: "创建可分享的表单，支持在线填写和数据收集。",
-    icon: "fa6-solid:share",
+  intelligent_form: {
+    id: "intelligent_form",
+    name: "智能表单应用",
+    description: "智能化的表单设计与数据收集系统，支持复杂逻辑和智能验证。",
+    icon: "mdi:form-select",
     category: "form",
     type: "form",
-    code: formShareTemplate,
+    code: intelligentFormTemplate,
+    suiteId: "form_suite",
+    suiteName: "智能表单套件",
+    suiteOrder: 1
+  },
+  form_analysis: {
+    id: "form_analysis",
+    name: "表单分析应用",
+    description: "深度分析表单数据，生成可视化报表，提供智能决策支持。",
+    icon: "mdi:chart-box",
+    category: "form",
+    type: "form",
+    code: formAnalysisTemplate,
+    suiteId: "form_suite",
+    suiteName: "智能表单套件",
+    suiteOrder: 2
   }
 }
