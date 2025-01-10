@@ -1,5 +1,50 @@
 export const initialAIResponse = `让我们开始创建一个简单的欢迎页面应用。
 
+<mo-ai-code type="markdown" name="readme" title="应用说明文档">
+# 应用说明文档
+
+## 简介
+这是一个使用 AI 助手创建的应用程序。该应用采用现代化的技术栈和组件库，提供了良好的用户界面和交互体验。
+
+## 功能特性
+- 响应式设计：适配不同屏幕尺寸
+- 现代化UI：使用 NextUI 组件库
+- 路由管理：使用 React Router 进行页面导航
+- 状态管理：采用 MobX 进行状态管理
+
+## 项目结构
+\`\`\`
+├── App.jsx          # 应用入口
+└── pages/
+    └── HomePage/    # 首页模块
+\`\`\`
+
+## 开发指南
+1. 使用 AI 助手：
+   - 在左侧输入您的需求
+   - AI 将帮助您开发新功能或修改现有功能
+
+2. 自定义开发：
+   - 遵循 React 最佳实践
+   - 使用 NextUI 组件库构建界面
+   - 使用 MobX 进行状态管理
+
+## 技术栈
+- React
+- NextUI
+- React Router
+- MobX
+- Tailwind CSS
+
+## 后续计划
+- 添加更多功能模块
+- 优化用户体验
+- 完善文档说明
+
+## 贡献指南
+欢迎提供建议和反馈，一起改进这个应用！
+</mo-ai-code>
+
 \`\`\`jsx
 <mo-ai-code type="app">
 const { 
