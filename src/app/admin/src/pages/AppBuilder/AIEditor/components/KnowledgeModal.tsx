@@ -19,6 +19,7 @@ import {
   Switch,
   Progress,
   Card,
+  Chip,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
@@ -36,9 +37,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
   const [searchQuery, setSearchQuery] = useState("")
   const [editingId, setEditingId] = useState<string | null>(null)
 
-  const knowledgeList = searchQuery.trim() 
-    ? knowledgeStore.searchKnowledge(searchQuery)
-    : knowledgeStore.knowledgeList
+  const knowledgeList = searchQuery.trim() ? knowledgeStore.searchKnowledge(searchQuery) : knowledgeStore.knowledgeList
 
   const handleAddKnowledge = () => {
     if (!title.trim() || !content.trim()) {
@@ -63,7 +62,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
   }
 
   const handleEdit = (id: string) => {
-    const item = knowledgeList.find(item => item.id === id)
+    const item = knowledgeList.find((item) => item.id === id)
     if (item) {
       setEditingId(id)
       setTitle(item.title)
@@ -94,13 +93,9 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
     if (!success) {
       message.error("选择失败：添加此知识会超过100KB的大小限制")
     } else {
-      const item = knowledgeList.find(i => i.id === id)
+      const item = knowledgeList.find((i) => i.id === id)
       if (item) {
-        message.success(
-          item.isSelected 
-            ? "AI 已取消学习此知识" 
-            : "AI 已成功学习此知识，将在对话中参考使用"
-        )
+        message.success(item.isSelected ? "AI 已取消学习此知识" : "AI 已成功学习此知识，将在对话中参考使用")
       }
     }
   }
@@ -148,17 +143,15 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
         return <div className='text-sm'>{knowledgeStore.formatSize(itemSize)}</div>
       case "select":
         return (
-          <div className="flex items-center gap-2">
-            <Switch 
-              isSelected={item.isSelected} 
-              onValueChange={() => handleToggleSelection(item.id)} 
-              size="sm" 
-            />
+          <div className='flex items-center gap-2'>
+            <Switch isSelected={item.isSelected} onValueChange={() => handleToggleSelection(item.id)} size='sm' />
             {item.isSelected && (
-              <Tooltip content="AI 已学习此知识，将在对话中参考使用">
-                <span className="text-primary text-sm flex items-center gap-1">
-                  <Icon icon="solar:brain-linear" className="w-4 h-4" />
-                  已学习
+              <Tooltip content='AI 已学习此知识，将在对话中参考使用'>
+                <span className='text-primary text-sm flex items-center gap-1'>
+                  <Icon icon='solar:brain-linear' className='w-4 h-4' />
+                  <Chip size='sm' color='success' className='text-white'>
+                    已学习
+                  </Chip>
                 </span>
               </Tooltip>
             )}
@@ -168,13 +161,13 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
         return (
           <div className='flex items-center gap-2'>
             <Tooltip content='编辑'>
-              <Button 
-                isIconOnly 
-                size='sm' 
-                variant='light' 
+              <Button
+                isIconOnly
+                size='sm'
+                variant='light'
                 color='primary'
                 onPress={() => handleEdit(item.id)}
-                className={editingId === item.id ? 'bg-primary/20' : ''}
+                className={editingId === item.id ? "bg-primary/20" : ""}
               >
                 <Icon icon='solar:pen-2-linear' />
               </Button>
@@ -192,12 +185,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
   }
 
   return (
-    <Modal
-      scrollBehavior='inside'
-      isOpen={isOpen}
-      onClose={onClose}
-      size='3xl'
-    >
+    <Modal scrollBehavior='inside' isOpen={isOpen} onClose={onClose} size='3xl'>
       <ModalContent>
         <ModalHeader className='flex flex-col gap-1'>
           <div className='flex items-center gap-2'>
@@ -208,12 +196,12 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
         <ModalBody>
           <div className='space-y-4'>
             {/* 知识库说明卡片 */}
-            <Card className="bg-default-50 p-3">
-              <div className="flex items-start gap-2">
-                <Icon icon="solar:info-circle-linear" className="text-primary w-5 h-5 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium mb-1">知识库使用说明：</p>
-                  <ul className="text-default-500 space-y-1">
+            <Card className='bg-default-50 p-3'>
+              <div className='flex items-start gap-2'>
+                <Icon icon='solar:info-circle-linear' className='text-primary w-5 h-5 mt-0.5' />
+                <div className='text-sm'>
+                  <p className='font-medium mb-1'>知识库使用说明：</p>
+                  <ul className='text-default-500 space-y-1'>
                     <li>• 选中的知识将被 AI 助手实时学习和参考</li>
                     <li>• AI 会在对话中结合这些知识提供更准确的回答</li>
                     <li>• 您可以随时调整选中的知识来优化 AI 的表现</li>
@@ -223,14 +211,14 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
               </div>
             </Card>
 
-            <Input 
-              label={editingId ? '编辑标题' : '标题'} 
-              placeholder='输入标题...' 
-              value={title} 
-              onChange={(e) => setTitle(e.target.value)} 
+            <Input
+              label={editingId ? "编辑标题" : "标题"}
+              placeholder='输入标题...'
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
             />
             <Textarea
-              label={editingId ? '编辑内容' : '知识内容'}
+              label={editingId ? "编辑内容" : "知识内容"}
               placeholder='输入知识内容...'
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -241,7 +229,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
                 <Button
                   variant='light'
                   onPress={handleCancelEdit}
-                  startContent={<Icon icon="solar:close-circle-linear" />}
+                  startContent={<Icon icon='solar:close-circle-linear' />}
                 >
                   取消编辑
                 </Button>
@@ -251,7 +239,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
                 onPress={handleAddKnowledge}
                 startContent={<Icon icon={editingId ? "solar:pen-2-linear" : "solar:add-circle-linear"} />}
               >
-                {editingId ? '保存修改' : '添加知识'}
+                {editingId ? "保存修改" : "添加知识"}
               </Button>
             </div>
 
@@ -315,11 +303,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button
-            color='danger'
-            variant='light'
-            onPress={onClose}
-          >
+          <Button color='danger' variant='light' onPress={onClose}>
             关闭
           </Button>
         </ModalFooter>
