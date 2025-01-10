@@ -6,25 +6,18 @@ interface KnowledgeItem {
   content: string
   createdAt: number
   updatedAt: number
+  isSelected: boolean
 }
 
 class KnowledgeStore {
   private static instance: KnowledgeStore
   private readonly STORAGE_KEY = "mo_knowledge_store"
+  private readonly MAX_CONTEXT_SIZE = 100 * 1024 // 100KB限制
 
-  // 使用 observable 标记响应式数据
   knowledge: Record<string, KnowledgeItem> = {}
 
   private constructor() {
-    makeAutoObservable(this, {
-      // 明确指定计算属性
-      knowledgeList: computed,
-      // 明确指定动作
-      addKnowledge: true,
-      updateKnowledge: true,
-      removeKnowledge: true,
-      clear: true
-    })
+    makeAutoObservable(this)
     this.loadFromStorage()
   }
 
@@ -41,6 +34,11 @@ class KnowledgeStore {
       if (stored) {
         runInAction(() => {
           this.knowledge = JSON.parse(stored)
+          Object.values(this.knowledge).forEach((item) => {
+            if (typeof item.isSelected === "undefined") {
+              item.isSelected = false
+            }
+          })
         })
       }
     } catch (error) {
@@ -59,23 +57,32 @@ class KnowledgeStore {
     }
   }
 
-  // 使用计算属性优化派生数据
   get knowledgeList() {
     return Object.values(this.knowledge).sort((a, b) => b.updatedAt - a.updatedAt)
   }
 
-  // 生成唯一ID的方法
-  private generateId(prefix: string = 'k'): string {
-    const timestamp = Date.now()
-    const randomStr = Math.random().toString(36).substring(2, 8)
-    return `${prefix}-${timestamp}-${randomStr}`
+  get selectedKnowledgeSize() {
+    return Object.values(this.knowledge)
+      .filter((item) => item.isSelected)
+      .reduce((total, item) => total + new Blob([item.title, item.content]).size, 0)
   }
 
-  // 添加知识的动作
+  get isOverSizeLimit() {
+    return this.selectedKnowledgeSize > this.MAX_CONTEXT_SIZE
+  }
+
+  get sizeLimit() {
+    return this.MAX_CONTEXT_SIZE
+  }
+
+  private generateId(): string {
+    return `k-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
+  }
+
   addKnowledge(id: string | null, title: string, content: string) {
     const timestamp = Date.now()
     const actualId = id || this.generateId()
-    
+
     runInAction(() => {
       this.knowledge[actualId] = {
         id: actualId,
@@ -83,14 +90,14 @@ class KnowledgeStore {
         content,
         createdAt: timestamp,
         updatedAt: timestamp,
+        isSelected: false,
       }
     })
-    
+
     this.saveToStorage()
     return actualId
   }
 
-  // 更新知识的动作
   updateKnowledge(id: string, updates: Partial<KnowledgeItem>) {
     if (this.knowledge[id]) {
       runInAction(() => {
@@ -104,7 +111,29 @@ class KnowledgeStore {
     }
   }
 
-  // 删除知识的动作
+  toggleKnowledgeSelection(id: string): boolean {
+    const item = this.knowledge[id]
+    if (!item) return false
+
+    const newIsSelected = !item.isSelected
+    if (newIsSelected) {
+      const newSize = this.selectedKnowledgeSize + new Blob([item.title, item.content]).size
+      if (newSize > this.MAX_CONTEXT_SIZE) {
+        return false
+      }
+    }
+
+    runInAction(() => {
+      this.knowledge[id] = {
+        ...item,
+        isSelected: newIsSelected,
+        updatedAt: Date.now(),
+      }
+    })
+    this.saveToStorage()
+    return true
+  }
+
   removeKnowledge(id: string) {
     runInAction(() => {
       delete this.knowledge[id]
@@ -112,17 +141,21 @@ class KnowledgeStore {
     this.saveToStorage()
   }
 
-  // 清空知识的动作
-  clear() {
-    runInAction(() => {
-      this.knowledge = {}
-    })
-    this.saveToStorage()
+  searchKnowledge(query: string): KnowledgeItem[] {
+    const lowercaseQuery = query.toLowerCase()
+    return this.knowledgeList.filter(
+      (item) => item.title.toLowerCase().includes(lowercaseQuery) || item.content.toLowerCase().includes(lowercaseQuery)
+    )
   }
 
-  // 获取知识上下文
   getKnowledgeContext(): string {
-    return this.knowledgeList
+    const selectedKnowledge = Object.values(this.knowledge).filter((item) => item.isSelected)
+
+    if (this.isOverSizeLimit) {
+      return "警告：选中的知识内容超过大小限制（100KB），请取消选择一些知识。"
+    }
+
+    return selectedKnowledge
       .map(
         (item) => `
 知识ID: ${item.id}
@@ -134,13 +167,10 @@ ${item.content}
       .join("\n---\n")
   }
 
-  // 搜索知识的计算属性方法
-  searchKnowledge(query: string): KnowledgeItem[] {
-    const lowercaseQuery = query.toLowerCase()
-    return this.knowledgeList.filter(
-      (item) => item.title.toLowerCase().includes(lowercaseQuery) || 
-                item.content.toLowerCase().includes(lowercaseQuery)
-    )
+  formatSize(bytes: number): string {
+    if (bytes < 1024) return bytes + " B"
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB"
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB"
   }
 }
 

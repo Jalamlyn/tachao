@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react"
+import React, { useState } from "react"
 import {
   Modal,
   ModalContent,
@@ -14,10 +14,10 @@ import {
   TableColumn,
   TableRow,
   TableCell,
-  useDisclosure,
   Tooltip,
-  Chip,
   Divider,
+  Switch,
+  Progress,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
@@ -33,15 +33,10 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
-  const [editingId, setEditingId] = useState<string | null>(null)
 
-  // 使用计算值，MobX 会自动追踪依赖
-  const filteredKnowledge = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return knowledgeStore.knowledgeList
-    }
-    return knowledgeStore.searchKnowledge(searchQuery)
-  }, [searchQuery])
+  const knowledgeList = searchQuery.trim() 
+    ? knowledgeStore.searchKnowledge(searchQuery)
+    : knowledgeStore.knowledgeList
 
   const handleAddKnowledge = () => {
     if (!title.trim() || !content.trim()) {
@@ -50,25 +45,12 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
     }
 
     try {
-      if (editingId) {
-        knowledgeStore.updateKnowledge(editingId, { title, content })
-        message.success("知识更新成功")
-      } else {
-        const newId = knowledgeStore.addKnowledge(null, title, content)
-        message.success("知识添加成功")
-      }
-      resetForm()
+      knowledgeStore.addKnowledge(null, title, content)
+      message.success("知识添加成功")
+      setTitle("")
+      setContent("")
     } catch (error) {
       message.error("操作失败：" + (error instanceof Error ? error.message : "未知错误"))
-    }
-  }
-
-  const handleEdit = (id: string) => {
-    const item = knowledgeStore.knowledge[id]
-    if (item) {
-      setEditingId(id)
-      setTitle(item.title)
-      setContent(item.content)
     }
   }
 
@@ -76,29 +58,33 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
     try {
       knowledgeStore.removeKnowledge(id)
       message.success("知识已删除")
-      if (editingId === id) {
-        resetForm()
-      }
     } catch (error) {
       message.error("删除失败：" + (error instanceof Error ? error.message : "未知错误"))
     }
   }
 
-  const resetForm = () => {
-    setEditingId(null)
-    setTitle("")
-    setContent("")
+  const handleToggleSelection = (id: string) => {
+    const success = knowledgeStore.toggleKnowledgeSelection(id)
+    if (!success) {
+      message.error("选择失败：添加此知识会超过100KB的大小限制")
+    }
   }
+
+  const usageProgress = (knowledgeStore.selectedKnowledgeSize / knowledgeStore.sizeLimit) * 100
 
   const columns = [
     { name: "ID", uid: "id" },
     { name: "标题", uid: "title" },
     { name: "内容预览", uid: "content" },
     { name: "更新时间", uid: "updatedAt" },
+    { name: "大小", uid: "size" },
+    { name: "选择", uid: "select" },
     { name: "操作", uid: "actions" },
   ]
 
   const renderCell = (item: any, columnKey: React.Key) => {
+    const itemSize = new Blob([item.title, item.content]).size
+
     switch (columnKey) {
       case "id":
         return (
@@ -123,14 +109,13 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
         return <div className='text-sm text-default-500 max-w-[300px] truncate'>{item.content}</div>
       case "updatedAt":
         return <div className='text-sm text-default-400'>{new Date(item.updatedAt).toLocaleString()}</div>
+      case "size":
+        return <div className='text-sm'>{knowledgeStore.formatSize(itemSize)}</div>
+      case "select":
+        return <Switch isSelected={item.isSelected} onValueChange={() => handleToggleSelection(item.id)} size='sm' />
       case "actions":
         return (
           <div className='flex items-center gap-2'>
-            <Tooltip content='编辑'>
-              <Button isIconOnly size='sm' variant='light' onPress={() => handleEdit(item.id)}>
-                <Icon icon='solar:pen-linear' className='text-default-400' />
-              </Button>
-            </Tooltip>
             <Tooltip content='删除' color='danger'>
               <Button isIconOnly size='sm' variant='light' color='danger' onPress={() => handleDelete(item.id)}>
                 <Icon icon='solar:trash-bin-trash-linear' />
@@ -147,10 +132,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
     <Modal
       scrollBehavior='inside'
       isOpen={isOpen}
-      onClose={() => {
-        resetForm()
-        onClose()
-      }}
+      onClose={onClose}
       size='3xl'
     >
       <ModalContent>
@@ -171,28 +153,18 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
               minRows={3}
             />
             <div className='flex justify-end gap-2'>
-              {editingId && (
-                <Button
-                  color='danger'
-                  variant='light'
-                  onPress={resetForm}
-                  startContent={<Icon icon='solar:close-circle-linear' />}
-                >
-                  取消编辑
-                </Button>
-              )}
               <Button
                 color='primary'
                 onPress={handleAddKnowledge}
-                startContent={<Icon icon={editingId ? "solar:pen-linear" : "solar:add-circle-linear"} />}
+                startContent={<Icon icon="solar:add-circle-linear" />}
               >
-                {editingId ? "更新知识" : "添加知识"}
+                添加知识
               </Button>
             </div>
 
             <Divider />
 
-            <div className='space-y-2'>
+            <div className='space-y-4'>
               <div className='flex items-center justify-between'>
                 <span className='text-lg font-medium'>知识列表</span>
                 <Input
@@ -203,6 +175,27 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
                   startContent={<Icon icon='solar:magnifer-linear' className='text-default-400' />}
                   className='w-64'
                 />
+              </div>
+
+              <div className='space-y-2'>
+                <div className='flex items-center justify-between'>
+                  <div className='text-sm text-default-500'>
+                    已选择大小：{knowledgeStore.formatSize(knowledgeStore.selectedKnowledgeSize)} /{" "}
+                    {knowledgeStore.formatSize(knowledgeStore.sizeLimit)}
+                  </div>
+                  <div className='w-1/2'>
+                    <Progress
+                      size='sm'
+                      value={usageProgress}
+                      color={usageProgress > 90 ? "danger" : usageProgress > 70 ? "warning" : "primary"}
+                    />
+                  </div>
+                </div>
+                {knowledgeStore.isOverSizeLimit && (
+                  <div className='text-danger text-sm'>
+                    警告：已超过大小限制（100KB），部分知识将不会被包含在上下文中
+                  </div>
+                )}
               </div>
 
               <Table aria-label='知识列表'>
@@ -217,7 +210,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
                     </TableColumn>
                   )}
                 </TableHeader>
-                <TableBody items={filteredKnowledge}>
+                <TableBody items={knowledgeList}>
                   {(item) => (
                     <TableRow key={item.id}>
                       {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
@@ -232,10 +225,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
           <Button
             color='danger'
             variant='light'
-            onPress={() => {
-              resetForm()
-              onClose()
-            }}
+            onPress={onClose}
           >
             关闭
           </Button>
