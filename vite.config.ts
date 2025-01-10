@@ -43,6 +43,7 @@ export default defineConfig({
           recharts: ["recharts"],
           "react-markdown": ["react-markdown"],
           "@visactor/react-vtable": ["@visactor/react-vtable"],
+          localStorage: ["localforage"],
           babel: ["@babel/standalone"],
           mermaid: ["mermaid"],
           xlsx: ["xlsx"],
