@@ -27,7 +27,7 @@ apiService.interceptors.request.use(
       config.headers["token"] = `${token}`
     }
     const appId = getAppId()
-    if (appId && !config.headers["x-app"]) {
+    if (appId !== "null" && appId && !config.headers["x-app"]) {
       config.headers["x-app"] = appId
     }
     return config
@@ -42,25 +42,25 @@ apiService.interceptors.response.use(
   (error) => {
     console.log(error)
     if (error.response) {
-      if (error.response.status === 401) {
-        // 保存当前的完整 URL
-        const currentUrl = window.location.href
-        // 排除登录页面本身，避免循环
-        const isHomePage = window.location.pathname === "/"
-        if (!currentUrl.includes("/login") && !isHomePage) {
-          localStorage.removeItem(modelBaseUserToken)
-          // 将当前 URL 编码后作为 callback 参数
-          const encodedCallback = encodeURIComponent(currentUrl)
-          window.location.href = `/login?callback=${encodedCallback}`
-        }
-      } else if (error.response.data.code === 400) {
-        if (error.response.data.data) {
-          message.error(error.response.data.data.message)
-        }
-        if (error.response.data.message) {
-          message.error(error.response.data.message)
-        }
-      }
+      // if (error.response.status === 401) {
+      //   // 保存当前的完整 URL
+      //   const currentUrl = window.location.href
+      //   // 排除登录页面本身，避免循环
+      //   const isHomePage = window.location.pathname === "/"
+      //   if (!currentUrl.includes("/login") && !isHomePage) {
+      //     localStorage.removeItem(modelBaseUserToken)
+      //     // 将当前 URL 编码后作为 callback 参数
+      //     const encodedCallback = encodeURIComponent(currentUrl)
+      //     window.location.href = `/login?callback=${encodedCallback}`
+      //   }
+      // } else if (error.response.data.code === 400) {
+      //   if (error.response.data.data) {
+      //     message.error(error.response.data.data.message)
+      //   }
+      //   if (error.response.data.message) {
+      //     message.error(error.response.data.message)
+      //   }
+      // }
     }
     return Promise.reject(error)
   }

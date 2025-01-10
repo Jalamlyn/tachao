@@ -8,6 +8,7 @@ import { observer } from "mobx-react-lite"
 import { appCodeStore } from "../store/appCodeStore"
 import { context } from "./functionContext"
 import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
+import { localDB } from "@/utils/localDB"
 
 interface PreviewPageProps {
   appId: string
@@ -29,7 +30,9 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
       try {
         setIsLoading(true)
         setError(null)
-
+        const pAppId = appId.split("_")[2]
+        const organizationId = appId.split("_")[1]
+        localDB.setAppId({ id: pAppId, organizationId })
         // 1. 先设置 appId
         appCodeStore.setAppId(appId)
 
@@ -38,13 +41,13 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
         if (!version) {
           throw new Error("Failed to load app")
         }
-        
+
         setAppInfo(version.app)
 
         // 3. 准备执行上下文
         // 4. 执行所有模块
         const results = await appCodeStore.executeModules(context(appId))
-        
+
         // 5. 检查执行结果
         const errors = results.filter((r) => !r.success)
         if (errors.length > 0) {
@@ -112,7 +115,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
 
   // 其他情况使用权限检查组件
   return (
-    <PermissionCheck resourceType="app" resourceId={appId}>
+    <PermissionCheck resourceType='app' resourceId={appId}>
       {content}
     </PermissionCheck>
   )

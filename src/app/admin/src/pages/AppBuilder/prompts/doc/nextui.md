@@ -349,3 +349,38 @@ export default function App() {
   )
 }
 ```
+
+## Listbox Component
+
+```jsx
+export default function App() {
+  return (
+    <Listbox
+      aria-label='User Menu'
+      className='p-0 gap-0 divide-y divide-default-300/50 dark:divide-default-100/80 bg-content1 max-w-[300px] overflow-visible shadow-small rounded-medium'
+      itemClasses={{
+        base: "px-3 first:rounded-t-medium last:rounded-b-medium rounded-none gap-3 h-12 data-[hover=true]:bg-default-100/80",
+      }}
+      onAction={(key) => alert(key)}
+    >
+      <ListboxItem
+        key='issues'
+        href='#issues'
+        endContent={<ItemCounter number={13} />}
+        startContent={<IconWrapper icon={bugIcon} className='bg-success/10 text-success' />}
+      >
+        Issues
+      </ListboxItem>
+      <ListboxItem
+        key='pull_requests'
+        href='#pull_requests'
+        endContent={<ItemCounter number={6} />}
+        startContent={<IconWrapper icon={pullRequestIcon} className='bg-primary/10 text-primary' />}
+      >
+        Pull Requests
+      </ListboxItem>
+      {/* Repeat for other ListboxItem components, replacing icons and adding href as needed */}
+    </Listbox>
+  )
+}
+```

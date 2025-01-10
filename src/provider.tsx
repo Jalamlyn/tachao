@@ -175,6 +175,7 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
 
       // 其他情况继续执行原有的初始化逻辑
       if (isInit && !location.pathname.includes("/login")) {
+        await checkInitialization()
         const actualBalance = await calculateActualBalance()
         balanceStore.setActualBalance(actualBalance)
         globalStore.actualBalance = actualBalance
@@ -186,9 +187,18 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
   }, [isInit])
 
   const checkInitialization = async () => {
+    const currentPath = location.pathname
+
+    // 检查是否是特殊路径
+    const isAppRunOrPreview = currentPath.includes("/app-run/") || currentPath.includes("/app-preview/")
+    if (isAppRunOrPreview) {
+      setAppIdReady(true)
+      setIsInit(true)
+      return
+    }
     try {
       const appId = localDB.getAppId()
-      if (!appId) {
+      if (!appId || appId == "null") {
         const projectResponse = await queryMyProject({
           name: "默认企业项目",
         })

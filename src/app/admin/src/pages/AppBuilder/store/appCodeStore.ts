@@ -32,6 +32,9 @@ import {
   toggleUseSelectedModulesAsContext,
   getSelectedModulesInfo,
 } from "./methods/viewMethods"
+import { getAppId } from "@/utils"
+import globalStore from "@/globalStore"
+import { localDB } from "@/utils/localDB"
 
 class AppCodeStore {
   #appId: string | null = null
@@ -127,7 +130,9 @@ class AppCodeStore {
   generateId(): string {
     const timestamp = Date.now()
     const random = Math.random().toString(36).substring(2, 8)
-    return `app_${timestamp}_${random}`
+    const pAppId = localDB.getAppId()
+    const organizationId = localDB.getOrganizationId()
+    return `app_${organizationId}_${pAppId}_${timestamp}_${random}`
   }
 }
 

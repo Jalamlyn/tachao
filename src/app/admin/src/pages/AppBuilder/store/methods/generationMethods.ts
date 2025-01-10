@@ -2,6 +2,7 @@ import { getMetadata, getPlatMetaData, getPublicMetaData } from "@/service/apis/
 import { initialAIResponse } from "../../prompts/nextui/initTemplate"
 import { templates } from "../../prompts/prompt/templates"
 import { AppCodeStore, Version, AIGenerationResult } from "../types"
+import { localDB } from "@/utils/localDB"
 async function checkAppNameExists(name: string): Promise<boolean> {
   const appIndexResult = await getMetadata(["app_index"])
   const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []

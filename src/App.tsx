@@ -11,6 +11,7 @@ import LandingPage from "./app/landing/App"
 import AdminRouter from "./app/admin/router"
 import UnauthorizedPage from "./app/admin/src/permissions/pages/UnauthorizedPage"
 import { Provider } from "./provider"
+import ErrorPage from "./app/admin/ErrorPage"
 
 setTimeout(() => {
   loadBMapScript()
@@ -42,6 +43,8 @@ function App() {
             <Route path='/' element={<LandingPage />} />
             <Route path='/login' element={<LoginPage />} />
             <Route path='/unauthorized' element={<UnauthorizedPage />} />
+            <Route path='error' element={<ErrorPage />} />
+
             {/* <Route path='/operations/wait-list' element={<WaitListPage />} /> */}
             {AdminRouter()}
           </Routes>

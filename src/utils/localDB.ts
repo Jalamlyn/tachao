@@ -38,6 +38,7 @@ export const localDB = {
   setAppId: ({ id, organizationId }) => {
     currentAppId = id
     localStorage.setItem("@@appId", id)
+    localStorage.setItem("@@organizationId", organizationId)
     globalStore.organizationId = organizationId
     globalStore.appId = id
   },
@@ -49,6 +50,12 @@ export const localDB = {
       if (localStorage.getItem("@@appId")) {
         return localStorage.getItem("@@appId")
       }
+    }
+    return null
+  },
+  getOrganizationId: () => {
+    if (localStorage.getItem("@@organizationId")) {
+      return localStorage.getItem("@@organizationId")
     }
     return null
   },

@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom"
 import { AppIndex, useAppStore } from "../store/useAppStore"
 import { PermissionModal } from "@/app/admin/src/permissions/components/PermissionModal"
 import message from "@/components/Message"
+import { color } from "framer-motion"
 
 interface AppCardProps {
   app: AppIndex
@@ -102,9 +103,20 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
   }
 
   const getAccessControlLabel = () => {
-    if (app.accessControl?.isPublic) return "所有用户可访问"
-    if (app.accessControl?.requireAuth) return "所有登录用户可访问"
-    return "指定用户访问"
+    if (app.accessControl?.isPublic)
+      return {
+        color: "success",
+        label: "所有用户可访问",
+      }
+    if (app.accessControl?.requireAuth)
+      return {
+        color: "primary",
+        label: "所有登录用户可访问",
+      }
+    return {
+      color: "default",
+      label: "指定用户可访问",
+    }
   }
 
   return (
@@ -129,8 +141,8 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
               <h3 className='text-xl font-bold tracking-tight truncate mb-1'>{app.title}</h3>
               <div className='flex items-center gap-2'>
                 <p className='text-small text-default-500'>创建于 {new Date(app.createdAt).toLocaleDateString()}</p>
-                <Chip size='sm' variant='flat' color='default'>
-                  {getAccessControlLabel()}
+                <Chip size='sm' variant='flat' color={getAccessControlLabel().color}>
+                  {getAccessControlLabel().label}
                 </Chip>
               </div>
             </div>
@@ -179,7 +191,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
             </DropdownTrigger>
             <DropdownMenu aria-label='应用操作'>
               <DropdownItem
-                key='rename'
+                key='copy-id'
                 startContent={
                   <Icon
                     icon='mdi:content-copy'
