@@ -105,7 +105,7 @@ export async function handleAIGeneration(
   }
 }
 
-export async function loadApp(this: AppCodeStore, appId: string) {
+export async function loadApp(this: AppCodeStore, appId: string, appInfo: any) {
   this.setAppId(appId)
 
   try {

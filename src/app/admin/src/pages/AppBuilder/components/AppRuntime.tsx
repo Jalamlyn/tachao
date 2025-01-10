@@ -9,6 +9,7 @@ import { appCodeStore } from "../store/appCodeStore"
 import { context } from "./functionContext"
 import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
 import { localDB } from "@/utils/localDB"
+import { getMetadata, getPublicMetaData } from "@/service/apis/metadata"
 
 interface PreviewPageProps {
   appId: string
@@ -35,14 +36,13 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
         localDB.setAppId({ id: pAppId, organizationId })
         // 1. 先设置 appId
         appCodeStore.setAppId(appId)
-
         // 2. 加载应用数据
         const version = await appCodeStore.loadApp(appId)
         if (!version) {
           throw new Error("Failed to load app")
         }
 
-        setAppInfo(version.app)
+        setAppInfo(appInfo)
 
         // 3. 准备执行上下文
         // 4. 执行所有模块
