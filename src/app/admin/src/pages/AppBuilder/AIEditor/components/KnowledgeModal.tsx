@@ -6,7 +6,6 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Textarea,
   Input,
   Table,
   TableHeader,
@@ -15,16 +14,15 @@ import {
   TableRow,
   TableCell,
   Tooltip,
-  Divider,
   Switch,
   Progress,
   Card,
-  Chip,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
 import { knowledgeStore } from "./KnowledgeStore"
 import message from "@/components/Message"
+import KnowledgeEditModal from "./KnowledgeEditModal"
 
 interface KnowledgeModalProps {
   isOpen: boolean
@@ -32,56 +30,31 @@ interface KnowledgeModalProps {
 }
 
 export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen, onClose }) => {
-  const [title, setTitle] = useState("")
-  const [content, setContent] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingItem, setEditingItem] = useState<{
+    id: string
+    title: string
+    content: string
+  } | null>(null)
 
   const knowledgeList = searchQuery.trim() ? knowledgeStore.searchKnowledge(searchQuery) : knowledgeStore.knowledgeList
-
-  const handleAddKnowledge = () => {
-    if (!title.trim() || !content.trim()) {
-      message.error("标题和内容不能为空")
-      return
-    }
-
-    try {
-      if (editingId) {
-        knowledgeStore.updateKnowledge(editingId, { title, content })
-        message.success("知识更新成功")
-        setEditingId(null)
-      } else {
-        knowledgeStore.addKnowledge(null, title, content)
-        message.success("知识添加成功")
-      }
-      setTitle("")
-      setContent("")
-    } catch (error) {
-      message.error("操作失败：" + (error instanceof Error ? error.message : "未知错误"))
-    }
-  }
 
   const handleEdit = (id: string) => {
     const item = knowledgeList.find((item) => item.id === id)
     if (item) {
-      setEditingId(id)
-      setTitle(item.title)
-      setContent(item.content)
+      setEditingItem({
+        id: item.id,
+        title: item.title,
+        content: item.content,
+      })
+      setShowEditModal(true)
     }
-  }
-
-  const handleCancelEdit = () => {
-    setEditingId(null)
-    setTitle("")
-    setContent("")
   }
 
   const handleDelete = (id: string) => {
     try {
       knowledgeStore.removeKnowledge(id)
-      if (editingId === id) {
-        handleCancelEdit()
-      }
       message.success("知识已删除")
     } catch (error) {
       message.error("删除失败：" + (error instanceof Error ? error.message : "未知错误"))
@@ -118,11 +91,11 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
     switch (columnKey) {
       case "id":
         return (
-          <div className='flex items-center gap-2'>
-            <Icon icon='solar:document-text-linear' className='text-default-400 w-5 h-5' />
-            <Tooltip content='点击复制ID'>
+          <div className="flex items-center gap-2">
+            <Icon icon="solar:document-text-linear" className="text-default-400 w-5 h-5" />
+            <Tooltip content="点击复制ID">
               <span
-                className='text-sm cursor-pointer hover:text-primary'
+                className="text-sm cursor-pointer hover:text-primary"
                 onClick={() => {
                   navigator.clipboard.writeText(item.id)
                   message.success("ID已复制到剪贴板")
@@ -134,24 +107,22 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
           </div>
         )
       case "title":
-        return <div className='font-medium'>{item.title}</div>
+        return <div className="font-medium">{item.title}</div>
       case "content":
-        return <div className='text-sm text-default-500 max-w-[300px] truncate'>{item.content}</div>
+        return <div className="text-sm text-default-500 max-w-[300px] truncate">{item.content}</div>
       case "updatedAt":
-        return <div className='text-sm text-default-400'>{new Date(item.updatedAt).toLocaleString()}</div>
+        return <div className="text-sm text-default-400">{new Date(item.updatedAt).toLocaleString()}</div>
       case "size":
-        return <div className='text-sm'>{knowledgeStore.formatSize(itemSize)}</div>
+        return <div className="text-sm">{knowledgeStore.formatSize(itemSize)}</div>
       case "select":
         return (
-          <div className='flex items-center gap-2'>
-            <Switch isSelected={item.isSelected} onValueChange={() => handleToggleSelection(item.id)} size='sm' />
+          <div className="flex items-center gap-2">
+            <Switch isSelected={item.isSelected} onValueChange={() => handleToggleSelection(item.id)} size="sm" />
             {item.isSelected && (
-              <Tooltip content='AI 已学习此知识，将在对话中参考使用'>
-                <span className='text-primary text-sm flex items-center gap-1'>
-                  <Icon icon='solar:brain-linear' className='w-4 h-4' />
-                  <Chip size='sm' color='success' className='text-white'>
-                    已学习
-                  </Chip>
+              <Tooltip content="AI 已学习此知识，将在对话中参考使用">
+                <span className="text-primary text-sm flex items-center gap-1">
+                  <Icon icon="solar:brain-linear" className="w-4 h-4" />
+                  已学习
                 </span>
               </Tooltip>
             )}
@@ -159,22 +130,21 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
         )
       case "actions":
         return (
-          <div className='flex items-center gap-2'>
-            <Tooltip content='编辑'>
+          <div className="flex items-center gap-2">
+            <Tooltip content="编辑">
               <Button
                 isIconOnly
-                size='sm'
-                variant='light'
-                color='primary'
+                size="sm"
+                variant="light"
+                color="primary"
                 onPress={() => handleEdit(item.id)}
-                className={editingId === item.id ? "bg-primary/20" : ""}
               >
-                <Icon icon='solar:pen-2-linear' />
+                <Icon icon="solar:pen-2-linear" />
               </Button>
             </Tooltip>
-            <Tooltip content='删除' color='danger'>
-              <Button isIconOnly size='sm' variant='light' color='danger' onPress={() => handleDelete(item.id)}>
-                <Icon icon='solar:trash-bin-trash-linear' />
+            <Tooltip content="删除" color="danger">
+              <Button isIconOnly size="sm" variant="light" color="danger" onPress={() => handleDelete(item.id)}>
+                <Icon icon="solar:trash-bin-trash-linear" />
               </Button>
             </Tooltip>
           </div>
@@ -185,105 +155,102 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
   }
 
   return (
-    <Modal scrollBehavior='inside' isOpen={isOpen} onClose={onClose} size='3xl'>
-      <ModalContent>
-        <ModalHeader className='flex flex-col gap-1'>
-          <div className='flex items-center gap-2'>
-            <Icon icon='solar:book-linear' className='w-6 h-6 text-primary' />
-            <span>知识管理</span>
-          </div>
-        </ModalHeader>
-        <ModalBody>
-          <div className='space-y-4'>
-            {/* 知识库说明卡片 */}
-            <Card className='bg-default-50 p-3'>
-              <div className='flex items-start gap-2'>
-                <Icon icon='solar:info-circle-linear' className='text-primary w-5 h-5 mt-0.5' />
-                <div className='text-sm'>
-                  <p className='font-medium mb-1'>知识库使用说明：</p>
-                  <ul className='text-default-500 space-y-1'>
-                    <li>• 选中的知识将被 AI 助手实时学习和参考</li>
-                    <li>• AI 会在对话中结合这些知识提供更准确的回答</li>
-                    <li>• 您可以随时调整选中的知识来优化 AI 的表现</li>
-                    <li>• 选中状态变化时会收到即时反馈提示</li>
-                  </ul>
-                </div>
+    <>
+      <Modal scrollBehavior="inside" isOpen={isOpen} onClose={onClose} size="3xl">
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                <Icon icon="solar:book-linear" className="w-6 h-6 text-primary" />
+                <span>知识管理</span>
               </div>
-            </Card>
-
-            <Input
-              label={editingId ? "编辑标题" : "标题"}
-              placeholder='输入标题...'
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <Textarea
-              label={editingId ? "编辑内容" : "知识内容"}
-              placeholder='输入知识内容...'
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              minRows={3}
-            />
-            <div className='flex justify-end gap-2'>
-              {editingId && (
+              <div className="flex gap-2">
                 <Button
-                  variant='light'
-                  onPress={handleCancelEdit}
-                  startContent={<Icon icon='solar:close-circle-linear' />}
+                  size="sm"
+                  color="primary"
+                  variant="flat"
+                  startContent={<Icon icon="solar:add-circle-linear" />}
+                  onPress={() => {
+                    setEditingItem(null)
+                    setShowEditModal(true)
+                  }}
                 >
-                  取消编辑
+                  添加知识
                 </Button>
-              )}
-              <Button
-                color='primary'
-                onPress={handleAddKnowledge}
-                startContent={<Icon icon={editingId ? "solar:pen-2-linear" : "solar:add-circle-linear"} />}
-              >
-                {editingId ? "保存修改" : "添加知识"}
-              </Button>
+              </div>
             </div>
+          </ModalHeader>
+          <ModalBody>
+            <div className="space-y-4">
+              {/* 数据安全说明 */}
+              <Card className="bg-default-50 p-3">
+                <div className="flex items-start gap-2">
+                  <Icon icon="solar:shield-keyhole-minimalistic-linear" className="text-success w-5 h-5 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium mb-1">数据安全说明：</p>
+                    <ul className="text-default-500 space-y-1">
+                      <li>• 所有知识内容仅存储在您的浏览器本地</li>
+                      <li>• 数据不会上传到云端，确保信息安全</li>
+                      <li>• 建议定期导出备份重要知识</li>
+                    </ul>
+                  </div>
+                </div>
+              </Card>
 
-            <Divider />
+              {/* 知识库使用说明 */}
+              <Card className="bg-default-50 p-3">
+                <div className="flex items-start gap-2">
+                  <Icon icon="solar:info-circle-linear" className="text-primary w-5 h-5 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium mb-1">知识库使用说明：</p>
+                    <ul className="text-default-500 space-y-1">
+                      <li>• 选中的知识将被 AI 助手实时学习和参考</li>
+                      <li>• AI 会在对话中结合这些知识提供更准确的回答</li>
+                      <li>• 您可以随时调整选中的知识来优化 AI 的表现</li>
+                      <li>• 选中状态变化时会收到即时反馈提示</li>
+                    </ul>
+                  </div>
+                </div>
+              </Card>
 
-            <div className='space-y-4'>
-              <div className='flex items-center justify-between'>
-                <span className='text-lg font-medium'>知识列表</span>
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-medium">知识列表</span>
                 <Input
-                  size='sm'
-                  placeholder='搜索知识...'
+                  size="sm"
+                  placeholder="搜索知识..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  startContent={<Icon icon='solar:magnifer-linear' className='text-default-400' />}
-                  className='w-64'
+                  startContent={<Icon icon="solar:magnifer-linear" className="text-default-400" />}
+                  className="w-64"
                 />
               </div>
 
-              <div className='space-y-2'>
-                <div className='flex items-center justify-between'>
-                  <div className='text-sm text-default-500'>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-default-500">
                     AI 已学习内容大小：{knowledgeStore.formatSize(knowledgeStore.selectedKnowledgeSize)} /{" "}
                     {knowledgeStore.formatSize(knowledgeStore.sizeLimit)}
                   </div>
-                  <div className='w-1/2'>
+                  <div className="w-1/2">
                     <Progress
-                      size='sm'
+                      size="sm"
                       value={usageProgress}
                       color={usageProgress > 90 ? "danger" : usageProgress > 70 ? "warning" : "primary"}
                     />
                   </div>
                 </div>
                 {knowledgeStore.isOverSizeLimit && (
-                  <div className='text-danger text-sm'>
+                  <div className="text-danger text-sm">
                     警告：已超过大小限制（100KB），部分知识将不会被 AI 学习和使用
                   </div>
                 )}
               </div>
 
-              <Table aria-label='知识列表'>
+              <Table aria-label="知识列表">
                 <TableHeader columns={columns}>
                   {(column) => (
                     <TableColumn
-                      className='min-w-20'
+                      className="min-w-20"
                       key={column.uid}
                       align={column.uid === "actions" ? "center" : "start"}
                     >
@@ -300,15 +267,21 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
                 </TableBody>
               </Table>
             </div>
-          </div>
-        </ModalBody>
-        <ModalFooter>
-          <Button color='danger' variant='light' onPress={onClose}>
-            关闭
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="danger" variant="light" onPress={onClose}>
+              关闭
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <KnowledgeEditModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        editingItem={editingItem}
+      />
+    </>
   )
 })
 
