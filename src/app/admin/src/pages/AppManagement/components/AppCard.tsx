@@ -18,6 +18,7 @@ import {
   RadioGroup,
   Radio,
   Chip,
+  Avatar,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -139,12 +140,25 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
             </div>
             <div className='flex-1 min-w-0'>
               <h3 className='text-xl font-bold tracking-tight truncate mb-1'>{app.title}</h3>
-              <div className='flex items-center gap-2'>
+              <div className='flex items-center gap-2 mb-2'>
                 <p className='text-small text-default-500'>创建于 {new Date(app.createdAt).toLocaleDateString()}</p>
                 <Chip size='sm' variant='flat' color={getAccessControlLabel().color}>
                   {getAccessControlLabel().label}
                 </Chip>
               </div>
+              {app.creator && (
+                <div className='flex items-center gap-2'>
+                  <Avatar
+                    size='sm'
+                    src={app.creator.avatar}
+                    name={app.creator.name}
+                    className='w-6 h-6'
+                  />
+                  <span className='text-small text-default-500'>
+                    由 {app.creator.name} 创建
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </CardBody>

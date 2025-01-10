@@ -9,6 +9,11 @@ export interface AppIndex {
     templateIds: string[]
     reportIds: string[]
   }
+  creator?: {
+    id: string
+    name: string
+    avatar?: string
+  }
   pages?: Array<{
     id: string
     title?: string
@@ -18,8 +23,8 @@ export interface AppIndex {
   }>
   homePageId?: string
   accessControl?: {
-    isPublic: boolean        // 所有用户可访问
-    requireAuth: boolean     // 需要登录才能访问
+    isPublic: boolean
+    requireAuth: boolean
   }
 }
 

@@ -1,6 +1,7 @@
 import { StateCreator } from "zustand"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { getCurrentAccountInfo } from "@/service/apis/user"
 import message from "@/components/Message"
 import { AppStore, AppDataSlice, AppIndex, UpdateAppConfigInput, RenameAppInput } from "../types"
 
@@ -18,8 +19,19 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
     const query = useQuery({
       queryKey: QUERY_KEYS.apps,
       queryFn: async () => {
-        const result = await getMetadata(["app_index"])
-        return result.data?.[0]?.value ? (JSON.parse(result.data[0].value) as AppIndex[]) : []
+        const [result, userInfo] = await Promise.all([
+          getMetadata(["app_index"]),
+          getCurrentAccountInfo()
+        ])
+        
+        const apps = result.data?.[0]?.value ? (JSON.parse(result.data[0].value) as AppIndex[]) : []
+        
+        // 如果不是admin，只返回用户创建的应用
+        if (userInfo.account !== 'admin') {
+          return apps.filter(app => app.creator?.id === userInfo.id)
+        }
+        
+        return apps
       },
     })
 
@@ -37,6 +49,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
     const queryClient = useQueryClient()
     const mutation = useMutation<string, Error, { title: string; template?: string }>({
       mutationFn: async (input) => {
+        const userInfo = await getCurrentAccountInfo()
         const newApp: AppIndex = {
           id: `app_${Date.now()}`,
           title: input.title,
@@ -44,13 +57,18 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           template: input.template || "enterprise",
+          creator: {
+            id: userInfo.id,
+            name: userInfo.name || userInfo.username,
+            avatar: userInfo.avatar
+          },
           indexFields: {
             templateIds: [],
             reportIds: [],
           },
           pages: [],
           accessControl: {
-            isPublic: true,  // 默认为所有用户可访问
+            isPublic: true,
             requireAuth: false,
           },
         }
