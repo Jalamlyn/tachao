@@ -13,6 +13,7 @@ import React, { useEffect, useState } from "react"
 import { Listbox, Tooltip, ListboxItem, ListboxSection } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { cn } from "@nextui-org/react"
+import { useGlobalUser } from "@/hooks/useGlobalUser"
 
 export enum SidebarItemType {
   Nest = "nest",
@@ -60,7 +61,7 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
     ref
   ) => {
     const [selected, setSelected] = React.useState<React.Key>(defaultSelectedKey)
-
+    const { userInfo } = useGlobalUser()
     const sectionClasses = {
       ...sectionClassesProp,
       base: cn(sectionClassesProp?.base, "w-full", {
@@ -186,6 +187,12 @@ const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
     const renderItem = React.useCallback(
       (item: SidebarItem) => {
         const isNestType = item.items && item.items?.length > 0 && item?.type === SidebarItemType.Nest
+
+        if (item.isAdmin) {
+          if (userInfo.account !== "admin") {
+            return null
+          }
+        }
 
         if (isNestType) {
           return renderNestItem(item)
