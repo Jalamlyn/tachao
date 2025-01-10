@@ -25,8 +25,14 @@ import { useAppStore } from "../store/useAppStore"
 import { getPlatMetaData, setPlatMetaData } from "@/service/apis/metadata"
 import { getCurrentAccountInfo } from "@/service/apis/user"
 import message from "@/components/Message"
+import { SuccessDialog, DeleteConfirmDialog } from "./CreateAppModalDialogs"
 
-// ... [保持其他接口定义不变]
+interface CreateAppModalProps {
+  isOpen: boolean
+  onClose: () => void
+  isLoading?: boolean
+  onSuccess?: () => void
+}
 
 const TemplateSuiteGroup = ({ children, suiteName }) => (
   <div className="relative p-4 rounded-xl border-2 border-default-200 bg-default-50 mb-6">
@@ -42,10 +48,106 @@ const TemplateSuiteGroup = ({ children, suiteName }) => (
   </div>
 )
 
-// ... [保持 SuccessDialog 和 DeleteConfirmDialog 组件不变]
-
 export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose, isLoading, onSuccess }) => {
-  // ... [保持状态定义和其他函数不变]
+  const [title, setTitle] = useState("")
+  const [selectedTemplate, setSelectedTemplate] = useState("")
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [newAppId, setNewAppId] = useState<string>("")
+  const [loading, setLoading] = useState(false)
+  const [createMode, setCreateMode] = useState<"scratch" | "template">("scratch")
+  const [platformTemplates, setPlatformTemplates] = useState([])
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [templateToDelete, setTemplateToDelete] = useState(null)
+  const { isOpen: isDeleteConfirmOpen, onOpen: onDeleteConfirmOpen, onClose: onDeleteConfirmClose } = useDisclosure()
+  const navigate = useNavigate()
+  const { useApps } = useAppStore()
+  const { refetch } = useApps()
+
+  useEffect(() => {
+    loadPlatformTemplates()
+    checkAdminStatus()
+  }, [])
+
+  const checkAdminStatus = async () => {
+    try {
+      const userInfo = await getCurrentAccountInfo()
+      setIsAdmin(userInfo.organizationId === "1" && userInfo.account === "admin")
+    } catch (error) {
+      console.error("Error checking admin status:", error)
+    }
+  }
+
+  const loadPlatformTemplates = async () => {
+    try {
+      const result = await getPlatMetaData(["plat_template_index"])
+      const templates = result.data?.[0]?.values[0]?.value ? JSON.parse(result.data?.[0]?.values[0]?.value) : []
+      setPlatformTemplates(templates)
+    } catch (error) {
+      console.error("Error loading platform templates:", error)
+      message.error("加载平台模板失败")
+    }
+  }
+
+  const handleDeleteTemplate = async (template) => {
+    setTemplateToDelete(template)
+    onDeleteConfirmOpen()
+  }
+
+  const confirmDeleteTemplate = async () => {
+    try {
+      const updatedTemplates = platformTemplates.filter((t) => t.id !== templateToDelete.id)
+      await setPlatMetaData({
+        name: "plat_template_index",
+        value: JSON.stringify(updatedTemplates),
+      })
+      setPlatformTemplates(updatedTemplates)
+      message.success("模板删除成功")
+      onDeleteConfirmClose()
+      setTemplateToDelete(null)
+    } catch (error) {
+      console.error("Error deleting template:", error)
+      message.error("删除模板失败")
+    }
+  }
+
+  const triggerConfetti = () => {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+    })
+  }
+
+  const handleNavigate = () => {
+    if (onSuccess) {
+      onSuccess()
+    } else {
+      navigate(`/admin/apps/${newAppId}/builder`)
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!title.trim()) return
+    try {
+      setLoading(true)
+      const appId = await appCodeStore.createApp(title.trim(), selectedTemplate)
+      setNewAppId(appId)
+      setTitle("")
+      setSelectedTemplate("")
+      onClose()
+
+      await refetch()
+
+      triggerConfetti()
+      setShowSuccess(true)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error creating app:", error)
+      message.error(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const renderTemplateCard = (template: AppTemplate) => (
     <Card
@@ -102,6 +204,55 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
     </Card>
   )
 
+  const renderCreateOptions = () => (
+    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+      <Card
+        isPressable
+        isHoverable
+        className={`border-2 transition-all duration-200 ${
+          createMode === "scratch" ? "border-primary" : "border-transparent"
+        }`}
+        onPress={() => {
+          setCreateMode("scratch")
+          setSelectedTemplate("")
+        }}
+      >
+        <CardBody className='p-4'>
+          <div className='flex items-center gap-4'>
+            <div className={`p-3 rounded-lg ${createMode === "scratch" ? "bg-primary/10" : "bg-default-100"}`}>
+              <Icon icon='mdi:file-outline' className='w-6 h-6 text-primary' />
+            </div>
+            <div>
+              <h4 className='text-base font-semibold'>从零开始</h4>
+              <p className='text-sm text-default-500'>从零开始构建您的应用</p>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
+
+      <Card
+        isPressable
+        isHoverable
+        className={`border-2 transition-all duration-200 ${
+          createMode === "template" ? "border-primary" : "border-transparent"
+        }`}
+        onPress={() => setCreateMode("template")}
+      >
+        <CardBody className='p-4'>
+          <div className='flex items-center gap-4'>
+            <div className={`p-3 rounded-lg ${createMode === "template" ? "bg-primary/10" : "bg-default-100"}`}>
+              <Icon icon='hugeicons:task-add-02' className='w-6 h-6 text-primary' />
+            </div>
+            <div>
+              <h4 className='text-base font-semibold'>从模板开始</h4>
+              <p className='text-sm text-default-500'>使用预设模板快速创建应用</p>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
+    </div>
+  )
+
   const renderTemplateSection = (title: string, icon: string, templateList: any[], type?: string) => {
     // 将模板按套件分组
     const suites = new Map<string, AppTemplate[]>()
@@ -141,7 +292,20 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
     )
   }
 
-  // ... [保持其他渲染函数不变]
+  const renderTemplateLibrary = () => {
+    const formTemplates = Object.values(templates).filter((template) => template.type === "form")
+    const aiTemplates = Object.values(templates).filter((template) => template.type === "ai")
+
+    return (
+      <div className='space-y-6'>
+        {renderTemplateSection("企业应用", "solar:document-bold-duotone", formTemplates)}
+        <Divider />
+        {renderTemplateSection("智能应用", "hugeicons:ai-chat-02", aiTemplates)}
+        <Divider />
+        {renderTemplateSection("平台模板", "solar:cloud-storage-bold-duotone", platformTemplates)}
+      </div>
+    )
+  }
 
   return (
     <>
