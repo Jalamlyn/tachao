@@ -7,6 +7,7 @@ import { AppContext } from "@/contexts/AppContext"
 import { observer } from "mobx-react-lite"
 import { appCodeStore } from "../store/appCodeStore"
 import { context } from "./functionContext"
+import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
 
 interface PreviewPageProps {
   appId: string
@@ -15,6 +16,7 @@ interface PreviewPageProps {
 const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [appInfo, setAppInfo] = useState<any>(null)
 
   useEffect(() => {
     if (!appId) {
@@ -32,12 +34,17 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
         appCodeStore.setAppId(appId)
 
         // 2. 加载应用数据
-        await appCodeStore.loadApp(appId)
+        const version = await appCodeStore.loadApp(appId)
+        if (!version) {
+          throw new Error("Failed to load app")
+        }
+        
+        setAppInfo(version.app)
 
         // 3. 准备执行上下文
-
         // 4. 执行所有模块
         const results = await appCodeStore.executeModules(context(appId))
+        
         // 5. 检查执行结果
         const errors = results.filter((r) => !r.success)
         if (errors.length > 0) {
@@ -55,7 +62,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
     }
 
     initializePreview()
-  }, [appId]) // 监听版本变化
+  }, [appId])
 
   if (!appId) {
     return (
@@ -83,7 +90,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
     )
   }
 
-  return (
+  const content = (
     <Provider>
       <AppContext.Provider value={{ appId }}>
         <AppRender
@@ -96,6 +103,18 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
         />
       </AppContext.Provider>
     </Provider>
+  )
+
+  // 根据accessControl决定是否需要权限检查
+  if (appInfo?.accessControl?.isPublic || appInfo?.accessControl?.requireAuth) {
+    return content
+  }
+
+  // 其他情况使用权限检查组件
+  return (
+    <PermissionCheck resourceType="app" resourceId={appId}>
+      {content}
+    </PermissionCheck>
   )
 })
 

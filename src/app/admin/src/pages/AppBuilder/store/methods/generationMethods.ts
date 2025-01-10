@@ -1,4 +1,4 @@
-import { getMetadata, getPlatMetaData } from "@/service/apis/metadata"
+import { getMetadata, getPlatMetaData, getPublicMetaData } from "@/service/apis/metadata"
 import { initialAIResponse } from "../../prompts/nextui/initTemplate"
 import { templates } from "../../prompts/prompt/templates"
 import { AppCodeStore, Version, AIGenerationResult } from "../types"
@@ -114,7 +114,8 @@ export async function loadApp(this: AppCodeStore, appId: string) {
     if (cached) {
       version = cached
     } else {
-      const appResult = await getMetadata([`${appId}`])
+      // 使用getPublicMetadata获取app基础信息
+      const appResult = await getPublicMetaData([`${appId}`], appId)
       if (!appResult.data?.[0]?.value) {
         throw new Error("App not found")
       }
@@ -123,7 +124,14 @@ export async function loadApp(this: AppCodeStore, appId: string) {
       const { app } = appData
 
       const moduleIds = Object.keys(app.modules)
-      const moduleResults = await Promise.all(moduleIds.map((moduleId) => getMetadata([moduleId])))
+      
+      // 根据accessControl决定使用哪个API获取模块数据
+      let moduleResults
+      if (app.accessControl?.isPublic) {
+        moduleResults = await Promise.all(moduleIds.map((moduleId) => getPublicMetaData([moduleId], appId)))
+      } else {
+        moduleResults = await Promise.all(moduleIds.map((moduleId) => getMetadata([moduleId], appId)))
+      }
 
       const modules = {}
       moduleResults.forEach((result, index) => {
@@ -162,6 +170,7 @@ export async function loadApp(this: AppCodeStore, appId: string) {
     throw error
   }
 }
+
 export async function generateInitialVersion(
   this: AppCodeStore,
   aiResponse: string,
@@ -218,6 +227,7 @@ export async function generateInitialVersion(
     }
   }
 }
+
 export async function createApp(this: AppCodeStore, name: string, templateId: string = ""): Promise<string> {
   const exists = await checkAppNameExists(name)
   if (exists) {
