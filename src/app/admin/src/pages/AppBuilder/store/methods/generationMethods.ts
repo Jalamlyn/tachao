@@ -115,7 +115,7 @@ export async function loadApp(this: AppCodeStore, appId: string) {
       version = cached
     } else {
       // 使用getPublicMetadata获取app基础信息
-      const appResult = await getPublicMetaData([`${appId}`], appId)
+      const appResult = await getPublicMetaData([`${appId}`])
       if (!appResult.data?.[0]?.value) {
         throw new Error("App not found")
       }
@@ -124,13 +124,13 @@ export async function loadApp(this: AppCodeStore, appId: string) {
       const { app } = appData
 
       const moduleIds = Object.keys(app.modules)
-      
+
       // 根据accessControl决定使用哪个API获取模块数据
       let moduleResults
       if (app.accessControl?.isPublic) {
-        moduleResults = await Promise.all(moduleIds.map((moduleId) => getPublicMetaData([moduleId], appId)))
+        moduleResults = await Promise.all(moduleIds.map((moduleId) => getPublicMetaData([moduleId])))
       } else {
-        moduleResults = await Promise.all(moduleIds.map((moduleId) => getMetadata([moduleId], appId)))
+        moduleResults = await Promise.all(moduleIds.map((moduleId) => getMetadata([moduleId])))
       }
 
       const modules = {}
