@@ -6,6 +6,8 @@ import { appCodeStore } from "./store/appCodeStore"
 import { promptsComposer } from "./prompts"
 import { logStore } from "./AIEditor/components/LogStore"
 import { knowledgeStore } from "./AIEditor/components/KnowledgeStore"
+import { getMetadata } from "@/service/apis/metadata"
+import { AppIndex } from "../AppManagement/store/types"
 
 interface CommandInput {
   content: string
@@ -22,6 +24,29 @@ class AppAgent {
       AppAgent.instance = new AppAgent()
     }
     return AppAgent.instance
+  }
+
+  private async getAppsContext(): Promise<string> {
+    try {
+      const result = await getMetadata(["app_index"])
+      if (!result.data?.[0]?.value) {
+        return "暂无应用信息"
+      }
+
+      const apps = JSON.parse(result.data[0].value) as AppIndex[]
+      const appsContext = apps.map(app => `
+应用ID: ${app.id}
+应用名称: ${app.title}${
+        app.creator 
+          ? `\n创建者: ${app.creator.name}`
+          : ''
+      }`).join('\n---\n')
+
+      return appsContext
+    } catch (error) {
+      console.error("Error getting apps context:", error)
+      return "获取应用信息失败"
+    }
   }
 
   private async getRelevantModuleIds(modules: Record<string, any>, command: string | CommandInput): Promise<string[]> {
@@ -141,14 +166,11 @@ ${modulesContext}
         relevantModules = appCodeStore.getContextModules()
         moduleSelectionMode = "manual"
       } else {
-        // 添加模块数量判断逻辑
         const moduleCount = Object.keys(allModules).length
         if (moduleCount <= 15) {
-          // 如果模块数量小于等于15，使用所有模块
           relevantModules = allModules
           moduleSelectionMode = "all"
         } else {
-          // 如果模块数量大于20，进行动态筛选
           const relevantIds = await this.getRelevantModuleIds(allModules, command)
           if (relevantIds.length === 0) {
             relevantModules = allModules
@@ -191,6 +213,9 @@ ${module.data.code}
 
       // 获取知识库内容
       const knowledgeContext = knowledgeStore.getKnowledgeContext()
+
+      // 获取应用列表信息
+      const appsContext = await this.getAppsContext()
 
       const enhancedCommand = `<project>
             ${
@@ -235,10 +260,13 @@ ${module.data.code}
             4. 知识库内容：
             ${knowledgeContext || "暂无自定义知识内容"}
 
+            5. 系统中的应用列表：
+            ${appsContext}
+
             ${
               typeof command !== "string" && command.images?.length > 0
                 ? `
-            5. 用户上传的图片资源：
+            6. 用户上传的图片资源：
             ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n            ")}
             `
                 : ""
