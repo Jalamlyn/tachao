@@ -1,4 +1,5 @@
-import { makeAutoObservable, runInAction, computed } from "mobx"
+import { makeAutoObservable, runInAction } from "mobx"
+import localforage from "localforage"
 
 interface KnowledgeItem {
   id: string
@@ -18,7 +19,16 @@ class KnowledgeStore {
 
   private constructor() {
     makeAutoObservable(this)
+    this.initLocalForage()
     this.loadFromStorage()
+  }
+
+  private initLocalForage() {
+    localforage.config({
+      name: 'MoKnowledge',
+      storeName: 'knowledge',
+      description: 'Storage for Mo AI knowledge base'
+    })
   }
 
   public static getInstance(): KnowledgeStore {
@@ -28,17 +38,12 @@ class KnowledgeStore {
     return KnowledgeStore.instance
   }
 
-  private loadFromStorage() {
+  private async loadFromStorage() {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY)
+      const stored = await localforage.getItem<Record<string, KnowledgeItem>>(this.STORAGE_KEY)
       if (stored) {
         runInAction(() => {
-          this.knowledge = JSON.parse(stored)
-          Object.values(this.knowledge).forEach((item) => {
-            if (typeof item.isSelected === "undefined") {
-              item.isSelected = false
-            }
-          })
+          this.knowledge = stored
         })
       }
     } catch (error) {
@@ -49,11 +54,12 @@ class KnowledgeStore {
     }
   }
 
-  private saveToStorage() {
+  private async saveToStorage() {
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.knowledge))
+      await localforage.setItem(this.STORAGE_KEY, this.knowledge)
     } catch (error) {
       console.error("Error saving knowledge to storage:", error)
+      throw error
     }
   }
 
@@ -67,19 +73,19 @@ class KnowledgeStore {
       .reduce((total, item) => total + new Blob([item.title, item.content]).size, 0)
   }
 
-  get isOverSizeLimit() {
-    return this.selectedKnowledgeSize > this.MAX_CONTEXT_SIZE
-  }
-
   get sizeLimit() {
     return this.MAX_CONTEXT_SIZE
+  }
+
+  get isOverSizeLimit() {
+    return this.selectedKnowledgeSize > this.MAX_CONTEXT_SIZE
   }
 
   private generateId(): string {
     return `k-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
   }
 
-  addKnowledge(id: string | null, title: string, content: string) {
+  async addKnowledge(id: string | null, title: string, content: string) {
     const timestamp = Date.now()
     const actualId = id || this.generateId()
 
@@ -94,11 +100,11 @@ class KnowledgeStore {
       }
     })
 
-    this.saveToStorage()
+    await this.saveToStorage()
     return actualId
   }
 
-  updateKnowledge(id: string, updates: Partial<KnowledgeItem>) {
+  async updateKnowledge(id: string, updates: Partial<KnowledgeItem>) {
     if (this.knowledge[id]) {
       runInAction(() => {
         this.knowledge[id] = {
@@ -107,11 +113,11 @@ class KnowledgeStore {
           updatedAt: Date.now(),
         }
       })
-      this.saveToStorage()
+      await this.saveToStorage()
     }
   }
 
-  toggleKnowledgeSelection(id: string): boolean {
+  async toggleKnowledgeSelection(id: string): Promise<boolean> {
     const item = this.knowledge[id]
     if (!item) return false
 
@@ -130,15 +136,16 @@ class KnowledgeStore {
         updatedAt: Date.now(),
       }
     })
-    this.saveToStorage()
+    
+    await this.saveToStorage()
     return true
   }
 
-  removeKnowledge(id: string) {
+  async removeKnowledge(id: string) {
     runInAction(() => {
       delete this.knowledge[id]
     })
-    this.saveToStorage()
+    await this.saveToStorage()
   }
 
   searchKnowledge(query: string): KnowledgeItem[] {
