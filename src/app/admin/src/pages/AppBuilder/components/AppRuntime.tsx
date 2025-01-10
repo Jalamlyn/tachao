@@ -42,7 +42,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
           throw new Error("Failed to load app")
         }
 
-        setAppInfo(appInfo)
+        setAppInfo(version.app)
 
         // 3. 准备执行上下文
         // 4. 执行所有模块
