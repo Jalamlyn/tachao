@@ -91,13 +91,8 @@ const AppSelector: React.FC = () => {
   return (
     <BrowserRouter>
       <StoreProvider>
-        <Provider>
-          <Routes>
-            <Route path='/*' element={<App />} />
-          </Routes>
-          <Toaster position='top-center' expand={true} richColors closeButton />
-          <RechargeModal />
-        </Provider>
+        <App />
+        <Toaster position='top-center' expand={true} richColors closeButton />
       </StoreProvider>
     </BrowserRouter>
   )

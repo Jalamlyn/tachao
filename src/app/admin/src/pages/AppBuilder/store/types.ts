@@ -25,7 +25,6 @@ export interface App {
 }
 
 export interface ModuleWrapper {
-  metadata: string
   data: ModuleData
   updatedAt: string
 }

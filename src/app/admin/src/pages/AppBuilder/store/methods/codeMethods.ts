@@ -212,7 +212,6 @@ export async function executeModules(this: AppCodeStore, context: any) {
       Object.values(this.currentVersion.modules).forEach((moduleWrapper) => {
         if (moduleWrapper.data.compiledCode) {
           delete moduleWrapper.data
-          delete moduleWrapper.metadata
         }
       })
     }

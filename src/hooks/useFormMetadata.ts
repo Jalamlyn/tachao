@@ -150,6 +150,7 @@ export const useFormMetadata = () => {
 
   const updateForm = useCallback(async (updatedForm: FormData) => {
     try {
+      debugger
       const currentUser = await getCurrentAccountInfo()
       const orderNumber = updatedForm.data?.basicInfo?.orderNumber
       const formId = orderNumber || updatedForm.id

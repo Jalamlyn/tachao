@@ -37,6 +37,7 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
       setLoading(true)
       setError(null)
       try {
+        debugger
         const currentUser = await getCurrentAccountInfo()
         const now = new Date().toISOString()
 
@@ -109,7 +110,7 @@ export function useMetadata<T = any>(type: string, options: UseMetadataOptions =
       try {
         const currentDetail = await getDetail(id)
         if (!currentDetail) throw new Error("Item not found")
-
+          debugger
         const currentUser = await getCurrentAccountInfo()
         const now = new Date().toISOString()
 

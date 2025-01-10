@@ -99,6 +99,7 @@ export function useQueryMetadata<T = any>(type: string, options: QueryMetadataOp
       logger.debug("[useQueryMetadata] Creating new item", { type })
       setError(null)
       try {
+        debugger
         const currentUser = await getCurrentAccountInfo()
         const now = new Date().toISOString()
 
@@ -168,7 +169,7 @@ export function useQueryMetadata<T = any>(type: string, options: QueryMetadataOp
       try {
         const currentDetail = await getDetail(id)
         if (!currentDetail) throw new Error("Item not found")
-
+debugger
         const currentUser = await getCurrentAccountInfo()
         const now = new Date().toISOString()
 

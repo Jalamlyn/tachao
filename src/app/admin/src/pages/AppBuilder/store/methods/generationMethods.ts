@@ -47,7 +47,6 @@ export async function handleAIGeneration(
           (acc, [moduleId, moduleData]) => ({
             ...acc,
             [moduleId]: {
-              metadata: JSON.stringify(moduleData),
               data: moduleData,
               updatedAt: new Date().toISOString(),
             },
@@ -67,7 +66,6 @@ export async function handleAIGeneration(
 
     for (const [moduleId, moduleData] of Object.entries(moduleDataMap)) {
       updatedModules[moduleId] = {
-        metadata: JSON.stringify(moduleData),
         data: moduleData,
         updatedAt: new Date().toISOString(),
       }
@@ -133,7 +131,6 @@ export async function loadApp(this: AppCodeStore, appId: string) {
         if (result.data?.[0]?.value) {
           const moduleData = JSON.parse(result.data[0].value)
           modules[moduleId] = {
-            metadata: result.data[0].value,
             data: moduleData,
             updatedAt: new Date().toISOString(),
           }
@@ -201,7 +198,6 @@ export async function generateInitialVersion(
         (acc, [moduleId, moduleData]) => ({
           ...acc,
           [moduleId]: {
-            metadata: JSON.stringify(moduleData),
             data: moduleData,
             updatedAt: new Date().toISOString(),
           },

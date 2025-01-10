@@ -4,7 +4,6 @@ import { Spinner } from "@nextui-org/react"
 import message from "@/components/Message"
 import { Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
-import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
 import { observer } from "mobx-react-lite"
 import { appCodeStore } from "../store/appCodeStore"
 import { context } from "./functionContext"
@@ -86,18 +85,16 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
 
   return (
     <Provider>
-      <PermissionCheck resourceType='app' resourceId={appId}>
-        <AppContext.Provider value={{ appId }}>
-          <AppRender
-            appId={appId}
-            basename={`/app-run/${appId}`}
-            onError={(error) => {
-              console.error("Preview error:", error)
-              message.error(`预览错误: ${error.message}`)
-            }}
-          />
-        </AppContext.Provider>
-      </PermissionCheck>
+      <AppContext.Provider value={{ appId }}>
+        <AppRender
+          appId={appId}
+          basename={`/app-run/${appId}`}
+          onError={(error) => {
+            console.error("Preview error:", error)
+            message.error(`预览错误: ${error.message}`)
+          }}
+        />
+      </AppContext.Provider>
     </Provider>
   )
 })

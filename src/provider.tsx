@@ -162,6 +162,18 @@ export const Provider = observer(({ children }: { children: React.ReactNode }) =
 
   useEffect(() => {
     const initializeData = async () => {
+      // 获取当前路径
+      const currentPath = location.pathname
+
+      // 检查是否是特殊路径
+      const isAppRunOrPreview = currentPath.includes("/app-run/") || currentPath.includes("/app-preview/")
+
+      // 如果是特殊路径，直接返回，不执行初始化
+      if (isAppRunOrPreview) {
+        return
+      }
+
+      // 其他情况继续执行原有的初始化逻辑
       if (isInit && !location.pathname.includes("/login")) {
         const actualBalance = await calculateActualBalance()
         balanceStore.setActualBalance(actualBalance)

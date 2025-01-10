@@ -10,7 +10,7 @@ import { loadBMapScript } from "@/components/reports/MapComponent"
 import LandingPage from "./app/landing/App"
 import AdminRouter from "./app/admin/router"
 import UnauthorizedPage from "./app/admin/src/permissions/pages/UnauthorizedPage"
-import WaitListPage from "./pages/WaitListPage"
+import { Provider } from "./provider"
 
 setTimeout(() => {
   loadBMapScript()

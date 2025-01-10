@@ -163,6 +163,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
 
   const checkAdminStatus = async () => {
     try {
+      debugger
       const userInfo = await getCurrentAccountInfo()
       setIsAdmin(userInfo.organizationId === "1" && userInfo.account === "admin")
     } catch (error) {
