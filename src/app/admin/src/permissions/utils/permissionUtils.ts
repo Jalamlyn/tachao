@@ -30,14 +30,14 @@ export const getResourcePermissions = async (resourceType: ResourceType): Promis
     const result = await getMetadata([key])
     const data = result.data?.[0]?.value
     const permissions = data ? JSON.parse(data) : {}
-    
+
     // 确保每个资源都有默认的权限设置
-    Object.keys(permissions).forEach(resourceId => {
-      if (!permissions[resourceId].hasOwnProperty('isPublic')) {
+    Object.keys(permissions).forEach((resourceId) => {
+      if (!permissions[resourceId].hasOwnProperty("isPublic")) {
         permissions[resourceId].isPublic = true // 设置默认为公开访问
       }
     })
-    
+
     return permissions
   } catch (error) {
     console.error("Error fetching permissions:", error)
@@ -52,8 +52,8 @@ export const setResourcePermissions = async (
   const key = getPermissionMetadataKey(resourceType)
   try {
     // 确保新添加的资源默认为公开访问
-    Object.keys(permissions).forEach(resourceId => {
-      if (!permissions[resourceId].hasOwnProperty('isPublic')) {
+    Object.keys(permissions).forEach((resourceId) => {
+      if (!permissions[resourceId].hasOwnProperty("isPublic")) {
         permissions[resourceId].isPublic = true
       }
     })
@@ -84,9 +84,13 @@ export const hasPermission = async (resourceType: ResourceType, resourceId: stri
     return true
   }
 
-  // 4. 检查是否公开访问（如果没有设置isPublic，默认为true）
-  if (resourcePermission.isPublic !== false) {
+  // 4. 检查访问控制设置
+  if (resourcePermission.isPublic) {
     return true
+  }
+
+  if (resourcePermission.requireAuth) {
+    return !!user
   }
 
   // 5. 检查具体权限
@@ -109,9 +113,12 @@ export const hasTemplatePermission = async (
     return true // 默认公开访问
   }
 
-  // 检查是否公开访问（如果没有设置isPublic，默认为true）
-  if (templatePermission.isPublic !== false) {
+  if (templatePermission.isPublic) {
     return true
+  }
+
+  if (templatePermission.requireAuth) {
+    return !!user
   }
 
   const userPermission = templatePermission.accounts.find((acc) => acc.accountId === user.id)
@@ -160,6 +167,7 @@ export const addPermission = async (
       resourceId,
       accounts: [],
       isPublic: true, // 新建资源默认公开访问
+      requireAuth: false,
     }
   }
 
@@ -241,10 +249,13 @@ export const checkPermissionRequestStatus = async (resourceType: string, resourc
   )
 }
 
-export const setResourcePublicAccess = async (
+export const setResourceAccessControl = async (
   resourceType: ResourceType,
   resourceId: string,
-  isPublic: boolean
+  accessControl: {
+    isPublic: boolean
+    requireAuth: boolean
+  }
 ): Promise<void> => {
   try {
     // 1. 更新权限信息
@@ -255,24 +266,28 @@ export const setResourcePublicAccess = async (
         resourceId,
         accounts: [],
         isPublic: true,
+        requireAuth: false,
       }
     }
-    permissions[resourceId].isPublic = isPublic
+
+    permissions[resourceId].isPublic = accessControl.isPublic
+    permissions[resourceId].requireAuth = accessControl.requireAuth
+
     await setResourcePermissions(resourceType, permissions)
 
     // 2. 如果是 app 类型,同时更新 app_index 和 app 元数据
-    if (resourceType === 'app') {
+    if (resourceType === "app") {
       // 更新 app_index
-      const appIndexResult = await getMetadata(['app_index'])
+      const appIndexResult = await getMetadata(["app_index"])
       const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
-      
-      const updatedApps = apps.map(app => {
+
+      const updatedApps = apps.map((app) => {
         if (app.id === resourceId) {
           return {
             ...app,
             accessControl: {
-              isPublic,
-              requireAuth: !isPublic && permissions[resourceId].accounts.length === 0,
+              isPublic: accessControl.isPublic,
+              requireAuth: accessControl.requireAuth,
             },
             updatedAt: new Date().toISOString(),
           }
@@ -280,21 +295,21 @@ export const setResourcePublicAccess = async (
         return app
       })
 
-      await setMetadata('app_index', JSON.stringify(updatedApps))
+      await setMetadata("app_index", JSON.stringify(updatedApps))
 
       // 更新 app 元数据
       const appResult = await getMetadata([resourceId])
       if (appResult.data?.[0]?.value) {
         const appData = JSON.parse(appResult.data[0].value)
         appData.app.accessControl = {
-          isPublic,
-          requireAuth: !isPublic && permissions[resourceId].accounts.length === 0,
+          isPublic: accessControl.isPublic,
+          requireAuth: accessControl.requireAuth,
         }
         await setMetadata(resourceId, JSON.stringify(appData))
       }
     }
   } catch (error) {
-    console.error("Error setting resource public access:", error)
+    console.error("Error setting resource access control:", error)
     throw error
   }
 }

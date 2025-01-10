@@ -1,4 +1,5 @@
 import globalStore from "@/globalStore"
+import { localDB } from "@/utils/localDB"
 import { useState, useEffect } from "react"
 
 export const useOid = (loginData) => {
@@ -19,8 +20,7 @@ export const useOid = (loginData) => {
         if (pathMatch) {
           const [, organizationId, appId] = pathMatch
           loginData.current.organizationId = organizationId
-          globalStore.organizationId = organizationId
-          globalStore.appId = appId
+          localDB.setAppId({ id: appId, organizationId })
           setHasOidParam(true)
         }
         // 保持原有的 oid 参数解析功能

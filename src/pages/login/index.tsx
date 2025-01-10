@@ -178,7 +178,7 @@ export default function LoginPage() {
                   title={
                     <div className='flex items-center gap-2'>
                       <Icon icon='material-symbols:admin-panel-settings-outline' />
-                      <span>管理员登录</span>
+                      <span>内部用户登录</span>
                     </div>
                   }
                 />

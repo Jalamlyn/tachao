@@ -16,7 +16,7 @@ import { usePermissions } from "../hooks/usePermissions"
 import { Permission, ResourceType } from "../types"
 import { queryRamAccount } from "@/service/apis/user"
 import message from "@/components/Message"
-import { setResourcePublicAccess } from "../utils/permissionUtils"
+import { setResourceAccessControl } from "../utils/permissionUtils"
 import { Icon } from "@iconify/react"
 
 interface PermissionModalProps {
@@ -54,7 +54,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
       // 根据现有权限设置初始访问模式
       if (permissions.isPublic) {
         setAccessMode("public")
-      } else if (permissions.accounts.length === 0) {
+      } else if (permissions.requireAuth) {
         setAccessMode("authenticated")
       } else {
         setAccessMode("specified")
@@ -114,8 +114,12 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
 
   const handleSaveSettings = async () => {
     try {
-      // 更新访问控制设置
-      await setResourcePublicAccess(resourceType, resourceId, accessMode === "public")
+      const accessControl = {
+        isPublic: accessMode === "public",
+        requireAuth: accessMode === "authenticated",
+      }
+
+      await setResourceAccessControl(resourceType, resourceId, accessControl)
 
       // 如果切换到其他模式，清除所有特定用户权限
       if (accessMode !== "specified") {
@@ -249,8 +253,8 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
               <Button
                 color='primary'
                 onPress={handleSaveSettings}
-                isDisabled={!hasUnsavedChanges}
                 startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
+                isDisabled={!hasUnsavedChanges}
               >
                 保存设置
               </Button>
