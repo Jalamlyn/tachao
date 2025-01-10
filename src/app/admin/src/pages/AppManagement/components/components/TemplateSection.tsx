@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react"
-import { Card, CardBody, Button, Chip } from "@nextui-org/react"
+import { Card, CardBody, Button, Chip, Divider } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { templates, AppTemplate } from "@/app/admin/src/pages/AppBuilder/prompts/prompt/templates"
-import { getPlatMetaData, setPlatMetaData } from "@/service/apis/metadata"
+import { getPlatMetaData } from "@/service/apis/metadata"
 import message from "@/components/Message"
 
 interface TemplateSectionProps {

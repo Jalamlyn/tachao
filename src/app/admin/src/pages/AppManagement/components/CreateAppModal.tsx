@@ -209,7 +209,31 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
       <DeleteConfirmDialog
         isOpen={isDeleteConfirmOpen}
         onClose={onDeleteConfirmClose}
-        onConfirm={confirmDeleteTemplate}
+        onConfirm={async () => {
+          if (templateToDelete) {
+            try {
+              const currentTemplates = await getPlatMetaData(["plat_template_index"])
+              const templates = currentTemplates.data?.[0]?.values[0]?.value 
+                ? JSON.parse(currentTemplates.data[0].values[0].value) 
+                : []
+              
+              const updatedTemplates = templates.filter(t => t.id !== templateToDelete.id)
+              
+              await setPlatMetaData([{
+                key: "plat_template_index",
+                values: [{
+                  value: JSON.stringify(updatedTemplates)
+                }]
+              }])
+              
+              message.success("模板删除成功")
+              onDeleteConfirmClose()
+            } catch (error) {
+              console.error("Error deleting template:", error)
+              message.error("删除模板失败")
+            }
+          }
+        }}
         templateName={templateToDelete?.name}
       />
     </>
