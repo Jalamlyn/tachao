@@ -33,6 +33,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   const knowledgeList = searchQuery.trim() 
     ? knowledgeStore.searchKnowledge(searchQuery)
@@ -45,8 +46,14 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
     }
 
     try {
-      knowledgeStore.addKnowledge(null, title, content)
-      message.success("知识添加成功")
+      if (editingId) {
+        knowledgeStore.updateKnowledge(editingId, { title, content })
+        message.success("知识更新成功")
+        setEditingId(null)
+      } else {
+        knowledgeStore.addKnowledge(null, title, content)
+        message.success("知识添加成功")
+      }
       setTitle("")
       setContent("")
     } catch (error) {
@@ -54,9 +61,27 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
     }
   }
 
+  const handleEdit = (id: string) => {
+    const item = knowledgeList.find(item => item.id === id)
+    if (item) {
+      setEditingId(id)
+      setTitle(item.title)
+      setContent(item.content)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setTitle("")
+    setContent("")
+  }
+
   const handleDelete = (id: string) => {
     try {
       knowledgeStore.removeKnowledge(id)
+      if (editingId === id) {
+        handleCancelEdit()
+      }
       message.success("知识已删除")
     } catch (error) {
       message.error("删除失败：" + (error instanceof Error ? error.message : "未知错误"))
@@ -116,6 +141,18 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
       case "actions":
         return (
           <div className='flex items-center gap-2'>
+            <Tooltip content='编辑'>
+              <Button 
+                isIconOnly 
+                size='sm' 
+                variant='light' 
+                color='primary'
+                onPress={() => handleEdit(item.id)}
+                className={editingId === item.id ? 'bg-primary/20' : ''}
+              >
+                <Icon icon='solar:pen-2-linear' />
+              </Button>
+            </Tooltip>
             <Tooltip content='删除' color='danger'>
               <Button isIconOnly size='sm' variant='light' color='danger' onPress={() => handleDelete(item.id)}>
                 <Icon icon='solar:trash-bin-trash-linear' />
@@ -144,21 +181,35 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
         </ModalHeader>
         <ModalBody>
           <div className='space-y-4'>
-            <Input label='标题' placeholder='输入标题...' value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Input 
+              label={editingId ? '编辑标题' : '标题'} 
+              placeholder='输入标题...' 
+              value={title} 
+              onChange={(e) => setTitle(e.target.value)} 
+            />
             <Textarea
-              label='知识内容'
+              label={editingId ? '编辑内容' : '知识内容'}
               placeholder='输入知识内容...'
               value={content}
               onChange={(e) => setContent(e.target.value)}
               minRows={3}
             />
             <div className='flex justify-end gap-2'>
+              {editingId && (
+                <Button
+                  variant='light'
+                  onPress={handleCancelEdit}
+                  startContent={<Icon icon="solar:close-circle-linear" />}
+                >
+                  取消编辑
+                </Button>
+              )}
               <Button
                 color='primary'
                 onPress={handleAddKnowledge}
-                startContent={<Icon icon="solar:add-circle-linear" />}
+                startContent={<Icon icon={editingId ? "solar:pen-2-linear" : "solar:add-circle-linear"} />}
               >
-                添加知识
+                {editingId ? '保存修改' : '添加知识'}
               </Button>
             </div>
 
