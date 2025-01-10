@@ -79,6 +79,14 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   const loadPermissions = async () => {
     const data = await getPermissions(resourceId)
     setPermissions(data)
+    // 根据权限状态设置正确的 accessMode
+    if (data.isPublic) {
+      setAccessMode("public")
+    } else if (data.requireAuth) {
+      setAccessMode("authenticated")
+    } else {
+      setAccessMode("specified")
+    }
   }
 
   const handleAddPermission = async () => {
