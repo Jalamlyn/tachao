@@ -149,9 +149,8 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        size='3xl'
+        size='5xl'
         classNames={{
-          base: "max-w-3xl",
           header: "border-b",
           body: "py-6",
           footer: "border-t",
@@ -213,19 +212,23 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
           if (templateToDelete) {
             try {
               const currentTemplates = await getPlatMetaData(["plat_template_index"])
-              const templates = currentTemplates.data?.[0]?.values[0]?.value 
-                ? JSON.parse(currentTemplates.data[0].values[0].value) 
+              const templates = currentTemplates.data?.[0]?.values[0]?.value
+                ? JSON.parse(currentTemplates.data[0].values[0].value)
                 : []
-              
-              const updatedTemplates = templates.filter(t => t.id !== templateToDelete.id)
-              
-              await setPlatMetaData([{
-                key: "plat_template_index",
-                values: [{
-                  value: JSON.stringify(updatedTemplates)
-                }]
-              }])
-              
+
+              const updatedTemplates = templates.filter((t) => t.id !== templateToDelete.id)
+
+              await setPlatMetaData([
+                {
+                  key: "plat_template_index",
+                  values: [
+                    {
+                      value: JSON.stringify(updatedTemplates),
+                    },
+                  ],
+                },
+              ])
+
               message.success("模板删除成功")
               onDeleteConfirmClose()
             } catch (error) {
