@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import {
   Modal,
   ModalContent,
@@ -18,8 +18,6 @@ import {
   Progress,
   Card,
   Chip,
-  Accordion,
-  AccordionItem,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
@@ -35,25 +33,11 @@ interface KnowledgeModalProps {
 export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen, onClose }) => {
   const [searchQuery, setSearchQuery] = useState("")
   const [showEditModal, setShowEditModal] = useState(false)
-  const [showGuides, setShowGuides] = useState(true)
   const [editingItem, setEditingItem] = useState<{
     id: string
     title: string
     content: string
   } | null>(null)
-
-  useEffect(() => {
-    const savedPreference = localStorage.getItem("mo_knowledge_guides")
-    if (savedPreference !== null) {
-      setShowGuides(savedPreference === "shown")
-    }
-  }, [])
-
-  const toggleGuides = (show: boolean) => {
-    setShowGuides(show)
-    localStorage.setItem("mo_knowledge_guides", show ? "shown" : "hidden")
-    message.success(show ? "已显示使用指南" : "已隐藏使用指南")
-  }
 
   const knowledgeList = searchQuery.trim() ? knowledgeStore.searchKnowledge(searchQuery) : knowledgeStore.knowledgeList
 
@@ -195,68 +179,36 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
           </ModalHeader>
           <ModalBody>
             <div className='space-y-4'>
-              {/* 使用指南控制开关 */}
-              <div className='flex justify-between items-center'>
-                <span className='text-sm text-default-600'>使用指南</span>
-                <Switch
-                  size='sm'
-                  isSelected={showGuides}
-                  onValueChange={toggleGuides}
-                  endContent={showGuides ? "显示" : "隐藏"}
-                />
-              </div>
+              {/* 数据安全说明 */}
+              <Card className='bg-default-50 p-3'>
+                <div className='flex items-start gap-2'>
+                  <Icon icon='solar:shield-keyhole-minimalistic-linear' className='text-success w-5 h-5 mt-0.5' />
+                  <div className='text-sm'>
+                    <p className='font-medium mb-1'>数据安全说明：</p>
+                    <ul className='text-default-500 space-y-1'>
+                      <li>• 所有知识内容仅存储在您的浏览器本地</li>
+                      <li>• 数据不会上传到云端，确保信息安全</li>
+                      <li>• 建议定期导出备份重要知识</li>
+                    </ul>
+                  </div>
+                </div>
+              </Card>
 
-              {/* 可折叠的使用指南 */}
-              {showGuides && (
-                <Accordion>
-                  <AccordionItem
-                    key="data-security"
-                    aria-label="数据安全说明"
-                    title={
-                      <div className='flex items-center gap-2'>
-                        <Icon icon='solar:shield-keyhole-minimalistic-linear' className='text-success w-5 h-5' />
-                        <span>数据安全说明</span>
-                      </div>
-                    }
-                  >
-                    <Card className='bg-default-50 p-3'>
-                      <div className='flex items-start gap-2'>
-                        <div className='text-sm'>
-                          <ul className='text-default-500 space-y-1'>
-                            <li>• 所有知识内容仅存储在您的浏览器本地</li>
-                            <li>• 数据不会上传到云端，确保信息安全</li>
-                            <li>• 建议定期导出备份重要知识</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </Card>
-                  </AccordionItem>
-
-                  <AccordionItem
-                    key="usage-guide"
-                    aria-label="知识库使用说明"
-                    title={
-                      <div className='flex items-center gap-2'>
-                        <Icon icon='solar:info-circle-linear' className='text-primary w-5 h-5' />
-                        <span>知识库使用说明</span>
-                      </div>
-                    }
-                  >
-                    <Card className='bg-default-50 p-3'>
-                      <div className='flex items-start gap-2'>
-                        <div className='text-sm'>
-                          <ul className='text-default-500 space-y-1'>
-                            <li>• 选中的知识将被 AI 助手实时学习和参考</li>
-                            <li>• AI 会在对话中结合这些知识提供更准确的回答</li>
-                            <li>• 您可以随时调整选中的知识来优化 AI 的表现</li>
-                            <li>• 选中状态变化时会收到即时反馈提示</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </Card>
-                  </AccordionItem>
-                </Accordion>
-              )}
+              {/* 知识库使用说明 */}
+              <Card className='bg-default-50 p-3'>
+                <div className='flex items-start gap-2'>
+                  <Icon icon='solar:info-circle-linear' className='text-primary w-5 h-5 mt-0.5' />
+                  <div className='text-sm'>
+                    <p className='font-medium mb-1'>知识库使用说明：</p>
+                    <ul className='text-default-500 space-y-1'>
+                      <li>• 选中的知识将被 AI 助手实时学习和参考</li>
+                      <li>• AI 会在对话中结合这些知识提供更准确的回答</li>
+                      <li>• 您可以随时调整选中的知识来优化 AI 的表现</li>
+                      <li>• 选中状态变化时会收到即时反馈提示</li>
+                    </ul>
+                  </div>
+                </div>
+              </Card>
 
               <div className='flex items-center justify-between'>
                 <span className='text-lg font-medium'>知识列表</span>
