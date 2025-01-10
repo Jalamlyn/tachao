@@ -76,12 +76,12 @@ export const CodeEditor: React.FC<CodeEditorProps> = observer(({ isFullWidth, on
         </Tooltip>
         <Tooltip content='导出代码'>
           <Button className='ml-2' size='sm' variant='flat' isIconOnly onPress={handleExportCode}>
-            <Icon icon='mdi:download' className='w-4 h-4' />
+            <Icon icon='line-md:arrow-open-down' className='w-4 h-4' />
           </Button>
         </Tooltip>
         <Tooltip content='导入代码'>
           <Button size='sm' variant='flat' isIconOnly onClick={() => (appCodeStore.viewState.showImportModal = true)}>
-            <Icon icon='mdi:upload' className='w-4 h-4' />
+            <Icon icon='line-md:arrow-open-up' className='w-4 h-4' />
           </Button>
         </Tooltip>
         <Divider orientation='vertical' className='h-6' />
