@@ -64,7 +64,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
           },
           pages: [],
           accessControl: {
-            isPublic: true,
+            isPublic: false,
             requireAuth: false,
           },
         }

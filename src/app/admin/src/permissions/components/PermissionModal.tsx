@@ -39,7 +39,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   const [newAccountId, setNewAccountId] = useState("")
   const [accounts, setAccounts] = useState<any[]>([])
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false)
-  const [accessMode, setAccessMode] = useState<"public" | "authenticated" | "specified">("public")
+  const [accessMode, setAccessMode] = useState<"public" | "authenticated" | "specified">("specified")
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   useEffect(() => {

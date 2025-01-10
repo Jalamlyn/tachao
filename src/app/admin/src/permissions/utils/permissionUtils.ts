@@ -166,7 +166,7 @@ export const addPermission = async (
       resourceType,
       resourceId,
       accounts: [],
-      isPublic: true, // 新建资源默认公开访问
+      isPublic: false, 
       requireAuth: false,
     }
   }
@@ -265,7 +265,7 @@ export const setResourceAccessControl = async (
         resourceType,
         resourceId,
         accounts: [],
-        isPublic: true,
+        isPublic: false,
         requireAuth: false,
       }
     }

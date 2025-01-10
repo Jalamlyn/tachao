@@ -119,7 +119,6 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
       label: "指定用户可访问",
     }
   }
-
   return (
     <>
       <Card
@@ -159,9 +158,11 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
 
                 {/* 创建者信息 */}
                 {app.creator && (
-                  <div className='flex items-center gap-2 bg-default-100/50 px-3 py-1 rounded-full'>
-                    <span className='text-small text-default-600'>{app.creator.name.split("_")[1]}</span>
-                  </div>
+                  <Chip color='success' variant='bordered'>
+                    <span className='text-small text-default-600'>
+                      由 {app.creator.name === "管理员" ? "管理员" : app.creator.name.split("_")[1]} 创建
+                    </span>
+                  </Chip>
                 )}
               </div>
 
