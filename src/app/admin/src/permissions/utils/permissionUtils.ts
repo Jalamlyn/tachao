@@ -260,8 +260,9 @@ export const setResourcePublicAccess = async (
     permissions[resourceId].isPublic = isPublic
     await setResourcePermissions(resourceType, permissions)
 
-    // 2. 如果是 app 类型,同时更新 app_index
+    // 2. 如果是 app 类型,同时更新 app_index 和 app 元数据
     if (resourceType === 'app') {
+      // 更新 app_index
       const appIndexResult = await getMetadata(['app_index'])
       const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
       
@@ -280,6 +281,17 @@ export const setResourcePublicAccess = async (
       })
 
       await setMetadata('app_index', JSON.stringify(updatedApps))
+
+      // 更新 app 元数据
+      const appResult = await getMetadata([resourceId])
+      if (appResult.data?.[0]?.value) {
+        const appData = JSON.parse(appResult.data[0].value)
+        appData.app.accessControl = {
+          isPublic,
+          requireAuth: !isPublic && permissions[resourceId].accounts.length === 0,
+        }
+        await setMetadata(resourceId, JSON.stringify(appData))
+      }
     }
   } catch (error) {
     console.error("Error setting resource public access:", error)
