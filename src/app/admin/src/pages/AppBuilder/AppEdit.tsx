@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useLocation } from "react-router-dom"
-import {
-  Button,
-  Spinner,
-  ButtonGroup,
-  Tooltip,
-} from "@nextui-org/react"
+import { Button, Spinner, ButtonGroup, Tooltip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
 import PageLayout from "@/app/admin/src/components/PageLayout"
@@ -327,6 +322,18 @@ const AppBuilder: React.FC = observer(() => {
                 size='sm'
                 variant='light'
                 isIconOnly
+                onClick={() => {
+                  window.open(`/app-preview/${appId}`, "_blank")
+                }}
+                isDisabled={isRefreshing}
+                className='bg-white/70 backdrop-blur-sm'
+              >
+                <Icon icon='fluent:open-12-regular' className={`w-4 h-4`} />
+              </Button>
+              <Button
+                size='sm'
+                variant='light'
+                isIconOnly
                 onClick={refreshPreview}
                 isDisabled={isRefreshing}
                 className='bg-white/70 backdrop-blur-sm'
@@ -395,7 +402,7 @@ const AppBuilder: React.FC = observer(() => {
             isDisabled={isLoading || publishInProgress}
             isLoading={publishInProgress}
             startContent={<Icon icon='fluent:book-template-20-filled' className='w-4 h-4' />}
-            aria-label="发布模板"
+            aria-label='发布模板'
           >
             发布模板
           </Button>
@@ -450,16 +457,9 @@ const AppBuilder: React.FC = observer(() => {
           />
         </div>
 
-        <PublishModal 
-          isOpen={showPublishModal} 
-          onClose={() => setShowPublishModal(false)}
-          appId={appId}
-        />
+        <PublishModal isOpen={showPublishModal} onClose={() => setShowPublishModal(false)} appId={appId} />
 
-        <PublishTemplateModal
-          isOpen={showPublishTemplateModal}
-          onClose={() => setShowPublishTemplateModal(false)}
-        />
+        <PublishTemplateModal isOpen={showPublishTemplateModal} onClose={() => setShowPublishTemplateModal(false)} />
 
         <RollbackModal
           isOpen={showRollbackModal}

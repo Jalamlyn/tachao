@@ -95,11 +95,11 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
   const getTemplateGradient = (template?: string) => {
     switch (template) {
       case "enterprise":
-        return "from-blue-100 via-blue-50 to-blue-100"
+        return "from-blue-100 to-blue-50"
       case "dashboard":
-        return "from-secondary-100 via-secondary-50 to-secondary-100"
+        return "from-secondary-100 to-secondary-50"
       default:
-        return "from-primary-100 via-primary-50 to-primary-100"
+        return "from-primary-100 to-primary-50"
     }
   }
 
@@ -124,143 +124,85 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
     <>
       <Card
         isBlurred
-        className="border-none bg-background/60 dark:bg-default-100/50 w-full group hover:shadow-xl transition-all duration-300 overflow-hidden"
-        shadow="sm"
+        className='border-none bg-background/60 dark:bg-default-100/50 w-full group hover:shadow-lg transition-all duration-300'
+        shadow='sm'
       >
-        <CardBody className="p-0">
-          <div className="grid grid-cols-12 items-stretch">
-            {/* 左侧图标区域 - 现代化设计 */}
-            <div className="col-span-4 md:col-span-3 relative overflow-hidden">
+        <CardBody>
+          <div className='grid grid-cols-12 gap-6 items-center'>
+            {/* 左侧图标区域 */}
+            <div className='col-span-4 md:col-span-3'>
               <div
                 className={`
-                  absolute inset-0 
-                  bg-gradient-to-br ${getTemplateGradient(app.template)}
-                  transform group-hover:scale-105 transition-all duration-500
-                  flex items-center justify-center
-                `}
+          aspect-square rounded-xl 
+          bg-gradient-to-br ${getTemplateGradient(app.template)}
+          flex items-center justify-center
+          transform group-hover:scale-105 transition-all duration-300
+          shadow-lg
+        `}
               >
-                <div className="relative z-10 p-6">
-                  <Icon 
-                    icon={getTemplateIcon(app.template)} 
-                    className={`w-12 h-12 ${getTemplateColor(app.template)} transform group-hover:scale-110 transition-transform duration-300`} 
-                  />
-                </div>
-                {/* 装饰性背景图案 */}
-                <div className="absolute inset-0 opacity-10">
-                  <Icon 
-                    icon={getTemplateIcon(app.template)} 
-                    className="w-full h-full"
-                  />
-                </div>
+                <Icon icon={getTemplateIcon(app.template)} className={`w-12 h-12 ${getTemplateColor(app.template)}`} />
               </div>
             </div>
 
-            {/* 右侧信息区域 - 优化布局 */}
-            <div className="col-span-8 md:col-span-9 p-6 space-y-4">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1 flex-1 min-w-0">
-                  <h3 className="text-xl font-bold tracking-tight truncate group-hover:text-primary transition-colors">
-                    {app.title}
-                  </h3>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-small text-default-500">
-                      创建于 {new Date(app.createdAt).toLocaleDateString()}
-                    </p>
-                    <Chip 
-                      size="sm" 
-                      variant="flat" 
-                      color={getAccessControlLabel().color}
-                      className="transition-transform group-hover:scale-105"
-                    >
+            {/* 右侧信息区域 */}
+            <div className='col-span-8 md:col-span-9 space-y-4'>
+              <div className='flex justify-between items-start'>
+                <div className='space-y-1'>
+                  <h3 className='text-xl font-bold tracking-tight truncate'>{app.title}</h3>
+                  <div className='flex items-center gap-2'>
+                    <p className='text-small text-default-500'>创建于 {new Date(app.createdAt).toLocaleDateString()}</p>
+                    <Chip size='sm' variant='flat' color={getAccessControlLabel().color}>
                       {getAccessControlLabel().label}
                     </Chip>
                   </div>
                 </div>
 
-                {/* 创建者信息 - 改进视觉效果 */}
+                {/* 创建者信息 */}
                 {app.creator && (
-                  <div className="flex items-center gap-2 bg-default-100/50 backdrop-blur-sm px-3 py-1 rounded-full transform group-hover:translate-y-1 transition-transform">
-                    <Avatar 
-                      size="sm" 
-                      src={app.creator.avatar} 
-                      name={app.creator.name} 
-                      className="w-6 h-6 ring-2 ring-primary/10"
-                    />
-                    <span className="text-small text-default-600">{app.creator.name}</span>
+                  <div className='flex items-center gap-2 bg-default-100/50 px-3 py-1 rounded-full'>
+                    <span className='text-small text-default-600'>{app.creator.name.split("_")[1]}</span>
                   </div>
                 )}
               </div>
 
-              {/* 操作按钮 - 优化交互 */}
-              <div className="flex gap-2 pt-2">
+              {/* 操作按钮 */}
+              <div className='flex gap-2'>
                 <Button
-                  size="sm"
-                  variant="flat"
-                  className="flex-1 bg-default-100/50 hover:bg-default-200/50 transition-colors group"
-                  startContent={
-                    <Icon 
-                      icon="mdi:eye" 
-                      className="w-4 h-4 group-hover:scale-110 transition-transform" 
-                    />
-                  }
+                  size='sm'
+                  variant='flat'
+                  startContent={<Icon icon='mdi:eye' className='w-5 h-5' />}
                   onPress={() => window.open(`/app-run/${app.id}`, "_blank")}
-                >
-                  访问应用
-                </Button>
+                ></Button>
 
                 <Button
-                  size="sm"
-                  color="primary"
-                  className="flex-1 bg-primary/10 hover:bg-primary/20 transition-colors group"
-                  startContent={
-                    <Icon 
-                      icon="hugeicons:ai-chat-02" 
-                      className="w-4 h-4 group-hover:scale-110 transition-transform" 
-                    />
-                  }
+                  size='sm'
+                  color='primary'
+                  startContent={<Icon icon='hugeicons:ai-chat-02' className='w-5 h-5' />}
                   onPress={() => navigate(`/admin/apps/${app.id}/builder`)}
-                >
-                  开发应用
-                </Button>
+                ></Button>
 
                 <Button
-                  size="sm"
-                  variant="flat"
-                  color="danger"
-                  className="bg-danger-50/50 hover:bg-danger-100/50 transition-colors group"
-                  startContent={
-                    <Icon 
-                      icon="mdi:shield-lock" 
-                      className="w-4 h-4 group-hover:scale-110 transition-transform" 
-                    />
-                  }
+                  size='sm'
+                  variant='flat'
+                  color='danger'
+                  startContent={<Icon icon='mdi:shield-lock' className='w-5 h-5' />}
                   onPress={onPermissionModalOpen}
-                >
-                  访问控制
-                </Button>
+                ></Button>
 
                 <Dropdown>
                   <DropdownTrigger>
-                    <Button 
-                      size="sm" 
-                      variant="light" 
-                      isIconOnly 
-                      className="bg-default-100/50 hover:bg-default-200/50 group"
-                    >
-                      <Icon 
-                        icon="mdi:dots-vertical" 
-                        className="w-5 h-5 group-hover:scale-110 transition-transform" 
-                      />
+                    <Button size='sm' variant='light' isIconOnly className='bg-default-100/50 hover:bg-default-200/50'>
+                      <Icon icon='mdi:dots-vertical' className='w-5 h-5' />
                     </Button>
                   </DropdownTrigger>
-                  <DropdownMenu aria-label="应用操作">
+                  <DropdownMenu aria-label='应用操作'>
                     <DropdownItem
-                      key="copy-id"
+                      key='copy-id'
                       startContent={
                         <Icon
-                          icon="mdi:content-copy"
-                          className="w-4 h-4 transform group-hover:scale-110 transition-transform duration-200"
-                          aria-hidden="true"
+                          icon='mdi:content-copy'
+                          className='w-4 h-4 transform group-hover:scale-110 transition-transform duration-200'
+                          aria-hidden='true'
                         />
                       }
                       onPress={handleCopyId}
@@ -268,17 +210,17 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
                       复制ID
                     </DropdownItem>
                     <DropdownItem
-                      key="rename"
-                      startContent={<Icon icon="mdi:pencil" className="w-4 h-4" />}
+                      key='rename'
+                      startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
                       onPress={onRenameModalOpen}
                     >
                       重命名
                     </DropdownItem>
                     <DropdownItem
-                      key="delete"
-                      className="text-danger"
-                      color="danger"
-                      startContent={<Icon icon="mdi:delete" className="w-4 h-4" />}
+                      key='delete'
+                      className='text-danger'
+                      color='danger'
+                      startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
                       onPress={handleDelete}
                     >
                       删除应用
@@ -294,7 +236,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
       <PermissionModal
         isOpen={isPermissionModalOpen}
         onClose={onPermissionModalClose}
-        resourceType="app"
+        resourceType='app'
         resourceId={app.id}
         resourceTitle={app.title}
       />
@@ -310,22 +252,22 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
         }}
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">重命名应用</ModalHeader>
+          <ModalHeader className='flex flex-col gap-1'>重命名应用</ModalHeader>
           <ModalBody>
             <Input
-              label="应用名称"
+              label='应用名称'
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              variant="bordered"
+              variant='bordered'
               isRequired
             />
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" onPress={onRenameModalClose}>
+            <Button variant='light' onPress={onRenameModalClose}>
               取消
             </Button>
             <Button
-              color="primary"
+              color='primary'
               onPress={handleRename}
               isLoading={isRenaming}
               isDisabled={!newTitle.trim() || newTitle.trim() === app.title}

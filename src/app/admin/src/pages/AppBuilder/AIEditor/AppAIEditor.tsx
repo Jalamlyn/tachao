@@ -13,7 +13,6 @@ import { appCodeStore } from "../store/appCodeStore"
 import { CodeView } from "./components/CodeView"
 import { motion } from "framer-motion"
 import LogViewer from "./components/LogViewer"
-import message from "@/components/Message"
 import KnowledgeModal from "./components/KnowledgeModal"
 
 const AIEditor: React.FC<AIEditorProps> = observer(

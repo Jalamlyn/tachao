@@ -70,7 +70,7 @@ export async function publishTemplate(this: AppCodeStore, { useLatest = false } 
 
     // 获取当前用户信息
     const userInfo = await getCurrentAccountInfo()
-    
+
     // 生成唯一模板ID
     const templateId = `template_${this.appId}_${Date.now()}`
 
@@ -82,16 +82,16 @@ export async function publishTemplate(this: AppCodeStore, { useLatest = false } 
       creator: {
         id: userInfo.id,
         name: userInfo.name || userInfo.username,
-        avatar: userInfo.avatar
+        avatar: userInfo.avatar,
       },
       app: versionToPublish.app,
       modules: versionToPublish.modules,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
 
     await setPlatMetaData({
       name: templateId,
-      value: JSON.stringify(templateData)
+      value: JSON.stringify(templateData),
     })
 
     // 更新模板索引
@@ -102,26 +102,26 @@ export async function publishTemplate(this: AppCodeStore, { useLatest = false } 
       creator: {
         id: userInfo.id,
         name: userInfo.name || userInfo.username,
-        avatar: userInfo.avatar
+        avatar: userInfo.avatar,
       },
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
 
-    const indexResult = await getPlatMetaData(['plat_template_index'])
+    const indexResult = await getPlatMetaData(["plat_template_index"])
     const currentIndex = indexResult.data?.[0]?.values[0]?.value ? JSON.parse(indexResult.data[0].values[0].value) : []
-    
+
     // 添加新模板到索引列表
     const newIndex = [...currentIndex, templateIndex]
 
     await setPlatMetaData({
-      name: 'plat_template_index',
-      value: JSON.stringify(newIndex)
+      name: "plat_template_index",
+      value: JSON.stringify(newIndex),
     })
 
     return {
       success: true,
       version: versionToPublish.app.version,
-      publishedAt: new Date().toISOString()
+      publishedAt: new Date().toISOString(),
     }
   } catch (error) {
     console.error("Error publishing template:", error)
@@ -131,6 +131,7 @@ export async function publishTemplate(this: AppCodeStore, { useLatest = false } 
 
 export async function updateAppIndex(this: AppCodeStore, app: any, name: string): Promise<void> {
   try {
+    const userInfo = await getCurrentAccountInfo()
     const appIndexResult = await getMetadata(["app_index"])
     const apps: AppIndexItem[] = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
 
@@ -141,6 +142,12 @@ export async function updateAppIndex(this: AppCodeStore, app: any, name: string)
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       version: app.version,
+      // 添加creator信息
+      creator: {
+        id: userInfo.id,
+        name: userInfo.name || userInfo.username,
+        avatar: userInfo.avatar,
+      },
     }
 
     const updatedApps = [...apps, newAppIndex]
@@ -151,21 +158,18 @@ export async function updateAppIndex(this: AppCodeStore, app: any, name: string)
     throw new Error("Failed to update app index")
   }
 }
-
 export async function getLastPublishedVersion(this: AppCodeStore): Promise<PublishedVersion | null> {
   if (!this.appId) throw new Error("No app id")
-  
+
   try {
     const appResult = await getMetadata([this.appId])
     if (!appResult.data?.[0]?.value) return null
-    
+
     const appData = JSON.parse(appResult.data[0].value)
-    
+
     const moduleIds = Object.keys(appData.app.modules)
-    const moduleResults = await Promise.all(
-      moduleIds.map(moduleId => getMetadata([moduleId]))
-    )
-    
+    const moduleResults = await Promise.all(moduleIds.map((moduleId) => getMetadata([moduleId])))
+
     const modules = {}
     moduleResults.forEach((result, index) => {
       const moduleId = moduleIds[index]
@@ -173,11 +177,11 @@ export async function getLastPublishedVersion(this: AppCodeStore): Promise<Publi
         modules[moduleId] = JSON.parse(result.data[0].value)
       }
     })
-    
+
     return {
       version: appData.version,
       publishedAt: appData.updatedAt,
-      modules
+      modules,
     }
   } catch (error) {
     console.error("Error getting last published version:", error)
