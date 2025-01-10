@@ -13,8 +13,18 @@ export const useOid = (loginData) => {
         const callbackUrl = new URL(decodeURIComponent(callback))
         const callbackParams = new URLSearchParams(callbackUrl.search)
         const callbackOid = callbackParams.get("oid")
+        const pathMatch = callbackUrl.pathname.match(/\/app_(\d+)_(\d+)/)
 
-        if (callbackOid) {
+        // 新的 URL 格式解析
+        if (pathMatch) {
+          const [, organizationId, appId] = pathMatch
+          loginData.current.organizationId = organizationId
+          globalStore.organizationId = organizationId
+          globalStore.appId = appId
+          setHasOidParam(true)
+        }
+        // 保持原有的 oid 参数解析功能
+        else if (callbackOid) {
           loginData.current.organizationId = callbackOid
           globalStore.organizationId = callbackOid
           setHasOidParam(true)
