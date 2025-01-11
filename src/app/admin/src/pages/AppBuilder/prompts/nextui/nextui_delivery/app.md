@@ -90,7 +90,7 @@ const App = observer(() => {
                   "w-0 opacity-0": isCollapsed,
                 })}
               >
-                酒类配送管理系统
+                江阴郎牌特曲配送管理
               </span>
               <div className={cn("flex-end flex", {hidden: isCollapsed})}>
                 <Icon
@@ -399,7 +399,7 @@ ${systemContext}
             ))}
           </div>
         )}
-        
+
         {/* 输入框区域 */}
         <div className={cn(
           "group relative rounded-xl transition-all duration-200",
@@ -593,20 +593,20 @@ ${order.items.map((item, index) =>
 3. 订单总额：¥${order.items.reduce((sum, item) => sum + item.amount, 0)}
 
 4. 确认信息：
-${order.confirmations?.customer ? 
+${order.confirmations?.customer ?
   `客户确认：
   - 确认人：${order.confirmations.customer.name}
   - 电话：${order.confirmations.customer.phone}
   - 时间：${new Date(order.confirmations.customer.time).toLocaleString()}
-  ${order.confirmations.customer.note ? `- 备注：${order.confirmations.customer.note}` : ''}` : 
+  ${order.confirmations.customer.note ? `- 备注：${order.confirmations.customer.note}` : ''}` :
   '客户未确认'}
 
-${order.confirmations?.staff ? 
+${order.confirmations?.staff ?
   `业务员确认：
   - 确认人：${order.confirmations.staff.name}
   - 电话：${order.confirmations.staff.phone}
   - 时间：${new Date(order.confirmations.staff.time).toLocaleString()}
-  ${order.confirmations.staff.note ? `- 备注：${order.confirmations.staff.note}` : ''}` : 
+  ${order.confirmations.staff.note ? `- 备注：${order.confirmations.staff.note}` : ''}` :
   '业务员未确认'}`;
   } catch (error) {
     console.error('Failed to get order context:', error);
@@ -656,7 +656,7 @@ const DeliveryBasicInfo = observer(({
             input: "text-default-800"
           }}
           startContent={
-            <Icon 
+            <Icon
               className="text-default-400 pointer-events-none flex-shrink-0"
               icon="solar:user-bold"
               width={20}
@@ -675,7 +675,7 @@ const DeliveryBasicInfo = observer(({
             input: "text-default-800"
           }}
           startContent={
-            <Icon 
+            <Icon
               className="text-default-400 pointer-events-none flex-shrink-0"
               icon="solar:user-id-bold"
               width={20}
@@ -694,7 +694,7 @@ const DeliveryBasicInfo = observer(({
             input: "text-default-800"
           }}
           startContent={
-            <Icon 
+            <Icon
               className="text-default-400 pointer-events-none flex-shrink-0"
               icon="solar:phone-bold"
               width={20}
@@ -714,7 +714,7 @@ const DeliveryBasicInfo = observer(({
             input: "text-default-800"
           }}
           startContent={
-            <Icon 
+            <Icon
               className="text-default-400 pointer-events-none flex-shrink-0"
               icon="solar:calendar-bold"
               width={20}
@@ -734,7 +734,7 @@ const DeliveryBasicInfo = observer(({
             input: "text-default-800"
           }}
           startContent={
-            <Icon 
+            <Icon
               className="text-default-400 pointer-events-none flex-shrink-0 mt-1"
               icon="solar:map-point-bold"
               width={20}
@@ -784,7 +784,7 @@ const DeliveryDetail = observer(({
   const [loading, setLoading] = React.useState(false);
   const [selectedTab, setSelectedTab] = React.useState("details");
   const contentRef = React.useRef(null);
-  
+
   const handlePrint = useReactToPrint({
     contentRef,
     documentTitle: `送货单_${order?.id || ''}`,
@@ -853,8 +853,8 @@ const DeliveryDetail = observer(({
                     size="sm"
                     variant="flat"
                     startContent={
-                      <Icon 
-                        className="text-current" 
+                      <Icon
+                        className="text-current"
                         icon={deliveryStore.constructor.StatusIcon[order.status]}
                         width={16}
                       />
@@ -868,7 +868,7 @@ const DeliveryDetail = observer(({
                 </p>
               </ModalHeader>
               <ModalBody>
-                <Tabs 
+                <Tabs
                   selectedKey={selectedTab}
                   onSelectionChange={setSelectedTab}
                   classNames={{
@@ -930,17 +930,17 @@ const DeliveryDetail = observer(({
                 </Tabs>
               </ModalBody>
               <ModalFooter>
-                <Button 
-                  color="primary" 
+                <Button
+                  color="primary"
                   variant="flat"
                   onPress={() => setShowPreview(true)}
                   startContent={<Icon icon="solar:eye-bold" />}
                 >
                   打印预览
                 </Button>
-                <Button 
-                  color="danger" 
-                  variant="light" 
+                <Button
+                  color="danger"
+                  variant="light"
                   onPress={onClose}
                   startContent={<Icon icon="solar:close-circle-bold" />}
                 >
@@ -972,16 +972,16 @@ const DeliveryDetail = observer(({
                 </div>
               </ModalBody>
               <ModalFooter>
-                <Button 
-                  color="primary" 
+                <Button
+                  color="primary"
                   onPress={handlePrint}
                   startContent={<Icon icon="solar:printer-bold" />}
                 >
                   打印
                 </Button>
-                <Button 
-                  color="danger" 
-                  variant="light" 
+                <Button
+                  color="danger"
+                  variant="light"
                   onPress={onClose}
                   startContent={<Icon icon="solar:close-circle-bold" />}
                 >
@@ -1011,7 +1011,8 @@ const {
   api
 } = context;
 
-const { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea } = NextUI;
+const { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Textarea, Spinner } = NextUI;
+const userStore = await context.wpm.import('store_user');
 
 const DeliveryDetailConfirmModal = observer(({
   isOpen,
@@ -1044,20 +1045,15 @@ const DeliveryDetailConfirmModal = observer(({
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    
-    if (!formData.get('name')?.trim()) {
-      message.warning('请输入确认人姓名');
-      return;
-    }
-    
-    if (!formData.get('phone')?.trim()) {
-      message.warning('请输入联系电话');
+
+    if (!userStore.userInfo) {
+      message.error('请先登录');
       return;
     }
 
     const data = {
-      name: formData.get('name'),
-      phone: formData.get('phone'),
+      name: userStore.userInfo.name,
+      phone: userStore.userInfo.phone || userStore.userInfo.mobile,
       note: formData.get('note'),
       location
     };
@@ -1069,6 +1065,26 @@ const DeliveryDetailConfirmModal = observer(({
       setLoading(false);
     }
   };
+
+  if (!userStore.userInfo) {
+    return (
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          <ModalBody className="py-6">
+            <div className="flex flex-col items-center justify-center gap-2">
+              <Icon className="text-danger" icon="solar:shield-warning-bold" width={32} />
+              <p className="text-center text-danger">未获取到用户信息,请重新登录</p>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="danger" variant="light" onPress={() => onOpenChange(false)}>
+              关闭
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  }
 
   return (
     <Modal
@@ -1084,73 +1100,69 @@ const DeliveryDetailConfirmModal = observer(({
                 {type === 'customer' ? '客户确认' : '业务员确认'}
               </h3>
               <p className="text-small text-default-500">
-                请填写确认信息，带 * 为必填项
+                使用当前登录用户信息进行确认
               </p>
             </ModalHeader>
             <ModalBody>
-              <Input
-                isRequired
-                label="确认人姓名"
-                name="name"
-                placeholder="请输入姓名"
-                startContent={
-                  <Icon 
-                    className="text-default-400 pointer-events-none flex-shrink-0"
-                    icon="solar:user-bold"
-                    width={20}
-                  />
-                }
-              />
-              <Input
-                isRequired
-                label="联系电话"
-                name="phone"
-                placeholder="请输入电话"
-                startContent={
-                  <Icon 
-                    className="text-default-400 pointer-events-none flex-shrink-0"
-                    icon="solar:phone-bold"
-                    width={20}
-                  />
-                }
-              />
-              <Textarea
-                label="备注"
-                name="note"
-                placeholder="可选填写备注信息"
-                startContent={
-                  <Icon 
-                    className="text-default-400 pointer-events-none flex-shrink-0 mt-1"
-                    icon="solar:notes-bold"
-                    width={20}
-                  />
-                }
-              />
-              {location && (
-                <div className="rounded-lg bg-default-100 p-3">
-                  <div className="flex items-center gap-2 text-small">
-                    <Icon 
-                      className="text-success"
-                      icon="solar:map-point-bold"
-                      width={20}
+              <div className="space-y-4">
+                {/* 显示当前用户信息 */}
+                <div className="rounded-lg bg-default-100 p-4">
+                  <div className="flex items-center gap-3">
+                    <NextUI.Avatar
+                      size="sm"
+                      src={userStore.userInfo.avatar}
+                      fallback={
+                        <Icon className="text-default-500" icon="solar:user-bold" width={20} />
+                      }
                     />
-                    <span>当前位置：{location.address}</span>
+                    <div>
+                      <p className="font-medium">{userStore.userInfo.name}</p>
+                      <p className="text-small text-default-500">
+                        {userStore.userInfo.phone || userStore.userInfo.mobile}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              )}
+
+                <Textarea
+                  label="备注"
+                  name="note"
+                  placeholder="可选填写备注信息"
+                  startContent={
+                    <Icon
+                      className="text-default-400 pointer-events-none flex-shrink-0 mt-1"
+                      icon="solar:notes-bold"
+                      width={20}
+                    />
+                  }
+                />
+
+                {location && (
+                  <div className="rounded-lg bg-default-100 p-3">
+                    <div className="flex items-center gap-2 text-small">
+                      <Icon
+                        className="text-success"
+                        icon="solar:map-point-bold"
+                        width={20}
+                      />
+                      <span>当前位置：{location.address}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </ModalBody>
             <ModalFooter>
-              <Button 
-                color="danger" 
-                variant="light" 
+              <Button
+                color="danger"
+                variant="light"
                 onPress={onClose}
                 startContent={<Icon icon="solar:close-circle-bold" />}
               >
                 取消
               </Button>
-              <Button 
-                color="primary" 
-                type="submit" 
+              <Button
+                color="primary"
+                type="submit"
                 isLoading={loading}
                 startContent={!loading && <Icon icon="solar:disk-bold" />}
               >
@@ -1441,7 +1453,7 @@ const DeliveryDetailProgress = observer(({
         status: 'delivering',
         title: '配送中',
         icon: 'solar:delivery-bold',
-        completed: order.status !== deliveryStore.constructor.OrderStatus.PENDING && 
+        completed: order.status !== deliveryStore.constructor.OrderStatus.PENDING &&
                   order.status !== deliveryStore.constructor.OrderStatus.DELIVERING
       },
       {
@@ -1558,7 +1570,7 @@ const DeliveryForm = observer(({
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    
+
     if (items.length === 0) {
       message.warning('请至少添加一个商品');
       return;
@@ -1572,7 +1584,7 @@ const DeliveryForm = observer(({
       address: formData.get('address'),
       items,
       status: 'pending',
-      ...(deliveryStore.currentOrder?.id ? { 
+      ...(deliveryStore.currentOrder?.id ? {
         id: deliveryStore.currentOrder.id,
         confirmations: deliveryStore.currentOrder.confirmations,
         createdAt: deliveryStore.currentOrder.createdAt
@@ -1628,7 +1640,7 @@ const DeliveryForm = observer(({
                 </ModalHeader>
                 <ModalBody>
                   <div className="space-y-8">
-                    <DeliveryBasicInfo 
+                    <DeliveryBasicInfo
                       readOnly={readOnly}
                       defaultValues={deliveryStore.currentOrder}
                     />
@@ -1641,18 +1653,18 @@ const DeliveryForm = observer(({
                   </div>
                 </ModalBody>
                 <ModalFooter>
-                  <Button 
-                    color="danger" 
-                    variant="light" 
+                  <Button
+                    color="danger"
+                    variant="light"
                     onPress={onClose}
                     startContent={<Icon icon="solar:close-circle-bold" />}
                   >
                     取消
                   </Button>
                   {!readOnly && (
-                    <Button 
-                      color="primary" 
-                      type="submit" 
+                    <Button
+                      color="primary"
+                      type="submit"
                       isLoading={loading}
                       startContent={!loading && <Icon icon="solar:disk-bold" />}
                     >
@@ -1714,7 +1726,7 @@ const DeliveryHistory = observer(({
         setLoading(true);
         setError(null);
         const result = await context.api.queryMetadataHistory({ names: [orderId] });
-        
+
         if (result.data) {
           const parsedHistory = result.data.map(item => ({
             updatedAt: item.updatedAt,
@@ -1855,7 +1867,7 @@ const DeliveryHistoryDiff = observer(({
   React.useEffect(() => {
     const compare = async () => {
       if (!isOpen || !currentVersion || !previousVersion) return;
-      
+
       setComparing(true);
       try {
         const diff = utilsDeliveryDiff.compareObjects(
@@ -2005,12 +2017,12 @@ const DeliveryItemForm = observer(({
     e.stopPropagation()
     const quantity = parseInt(formData.quantity);
     const price = parseFloat(formData.price);
-    
+
     if (isNaN(quantity) || quantity <= 0) {
       message.warning('请输入有效的数量');
       return;
     }
-    
+
     if (isNaN(price) || price <= 0) {
       message.warning('请输入有效的单价');
       return;
@@ -2024,7 +2036,7 @@ const DeliveryItemForm = observer(({
         price,
         amount: quantity * price
       };
-      
+
       onSubmit(itemData);
       onOpenChange(false);
     } finally {
@@ -2096,7 +2108,7 @@ const DeliveryItemForm = observer(({
                       input: "text-default-800"
                     }}
                     startContent={
-                      <Icon 
+                      <Icon
                         className="text-default-400 pointer-events-none flex-shrink-0"
                         icon="solar:wine-glass-bold"
                         width={20}
@@ -2117,7 +2129,7 @@ const DeliveryItemForm = observer(({
                       input: "text-default-800"
                     }}
                     startContent={
-                      <Icon 
+                      <Icon
                         className="text-default-400 pointer-events-none flex-shrink-0"
                         icon="solar:box-minimalistic-bold"
                         width={20}
@@ -2158,18 +2170,18 @@ const DeliveryItemForm = observer(({
                 </div>
               </ModalBody>
               <ModalFooter>
-                <Button 
-                  color="danger" 
-                  variant="light" 
+                <Button
+                  color="danger"
+                  variant="light"
                   onPress={onClose}
                   startContent={<Icon icon="solar:close-circle-bold" />}
                 >
                   取消
                 </Button>
                 {!readOnly && (
-                  <Button 
-                    color="primary" 
-                    type="submit" 
+                  <Button
+                    color="primary"
+                    type="submit"
                     isLoading={loading}
                     startContent={!loading && <Icon icon="solar:disk-bold" />}
                   >
@@ -2280,8 +2292,8 @@ const DeliveryItemList = observer(({
 
         {items.length === 0 && (
           <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8">
-            <Icon 
-              className="text-default-300 mb-2" 
+            <Icon
+              className="text-default-300 mb-2"
               icon="solar:box-minimalistic-bold"
               width={48}
             />
@@ -2544,182 +2556,6 @@ context.wpm.export('comp_delivery_print', DeliveryPrint);
 ```
 
 ```jsx
-<mo-ai-code type="component" name="comp_delivery_share_content" title="送货单分享页面内容">
-const {
-  wpm,
-  React,
-  observer,
-  NextUI,
-  Icon
-} = context;
-
-const { Card, CardBody, Progress, Button } = NextUI;
-const DeliveryDetailProgress = await context.wpm.import('comp_delivery_detail_progress');
-const DeliveryDetailInfo = await context.wpm.import('comp_delivery_detail_info');
-const DeliveryDetailItems = await context.wpm.import('comp_delivery_detail_items');
-const DeliveryDetailConfirmations = await context.wpm.import('comp_delivery_detail_confirmations');
-
-const DeliveryShareContent = observer(({
-  order,
-  onConfirm
-}) => {
-  const [confirming, setConfirming] = React.useState(false);
-  const confirmProgress = [
-    order.confirmations?.customer,
-    order.confirmations?.staff
-  ].filter(Boolean).length;
-
-  const handleConfirm = async (type) => {
-    setConfirming(true);
-    try {
-      await onConfirm(type);
-    } finally {
-      setConfirming(false);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardBody>
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-medium font-medium">确认进度</h4>
-            <span className="text-small text-default-400">
-              {confirmProgress}/2 已确认
-            </span>
-          </div>
-          <Progress
-            aria-label="确认进度"
-            value={confirmProgress * 50}
-            className="mb-4"
-          />
-          <div className="flex gap-2 justify-end">
-            <Button
-              color="primary"
-              variant={order.confirmations?.customer ? "flat" : "solid"}
-              startContent={<Icon icon="solar:user-check-bold" />}
-              isDisabled={order.confirmations?.customer || confirming}
-              isLoading={confirming}
-              onPress={() => handleConfirm('customer')}
-            >
-              客户确认
-            </Button>
-            <Button
-              color="secondary"
-              variant={order.confirmations?.staff ? "flat" : "solid"}
-              startContent={<Icon icon="solar:shield-check-bold" />}
-              isDisabled={order.confirmations?.staff || confirming}
-              isLoading={confirming}
-              onPress={() => handleConfirm('staff')}
-            >
-              业务员确认
-            </Button>
-          </div>
-        </CardBody>
-      </Card>
-
-      <DeliveryDetailInfo order={order} />
-      <DeliveryDetailItems order={order} />
-      <DeliveryDetailConfirmations order={order} />
-    </div>
-  );
-});
-
-context.wpm.export('comp_delivery_share_content', DeliveryShareContent);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="component" name="comp_delivery_share_header" title="送货单分享页面头部">
-const {
-  wpm,
-  React,
-  observer,
-  NextUI,
-  Icon
-} = context;
-
-const { Button } = NextUI;
-
-const DeliveryShareHeader = observer(({
-  onEdit
-}) => {
-  return (
-    <div className="mb-6 flex items-center justify-between">
-      <h1 className="text-xl font-bold">送货单详情</h1>
-      <Button
-        color="primary"
-        variant="flat"
-        startContent={<Icon icon="solar:pen-bold" />}
-        onPress={onEdit}
-      >
-        编辑
-      </Button>
-    </div>
-  );
-});
-
-context.wpm.export('comp_delivery_share_header', DeliveryShareHeader);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="component" name="comp_delivery_share_layout" title="送货单分享页面布局">
-const {
-  wpm,
-  React,
-  observer,
-  NextUI,
-  Icon
-} = context;
-
-const { Spinner } = NextUI;
-
-const DeliveryShareLayout = observer(({
-  loading,
-  error,
-  children
-}) => {
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <Spinner size="lg" label="加载中..." />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mb-4 flex justify-center">
-            <Icon className="text-danger" icon="solar:shield-warning-bold" width={48} />
-          </div>
-          <p className="mb-2 text-xl">送货单不存在或已被删除</p>
-          <p className="mb-4 text-small text-default-500">
-            请检查链接是否正确，或联系管理员
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-default-50 p-6">
-      <div className="mx-auto max-w-3xl">
-        {children}
-      </div>
-    </div>
-  );
-});
-
-context.wpm.export('comp_delivery_share_layout', DeliveryShareLayout);
-</mo-ai-code>
-```
-
-```jsx
 <mo-ai-code type="component" name="comp_delivery_table" title="送货单表格组件">
 const {
   wpm,
@@ -2802,7 +2638,7 @@ const DeliveryTable = observer(() => {
 
   const handleShare = (order) => {
     if (!userStore.enterpriseInfo.id) {
-      
+
                   message.error('无法获取组织信息');
       return;
     }
@@ -2819,7 +2655,7 @@ const DeliveryTable = observer(() => {
     switch (columnKey) {
       case "totalAmount":
         return `¥${order.totalAmount}`;
-        
+
       case "status":
         return (
           <Chip
@@ -2828,8 +2664,8 @@ const DeliveryTable = observer(() => {
             size="sm"
             variant="flat"
             startContent={
-              <Icon 
-                className="text-current" 
+              <Icon
+                className="text-current"
                 icon={deliveryStore.constructor.StatusIcon[order.status]}
                 width={16}
               />
@@ -2838,7 +2674,7 @@ const DeliveryTable = observer(() => {
             {deliveryStore.constructor.StatusText[order.status]}
           </Chip>
         );
-        
+
       case "actions":
         return (
           <div className="flex items-center gap-2">
@@ -2879,7 +2715,7 @@ const DeliveryTable = observer(() => {
             </Button>
           </div>
         );
-        
+
       default:
         return cellValue;
     }
@@ -3220,7 +3056,7 @@ const reportStore = await context.wpm.import('store_report');
 
 const CustomerReport = observer(() => {
   const report = reportStore.getCurrentReport();
-  
+
   if (!report) return null;
 
   return (
@@ -3249,8 +3085,8 @@ const CustomerReport = observer(() => {
                       <Icon
                         className={cn(
                           "text-2xl",
-                          index === 0 ? "text-warning" : 
-                          index === 1 ? "text-default-400" : 
+                          index === 0 ? "text-warning" :
+                          index === 1 ? "text-default-400" :
                           "text-orange-600"
                         )}
                         icon="solar:medal-ribbons-star-bold"
@@ -3293,8 +3129,8 @@ const CustomerReport = observer(() => {
                       <Icon
                         className={cn(
                           "text-2xl",
-                          index === 0 ? "text-warning" : 
-                          index === 1 ? "text-default-400" : 
+                          index === 0 ? "text-warning" :
+                          index === 1 ? "text-default-400" :
                           "text-orange-600"
                         )}
                         icon="solar:medal-ribbons-star-bold"
@@ -3495,7 +3331,7 @@ const reportStore = await context.wpm.import('store_report');
 
 const ProductReport = observer(() => {
   const report = reportStore.getCurrentReport();
-  
+
   if (!report) {
     return (
       <div className="flex h-[200px] items-center justify-center">
@@ -3539,8 +3375,8 @@ const ProductReport = observer(() => {
                       <Icon
                         className={cn(
                           "text-2xl",
-                          index === 0 ? "text-warning" : 
-                          index === 1 ? "text-default-400" : 
+                          index === 0 ? "text-warning" :
+                          index === 1 ? "text-default-400" :
                           "text-orange-600"
                         )}
                         icon="solar:medal-ribbons-star-bold"
@@ -3583,8 +3419,8 @@ const ProductReport = observer(() => {
                       <Icon
                         className={cn(
                           "text-2xl",
-                          index === 0 ? "text-warning" : 
-                          index === 1 ? "text-default-400" : 
+                          index === 0 ? "text-warning" :
+                          index === 1 ? "text-default-400" :
                           "text-orange-600"
                         )}
                         icon="solar:medal-ribbons-star-bold"
@@ -3654,8 +3490,8 @@ const TrendCard = observer(({
             content: "font-medium text-[0.65rem]",
           }}
           color={
-            changeType === "positive" ? "success" : 
-            changeType === "neutral" ? "warning" : 
+            changeType === "positive" ? "success" :
+            changeType === "neutral" ? "warning" :
             "danger"
           }
           radius="sm"
@@ -4127,6 +3963,102 @@ context.wpm.export('comp_sidebar_drawer', SidebarDrawer);
 </mo-ai-code>
 ```
 
+````jsx
+<mo-ai-code type="markdown" name="markdown_delivery_doc" title="送货单文档">
+# 送货单数据定义和使用示例
+
+## 数据结构
+
+### 送货单索引
+```typescript
+interface OrderIndex {
+  id: string;                 // 送货单ID
+  customerName: string;       // 客户名称
+  contactPerson: string;      // 联系人
+  contactPhone: string;       // 联系电话
+  deliveryTime: string;       // 送货时间
+  status: string;            // 状态
+  totalAmount: number;       // 总金额
+  createdAt: string;         // 创建时间
+  updatedAt: string;         // 更新时间
+  operator: {                // 操作人
+    id: string;
+    name: string;
+    role: string;
+    time: string;
+  }
+}
+````
+
+### 送货单详情
+
+```typescript
+interface DeliveryOrder {
+  id: string // 送货单ID
+  customerName: string // 客户名称
+  contactPerson: string // 联系人
+  contactPhone: string // 联系电话
+  deliveryTime: string // 送货时间
+  status: string // 状态
+  items: {
+    // 商品列表
+    productId: string
+    productName: string
+    quantity: number
+    price: number
+    amount: number
+  }[]
+  createdAt: string // 创建时间
+  updatedAt: string // 更新时间
+  operator: {
+    // 操作人
+    id: string
+    name: string
+    role: string
+    time: string
+  }
+  confirmations: {
+    // 确认信息
+    customer: {
+      // 客户确认
+      time: string
+      signature: string
+    } | null
+    staff: {
+      // 业务员确认
+      time: string
+      signature: string
+    } | null
+  }
+}
+```
+
+## 代码示例
+
+### 获取送货单列表
+
+```javascript
+const result = await api.getMetadata([`${appId}_order_indexes`])
+const orderIndexes = JSON.parse(result.data[0].value)
+```
+
+### 获取送货单详情
+
+```javascript
+const result = await api.getMetadata([`${appId}_order_${orderId}`])
+const orderDetail = JSON.parse(result.data[0].value)
+```
+
+### 保存送货单
+
+```javascript
+await api.setMetadata(`${appId}_order_${orderId}`, JSON.stringify(orderData))
+await api.setMetadata(`${appId}_order_indexes`, JSON.stringify(orderIndexes))
+```
+
+</mo-ai-code>
+```
+
 ```jsx
 <mo-ai-code type="module" name="utils_delivery_diff" title="送货单数据比较工具">
 const {
@@ -4304,12 +4236,12 @@ const isEqual = (value1, value2) => {
   if (typeof value1 !== typeof value2) return false;
   if (typeof value1 !== 'object') return value1 === value2;
   if (value1 === null || value2 === null) return value1 === value2;
-  
+
   const keys1 = Object.keys(value1);
   const keys2 = Object.keys(value2);
-  
+
   if (keys1.length !== keys2.length) return false;
-  
+
   return keys1.every(key => isEqual(value1[key], value2[key]));
 };
 
@@ -4323,9 +4255,9 @@ const formatDiff = (changes) => {
   return changes.map(change => {
     const pathParts = change.path.split('.');
     const fieldName = fieldNameMap[pathParts[pathParts.length - 1]] || pathParts[pathParts.length - 1];
-    
+
     let detail = '';
-    
+
     if (change.path.endsWith('items')) {
       if (change.type === 'added') {
         detail = `新增商品：${change.newValue.name}，数量：${change.newValue.quantity}，单价：${formatAmount(change.newValue.price)}`;
@@ -4582,7 +4514,7 @@ const DeliveryPage = observer(() => {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statusCards.map((card) => (
-          <Card 
+          <Card
             key={card.key ?? 'total'}
             isPressable
             onPress={() => handleFilterClick(card.key)}
@@ -4638,14 +4570,14 @@ const {
 } = context;
 
 const { useParams, useSearchParams } = ReactRouterDom;
-const { useDisclosure } = NextUI;
+const { useDisclosure, Spinner, Card, CardBody, Progress, Button } = NextUI;
 const deliveryStore = await context.wpm.import('store_delivery');
 const userStore = await context.wpm.import('store_user');
 const DeliveryForm = await context.wpm.import('comp_delivery_form');
 const DeliveryDetailConfirmModal = await context.wpm.import('comp_delivery_detail_confirm_modal');
-const DeliveryShareHeader = await context.wpm.import('comp_delivery_share_header');
-const DeliveryShareLayout = await context.wpm.import('comp_delivery_share_layout');
-const DeliveryShareContent = await context.wpm.import('comp_delivery_share_content');
+const DeliveryDetailInfo = await context.wpm.import('comp_delivery_detail_info');
+const DeliveryDetailItems = await context.wpm.import('comp_delivery_detail_items');
+const DeliveryDetailConfirmations = await context.wpm.import('comp_delivery_detail_confirmations');
 
 const DeliverySharePage = observer(() => {
   const { id } = useParams();
@@ -4709,33 +4641,119 @@ const DeliverySharePage = observer(() => {
     onEditOpen();
   };
 
+  // 加载状态
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <Spinner size="lg" label="加载中..." />
+        </div>
+      </div>
+    );
+  }
+
+  // 错误状态
+  if (!order) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 flex justify-center">
+            <Icon className="text-danger" icon="solar:shield-warning-bold" width={48} />
+          </div>
+          <p className="mb-2 text-xl">送货单不存在或已被删除</p>
+          <p className="mb-4 text-small text-default-500">
+            请检查链接是否正确，或联系管理员
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // 计算确认进度
+  const confirmProgress = [
+    order.confirmations?.customer,
+    order.confirmations?.staff
+  ].filter(Boolean).length;
+
   return (
-    <DeliveryShareLayout loading={loading} error={!order}>
-      {order && (
-        <>
-          <DeliveryShareHeader onEdit={handleEdit} />
-          <DeliveryShareContent 
-            order={order}
-            onConfirm={openConfirmModal}
-          />
+    <div className="min-h-screen bg-default-50 p-6">
+      <div className="mx-auto max-w-3xl">
+        {/* 页面头部 */}
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-xl font-bold">送货单详情</h1>
+          <Button
+            color="primary"
+            variant="flat"
+            startContent={<Icon icon="solar:pen-bold" />}
+            onPress={handleEdit}
+          >
+            编辑
+          </Button>
+        </div>
 
-          <DeliveryDetailConfirmModal
-            isOpen={isConfirmOpen}
-            onOpenChange={onConfirmOpenChange}
-            type={confirmType}
-            onConfirm={handleConfirm}
-          />
+        {/* 页面内容 */}
+        <div className="space-y-6">
+          <Card>
+            <CardBody>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-medium font-medium">确认进度</h4>
+                <span className="text-small text-default-400">
+                  {confirmProgress}/2 已确认
+                </span>
+              </div>
+              <Progress
+                aria-label="确认进度"
+                value={confirmProgress * 50}
+                className="mb-4"
+              />
+              <div className="flex gap-2 justify-end">
+                <Button
+                  color="primary"
+                  variant={order.confirmations?.customer ? "flat" : "solid"}
+                  startContent={<Icon icon="solar:user-check-bold" />}
+                  isDisabled={order.confirmations?.customer || confirmLoading}
+                  isLoading={confirmLoading}
+                  onPress={() => openConfirmModal('customer')}
+                >
+                  客户确认
+                </Button>
+                <Button
+                  color="secondary"
+                  variant={order.confirmations?.staff ? "flat" : "solid"}
+                  startContent={<Icon icon="solar:shield-check-bold" />}
+                  isDisabled={order.confirmations?.staff || confirmLoading}
+                  isLoading={confirmLoading}
+                  onPress={() => openConfirmModal('staff')}
+                >
+                  业务员确认
+                </Button>
+              </div>
+            </CardBody>
+          </Card>
 
-          <DeliveryForm
-            isOpen={isEditOpen}
-            onOpenChange={onEditOpenChange}
-            onSuccess={(updatedOrder) => {
-              setOrder(updatedOrder);
-            }}
-          />
-        </>
-      )}
-    </DeliveryShareLayout>
+          <DeliveryDetailInfo order={order} />
+          <DeliveryDetailItems order={order} />
+          <DeliveryDetailConfirmations order={order} />
+        </div>
+
+        {/* 确认模态框 */}
+        <DeliveryDetailConfirmModal
+          isOpen={isConfirmOpen}
+          onOpenChange={onConfirmOpenChange}
+          type={confirmType}
+          onConfirm={handleConfirm}
+        />
+
+        {/* 编辑模态框 */}
+        <DeliveryForm
+          isOpen={isEditOpen}
+          onOpenChange={onEditOpenChange}
+          onSuccess={(updatedOrder) => {
+            setOrder(updatedOrder);
+          }}
+        />
+      </div>
+    </div>
   );
 });
 
@@ -4882,7 +4900,7 @@ const ConfirmService = {
 
       order.status = this.constructor.OrderStatus.DELIVERING;
       const success = await this.saveDeliveryOrder(order);
-      
+
       if (success) {
         message.success('已开始配送');
         return true;
@@ -4912,8 +4930,8 @@ const ConfirmService = {
       const now = new Date().toISOString();
       const confirmation = {
         time: now,
-        name: data.name,
-        phone: data.phone,
+        name: currentUser.name,
+        phone: currentUser.phone || currentUser.mobile,
         note: data.note || '',
         location: data.location || null,
         operator: {
@@ -4924,10 +4942,25 @@ const ConfirmService = {
         }
       };
 
+      if (!order.confirmations) {
+        order.confirmations = {
+          customer: null,
+          staff: null
+        };
+      }
+
       if (type === 'customer') {
+        if (order.confirmations.customer) {
+          message.error('客户已确认过此订单');
+          return false;
+        }
         order.confirmations.customer = confirmation;
         order.status = this.constructor.OrderStatus.CUSTOMER_CONFIRMED;
       } else if (type === 'staff') {
+        if (order.confirmations.staff) {
+          message.error('业务员已确认过此订单');
+          return false;
+        }
         order.confirmations.staff = confirmation;
         order.status = this.constructor.OrderStatus.STAFF_CONFIRMED;
       }
@@ -5009,7 +5042,7 @@ const OrderService = {
 
       const orderId = order.id || `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const now = new Date().toISOString();
-      
+
       const orderData = {
         ...order,
         id: orderId,
@@ -5052,10 +5085,10 @@ const OrderService = {
       }
 
       await api.setMetadata(`${appId}_order_indexes`, JSON.stringify(this.orderIndexes));
-      
+
       this.orderDetails.set(orderId, orderData);
       this.clearProductStatsCache();
-      
+
       message.success('保存成功');
       return true;
     } catch (error) {
@@ -5123,17 +5156,17 @@ const StatisticsService = {
 
   getCustomerStatistics() {
     const customerMap = new Map();
-    
+
     this.orderIndexes.forEach(order => {
       const customer = customerMap.get(order.customerName) || {
         name: order.customerName,
         orderCount: 0,
         totalAmount: 0
       };
-      
+
       customer.orderCount++;
       customer.totalAmount += order.totalAmount;
-      
+
       customerMap.set(order.customerName, customer);
     });
 
@@ -5150,7 +5183,7 @@ const StatisticsService = {
     }
 
     const productMap = new Map();
-    
+
     try {
       for (const index of this.orderIndexes) {
         const detail = await this.loadOrderDetail(index.id);
@@ -5161,10 +5194,10 @@ const StatisticsService = {
               quantity: 0,
               amount: 0
             };
-            
+
             product.quantity += item.quantity;
             product.amount += item.amount;
-            
+
             productMap.set(item.name, product);
           });
         }
@@ -5373,17 +5406,17 @@ class ReportStore {
 
   calculateTrends(currentStats, previousStats) {
     return {
-      totalChange: previousStats.total ? 
-        ((currentStats.total - previousStats.total) / previousStats.total * 100).toFixed(1) : 
+      totalChange: previousStats.total ?
+        ((currentStats.total - previousStats.total) / previousStats.total * 100).toFixed(1) :
         "0.0",
-      amountChange: previousStats.totalAmount ? 
-        ((currentStats.totalAmount - previousStats.totalAmount) / previousStats.totalAmount * 100).toFixed(1) : 
+      amountChange: previousStats.totalAmount ?
+        ((currentStats.totalAmount - previousStats.totalAmount) / previousStats.totalAmount * 100).toFixed(1) :
         "0.0",
-      averageChange: previousStats.averageAmount ? 
-        ((currentStats.averageAmount - previousStats.averageAmount) / previousStats.averageAmount * 100).toFixed(1) : 
+      averageChange: previousStats.averageAmount ?
+        ((currentStats.averageAmount - previousStats.averageAmount) / previousStats.averageAmount * 100).toFixed(1) :
         "0.0",
-      customerChange: previousStats.activeCustomers ? 
-        ((currentStats.activeCustomers - previousStats.activeCustomers) / previousStats.activeCustomers * 100).toFixed(1) : 
+      customerChange: previousStats.activeCustomers ?
+        ((currentStats.activeCustomers - previousStats.activeCustomers) / previousStats.activeCustomers * 100).toFixed(1) :
         "0.0"
     };
   }
@@ -5410,8 +5443,8 @@ class ReportStore {
       const currentStats = {
         total: deliveryStore.deliveryOrders.length,
         totalAmount: deliveryStore.deliveryOrders.reduce((sum, order) => sum + order.totalAmount, 0),
-        averageAmount: deliveryStore.deliveryOrders.length ? 
-          deliveryStore.deliveryOrders.reduce((sum, order) => sum + order.totalAmount, 0) / deliveryStore.deliveryOrders.length : 
+        averageAmount: deliveryStore.deliveryOrders.length ?
+          deliveryStore.deliveryOrders.reduce((sum, order) => sum + order.totalAmount, 0) / deliveryStore.deliveryOrders.length :
           0,
         activeCustomers: new Set(deliveryStore.deliveryOrders.map(order => order.customerName)).size
       };
@@ -5419,7 +5452,7 @@ class ReportStore {
       // 获取上一期数据进行对比
       const previousPeriod = this.getPreviousPeriod();
       const previousStats = this.calculatePreviousStats(previousPeriod);
-      
+
       // 计算变化趋势
       const trends = this.calculateTrends(currentStats, previousStats);
 
@@ -5429,14 +5462,8 @@ class ReportStore {
       };
 
       const chartData = {
-        orderTrend: this.generateTrendData(orderRanking.slice(0, 5).map(c => ({
-          name: c.name,
-          value: c.orderCount
-        }))),
-        amountTrend: this.generateTrendData(amountRanking.slice(0, 5).map(c => ({
-          name: c.name,
-          value: c.totalAmount
-        })))
+        orderTrend: await this.calculateTrendData('order', orderRanking.slice(0, 5)),
+        amountTrend: await this.calculateTrendData('amount', amountRanking.slice(0, 5))
       };
 
       return {
@@ -5448,7 +5475,7 @@ class ReportStore {
       };
     } catch (error) {
       console.error('Failed to generate customer report:', error);
-      message.error('生成客户报表失败');
+      message.error(`生成客户报表失败:${error}`);
       return this.reportCache.customer;
     }
   }
@@ -5457,10 +5484,10 @@ class ReportStore {
     const currentStart = new Date(this.dateRange.start);
     const currentEnd = new Date(this.dateRange.end);
     const duration = currentEnd.getTime() - currentStart.getTime();
-    
+
     const previousStart = new Date(currentStart.getTime() - duration);
     const previousEnd = new Date(currentEnd.getTime() - duration);
-    
+
     return {
       start: previousStart.toISOString().split('T')[0],
       end: previousEnd.toISOString().split('T')[0]
@@ -5476,8 +5503,8 @@ class ReportStore {
     return {
       total: previousOrders.length,
       totalAmount: previousOrders.reduce((sum, order) => sum + order.totalAmount, 0),
-      averageAmount: previousOrders.length ? 
-        previousOrders.reduce((sum, order) => sum + order.totalAmount, 0) / previousOrders.length : 
+      averageAmount: previousOrders.length ?
+        previousOrders.reduce((sum, order) => sum + order.totalAmount, 0) / previousOrders.length :
         0,
       activeCustomers: new Set(previousOrders.map(order => order.customerName)).size
     };
@@ -5499,14 +5526,8 @@ class ReportStore {
       }));
 
       const chartData = {
-        quantityTrend: this.generateTrendData(quantityRanking.slice(0, 5).map(p => ({
-          name: p.name,
-          value: p.quantity
-        }))),
-        amountTrend: this.generateTrendData(amountRanking.slice(0, 5).map(p => ({
-          name: p.name,
-          value: p.amount
-        })))
+        quantityTrend: await this.calculateTrendData('quantity', quantityRanking.slice(0, 5)),
+        amountTrend: await this.calculateTrendData('amount', amountRanking.slice(0, 5))
       };
 
       return {
@@ -5517,37 +5538,166 @@ class ReportStore {
       };
     } catch (error) {
       console.error('Failed to generate product report:', error);
-      message.error('生成商品报表失败');
+        message.error(`生成商品报表失败${error}`);
       return null;
     }
   }
 
-  generateTrendData(items) {
+  /**
+   * 计算趋势数据
+   * @param {string} type - 统计类型：'order'(订单数)/'amount'(金额)/'quantity'(数量)
+   * @param {Array} items - 要统计的项目列表(客户或商品)
+   * @returns {Array} 趋势数据数组
+   */
+  async calculateTrendData(type, items) {
+    console.log(`开始计算趋势数据 - 类型:${type}, 维度:${this.currentDimension}`);
+
+    // 1. 确定时间范围
     const periods = {
       '7-days': 7,
       '30-days': 30,
       '3-months': 90,
       '6-months': 180
     };
-
     const days = periods[this.chartPeriod] || 30;
-    const data = [];
-    const now = new Date();
+    console.log(`统计周期: ${days}天`);
 
-    for (let i = days - 1; i >= 0; i--) {
+    // 2. 计算日期范围
+    const now = new Date();
+    const startDate = new Date(now);
+    startDate.setDate(startDate.getDate() - days);
+    console.log(`统计时间范围: ${startDate.toISOString()} 至 ${now.toISOString()}`);
+
+    // 3. 获取期间订单数据
+    console.log('正在获取订单详情...');
+    const periodOrders = await Promise.all(
+      deliveryStore.deliveryOrders
+        .filter(order => {
+          const orderDate = new Date(order.createdAt);
+          return orderDate >= startDate && orderDate <= now;
+        })
+        .map(async order => {
+          const detail = await deliveryStore.getOrderById(order.id);
+          if (!detail) {
+            console.warn(`未能获取订单详情: ${order.id}`);
+          }
+          return detail || order;
+        })
+    );
+    console.log(`获取到 ${periodOrders.length} 条订单数据`);
+
+    // 4. 按日期分组订单
+    console.log('正在按日期分组订单...');
+    const ordersByDate = new Map();
+    // 初始化日期映射
+    for (let i = 0; i < days; i++) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
-      
-      data.push({
-        date: date.toISOString().split('T')[0],
-        ...items.reduce((acc, item) => {
-          acc[item.name] = Math.round(item.value * (0.8 + Math.random() * 0.4));
-          return acc;
-        }, {})
-      });
+      const dateStr = date.toISOString().split('T')[0];
+      ordersByDate.set(dateStr, []);
+    }
+    // 分配订单到对应日期
+    periodOrders.forEach(order => {
+      const dateStr = new Date(order.createdAt).toISOString().split('T')[0];
+      if (ordersByDate.has(dateStr)) {
+        ordersByDate.get(dateStr).push(order);
+      } else {
+        console.warn(`订单日期超出范围: ${dateStr}, orderId: ${order.id}`);
+      }
+    });
+
+    // 5. 计算每个日期的统计数据
+    console.log('开始计算每日统计数据...');
+    const data = [];
+    for (const [date, orders] of ordersByDate) {
+      const dateData = { date };
+      console.log(`\n处理日期: ${date}, 订单数: ${orders.length}`);
+
+      for (const item of items) {
+        let value = 0;
+
+        try {
+          switch (type) {
+            case 'order':
+              // 统计订单数：计算指定客户的订单数量
+              value = orders.filter(order => order.customerName === item.name).length;
+              console.log(`${item.name} 订单数: ${value}`);
+              break;
+
+            case 'amount':
+              if (this.currentDimension === 'product') {
+                // 商品金额统计：累计商品的销售金额
+                value = orders.reduce((sum, order) => {
+                  if (!order.items || !Array.isArray(order.items)) {
+                    console.warn(`订单 ${order.id} 缺少商品数据`);
+                    return sum;
+                  }
+                  const product = order.items.find(i => i?.name === item.name);
+                  const amount = product?.amount || 0;
+                  console.log(`订单 ${order.id} 商品 ${item.name} 金额: ${amount}`);
+                  return sum + amount;
+                }, 0);
+                console.log(`${item.name} 总金额: ${value}`);
+              } else {
+                // 客户金额统计：累计客户的订单总额
+                const customerOrders = orders.filter(order => order.customerName === item.name);
+              console.log(`客户 ${item.name} 的订单列表:`, JSON.stringify(customerOrders, null, 2));
+              value = customerOrders.reduce((sum, order) => {
+                console.log(`处理订单 ${order.id} 的完整数据:`, JSON.stringify(order, null, 2));
+
+                // 从订单项计算总金额
+                const orderAmount = order.items?.reduce((itemSum, item) => {
+                  const itemAmount = item?.amount || 0;
+                  console.log(`订单项 ${item?.name}: 数量=${item?.quantity}, 单价=${item?.price}, 金额=${itemAmount}`);
+                  return itemSum + itemAmount;
+                }, 0) || 0;
+
+                console.log(`客户 ${item.name} 订单 ${order.id} 计算金额: ${orderAmount}`);
+                return sum + orderAmount;
+              }, 0);
+              console.log(`${item.name} 消费总额: ${value}`);
+              }
+              break;
+
+            case 'quantity':
+              // 商品数量统计：累计商品的销售数量
+              value = orders.reduce((sum, order) => {
+                if (!order.items || !Array.isArray(order.items)) {
+                  console.warn(`订单 ${order.id} 缺少商品数据`);
+                  return sum;
+                }
+                const product = order.items.find(i => i?.name === item.name);
+                const quantity = product?.quantity || 0;
+                console.log(`订单 ${order.id} 商品 ${item.name} 数量: ${quantity}`);
+                return sum + quantity;
+              }, 0);
+              console.log(`${item.name} 总数量: ${value}`);
+              break;
+          }
+
+          dateData[item.name] = value;
+        } catch (error) {
+          console.error(`计算 ${item.name} 的趋势数据时出错:`, error);
+          console.error('错误详情:', {
+            date,
+            itemName: item.name,
+            ordersCount: orders.length,
+            type,
+            dimension: this.currentDimension
+          });
+          dateData[item.name] = 0;
+        }
+      }
+
+      data.push(dateData);
     }
 
-    return data;
+    // 6. 按日期排序
+    console.log('完成趋势数据计算，正在排序...');
+    const sortedData = data.sort((a, b) => a.date.localeCompare(b.date));
+    console.log(`生成趋势数据 ${sortedData.length} 条`);
+
+    return sortedData;
   }
 
   getCurrentReport() {
@@ -5606,16 +5756,16 @@ class UserStore {
 
   async loadUserInfo() {
     if (this.isLoading) return;
-    
+
     this.isLoading = true;
     this.error = null;
-    
+
     try {
       const [userInfo, enterpriseInfo] = await Promise.all([
         api.getCurrentAccountInfo(),
         api.queryCurrentEnterPrise()
       ]);
-      
+
       this.userInfo = userInfo;
       this.enterpriseInfo = enterpriseInfo;
     } catch (error) {
@@ -5646,4 +5796,3 @@ const store = new UserStore();
 context.wpm.export('store_user', store);
 </mo-ai-code>
 ```
-

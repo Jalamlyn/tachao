@@ -34,13 +34,13 @@ class AppAgent {
       }
 
       const apps = JSON.parse(result.data[0].value) as AppIndex[]
-      const appsContext = apps.map(app => `
+      const appsContext = apps
+        .map(
+          (app) => `
 应用ID: ${app.id}
-应用名称: ${app.title}${
-        app.creator 
-          ? `\n创建者: ${app.creator.name}`
-          : ''
-      }`).join('\n---\n')
+应用名称: ${app.title}${app.creator ? `\n创建者: ${app.creator.name}` : ""}`
+        )
+        .join("\n---\n")
 
       return appsContext
     } catch (error) {
@@ -110,7 +110,7 @@ ${modulesContext}
 
   private getRelevantLogs(): { logs: string; completeness: any } {
     const logs = logStore.logs
-    const MAX_LOGS = 100
+    const MAX_LOGS = 10
 
     const errorAndWarnings = logs.filter((log) => log.level === "error" || log.level === "warn").slice(-100)
 
@@ -167,11 +167,12 @@ ${modulesContext}
         moduleSelectionMode = "manual"
       } else {
         const moduleCount = Object.keys(allModules).length
-        if (moduleCount <= 15) {
+        if (moduleCount <= 20) {
           relevantModules = allModules
           moduleSelectionMode = "all"
         } else {
-          const relevantIds = await this.getRelevantModuleIds(allModules, command)
+          // const relevantIds = await this.getRelevantModuleIds(allModules, command)
+          const relevantIds = []
           if (relevantIds.length === 0) {
             relevantModules = allModules
             moduleSelectionMode = "all"
@@ -184,10 +185,6 @@ ${modulesContext}
             }, {})
             moduleSelectionMode = "smart"
           }
-          context.api.log.info("模块数量大于20，使用动态筛选", {
-            totalModules: moduleCount,
-            selectedModules: Object.keys(relevantModules).length,
-          })
         }
       }
 
@@ -294,8 +291,6 @@ ${module.data.code}
             
             4. 调试日志 (DEBUG)：包含详细的技术信息
                context.api.log.debug("状态更新", { oldState, newState })
-
-            <我的输入>${commandContent}</我的输入>
             `
             }
             
@@ -321,7 +316,7 @@ ${module.data.code}
               - SEARCH/REPLACE 方式，原因：[说明原因]
               - 或完整代码生成，原因：[说明原因]
               [列出反思后的最终计划，${isPMMode ? "包括如何回答用户的问题" : "包括要修改哪些模块以及如何修改"}]
-              </mo-ai-final_plan>`
+              </mo-ai-final_plan><我的输入>${commandContent}, 生成完整代码必须确保代码是完整的, 不允许用注释省略模块中的任何代码和任何逻辑</我的输入>`
 
       const allMessages = [
         { role: "system", content: systemPrompt },

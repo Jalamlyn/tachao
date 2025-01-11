@@ -55,8 +55,8 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
           throw new Error(`最多只能上传${MAX_IMAGES}张图片`)
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-          throw new Error("单张图片大小不能超过5MB")
+        if (file.size > 4 * 1024 * 1024) {
+          throw new Error("单张图片大小不能超过4MB")
         }
 
         const currentTotalSize = imagePreviews.length * 5 * 1024 * 1024

@@ -1,14 +1,6 @@
 import React from "react"
 import { Icon } from "@iconify/react"
-import {
-  Button,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Divider,
-} from "@nextui-org/react"
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Divider } from "@nextui-org/react"
 
 // 错误提示组件
 export const ErrorPrompt = ({ error, onFix }) => {
@@ -69,18 +61,18 @@ export const ErrorPrompt = ({ error, onFix }) => {
 // 发布模态框组件
 export const PublishModal = ({ isOpen, onClose, appId }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} size='4xl'>
       <ModalContent>
         <ModalHeader className='flex flex-col gap-1'>
-          <div className="flex items-center gap-2">
-            <Icon icon="mdi:check-circle" className="w-6 h-6 text-success" />
+          <div className='flex items-center gap-2'>
+            <Icon icon='mdi:check-circle' className='w-6 h-6 text-success' />
             <span>发布成功</span>
           </div>
         </ModalHeader>
         <ModalBody>
-          <div className="space-y-4">
+          <div className='space-y-4'>
             <div>
-              <h3 className="text-lg font-medium mb-2">访问应用</h3>
+              <h3 className='text-lg font-medium mb-2'>访问应用</h3>
               <div className='flex items-center gap-2 p-2 bg-default-100 rounded'>
                 <code className='text-sm'>/app-run/{appId}</code>
                 <Button
@@ -97,14 +89,14 @@ export const PublishModal = ({ isOpen, onClose, appId }) => {
             <Divider />
 
             <div>
-              <h3 className="text-lg font-medium mb-2">分享应用</h3>
-              <p className="text-sm text-default-600 mb-3">
+              <h3 className='text-lg font-medium mb-2'>分享应用</h3>
+              <p className='text-sm text-default-600 mb-3'>
                 将您的应用发布为模板，其他用户可以基于您的模板快速创建新应用。
               </p>
               <Button
-                color="secondary"
-                variant="flat"
-                startContent={<Icon icon="fluent:book-template-20-filled" className="w-4 h-4" />}
+                color='secondary'
+                variant='flat'
+                startContent={<Icon icon='fluent:book-template-20-filled' className='w-4 h-4' />}
                 onClick={() => {
                   onClose()
                   // 这里可以触发发布模板的操作

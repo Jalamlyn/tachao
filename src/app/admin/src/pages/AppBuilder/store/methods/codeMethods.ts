@@ -1,12 +1,13 @@
 import { transform } from "@/utils/moduleLoader"
 import { AppCodeStore, ModuleData, ShataAICode, Version } from "../types"
 import { logStore } from "../../AIEditor/components/LogStore"
+import message from "@/components/Message"
 
 export function compileCode(this: AppCodeStore, code: string): Promise<string> {
   try {
     const { code: compiledCode } = transform(
       `export default async () => {
-        ${code}
+          ${code}
        }
       `,
       {
@@ -17,7 +18,7 @@ export function compileCode(this: AppCodeStore, code: string): Promise<string> {
     return Promise.resolve(compiledCode)
   } catch (error) {
     logStore.error("Error compiling code:", code)
-    console.error("Error compiling code:", code)
+    message.error("AI 生成代码编译失败, 其尝试点击新对话, 重试")
     throw error
   }
 }
@@ -178,7 +179,6 @@ export async function executeModules(this: AppCodeStore, context: any) {
         if (!moduleData || !moduleData.compiledCode) {
           throw new Error(`Invalid module data for ${moduleId}`)
         }
-
         const moduleFunction = new Function(
           "context",
           `

@@ -61,8 +61,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (file.size > 5 * 1024 * 1024) {
-      message.error("图片大小不能超过5MB")
+    if (file.size > 4 * 1024 * 1024) {
+      message.error("图片大小不能超过4MB")
       return
     }
 

@@ -7,6 +7,7 @@ import { RESOURCE_PROMPTS } from "./prompt/resource-prompts"
 import { LOCATION_PROMPTS } from "./prompt/location-prompts"
 import { ESM_PROMPTS } from "./prompt/esm-prompts"
 import { AI_PROMPTS } from "./prompt/ai-prompts"
+import { markdown as nextuidoc } from "./doc/nextui.md"
 
 // 提示词组合器
 export const promptsComposer = {
@@ -44,6 +45,10 @@ ${AI_PROMPTS.aiPrompt}
 <business-resources>
 ${resourcePrompt}
 </business-resources>
+
+<nextui-doc>
+${nextuidoc}
+</nextui-doc>
 
 1. 代码生成顺序：
    - 如果应用入口代码不存在，必须先生成入口代码

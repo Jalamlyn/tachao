@@ -335,6 +335,10 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
 
                     <div className='flex flex-col flex-1 min-w-0'>
                       <span className='text-sm font-medium truncate tracking-wide leading-snug'>{item.title}</span>
+
+                      <span className='text-xs text-default-400 mt-0.5 truncate tracking-wide leading-snug'>
+                        {item.name}
+                      </span>
                       <span className='text-xs text-default-300 mt-0.5'>
                         {new Date(item.updatedAt).toLocaleString("zh-CN", {
                           year: "numeric",

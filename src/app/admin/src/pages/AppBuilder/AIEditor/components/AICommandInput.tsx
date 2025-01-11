@@ -126,8 +126,8 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   )
 
   const handleUploadFile = async (file: File) => {
-    if (file.size > 5 * 1024 * 1024) {
-      message.error("图片大小不能超过5MB")
+    if (file.size > 4 * 1024 * 1024) {
+      message.error("图片大小不能超过4MB")
       return
     }
 
@@ -410,7 +410,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
 
         <div className='flex w-full flex-wrap items-center justify-between gap-2 px-4 pb-4'>
           <div className='flex flex-wrap gap-3'>
-            <Tooltip content='支持jpg、png、gif，最大5MB'>
+            <Tooltip content='支持jpg、png、gif，最大4MB'>
               <Button
                 size='sm'
                 variant='flat'
