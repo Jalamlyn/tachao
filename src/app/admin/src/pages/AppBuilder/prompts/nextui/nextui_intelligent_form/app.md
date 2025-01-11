@@ -89,40 +89,31 @@ const {
   NextUI,
   Icon,
   cn,
-  api
+  api,
+  message
 } = context;
 
 const { Card, CardBody, Button, Tabs, Tab, useDisclosure } = NextUI;
 
-// 导入子组件
 const DynamicFormBasic = await context.wpm.import('comp_dynamic_form_basic');
 const DynamicFormDetail = await context.wpm.import('comp_dynamic_form_detail');
 const DynamicFormConfirm = await context.wpm.import('comp_dynamic_form_confirm');
 const DynamicFormHistory = await context.wpm.import('comp_dynamic_form_history');
-
-// 导入数据管理
 const dynamicFormStore = await context.wpm.import('store_dynamic_form');
 
 const DynamicFormAdapter = observer(({
-  // 表单配置
   config,
-  // 表单数据
   formId,
-  // 回调函数
   onSave,
   onError,
-  // 只读模式
   readOnly = false,
-  // 样式
   className
 }) => {
   const [loading, setLoading] = React.useState(false);
   const [selectedTab, setSelectedTab] = React.useState("basic");
-  const [errors, setErrors] = React.useState({});
   const historyModal = useDisclosure();
   const saveButtonRef = React.useRef(null);
 
-  // 初始化加载数据
   React.useEffect(() => {
     const loadData = async () => {
       try {
@@ -143,55 +134,18 @@ const DynamicFormAdapter = observer(({
     loadData();
   }, [formId, config]);
 
-  // 表单校验
-  const validateForm = () => {
-    const newErrors = {};
-    let isValid = true;
-
-    // 校验基本信息
-    if (!dynamicFormStore.validateBasicFields()) {
-      newErrors.basic = '请完善基本信息';
-      isValid = false;
-    }
-
-    // 校验明细信息
-    if (!dynamicFormStore.validateDetailData()) {
-      newErrors.detail = '请至少添加一条明细记录';
-      isValid = false;
-    }
-
-    // 校验确认信息
-    if (!dynamicFormStore.validateConfirmData()) {
-      newErrors.confirm = '请完成必要的确认信息';
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
-  // 处理保存
+  // 修改: 优化保存逻辑，添加防重复提交
   const handleSave = async () => {
     if (loading || !saveButtonRef.current) return;
 
     try {
-      // 防重复点击
       saveButtonRef.current.disabled = true;
       setLoading(true);
 
-      // 表单校验
-      if (!validateForm()) {
-        // 显示错误提示
-        Object.entries(errors).forEach(([key, message]) => {
-          message && NextUI.message.error(message);
-        });
-        return;
-      }
-
       const success = await dynamicFormStore.saveFormData();
       if (success) {
-        NextUI.message.success('保存成功');
-        onSave?.(dynamicFormStore.currentForm);
+        message.success('保存成功');
+        onSave?.();
       }
     } catch (error) {
       api.log.error('保存表单失败', { error });
@@ -204,7 +158,6 @@ const DynamicFormAdapter = observer(({
     }
   };
 
-  // 渲染工具栏
   const renderToolbar = () => (
     <div className="mb-6 flex items-center justify-between">
       <div>
@@ -269,12 +222,6 @@ const DynamicFormAdapter = observer(({
                 <div className="flex items-center gap-2">
                   <Icon icon="solar:document-text-bold" />
                   <span>基本信息</span>
-                  {errors.basic && (
-                    <Icon
-                      icon="solar:danger-circle-bold"
-                      className="text-danger"
-                    />
-                  )}
                 </div>
               }
             >
@@ -289,12 +236,6 @@ const DynamicFormAdapter = observer(({
                 <div className="flex items-center gap-2">
                   <Icon icon="solar:table-2-bold" />
                   <span>明细信息</span>
-                  {errors.detail && (
-                    <Icon
-                      icon="solar:danger-circle-bold"
-                      className="text-danger"
-                    />
-                  )}
                 </div>
               }
             >
@@ -309,12 +250,6 @@ const DynamicFormAdapter = observer(({
                 <div className="flex items-center gap-2">
                   <Icon icon="solar:user-check-bold" />
                   <span>确认信息</span>
-                  {errors.confirm && (
-                    <Icon
-                      icon="solar:danger-circle-bold"
-                      className="text-danger"
-                    />
-                  )}
                 </div>
               }
             >
@@ -348,8 +283,7 @@ const {
   observer,
   NextUI,
   Icon,
-  cn,
-  api
+  cn
 } = context;
 
 const { Input, Textarea, Select, SelectItem } = NextUI;
@@ -359,53 +293,14 @@ const DynamicFormBasic = observer(({
   config,
   readOnly = false
 }) => {
-  const [errors, setErrors] = React.useState({});
-  const [touched, setTouched] = React.useState({});
-
   // 处理字段变更
   const handleFieldChange = (field, value) => {
     dynamicFormStore.updateBasicField(field.name, value);
-    validateField(field, value);
-  };
-
-  // 处理字段失焦
-  const handleFieldBlur = (field) => {
-    setTouched(prev => ({
-      ...prev,
-      [field.name]: true
-    }));
-    validateField(field, dynamicFormStore.currentForm?.basic?.[field.name]);
-  };
-
-  // 验证单个字段
-  const validateField = (field, value) => {
-    let error = null;
-
-    // 必填校验
-    if (field.required && (!value || (typeof value === 'string' && !value.trim()))) {
-      error = `请输入${field.label}`;
-    }
-
-    // 自定义校验规则
-    if (field.validate) {
-      const customError = field.validate(value);
-      if (customError) {
-        error = customError;
-      }
-    }
-
-    setErrors(prev => ({
-      ...prev,
-      [field.name]: error
-    }));
-
-    return !error;
   };
 
   // 渲染字段
   const renderField = (field) => {
     const value = dynamicFormStore.currentForm?.basic?.[field.name] || '';
-    const isInvalid = touched[field.name] && errors[field.name];
 
     const commonProps = {
       key: field.name,
@@ -414,13 +309,9 @@ const DynamicFormBasic = observer(({
       value: value,
       isRequired: field.required,
       isReadOnly: readOnly,
-      isInvalid: !!isInvalid,
-      errorMessage: isInvalid,
-      onBlur: () => handleFieldBlur(field),
       classNames: {
         label: "text-default-600",
-        input: "text-default-800",
-        errorMessage: "text-danger text-xs mt-1"
+        input: "text-default-800"
       }
     };
 
@@ -481,8 +372,7 @@ const DynamicFormBasic = observer(({
       {config.fields?.map((field) => (
         <div key={field.name} className={cn(
           "relative",
-          field.span === 'full' ? 'col-span-2' : '',
-          errors[field.name] && touched[field.name] ? 'animate-shake' : ''
+          field.span === 'full' ? 'col-span-2' : ''
         )}>
           {renderField(field)}
           {field.help && (
@@ -522,8 +412,6 @@ const DynamicFormConfirm = observer(({
 }) => {
   const [currentUser, setCurrentUser] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
-  const [errors, setErrors] = React.useState({});
-  const [touched, setTouched] = React.useState({});
 
   // 加载当前用户信息
   React.useEffect(() => {
@@ -539,48 +427,11 @@ const DynamicFormConfirm = observer(({
     loadUser();
   }, []);
 
-  // 验证表单字段
-  const validateField = (formIndex, field, value) => {
-    let error = null;
-
-    if (field.required && (!value || value.toString().trim() === '')) {
-      error = `请输入${field.label}`;
-    }
-
-    setErrors(prev => ({
-      ...prev,
-      [`${formIndex}_${field.name}`]: error
-    }));
-
-    return !error;
-  };
-
-  // 验证整个确认表单
-  const validateConfirmForm = (formIndex) => {
-    const form = config.forms[formIndex];
-    const confirmData = dynamicFormStore.currentForm?.confirms?.[formIndex] || {};
-    let isValid = true;
-
-    form.fields.forEach(field => {
-      if (!validateField(formIndex, field, confirmData[field.name])) {
-        isValid = false;
-      }
-    });
-
-    return isValid;
-  };
-
   // 处理确认
   const handleConfirm = async (formIndex) => {
     if (loading) return;
 
     try {
-      // 验证表单
-      if (!validateConfirmForm(formIndex)) {
-        message.error('请完善必填信息');
-        return;
-      }
-
       setLoading(true);
       const confirmInfo = {
         name: currentUser.name,
@@ -623,17 +474,6 @@ const DynamicFormConfirm = observer(({
   // 处理字段变更
   const handleFieldChange = (formIndex, field, value) => {
     dynamicFormStore.updateConfirmField(formIndex, field.name, value);
-    validateField(formIndex, field, value);
-  };
-
-  // 处理字段失焦
-  const handleFieldBlur = (formIndex, field) => {
-    setTouched(prev => ({
-      ...prev,
-      [`${formIndex}_${field.name}`]: true
-    }));
-    const value = dynamicFormStore.currentForm?.confirms?.[formIndex]?.[field.name];
-    validateField(formIndex, field, value);
   };
 
   // 渲染确认状态标签
@@ -740,37 +580,26 @@ const DynamicFormConfirm = observer(({
                 </div>
 
                 <div className="space-y-3">
-                  {form.fields.map((field) => {
-                    const fieldKey = `${index}_${field.name}`;
-                    const isInvalid = touched[fieldKey] && errors[fieldKey];
-
-                    return (
-                      <div key={field.name}>
-                        <Input
-                          label={field.label}
-                          value={dynamicFormStore.currentForm?.confirms?.[index]?.[field.name] || ''}
-                          isReadOnly={readOnly || dynamicFormStore.currentForm?.confirms?.[index]?.status === 'confirmed'}
-                          isRequired={field.required}
-                          isInvalid={!!isInvalid}
-                          errorMessage={isInvalid}
-                          onChange={(e) => handleFieldChange(index, field, e.target.value)}
-                          onBlur={() => handleFieldBlur(index, field)}
-                          startContent={
-                            field.icon && (
-                              <Icon
-                                className="text-default-400 pointer-events-none flex-shrink-0"
-                                icon={field.icon}
-                                width={20}
-                              />
-                            )
-                          }
-                          classNames={{
-                            errorMessage: "text-danger text-xs mt-1"
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
+                  {form.fields.map((field) => (
+                    <div key={field.name}>
+                      <Input
+                        label={field.label}
+                        value={dynamicFormStore.currentForm?.confirms?.[index]?.[field.name] || ''}
+                        isReadOnly={readOnly || dynamicFormStore.currentForm?.confirms?.[index]?.status === 'confirmed'}
+                        isRequired={field.required}
+                        onChange={(e) => handleFieldChange(index, field, e.target.value)}
+                        startContent={
+                          field.icon && (
+                            <Icon
+                              className="text-default-400 pointer-events-none flex-shrink-0"
+                              icon={field.icon}
+                              width={20}
+                            />
+                          )
+                        }
+                      />
+                    </div>
+                  ))}
                 </div>
 
                 {/* 确认信息 */}
@@ -824,7 +653,6 @@ const DynamicFormDetail = observer(({
   readOnly = false
 }) => {
   const [selectedItem, setSelectedItem] = React.useState(null);
-  const [errors, setErrors] = React.useState({});
   const editModal = useDisclosure();
 
   // 使用计算属性获取数据
@@ -832,37 +660,9 @@ const DynamicFormDetail = observer(({
   const totalAmount = dynamicFormStore.totalAmount;
   const detailCount = dynamicFormStore.detailCount;
 
-  // 验证明细项
-  const validateDetailItem = (item) => {
-    const newErrors = {};
-    let isValid = true;
-
-    config.columns.forEach(column => {
-      if (column.required && (!item[column.key] || item[column.key].toString().trim() === '')) {
-        newErrors[column.key] = `${column.label}不能为空`;
-        isValid = false;
-      }
-
-      if (column.type === 'number' || column.type === 'money') {
-        const value = Number(item[column.key]);
-        if (isNaN(value) || value < 0) {
-          newErrors[column.key] = `${column.label}必须是有效的数字`;
-          isValid = false;
-        }
-      }
-    });
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
   // 处理添加
   const handleAdd = (item) => {
     try {
-      if (!validateDetailItem(item)) {
-        return;
-      }
-
       // 计算金额
       const quantity = Number(item.quantity) || 0;
       const price = Number(item.price) || 0;
@@ -883,10 +683,6 @@ const DynamicFormDetail = observer(({
   // 处理编辑
   const handleEdit = (item) => {
     try {
-      if (!validateDetailItem(item)) {
-        return;
-      }
-
       // 计算金额
       const quantity = Number(item.quantity) || 0;
       const price = Number(item.price) || 0;
@@ -990,7 +786,6 @@ const DynamicFormDetail = observer(({
             startContent={<Icon icon="solar:add-circle-bold" />}
             onPress={() => {
               setSelectedItem(null);
-              setErrors({});
               editModal.onOpen();
             }}
           >
@@ -1052,7 +847,7 @@ const DynamicFormDetail = observer(({
         isOpen={editModal.isOpen}
         onOpenChange={editModal.onOpenChange}
         placement="top-center"
-        scrollBehavior="inside"
+        scrollBehavior="outside"
       >
         <NextUI.ModalContent>
           {(onClose) => {
@@ -1116,12 +911,7 @@ const DynamicFormDetail = observer(({
                           defaultValue={selectedItem?.[column.key]}
                           isRequired={column.required}
                           step={column.type === 'money' ? "0.01" : "1"}
-                          isInvalid={!!errors[column.key]}
-                          errorMessage={errors[column.key]}
                           onChange={(e) => handleFieldChange(column.key, e.target.value)}
-                          classNames={{
-                            errorMessage: "text-danger text-xs mt-1"
-                          }}
                         />
                       );
                     })}
@@ -1170,7 +960,7 @@ const {
   api
 } = context;
 
-const { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Table, TableHeader, TableBody, TableColumn, TableRow, TableCell, useDisclosure } = NextUI;
+const { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Table, TableHeader, TableBody, TableColumn, TableRow, TableCell, useDisclosure, User } = NextUI;
 const dynamicFormStore = await context.wpm.import('store_dynamic_form');
 
 const DynamicFormHistory = observer(({
@@ -1185,7 +975,6 @@ const DynamicFormHistory = observer(({
 
   // 加载历史记录
   React.useEffect(() => {
-
     const loadHistory = async () => {
       if (!formId || !isOpen) return;
 
@@ -1196,13 +985,17 @@ const DynamicFormHistory = observer(({
           limit: 50
         });
         if (result.data) {
-          const parsedHistory = result.data.map(item => ({
-            id: `history_${item.versionCode}`,
-            versionCode: item.versionCode,
-            updatedAt: item.updatedAt,
-            updatedBy: item.updatedBy,
-            value: JSON.parse(item.value)
-          }));
+          const parsedHistory = result.data.map(item => {
+            const value = JSON.parse(item.value);
+            return {
+              id: `history_${item.versionCode}`,
+              versionCode: item.versionCode,
+              updatedAt: item.updatedAt,
+              updatedBy: value.operator?.name || item.updatedBy || '未知用户',
+              updatedByRole: value.operator?.role || '未知角色',
+              value: value
+            };
+          });
           setHistory(parsedHistory);
         }
       } catch (error) {
@@ -1253,12 +1046,12 @@ const DynamicFormHistory = observer(({
     }
 
     // 比较确认信息
-    if (JSON.stringify(current.value.confirm) !== JSON.stringify(previous.value.confirm)) {
+    if (JSON.stringify(current.value.confirms) !== JSON.stringify(previous.value.confirms)) {
       changes.push({
         id: `diff_confirm_${current.versionCode}`,
         type: 'confirm',
-        oldValue: previous.value.confirm,
-        newValue: current.value.confirm
+        oldValue: previous.value.confirms,
+        newValue: current.value.confirms
       });
     }
 
@@ -1327,30 +1120,60 @@ const DynamicFormHistory = observer(({
                 ) : (
                   <Table
                     aria-label="修改历史记录"
+                    classNames={{
+                      th: "bg-default-100",
+                      td: "py-3"
+                    }}
                   >
                     <TableHeader>
                       <TableColumn key="version">版本</TableColumn>
+                      <TableColumn key="operator">修改人</TableColumn>
                       <TableColumn key="time">修改时间</TableColumn>
-                      <TableColumn key="user">修改人</TableColumn>
-                      <TableColumn key="action">操作</TableColumn>
+                      <TableColumn key="action" align="center">操作</TableColumn>
                     </TableHeader>
                     <TableBody
                       items={history}
-                      emptyContent="暂无修改记录"
+                      emptyContent={
+                        <div className="text-center py-6">
+                          <Icon icon="solar:notebook-minimalistic-bold" className="mx-auto mb-2 h-8 w-8 text-default-400" />
+                          <p>暂无修改记录</p>
+                        </div>
+                      }
                     >
                       {(item) => (
                         <TableRow key={item.id}>
-                          <TableCell>v{item.versionCode}</TableCell>
                           <TableCell>
-                            {new Date(item.updatedAt).toLocaleString()}
+                            <span className="font-medium">v{item.versionCode}</span>
                           </TableCell>
-                          <TableCell>{item.updatedBy}</TableCell>
+                          <TableCell>
+                            <User
+                              name={item.updatedBy}
+                              description={item.updatedByRole}
+                              avatarProps={{
+                                src: `https://api.dicebear.com/7.x/initials/svg?seed=${item.updatedBy}`,
+                                size: "sm",
+                                radius: "lg"
+                              }}
+                              classNames={{
+                                name: "font-medium"
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span>{new Date(item.updatedAt).toLocaleDateString()}</span>
+                              <span className="text-tiny text-default-400">
+                                {new Date(item.updatedAt).toLocaleTimeString()}
+                              </span>
+                            </div>
+                          </TableCell>
                           <TableCell>
                             {history.indexOf(item) < history.length - 1 && (
                               <Button
                                 size="sm"
                                 color="primary"
                                 variant="flat"
+                                startContent={<Icon icon="solar:eye-bold" />}
                                 onPress={() => compareVersions(item, history[history.indexOf(item) + 1])}
                               >
                                 查看修改
@@ -1413,11 +1236,198 @@ context.wpm.export('comp_dynamic_form_history', DynamicFormHistory);
 </mo-ai-code>
 ```
 
+````jsx
+<mo-ai-code type="markdown" name="doc_form_index_structure" title="表单索引结构说明文档">
+# 表单索引结构说明文档
+
+## 1. 索引数据结构
+
+表单索引使用以下数据结构:
+
+```typescript
+interface FormIndex {
+  // 表单基本信息
+  formId: string;           // 表单唯一标识
+  formType: string;         // 表单类型
+  formName: string;         // 表单名称
+  description?: string;     // 表单描述
+  version: string;          // 表单版本号
+
+  // 表单状态
+  status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'pending';  // 表单状态
+
+  // 时间信息
+  createdAt: string;        // 创建时间
+  updatedAt: string;        // 更新时间
+
+  // 创建者信息
+  creator: {
+    id: string;            // 创建者ID
+    name: string;          // 创建者姓名
+    role?: string;         // 创建者角色
+  };
+
+  // 表单结构信息
+  structure: {
+    basicFields: number;    // 基本信息字段数量
+    detailColumns: number;  // 明细表格列数量
+    confirmForms: number;   // 确认表单数量
+  };
+}
+````
+
+## 2. 索引存储说明
+
+- 索引数据统一存储在元数据中
+- 元数据名称格式: `${appId}_form_index`
+- 元数据值为 FormIndex[] 类型的 JSON 字符串
+- 每个表单创建时会添加一条索引记录
+- 表单更新时会同步更新索引记录
+- 表单删除时会删除对应的索引记录
+
+## 3. 状态说明
+
+表单状态包括:
+
+| 状态      | 说明   | 触发条件             |
+| --------- | ------ | -------------------- |
+| draft     | 草稿   | 表单创建后的初始状态 |
+| submitted | 已提交 | 用户提交表单后       |
+| approved  | 已审批 | 审批人同意后         |
+| rejected  | 已拒绝 | 审批人拒绝后         |
+| pending   | 待确认 | 等待相关人员确认     |
+
+## 4. 索引操作说明
+
+### 4.1 创建索引
+
+```typescript
+// 创建新表单时自动创建索引
+await formIndexStore.createFormIndex({
+  id: "form_123",
+  config: formConfig,
+  creator: currentUser,
+  status: "draft",
+})
+```
+
+### 4.2 更新索引
+
+```typescript
+// 更新表单时同步更新索引
+await formIndexStore.updateFormIndex({
+  id: "form_123",
+  status: "submitted",
+  ...formData,
+})
+```
+
+### 4.3 删除索引
+
+```typescript
+// 删除表单时删除对应索引
+await formIndexStore.deleteFormIndex("form_123")
+```
+
+## 5. 索引查询说明
+
+### 5.1 获取用户表单列表
+
+```typescript
+// 获取当前用户创建的所有表单
+const userForms = await formListStore.loadUserForms()
+```
+
+### 5.2 索引字段过滤
+
+可按以下字段进行过滤:
+
+- formId: 表单ID
+- formType: 表单类型
+- status: 表单状态
+- creator.id: 创建者ID
+
+## 6. 注意事项
+
+1. 索引更新
+
+   - 表单任何状态变更都需要同步更新索引
+   - 批量操作时需要保证索引数据一致性
+   - 避免重复创建索引
+
+2. 性能优化
+
+   - 索引数据量较大时建议分页加载
+   - 可以使用缓存优化查询性能
+   - 定期清理无效索引数据
+
+3. 错误处理
+   - 索引操作失败时需要回滚表单操作
+   - 定期检查索引完整性
+   - 提供索引修复机制
+
+## 7. 最佳实践
+
+1. 创建表单时:
+
+```typescript
+// 1. 创建表单数据
+const formId = await dynamicFormStore.createNewForm(config)
+
+// 2. 索引会自动创建
+// 3. 跳转到表单编辑页
+navigate(`/form/${formId}`)
+```
+
+2. 更新表单时:
+
+```typescript
+// 1. 更新表单数据
+await dynamicFormStore.saveFormData()
+
+// 2. 索引会自动更新
+// 3. 显示成功提示
+message.success("保存成功")
+```
+
+3. 删除表单时:
+
+```typescript
+// 1. 删除表单索引
+await dynamicFormStore.deleteForm(formId)
+
+// 2. 更新列表
+await formListStore.loadUserForms()
+```
+
+## 8. 开发建议
+
+1. 数据一致性
+
+   - 使用事务确保表单数据和索引同步
+   - 定期校验数据一致性
+   - 提供数据修复工具
+
+2. 扩展性
+
+   - 预留索引字段便于后续扩展
+   - 使用统一的状态管理
+   - 支持自定义索引规则
+
+3. 安全性
+   - 严格校验数据权限
+   - 记录索引操作日志
+   - 定期备份索引数据
+     </mo-ai-code>
+
+````
+
 ```jsx
 <mo-ai-code type="module" name="module_form_config" title="动态表单配置">
 const {
   wpm,
-  api
+  api,
+  appId
 } = context;
 
 // 动态表单配置
@@ -1425,6 +1435,8 @@ const formConfig = {
   // 表单标题和描述
   title: "设备维修申请单",
   description: "用于申请设备维修和记录维修过程",
+  type: "maintenance",
+  version: "1.0.0",
 
   // 基本信息配置
   basic: {
@@ -1433,7 +1445,7 @@ const formConfig = {
         name: "title",
         label: "维修事由",
         type: "text",
-        required: true,
+
         placeholder: "请简要描述维修原因",
         icon: "solar:document-text-bold"
       },
@@ -1441,7 +1453,7 @@ const formConfig = {
         name: "deviceNo",
         label: "设备编号",
         type: "text",
-        required: true,
+
         placeholder: "请输入设备编号",
         icon: "solar:hashtag-bold"
       },
@@ -1449,7 +1461,7 @@ const formConfig = {
         name: "deviceName",
         label: "设备名称",
         type: "text",
-        required: true,
+
         placeholder: "请输入设备名称",
         icon: "solar:widget-bold"
       },
@@ -1457,7 +1469,7 @@ const formConfig = {
         name: "department",
         label: "所属部门",
         type: "select",
-        required: true,
+
         placeholder: "请选择所属部门",
         options: [
           { value: "production", label: "生产部" },
@@ -1469,7 +1481,7 @@ const formConfig = {
         name: "urgency",
         label: "紧急程度",
         type: "select",
-        required: true,
+
         placeholder: "请选择紧急程度",
         options: [
           { value: "high", label: "高" },
@@ -1481,7 +1493,7 @@ const formConfig = {
         name: "description",
         label: "详细说明",
         type: "textarea",
-        required: true,
+
         placeholder: "请详细描述设备故障情况",
         span: "full",
         minRows: 3,
@@ -1505,7 +1517,7 @@ const formConfig = {
         key: "type",
         label: "维修类型",
         type: "select",
-        required: true,
+
         options: [
           { value: "parts", label: "更换零件" },
           { value: "repair", label: "维修保养" },
@@ -1540,19 +1552,20 @@ const formConfig = {
       {
         id: "apply_confirm",
         title: "申请确认",
+
         fields: [
           {
             name: "name",
             label: "申请人",
             type: "text",
-            required: true,
+
             icon: "solar:user-bold"
           },
           {
             name: "phone",
             label: "联系电话",
             type: "tel",
-            required: true,
+
             icon: "solar:phone-bold"
           },
           {
@@ -1567,19 +1580,20 @@ const formConfig = {
       {
         id: "manager_confirm",
         title: "主管确认",
+
         fields: [
           {
             name: "name",
             label: "主管姓名",
             type: "text",
-            required: true,
+
             icon: "solar:user-bold"
           },
           {
             name: "phone",
             label: "联系电话",
             type: "tel",
-            required: true,
+
             icon: "solar:phone-bold"
           },
           {
@@ -1594,19 +1608,20 @@ const formConfig = {
       {
         id: "maintenance_confirm",
         title: "维修确认",
+
         fields: [
           {
             name: "name",
             label: "维修人员",
             type: "text",
-            required: true,
+
             icon: "solar:user-bold"
           },
           {
             name: "phone",
             label: "联系电话",
             type: "tel",
-            required: true,
+
             icon: "solar:phone-bold"
           },
           {
@@ -1625,7 +1640,7 @@ const formConfig = {
 // 导出配置
 context.wpm.export('module_form_config', formConfig);
 </mo-ai-code>
-```
+````
 
 ```jsx
 <mo-ai-code type="page" name="page_form_detail" title="表单详情页">
@@ -1673,14 +1688,14 @@ const FormDetailPage = observer(() => {
     }
   };
 
-  const handleSave = async (formData) => {
-    try {
-      await dynamicFormStore.saveFormData();
-      message.success('保存成功');
-    } catch (error) {
-      message.error('保存失败: ' + error.message);
-      api.log.error('保存表单失败', { error, formId });
-    }
+  // 修改: 移除重复的保存操作，只处理成功和错误提示
+  const handleFormSave = () => {
+    api.log.info('表单保存成功', { formId });
+  };
+
+  const handleFormError = (error) => {
+    message.error("表单操作失败");
+    api.log.error('表单操作失败', { error, formId });
   };
 
   const handleBack = () => {
@@ -1707,17 +1722,14 @@ const FormDetailPage = observer(() => {
             返回首页
           </Button>
           <h1 className="text-xl font-bold">维修申请单</h1>
-          <div className="w-[88px]" /> {/* 占位，保持标题居中 */}
+          <div className="w-[88px]" />
         </div>
 
         <DynamicFormAdapter
           formId={formId}
           config={formConfig}
-          onSave={handleSave}
-          onError={(error) => {
-            message.error("表单操作失败")
-            api.log.error('表单操作失败', { error, formId });
-          }}
+          onSave={handleFormSave}
+          onError={handleFormError}
         />
       </div>
     </div>
@@ -1742,7 +1754,7 @@ const {
 } = context;
 
 const { useNavigate } = ReactRouterDom;
-const { Button, Card } = NextUI;
+const { Button, Card, Table, TableHeader, TableBody, TableColumn, TableRow, TableCell, useDisclosure, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Chip } = NextUI;
 
 const dynamicFormStore = await context.wpm.import('store_dynamic_form');
 const formConfig = await context.wpm.import('module_form_config');
@@ -1750,6 +1762,23 @@ const formConfig = await context.wpm.import('module_form_config');
 const HomePage = observer(() => {
   const navigate = useNavigate();
   const [loading, setLoading] = React.useState(false);
+  const [selectedForm, setSelectedForm] = React.useState(null);
+  const deleteModal = useDisclosure();
+
+  React.useEffect(() => {
+    loadUserForms();
+  }, []);
+
+  const loadUserForms = async () => {
+    try {
+      setLoading(true);
+      await dynamicFormStore.loadUserForms();
+    } catch (error) {
+      message.error('加载表单列表失败: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreateForm = async () => {
     try {
@@ -1765,36 +1794,243 @@ const HomePage = observer(() => {
     }
   };
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-tr from-pink-300 to-blue-300 p-6">
-      <Card className="w-full max-w-md bg-background/60 p-6 backdrop-blur-md">
-        <div className="text-center">
-          <div className="mb-6">
-            <Icon
-              icon="solar:clipboard-add-bold"
-              className="h-16 w-16 text-primary mx-auto"
-            />
-            <h1 className="mt-4 text-2xl font-bold text-foreground">
-              设备维修申请
-            </h1>
-            <p className="mt-2 text-small text-foreground-500">
-              点击下方按钮创建新的维修申请单
-            </p>
-          </div>
+  const handleEditForm = (formId) => {
+    navigate(`/form/${formId}`);
+  };
 
-          <Button
-            size="lg"
-            color="primary"
-            variant="shadow"
-            className="w-full"
-            startContent={<Icon icon="solar:add-circle-bold" />}
-            isLoading={loading}
-            onPress={handleCreateForm}
-          >
-            创建维修申请单
-          </Button>
-        </div>
-      </Card>
+  const handleDeleteForm = async () => {
+    if (!selectedForm) return;
+
+    try {
+      setLoading(true);
+      await dynamicFormStore.deleteForm(selectedForm.formId);
+      message.success('删除表单成功');
+      deleteModal.onClose();
+    } catch (error) {
+      message.error('删除表单失败: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderStatus = (status, confirmStatus) => {
+    // 优先显示确认状态
+    if (confirmStatus === 'completed') {
+      return (
+        <Chip
+          size="sm"
+          color="success"
+          variant="flat"
+          startContent={<Icon icon="solar:check-circle-bold" className="text-success" />}
+        >
+          已完成
+        </Chip>
+      );
+    }
+
+    if (confirmStatus === 'pending') {
+      return (
+        <Chip
+          size="sm"
+          color="warning"
+          variant="flat"
+          startContent={<Icon icon="solar:clock-circle-bold" className="text-warning" />}
+        >
+          待确认
+        </Chip>
+      );
+    }
+
+    // 兜底显示基础状态
+    const statusMap = {
+      draft: { label: '草稿', color: 'default', icon: 'solar:file-bold' },
+      submitted: { label: '已提交', color: 'primary', icon: 'solar:check-square-bold' },
+      approved: { label: '已审批', color: 'success', icon: 'solar:check-circle-bold' },
+      rejected: { label: '已拒绝', color: 'danger', icon: 'solar:close-circle-bold' }
+    };
+
+    const statusInfo = statusMap[status] || { label: '未知', color: 'default', icon: 'solar:question-circle-bold' };
+
+    return (
+      <Chip
+        size="sm"
+        color={statusInfo.color}
+        variant="flat"
+        startContent={<Icon icon={statusInfo.icon} className={`text-${statusInfo.color}`} />}
+      >
+        {statusInfo.label}
+      </Chip>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-tr from-pink-300 to-blue-300 p-6">
+      <div className="mx-auto max-w-6xl">
+        <Card className="bg-background/60 backdrop-blur-md">
+          <div className="p-6">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">
+                  我的表单
+                </h1>
+                <p className="mt-1 text-small text-foreground-500">
+                  管理您创建的所有表单
+                </p>
+              </div>
+              <Button
+                color="primary"
+                variant="shadow"
+                startContent={<Icon icon="solar:add-circle-bold" />}
+                isLoading={loading}
+                onPress={handleCreateForm}
+              >
+                创建新表单
+              </Button>
+            </div>
+
+            <Table
+              aria-label="表单列表"
+              classNames={{
+                wrapper: "bg-background/60",
+                th: "bg-background/70 text-default-500",
+                td: "py-3"
+              }}
+              selectionMode="none"
+            >
+              <TableHeader>
+                <TableColumn key="formName">表单名称</TableColumn>
+                <TableColumn key="description">描述</TableColumn>
+                <TableColumn key="status" className="text-center">状态</TableColumn>
+                <TableColumn key="createdAt">创建时间</TableColumn>
+                <TableColumn key="updatedAt">更新时间</TableColumn>
+                <TableColumn key="actions" className="text-center">操作</TableColumn>
+              </TableHeader>
+              <TableBody
+                items={dynamicFormStore.userForms}
+                emptyContent={
+                  <div className="text-center py-6">
+                    <Icon
+                      icon="solar:clipboard-bold"
+                      className="mx-auto mb-2 h-8 w-8 text-default-400"
+                    />
+                    <p>暂无表单数据</p>
+                    <p className="text-small text-default-400 mt-1">
+                      点击"创建新表单"按钮创建您的第一个表单
+                    </p>
+                  </div>
+                }
+                loadingContent={
+                  <div className="text-center py-6">
+                    <NextUI.Spinner label="加载中..." />
+                  </div>
+                }
+                isLoading={loading}
+              >
+                {(form) => (
+                  <TableRow key={form.formId}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Icon
+                          icon="solar:clipboard-bold"
+                          className="text-primary"
+                          width={20}
+                        />
+                        <span className="font-medium">{form.formName}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-default-500">
+                        {form.description || '-'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {renderStatus(form.status, form.confirmStatus)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span>{new Date(form.createdAt).toLocaleDateString()}</span>
+                        <span className="text-tiny text-default-400">
+                          {new Date(form.createdAt).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span>{new Date(form.updatedAt).toLocaleDateString()}</span>
+                        <span className="text-tiny text-default-400">
+                          {new Date(form.updatedAt).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-center gap-2">
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="light"
+                          onPress={() => handleEditForm(form.formId)}
+                        >
+                          <Icon icon="solar:pen-bold" />
+                        </Button>
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          color="danger"
+                          variant="light"
+                          onPress={() => {
+                            setSelectedForm(form);
+                            deleteModal.onOpen();
+                          }}
+                        >
+                          <Icon icon="solar:trash-bin-trash-bold" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      </div>
+
+      <Modal
+        isOpen={deleteModal.isOpen}
+        onOpenChange={deleteModal.onOpenChange}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>
+                <h3 className="text-xl font-semibold">确认删除</h3>
+              </ModalHeader>
+              <ModalBody>
+                <p>
+                  确定要删除表单 "{selectedForm?.formName}" 吗？
+                </p>
+                <p className="text-small text-danger mt-1">
+                  此操作不可恢复！
+                </p>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="light"
+                  onPress={onClose}
+                >
+                  取消
+                </Button>
+                <Button
+                  color="danger"
+                  onPress={handleDeleteForm}
+                  isLoading={loading}
+                >
+                  确认删除
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 });
@@ -1808,12 +2044,18 @@ context.wpm.export('page_home', HomePage);
 const {
   wpm,
   mobx,
-  message,
   api,
   appId
 } = context;
 
-const { makeAutoObservable, runInAction, computed } = mobx;
+const { makeAutoObservable, runInAction } = mobx;
+
+// 导入拆分后的子 store
+const formListStore = await context.wpm.import('store_form_list');
+const formIndexStore = await context.wpm.import('store_form_index');
+const formBasicStore = await context.wpm.import('store_form_basic');
+const formDetailStore = await context.wpm.import('store_form_detail');
+const formConfirmStore = await context.wpm.import('store_form_confirm');
 
 class DynamicFormStore {
   // 私有状态
@@ -1822,13 +2064,11 @@ class DynamicFormStore {
   _error = null;
 
   // 不可变配置
-  formPrefix = `${appId}_dynamic_form`;
-  indexPrefix = `${appId}_form_index`;
+  formPrefix = `${appId}_form`;
 
   constructor() {
     makeAutoObservable(this, {
-      formPrefix: false,
-      indexPrefix: false
+      formPrefix: false
     });
   }
 
@@ -1850,189 +2090,84 @@ class DynamicFormStore {
   }
 
   get currentForm() {
-    return this._formData;
+    return this._formData ? {
+      ...this._formData,
+      basic: formBasicStore.basicData,
+      detail: formDetailStore.detailData,
+      confirms: formConfirmStore.confirmData
+    } : null;
   }
 
+  // 代理计算属性
   get detailData() {
-    return this._formData?.detail || [];
+    return formDetailStore.detailData;
   }
 
   get totalAmount() {
-    return computed(() => {
-      if (!Array.isArray(this._formData?.detail)) {
-        return 0;
-      }
-      return this._formData.detail.reduce((sum, item) => {
-        const amount = Number(item.amount);
-        return sum + (isNaN(amount) ? 0 : amount);
-      }, 0);
-    }).get();
+    return formDetailStore.totalAmount;
   }
 
   get detailCount() {
-    return this._formData?.detail?.length || 0;
+    return formDetailStore.detailCount;
   }
 
-  // 校验基本信息
-  validateBasicFields() {
-    if (!this._formData?.config?.basic?.fields) return true;
-
-    const requiredFields = this._formData.config.basic.fields
-      .filter(field => field.required)
-      .map(field => field.name);
-
-    return requiredFields.every(field => {
-      const value = this._formData.basic?.[field];
-      return value !== undefined && value !== null && value !== '';
-    });
+  get userForms() {
+    return formListStore.userForms;
   }
 
-  // 校验明细数据
-  validateDetailData() {
-    if (!this._formData?.config?.detail?.columns) return true;
+  get userFormsLoading() {
+    return formListStore.userFormsLoading;
+  }
 
-    // 检查是否有明细数据
-    if (!Array.isArray(this._formData.detail) || this._formData.detail.length === 0) {
-      return false;
+  // 修复确认状态计算逻辑
+  getConfirmStatus() {
+    const confirms = formConfirmStore.confirmData;
+    const config = this._formData?.config;
+
+    // 如果没有确认数据或配置，返回待确认
+    if (!confirms || !config?.confirm?.forms) {
+      return 'pending';
     }
 
-    // 检查每条明细的必填字段
-    const requiredColumns = this._formData.config.detail.columns
-      .filter(col => col.required)
-      .map(col => col.key);
+    // 获取需要确认的表单数量
+    const requiredConfirmCount = config.confirm.forms.length;
 
-    return this._formData.detail.every(item =>
-      requiredColumns.every(key => {
-        const value = item[key];
-        return value !== undefined && value !== null && value !== '';
-      })
-    );
-  }
-
-  // 校验确认信息
-  validateConfirmData() {
-    if (!this._formData?.config?.confirm?.forms) return true;
-
-    // 检查必填的确认表单
-    return this._formData.config.confirm.forms.every((form, index) => {
-      if (!form.required) return true;
-
-      const confirmData = this._formData.confirms?.[index];
-      if (!confirmData) return false;
-
-      // 检查必填字段
-      const requiredFields = form.fields
-        .filter(field => field.required)
-        .map(field => field.name);
-
-      return requiredFields.every(field => {
-        const value = confirmData[field];
-        return value !== undefined && value !== null && value !== '';
-      });
-    });
-  }
-
-  // 创建表单结构索引
-  async createFormIndex(formData) {
-    const indexData = {
-      formId: formData.id,
-      formType: formData.config?.type || 'default',
-      formName: formData.config?.title || '未命名表单',
-      description: formData.config?.description,
-      version: formData.config?.version || '1.0.0',
-      status: formData.status || 'draft',
-      createdAt: formData.createdAt,
-      updatedAt: formData.updatedAt,
-      creator: formData.creator,
-      // 表单结构信息
-      structure: {
-        basicFields: formData.config?.basic?.fields?.length || 0,
-        detailColumns: formData.config?.detail?.columns?.length || 0,
-        confirmForms: formData.config?.confirm?.forms?.length || 0
-      }
-    };
-
-    try {
-      await api.setMetadata(
-        `${this.indexPrefix}_${formData.id}`,
-        indexData
-      );
-
-      api.log.info('创建表单索引成功', {
-        formId: formData.id,
-        formType: indexData.formType
-      });
-
-      return true;
-    } catch (error) {
-      api.log.error('创建表单索引失败', { error, formId: formData.id });
-      throw error;
+    // 如果确认数据长度小于需要确认的数量，返回待确认
+    if (confirms.length < requiredConfirmCount) {
+      return 'pending';
     }
+
+    // 检查是否所有需要的表单都已确认
+    for (let i = 0; i < requiredConfirmCount; i++) {
+      const confirmForm = confirms[i];
+      // 如果任何一个表单未确认或已取消，返回待确认
+      if (!confirmForm || confirmForm.status !== 'confirmed') {
+        return 'pending';
+      }
+    }
+
+    // 所有表单都已确认
+    return 'completed';
   }
 
-  // 更新表单结构索引
-  async updateFormIndex(formData) {
-    const indexData = {
-      formId: formData.id,
-      formType: formData.config?.type || 'default',
-      formName: formData.config?.title || '未命名表单',
-      description: formData.config?.description,
-      version: formData.config?.version || '1.0.0',
-      status: formData.status || 'draft',
-      createdAt: formData.createdAt,
-      updatedAt: formData.updatedAt,
-      creator: formData.creator,
-      // 表单结构信息
-      structure: {
-        basicFields: formData.config?.basic?.fields?.length || 0,
-        detailColumns: formData.config?.detail?.columns?.length || 0,
-        confirmForms: formData.config?.confirm?.forms?.length || 0
-      }
-    };
-
-    try {
-      // 检查索引是否存在
-      const existingIndex = await api.getMetadata([`${this.indexPrefix}_${formData.id}`]);
-
-      if (existingIndex?.data?.[0]?.value) {
-        // 更新现有索引
-        await api.setMetadata(
-          `${this.indexPrefix}_${formData.id}`,
-          {
-            ...JSON.parse(existingIndex.data[0].value),
-            ...indexData,
-            updatedAt: new Date().toISOString()
-          }
-        );
-      } else {
-        // 创建新索引
-        await this.createFormIndex(formData);
-      }
-
-      api.log.info('更新表单索引成功', {
-        formId: formData.id,
-        formType: indexData.formType
-      });
-
-      return true;
-    } catch (error) {
-      api.log.error('更新表单索引失败', { error, formId: formData.id });
-      throw error;
-    }
+  // 加载用户表单列表
+  async loadUserForms() {
+    await formListStore.loadUserForms();
   }
 
   // 初始化新表单
   initNewForm(config) {
     runInAction(() => {
       this._formData = {
-        basic: {},
-        detail: [],
-        confirms: [],
         config: config,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
     });
+
+    formBasicStore.initBasicData({});
+    formDetailStore.initDetailData([]);
+    formConfirmStore.initConfirmData([]);
   }
 
   // 创建新表单
@@ -2047,9 +2182,6 @@ class DynamicFormStore {
 
     const formData = {
       id: formId,
-      basic: {},
-      detail: [],
-      confirms: [],
       config: config,
       createdAt: now,
       updatedAt: now,
@@ -2058,7 +2190,8 @@ class DynamicFormStore {
         name: currentUser.name,
         role: currentUser.role
       },
-      status: 'draft'
+      status: 'pending',
+      confirmStatus: 'pending' // 初始确认状态
     };
 
     try {
@@ -2069,15 +2202,21 @@ class DynamicFormStore {
       );
 
       // 创建表单索引
-      await this.createFormIndex(formData);
+      await formIndexStore.createFormIndex(formData);
 
       runInAction(() => {
         this._formData = formData;
       });
 
+      // 初始化各个 store
+      formBasicStore.initBasicData({});
+      formDetailStore.initDetailData([]);
+      formConfirmStore.initConfirmData([]);
+
       api.log.info('创建表单成功', {
         formId,
-        creator: currentUser.name
+        creator: currentUser.name,
+        confirmStatus: 'pending'
       });
 
       return formId;
@@ -2109,16 +2248,18 @@ class DynamicFormStore {
       const formData = JSON.parse(result.data[0].value);
 
       runInAction(() => {
-        this._formData = {
-          ...formData,
-          detail: Array.isArray(formData.detail) ? formData.detail : [],
-          confirms: Array.isArray(formData.confirms) ? formData.confirms : []
-        };
+        this._formData = formData;
       });
+
+      // 初始化各个 store
+      formBasicStore.initBasicData(formData.basic || {});
+      formDetailStore.initDetailData(Array.isArray(formData.detail) ? formData.detail : []);
+      formConfirmStore.initConfirmData(Array.isArray(formData.confirms) ? formData.confirms : []);
 
       api.log.info('加载表单数据成功', {
         formId,
-        formType: formData.config?.type
+        formType: formData.config?.type,
+        confirmStatus: formData.confirmStatus
       });
 
       return true;
@@ -2135,23 +2276,10 @@ class DynamicFormStore {
     }
   }
 
-  // 保存表单数据
+  // 保存表单数据时更新确认状态
   async saveFormData() {
     if (!this._formData) {
       throw new Error('没有可保存的表单数据');
-    }
-
-    // 表单校验
-    if (!this.validateBasicFields()) {
-      throw new Error('请完善基本信息');
-    }
-
-    if (!this.validateDetailData()) {
-      throw new Error('请至少添加一条明细记录');
-    }
-
-    if (!this.validateConfirmData()) {
-      throw new Error('请完成必要的确认信息');
     }
 
     const currentUser = await api.getCurrentAccountInfo();
@@ -2162,8 +2290,15 @@ class DynamicFormStore {
     const formId = this._formData.id;
     const now = new Date().toISOString();
 
+    // 计算最新的确认状态
+    const confirmStatus = this.getConfirmStatus();
+
     const formData = {
       ...this._formData,
+      basic: formBasicStore.basicData,
+      detail: formDetailStore.detailData,
+      confirms: formConfirmStore.confirmData,
+      confirmStatus, // 更新确认状态
       updatedAt: now,
       operator: {
         id: currentUser.id,
@@ -2180,8 +2315,8 @@ class DynamicFormStore {
         formData
       );
 
-      // 更新表单索引
-      await this.updateFormIndex(formData);
+      // 更新表单索引,包含新的确认状态
+      await formIndexStore.updateFormIndex(formData);
 
       runInAction(() => {
         this._formData = formData;
@@ -2189,12 +2324,34 @@ class DynamicFormStore {
 
       api.log.info('保存表单数据成功', {
         formId,
-        formType: formData.config?.type
+        formType: formData.config?.type,
+        confirmStatus
       });
 
       return true;
     } catch (error) {
       api.log.error('保存表单数据失败', { error, formId });
+      throw error;
+    }
+  }
+
+  // 删除表单 - 修改后只删除索引
+  async deleteForm(formId) {
+    if (!formId) {
+      throw new Error('表单ID不能为空');
+    }
+
+    try {
+      // 只删除表单索引
+      await formIndexStore.deleteFormIndex(formId);
+
+      // 重新加载用户表单列表
+      await formListStore.loadUserForms();
+
+      api.log.info('删除表单成功', { formId });
+      return true;
+    } catch (error) {
+      api.log.error('删除表单失败', { error, formId });
       throw error;
     }
   }
@@ -2206,99 +2363,518 @@ class DynamicFormStore {
       this._error = null;
       this._isLoading = false;
     });
+
+    formBasicStore.clearBasicData();
+    formDetailStore.clearDetailData();
+    formConfirmStore.clearConfirmData();
   }
 
-  // 更新基本信息字段
+  // 代理方法 - 基本信息
   updateBasicField(field, value) {
-    if (!this._formData) return;
-
-    runInAction(() => {
-      this._formData.basic = {
-        ...this._formData.basic,
-        [field]: value
-      };
-    });
+    formBasicStore.updateBasicField(field, value);
   }
 
-  // 添加明细项
+  // 代理方法 - 明细信息
   addDetailItem(item) {
-    if (!this._formData) return;
-
-    runInAction(() => {
-      if (!Array.isArray(this._formData.detail)) {
-        this._formData.detail = [];
-      }
-      this._formData.detail.push({
-        ...item,
-        id: `detail_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      });
-    });
+    formDetailStore.addDetailItem(item);
   }
 
-  // 更新明细项
   updateDetailItem(index, item) {
-    if (!this._formData?.detail?.[index]) return;
-
-    runInAction(() => {
-      this._formData.detail[index] = {
-        ...item,
-        id: this._formData.detail[index].id
-      };
-    });
+    formDetailStore.updateDetailItem(index, item);
   }
 
-  // 删除明细项
   removeDetailItem(index) {
-    if (!this._formData?.detail?.[index]) return;
-
-    runInAction(() => {
-      this._formData.detail.splice(index, 1);
-    });
+    formDetailStore.removeDetailItem(index);
   }
 
-  // 更新确认表单
-  async updateConfirmForm(formIndex, confirmInfo) {
-    if (!this._formData) return;
-
-    runInAction(() => {
-      if (!Array.isArray(this._formData.confirms)) {
-        this._formData.confirms = [];
-      }
-
-      while (this._formData.confirms.length <= formIndex) {
-        this._formData.confirms.push({});
-      }
-
-      this._formData.confirms[formIndex] = {
-        ...this._formData.confirms[formIndex],
-        ...confirmInfo,
-        updatedAt: new Date().toISOString()
-      };
-    });
+  // 代理方法 - 确认信息
+  updateConfirmForm(formIndex, confirmInfo) {
+    return formConfirmStore.updateConfirmForm(formIndex, confirmInfo);
   }
 
-  // 更新确认字段
   updateConfirmField(formIndex, field, value) {
-    if (!this._formData) return;
-
-    runInAction(() => {
-      if (!Array.isArray(this._formData.confirms)) {
-        this._formData.confirms = [];
-      }
-
-      while (this._formData.confirms.length <= formIndex) {
-        this._formData.confirms.push({});
-      }
-
-      this._formData.confirms[formIndex] = {
-        ...this._formData.confirms[formIndex],
-        [field]: value
-      };
-    });
+    formConfirmStore.updateConfirmField(formIndex, field, value);
   }
 }
 
 const store = new DynamicFormStore();
 context.wpm.export('store_dynamic_form', store);
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="store" name="store_form_basic" title="基本信息管理">
+const {
+  wpm,
+  mobx
+} = context;
+
+const { makeAutoObservable } = mobx;
+
+class FormBasicStore {
+  // 状态
+  _basicData = {};
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  // 计算属性
+  get basicData() {
+    return this._basicData;
+  }
+
+  // 初始化基本信息
+  initBasicData(data = {}) {
+    this._basicData = { ...data };
+  }
+
+  // 更新基本信息字段
+  updateBasicField(field, value) {
+    this._basicData = {
+      ...this._basicData,
+      [field]: value
+    };
+  }
+
+  // 批量更新基本信息
+  updateBasicData(data) {
+    this._basicData = {
+      ...this._basicData,
+      ...data
+    };
+  }
+
+  // 清除基本信息
+  clearBasicData() {
+    this._basicData = {};
+  }
+}
+
+const store = new FormBasicStore();
+context.wpm.export('store_form_basic', store);
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="store" name="store_form_confirm" title="确认信息管理">
+const {
+  wpm,
+  mobx
+} = context;
+
+const { makeAutoObservable } = mobx;
+
+class FormConfirmStore {
+  // 状态
+  _confirmData = [];
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  // 计算属性
+  get confirmData() {
+    return this._confirmData;
+  }
+
+  // 获取已确认的表单数量
+  get confirmedCount() {
+    return this._confirmData.filter(form => form?.status === 'confirmed').length;
+  }
+
+  // 获取已取消的表单数量
+  get cancelledCount() {
+    return this._confirmData.filter(form => form?.status === 'cancelled').length;
+  }
+
+  // 获取待确认的表单数量
+  get pendingCount() {
+    return this._confirmData.filter(form => !form?.status || form.status === 'pending').length;
+  }
+
+  // 检查指定索引的表单是否已确认
+  isFormConfirmed(index) {
+    return this._confirmData[index]?.status === 'confirmed';
+  }
+
+  // 检查指定索引的表单是否已取消
+  isFormCancelled(index) {
+    return this._confirmData[index]?.status === 'cancelled';
+  }
+
+  // 初始化确认数据
+  initConfirmData(data = []) {
+    this._confirmData = [...data];
+  }
+
+  // 更新确认表单
+  async updateConfirmForm(formIndex, confirmInfo) {
+    while (this._confirmData.length <= formIndex) {
+      this._confirmData.push({});
+    }
+
+    this._confirmData[formIndex] = {
+      ...this._confirmData[formIndex],
+      ...confirmInfo,
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  // 更新确认字段
+  updateConfirmField(formIndex, field, value) {
+    while (this._confirmData.length <= formIndex) {
+      this._confirmData.push({});
+    }
+
+    this._confirmData[formIndex] = {
+      ...this._confirmData[formIndex],
+      [field]: value
+    };
+  }
+
+  // 清除确认数据
+  clearConfirmData() {
+    this._confirmData = [];
+  }
+}
+
+const store = new FormConfirmStore();
+context.wpm.export('store_form_confirm', store);
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="store" name="store_form_detail" title="明细信息管理">
+const {
+  wpm,
+  mobx
+} = context;
+
+const { makeAutoObservable, computed } = mobx;
+
+class FormDetailStore {
+  // 状态
+  _detailData = [];
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  // 计算属性
+  get detailData() {
+    return this._detailData;
+  }
+
+  get detailCount() {
+    return this._detailData.length;
+  }
+
+  get totalAmount() {
+    return computed(() => {
+      return this._detailData.reduce((sum, item) => {
+        const amount = Number(item.amount);
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0);
+    }).get();
+  }
+
+  // 初始化明细数据
+  initDetailData(data = []) {
+    this._detailData = [...data];
+  }
+
+  // 添加明细项
+  addDetailItem(item) {
+    this._detailData.push({
+      ...item,
+      id: `detail_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    });
+  }
+
+  // 更新明细项
+  updateDetailItem(index, item) {
+    if (!this._detailData[index]) return;
+
+    this._detailData[index] = {
+      ...item,
+      id: this._detailData[index].id
+    };
+  }
+
+  // 删除明细项
+  removeDetailItem(index) {
+    if (!this._detailData[index]) return;
+    this._detailData.splice(index, 1);
+  }
+
+  // 清除明细数据
+  clearDetailData() {
+    this._detailData = [];
+  }
+}
+
+const store = new FormDetailStore();
+context.wpm.export('store_form_detail', store);
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="store" name="store_form_index" title="表单索引管理">
+const {
+  wpm,
+  mobx,
+  api,
+  appId
+} = context;
+
+const { makeAutoObservable } = mobx;
+
+class FormIndexStore {
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  // 创建表单结构索引
+  async createFormIndex(formData) {
+    const indexData = {
+      formId: formData.id,
+      formType: formData.config?.type || 'default',
+      formName: formData.config?.title || '未命名表单',
+      description: formData.config?.description,
+      version: formData.config?.version || '1.0.0',
+      status: formData.status || 'pending',
+      confirmStatus: formData.confirmStatus || 'pending', // 添加确认状态
+      createdAt: formData.createdAt,
+      updatedAt: formData.updatedAt,
+      creator: formData.creator,
+      structure: {
+        basicFields: formData.config?.basic?.fields?.length || 0,
+        detailColumns: formData.config?.detail?.columns?.length || 0,
+        confirmForms: formData.config?.confirm?.forms?.length || 0
+      }
+    };
+
+    try {
+      // 获取现有索引
+      const existingResult = await api.getMetadata([`${appId}_form_index`]);
+      let existingIndex = [];
+
+      if (existingResult?.data?.[0]?.value) {
+        existingIndex = JSON.parse(existingResult.data[0].value);
+      }
+
+      // 添加新表单索引
+      const updatedIndex = Array.isArray(existingIndex) ?
+        [...existingIndex, indexData] : [indexData];
+
+      await api.setMetadata(
+        `${appId}_form_index`,
+        updatedIndex
+      );
+
+      api.log.info('创建表单索引成功', {
+        formId: formData.id,
+        formType: indexData.formType,
+        status: indexData.status,
+        confirmStatus: indexData.confirmStatus
+      });
+
+      return true;
+    } catch (error) {
+      api.log.error('创建表单索引失败', { error, formId: formData.id });
+      throw error;
+    }
+  }
+
+  // 更新表单结构索引
+  async updateFormIndex(formData) {
+    const indexData = {
+      formId: formData.id,
+      formType: formData.config?.type || 'default',
+      formName: formData.config?.title || '未命名表单',
+      description: formData.config?.description,
+      version: formData.config?.version || '1.0.0',
+      status: formData.status,
+      confirmStatus: formData.confirmStatus, // 更新确认状态
+      createdAt: formData.createdAt,
+      updatedAt: formData.updatedAt,
+      creator: formData.creator,
+      structure: {
+        basicFields: formData.config?.basic?.fields?.length || 0,
+        detailColumns: formData.config?.detail?.columns?.length || 0,
+        confirmForms: formData.config?.confirm?.forms?.length || 0
+      }
+    };
+
+    try {
+      // 获取现有索引
+      const existingResult = await api.getMetadata([`${appId}_form_index`]);
+      let existingIndex = [];
+
+      if (existingResult?.data?.[0]?.value) {
+        existingIndex = JSON.parse(existingResult.data[0].value);
+      }
+
+      // 更新表单索引
+      const updatedIndex = Array.isArray(existingIndex) ?
+        existingIndex.map(item =>
+          item.formId === formData.id ? indexData : item
+        ) : [indexData];
+
+      await api.setMetadata(
+        `${appId}_form_index`,
+        updatedIndex
+      );
+
+      api.log.info('更新表单索引成功', {
+        formId: formData.id,
+        formType: indexData.formType,
+        status: indexData.status,
+        confirmStatus: indexData.confirmStatus
+      });
+
+      return true;
+    } catch (error) {
+      api.log.error('更新表单索引失败', { error, formId: formData.id });
+      throw error;
+    }
+  }
+
+  // 删除表单索引
+  async deleteFormIndex(formId) {
+    try {
+      // 获取现有索引
+      const existingResult = await api.getMetadata([`${appId}_form_index`]);
+      let existingIndex = [];
+
+      if (existingResult?.data?.[0]?.value) {
+        existingIndex = JSON.parse(existingResult.data[0].value);
+      }
+
+      // 删除表单索引
+      const updatedIndex = Array.isArray(existingIndex) ?
+        existingIndex.filter(item => item.formId !== formId) : [];
+
+      await api.setMetadata(
+        `${appId}_form_index`,
+        updatedIndex
+      );
+
+      api.log.info('删除表单索引成功', { formId });
+      return true;
+    } catch (error) {
+      api.log.error('删除表单索引失败', { error, formId });
+      throw error;
+    }
+  }
+}
+
+const store = new FormIndexStore();
+context.wpm.export('store_form_index', store);
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="store" name="store_form_list" title="用户表单列表管理">
+const {
+  wpm,
+  mobx,
+  api,
+  appId
+} = context;
+
+const { makeAutoObservable, runInAction } = mobx;
+
+class FormListStore {
+  // 状态
+  _userForms = [];
+  _userFormsLoading = false;
+  _error = null;
+
+  constructor() {
+    makeAutoObservable(this);
+  }
+
+  // 计算属性
+  get userForms() {
+    return this._userForms;
+  }
+
+  get userFormsLoading() {
+    return this._userFormsLoading;
+  }
+
+  get error() {
+    return this._error;
+  }
+
+  // 加载用户创建的表单列表
+  async loadUserForms() {
+    const currentUser = await api.getCurrentAccountInfo();
+    if (!currentUser) {
+      throw new Error('获取用户信息失败');
+    }
+
+    runInAction(() => {
+      this._userFormsLoading = true;
+      this._error = null;
+    });
+
+    try {
+      // 获取表单索引
+      const result = await api.getMetadata([`${appId}_form_index`]);
+
+      if (!result?.data?.[0]?.value) {
+        runInAction(() => {
+          this._userForms = [];
+        });
+        return;
+      }
+
+      const indexData = JSON.parse(result.data[0].value);
+
+      // 过滤出当前用户创建的表单
+      const userForms = Array.isArray(indexData) ?
+        indexData.filter(form => form.creator?.id === currentUser.id) : [];
+
+      runInAction(() => {
+        this._userForms = userForms.map(form => ({
+          ...form,
+          createdAtFormatted: new Date(form.createdAt).toLocaleString(),
+          updatedAtFormatted: new Date(form.updatedAt).toLocaleString()
+        }));
+      });
+
+      api.log.info('加载用户表单列表成功', {
+        userId: currentUser.id,
+        formCount: userForms.length
+      });
+
+    } catch (error) {
+      runInAction(() => {
+        this._error = error.message || '加载失败';
+      });
+      api.log.error('加载用户表单列表失败', { error });
+      throw error;
+    } finally {
+      runInAction(() => {
+        this._userFormsLoading = false;
+      });
+    }
+  }
+
+  // 清除列表数据
+  clearUserForms() {
+    runInAction(() => {
+      this._userForms = [];
+      this._error = null;
+      this._userFormsLoading = false;
+    });
+  }
+}
+
+const store = new FormListStore();
+context.wpm.export('store_form_list', store);
 </mo-ai-code>
 ```

@@ -286,7 +286,8 @@ const {
   React, 
   observer, 
   NextUI,
-  appId 
+  appId,
+  Icon
 } = context;
 
 const {
@@ -389,6 +390,3 @@ context.wpm.export(appId, App);
 </mo-ai-code>
 \`\`\`
 `
-
-// 导出默认模板（向后兼容）
-export const initialAIResponse = multiPageTemplate

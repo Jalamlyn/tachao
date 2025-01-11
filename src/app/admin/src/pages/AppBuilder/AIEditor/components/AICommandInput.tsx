@@ -47,7 +47,7 @@ interface UploadingFile {
 const AI_ASSISTANTS = {
   mo: {
     name: "",
-    role: "开发模式",
+    role: "工程师",
     description: "专注于代码实现和功能开发",
     icon: "line-md:mastodon-filled",
     color: "primary",
@@ -55,7 +55,7 @@ const AI_ASSISTANTS = {
   },
   pm: {
     name: "",
-    role: "交流模式",
+    role: "产品经理",
     description: "帮助分析需求和解答问题",
     icon: "mdi:account-tie",
     color: "success",

@@ -216,7 +216,7 @@ ${module.data.code}
       // 获取应用列表信息
       const appsContext = await this.getAppsContext()
 
-      const enhancedCommand = `<我的输入>${commandContent}, 生成完整代码必须确保代码是完整的, 不允许用注释省略模块中的任何代码和任何逻辑,禁止生成“// ... 保留原有方法 ... {/* ... 保留 xxx ... */}, // 在现有的 xxx 中添加以下方法”</我的输入><project>
+      const enhancedCommand = `<我的输入>${commandContent}, 生成完整代码必须确保代码是完整的</我的输入><project>
             ${
               isPMMode
                 ? `
@@ -279,10 +279,10 @@ ${module.data.code}
             <我的输入>${commandContent.replace("@pm", "").trim()}</我的输入>
             `
                 : `
-            <project> 里是现有代码和系统日志,根据 <我的输入> ,生成所有代码都必须包裹在\`\`\`jsx<mo-ai-code type="xxx" name="xxx" title="xxx" des="模块一句话介绍">生成的代码</mo-ai-code>\`\`\`标签中,你需要先列出要生成或者修改的模块名称,然后再开始生成代码,所有列出的模块都必须生成, ui交互要从设计师的角度思考, <experience-nextui>里有示例代码, 不要返回没有修改的模块
+            <project> 里是现有代码和系统日志,根据 <我的输入> ,生成所有代码都必须包裹在\`\`\`jsx<mo-ai-code type="xxx" name="xxx" title="xxx" des="模块一句话介绍">生成的代码,必须确保代码是完整的, 不允许用注释省略模块中的任何代码和任何逻辑,禁止在代码中生成"""// ... 保留原有方法 ... {/* ... 保留 xxx ... */}, // 在现有的 xxx 中添加以下方法, // 其他现有方法保持不变..., //其他原有方法... """</mo-ai-code>\`\`\`标签中,你需要先进行一轮思考, 检查模块上下文是否足够, 如果模块上下文不充分, 向我要求提供更多的模块上下文, 然后列出要生成或者修改的模块名称, 然后再开始生成代码,所有列出的模块都必须生成, ui交互要从设计师的角度思考, 不要返回没有修改的模块
             `
             }
-            <我的输入>${commandContent}, 生成完整代码必须确保代码是完整的, 不允许用注释省略模块中的任何代码和任何逻辑</我的输入>`
+            <我的输入>${commandContent}</我的输入>`
 
       const allMessages = [
         { role: "system", content: systemPrompt },
