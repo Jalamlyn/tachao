@@ -2,6 +2,8 @@ import expenseTrackerTemplate from "../nextui/nextui_expense_tracker"
 import enterpriseBussiness from "../nextui/nextui_delivery"
 import intelligentFormTemplate from "../nextui/nextui_intelligent_form"
 import formAnalysisTemplate from "../nextui/nextui_form_analysis"
+import formBackendTemplate from "../nextui/nextui_form_backend"
+import formAIAssistantTemplate from "../nextui/nextui_form_ai_assistant"
 
 export interface AppTemplate {
   id: string
@@ -58,5 +60,29 @@ export const templates: Record<string, AppTemplate> = {
     suiteId: "form_suite",
     suiteName: "智能表单套件",
     suiteOrder: 2
+  },
+  form_backend: {
+    id: "form_backend",
+    name: "表单后台应用",
+    description: "强大的表单管理后台，支持表单数据管理、权限控制和工作流配置。",
+    icon: "mdi:view-dashboard",
+    category: "form",
+    type: "form",
+    code: formBackendTemplate,
+    suiteId: "form_suite",
+    suiteName: "智能表单套件",
+    suiteOrder: 3
+  },
+  form_ai_assistant: {
+    id: "form_ai_assistant",
+    name: "表单 AI 助手",
+    description: "智能表单助手，支持智能填写建议、数据校验和自动完成功能。",
+    icon: "mdi:robot",
+    category: "form",
+    type: "ai",
+    code: formAIAssistantTemplate,
+    suiteId: "form_suite",
+    suiteName: "智能表单套件",
+    suiteOrder: 4
   }
 }
