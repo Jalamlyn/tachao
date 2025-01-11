@@ -244,8 +244,12 @@ export async function addModules(this: AppCodeStore, updates: Record<string, str
       if (!existingModule) {
         throw new Error(`Module ${moduleId} not found`)
       }
-
-      const compiledCode = await this.compileCode(newCode)
+      let compiledCode
+      if (moduleId.includes("markdown")) {
+        compiledCode = newCode
+      } else {
+        compiledCode = await this.compileCode(newCode)
+      }
 
       updatedModules[moduleId] = {
         data: {

@@ -283,46 +283,10 @@ ${module.data.code}
             <我的输入>${commandContent.replace("@pm", "").trim()}</我的输入>
             `
                 : `
-            <project> 里是现有代码和系统日志,根据 <我的输入> ,使用 SEARCH 和 REPLACE 模式来修改或创建模块,如果代码中用 wpm.import 了某个模块, 那必须同时生成这个模块,并 wpm.export, 不允许 wpm.import 还没有被 wpm.export 的模块, 生成所有代码都必须包裹在\`\`\`jsx<mo-ai-code type="xxx" name="xxx" title="xxx" des="模块一句话介绍">生成的代码</mo-ai-code>\`\`\`标签中,你需要先列出要生成或者修改的模块名称,然后再开始生成代码,所有列出的模块都必须生成, ui交互要从设计师的角度思考, <experience-nextui>里有示例代码, 不要返回没有修改的模块
-
-            在生成的代码中，请使用日志 API 记录重要且关键的信息：
-            1. 错误日志 (ERROR)：表示需要立即处理的严重问题
-               context.api.log.error("操作失败", { error: error.message })
-            
-            2. 警告日志 (WARN)：表示潜在的问题或风险
-               context.api.log.warn("API响应时间过长", { responseTime: "2000ms" })
-            
-            3. 信息日志 (INFO)：记录正常的系统操作
-               context.api.log.info("用户提交表单", { formData: data })
-            
-            4. 调试日志 (DEBUG)：包含详细的技术信息
-               context.api.log.debug("状态更新", { oldState, newState })
+            <project> 里是现有代码和系统日志,根据 <我的输入> ,生成所有代码都必须包裹在\`\`\`jsx<mo-ai-code type="xxx" name="xxx" title="xxx" des="模块一句话介绍">生成的代码</mo-ai-code>\`\`\`标签中,你需要先列出要生成或者修改的模块名称,然后再开始生成代码,所有列出的模块都必须生成, ui交互要从设计师的角度思考, <experience-nextui>里有示例代码, 不要返回没有修改的模块
             `
             }
-            
-            4. 仔细分析我的输入和系统日志,考虑以下方面:
-              - 任务复杂性
-              - 上下文信息审查
-              - 执行计划制定
-              - 修改执行
-              - 修改总结
-              使用以下格式呈现您的思考过程:
-              <mo-ai-think>
-              [您的思考过程,涉及上述提到的每个考虑因素]
-              <mo-ai-context_check>
-              [检查上下文信息是否完整,考虑是否缺少任何模块或上下文，
-              检查要修改的模块是否在上下文中已经提供，如果没有提供，就停止并向用户要求添加要修改的模块]
-              </mo-ai-context_check>
-              <mo-ai-reflection>
-              [反思您的初步想法,考虑它们是否合理,是否缺少任何模块或上下文,以及是否需要改进]
-              </mo-ai-reflection>
-              </mo-ai-think>
-              <mo-ai-final_plan>
-              根据以上分析，判断使用：
-              - SEARCH/REPLACE 方式，原因：[说明原因]
-              - 或完整代码生成，原因：[说明原因]
-              [列出反思后的最终计划，${isPMMode ? "包括如何回答用户的问题" : "包括要修改哪些模块以及如何修改"}]
-              </mo-ai-final_plan><我的输入>${commandContent}, 生成完整代码必须确保代码是完整的, 不允许用注释省略模块中的任何代码和任何逻辑</我的输入>`
+            <我的输入>${commandContent}, 生成完整代码必须确保代码是完整的, 不允许用注释省略模块中的任何代码和任何逻辑</我的输入>`
 
       const allMessages = [
         { role: "system", content: systemPrompt },
