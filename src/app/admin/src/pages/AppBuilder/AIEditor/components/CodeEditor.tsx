@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from "react"
+import React, { useRef, useCallback, useEffect } from "react"
 import { Button, Tooltip, Divider } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import Editor from "@monaco-editor/react"
@@ -59,6 +59,22 @@ export const CodeEditor: React.FC<CodeEditorProps> = observer(({ isFullWidth, on
     }
   }, [])
 
+  // 添加快捷键保存功能
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        if (appCodeStore.viewState.isEditing) {
+          appCodeStore.handleSaveEdit()
+          message.success("代码已保存")
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   return (
     <div className='flex-1 relative mt-2'>
       <div className='flex items-center gap-2'>
@@ -99,14 +115,16 @@ export const CodeEditor: React.FC<CodeEditorProps> = observer(({ isFullWidth, on
         <Divider orientation='vertical' className='h-6' />
         {appCodeStore.viewState.isEditing ? (
           <div className='space-x-2'>
-            <Button
-              size='sm'
-              color='primary'
-              onClick={() => appCodeStore.handleSaveEdit()}
-              startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
-            >
-              保存
-            </Button>
+            <Tooltip content='保存 (Ctrl/Cmd + S)'>
+              <Button
+                size='sm'
+                color='primary'
+                onClick={() => appCodeStore.handleSaveEdit()}
+                startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
+              >
+                保存
+              </Button>
+            </Tooltip>
             <Button
               size='sm'
               variant='flat'
