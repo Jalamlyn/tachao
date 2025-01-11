@@ -42,7 +42,7 @@ const wpm = {
         )
         logStore.error(`模块导入失败: ${moduleName}`, { error: error.message })
         reject(error)
-      }, 2000)
+      }, 5000)
     })
 
     try {

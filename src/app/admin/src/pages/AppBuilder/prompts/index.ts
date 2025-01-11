@@ -8,6 +8,7 @@ import { LOCATION_PROMPTS } from "./prompt/location-prompts"
 import { ESM_PROMPTS } from "./prompt/esm-prompts"
 import { AI_PROMPTS } from "./prompt/ai-prompts"
 import { markdown as nextuidoc } from "./doc/nextui.md"
+import { TECH_PROMPTS } from "./prompt/tech-prompts"
 
 // 提示词组合器
 export const promptsComposer = {
@@ -22,6 +23,8 @@ ${BASE_PROMPTS.thoughtChain}
 ${BASE_PROMPTS.reflection}
 
 ${BASE_PROMPTS.codeGeneration}
+
+${TECH_PROMPTS}
 
 ${EXPERIENCE_PROMPTS.apiExperience.metadata}
 ${EXPERIENCE_PROMPTS.apiExperience.getCurrentUser}
