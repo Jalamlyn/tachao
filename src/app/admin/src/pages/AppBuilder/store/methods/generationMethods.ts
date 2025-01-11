@@ -242,7 +242,7 @@ export async function createApp(this: AppCodeStore, name: string, templateId: st
     let version: Version
 
     // 处理平台模板
-    if (templateId.startsWith("plat_template_")) {
+    if (templateId.startsWith("template_")) {
       const result = await getPlatMetaData([templateId])
       if (!result.data?.[0]?.values[0]?.value) {
         throw new Error("Failed to load platform template")

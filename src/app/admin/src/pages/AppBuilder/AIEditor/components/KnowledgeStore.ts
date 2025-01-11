@@ -1,4 +1,5 @@
-import { makeAutoObservable, runInAction } from "mobx"
+import { makeAutoObservable, runInAction, toJS } from "mobx"
+
 import localforage from "localforage"
 
 interface KnowledgeItem {
@@ -25,9 +26,10 @@ class KnowledgeStore {
 
   private initLocalForage() {
     localforage.config({
-      name: 'MoKnowledge',
-      storeName: 'knowledge',
-      description: 'Storage for Mo AI knowledge base'
+      driver: [localforage.INDEXEDDB, localforage.WEBSQL, localforage.LOCALSTORAGE],
+      name: "MoKnowledge",
+      storeName: "knowledge",
+      description: "Storage for Mo AI knowledge base",
     })
   }
 
@@ -53,12 +55,16 @@ class KnowledgeStore {
       })
     }
   }
-
   private async saveToStorage() {
     try {
-      await localforage.setItem(this.STORAGE_KEY, this.knowledge)
+      // 使用 MobX 的 toJS 来转换数据
+      const plainKnowledge = toJS(this.knowledge)
+      console.log("Saving knowledge to storage:", plainKnowledge)
+      await localforage.setItem(this.STORAGE_KEY, plainKnowledge)
+      console.log("Knowledge saved successfully")
     } catch (error) {
       console.error("Error saving knowledge to storage:", error)
+      console.error("Current knowledge state:", toJS(this.knowledge))
       throw error
     }
   }
@@ -136,7 +142,7 @@ class KnowledgeStore {
         updatedAt: Date.now(),
       }
     })
-    
+
     await this.saveToStorage()
     return true
   }

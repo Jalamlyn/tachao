@@ -214,7 +214,6 @@ ${module.data.code}
         .join("\n---\n")
 
       const { logs: relevantLogs, completeness } = this.getRelevantLogs()
-      debugger
       // 获取知识库内容
       const knowledgeContext = knowledgeStore.getKnowledgeContext()
 
