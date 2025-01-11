@@ -66,7 +66,6 @@ export const CodeEditor: React.FC<CodeEditorProps> = observer(({ isFullWidth, on
         e.preventDefault()
         if (appCodeStore.viewState.isEditing) {
           appCodeStore.handleSaveEdit()
-          message.success("代码已保存")
         }
       }
     }

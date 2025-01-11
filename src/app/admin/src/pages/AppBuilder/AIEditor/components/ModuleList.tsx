@@ -14,7 +14,6 @@ interface ModuleListProps {
 
 export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
   const [activeSection, setActiveSection] = useState<string>("search")
-  const [hoveredItemId, setHoveredItemId] = useState<string | null>(null)
   const searchRef = useRef<HTMLDivElement>(null)
   const contextRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
@@ -106,19 +105,13 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
   const handleDelete = async () => {
     try {
       appCodeStore.viewState.isDeletingModules = true
-      message.loading('正在检查模块依赖关系...', 0)
-      
-      await appCodeStore.deleteModules(
-        appCodeStore.viewState.selectedModules,
-        (progress) => {
-          message.loading(
-            `正在检查依赖 (${progress.current}/${progress.total}): ${progress.status}`,
-            0
-          )
-        }
-      )
-      
-      message.success('模块删除成功')
+      message.loading("正在检查模块依赖关系...", 0)
+
+      await appCodeStore.deleteModules(appCodeStore.viewState.selectedModules, (progress) => {
+        message.loading(`正在检查依赖 (${progress.current}/${progress.total}): ${progress.status}`, 0)
+      })
+
+      message.success("模块删除成功")
       appCodeStore.viewState.showDeleteConfirm = false
     } catch (error) {
       message.error(error.message)
@@ -200,7 +193,10 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
               value={appCodeStore.viewState.searchContent}
               onChange={(e) => appCodeStore.setSearchContent(e.target.value)}
               startContent={
-                <Icon icon='mdi:code-search' className='text-default-400 transition-transform group-hover:scale-110 w-4 h-4' />
+                <Icon
+                  icon='mdi:code-search'
+                  className='text-default-400 transition-transform group-hover:scale-110 w-4 h-4'
+                />
               }
               className='w-full group'
               classNames={{
@@ -287,10 +283,12 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                         onClick={() => {
                           appCodeStore.viewState.showDeleteConfirm = true
                         }}
-                        startContent={!appCodeStore.viewState.isDeletingModules && <Icon icon='mdi:delete' className='w-3 h-3' />}
+                        startContent={
+                          !appCodeStore.viewState.isDeletingModules && <Icon icon='mdi:delete' className='w-3 h-3' />
+                        }
                         className='min-w-unit-16 h-6'
                       >
-                        {appCodeStore.viewState.isDeletingModules ? '检查依赖中...' : '删除'}
+                        {appCodeStore.viewState.isDeletingModules ? "检查依赖中..." : "删除"}
                       </Button>
                       <Button
                         size='sm'
@@ -317,8 +315,6 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 whileHover={{ x: 5 }}
-                onMouseEnter={() => setHoveredItemId(item.id)}
-                onMouseLeave={() => setHoveredItemId(null)}
                 className={`
                   group relative rounded-lg border border-transparent
                   ${
@@ -356,7 +352,9 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                     onClick={() => appCodeStore.handleCodeSelect(item.id)}
                   >
                     <div className='flex-1 min-w-0'>
-                      <span className='text-sm font-medium truncate tracking-wide leading-snug block'>{item.title}</span>
+                      <span className='text-sm font-medium truncate tracking-wide leading-snug block'>
+                        {item.title}
+                      </span>
                       <div className='flex items-center gap-2 text-xs text-default-400'>
                         <span className='truncate tracking-wide'>{item.name}</span>
                         <span className='flex-shrink-0'>
@@ -369,27 +367,22 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                         </span>
                       </div>
                     </div>
-                    
-                    {/* 右上角图标，只在hover时显示 */}
-                    <AnimatePresence>
-                      {hoveredItemId === item.id && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.8 }}
-                          className='absolute right-2 top-2'
-                        >
-                          <div className='w-5 h-5 rounded-md bg-default-50 flex items-center justify-center flex-shrink-0'>
-                            <Icon
-                              icon={getCodeTypeIcon(item.type)}
-                              className={`w-3 h-3 transition-transform group-hover:scale-110 text-${getCodeTypeColor(
-                                item.type
-                              )}`}
-                            />
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className='absolute right-2 top-2'
+                    >
+                      <div className='w-5 h-5 rounded-md bg-default-50 flex items-center justify-center flex-shrink-0'>
+                        <Icon
+                          icon={getCodeTypeIcon(item.type)}
+                          className={`w-3 h-3 transition-transform group-hover:scale-110 text-${getCodeTypeColor(
+                            item.type
+                          )}`}
+                        />
+                      </div>
+                    </motion.div>
                   </div>
                 </div>
               </motion.div>
