@@ -64,8 +64,54 @@ export const BASE_PROMPTS = {
    - 是否包含了所有必要的 context 依赖？`,
 
   codeGeneration: `
+代码生成规范：
 
-2. 代码输出格式：
+1. 代码完整性原则：
+   - 禁止使用 "// ..." 或类似的省略符号
+   - 必须生成完整的代码内容，包括所有方法和属性
+   - 保持代码的可读性和可维护性
+   - 包含必要的注释和文档
+   - 确保代码逻辑的完整性
+
+2. 代码修改规则：
+   a) 简单修改（使用 SEARCH/REPLACE）：
+      - 仅适用于局部的、小范围的修改
+      - 修改单个属性或参数
+      - 添加单个简单方法
+      - 修改单个函数的实现
+      - 修改范围必须小且明确
+      示例：
+      \`\`\`jsx
+      <mo-ai-code type="component" name="comp_button" title="按钮组件">
+      <<<<<<< SEARCH
+      const Button = ({ onClick }) => {
+      =======
+      const Button = ({ onClick, className }) => {
+      >>>>>>> REPLACE
+      </mo-ai-code>
+      \`\`\`
+
+   b) 复杂修改（生成完整文件）：
+      - 涉及多处代码修改时
+      - 涉及组件结构变更时
+      - 添加多个新功能时
+      - 修改主要逻辑时
+      - 重构代码时
+      示例：
+      \`\`\`jsx
+      <mo-ai-code type="component" name="comp_button" title="按钮组件">
+      // 生成完整的组件代码，包含所有方法和属性
+      const { React, NextUI } = context;
+      
+      const Button = ({ onClick, className, children }) => {
+        // 完整的组件实现...
+      };
+      
+      context.wpm.export('comp_button', Button);
+      </mo-ai-code>
+      \`\`\`
+
+3. 代码生成格式：
    根据思考过程的判断，使用对应的格式：
 
    a) 对于大型模块的修改，使用 SEARCH/REPLACE：
@@ -94,7 +140,7 @@ export const BASE_PROMPTS = {
    </mo-ai-code>
    \`\`\`
 
-3. 修改场景示例：
+4. 修改场景示例：
 
    a) 添加新属性：
    \`\`\`jsx
@@ -132,7 +178,14 @@ export const BASE_PROMPTS = {
    </mo-ai-code>
    \`\`\`
 
-4. 注意事项：
+5. 代码修改原则：
+   - 保持原有功能的兼容性
+   - 不删除可能被其他模块依赖的代码
+   - 添加新功能时不影响现有功能
+   - 修改时考虑向后兼容性
+   - 保持代码风格的一致性
+
+6. 注意事项：
    - 思考过程必须完整和清晰
    - 判断需要有充分的理由
    - SEARCH 部分必须精确匹配
