@@ -110,7 +110,8 @@ ${modulesContext}
 
   private getRelevantLogs(): { logs: string; completeness: any } {
     const MAX_LOGS = 10
-    const allLogs = logStore.getLatestLogs(100, true) // 获取最新的100条日志，倒序排列
+    // 修改：获取最新的日志，使用 reverse=true 确保最新的日志在前面
+    const allLogs = logStore.getLatestLogs(100, true)
 
     // 优先获取最新的错误和警告日志
     const errorAndWarnings = allLogs
@@ -123,7 +124,7 @@ ${modulesContext}
       .filter((log) => log.level !== "error" && log.level !== "warn")
       .slice(0, remainingCount)
 
-    // 合并日志并按时间戳倒序排序
+    // 合并日志并保持最新的日志在前面
     const relevantLogs = [...errorAndWarnings, ...otherLogs].sort((a, b) => b.timestamp - a.timestamp)
 
     const completeness = logStore.checkLogsCompleteness(relevantLogs)
@@ -213,7 +214,7 @@ ${module.data.code}
         .join("\n---\n")
 
       const { logs: relevantLogs, completeness } = this.getRelevantLogs()
-
+      debugger
       // 获取知识库内容
       const knowledgeContext = knowledgeStore.getKnowledgeContext()
 
