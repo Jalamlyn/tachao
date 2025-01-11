@@ -220,7 +220,7 @@ ${module.data.code}
       // 获取应用列表信息
       const appsContext = await this.getAppsContext()
 
-      const enhancedCommand = `<project>
+      const enhancedCommand = `<我的输入>${commandContent}, 生成完整代码必须确保代码是完整的, 不允许用注释省略模块中的任何代码和任何逻辑</我的输入><project>
             ${
               isPMMode
                 ? `
