@@ -174,7 +174,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
           <div className='flex gap-2'>
             <Input
               type='text'
-              placeholder='搜索代码内容...'
+              placeholder='搜索代码内容/模块名...'
               value={appCodeStore.viewState.searchContent}
               onChange={(e) => appCodeStore.setSearchContent(e.target.value)}
               startContent={
