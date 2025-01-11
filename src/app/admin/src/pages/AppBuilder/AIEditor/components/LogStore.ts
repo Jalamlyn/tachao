@@ -38,6 +38,21 @@ class LogStore {
     return this._logs
   }
 
+  // 获取最新的日志，支持反向排序
+  getLatestLogs(count: number = this.MAX_LOGS, reverse: boolean = true): LogEntry[] {
+    const sortedLogs = [...this._logs].sort((a, b) => 
+      reverse ? b.timestamp - a.timestamp : a.timestamp - b.timestamp
+    );
+    return sortedLogs.slice(0, count);
+  }
+
+  // 获取特定级别的最新日志
+  getLatestLogsByLevel(level: LogEntry["level"], count: number = this.MAX_LOGS): LogEntry[] {
+    return this.getLatestLogs()
+      .filter(log => log.level === level)
+      .slice(0, count);
+  }
+
   private notify() {
     this._listeners.forEach((listener) => listener())
   }

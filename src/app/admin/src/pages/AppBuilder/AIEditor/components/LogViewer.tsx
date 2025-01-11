@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from "react"
-import { ScrollShadow, Chip, Input, Button, Select, SelectItem, Tooltip, Card } from "@nextui-org/react"
+import { ScrollShadow, Chip, Input, Button, Select, SelectItem, Tooltip, Card, Switch } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { logStore } from "./LogStore"
@@ -103,6 +103,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
   const [selectedLevel, setSelectedLevel] = useState<string>("all")
   const [aiObserving, setAiObserving] = useState(true)
   const [completeness, setCompleteness] = useState<any>(null)
+  const [reverseOrder, setReverseOrder] = useState(true) // 新增：控制日志排序方向
   const scrollRef = useRef<HTMLDivElement>(null)
   
   // 使用防抖处理搜索
@@ -110,18 +111,18 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
 
   useEffect(() => {
     const unsubscribe = logStore.subscribe(() => {
-      const newLogs = [...logStore.logs]
+      const newLogs = logStore.getLatestLogs(undefined, reverseOrder)
       setLogs(newLogs)
       // 检查日志完整性
       setCompleteness(logStore.checkLogsCompleteness(newLogs))
       setTimeout(() => {
         if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+          scrollRef.current.scrollTop = reverseOrder ? 0 : scrollRef.current.scrollHeight
         }
       }, 0)
     })
     return unsubscribe
-  }, [])
+  }, [reverseOrder])
 
   // 使用 useMemo 优化过滤逻辑
   const filteredLogs = useMemo(() => {
@@ -140,8 +141,7 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
   const handleExport = () => {
     const blob = new Blob([logStore.export()], { type: "application/json" })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
+    const a = document.createElement("a")a.href = url
     a.download = `logs-${new Date().toISOString()}.json`
     document.body.appendChild(a)
     a.click()
@@ -203,6 +203,14 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
               </SelectItem>
             )}
           </Select>
+          <Switch
+            size="sm"
+            isSelected={reverseOrder}
+            onValueChange={setReverseOrder}
+            startContent={<Icon icon="solar:sort-by-time-linear" />}
+          >
+            最新日志在顶部
+          </Switch>
           <Chip variant="flat" size="sm" className="bg-default-100">
             共 {logs.length} 条日志
             {filteredLogs.length !== logs.length && ` (已筛选 ${filteredLogs.length} 条)`}

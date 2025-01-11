@@ -109,20 +109,26 @@ ${modulesContext}
   }
 
   private getRelevantLogs(): { logs: string; completeness: any } {
-    const logs = logStore.logs
     const MAX_LOGS = 10
+    const allLogs = logStore.getLatestLogs(100, true) // 获取最新的100条日志，倒序排列
 
-    const errorAndWarnings = logs.filter((log) => log.level === "error" || log.level === "warn").slice(-100)
+    // 优先获取最新的错误和警告日志
+    const errorAndWarnings = allLogs
+      .filter((log) => log.level === "error" || log.level === "warn")
+      .slice(0, MAX_LOGS)
 
-    const recentLogs = logs
+    // 如果错误和警告不足MAX_LOGS条，补充其他类型的最新日志
+    const remainingCount = MAX_LOGS - errorAndWarnings.length
+    const otherLogs = allLogs
       .filter((log) => log.level !== "error" && log.level !== "warn")
-      .slice(-(MAX_LOGS - errorAndWarnings.length))
+      .slice(0, remainingCount)
 
-    const allLogs = [...errorAndWarnings, ...recentLogs].sort((a, b) => a.timestamp - b.timestamp)
+    // 合并日志并按时间戳倒序排序
+    const relevantLogs = [...errorAndWarnings, ...otherLogs].sort((a, b) => b.timestamp - a.timestamp)
 
-    const completeness = logStore.checkLogsCompleteness(allLogs)
+    const completeness = logStore.checkLogsCompleteness(relevantLogs)
 
-    const logsText = allLogs
+    const logsText = relevantLogs
       .map(
         (log) =>
           `[${log.level.toUpperCase()}] ${log.message}${log.details ? `\nDetails: ${JSON.stringify(log.details)}` : ""}`
