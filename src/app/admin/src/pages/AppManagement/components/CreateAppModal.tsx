@@ -24,6 +24,7 @@ import message from "@/components/Message"
 import { TemplateSection } from "./components/TemplateSection"
 import { SuccessDialog, DeleteConfirmDialog } from "./CreateAppModalDialogs"
 import { multiPageTemplate, singlePageTemplate } from "@/app/admin/src/pages/AppBuilder/prompts/nextui/initTemplate"
+import { getPlatMetaData, setPlatMetaData } from "@/service/apis/metadata"
 
 interface CreateAppModalProps {
   isOpen: boolean
@@ -263,16 +264,10 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
 
               const updatedTemplates = templates.filter((t) => t.id !== templateToDelete.id)
 
-              await setPlatMetaData([
-                {
-                  key: "plat_template_index",
-                  values: [
-                    {
-                      value: JSON.stringify(updatedTemplates),
-                    },
-                  ],
-                },
-              ])
+              await setPlatMetaData({
+                name: "plat_template_index",
+                value: JSON.stringify(updatedTemplates),
+              })
 
               message.success("模板删除成功")
               onDeleteConfirmClose()

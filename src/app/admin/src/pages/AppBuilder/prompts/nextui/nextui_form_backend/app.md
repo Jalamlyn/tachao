@@ -1560,8 +1560,8 @@ interface FormIndex {
   description?: string;     // 表单描述
   version: string;          // 表单版本号
 
-  // 确认状态
-  confirmStatus: 'pending' | 'completed';  // 表单确认状态
+  // 表单状态
+  status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'pending';  // 表单状态
 
   // 时间信息
   createdAt: string;        // 创建时间
@@ -1592,14 +1592,17 @@ interface FormIndex {
 - 表单更新时会同步更新索引记录
 - 表单删除时会删除对应的索引记录
 
-## 3. 确认状态说明
+## 3. 状态说明
 
-表单确认状态包括:
+表单状态包括:
 
-| 状态      | 说明   | 触发条件                                 |
-| --------- | ------ | ---------------------------------------- |
-| pending   | 待确认 | 表单创建后的初始状态或部分确认表单未完成 |
-| completed | 已完成 | 所有确认表单都已确认完成                 |
+| 状态      | 说明   | 触发条件             |
+| --------- | ------ | -------------------- |
+| draft     | 草稿   | 表单创建后的初始状态 |
+| submitted | 已提交 | 用户提交表单后       |
+| approved  | 已审批 | 审批人同意后         |
+| rejected  | 已拒绝 | 审批人拒绝后         |
+| pending   | 待确认 | 等待相关人员确认     |
 
 ## 4. 索引操作说明
 
@@ -1611,7 +1614,7 @@ await formIndexStore.createFormIndex({
   id: "form_123",
   config: formConfig,
   creator: currentUser,
-  confirmStatus: "pending",
+  status: "draft",
 })
 ```
 
@@ -1621,7 +1624,7 @@ await formIndexStore.createFormIndex({
 // 更新表单时同步更新索引
 await formIndexStore.updateFormIndex({
   id: "form_123",
-  confirmStatus: "completed",
+  status: "submitted",
   ...formData,
 })
 ```
@@ -1648,14 +1651,14 @@ const userForms = await formListStore.loadUserForms()
 
 - formId: 表单ID
 - formType: 表单类型
-- confirmStatus: 确认状态
+- status: 表单状态
 - creator.id: 创建者ID
 
 ## 6. 注意事项
 
 1. 索引更新
 
-   - 表单确认状态变更时需要同步更新索引
+   - 表单任何状态变更都需要同步更新索引
    - 批量操作时需要保证索引数据一致性
    - 避免重复创建索引
 
@@ -2065,7 +2068,7 @@ const {
 } = context;
 
 const { useNavigate } = ReactRouterDom;
-const { Button, Card, Table, TableHeader, TableBody, TableColumn, TableRow, TableCell, useDisclosure, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Chip, Tooltip } = NextUI;
+const { Button, Card, Table, TableHeader, TableBody, TableColumn, TableRow, TableCell, useDisclosure, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Chip } = NextUI;
 
 const dynamicFormStore = await context.wpm.import('store_dynamic_form');
 const formConfig = await context.wpm.import('module_form_config');
@@ -2083,7 +2086,6 @@ const HomePage = observer(() => {
   const viewModal = useDisclosure();
   const printModal = useDisclosure();
   const printRef = React.useRef(null);
-  const [copyTooltip, setCopyTooltip] = React.useState("点击复制链接");
 
   // 确保表单列表数据始终是数组
   const formItems = React.useMemo(() => {
@@ -2121,6 +2123,7 @@ const HomePage = observer(() => {
   };
 
   const handleViewForm = async (formId) => {
+    debugger
     try {
       setLoading(true);
       const success = await dynamicFormStore.loadFormData(formId);
@@ -2173,67 +2176,52 @@ const HomePage = observer(() => {
     }
   });
 
-  // 处理分享表单
-  const handleShareForm = async (formId) => {
-    try {
-      // 构建完整的表单URL
-      const formUrl = `${window.location.origin}/app-run/${context.appId}/form/${formId}`;
-
-      // 使用 Clipboard API 复制链接
-      await navigator.clipboard.writeText(formUrl);
-
-      // 更新提示文本
-      setCopyTooltip("复制成功!");
-      message.success('表单链接已复制到剪贴板');
-
-      // 3秒后重置提示文本
-      setTimeout(() => {
-        setCopyTooltip("点击复制链接");
-      }, 3000);
-
-      api.log.info('分享表单', { formId, url: formUrl });
-    } catch (error) {
-      message.error('复制链接失败，请重试');
-      api.log.error('复制表单链接失败', { error, formId });
+  const renderStatus = (status, confirmStatus) => {
+    if (confirmStatus === 'completed') {
+      return (
+        <Chip
+          size="sm"
+          color="success"
+          variant="flat"
+          startContent={<Icon icon="solar:check-circle-bold" className="text-success" />}
+        >
+          已完成
+        </Chip>
+      );
     }
-  };
 
-  const renderConfirmStatus = (confirmStatus) => {
-    switch(confirmStatus) {
-      case 'completed':
-        return (
-          <Chip
-            size="sm"
-            color="success"
-            variant="flat"
-            startContent={<Icon icon="solar:check-circle-bold" className="text-success" />}
-          >
-            已完成
-          </Chip>
-        );
-      case 'pending':
-        return (
-          <Chip
-            size="sm"
-            color="warning"
-            variant="flat"
-            startContent={<Icon icon="solar:clock-circle-bold" className="text-warning" />}
-          >
-            待确认
-          </Chip>
-        );
-      default:
-        return (
-          <Chip
-            size="sm"
-            color="default"
-            variant="flat"
-            startContent={<Icon icon="solar:question-circle-bold" className="text-default" />}
-          >
-            未知状态
-          </Chip>
-        );
+    if (confirmStatus === 'pending') {
+      return (
+        <Chip
+          size="sm"
+          color="warning"
+          variant="flat"
+          startContent={<Icon icon="solar:clock-circle-bold" className="text-warning" />}
+        >
+          待确认
+        </Chip>
+      );
     }
+
+    const statusMap = {
+      draft: { label: '草稿', color: 'default', icon: 'solar:file-bold' },
+      submitted: { label: '已提交', color: 'primary', icon: 'solar:check-square-bold' },
+      approved: { label: '已审批', color: 'success', icon: 'solar:check-circle-bold' },
+      rejected: { label: '已拒绝', color: 'danger', icon: 'solar:close-circle-bold' }
+    };
+
+    const statusInfo = statusMap[status] || { label: '未知', color: 'default', icon: 'solar:question-circle-bold' };
+
+    return (
+      <Chip
+        size="sm"
+        color={statusInfo.color}
+        variant="flat"
+        startContent={<Icon icon={statusInfo.icon} className={`text-${statusInfo.color}`} />}
+      >
+        {statusInfo.label}
+      </Chip>
+    );
   };
 
   // 定义表格列配置
@@ -2247,8 +2235,8 @@ const HomePage = observer(() => {
       label: "描述",
     },
     {
-      key: "confirmStatus",
-      label: "确认状态",
+      key: "status",
+      label: "状态",
     },
     {
       key: "createdAt",
@@ -2342,8 +2330,8 @@ const HomePage = observer(() => {
                           <span className="text-default-500">
                             {item.description || '-'}
                           </span>
-                        ) : columnKey === "confirmStatus" ? (
-                          renderConfirmStatus(item.confirmStatus)
+                        ) : columnKey === "status" ? (
+                          renderStatus(item.status, item.confirmStatus)
                         ) : columnKey === "createdAt" ? (
                           <div className="flex flex-col">
                             <span>{new Date(item.createdAt).toLocaleDateString()}</span>
@@ -2376,20 +2364,6 @@ const HomePage = observer(() => {
                             >
                               <Icon icon="solar:pen-bold" />
                             </Button>
-                            <Tooltip
-                              content={copyTooltip}
-                              placement="top"
-                              closeDelay={2000}
-                            >
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                variant="light"
-                                onPress={() => handleShareForm(item.formId)}
-                              >
-                                <Icon icon="solar:share-bold" />
-                              </Button>
-                            </Tooltip>
                             <Button
                               isIconOnly
                               size="sm"
@@ -2626,7 +2600,7 @@ class DynamicFormStore {
     return formListStore.userFormsLoading;
   }
 
-  // 计算确认状态
+  // 修复确认状态计算逻辑
   getConfirmStatus() {
     const confirms = formConfirmStore.confirmData;
     const config = this._formData?.config;
@@ -2697,7 +2671,8 @@ class DynamicFormStore {
         name: currentUser.name,
         role: currentUser.role
       },
-      confirmStatus: 'pending'
+      status: 'pending',
+      confirmStatus: 'pending' // 初始确认状态
     };
 
     try {
@@ -2782,7 +2757,7 @@ class DynamicFormStore {
     }
   }
 
-  // 保存表单数据
+  // 保存表单数据时更新确认状态
   async saveFormData() {
     if (!this._formData) {
       throw new Error('没有可保存的表单数据');
@@ -2804,7 +2779,7 @@ class DynamicFormStore {
       basic: formBasicStore.basicData,
       detail: formDetailStore.detailData,
       confirms: formConfirmStore.confirmData,
-      confirmStatus,
+      confirmStatus, // 更新确认状态
       updatedAt: now,
       operator: {
         id: currentUser.id,
@@ -2821,7 +2796,7 @@ class DynamicFormStore {
         formData
       );
 
-      // 更新表单索引
+      // 更新表单索引,包含新的确认状态
       await formIndexStore.updateFormIndex(formData);
 
       runInAction(() => {
@@ -2841,7 +2816,7 @@ class DynamicFormStore {
     }
   }
 
-  // 删除表单
+  // 删除表单 - 修改后只删除索引
   async deleteForm(formId) {
     if (!formId) {
       throw new Error('表单ID不能为空');
@@ -2867,7 +2842,7 @@ class DynamicFormStore {
     runInAction(() => {
       this._formData = null;
       this._error = null;
-      this._isLoading= false;
+      this._isLoading = false;
     });
 
     formBasicStore.clearBasicData();
@@ -3175,7 +3150,8 @@ class FormIndexStore {
       formName: formData.config?.title || '未命名表单',
       description: formData.config?.description,
       version: formData.config?.version || '1.0.0',
-      confirmStatus: formData.confirmStatus || 'pending',
+      status: formData.status || 'pending',
+      confirmStatus: formData.confirmStatus || 'pending', // 添加确认状态
       createdAt: formData.createdAt,
       updatedAt: formData.updatedAt,
       creator: formData.creator,
@@ -3207,6 +3183,7 @@ class FormIndexStore {
       api.log.info('创建表单索引成功', {
         formId: formData.id,
         formType: indexData.formType,
+        status: indexData.status,
         confirmStatus: indexData.confirmStatus
       });
 
@@ -3225,7 +3202,8 @@ class FormIndexStore {
       formName: formData.config?.title || '未命名表单',
       description: formData.config?.description,
       version: formData.config?.version || '1.0.0',
-      confirmStatus: formData.confirmStatus,
+      status: formData.status,
+      confirmStatus: formData.confirmStatus, // 更新确认状态
       createdAt: formData.createdAt,
       updatedAt: formData.updatedAt,
       creator: formData.creator,
@@ -3259,6 +3237,7 @@ class FormIndexStore {
       api.log.info('更新表单索引成功', {
         formId: formData.id,
         formType: indexData.formType,
+        status: indexData.status,
         confirmStatus: indexData.confirmStatus
       });
 

@@ -19,6 +19,7 @@ import {
   Radio,
   Chip,
   Avatar,
+  Tooltip,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -147,7 +148,10 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
             <div className='col-span-8 md:col-span-9 space-y-4'>
               <div className='flex justify-between items-start'>
                 <div className='space-y-1'>
-                  <h3 className='text-xl font-bold tracking-tight truncate'>{app.title}</h3>
+                  <Tooltip content={app.title}>
+                    <h3 className='text-xl font-bold tracking-tight truncate max-w-36'>{app.title}</h3>
+                  </Tooltip>
+
                   <div className='flex items-center gap-2'>
                     <p className='text-small text-default-500'>创建于 {new Date(app.createdAt).toLocaleDateString()}</p>
                     <Chip size='sm' variant='flat' color={getAccessControlLabel().color}>

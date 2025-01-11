@@ -77,7 +77,6 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
                   size='sm'
                   variant='light'
                   onPress={(e) => {
-                    e.stopPropagation()
                     onDeleteTemplate(template)
                   }}
                 >

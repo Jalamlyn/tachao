@@ -100,7 +100,6 @@ const AIEditor: React.FC<AIEditorProps> = observer(
       }
 
       await copy(content)
-      message.success("已复制到剪贴板")
     }
 
     const handleDeleteMessage = (messageId: string) => {
