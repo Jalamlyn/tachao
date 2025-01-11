@@ -1,4 +1,4 @@
-# 独立表单应用代码
+# 应用代码导出
 
 ## All Modules
 
@@ -10,29 +10,69 @@ const {
   ReactRouterDom,
   observer,
   NextUI,
-  Icon,
-  FramerMotion,
-  message,
-  api,
-  mobx,
   appId,
-  cn
+  message,
+  api
 } = context;
-const { Routes, Route, Navigate, useNavigate } = ReactRouterDom;
-const { ScrollShadow, Spacer, Avatar, Button, useDisclosure, Spinner, Divider } = NextUI;
+
+const { Routes, Route, Navigate } = ReactRouterDom;
 
 // 导入页面组件
-const DeliverySharePage = await context.wpm.import('page_delivery_share');
+const HomePage = await context.wpm.import('page_home');
+const FormDetailPage = await context.wpm.import('page_form_detail');
+
+// 错误边界组件
+const ErrorBoundary = ({ children }) => {
+  const [hasError, setHasError] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleError = (error) => {
+      api.log.error('应用运行时错误', { error });
+      message.error('应用出现异常，请刷新重试');
+      setHasError(true);
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleError);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleError);
+    };
+  }, []);
+
+  if (hasError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <Icon icon="solar:shield-warning-bold" className="mb-4 h-12 w-12 text-danger" />
+          <h2 className="mb-2 text-lg font-semibold">应用出现异常</h2>
+          <p className="mb-4 text-small text-default-500">请刷新页面重试</p>
+          <Button
+            color="primary"
+            onPress={() => window.location.reload()}
+          >
+            刷新页面
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return children;
+};
 
 const App = observer(() => {
-  const navigate = useNavigate();
-
   return (
-    <NextUI.NextUIProvider navigate={navigate}>
-      <Routes>
-        <Route path="/share/:id" element={<DeliverySharePage />} />
-      </Routes>
-    </NextUI.NextUIProvider>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-background">
+        <Routes>
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/form/:formId" element={<FormDetailPage />} />
+        </Routes>
+      </div>
+    </ErrorBoundary>
   );
 });
 
@@ -41,913 +81,1327 @@ context.wpm.export(appId, App);
 ```
 
 ```jsx
-<mo-ai-code type="component" name="comp_delivery_basic_info" title="送货单基本信息">
+<mo-ai-code type="component" name="comp_dynamic_form_adapter" title="动态表单适配器">
 const {
   wpm,
   React,
   observer,
   NextUI,
-  Icon
+  Icon,
+  cn,
+  api
 } = context;
 
-const { Input, Textarea } = NextUI;
+const { Card, CardBody, Button, Tabs, Tab, useDisclosure } = NextUI;
 
-const DeliveryBasicInfo = observer(({
+// 导入子组件
+const DynamicFormBasic = await context.wpm.import('comp_dynamic_form_basic');
+const DynamicFormDetail = await context.wpm.import('comp_dynamic_form_detail');
+const DynamicFormConfirm = await context.wpm.import('comp_dynamic_form_confirm');
+const DynamicFormHistory = await context.wpm.import('comp_dynamic_form_history');
+
+// 导入数据管理
+const dynamicFormStore = await context.wpm.import('store_dynamic_form');
+
+const DynamicFormAdapter = observer(({
+  // 表单配置
+  config,
+  // 表单数据
+  formId,
+  // 回调函数
+  onSave,
+  onError,
+  // 只读模式
   readOnly = false,
-  defaultValues = {}
+  // 样式
+  className
 }) => {
+  const [loading, setLoading] = React.useState(false);
+  const [selectedTab, setSelectedTab] = React.useState("basic");
+  const [errors, setErrors] = React.useState({});
+  const historyModal = useDisclosure();
+  const saveButtonRef = React.useRef(null);
+
+  // 初始化加载数据
+  React.useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        if (formId) {
+          await dynamicFormStore.loadFormData(formId);
+        } else {
+          dynamicFormStore.initNewForm(config);
+        }
+        api.log.info('动态表单初始化成功', { formId });
+      } catch (error) {
+        api.log.error('动态表单初始化失败', { error });
+        onError?.(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [formId, config]);
+
+  // 表单校验
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    // 校验基本信息
+    if (!dynamicFormStore.validateBasicFields()) {
+      newErrors.basic = '请完善基本信息';
+      isValid = false;
+    }
+
+    // 校验明细信息
+    if (!dynamicFormStore.validateDetailData()) {
+      newErrors.detail = '请至少添加一条明细记录';
+      isValid = false;
+    }
+
+    // 校验确认信息
+    if (!dynamicFormStore.validateConfirmData()) {
+      newErrors.confirm = '请完成必要的确认信息';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  // 处理保存
+  const handleSave = async () => {
+    if (loading || !saveButtonRef.current) return;
+
+    try {
+      // 防重复点击
+      saveButtonRef.current.disabled = true;
+      setLoading(true);
+
+      // 表单校验
+      if (!validateForm()) {
+        // 显示错误提示
+        Object.entries(errors).forEach(([key, message]) => {
+          message && NextUI.message.error(message);
+        });
+        return;
+      }
+
+      const success = await dynamicFormStore.saveFormData();
+      if (success) {
+        NextUI.message.success('保存成功');
+        onSave?.(dynamicFormStore.currentForm);
+      }
+    } catch (error) {
+      api.log.error('保存表单失败', { error });
+      onError?.(error);
+    } finally {
+      setLoading(false);
+      if (saveButtonRef.current) {
+        saveButtonRef.current.disabled = false;
+      }
+    }
+  };
+
+  // 渲染工具栏
+  const renderToolbar = () => (
+    <div className="mb-6 flex items-center justify-between">
+      <div>
+        <h1 className="text-2xl font-bold">
+          {config.title || '动态表单'}
+        </h1>
+        <p className="mt-1 text-small text-default-500">
+          {config.description}
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <Button
+          color="primary"
+          variant="flat"
+          startContent={<Icon icon="solar:history-bold" />}
+          onPress={historyModal.onOpen}
+        >
+          修改记录
+        </Button>
+        {!readOnly && (
+          <Button
+            ref={saveButtonRef}
+            color="primary"
+            startContent={<Icon icon="solar:disk-bold" />}
+            isLoading={loading}
+            onPress={handleSave}
+          >
+            保存
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
+  if (loading && !dynamicFormStore.currentForm) {
+    return (
+      <div className="flex h-[200px] items-center justify-center">
+        <NextUI.Spinner label="加载中..." />
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <h4 className="text-medium font-medium mb-4 flex items-center gap-2">
-        <Icon className="text-primary" icon="solar:user-id-bold" />
-        客户信息
-      </h4>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Input
-          isRequired
-          isReadOnly={readOnly}
-          label="客户名称"
-          name="customerName"
-          placeholder="请输入客户名称"
-          defaultValue={defaultValues?.customerName}
-          classNames={{
-            label: "text-default-600",
-            input: "text-default-800"
-          }}
-          startContent={
-            <Icon 
-              className="text-default-400 pointer-events-none flex-shrink-0"
-              icon="solar:user-bold"
-              width={20}
-            />
-          }
-        />
-        <Input
-          isRequired
-          isReadOnly={readOnly}
-          label="联系人"
-          name="contactPerson"
-          placeholder="请输入联系人"
-          defaultValue={defaultValues?.contactPerson}
-          classNames={{
-            label: "text-default-600",
-            input: "text-default-800"
-          }}
-          startContent={
-            <Icon 
-              className="text-default-400 pointer-events-none flex-shrink-0"
-              icon="solar:user-id-bold"
-              width={20}
-            />
-          }
-        />
-        <Input
-          isRequired
-          isReadOnly={readOnly}
-          label="联系电话"
-          name="contactPhone"
-          placeholder="请输入联系电话"
-          defaultValue={defaultValues?.contactPhone}
-          classNames={{
-            label: "text-default-600",
-            input: "text-default-800"
-          }}
-          startContent={
-            <Icon 
-              className="text-default-400 pointer-events-none flex-shrink-0"
-              icon="solar:phone-bold"
-              width={20}
-            />
-          }
-        />
-        <Input
-          isRequired
-          isReadOnly={readOnly}
-          type="date"
-          label="送货日期"
-          name="deliveryTime"
-          placeholder="请选择送货日期"
-          defaultValue={defaultValues?.deliveryTime || new Date().toISOString().split('T')[0]}
-          classNames={{
-            label: "text-default-600",
-            input: "text-default-800"
-          }}
-          startContent={
-            <Icon 
-              className="text-default-400 pointer-events-none flex-shrink-0"
-              icon="solar:calendar-bold"
-              width={20}
-            />
-          }
-        />
-        <Textarea
-          isRequired
-          isReadOnly={readOnly}
-          className="md:col-span-2"
-          label="送货地址"
-          name="address"
-          placeholder="请输入详细地址"
-          defaultValue={defaultValues?.address}
-          classNames={{
-            label: "text-default-600",
-            input: "text-default-800"
-          }}
-          startContent={
-            <Icon 
-              className="text-default-400 pointer-events-none flex-shrink-0 mt-1"
-              icon="solar:map-point-bold"
-              width={20}
-            />
-          }
-        />
+    <div className={className}>
+      {renderToolbar()}
+
+      <Card>
+        <CardBody>
+          <Tabs
+            selectedKey={selectedTab}
+            onSelectionChange={setSelectedTab}
+            classNames={{
+              tabList: "gap-4",
+              cursor: "w-full",
+              tab: "max-w-fit px-2 h-8",
+              tabContent: "group-data-[selected=true]:text-primary"
+            }}
+          >
+            <Tab
+              key="basic"
+              title={
+                <div className="flex items-center gap-2">
+                  <Icon icon="solar:document-text-bold" />
+                  <span>基本信息</span>
+                  {errors.basic && (
+                    <Icon
+                      icon="solar:danger-circle-bold"
+                      className="text-danger"
+                    />
+                  )}
+                </div>
+              }
+            >
+              <DynamicFormBasic
+                config={config.basic}
+                readOnly={readOnly}
+              />
+            </Tab>
+            <Tab
+              key="detail"
+              title={
+                <div className="flex items-center gap-2">
+                  <Icon icon="solar:table-2-bold" />
+                  <span>明细信息</span>
+                  {errors.detail && (
+                    <Icon
+                      icon="solar:danger-circle-bold"
+                      className="text-danger"
+                    />
+                  )}
+                </div>
+              }
+            >
+              <DynamicFormDetail
+                config={config.detail}
+                readOnly={readOnly}
+              />
+            </Tab>
+            <Tab
+              key="confirm"
+              title={
+                <div className="flex items-center gap-2">
+                  <Icon icon="solar:user-check-bold" />
+                  <span>确认信息</span>
+                  {errors.confirm && (
+                    <Icon
+                      icon="solar:danger-circle-bold"
+                      className="text-danger"
+                    />
+                  )}
+                </div>
+              }
+            >
+              <DynamicFormConfirm
+                config={config.confirm}
+                readOnly={readOnly}
+              />
+            </Tab>
+          </Tabs>
+        </CardBody>
+      </Card>
+
+      <DynamicFormHistory
+        isOpen={historyModal.isOpen}
+        onOpenChange={historyModal.onOpenChange}
+        formId={formId}
+      />
+    </div>
+  );
+});
+
+context.wpm.export('comp_dynamic_form_adapter', DynamicFormAdapter);
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="component" name="comp_dynamic_form_basic" title="动态表单基本信息">
+const {
+  wpm,
+  React,
+  observer,
+  NextUI,
+  Icon,
+  cn,
+  api
+} = context;
+
+const { Input, Textarea, Select, SelectItem } = NextUI;
+const dynamicFormStore = await context.wpm.import('store_dynamic_form');
+
+const DynamicFormBasic = observer(({
+  config,
+  readOnly = false
+}) => {
+  const [errors, setErrors] = React.useState({});
+  const [touched, setTouched] = React.useState({});
+
+  // 处理字段变更
+  const handleFieldChange = (field, value) => {
+    dynamicFormStore.updateBasicField(field.name, value);
+    validateField(field, value);
+  };
+
+  // 处理字段失焦
+  const handleFieldBlur = (field) => {
+    setTouched(prev => ({
+      ...prev,
+      [field.name]: true
+    }));
+    validateField(field, dynamicFormStore.currentForm?.basic?.[field.name]);
+  };
+
+  // 验证单个字段
+  const validateField = (field, value) => {
+    let error = null;
+
+    // 必填校验
+    if (field.required && (!value || (typeof value === 'string' && !value.trim()))) {
+      error = `请输入${field.label}`;
+    }
+
+    // 自定义校验规则
+    if (field.validate) {
+      const customError = field.validate(value);
+      if (customError) {
+        error = customError;
+      }
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      [field.name]: error
+    }));
+
+    return !error;
+  };
+
+  // 渲染字段
+  const renderField = (field) => {
+    const value = dynamicFormStore.currentForm?.basic?.[field.name] || '';
+    const isInvalid = touched[field.name] && errors[field.name];
+
+    const commonProps = {
+      key: field.name,
+      label: field.label,
+      name: field.name,
+      value: value,
+      isRequired: field.required,
+      isReadOnly: readOnly,
+      isInvalid: !!isInvalid,
+      errorMessage: isInvalid,
+      onBlur: () => handleFieldBlur(field),
+      classNames: {
+        label: "text-default-600",
+        input: "text-default-800",
+        errorMessage: "text-danger text-xs mt-1"
+      }
+    };
+
+    switch (field.type) {
+      case 'textarea':
+        return (
+          <Textarea
+            {...commonProps}
+            placeholder={field.placeholder || `请输入${field.label}`}
+            minRows={field.minRows || 3}
+            maxRows={field.maxRows || 5}
+            onChange={(e) => handleFieldChange(field, e.target.value)}
+            description={field.description}
+          />
+        );
+
+      case 'select':
+        return (
+          <Select
+            {...commonProps}
+            placeholder={field.placeholder || `请选择${field.label}`}
+            selectedKeys={value ? [value] : []}
+            onChange={(e) => handleFieldChange(field, e.target.value)}
+            description={field.description}
+          >
+            {field.options?.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </Select>
+        );
+
+      default:
+        return (
+          <Input
+            {...commonProps}
+            type={field.type || 'text'}
+            placeholder={field.placeholder || `请输入${field.label}`}
+            onChange={(e) => handleFieldChange(field, e.target.value)}
+            description={field.description}
+            startContent={
+              field.icon && (
+                <Icon
+                  className="text-default-400 pointer-events-none flex-shrink-0"
+                  icon={field.icon}
+                  width={20}
+                />
+              )
+            }
+          />
+        );
+    }
+  };
+
+  return (
+    <div className="space-y-6 py-4">
+      {config.fields?.map((field) => (
+        <div key={field.name} className={cn(
+          "relative",
+          field.span === 'full' ? 'col-span-2' : '',
+          errors[field.name] && touched[field.name] ? 'animate-shake' : ''
+        )}>
+          {renderField(field)}
+          {field.help && (
+            <p className="mt-1 text-xs text-default-400">
+              {field.help}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+});
+
+context.wpm.export('comp_dynamic_form_basic', DynamicFormBasic);
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="component" name="comp_dynamic_form_confirm" title="动态表单确认信息">
+const {
+  wpm,
+  React,
+  observer,
+  NextUI,
+  Icon,
+  cn,
+  api,
+  message
+} = context;
+
+const { Input, Textarea, Avatar, Button, Card, CardBody } = NextUI;
+const dynamicFormStore = await context.wpm.import('store_dynamic_form');
+
+const DynamicFormConfirm = observer(({
+  config,
+  readOnly = false
+}) => {
+  const [currentUser, setCurrentUser] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
+  const [errors, setErrors] = React.useState({});
+  const [touched, setTouched] = React.useState({});
+
+  // 加载当前用户信息
+  React.useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userInfo = await api.getCurrentAccountInfo();
+        setCurrentUser(userInfo);
+      } catch (error) {
+        api.log.error('加载用户信息失败', { error });
+        message.error('加载用户信息失败');
+      }
+    };
+    loadUser();
+  }, []);
+
+  // 验证表单字段
+  const validateField = (formIndex, field, value) => {
+    let error = null;
+
+    if (field.required && (!value || value.toString().trim() === '')) {
+      error = `请输入${field.label}`;
+    }
+
+    setErrors(prev => ({
+      ...prev,
+      [`${formIndex}_${field.name}`]: error
+    }));
+
+    return !error;
+  };
+
+  // 验证整个确认表单
+  const validateConfirmForm = (formIndex) => {
+    const form = config.forms[formIndex];
+    const confirmData = dynamicFormStore.currentForm?.confirms?.[formIndex] || {};
+    let isValid = true;
+
+    form.fields.forEach(field => {
+      if (!validateField(formIndex, field, confirmData[field.name])) {
+        isValid = false;
+      }
+    });
+
+    return isValid;
+  };
+
+  // 处理确认
+  const handleConfirm = async (formIndex) => {
+    if (loading) return;
+
+    try {
+      // 验证表单
+      if (!validateConfirmForm(formIndex)) {
+        message.error('请完善必填信息');
+        return;
+      }
+
+      setLoading(true);
+      const confirmInfo = {
+        name: currentUser.name,
+        phone: currentUser.phone || currentUser.mobile,
+        time: new Date().toISOString(),
+        status: 'confirmed'
+      };
+      await dynamicFormStore.updateConfirmForm(formIndex, confirmInfo);
+      message.success('确认成功');
+    } catch (error) {
+      message.error('确认失败: ' + (error.message || '未知错误'));
+      api.log.error('确认失败', { error, formIndex });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理取消确认
+  const handleCancel = async (formIndex) => {
+    if (loading) return;
+
+    try {
+      setLoading(true);
+      await dynamicFormStore.updateConfirmForm(formIndex, {
+        ...dynamicFormStore.currentForm.confirms[formIndex],
+        status: 'cancelled',
+        cancelTime: new Date().toISOString(),
+        cancelBy: currentUser.name,
+        cancelReason: ''
+      });
+      message.success('已取消确认');
+    } catch (error) {
+      message.error('取消确认失败: ' + (error.message || '未知错误'));
+      api.log.error('取消确认失败', { error, formIndex });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理字段变更
+  const handleFieldChange = (formIndex, field, value) => {
+    dynamicFormStore.updateConfirmField(formIndex, field.name, value);
+    validateField(formIndex, field, value);
+  };
+
+  // 处理字段失焦
+  const handleFieldBlur = (formIndex, field) => {
+    setTouched(prev => ({
+      ...prev,
+      [`${formIndex}_${field.name}`]: true
+    }));
+    const value = dynamicFormStore.currentForm?.confirms?.[formIndex]?.[field.name];
+    validateField(formIndex, field, value);
+  };
+
+  // 渲染确认状态标签
+  const renderStatusChip = (status) => {
+    switch(status) {
+      case 'confirmed':
+        return (
+          <NextUI.Chip color="success" variant="flat">
+            已确认
+          </NextUI.Chip>
+        );
+      case 'cancelled':
+        return (
+          <NextUI.Chip color="danger" variant="flat">
+            已取消
+          </NextUI.Chip>
+        );
+      default:
+        return (
+          <NextUI.Chip color="default" variant="flat">
+            待确认
+          </NextUI.Chip>
+        );
+    }
+  };
+
+  if (!currentUser) {
+    return (
+      <div className="flex h-[200px] items-center justify-center">
+        <NextUI.Spinner label="加载中..." />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 py-4">
+      {/* 当前用户信息 */}
+      <div className="rounded-lg bg-default-100 p-4">
+        <div className="flex items-center gap-3">
+          <Avatar
+            size="sm"
+            src={currentUser.avatar}
+            fallback={
+              <Icon className="text-default-500" icon="solar:user-bold" width={20} />
+            }
+          />
+          <div>
+            <p className="font-medium">{currentUser.name}</p>
+            <p className="text-small text-default-500">
+              {currentUser.phone || currentUser.mobile}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 确认表单列表 */}
+      <div className="space-y-4">
+        {config.forms.map((form, index) => (
+          <Card
+            key={form.id || index}
+            className={cn(
+              "border",
+              dynamicFormStore.currentForm?.confirms?.[index]?.status === 'confirmed'
+                ? "border-success"
+                : dynamicFormStore.currentForm?.confirms?.[index]?.status === 'cancelled'
+                ? "border-danger"
+                : "border-default-200"
+            )}
+          >
+            <CardBody>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">{form.title}</h3>
+                  <div className="flex items-center gap-2">
+                    {renderStatusChip(dynamicFormStore.currentForm?.confirms?.[index]?.status)}
+                    {!readOnly && (
+                      <>
+                        {dynamicFormStore.currentForm?.confirms?.[index]?.status === 'confirmed' && (
+                          <Button
+                            color="danger"
+                            variant="flat"
+                            size="sm"
+                            isLoading={loading}
+                            onPress={() => handleCancel(index)}
+                          >
+                            取消确认
+                          </Button>
+                        )}
+                        {(dynamicFormStore.currentForm?.confirms?.[index]?.status === 'cancelled' ||
+                         !dynamicFormStore.currentForm?.confirms?.[index]?.status) && (
+                          <Button
+                            color="success"
+                            variant="flat"
+                            size="sm"
+                            isLoading={loading}
+                            onPress={() => handleConfirm(index)}
+                          >
+                            {dynamicFormStore.currentForm?.confirms?.[index]?.status === 'cancelled' ? '重新确认' : '确认'}
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {form.fields.map((field) => {
+                    const fieldKey = `${index}_${field.name}`;
+                    const isInvalid = touched[fieldKey] && errors[fieldKey];
+
+                    return (
+                      <div key={field.name}>
+                        <Input
+                          label={field.label}
+                          value={dynamicFormStore.currentForm?.confirms?.[index]?.[field.name] || ''}
+                          isReadOnly={readOnly || dynamicFormStore.currentForm?.confirms?.[index]?.status === 'confirmed'}
+                          isRequired={field.required}
+                          isInvalid={!!isInvalid}
+                          errorMessage={isInvalid}
+                          onChange={(e) => handleFieldChange(index, field, e.target.value)}
+                          onBlur={() => handleFieldBlur(index, field)}
+                          startContent={
+                            field.icon && (
+                              <Icon
+                                className="text-default-400 pointer-events-none flex-shrink-0"
+                                icon={field.icon}
+                                width={20}
+                              />
+                            )
+                          }
+                          classNames={{
+                            errorMessage: "text-danger text-xs mt-1"
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 确认信息 */}
+                {dynamicFormStore.currentForm?.confirms?.[index]?.status === 'confirmed' && (
+                  <div className="text-small text-success">
+                    确认时间: {new Date(dynamicFormStore.currentForm.confirms[index].time).toLocaleString()}
+                    <br/>
+                    确认人: {dynamicFormStore.currentForm.confirms[index].name}
+                  </div>
+                )}
+
+                {/* 取消信息 */}
+                {dynamicFormStore.currentForm?.confirms?.[index]?.status === 'cancelled' && (
+                  <div className="text-small text-danger">
+                    取消时间: {new Date(dynamicFormStore.currentForm.confirms[index].cancelTime).toLocaleString()}
+                    <br/>
+                    取消人: {dynamicFormStore.currentForm.confirms[index].cancelBy}
+                  </div>
+                )}
+              </div>
+            </CardBody>
+          </Card>
+        ))}
       </div>
     </div>
   );
 });
 
-context.wpm.export('comp_delivery_basic_info', DeliveryBasicInfo);
+context.wpm.export('comp_dynamic_form_confirm', DynamicFormConfirm);
 </mo-ai-code>
 ```
 
 ```jsx
-<mo-ai-code type="component" name="comp_delivery_detail_confirm_modal" title="送货单确认表单模态框组件">
+<mo-ai-code type="component" name="comp_dynamic_form_detail" title="动态表单明细信息">
 const {
   wpm,
   React,
   observer,
   NextUI,
   Icon,
-  api
-} = context;
-
-const { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea } = NextUI;
-
-const DeliveryDetailConfirmModal = observer(({
-  isOpen,
-  onOpenChange,
-  type,
-  onConfirm
-}) => {
-  const [loading, setLoading] = React.useState(false);
-  const [location, setLocation] = React.useState(null);
-
-  React.useEffect(() => {
-    if (isOpen) {
-      // 获取当前位置
-      api.location.getCurrentPosition().then(async position => {
-        const address = await api.location.getAddressFromLocation(
-          position.coords.latitude,
-          position.coords.longitude
-        );
-        setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          address
-        });
-      }).catch(() => {
-        setLocation(null);
-      });
-    }
-  }, [isOpen]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    
-    if (!formData.get('name')?.trim()) {
-      message.warning('请输入确认人姓名');
-      return;
-    }
-    
-    if (!formData.get('phone')?.trim()) {
-      message.warning('请输入联系电话');
-      return;
-    }
-
-    const data = {
-      name: formData.get('name'),
-      phone: formData.get('phone'),
-      note: formData.get('note'),
-      location
-    };
-
-    setLoading(true);
-    try {
-      await onConfirm(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
-      placement="top-center"
-    >
-      <ModalContent>
-        {(onClose) => (
-          <form onSubmit={handleSubmit}>
-            <ModalHeader className="flex flex-col gap-1">
-              <h3 className="text-xl font-semibold">
-                {type === 'customer' ? '客户确认' : '业务员确认'}
-              </h3>
-              <p className="text-small text-default-500">
-                请填写确认信息，带 * 为必填项
-              </p>
-            </ModalHeader>
-            <ModalBody>
-              <Input
-                isRequired
-                label="确认人姓名"
-                name="name"
-                placeholder="请输入姓名"
-                startContent={
-                  <Icon 
-                    className="text-default-400 pointer-events-none flex-shrink-0"
-                    icon="solar:user-bold"
-                    width={20}
-                  />
-                }
-              />
-              <Input
-                isRequired
-                label="联系电话"
-                name="phone"
-                placeholder="请输入电话"
-                startContent={
-                  <Icon 
-                    className="text-default-400 pointer-events-none flex-shrink-0"
-                    icon="solar:phone-bold"
-                    width={20}
-                  />
-                }
-              />
-              <Textarea
-                label="备注"
-                name="note"
-                placeholder="可选填写备注信息"
-                startContent={
-                  <Icon 
-                    className="text-default-400 pointer-events-none flex-shrink-0 mt-1"
-                    icon="solar:notes-bold"
-                    width={20}
-                  />
-                }
-              />
-              {location && (
-                <div className="rounded-lg bg-default-100 p-3">
-                  <div className="flex items-center gap-2 text-small">
-                    <Icon 
-                      className="text-success"
-                      icon="solar:map-point-bold"
-                      width={20}
-                    />
-                    <span>当前位置：{location.address}</span>
-                  </div>
-                </div>
-              )}
-            </ModalBody>
-            <ModalFooter>
-              <Button 
-                color="danger" 
-                variant="light" 
-                onPress={onClose}
-                startContent={<Icon icon="solar:close-circle-bold" />}
-              >
-                取消
-              </Button>
-              <Button 
-                color="primary" 
-                type="submit" 
-                isLoading={loading}
-                startContent={!loading && <Icon icon="solar:disk-bold" />}
-              >
-                确认
-              </Button>
-            </ModalFooter>
-          </form>
-        )}
-      </ModalContent>
-    </Modal>
-  );
-});
-
-context.wpm.export('comp_delivery_detail_confirm_modal', DeliveryDetailConfirmModal);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="component" name="comp_delivery_detail_confirmations" title="送货单确认记录组件">
-const {
-  wpm,
-  React,
-  observer,
-  NextUI,
-  Icon
-} = context;
-
-const { Card, CardBody } = NextUI;
-
-const DeliveryDetailConfirmations = observer(({
-  order
-}) => {
-  if (!order.confirmations?.customer && !order.confirmations?.staff) {
-    return null;
-  }
-
-  return (
-    <Card>
-      <CardBody>
-        <h4 className="mb-4 text-medium font-medium flex items-center gap-2">
-          <Icon className="text-primary" icon="solar:notes-bold" />
-          确认记录
-        </h4>
-        <div className="space-y-4">
-          {order.confirmations?.customer && (
-            <div className="rounded-lg bg-default-100 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Icon
-                  className="text-success text-xl"
-                  icon="solar:user-speak-bold"
-                />
-                <h5 className="text-small font-medium">客户确认信息</h5>
-              </div>
-              <div className="space-y-1">
-                <p className="text-small">
-                  <span className="text-default-500">确认人：</span>
-                  {order.confirmations.customer.name}
-                </p>
-                <p className="text-small">
-                  <span className="text-default-500">联系电话：</span>
-                  {order.confirmations.customer.phone}
-                </p>
-                {order.confirmations.customer.note && (
-                  <p className="text-small">
-                    <span className="text-default-500">备注：</span>
-                    {order.confirmations.customer.note}
-                  </p>
-                )}
-                <p className="text-small">
-                  <span className="text-default-500">确认时间：</span>
-                  {new Date(order.confirmations.customer.time).toLocaleString()}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {order.confirmations?.staff && (
-            <div className="rounded-lg bg-default-100 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Icon
-                  className="text-secondary text-xl"
-                  icon="solar:shield-minimalistic-bold"
-                />
-                <h5 className="text-small font-medium">业务员确认信息</h5>
-              </div>
-              <div className="space-y-1">
-                <p className="text-small">
-                  <span className="text-default-500">确认人：</span>
-                  {order.confirmations.staff.name}
-                </p>
-                <p className="text-small">
-                  <span className="text-default-500">联系电话：</span>
-                  {order.confirmations.staff.phone}
-                </p>
-                {order.confirmations.staff.note && (
-                  <p className="text-small">
-                    <span className="text-default-500">备注：</span>
-                    {order.confirmations.staff.note}
-                  </p>
-                )}
-                <p className="text-small">
-                  <span className="text-default-500">确认时间：</span>
-                  {new Date(order.confirmations.staff.time).toLocaleString()}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </CardBody>
-    </Card>
-  );
-});
-
-context.wpm.export('comp_delivery_detail_confirmations', DeliveryDetailConfirmations);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="component" name="comp_delivery_detail_info" title="送货单基本信息组件">
-const {
-  wpm,
-  React,
-  observer,
-  NextUI,
-  Icon
-} = context;
-
-const { Card, CardBody } = NextUI;
-
-const DeliveryDetailInfo = observer(({
-  order
-}) => {
-  return (
-    <Card>
-      <CardBody>
-        <h4 className="mb-4 text-medium font-medium flex items-center gap-2">
-          <Icon className="text-primary" icon="solar:user-id-bold" />
-          客户信息
-        </h4>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-small text-default-500">客户名称</p>
-            <p className="font-medium">{order.customerName}</p>
-          </div>
-          <div>
-            <p className="text-small text-default-500">联系人</p>
-            <p className="font-medium">{order.contactPerson}</p>
-          </div>
-          <div>
-            <p className="text-small text-default-500">联系电话</p>
-            <p className="font-medium">{order.contactPhone}</p>
-          </div>
-          <div>
-            <p className="text-small text-default-500">送货日期</p>
-            <p className="font-medium">{order.deliveryTime}</p>
-          </div>
-          <div className="col-span-2">
-            <p className="text-small text-default-500">送货地址</p>
-            <p className="font-medium">{order.address}</p>
-          </div>
-        </div>
-      </CardBody>
-    </Card>
-  );
-});
-
-context.wpm.export('comp_delivery_detail_info', DeliveryDetailInfo);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="component" name="comp_delivery_detail_items" title="送货单商品明细组件">
-const {
-  wpm,
-  React,
-  observer,
-  NextUI,
-  Icon,
-  cn
-} = context;
-
-const { Card, CardBody } = NextUI;
-
-const DeliveryDetailItems = observer(({
-  order
-}) => {
-  const totalAmount = order.items.reduce((sum, item) => sum + item.amount, 0);
-
-  return (
-    <Card>
-      <CardBody>
-        <h4 className="mb-4 text-medium font-medium flex items-center gap-2">
-          <Icon className="text-primary" icon="solar:box-bold" />
-          商品明细
-        </h4>
-        <div className="space-y-3">
-          {order.items.map((item, index) => (
-            <div
-              key={index}
-              className={cn(
-                "group flex items-center justify-between rounded-xl border p-4",
-                "transition-colors duration-200",
-                "hover:border-primary hover:bg-primary/5"
-              )}
-            >
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <h6 className="font-medium text-default-800">{item.name}</h6>
-                    <div className="flex items-center gap-3 text-small text-default-500">
-                      <span>单价: ¥{item.price}</span>
-                      <span>数量: {item.quantity}</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-primary">¥{item.amount}</p>
-                    <p className="text-tiny text-default-400">小计</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-6 flex justify-end rounded-xl bg-primary/10 p-4">
-          <div className="text-right">
-            <p className="text-small text-default-600">
-              共 {order.items.length} 件商品
-            </p>
-            <div className="mt-1 flex items-baseline gap-1">
-              <span className="text-default-600">总计:</span>
-              <span className="text-2xl font-semibold text-primary">
-                ¥{totalAmount}
-              </span>
-            </div>
-          </div>
-        </div>
-      </CardBody>
-    </Card>
-  );
-});
-
-context.wpm.export('comp_delivery_detail_items', DeliveryDetailItems);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="component" name="comp_delivery_form" title="送货单表单">
-const {
-  wpm,
-  React,
-  observer,
-  NextUI,
-  Icon,
-  message,
-  cn
-} = context;
-
-const { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Spinner } = NextUI;
-const deliveryStore = await context.wpm.import('store_delivery');
-const DeliveryBasicInfo = await context.wpm.import('comp_delivery_basic_info');
-const DeliveryItemList = await context.wpm.import('comp_delivery_item_list');
-
-const DeliveryForm = observer(({
-  isOpen,
-  onOpenChange,
-  onSuccess,
-  readOnly = false
-}) => {
-  const [loading, setLoading] = React.useState(false);
-  const [items, setItems] = React.useState([]);
-  const [formKey, setFormKey] = React.useState(0);
-  const [initializing, setInitializing] = React.useState(true);
-  const formRef = React.useRef(null);
-
-  React.useEffect(() => {
-    if (isOpen) {
-      setInitializing(true);
-      try {
-        if (deliveryStore.currentOrder) {
-          setItems(JSON.parse(JSON.stringify(deliveryStore.currentOrder.items || [])));
-        } else {
-          setItems([]);
-        }
-        setFormKey(prev => prev + 1);
-      } finally {
-        setInitializing(false);
-      }
-    }
-  }, [isOpen, deliveryStore.currentOrder]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    
-    if (items.length === 0) {
-      message.warning('请至少添加一个商品');
-      return;
-    }
-
-    const data = {
-      customerName: formData.get('customerName'),
-      contactPerson: formData.get('contactPerson'),
-      contactPhone: formData.get('contactPhone'),
-      deliveryTime: formData.get('deliveryTime'),
-      address: formData.get('address'),
-      items,
-      status: 'pending',
-      ...(deliveryStore.currentOrder?.id ? { 
-        id: deliveryStore.currentOrder.id,
-        confirmations: deliveryStore.currentOrder.confirmations,
-        createdAt: deliveryStore.currentOrder.createdAt
-      } : {})
-    };
-
-    setLoading(true);
-    try {
-      const success = await deliveryStore.saveDeliveryOrder(data);
-      if (success) {
-        onOpenChange(false);
-        if (onSuccess) {
-          const updatedOrder = await deliveryStore.getOrderById(data.id);
-          onSuccess(updatedOrder);
-        }
-        deliveryStore.clearCurrentOrder();
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
-      placement="top-center"
-      size="3xl"
-      scrollBehavior="outside"
-      classNames={{
-        base: "bg-background",
-        header: "border-b border-divider",
-        body: "py-6",
-        footer: "border-t border-divider"
-      }}
-    >
-      <ModalContent>
-        {(onClose) => (
-          <>
-            {initializing ? (
-              <div className="flex h-[200px] items-center justify-center">
-                <Spinner label="加载中..." />
-              </div>
-            ) : (
-              <form key={formKey} onSubmit={handleSubmit} ref={formRef}>
-                <ModalHeader className="flex flex-col gap-1">
-                  <h3 className="text-xl font-semibold">
-                    {deliveryStore.currentOrder ? '编辑送货单' : '新建送货单'}
-                  </h3>
-                  <p className="text-small text-default-500">
-                    请填写送货单信息，带 * 为必填项
-                  </p>
-                </ModalHeader>
-                <ModalBody>
-                  <div className="space-y-8">
-                    <DeliveryBasicInfo 
-                      readOnly={readOnly}
-                      defaultValues={deliveryStore.currentOrder}
-                    />
-                    <NextUI.Divider />
-                    <DeliveryItemList
-                      items={items}
-                      readOnly={readOnly}
-                      onItemsChange={setItems}
-                    />
-                  </div>
-                </ModalBody>
-                <ModalFooter>
-                  <Button 
-                    color="danger" 
-                    variant="light" 
-                    onPress={onClose}
-                    startContent={<Icon icon="solar:close-circle-bold" />}
-                  >
-                    取消
-                  </Button>
-                  {!readOnly && (
-                    <Button 
-                      color="primary" 
-                      type="submit" 
-                      isLoading={loading}
-                      startContent={!loading && <Icon icon="solar:disk-bold" />}
-                    >
-                      保存
-                    </Button>
-                  )}
-                </ModalFooter>
-              </form>
-            )}
-          </>
-        )}
-      </ModalContent>
-    </Modal>
-  );
-});
-
-context.wpm.export('comp_delivery_form', DeliveryForm);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="component" name="comp_delivery_item_form" title="商品明细表单组件">
-const {
-  wpm,
-  React,
-  observer,
-  NextUI,
-  Icon,
+  cn,
+  api,
   message
 } = context;
 
-const { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, useDisclosure } = NextUI;
+const { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell, Button, useDisclosure, Input } = NextUI;
+const dynamicFormStore = await context.wpm.import('store_dynamic_form');
 
-const DeliveryItemForm = observer(({
-  item,
-  onSubmit,
+const DynamicFormDetail = observer(({
+  config,
   readOnly = false
 }) => {
-  const {isOpen, onOpen, onOpenChange} = useDisclosure();
-  const [loading, setLoading] = React.useState(false);
-  const [formData, setFormData] = React.useState({
-    name: '',
-    quantity: '',
-    price: ''
-  });
+  const [selectedItem, setSelectedItem] = React.useState(null);
+  const [errors, setErrors] = React.useState({});
+  const editModal = useDisclosure();
 
-  React.useEffect(() => {
-    if (item) {
-      setFormData({
-        name: item.name,
-        quantity: item.quantity.toString(),
-        price: item.price.toString()
-      });
-    } else {
-      setFormData({
-        name: '',
-        quantity: '',
-        price: ''
-      });
-    }
-  }, [item, isOpen]);
+  // 使用计算属性获取数据
+  const detailData = dynamicFormStore.detailData;
+  const totalAmount = dynamicFormStore.totalAmount;
+  const detailCount = dynamicFormStore.detailCount;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    e.stopPropagation()
-    const quantity = parseInt(formData.quantity);
-    const price = parseFloat(formData.price);
-    
-    if (isNaN(quantity) || quantity <= 0) {
-      message.warning('请输入有效的数量');
-      return;
-    }
-    
-    if (isNaN(price) || price <= 0) {
-      message.warning('请输入有效的单价');
-      return;
-    }
+  // 验证明细项
+  const validateDetailItem = (item) => {
+    const newErrors = {};
+    let isValid = true;
 
-    setLoading(true);
+    config.columns.forEach(column => {
+      if (column.required && (!item[column.key] || item[column.key].toString().trim() === '')) {
+        newErrors[column.key] = `${column.label}不能为空`;
+        isValid = false;
+      }
+
+      if (column.type === 'number' || column.type === 'money') {
+        const value = Number(item[column.key]);
+        if (isNaN(value) || value < 0) {
+          newErrors[column.key] = `${column.label}必须是有效的数字`;
+          isValid = false;
+        }
+      }
+    });
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  // 处理添加
+  const handleAdd = (item) => {
     try {
-      const itemData = {
-        name: formData.name,
-        quantity,
-        price,
-        amount: quantity * price
-      };
-      
-      onSubmit(itemData);
-      onOpenChange(false);
-    } finally {
-      setLoading(false);
+      if (!validateDetailItem(item)) {
+        return;
+      }
+
+      // 计算金额
+      const quantity = Number(item.quantity) || 0;
+      const price = Number(item.price) || 0;
+      const amount = quantity * price;
+
+      dynamicFormStore.addDetailItem({
+        ...item,
+        amount: amount
+      });
+      editModal.onClose();
+      message.success('添加成功');
+    } catch (error) {
+      message.error('添加失败: ' + error.message);
+      api.log.error('添加明细失败', { error, item });
     }
   };
 
-  const handleChange = (field) => (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
+  // 处理编辑
+  const handleEdit = (item) => {
+    try {
+      if (!validateDetailItem(item)) {
+        return;
+      }
+
+      // 计算金额
+      const quantity = Number(item.quantity) || 0;
+      const price = Number(item.price) || 0;
+      const amount = quantity * price;
+
+      dynamicFormStore.updateDetailItem(selectedItem.index, {
+        ...item,
+        amount: amount
+      });
+      editModal.onClose();
+      message.success('更新成功');
+    } catch (error) {
+      message.error('更新失败: ' + error.message);
+      api.log.error('更新明细失败', { error, item });
+    }
   };
 
-  const amount = parseFloat(formData.quantity || 0) * parseFloat(formData.price || 0);
+  // 处理删除
+  const handleDelete = (index) => {
+    try {
+      dynamicFormStore.removeDetailItem(index);
+      message.success('删除成功');
+    } catch (error) {
+      message.error('删除失败: ' + error.message);
+      api.log.error('删除明细失败', { error, index });
+    }
+  };
+
+  // 渲染单元格
+  const renderCell = (item, columnKey) => {
+    const column = config.columns.find(col => col.key === columnKey);
+    if (!column) return null;
+
+    if (columnKey === "actions") {
+      return !readOnly && (
+        <div className="flex justify-center gap-2">
+          <Button
+            isIconOnly
+            size="sm"
+            variant="light"
+            onPress={() => {
+              setSelectedItem({ ...item, index: detailData.indexOf(item) });
+              editModal.onOpen();
+            }}
+          >
+            <Icon icon="solar:pen-bold" />
+          </Button>
+          <Button
+            isIconOnly
+            size="sm"
+            color="danger"
+            variant="light"
+            onPress={() => handleDelete(detailData.indexOf(item))}
+          >
+            <Icon icon="solar:trash-bin-trash-bold" />
+          </Button>
+        </div>
+      );
+    }
+
+    // 处理金额显示
+    if (column.type === 'money') {
+      const amount = Number(item[columnKey]);
+      return !isNaN(amount) ? `¥${amount.toFixed(2)}` : '¥0.00';
+    }
+
+    if (column.render) {
+      return column.render(item[columnKey], item);
+    }
+
+    switch (column.type) {
+      case 'number':
+        const num = Number(item[columnKey]);
+        return !isNaN(num) ? num.toLocaleString() : '0';
+      case 'date':
+        return item[columnKey] ? new Date(item[columnKey]).toLocaleString() : '-';
+      default:
+        return item[columnKey] || '-';
+    }
+  };
+
+  // 自动计算金额
+  const calculateAmount = (quantity, price) => {
+    const numQuantity = Number(quantity) || 0;
+    const numPrice = Number(price) || 0;
+    return numQuantity * numPrice;
+  };
 
   return (
-    <>
-      <Button
-        size="sm"
-        color="primary"
-        variant={item ? "light" : "solid"}
-        isIconOnly={!!item}
-        onPress={onOpen}
-        isDisabled={readOnly}
-        className={item ? "w-9 h-9" : "h-9"}
-        startContent={item ? null : <Icon icon="solar:add-circle-bold" className="text-current" />}
-      >
-        {item ? (
-          <Icon icon="solar:pen-bold" className="text-current" />
-        ) : (
-          "添加商品"
-        )}
-      </Button>
+    <div className="space-y-4 py-4">
+      {!readOnly && (
+        <div className="flex justify-between items-center">
+          <div className="text-small text-default-500">
+            共 {detailCount} 项，总金额：
+            <span className="font-semibold text-primary">
+              ¥{totalAmount.toFixed(2)}
+            </span>
+          </div>
+          <Button
+            color="primary"
+            startContent={<Icon icon="solar:add-circle-bold" />}
+            onPress={() => {
+              setSelectedItem(null);
+              setErrors({});
+              editModal.onOpen();
+            }}
+          >
+            添加明细
+          </Button>
+        </div>
+      )}
 
-      <Modal
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        placement="top-center"
+      <Table
+        aria-label={config.title || "明细信息"}
         classNames={{
-          base: "bg-background",
-          header: "border-b border-divider",
-          body: "py-6",
-          footer: "border-t border-divider"
+          wrapper: "max-h-[400px]"
         }}
+        selectionMode="none"
       >
-        <ModalContent>
-          {(onClose) => (
-            <form onSubmit={handleSubmit}>
-              <ModalHeader className="flex flex-col gap-1">
-                <h3 className="text-xl font-semibold">
-                  {item ? '编辑商品' : '添加商品'}
-                </h3>
-                <p className="text-small text-default-500">
-                  请填写商品信息，所有字段均为必填
-                </p>
-              </ModalHeader>
-              <ModalBody>
-                <div className="space-y-6">
-                  <Input
-                    isRequired
-                    isReadOnly={readOnly}
-                    label="商品名称"
-                    placeholder="请输入商品名称"
-                    value={formData.name}
-                    onChange={handleChange('name')}
-                    classNames={{
-                      label: "text-default-600",
-                      input: "text-default-800"
-                    }}
-                    startContent={
-                      <Icon 
-                        className="text-default-400 pointer-events-none flex-shrink-0"
-                        icon="solar:wine-glass-bold"
-                        width={20}
-                      />
-                    }
-                  />
-                  <Input
-                    isRequired
-                    isReadOnly={readOnly}
-                    type="number"
-                    label="数量"
-                    placeholder="请输入数量"
-                    value={formData.quantity}
-                    onChange={handleChange('quantity')}
-                    min={1}
-                    classNames={{
-                      label: "text-default-600",
-                      input: "text-default-800"
-                    }}
-                    startContent={
-                      <Icon 
-                        className="text-default-400 pointer-events-none flex-shrink-0"
-                        icon="solar:box-minimalistic-bold"
-                        width={20}
-                      />
-                    }
-                  />
-                  <Input
-                    isRequired
-                    isReadOnly={readOnly}
-                    type="number"
-                    label="单价"
-                    placeholder="请输入单价"
-                    value={formData.price}
-                    onChange={handleChange('price')}
-                    min={0}
-                    step={0.01}
-                    classNames={{
-                      label: "text-default-600",
-                      input: "text-default-800"
-                    }}
-                    startContent={
-                      <div className="pointer-events-none flex items-center">
-                        <span className="text-default-400">¥</span>
-                      </div>
-                    }
-                  />
+        <TableHeader>
+          {config.columns.map((column) => (
+            <TableColumn
+              key={column.key}
+              align={column.align || "start"}
+            >
+              {column.label}
+              {column.required && (
+                <span className="text-danger ml-1">*</span>
+              )}
+            </TableColumn>
+          ))}
+          {!readOnly && (
+            <TableColumn key="actions" align="center">
+              操作
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody
+          items={detailData}
+          emptyContent={
+            <div className="text-center py-6 text-default-400">
+              <Icon icon="solar:box-minimalistic-bold" className="w-8 h-8 mx-auto mb-2" />
+              <p>暂无明细数据</p>
+              {!readOnly && (
+                <p className="text-xs mt-1">点击"添加明细"按钮添加数据</p>
+              )}
+            </div>
+          }
+        >
+          {(item) => (
+            <TableRow key={item.id}>
+              {(columnKey) => (
+                <TableCell>
+                  {renderCell(item, columnKey)}
+                </TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
 
-                  {(formData.quantity && formData.price) && (
-                    <div className="rounded-xl bg-primary/10 p-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-default-600">小计</span>
-                        <span className="text-xl font-semibold text-primary">
-                          ¥{amount.toFixed(2)}
-                        </span>
-                      </div>
+      <NextUI.Modal
+        isOpen={editModal.isOpen}
+        onOpenChange={editModal.onOpenChange}
+        placement="top-center"
+        scrollBehavior="inside"
+      >
+        <NextUI.ModalContent>
+          {(onClose) => {
+            const [formState, setFormState] = React.useState({
+              quantity: selectedItem?.quantity || '',
+              price: selectedItem?.price || ''
+            });
+
+            const handleFieldChange = (field, value) => {
+              setFormState(prev => {
+                const newState = { ...prev, [field]: value };
+                // 自动计算金额
+                if (field === 'quantity' || field === 'price') {
+                  const amount = calculateAmount(
+                    field === 'quantity' ? value : newState.quantity,
+                    field === 'price' ? value : newState.price
+                  );
+                  return { ...newState, amount };
+                }
+                return newState;
+              });
+            };
+
+            return (
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = {};
+                config.columns.forEach(column => {
+                  if (column.key !== 'actions' && column.key !== 'amount') {
+                    const value = formData.get(column.key);
+                    data[column.key] = value;
+                  }
+                });
+
+                // 计算金额
+                data.amount = calculateAmount(data.quantity, data.price);
+
+                if (selectedItem) {
+                  handleEdit(data);
+                } else {
+                  handleAdd(data);
+                }
+              }}>
+                <NextUI.ModalHeader>
+                  <h3 className="text-xl font-semibold">
+                    {selectedItem ? '编辑明细' : '添加明细'}
+                  </h3>
+                </NextUI.ModalHeader>
+                <NextUI.ModalBody>
+                  <div className="space-y-4">
+                    {config.columns.map((column) => {
+                      if (column.key === 'actions' || column.key === 'amount') return null;
+
+                      return (
+                        <Input
+                          key={column.key}
+                          name={column.key}
+                          label={column.label}
+                          type={column.type === 'number' || column.type === 'money' ? 'number' : 'text'}
+                          defaultValue={selectedItem?.[column.key]}
+                          isRequired={column.required}
+                          step={column.type === 'money' ? "0.01" : "1"}
+                          isInvalid={!!errors[column.key]}
+                          errorMessage={errors[column.key]}
+                          onChange={(e) => handleFieldChange(column.key, e.target.value)}
+                          classNames={{
+                            errorMessage: "text-danger text-xs mt-1"
+                          }}
+                        />
+                      );
+                    })}
+                    <div className="text-small text-default-500">
+                      预计金额：¥{calculateAmount(formState.quantity, formState.price).toFixed(2)}
                     </div>
-                  )}
-                </div>
-              </ModalBody>
-              <ModalFooter>
-                <Button 
-                  color="danger" 
-                  variant="light" 
-                  onPress={onClose}
-                  startContent={<Icon icon="solar:close-circle-bold" />}
-                >
-                  取消
-                </Button>
-                {!readOnly && (
-                  <Button 
-                    color="primary" 
-                    type="submit" 
-                    isLoading={loading}
-                    startContent={!loading && <Icon icon="solar:disk-bold" />}
+                  </div>
+                </NextUI.ModalBody>
+                <NextUI.ModalFooter>
+                  <Button
+                    color="danger"
+                    variant="light"
+                    onPress={onClose}
+                  >
+                    取消
+                  </Button>
+                  <Button
+                    color="primary"
+                    type="submit"
                   >
                     确定
                   </Button>
+                </NextUI.ModalFooter>
+              </form>
+            );
+          }}
+        </NextUI.ModalContent>
+      </NextUI.Modal>
+    </div>
+  );
+});
+
+context.wpm.export('comp_dynamic_form_detail', DynamicFormDetail);
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="component" name="comp_dynamic_form_history" title="动态表单历史记录">
+const {
+  wpm,
+  React,
+  observer,
+  NextUI,
+  Icon,
+  cn,
+  api
+} = context;
+
+const { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Table, TableHeader, TableBody, TableColumn, TableRow, TableCell, useDisclosure } = NextUI;
+const dynamicFormStore = await context.wpm.import('store_dynamic_form');
+
+const DynamicFormHistory = observer(({
+  isOpen,
+  onOpenChange,
+  formId
+}) => {
+  const [loading, setLoading] = React.useState(false);
+  const [history, setHistory] = React.useState([]);
+  const [selectedVersions, setSelectedVersions] = React.useState(null);
+  const diffModal = useDisclosure();
+
+  // 加载历史记录
+  React.useEffect(() => {
+
+    const loadHistory = async () => {
+      if (!formId || !isOpen) return;
+
+      try {
+        setLoading(true);
+        const result = await api.queryMetadataHistory({
+          names: [`${dynamicFormStore.formPrefix}_${formId}`],
+          limit: 50
+        });
+        if (result.data) {
+          const parsedHistory = result.data.map(item => ({
+            id: `history_${item.versionCode}`,
+            versionCode: item.versionCode,
+            updatedAt: item.updatedAt,
+            updatedBy: item.updatedBy,
+            value: JSON.parse(item.value)
+          }));
+          setHistory(parsedHistory);
+        }
+      } catch (error) {
+        api.log.error('加载历史记录失败', { error });
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadHistory();
+  }, [formId, isOpen]);
+
+  // 比较两个版本
+  const compareVersions = (current, previous) => {
+    setSelectedVersions({ current, previous });
+    diffModal.onOpen();
+  };
+
+  // 渲染差异内容
+  const renderDiff = () => {
+    if (!selectedVersions) return null;
+
+    const { current, previous } = selectedVersions;
+    const changes = [];
+
+    // 比较基本信息
+    Object.keys(current.value.basic || {}).forEach(key => {
+      if (JSON.stringify(current.value.basic[key]) !== JSON.stringify(previous.value.basic[key])) {
+        changes.push({
+          id: `diff_basic_${key}`,
+          type: 'basic',
+          field: key,
+          oldValue: previous.value.basic[key],
+          newValue: current.value.basic[key]
+        });
+      }
+    });
+
+    // 比较明细信息
+    const currentDetail = current.value.detail || [];
+    const previousDetail = previous.value.detail || [];
+    if (JSON.stringify(currentDetail) !== JSON.stringify(previousDetail)) {
+      changes.push({
+        id: `diff_detail_${current.versionCode}`,
+        type: 'detail',
+        oldValue: previousDetail,
+        newValue: currentDetail
+      });
+    }
+
+    // 比较确认信息
+    if (JSON.stringify(current.value.confirm) !== JSON.stringify(previous.value.confirm)) {
+      changes.push({
+        id: `diff_confirm_${current.versionCode}`,
+        type: 'confirm',
+        oldValue: previous.value.confirm,
+        newValue: current.value.confirm
+      });
+    }
+
+    return (
+      <div className="space-y-4">
+        {changes.map((change) => (
+          <div
+            key={change.id}
+            className={cn(
+              "rounded-lg border p-4",
+              "transition-colors duration-200",
+              "border-warning/20 bg-warning/10"
+            )}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Icon
+                className="text-warning"
+                icon="solar:pen-bold"
+                width={20}
+              />
+              <span className="font-medium">
+                {change.type === 'basic' ? `基本信息 - ${change.field}` :
+                 change.type === 'detail' ? '明细信息' : '确认信息'}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <div>
+                <p className="text-small text-default-500">修改前：</p>
+                <pre className="mt-1 text-small bg-default-100 rounded-lg p-2 whitespace-pre-wrap">
+                  {JSON.stringify(change.oldValue, null, 2)}
+                </pre>
+              </div>
+              <div>
+                <p className="text-small text-default-500">修改后：</p>
+                <pre className="mt-1 text-small bg-default-100 rounded-lg p-2 whitespace-pre-wrap">
+                  {JSON.stringify(change.newValue, null, 2)}
+                </pre>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <Modal
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        size="2xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>
+                <h3 className="text-xl font-semibold">修改记录</h3>
+              </ModalHeader>
+              <ModalBody>
+                {loading ? (
+                  <div className="flex h-[200px] items-center justify-center">
+                    <NextUI.Spinner label="加载中..." />
+                  </div>
+                ) : (
+                  <Table
+                    aria-label="修改历史记录"
+                  >
+                    <TableHeader>
+                      <TableColumn key="version">版本</TableColumn>
+                      <TableColumn key="time">修改时间</TableColumn>
+                      <TableColumn key="user">修改人</TableColumn>
+                      <TableColumn key="action">操作</TableColumn>
+                    </TableHeader>
+                    <TableBody
+                      items={history}
+                      emptyContent="暂无修改记录"
+                    >
+                      {(item) => (
+                        <TableRow key={item.id}>
+                          <TableCell>v{item.versionCode}</TableCell>
+                          <TableCell>
+                            {new Date(item.updatedAt).toLocaleString()}
+                          </TableCell>
+                          <TableCell>{item.updatedBy}</TableCell>
+                          <TableCell>
+                            {history.indexOf(item) < history.length - 1 && (
+                              <Button
+                                size="sm"
+                                color="primary"
+                                variant="flat"
+                                onPress={() => compareVersions(item, history[history.indexOf(item) + 1])}
+                              >
+                                查看修改
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 )}
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  color="danger"
+                  variant="light"
+                  onPress={onClose}
+                >
+                  关闭
+                </Button>
               </ModalFooter>
-            </form>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={diffModal.isOpen}
+        onOpenChange={diffModal.onOpenChange}
+        size="2xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>
+                <h3 className="text-xl font-semibold">修改详情</h3>
+              </ModalHeader>
+              <ModalBody>
+                {renderDiff()}
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  color="danger"
+                  variant="light"
+                  onPress={onClose}
+                >
+                  关闭
+                </Button>
+              </ModalFooter>
+            </>
           )}
         </ModalContent>
       </Modal>
@@ -955,1059 +1409,896 @@ const DeliveryItemForm = observer(({
   );
 });
 
-context.wpm.export('comp_delivery_item_form', DeliveryItemForm);
+context.wpm.export('comp_dynamic_form_history', DynamicFormHistory);
 </mo-ai-code>
 ```
 
 ```jsx
-<mo-ai-code type="component" name="comp_delivery_item_list" title="送货单商品列表">
+<mo-ai-code type="module" name="module_form_config" title="动态表单配置">
 const {
   wpm,
-  React,
-  observer,
-  NextUI,
-  Icon,
-  cn
+  api
 } = context;
 
-const DeliveryItemForm = await context.wpm.import('comp_delivery_item_form');
+// 动态表单配置
+const formConfig = {
+  // 表单标题和描述
+  title: "设备维修申请单",
+  description: "用于申请设备维修和记录维修过程",
 
-const DeliveryItemList = observer(({
-  items = [],
-  readOnly = false,
-  onItemsChange
-}) => {
-  const addItem = (item) => {
-    onItemsChange([...items, item]);
-  };
+  // 基本信息配置
+  basic: {
+    fields: [
+      {
+        name: "title",
+        label: "维修事由",
+        type: "text",
+        required: true,
+        placeholder: "请简要描述维修原因",
+        icon: "solar:document-text-bold"
+      },
+      {
+        name: "deviceNo",
+        label: "设备编号",
+        type: "text",
+        required: true,
+        placeholder: "请输入设备编号",
+        icon: "solar:hashtag-bold"
+      },
+      {
+        name: "deviceName",
+        label: "设备名称",
+        type: "text",
+        required: true,
+        placeholder: "请输入设备名称",
+        icon: "solar:widget-bold"
+      },
+      {
+        name: "department",
+        label: "所属部门",
+        type: "select",
+        required: true,
+        placeholder: "请选择所属部门",
+        options: [
+          { value: "production", label: "生产部" },
+          { value: "rd", label: "研发部" },
+          { value: "qa", label: "质量部" }
+        ]
+      },
+      {
+        name: "urgency",
+        label: "紧急程度",
+        type: "select",
+        required: true,
+        placeholder: "请选择紧急程度",
+        options: [
+          { value: "high", label: "高" },
+          { value: "medium", label: "中" },
+          { value: "low", label: "低" }
+        ]
+      },
+      {
+        name: "description",
+        label: "详细说明",
+        type: "textarea",
+        required: true,
+        placeholder: "请详细描述设备故障情况",
+        span: "full",
+        minRows: 3,
+        maxRows: 5,
+        icon: "solar:notebook-bold"
+      }
+    ]
+  },
 
-  const removeItem = (index) => {
-    onItemsChange(items.filter((_, i) => i !== index));
-  };
+  // 明细信息配置
+  detail: {
+    title: "维修项目",
+    columns: [
+      {
+        key: "name",
+        label: "维修项目",
+        type: "text",
+        required: true
+      },
+      {
+        key: "type",
+        label: "维修类型",
+        type: "select",
+        required: true,
+        options: [
+          { value: "parts", label: "更换零件" },
+          { value: "repair", label: "维修保养" },
+          { value: "check", label: "检查调试" }
+        ]
+      },
+      {
+        key: "quantity",
+        label: "数量",
+        type: "number",
+        required: true
+      },
+      {
+        key: "price",
+        label: "单价",
+        type: "number",
+        required: true
+      },
+      {
+        key: "amount",
+        label: "金额",
+        type: "money",
+        render: (value) => `¥${value?.toFixed(2)}`
+      }
+    ]
+  },
 
-  const updateItem = (index, item) => {
-    onItemsChange(items.map((i, idx) => idx === index ? item : i));
-  };
-
-  const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-medium font-medium flex items-center gap-2">
-          <Icon className="text-primary" icon="solar:box-bold" />
-          商品明细
-        </h4>
-        {!readOnly && (
-          <DeliveryItemForm onSubmit={addItem} />
-        )}
-      </div>
-
-      <div className="space-y-3">
-        {items.map((item, index) => (
-          <div
-            key={index}
-            className={cn(
-              "group flex items-center justify-between rounded-xl border p-4",
-              "transition-colors duration-200",
-              "hover:border-primary hover:bg-primary/5"
-            )}
-          >
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <h6 className="font-medium text-default-800">{item.name}</h6>
-                  <div className="flex items-center gap-3 text-small text-default-500">
-                    <span>单价: ¥{item.price}</span>
-                    <span>数量: {item.quantity}</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-primary">¥{item.amount}</p>
-                  <p className="text-tiny text-default-400">小计</p>
-                </div>
-              </div>
-            </div>
-            {!readOnly && (
-              <div className="ml-4 flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                <DeliveryItemForm
-                  item={item}
-                  onSubmit={(updatedItem) => updateItem(index, updatedItem)}
-                />
-                <NextUI.Button
-                  isIconOnly
-                  color="danger"
-                  size="sm"
-                  variant="light"
-                  onPress={() => removeItem(index)}
-                >
-                  <Icon icon="solar:trash-bin-trash-bold" />
-                </NextUI.Button>
-              </div>
-            )}
-          </div>
-        ))}
-
-        {items.length === 0 && (
-          <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8">
-            <Icon 
-              className="text-default-300 mb-2" 
-              icon="solar:box-minimalistic-bold"
-              width={48}
-            />
-            <p className="text-default-500">请添加商品</p>
-          </div>
-        )}
-      </div>
-
-      {items.length > 0 && (
-        <div className="mt-6 flex justify-end rounded-xl bg-primary/10 p-4">
-          <div className="text-right">
-            <p className="text-small text-default-600">
-              共 {items.length} 件商品
-            </p>
-            <div className="mt-1 flex items-baseline gap-1">
-              <span className="text-default-600">总计:</span>
-              <span className="text-2xl font-semibold text-primary">
-                ¥{totalAmount}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-});
-
-context.wpm.export('comp_delivery_item_list', DeliveryItemList);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="component" name="comp_delivery_share_content" title="送货单分享页面内容">
-const {
-  wpm,
-  React,
-  observer,
-  NextUI,
-  Icon
-} = context;
-
-const { Card, CardBody, Progress, Button } = NextUI;
-const DeliveryDetailProgress = await context.wpm.import('comp_delivery_detail_progress');
-const DeliveryDetailInfo = await context.wpm.import('comp_delivery_detail_info');
-const DeliveryDetailItems = await context.wpm.import('comp_delivery_detail_items');
-const DeliveryDetailConfirmations = await context.wpm.import('comp_delivery_detail_confirmations');
-
-const DeliveryShareContent = observer(({
-  order,
-  onConfirm
-}) => {
-  const [confirming, setConfirming] = React.useState(false);
-  const confirmProgress = [
-    order.confirmations?.customer,
-    order.confirmations?.staff
-  ].filter(Boolean).length;
-
-  const handleConfirm = async (type) => {
-    setConfirming(true);
-    try {
-      await onConfirm(type);
-    } finally {
-      setConfirming(false);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardBody>
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-medium font-medium">确认进度</h4>
-            <span className="text-small text-default-400">
-              {confirmProgress}/2 已确认
-            </span>
-          </div>
-          <Progress
-            aria-label="确认进度"
-            value={confirmProgress * 50}
-            className="mb-4"
-          />
-          <div className="flex gap-2 justify-end">
-            <Button
-              color="primary"
-              variant={order.confirmations?.customer ? "flat" : "solid"}
-              startContent={<Icon icon="solar:user-check-bold" />}
-              isDisabled={order.confirmations?.customer || confirming}
-              isLoading={confirming}
-              onPress={() => handleConfirm('customer')}
-            >
-              客户确认
-            </Button>
-            <Button
-              color="secondary"
-              variant={order.confirmations?.staff ? "flat" : "solid"}
-              startContent={<Icon icon="solar:shield-check-bold" />}
-              isDisabled={order.confirmations?.staff || confirming}
-              isLoading={confirming}
-              onPress={() => handleConfirm('staff')}
-            >
-              业务员确认
-            </Button>
-          </div>
-        </CardBody>
-      </Card>
-
-      <DeliveryDetailInfo order={order} />
-      <DeliveryDetailItems order={order} />
-      <DeliveryDetailConfirmations order={order} />
-    </div>
-  );
-});
-
-context.wpm.export('comp_delivery_share_content', DeliveryShareContent);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="component" name="comp_delivery_share_header" title="送货单分享页面头部">
-const {
-  wpm,
-  React,
-  observer,
-  NextUI,
-  Icon
-} = context;
-
-const { Button } = NextUI;
-
-const DeliveryShareHeader = observer(({
-  onEdit
-}) => {
-  return (
-    <div className="mb-6 flex items-center justify-between">
-      <h1 className="text-xl font-bold">送货单详情</h1>
-      <Button
-        color="primary"
-        variant="flat"
-        startContent={<Icon icon="solar:pen-bold" />}
-        onPress={onEdit}
-      >
-        编辑
-      </Button>
-    </div>
-  );
-});
-
-context.wpm.export('comp_delivery_share_header', DeliveryShareHeader);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="component" name="comp_delivery_share_layout" title="送货单分享页面布局">
-const {
-  wpm,
-  React,
-  observer,
-  NextUI,
-  Icon
-} = context;
-
-const { Spinner } = NextUI;
-
-const DeliveryShareLayout = observer(({
-  loading,
-  error,
-  children
-}) => {
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <Spinner size="lg" label="加载中..." />
-        </div>
-      </div>
-    );
+  // 确认信息配置
+  confirm: {
+    title: "确认信息",
+    forms: [
+      {
+        id: "apply_confirm",
+        title: "申请确认",
+        fields: [
+          {
+            name: "name",
+            label: "申请人",
+            type: "text",
+            required: true,
+            icon: "solar:user-bold"
+          },
+          {
+            name: "phone",
+            label: "联系电话",
+            type: "tel",
+            required: true,
+            icon: "solar:phone-bold"
+          },
+          {
+            name: "note",
+            label: "申请说明",
+            type: "textarea",
+            required: false,
+            icon: "solar:notes-bold"
+          }
+        ]
+      },
+      {
+        id: "manager_confirm",
+        title: "主管确认",
+        fields: [
+          {
+            name: "name",
+            label: "主管姓名",
+            type: "text",
+            required: true,
+            icon: "solar:user-bold"
+          },
+          {
+            name: "phone",
+            label: "联系电话",
+            type: "tel",
+            required: true,
+            icon: "solar:phone-bold"
+          },
+          {
+            name: "note",
+            label: "审批意见",
+            type: "textarea",
+            required: false,
+            icon: "solar:notes-bold"
+          }
+        ]
+      },
+      {
+        id: "maintenance_confirm",
+        title: "维修确认",
+        fields: [
+          {
+            name: "name",
+            label: "维修人员",
+            type: "text",
+            required: true,
+            icon: "solar:user-bold"
+          },
+          {
+            name: "phone",
+            label: "联系电话",
+            type: "tel",
+            required: true,
+            icon: "solar:phone-bold"
+          },
+          {
+            name: "note",
+            label: "维修说明",
+            type: "textarea",
+            required: false,
+            icon: "solar:notes-bold"
+          }
+        ]
+      }
+    ]
   }
+};
 
-  if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mb-4 flex justify-center">
-            <Icon className="text-danger" icon="solar:shield-warning-bold" width={48} />
-          </div>
-          <p className="mb-2 text-xl">送货单不存在或已被删除</p>
-          <p className="mb-4 text-small text-default-500">
-            请检查链接是否正确，或联系管理员
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-default-50 p-6">
-      <div className="mx-auto max-w-3xl">
-        {children}
-      </div>
-    </div>
-  );
-});
-
-context.wpm.export('comp_delivery_share_layout', DeliveryShareLayout);
+// 导出配置
+context.wpm.export('module_form_config', formConfig);
 </mo-ai-code>
 ```
 
 ```jsx
-<mo-ai-code type="page" name="page_delivery_share" title="送货单分享页面">
+<mo-ai-code type="page" name="page_form_detail" title="表单详情页">
 const {
   wpm,
   React,
   observer,
   NextUI,
   ReactRouterDom,
-  Icon
-} = context;
-
-const { useParams, useSearchParams } = ReactRouterDom;
-const { useDisclosure } = NextUI;
-const deliveryStore = await context.wpm.import('store_delivery');
-const userStore = await context.wpm.import('store_user');
-const DeliveryForm = await context.wpm.import('comp_delivery_form');
-const DeliveryDetailConfirmModal = await context.wpm.import('comp_delivery_detail_confirm_modal');
-const DeliveryShareHeader = await context.wpm.import('comp_delivery_share_header');
-const DeliveryShareLayout = await context.wpm.import('comp_delivery_share_layout');
-const DeliveryShareContent = await context.wpm.import('comp_delivery_share_content');
-
-const DeliverySharePage = observer(() => {
-  const { id } = useParams();
-  const [searchParams] = useSearchParams();
-  const [order, setOrder] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [confirmLoading, setConfirmLoading] = React.useState(false);
-  const [confirmType, setConfirmType] = React.useState(null);
-  const { isOpen: isConfirmOpen, onOpen: onConfirmOpen, onOpenChange: onConfirmOpenChange } = useDisclosure();
-  const { isOpen: isEditOpen, onOpen: onEditOpen, onOpenChange: onEditOpenChange } = useDisclosure();
-
-  React.useEffect(() => {
-    const loadOrder = async () => {
-      setLoading(true);
-      try {
-        const oid = searchParams.get('oid');
-        if (!oid) {
-          throw new Error('缺少组织ID参数');
-        }
-        await deliveryStore.loadOrderIndexes();
-        const foundOrder = await deliveryStore.getOrderById(id);
-        setOrder(foundOrder);
-      } catch (error) {
-        console.error('Failed to load order:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadOrder();
-  }, [id, searchParams]);
-
-  const handleConfirm = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const data = {
-      name: formData.get('name'),
-      phone: formData.get('phone'),
-      note: formData.get('note')
-    };
-
-    setConfirmLoading(true);
-    try {
-      const success = await deliveryStore.confirmDelivery(id, confirmType, data);
-      if (success) {
-        onConfirmOpenChange(false);
-        const updatedOrder = await deliveryStore.getOrderById(id);
-        setOrder(updatedOrder);
-      }
-    } finally {
-      setConfirmLoading(false);
-    }
-  };
-
-  const openConfirmModal = (type) => {
-    setConfirmType(type);
-    onConfirmOpen();
-  };
-
-  const handleEdit = () => {
-    deliveryStore.setCurrentOrder(order);
-    onEditOpen();
-  };
-
-  return (
-    <DeliveryShareLayout loading={loading} error={!order}>
-      {order && (
-        <>
-          <DeliveryShareHeader onEdit={handleEdit} />
-          <DeliveryShareContent 
-            order={order}
-            onConfirm={openConfirmModal}
-          />
-
-          <DeliveryDetailConfirmModal
-            isOpen={isConfirmOpen}
-            onOpenChange={onConfirmOpenChange}
-            type={confirmType}
-            onConfirm={handleConfirm}
-          />
-
-          <DeliveryForm
-            isOpen={isEditOpen}
-            onOpenChange={onEditOpenChange}
-            onSuccess={(updatedOrder) => {
-              setOrder(updatedOrder);
-            }}
-          />
-        </>
-      )}
-    </DeliveryShareLayout>
-  );
-});
-
-context.wpm.export('page_delivery_share', DeliverySharePage);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="service" name="service_delivery_confirm" title="送货单确认服务">
-const {
-  wpm,
+  Icon,
   message,
   api
 } = context;
 
-const ConfirmService = {
-  async startDelivering(orderId) {
+const { useParams, useNavigate } = ReactRouterDom;
+const { Button, Spinner } = NextUI;
+
+const DynamicFormAdapter = await context.wpm.import('comp_dynamic_form_adapter');
+const dynamicFormStore = await context.wpm.import('store_dynamic_form');
+const formConfig = await context.wpm.import('module_form_config');
+
+const FormDetailPage = observer(() => {
+  const { formId } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    loadFormData();
+  }, [formId]);
+
+  const loadFormData = async () => {
     try {
-      const order = await this.loadOrderDetail(orderId);
-      if (!order) {
-        message.error('订单不存在');
-        return false;
+      setLoading(true);
+      const success = await dynamicFormStore.loadFormData(formId);
+      if (!success) {
+        message.error('表单不存在或已被删除');
+        navigate('/home');
       }
-
-      if (order.status !== this.constructor.OrderStatus.PENDING) {
-        message.error('只有待处理的订单可以开始配送');
-        return false;
-      }
-
-      order.status = this.constructor.OrderStatus.DELIVERING;
-      const success = await this.saveDeliveryOrder(order);
-      
-      if (success) {
-        message.success('已开始配送');
-        return true;
-      }
-      return false;
     } catch (error) {
-      console.error('Failed to start delivering:', error);
-      message.error('操作失败');
-      return false;
+      message.error('加载表单失败: ' + error.message);
+      api.log.error('加载表单失败', { error, formId });
+      navigate('/home');
+    } finally {
+      setLoading(false);
     }
-  },
+  };
 
-  async confirmDelivery(orderId, type, data) {
+  const handleSave = async (formData) => {
     try {
-      const currentUser = await this.getCurrentUser();
-      if (!currentUser) {
-        message.error('获取用户信息失败，无法确认');
-        return false;
-      }
-
-      const order = await this.loadOrderDetail(orderId);
-      if (!order) {
-        message.error('订单不存在');
-        return false;
-      }
-
-      const now = new Date().toISOString();
-      const confirmation = {
-        time: now,
-        name: data.name,
-        phone: data.phone,
-        note: data.note || '',
-        location: data.location || null,
-        operator: {
-          id: currentUser.id,
-          name: currentUser.name,
-          role: currentUser.role,
-          time: now
-        }
-      };
-
-      if (type === 'customer') {
-        order.confirmations.customer = confirmation;
-        order.status = this.constructor.OrderStatus.CUSTOMER_CONFIRMED;
-      } else if (type === 'staff') {
-        order.confirmations.staff = confirmation;
-        order.status = this.constructor.OrderStatus.STAFF_CONFIRMED;
-      }
-
-      if (order.confirmations.customer && order.confirmations.staff) {
-        order.status = this.constructor.OrderStatus.COMPLETED;
-      }
-
-      const success = await this.saveDeliveryOrder(order);
-      if (success) {
-        message.success('确认成功');
-        return true;
-      }
-      return false;
+      await dynamicFormStore.saveFormData();
+      message.success('保存成功');
     } catch (error) {
-      console.error('Failed to confirm delivery:', error);
-      message.error('确认失败');
-      return false;
+      message.error('保存失败: ' + error.message);
+      api.log.error('保存表单失败', { error, formId });
     }
+  };
+
+  const handleBack = () => {
+    navigate('/home');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Spinner label="加载中..." />
+      </div>
+    );
   }
-};
 
-context.wpm.export('service_delivery_confirm', ConfirmService);
+  return (
+    <div className="min-h-screen bg-background p-6">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-6 flex items-center justify-between">
+          <Button
+            variant="light"
+            startContent={<Icon icon="solar:arrow-left-bold" />}
+            onPress={handleBack}
+          >
+            返回首页
+          </Button>
+          <h1 className="text-xl font-bold">维修申请单</h1>
+          <div className="w-[88px]" /> {/* 占位，保持标题居中 */}
+        </div>
+
+        <DynamicFormAdapter
+          formId={formId}
+          config={formConfig}
+          onSave={handleSave}
+          onError={(error) => {
+            message.error("表单操作失败")
+            api.log.error('表单操作失败', { error, formId });
+          }}
+        />
+      </div>
+    </div>
+  );
+});
+
+context.wpm.export('page_form_detail', FormDetailPage);
 </mo-ai-code>
 ```
 
 ```jsx
-<mo-ai-code type="service" name="service_delivery_order" title="送货单基础操作服务">
+<mo-ai-code type="page" name="page_home" title="首页">
 const {
   wpm,
+  React,
+  observer,
+  NextUI,
+  ReactRouterDom,
+  Icon,
+  message,
+  api
+} = context;
+
+const { useNavigate } = ReactRouterDom;
+const { Button, Card } = NextUI;
+
+const dynamicFormStore = await context.wpm.import('store_dynamic_form');
+const formConfig = await context.wpm.import('module_form_config');
+
+const HomePage = observer(() => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = React.useState(false);
+
+  const handleCreateForm = async () => {
+    try {
+      setLoading(true);
+      const formId = await dynamicFormStore.createNewForm(formConfig);
+      message.success('创建表单成功');
+      navigate(`/form/${formId}`);
+    } catch (error) {
+      message.error('创建表单失败: ' + error.message);
+      api.log.error('创建表单失败', { error });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-tr from-pink-300 to-blue-300 p-6">
+      <Card className="w-full max-w-md bg-background/60 p-6 backdrop-blur-md">
+        <div className="text-center">
+          <div className="mb-6">
+            <Icon
+              icon="solar:clipboard-add-bold"
+              className="h-16 w-16 text-primary mx-auto"
+            />
+            <h1 className="mt-4 text-2xl font-bold text-foreground">
+              设备维修申请
+            </h1>
+            <p className="mt-2 text-small text-foreground-500">
+              点击下方按钮创建新的维修申请单
+            </p>
+          </div>
+
+          <Button
+            size="lg"
+            color="primary"
+            variant="shadow"
+            className="w-full"
+            startContent={<Icon icon="solar:add-circle-bold" />}
+            isLoading={loading}
+            onPress={handleCreateForm}
+          >
+            创建维修申请单
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+});
+
+context.wpm.export('page_home', HomePage);
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="store" name="store_dynamic_form" title="动态表单数据管理">
+const {
+  wpm,
+  mobx,
   message,
   api,
   appId
 } = context;
 
-const OrderService = {
-  async loadOrderIndexes() {
-    this.isLoading = true;
-    try {
-      const result = await api.getMetadata([`${appId}_order_indexes`]);
-      if (result.data?.[0]?.value) {
-        this.orderIndexes = JSON.parse(result.data[0].value);
-      }
-    } catch (error) {
-      console.error('Failed to load order indexes:', error);
-      message.error('加载订单列表失败');
-    } finally {
-      this.isLoading = false;
-    }
-  },
+const { makeAutoObservable, runInAction, computed } = mobx;
 
-  async loadOrderDetail(orderId) {
-    if (this.orderDetails.has(orderId)) {
-      return this.orderDetails.get(orderId);
-    }
+class DynamicFormStore {
+  // 私有状态
+  _formData = null;
+  _isLoading = false;
+  _error = null;
 
-    try {
-      const result = await api.getMetadata([`${appId}_order_${orderId}`]);
-      if (result.data?.[0]?.value) {
-        const detail = JSON.parse(result.data[0].value);
-        this.orderDetails.set(orderId, detail);
-        return detail;
-      }
-      return null;
-    } catch (error) {
-      console.error('Failed to load order detail:', error);
-      message.error('加载订单详情失败');
-      return null;
-    }
-  },
-
-  async saveDeliveryOrder(order) {
-    try {
-      const currentUser = await this.getCurrentUser();
-      if (!currentUser) {
-        message.error('获取用户信息失败，无法保存');
-        return false;
-      }
-
-      const orderId = order.id || `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const now = new Date().toISOString();
-      
-      const orderData = {
-        ...order,
-        id: orderId,
-        createdAt: order.createdAt || now,
-        updatedAt: now,
-        operator: {
-          id: currentUser.id,
-          name: currentUser.name,
-          role: currentUser.role,
-          time: now
-        },
-        confirmations: order.confirmations || {
-          customer: null,
-          staff: null
-        }
-      };
-
-      const indexData = {
-        id: orderId,
-        customerName: order.customerName,
-        contactPerson: order.contactPerson,
-        contactPhone: order.contactPhone,
-        deliveryTime: order.deliveryTime,
-        status: order.status,
-        totalAmount: order.items.reduce((sum, item) => sum + item.amount, 0),
-        createdAt: orderData.createdAt,
-        updatedAt: orderData.updatedAt,
-        operator: orderData.operator
-      };
-
-      await api.setMetadata(`${appId}_order_${orderId}`, JSON.stringify(orderData));
-
-      if (order.id) {
-        const index = this.orderIndexes.findIndex(o => o.id === order.id);
-        if (index !== -1) {
-          this.orderIndexes[index] = indexData;
-        }
-      } else {
-        this.orderIndexes.unshift(indexData);
-      }
-
-      await api.setMetadata(`${appId}_order_indexes`, JSON.stringify(this.orderIndexes));
-      
-      this.orderDetails.set(orderId, orderData);
-      this.clearProductStatsCache();
-      
-      message.success('保存成功');
-      return true;
-    } catch (error) {
-      console.error('Failed to save delivery order:', error);
-      message.error('保存失败');
-      return false;
-    }
-  },
-
-  async setCurrentOrder(orderIndex) {
-    const detail = await this.loadOrderDetail(orderIndex.id);
-    this.currentOrder = detail;
-  },
-
-  clearCurrentOrder() {
-    this.currentOrder = null;
-  },
-
-  async getOrderById(id) {
-    return await this.loadOrderDetail(id);
-  }
-};
-
-context.wpm.export('service_delivery_order', OrderService);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="store" name="store_delivery" title="送货单数据管理">
-const {
-  wpm,
-  mobx,
-  api
-} = context;
-
-const { makeAutoObservable } = mobx;
-
-const OrderService = await context.wpm.import('service_delivery_order');
-const ConfirmService = await context.wpm.import('service_delivery_confirm');
-
-class DeliveryStore {
-  orderIndexes = [];
-  orderDetails = new Map();
-  currentOrder = null;
-  isLoading = false;
-  currentUser = null;
+  // 不可变配置
+  formPrefix = `${appId}_dynamic_form`;
+  indexPrefix = `${appId}_form_index`;
 
   constructor() {
-    makeAutoObservable(this);
-
-    // 绑定服务方法
-    Object.assign(this, {
-      ...Object.keys(OrderService).reduce((acc, key) => {
-        acc[key] = OrderService[key].bind(this);
-        return acc;
-      }, {}),
-      ...Object.keys(ConfirmService).reduce((acc, key) => {
-        acc[key] = ConfirmService[key].bind(this);
-        return acc;
-      }, {})
+    makeAutoObservable(this, {
+      formPrefix: false,
+      indexPrefix: false
     });
   }
 
-  // 统一的状态定义
-  static OrderStatus = {
-    PENDING: 'pending',                // 待处理
-    DELIVERING: 'delivering',          // 配送中
-    CUSTOMER_CONFIRMED: 'customer_confirmed',  // 客户已确认
-    STAFF_CONFIRMED: 'staff_confirmed',        // 业务员已确认
-    COMPLETED: 'completed',            // 已完成
-    CANCELLED: 'cancelled'             // 已取消
+  // 计算属性
+  get isLoading() {
+    return this._isLoading;
   }
 
-  // 状态显示文本
-  static StatusText = {
-    [DeliveryStore.OrderStatus.PENDING]: '待处理',
-    [DeliveryStore.OrderStatus.DELIVERING]: '配送中',
-    [DeliveryStore.OrderStatus.CUSTOMER_CONFIRMED]: '客户已确认',
-    [DeliveryStore.OrderStatus.STAFF_CONFIRMED]: '业务员已确认',
-    [DeliveryStore.OrderStatus.COMPLETED]: '已完成',
-    [DeliveryStore.OrderStatus.CANCELLED]: '已取消'
+  get error() {
+    return this._error;
   }
 
-  // 状态颜色
-  static StatusColor = {
-    [DeliveryStore.OrderStatus.PENDING]: 'warning',
-    [DeliveryStore.OrderStatus.DELIVERING]: 'primary',
-    [DeliveryStore.OrderStatus.CUSTOMER_CONFIRMED]: 'secondary',
-    [DeliveryStore.OrderStatus.STAFF_CONFIRMED]: 'secondary',
-    [DeliveryStore.OrderStatus.COMPLETED]: 'success',
-    [DeliveryStore.OrderStatus.CANCELLED]: 'danger'
+  get hasData() {
+    return !!this._formData;
   }
 
-  // 状态图标
-  static StatusIcon = {
-    [DeliveryStore.OrderStatus.PENDING]: 'solar:clock-circle-bold',
-    [DeliveryStore.OrderStatus.DELIVERING]: 'solar:delivery-bold',
-    [DeliveryStore.OrderStatus.CUSTOMER_CONFIRMED]: 'solar:user-check-bold',
-    [DeliveryStore.OrderStatus.STAFF_CONFIRMED]: 'solar:shield-check-bold',
-    [DeliveryStore.OrderStatus.COMPLETED]: 'solar:check-circle-bold',
-    [DeliveryStore.OrderStatus.CANCELLED]: 'solar:close-circle-bold'
+  get formId() {
+    return this._formData?.id;
   }
 
-  async getCurrentUser() {
-    if (!this.currentUser) {
-      try {
-        const userInfo = await api.getCurrentAccountInfo();
-        this.currentUser = {
-          id: userInfo.id,
-          name: userInfo.name,
-          role: userInfo.role
-        };
-      } catch (error) {
-        console.error('Failed to get current user:', error);
-        message.error('获取用户信息失败');
-        return null;
+  get currentForm() {
+    return this._formData;
+  }
+
+  get detailData() {
+    return this._formData?.detail || [];
+  }
+
+  get totalAmount() {
+    return computed(() => {
+      if (!Array.isArray(this._formData?.detail)) {
+        return 0;
       }
+      return this._formData.detail.reduce((sum, item) => {
+        const amount = Number(item.amount);
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0);
+    }).get();
+  }
+
+  get detailCount() {
+    return this._formData?.detail?.length || 0;
+  }
+
+  // 校验基本信息
+  validateBasicFields() {
+    if (!this._formData?.config?.basic?.fields) return true;
+
+    const requiredFields = this._formData.config.basic.fields
+      .filter(field => field.required)
+      .map(field => field.name);
+
+    return requiredFields.every(field => {
+      const value = this._formData.basic?.[field];
+      return value !== undefined && value !== null && value !== '';
+    });
+  }
+
+  // 校验明细数据
+  validateDetailData() {
+    if (!this._formData?.config?.detail?.columns) return true;
+
+    // 检查是否有明细数据
+    if (!Array.isArray(this._formData.detail) || this._formData.detail.length === 0) {
+      return false;
     }
-    return this.currentUser;
-  }
-}
 
-const store = new DeliveryStore();
-context.wpm.export('store_delivery', store);
-</mo-ai-code>
-```
+    // 检查每条明细的必填字段
+    const requiredColumns = this._formData.config.detail.columns
+      .filter(col => col.required)
+      .map(col => col.key);
 
-```jsx
-<mo-ai-code type="store" name="store_user" title="用户信息管理">
-const {
-  wpm,
-  mobx,
-  message,
-  api
-} = context;
-
-const { makeAutoObservable } = mobx;
-
-class UserStore {
-  userInfo = null;
-  enterpriseInfo = null;
-  isLoading = false;
-  error = null;
-
-  constructor() {
-    makeAutoObservable(this);
+    return this._formData.detail.every(item =>
+      requiredColumns.every(key => {
+        const value = item[key];
+        return value !== undefined && value !== null && value !== '';
+      })
+    );
   }
 
-  async loadUserInfo() {
-    if (this.isLoading) return;
-    
-    this.isLoading = true;
-    this.error = null;
-    
-    try {
-      const [userInfo, enterpriseInfo] = await Promise.all([
-        api.getCurrentAccountInfo(),
-        api.queryCurrentEnterPrise()
-      ]);
-      
-      this.userInfo = userInfo;
-      this.enterpriseInfo = enterpriseInfo;
-    } catch (error) {
-      console.error('Failed to load user info:', error);
-      this.error = error;
-      message.error('获取用户信息失败');
-    } finally {
-      this.isLoading = false;
-    }
-  }
+  // 校验确认信息
+  validateConfirmData() {
+    if (!this._formData?.config?.confirm?.forms) return true;
 
-  get organizationId() {
-    return this.enterpriseInfo?.organizationId;
-  }
+    // 检查必填的确认表单
+    return this._formData.config.confirm.forms.every((form, index) => {
+      if (!form.required) return true;
 
-  get isAuthenticated() {
-    return !!this.userInfo;
-  }
+      const confirmData = this._formData.confirms?.[index];
+      if (!confirmData) return false;
 
-  clearUserInfo() {
-    this.userInfo = null;
-    this.enterpriseInfo = null;
-    this.error = null;
-  }
-}
+      // 检查必填字段
+      const requiredFields = form.fields
+        .filter(field => field.required)
+        .map(field => field.name);
 
-const store = new UserStore();
-context.wpm.export('store_user', store);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="utils" name="utils_delivery_diff" title="送货单数据比较工具">
-const {
-  wpm
-} = context;
-
-// 字段名映射
-const fieldNameMap = {
-  customerName: '客户名称',
-  contactPerson: '联系人',
-  contactPhone: '联系电话',
-  deliveryTime: '送货日期',
-  address: '送货地址',
-  status: '状态',
-  items: '商品明细',
-  name: '商品名称',
-  quantity: '数量',
-  price: '单价',
-  amount: '金额',
-  confirmations: '确认信息',
-  customer: '客户确认',
-  staff: '业务员确认',
-  note: '备注'
-};
-
-// 比较两个对象的差异
-const compareObjects = (oldObj, newObj, path = '') => {
-  const changes = [];
-
-  // 如果是数组，使用专门的数组比较逻辑
-  if (Array.isArray(oldObj) && Array.isArray(newObj)) {
-    return compareArrays(oldObj, newObj, path);
-  }
-
-  // 获取所有唯一的键
-  const allKeys = new Set([
-    ...Object.keys(oldObj || {}),
-    ...Object.keys(newObj || {})
-  ]);
-
-  for (const key of allKeys) {
-    const oldValue = oldObj?.[key];
-    const newValue = newObj?.[key];
-    const currentPath = path ? `${path}.${key}` : key;
-
-    // 如果键在新对象中不存在
-    if (!(key in newObj)) {
-      changes.push({
-        type: 'deleted',
-        path: currentPath,
-        oldValue,
-        newValue: undefined
+      return requiredFields.every(field => {
+        const value = confirmData[field];
+        return value !== undefined && value !== null && value !== '';
       });
-      continue;
-    }
-
-    // 如果键在旧对象中不存在
-    if (!(key in oldObj)) {
-      changes.push({
-        type: 'added',
-        path: currentPath,
-        oldValue: undefined,
-        newValue
-      });
-      continue;
-    }
-
-    // 如果两个值都是对象，递归比较
-    if (
-      typeof oldValue === 'object' &&
-      typeof newValue === 'object' &&
-      oldValue !== null &&
-      newValue !== null &&
-      !Array.isArray(oldValue) &&
-      !Array.isArray(newValue)
-    ) {
-      changes.push(...compareObjects(oldValue, newValue, currentPath));
-      continue;
-    }
-
-    // 比较值是否相等
-    if (!isEqual(oldValue, newValue)) {
-      changes.push({
-        type: 'updated',
-        path: currentPath,
-        oldValue,
-        newValue
-      });
-    }
+    });
   }
 
-  return changes;
-};
-
-// 比较数组
-const compareArrays = (oldArray, newArray, path) => {
-  const changes = [];
-
-  // 如果是商品列表，使用商品名称作为标识符
-  if (path.endsWith('items')) {
-    const oldMap = new Map(oldArray.map(item => [item.name, item]));
-    const newMap = new Map(newArray.map(item => [item.name, item]));
-
-    // 检查删除的商品
-    for (const [name, item] of oldMap) {
-      if (!newMap.has(name)) {
-        changes.push({
-          type: 'deleted',
-          path: `${path}`,
-          oldValue: item,
-          newValue: undefined
-        });
+  // 创建表单结构索引
+  async createFormIndex(formData) {
+    const indexData = {
+      formId: formData.id,
+      formType: formData.config?.type || 'default',
+      formName: formData.config?.title || '未命名表单',
+      description: formData.config?.description,
+      version: formData.config?.version || '1.0.0',
+      status: formData.status || 'draft',
+      createdAt: formData.createdAt,
+      updatedAt: formData.updatedAt,
+      creator: formData.creator,
+      // 表单结构信息
+      structure: {
+        basicFields: formData.config?.basic?.fields?.length || 0,
+        detailColumns: formData.config?.detail?.columns?.length || 0,
+        confirmForms: formData.config?.confirm?.forms?.length || 0
       }
-    }
-
-    // 检查新增的商品
-    for (const [name, item] of newMap) {
-      if (!oldMap.has(name)) {
-        changes.push({
-          type: 'added',
-          path: `${path}`,
-          oldValue: undefined,
-          newValue: item
-        });
-      }
-    }
-
-    // 检查修改的商品
-    for (const [name, oldItem] of oldMap) {
-      const newItem = newMap.get(name);
-      if (newItem && !isEqual(oldItem, newItem)) {
-        changes.push({
-          type: 'updated',
-          path: `${path}`,
-          oldValue: oldItem,
-          newValue: newItem
-        });
-      }
-    }
-  } else {
-    //// 其他数组的通用比较逻辑
-    const maxLength = Math.max(oldArray.length, newArray.length);
-    for (let i = 0; i < maxLength; i++) {
-      if (i >= oldArray.length) {
-        changes.push({
-          type: 'added',
-          path: `${path}[${i}]`,
-          oldValue: undefined,
-          newValue: newArray[i]
-        });
-      } else if (i >= newArray.length) {
-        changes.push({
-          type: 'deleted',
-          path: `${path}[${i}]`,
-          oldValue: oldArray[i],
-          newValue: undefined
-        });
-      } else if (!isEqual(oldArray[i], newArray[i])) {
-        changes.push({
-          type: 'updated',
-          path: `${path}[${i}]`,
-          oldValue: oldArray[i],
-          newValue: newArray[i]
-        });
-      }
-    }
-  }
-
-  return changes;
-};
-
-// 判断两个值是否相等
-const isEqual = (value1, value2) => {
-  if (value1 === value2) return true;
-  if (typeof value1 !== typeof value2) return false;
-  if (typeof value1 !== 'object') return value1 === value2;
-  if (value1 === null || value2 === null) return value1 === value2;
-  
-  const keys1 = Object.keys(value1);
-  const keys2 = Object.keys(value2);
-  
-  if (keys1.length !== keys2.length) return false;
-  
-  return keys1.every(key => isEqual(value1[key], value2[key]));
-};
-
-// 格式化金额
-const formatAmount = (amount) => {
-  return `¥${parseFloat(amount).toFixed(2)}`;
-};
-
-// 格式化差异结果
-const formatDiff = (changes) => {
-  return changes.map(change => {
-    const pathParts = change.path.split('.');
-    const fieldName = fieldNameMap[pathParts[pathParts.length - 1]] || pathParts[pathParts.length - 1];
-    
-    let detail = '';
-    
-    if (change.path.endsWith('items')) {
-      if (change.type === 'added') {
-        detail = `新增商品：${change.newValue.name}，数量：${change.newValue.quantity}，单价：${formatAmount(change.newValue.price)}`;
-      } else if (change.type === 'deleted') {
-        detail = `删除商品：${change.oldValue.name}，数量：${change.oldValue.quantity}，单价：${formatAmount(change.oldValue.price)}`;
-      } else if (change.type === 'updated') {
-        const diffs = [];
-        if (change.oldValue.quantity !== change.newValue.quantity) {
-          diffs.push(`数量从 ${change.oldValue.quantity} 改为 ${change.newValue.quantity}`);
-        }
-        if (change.oldValue.price !== change.newValue.price) {
-          diffs.push(`单价从 ${formatAmount(change.oldValue.price)} 改为 ${formatAmount(change.newValue.price)}`);
-        }
-        detail = `修改商品 ${change.newValue.name}：${diffs.join('，')}`;
-      }
-    } else if (change.path.includes('confirmations')) {
-      if (change.type === 'added') {
-        detail = `添加${fieldName}信息`;
-      } else if (change.type === 'deleted') {
-        detail = `删除${fieldName}信息`;
-      } else if (change.type === 'updated') {
-        detail = `更新${fieldName}信息`;
-      }
-    } else {
-      if (change.type === 'added') {
-        detail = `添加${fieldName}：${change.newValue}`;
-      } else if (change.type === 'deleted') {
-        detail = `删除${fieldName}：${change.oldValue}`;
-      } else if (change.type === 'updated') {
-        detail = `${fieldName}从 ${change.oldValue} 改为 ${change.newValue}`;
-      }
-    }
-
-    return {
-      type: change.type,
-      field: fieldName,
-      detail
     };
-  });
-};
 
-context.wpm.export('utils_delivery_diff', {
-  compareObjects,
-  formatDiff
-});
+    try {
+      await api.setMetadata(
+        `${this.indexPrefix}_${formData.id}`,
+        indexData
+      );
+
+      api.log.info('创建表单索引成功', {
+        formId: formData.id,
+        formType: indexData.formType
+      });
+
+      return true;
+    } catch (error) {
+      api.log.error('创建表单索引失败', { error, formId: formData.id });
+      throw error;
+    }
+  }
+
+  // 更新表单结构索引
+  async updateFormIndex(formData) {
+    const indexData = {
+      formId: formData.id,
+      formType: formData.config?.type || 'default',
+      formName: formData.config?.title || '未命名表单',
+      description: formData.config?.description,
+      version: formData.config?.version || '1.0.0',
+      status: formData.status || 'draft',
+      createdAt: formData.createdAt,
+      updatedAt: formData.updatedAt,
+      creator: formData.creator,
+      // 表单结构信息
+      structure: {
+        basicFields: formData.config?.basic?.fields?.length || 0,
+        detailColumns: formData.config?.detail?.columns?.length || 0,
+        confirmForms: formData.config?.confirm?.forms?.length || 0
+      }
+    };
+
+    try {
+      // 检查索引是否存在
+      const existingIndex = await api.getMetadata([`${this.indexPrefix}_${formData.id}`]);
+
+      if (existingIndex?.data?.[0]?.value) {
+        // 更新现有索引
+        await api.setMetadata(
+          `${this.indexPrefix}_${formData.id}`,
+          {
+            ...JSON.parse(existingIndex.data[0].value),
+            ...indexData,
+            updatedAt: new Date().toISOString()
+          }
+        );
+      } else {
+        // 创建新索引
+        await this.createFormIndex(formData);
+      }
+
+      api.log.info('更新表单索引成功', {
+        formId: formData.id,
+        formType: indexData.formType
+      });
+
+      return true;
+    } catch (error) {
+      api.log.error('更新表单索引失败', { error, formId: formData.id });
+      throw error;
+    }
+  }
+
+  // 初始化新表单
+  initNewForm(config) {
+    runInAction(() => {
+      this._formData = {
+        basic: {},
+        detail: [],
+        confirms: [],
+        config: config,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+    });
+  }
+
+  // 创建新表单
+  async createNewForm(config) {
+    const currentUser = await api.getCurrentAccountInfo();
+    if (!currentUser) {
+      throw new Error('获取用户信息失败');
+    }
+
+    const formId = `form_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const now = new Date().toISOString();
+
+    const formData = {
+      id: formId,
+      basic: {},
+      detail: [],
+      confirms: [],
+      config: config,
+      createdAt: now,
+      updatedAt: now,
+      creator: {
+        id: currentUser.id,
+        name: currentUser.name,
+        role: currentUser.role
+      },
+      status: 'draft'
+    };
+
+    try {
+      // 保存表单数据
+      await api.setMetadata(
+        `${this.formPrefix}_${formId}`,
+        formData
+      );
+
+      // 创建表单索引
+      await this.createFormIndex(formData);
+
+      runInAction(() => {
+        this._formData = formData;
+      });
+
+      api.log.info('创建表单成功', {
+        formId,
+        creator: currentUser.name
+      });
+
+      return formId;
+    } catch (error) {
+      api.log.error('创建表单失败', { error });
+      throw error;
+    }
+  }
+
+  // 加载表单数据
+  async loadFormData(formId) {
+    if (!formId) {
+      api.log.error('加载表单数据失败：缺少formId');
+      return false;
+    }
+
+    runInAction(() => {
+      this._isLoading = true;
+      this._error = null;
+    });
+
+    try {
+      const result = await api.getMetadata([`${this.formPrefix}_${formId}`]);
+
+      if (!result?.data?.[0]?.value) {
+        throw new Error('未找到表单数据');
+      }
+
+      const formData = JSON.parse(result.data[0].value);
+
+      runInAction(() => {
+        this._formData = {
+          ...formData,
+          detail: Array.isArray(formData.detail) ? formData.detail : [],
+          confirms: Array.isArray(formData.confirms) ? formData.confirms : []
+        };
+      });
+
+      api.log.info('加载表单数据成功', {
+        formId,
+        formType: formData.config?.type
+      });
+
+      return true;
+    } catch (error) {
+      runInAction(() => {
+        this._error = error.message || '加载失败';
+      });
+      api.log.error('加载表单数据失败', { error, formId });
+      return false;
+    } finally {
+      runInAction(() => {
+        this._isLoading = false;
+      });
+    }
+  }
+
+  // 保存表单数据
+  async saveFormData() {
+    if (!this._formData) {
+      throw new Error('没有可保存的表单数据');
+    }
+
+    // 表单校验
+    if (!this.validateBasicFields()) {
+      throw new Error('请完善基本信息');
+    }
+
+    if (!this.validateDetailData()) {
+      throw new Error('请至少添加一条明细记录');
+    }
+
+    if (!this.validateConfirmData()) {
+      throw new Error('请完成必要的确认信息');
+    }
+
+    const currentUser = await api.getCurrentAccountInfo();
+    if (!currentUser) {
+      throw new Error('获取用户信息失败');
+    }
+
+    const formId = this._formData.id;
+    const now = new Date().toISOString();
+
+    const formData = {
+      ...this._formData,
+      updatedAt: now,
+      operator: {
+        id: currentUser.id,
+        name: currentUser.name,
+        role: currentUser.role,
+        time: now
+      }
+    };
+
+    try {
+      // 保存表单数据
+      await api.setMetadata(
+        `${this.formPrefix}_${formId}`,
+        formData
+      );
+
+      // 更新表单索引
+      await this.updateFormIndex(formData);
+
+      runInAction(() => {
+        this._formData = formData;
+      });
+
+      api.log.info('保存表单数据成功', {
+        formId,
+        formType: formData.config?.type
+      });
+
+      return true;
+    } catch (error) {
+      api.log.error('保存表单数据失败', { error, formId });
+      throw error;
+    }
+  }
+
+  // 清除表单数据
+  clearCurrentForm() {
+    runInAction(() => {
+      this._formData = null;
+      this._error = null;
+      this._isLoading = false;
+    });
+  }
+
+  // 更新基本信息字段
+  updateBasicField(field, value) {
+    if (!this._formData) return;
+
+    runInAction(() => {
+      this._formData.basic = {
+        ...this._formData.basic,
+        [field]: value
+      };
+    });
+  }
+
+  // 添加明细项
+  addDetailItem(item) {
+    if (!this._formData) return;
+
+    runInAction(() => {
+      if (!Array.isArray(this._formData.detail)) {
+        this._formData.detail = [];
+      }
+      this._formData.detail.push({
+        ...item,
+        id: `detail_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      });
+    });
+  }
+
+  // 更新明细项
+  updateDetailItem(index, item) {
+    if (!this._formData?.detail?.[index]) return;
+
+    runInAction(() => {
+      this._formData.detail[index] = {
+        ...item,
+        id: this._formData.detail[index].id
+      };
+    });
+  }
+
+  // 删除明细项
+  removeDetailItem(index) {
+    if (!this._formData?.detail?.[index]) return;
+
+    runInAction(() => {
+      this._formData.detail.splice(index, 1);
+    });
+  }
+
+  // 更新确认表单
+  async updateConfirmForm(formIndex, confirmInfo) {
+    if (!this._formData) return;
+
+    runInAction(() => {
+      if (!Array.isArray(this._formData.confirms)) {
+        this._formData.confirms = [];
+      }
+
+      while (this._formData.confirms.length <= formIndex) {
+        this._formData.confirms.push({});
+      }
+
+      this._formData.confirms[formIndex] = {
+        ...this._formData.confirms[formIndex],
+        ...confirmInfo,
+        updatedAt: new Date().toISOString()
+      };
+    });
+  }
+
+  // 更新确认字段
+  updateConfirmField(formIndex, field, value) {
+    if (!this._formData) return;
+
+    runInAction(() => {
+      if (!Array.isArray(this._formData.confirms)) {
+        this._formData.confirms = [];
+      }
+
+      while (this._formData.confirms.length <= formIndex) {
+        this._formData.confirms.push({});
+      }
+
+      this._formData.confirms[formIndex] = {
+        ...this._formData.confirms[formIndex],
+        [field]: value
+      };
+    });
+  }
+}
+
+const store = new DynamicFormStore();
+context.wpm.export('store_dynamic_form', store);
 </mo-ai-code>
 ```

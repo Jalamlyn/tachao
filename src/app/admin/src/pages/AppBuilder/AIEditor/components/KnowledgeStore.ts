@@ -14,7 +14,7 @@ interface KnowledgeItem {
 class KnowledgeStore {
   private static instance: KnowledgeStore
   private readonly STORAGE_KEY = "mo_knowledge_store"
-  private readonly MAX_CONTEXT_SIZE = 100 * 1024 // 100KB限制
+  private readonly MAX_CONTEXT_SIZE = 300 * 1024 // 300KB限制
 
   knowledge: Record<string, KnowledgeItem> = {}
 
@@ -165,7 +165,7 @@ class KnowledgeStore {
     const selectedKnowledge = Object.values(this.knowledge).filter((item) => item.isSelected)
 
     if (this.isOverSizeLimit) {
-      return "警告：选中的知识内容超过大小限制（100KB），请取消选择一些知识。"
+      return "警告：选中的知识内容超过大小限制（300KB），请取消选择一些知识。"
     }
 
     return selectedKnowledge

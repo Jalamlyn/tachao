@@ -1,7 +1,7 @@
 import expenseTrackerTemplate from "../nextui/nextui_expense_tracker"
 import enterpriseBussiness from "../nextui/nextui_delivery"
 import intelligentFormTemplate from "../nextui/nextui_intelligent_form"
-import formAnalysisTemplate from "../nextui/nextui_form_share copy 2"
+import formAnalysisTemplate from "../nextui/nextui_form_analysis"
 
 export interface AppTemplate {
   id: string
