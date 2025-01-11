@@ -72,10 +72,13 @@ export function useAICommandButton({ input, previews, agent, onResult, onStop }:
 
     try {
       setIsLoading(true)
+      const isPMMode = input.trim().toLowerCase().includes("@pm")
+
       // 保存当前输入，以便发送失败时恢复
       lastInputRef.current = {
         content: input.trim(),
         images: [...previews],
+        mode: isPMMode ? "pm" : "engineer", // 添加模式标记
       }
 
       const messageContent = {
@@ -84,13 +87,13 @@ export function useAICommandButton({ input, previews, agent, onResult, onStop }:
       }
 
       // 立即清空输入和图片
-      onResult?.({ 
-        type: 'clear',
-        content: '',
-        status: 'clear',
-        role: 'system',
+      onResult?.({
+        type: "clear",
+        content: "",
+        status: "clear",
+        role: "system",
         id: Date.now().toString(),
-        images: []
+        images: [],
       })
 
       // 调用AI处理命令，并等待结果
@@ -118,15 +121,15 @@ export function useAICommandButton({ input, previews, agent, onResult, onStop }:
     } catch (error) {
       console.error("Error in AI command:", error)
       message.error("发送消息失败：" + (error instanceof Error ? error.message : "未知错误"))
-      
+
       // 发送失败时，恢复之前的输入
-      onResult?.({ 
-        type: 'restore',
+      onResult?.({
+        type: "restore",
         content: lastInputRef.current.content,
-        status: 'restore',
-        role: 'system',
+        status: "restore",
+        role: "system",
         id: Date.now().toString(),
-        images: lastInputRef.current.images
+        images: lastInputRef.current.images,
       })
     } finally {
       // 设置一个短暂的延时，确保状态正确更新

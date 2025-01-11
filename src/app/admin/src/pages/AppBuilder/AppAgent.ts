@@ -114,15 +114,11 @@ ${modulesContext}
     const allLogs = logStore.getLatestLogs(100, true)
 
     // 优先获取最新的错误和警告日志
-    const errorAndWarnings = allLogs
-      .filter((log) => log.level === "error" || log.level === "warn")
-      .slice(0, MAX_LOGS)
+    const errorAndWarnings = allLogs.filter((log) => log.level === "error" || log.level === "warn").slice(0, MAX_LOGS)
 
     // 如果错误和警告不足MAX_LOGS条，补充其他类型的最新日志
     const remainingCount = MAX_LOGS - errorAndWarnings.length
-    const otherLogs = allLogs
-      .filter((log) => log.level !== "error" && log.level !== "warn")
-      .slice(0, remainingCount)
+    const otherLogs = allLogs.filter((log) => log.level !== "error" && log.level !== "warn").slice(0, remainingCount)
 
     // 合并日志并保持最新的日志在前面
     const relevantLogs = [...errorAndWarnings, ...otherLogs].sort((a, b) => b.timestamp - a.timestamp)
@@ -220,7 +216,7 @@ ${module.data.code}
       // 获取应用列表信息
       const appsContext = await this.getAppsContext()
 
-      const enhancedCommand = `<我的输入>${commandContent}, 生成完整代码必须确保代码是完整的, 不允许用注释省略模块中的任何代码和任何逻辑,禁止生成“// ... 保留原有方法 ...”</我的输入><project>
+      const enhancedCommand = `<我的输入>${commandContent}, 生成完整代码必须确保代码是完整的, 不允许用注释省略模块中的任何代码和任何逻辑,禁止生成“// ... 保留原有方法 ... {/* ... 保留 xxx ... */}, // 在现有的 xxx 中添加以下方法”</我的输入><project>
             ${
               isPMMode
                 ? `

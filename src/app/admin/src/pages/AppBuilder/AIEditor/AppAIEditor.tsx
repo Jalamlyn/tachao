@@ -42,6 +42,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     const scrollContainerRef = useRef<HTMLDivElement>(null)
     const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
     const { copy } = useClipboard()
+    const isPM = useRef(false)
 
     useEffect(() => {
       const timer = setTimeout(() => {
@@ -77,14 +78,14 @@ const AIEditor: React.FC<AIEditorProps> = observer(
     const getMessageSenderInfo = (message: any) => {
       const isUser = message.role === "user"
       if (isUser) {
+        isPM.current = message?.content?.content?.toLowerCase()?.includes("@pm")
         return { avatar: user, role: "用户" }
       }
 
-      const isPM = message.content.toLowerCase().includes("@pm")
       return {
-        avatar: isPM ? pm : mo2,
-        role: isPM ? "产品经理" : "工程师",
-        roleColor: isPM ? "success" : "primary",
+        avatar: isPM.current ? pm : mo2,
+        role: isPM.current ? "产品经理" : "工程师",
+        roleColor: isPM.current ? "success" : "primary",
       }
     }
 
@@ -255,7 +256,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
                 </div>
               </div>
               <ScrollShadow className='flex-1 overflow-y-auto pb-9' ref={scrollContainerRef}>
-                <div className='space-y-4 p-4'>
+                <div className='space-y-4 p-4 pr-6'>
                   {messages.map((message) => renderMessage(message))}
                   <div ref={messagesEndRef} />
                 </div>
