@@ -14,12 +14,12 @@ interface ModuleListProps {
 
 export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
   const [activeSection, setActiveSection] = useState<string>("search")
+  const [hoveredItemId, setHoveredItemId] = useState<string | null>(null)
   const searchRef = useRef<HTMLDivElement>(null)
   const contextRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // 监听滚动位置更新活动区域
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
@@ -45,7 +45,6 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
     return () => container.removeEventListener("scroll", handleScroll)
   }, [])
 
-  // 处理导航点击
   const handleNavClick = (sectionId: string) => {
     const sectionRef = {
       search: searchRef,
@@ -60,7 +59,6 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
       })
     }
 
-    // 添加上下文相关的交互提示
     if (sectionId === "context") {
       const selectedCount = appCodeStore?.viewState?.selectedModules?.length || 0
       const totalCount = appCodeStore.getFilteredCodeItems().length
@@ -76,7 +74,6 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
     }
   }
 
-  // 获取上下文状态
   const getContextStatus = () => {
     const selectedCount = appCodeStore?.viewState?.selectedModules?.length || 0
     const totalCount = appCodeStore.getFilteredCodeItems().length
@@ -127,7 +124,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
       message.error(error.message)
     } finally {
       appCodeStore.viewState.isDeletingModules = false
-      message.destroy() // 清除所有 loading 消息
+      message.destroy()
     }
   }
 
@@ -136,17 +133,17 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
   return (
     <div className='p-2 h-full flex'>
       {/* 左侧导航栏 */}
-      <div className='w-10 flex-shrink-0 border-r pr-2 mr-2'>
-        <div className='sticky top-0 pt-2 flex flex-col items-center gap-2'>
+      <div className='w-8 flex-shrink-0 border-r pr-1 mr-1'>
+        <div className='sticky top-0 pt-2 flex flex-col items-center gap-1.5'>
           <Tooltip content='搜索' placement='right'>
             <Button
               isIconOnly
               size='sm'
               variant='light'
-              className={`w-8 h-8 ${activeSection === "search" ? "bg-primary/10 text-primary" : ""}`}
+              className={`w-6 h-6 min-w-unit-6 ${activeSection === "search" ? "bg-primary/10 text-primary" : ""}`}
               onClick={() => handleNavClick("search")}
             >
-              <Icon icon='mdi:magnify' className='w-5 h-5' />
+              <Icon icon='mdi:magnify' className='w-4 h-4' />
             </Button>
           </Tooltip>
 
@@ -162,12 +159,12 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                 isIconOnly
                 size='sm'
                 variant='light'
-                className={`w-8 h-8 ${activeSection === "context" ? "bg-primary/10 text-primary" : ""}`}
+                className={`w-6 h-6 min-w-unit-6 ${activeSection === "context" ? "bg-primary/10 text-primary" : ""}`}
                 onClick={() => handleNavClick("context")}
               >
                 <Icon
                   icon={contextStatus.icon}
-                  className={`w-5 h-5 ${
+                  className={`w-4 h-4 ${
                     appCodeStore.viewState.useSelectedModulesAsContext &&
                     appCodeStore?.viewState?.selectedModules?.length
                       ? "text-success"
@@ -183,10 +180,10 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
               isIconOnly
               size='sm'
               variant='light'
-              className={`w-8 h-8 ${activeSection === "list" ? "bg-primary/10 text-primary" : ""}`}
+              className={`w-6 h-6 min-w-unit-6 ${activeSection === "list" ? "bg-primary/10 text-primary" : ""}`}
               onClick={() => handleNavClick("list")}
             >
-              <Icon icon='mdi:view-list' className='w-5 h-5' />
+              <Icon icon='mdi:view-list' className='w-4 h-4' />
             </Button>
           </Tooltip>
         </div>
@@ -195,19 +192,19 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
       {/* 主内容区域 */}
       <div ref={containerRef} className='flex-1 overflow-y-auto'>
         {/* 搜索区域 */}
-        <div ref={searchRef} id='search' className='space-y-2 mb-6'>
-          <div className='flex gap-2'>
+        <div ref={searchRef} id='search' className='space-y-2 mb-4'>
+          <div className='flex gap-1'>
             <Input
               type='text'
               placeholder='搜索代码内容/模块名...'
               value={appCodeStore.viewState.searchContent}
               onChange={(e) => appCodeStore.setSearchContent(e.target.value)}
               startContent={
-                <Icon icon='mdi:code-search' className='text-default-400 transition-transform group-hover:scale-110' />
+                <Icon icon='mdi:code-search' className='text-default-400 transition-transform group-hover:scale-110 w-4 h-4' />
               }
               className='w-full group'
               classNames={{
-                inputWrapper: "shadow-sm hover:shadow transition-shadow duration-200",
+                inputWrapper: "shadow-sm hover:shadow transition-shadow duration-200 h-8",
                 input: "text-sm",
               }}
             />
@@ -217,20 +214,20 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className='text-xs text-default-500 pl-2 flex items-center gap-2'
+              className='text-xs text-default-500 pl-1 flex items-center gap-1'
             >
-              <Icon icon='mdi:search-web' className='w-4 h-4' />
+              <Icon icon='mdi:search-web' className='w-3 h-3' />
               找到 {appCodeStore.viewState.searchResults.length} 个匹配结果
             </motion.div>
           )}
         </div>
 
-        {/* 独立的上下文区域 */}
+        {/* 上下文区域 */}
         {appCodeStore.viewState.useSelectedModulesAsContext && appCodeStore?.viewState?.selectedModules?.length > 0 && (
-          <div ref={contextRef} id='context' className='mb-6'>
+          <div ref={contextRef} id='context' className='mb-4'>
             <Card className='bg-default-50/80 backdrop-blur-sm shadow-sm'>
-              <div className='p-3'>
-                <div className='font-medium mb-2 flex items-center justify-between'>
+              <div className='p-2'>
+                <div className='text-sm font-medium mb-1.5 flex items-center justify-between'>
                   <span>当前上下文模块</span>
                   <Button
                     size='sm'
@@ -238,21 +235,22 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                     variant='light'
                     onClick={() => appCodeStore.toggleUseSelectedModulesAsContext()}
                     startContent={
-                      <Icon icon='material-symbols:contextual-token-add-outline-sharp' className='w-4 h-4' />
+                      <Icon icon='material-symbols:contextual-token-add-outline-sharp' className='w-3 h-3' />
                     }
+                    className='min-w-unit-16 h-6'
                   >
                     清除上下文
                   </Button>
                 </div>
                 <div className='flex flex-wrap gap-1'>
                   {appCodeStore.getSelectedModulesInfo().map((module) => (
-                    <Chip key={module.id} size='sm' variant='flat' className='transition-transform hover:scale-105'>
+                    <Chip key={module.id} size='sm' variant='flat' className='transition-transform hover:scale-105 h-5'>
                       <div className='flex items-center gap-1'>
                         <Icon
                           icon={getCodeTypeIcon(module.type)}
                           className={`w-3 h-3 text-${getCodeTypeColor(module.type)}`}
                         />
-                        <span>{module.title || module.name}</span>
+                        <span className='text-xs'>{module.title || module.name}</span>
                       </div>
                     </Chip>
                   ))}
@@ -263,24 +261,24 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
         )}
 
         {/* 模块列表 */}
-        <div ref={listRef} id='list' className='space-y-2'>
+        <div ref={listRef} id='list' className='space-y-1.5'>
           {appCodeStore?.viewState?.selectedModules?.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className='mb-4'
+              className='mb-3'
             >
               <Card className='bg-default-100/80 backdrop-blur-sm shadow-sm'>
-                <div className='p-3'>
+                <div className='p-2'>
                   <div className='flex flex-col items-center justify-between'>
-                    <div className='text-sm text-left font-medium p-2'>
+                    <div className='text-sm text-left font-medium p-1'>
                       已选择 {appCodeStore?.viewState?.selectedModules?.length} 个模块
                       {!appCodeStore.viewState.useSelectedModulesAsContext && (
-                        <span className='text-default-400 text-xs ml-2'>(尚未用作上下文)</span>
+                        <span className='text-default-400 text-xs ml-1'>(尚未用作上下文)</span>
                       )}
                     </div>
-                    <div className='flex gap-2'>
+                    <div className='flex gap-1'>
                       <Button
                         size='sm'
                         color='danger'
@@ -289,7 +287,8 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                         onClick={() => {
                           appCodeStore.viewState.showDeleteConfirm = true
                         }}
-                        startContent={!appCodeStore.viewState.isDeletingModules && <Icon icon='mdi:delete' className='w-4 h-4' />}
+                        startContent={!appCodeStore.viewState.isDeletingModules && <Icon icon='mdi:delete' className='w-3 h-3' />}
+                        className='min-w-unit-16 h-6'
                       >
                         {appCodeStore.viewState.isDeletingModules ? '检查依赖中...' : '删除'}
                       </Button>
@@ -298,7 +297,8 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                         color='primary'
                         variant='flat'
                         onClick={() => appCodeStore.toggleUseSelectedModulesAsContext()}
-                        startContent={<Icon icon='material-symbols:contextual-token-add-rounded' className='w-4 h-4' />}
+                        startContent={<Icon icon='material-symbols:contextual-token-add-rounded' className='w-3 h-3' />}
+                        className='min-w-unit-16 h-6'
                       >
                         {appCodeStore.viewState.useSelectedModulesAsContext ? "取消上下文" : "用作上下文"}
                       </Button>
@@ -317,8 +317,10 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 whileHover={{ x: 5 }}
+                onMouseEnter={() => setHoveredItemId(item.id)}
+                onMouseLeave={() => setHoveredItemId(null)}
                 className={`
-                  group relative rounded-xl border border-transparent
+                  group relative rounded-lg border border-transparent
                   ${
                     appCodeStore.viewState.selectedCodeId === item.id
                       ? "bg-primary/5 border-primary/10 shadow-sm"
@@ -327,7 +329,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                   transition-all duration-300 ease-in-out
                 `}
               >
-                <div className='flex items-center gap-4 px-4 py-3'>
+                <div className='flex items-center gap-2 px-2 py-2'>
                   {item.type !== "app" && (
                     <Checkbox
                       size='sm'
@@ -343,38 +345,51 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                       }}
                       onClick={(e) => e.stopPropagation()}
                       className='transition-transform group-hover:scale-110'
+                      classNames={{
+                        wrapper: "w-3 h-3",
+                      }}
                     />
                   )}
 
                   <div
-                    className='flex-1 flex items-center gap-4 cursor-pointer min-w-0'
+                    className='flex-1 flex items-center gap-2 cursor-pointer min-w-0'
                     onClick={() => appCodeStore.handleCodeSelect(item.id)}
                   >
-                    <div className='w-7 h-7 rounded-lg bg-default-50 flex items-center justify-center'>
-                      <Icon
-                        icon={getCodeTypeIcon(item.type)}
-                        className={`w-4 h-4 transition-transform group-hover:scale-110 text-${getCodeTypeColor(
-                          item.type
-                        )}`}
-                      />
+                    <div className='flex-1 min-w-0'>
+                      <span className='text-sm font-medium truncate tracking-wide leading-snug block'>{item.title}</span>
+                      <div className='flex items-center gap-2 text-xs text-default-400'>
+                        <span className='truncate tracking-wide'>{item.name}</span>
+                        <span className='flex-shrink-0'>
+                          {new Date(item.updatedAt).toLocaleString("zh-CN", {
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
                     </div>
-
-                    <div className='flex flex-col flex-1 min-w-0'>
-                      <span className='text-sm font-medium truncate tracking-wide leading-snug'>{item.title}</span>
-
-                      <span className='text-xs text-default-400 mt-0.5 truncate tracking-wide leading-snug'>
-                        {item.name}
-                      </span>
-                      <span className='text-xs text-default-300 mt-0.5'>
-                        {new Date(item.updatedAt).toLocaleString("zh-CN", {
-                          year: "numeric",
-                          month: "2-digit",
-                          day: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
+                    
+                    {/* 右上角图标，只在hover时显示 */}
+                    <AnimatePresence>
+                      {hoveredItemId === item.id && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          className='absolute right-2 top-2'
+                        >
+                          <div className='w-5 h-5 rounded-md bg-default-50 flex items-center justify-center flex-shrink-0'>
+                            <Icon
+                              icon={getCodeTypeIcon(item.type)}
+                              className={`w-3 h-3 transition-transform group-hover:scale-110 text-${getCodeTypeColor(
+                                item.type
+                              )}`}
+                            />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </motion.div>
