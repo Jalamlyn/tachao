@@ -65,19 +65,40 @@ export interface ViewState {
   showImportModal: boolean
   showConfirmModal: boolean
   showVersionInfo: boolean
-  showExportModal: boolean // 新增这一行
+  showExportModal: boolean
   importContent: string
   isImporting: boolean
   pendingImportContent: string
   selectedModules: string[]
   showDeleteConfirm: boolean
-  useSelectedModulesAsContext: boolean // 新增：是否使用选中模块作为上下文
+  useSelectedModulesAsContext: boolean
+  isDeletingModules?: boolean // 新增：模块删除loading状态
 }
 
 export interface PublishedVersion {
   version: number
   publishedAt: string
   modules: Record<string, ModuleData>
+}
+
+export interface DependencyCheckResult {
+  canDelete: boolean
+  dependencies: Array<{
+    moduleId: string
+    name: string
+    dependentModules: Array<{
+      moduleId: string
+      name: string
+      title: string
+    }>
+  }>
+}
+
+export interface DependencyCheckProgress {
+  current: number
+  total: number
+  currentModule: string
+  status: string
 }
 
 export interface AppCodeStore {
@@ -109,8 +130,8 @@ export interface AppCodeStore {
   generateId(): string
   getLastPublishedVersion(): Promise<PublishedVersion | null>
   rollbackToLastPublished(): Promise<boolean>
-  deleteModules(moduleIds: string[]): Promise<Version>
-  getContextModules(): Record<string, ModuleWrapper> // 新增：获取当前上下文模块方法
-  toggleUseSelectedModulesAsContext(): void // 新增：切换是否使用选中模块作为上下文
-  getSelectedModulesInfo(): Array<{ id: string; name: string; title: string; type: ModuleType }> // 新增：获取选中模块信息
+  deleteModules(moduleIds: string[], onProgress?: (progress: DependencyCheckProgress) => void): Promise<Version>
+  getContextModules(): Record<string, ModuleWrapper>
+  toggleUseSelectedModulesAsContext(): void
+  getSelectedModulesInfo(): Array<{ id: string; name: string; title: string; type: ModuleType }>
 }

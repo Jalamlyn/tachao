@@ -106,6 +106,31 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
     }
   }
 
+  const handleDelete = async () => {
+    try {
+      appCodeStore.viewState.isDeletingModules = true
+      message.loading('正在检查模块依赖关系...', 0)
+      
+      await appCodeStore.deleteModules(
+        appCodeStore.viewState.selectedModules,
+        (progress) => {
+          message.loading(
+            `正在检查依赖 (${progress.current}/${progress.total}): ${progress.status}`,
+            0
+          )
+        }
+      )
+      
+      message.success('模块删除成功')
+      appCodeStore.viewState.showDeleteConfirm = false
+    } catch (error) {
+      message.error(error.message)
+    } finally {
+      appCodeStore.viewState.isDeletingModules = false
+      message.destroy() // 清除所有 loading 消息
+    }
+  }
+
   const contextStatus = getContextStatus()
 
   return (
@@ -260,12 +285,13 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                         size='sm'
                         color='danger'
                         variant='flat'
+                        isLoading={appCodeStore.viewState.isDeletingModules}
                         onClick={() => {
                           appCodeStore.viewState.showDeleteConfirm = true
                         }}
-                        startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
+                        startContent={!appCodeStore.viewState.isDeletingModules && <Icon icon='mdi:delete' className='w-4 h-4' />}
                       >
-                        删除
+                        {appCodeStore.viewState.isDeletingModules ? '检查依赖中...' : '删除'}
                       </Button>
                       <Button
                         size='sm'
