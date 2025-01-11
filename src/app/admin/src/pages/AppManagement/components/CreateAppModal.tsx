@@ -11,6 +11,8 @@ import {
   CardBody,
   Divider,
   useDisclosure,
+  RadioGroup,
+  Radio,
 } from "@nextui-org/react"
 import { useNavigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
@@ -21,6 +23,7 @@ import { getCurrentAccountInfo } from "@/service/apis/user"
 import message from "@/components/Message"
 import { TemplateSection } from "./components/TemplateSection"
 import { SuccessDialog, DeleteConfirmDialog } from "./CreateAppModalDialogs"
+import { multiPageTemplate, singlePageTemplate } from "@/app/admin/src/pages/AppBuilder/prompts/nextui/initTemplate"
 
 interface CreateAppModalProps {
   isOpen: boolean
@@ -36,6 +39,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   const [newAppId, setNewAppId] = useState<string>("")
   const [loading, setLoading] = useState(false)
   const [createMode, setCreateMode] = useState<"scratch" | "template">("scratch")
+  const [initTemplateType, setInitTemplateType] = useState<"multi" | "single">("multi")
   const [isAdmin, setIsAdmin] = useState(false)
   const [templateToDelete, setTemplateToDelete] = useState(null)
   const { isOpen: isDeleteConfirmOpen, onOpen: onDeleteConfirmOpen, onClose: onDeleteConfirmClose } = useDisclosure()
@@ -76,7 +80,12 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
     if (!title.trim()) return
     try {
       setLoading(true)
-      const appId = await appCodeStore.createApp(title.trim(), selectedTemplate)
+      // 根据选择的模板类型使用不同的模板
+      const templateCode = createMode === "scratch" 
+        ? (initTemplateType === "multi" ? multiPageTemplate : singlePageTemplate)
+        : selectedTemplate
+      
+      const appId = await appCodeStore.createApp(title.trim(), templateCode)
       setNewAppId(appId)
       setTitle("")
       setSelectedTemplate("")
@@ -144,6 +153,49 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
     </div>
   )
 
+  const renderInitTemplateOptions = () => (
+    <div className="mt-4 space-y-4">
+      <p className="text-sm text-default-700 font-medium">选择初始化模板类型：</p>
+      <RadioGroup
+        value={initTemplateType}
+        onValueChange={(value) => setInitTemplateType(value as "multi" | "single")}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Radio
+            value="multi"
+            description="包含路由配置，适合构建完整应用，可集成单页模块"
+            className="max-w-full"
+          >
+            多页应用
+          </Radio>
+          <Radio
+            value="single"
+            description="无路由配置，适合单一功能模块，可被多页应用集成"
+            className="max-w-full"
+          >
+            单页模块
+          </Radio>
+        </div>
+      </RadioGroup>
+      
+      <div className="mt-4 p-3 bg-default-100 rounded-lg">
+        <p className="text-sm text-default-600">
+          {initTemplateType === "multi" ? (
+            <span>
+              <Icon icon="mdi:information" className="inline-block w-4 h-4 mr-1" />
+              多页应用包含完整的路由配置，适合构建需要多个页面的完整应用。您可以在此基础上集成单页模块，扩展应用功能。
+            </span>
+          ) : (
+            <span>
+              <Icon icon="mdi:information" className="inline-block w-4 h-4 mr-1" />
+              单页模块专注于单一功能，不包含路由配置。它可以独立运行，也可以被集成到多页应用中，实现功能复用。
+            </span>
+          )}
+        </p>
+      </div>
+    </div>
+  )
+
   return (
     <>
       <Modal
@@ -171,6 +223,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
 
             <div className='space-y-6'>
               {renderCreateOptions()}
+              {createMode === "scratch" && renderInitTemplateOptions()}
               {createMode === "template" && (
                 <div className='mt-6'>
                   <Divider className='my-6' />
