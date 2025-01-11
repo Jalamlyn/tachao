@@ -61,7 +61,7 @@ export const ErrorPrompt = ({ error, onFix }) => {
 // 发布模态框组件
 export const PublishModal = ({ isOpen, onClose, appId }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size='4xl'>
+    <Modal isOpen={isOpen} onClose={onClose} size='3xl'>
       <ModalContent>
         <ModalHeader className='flex flex-col gap-1'>
           <div className='flex items-center gap-2'>

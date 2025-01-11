@@ -52,50 +52,44 @@ interface LogViewerProps {
 
 // 防抖 hook
 function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
+  const [debouncedValue, setDebouncedValue] = useState(value)
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
+      setDebouncedValue(value)
+    }, delay)
 
     return () => {
-      clearTimeout(timer);
-    };
-  }, [value, delay]);
+      clearTimeout(timer)
+    }
+  }, [value, delay])
 
-  return debouncedValue;
+  return debouncedValue
 }
 
 const LogHelpTip: React.FC<{ completeness: any }> = ({ completeness }) => {
-  if (!completeness || completeness.isComplete) return null;
+  if (!completeness || completeness.isComplete) return null
 
   return (
-    <Card className="p-4 mb-4 bg-default-50">
-      <div className="flex items-start gap-2">
-        <Icon icon="solar:info-circle-linear" className="text-primary mt-1" />
-        <div className="flex-1">
-          <p className="text-sm font-medium m-2">日志可能不完整</p>
-          <p className="text-sm text-default-600 mb-2">{completeness.summary}</p>
-          <div className="text-sm text-default-500">
+    <Card className='p-4 mb-4 bg-default-50'>
+      <div className='flex items-start gap-2'>
+        <Icon icon='solar:info-circle-linear' className='text-primary mt-1' />
+        <div className='flex-1'>
+          <p className='text-sm font-medium m-2'>日志可能不完整</p>
+          <p className='text-sm text-default-600 mb-2'>{completeness.summary}</p>
+          <div className='text-sm text-default-500'>
             <p>建议操作：</p>
-            <ul className="list-disc pl-4 mt-1">
-              {completeness.missingAspects.timeGaps && (
-                <li>使用时间筛选查看特定时间段的日志</li>
-              )}
-              {completeness.missingAspects.missingLevels && (
-                <li>调整日志级别筛选，确保包含所有必要的日志级别</li>
-              )}
-              {completeness.missingAspects.limitedRange && (
-                <li>导出更多日志以获取完整上下文</li>
-              )}
+            <ul className='list-disc pl-4 mt-1'>
+              {completeness.missingAspects.timeGaps && <li>使用时间筛选查看特定时间段的日志</li>}
+              {completeness.missingAspects.missingLevels && <li>调整日志级别筛选，确保包含所有必要的日志级别</li>}
+              {completeness.missingAspects.limitedRange && <li>导出更多日志以获取完整上下文</li>}
             </ul>
           </div>
         </div>
       </div>
     </Card>
-  );
-};
+  )
+}
 
 const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100vh-250px)" }) => {
   const [logs, setLogs] = useState(logStore.logs)
@@ -105,9 +99,9 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
   const [completeness, setCompleteness] = useState<any>(null)
   const [reverseOrder, setReverseOrder] = useState(true) // 新增：控制日志排序方向
   const scrollRef = useRef<HTMLDivElement>(null)
-  
+
   // 使用防抖处理搜索
-  const debouncedSearch = useDebounce(search, 300);
+  const debouncedSearch = useDebounce(search, 300)
 
   useEffect(() => {
     const unsubscribe = logStore.subscribe(() => {
@@ -127,12 +121,11 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
   // 使用 useMemo 优化过滤逻辑
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
-      const matchesLevel = selectedLevel === "all" || log.level === selectedLevel;
-      const matchesSearch = !debouncedSearch || 
-        log.message.toLowerCase().includes(debouncedSearch.toLowerCase());
-      return matchesLevel && matchesSearch;
-    });
-  }, [logs, selectedLevel, debouncedSearch]);
+      const matchesLevel = selectedLevel === "all" || log.level === selectedLevel
+      const matchesSearch = !debouncedSearch || log.message.toLowerCase().includes(debouncedSearch.toLowerCase())
+      return matchesLevel && matchesSearch
+    })
+  }, [logs, selectedLevel, debouncedSearch])
 
   const handleClear = () => {
     logStore.clear()
@@ -141,7 +134,8 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
   const handleExport = () => {
     const blob = new Blob([logStore.export()], { type: "application/json" })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")a.href = url
+    const a = document.createElement("a")
+    a.href = url
     a.download = `logs-${new Date().toISOString()}.json`
     document.body.appendChild(a)
     a.click()
@@ -204,14 +198,14 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
             )}
           </Select>
           <Switch
-            size="sm"
+            size='sm'
             isSelected={reverseOrder}
             onValueChange={setReverseOrder}
-            startContent={<Icon icon="solar:sort-by-time-linear" />}
+            startContent={<Icon icon='solar:sort-by-time-linear' />}
           >
             最新日志在顶部
           </Switch>
-          <Chip variant="flat" size="sm" className="bg-default-100">
+          <Chip variant='flat' size='sm' className='bg-default-100'>
             共 {logs.length} 条日志
             {filteredLogs.length !== logs.length && ` (已筛选 ${filteredLogs.length} 条)`}
           </Chip>
