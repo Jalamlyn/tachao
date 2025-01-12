@@ -1,9 +1,9 @@
-import expenseTrackerTemplate from "../nextui/nextui_expense_tracker"
-import enterpriseBussiness from "../nextui/nextui_delivery"
-import intelligentFormTemplate from "../nextui/nextui_intelligent_form"
-import formAnalysisTemplate from "../nextui/nextui_form_analysis"
-import formBackendTemplate from "../nextui/nextui_form_backend"
-import formAIAssistantTemplate from "../nextui/nextui_form_ai_assistant"
+import expenseTrackerTemplate from "./nextui/nextui_expense_tracker"
+import enterpriseBussiness from "./nextui/nextui_delivery"
+import intelligentFormTemplate from "./nextui/nextui_intelligent_form"
+import formAnalysisTemplate from "./nextui/nextui_form_analysis"
+import formBackendTemplate from "./nextui/nextui_form_backend"
+import formAIAssistantTemplate from "./nextui/nextui_form_ai_assistant"
 
 export interface AppTemplate {
   id: string

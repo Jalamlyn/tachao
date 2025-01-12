@@ -1,10 +1,8 @@
 import chatChunkExpert from "@/service/chat/chat-chunk-openrouter"
 import chatChunkFree from "@/service/chat/chat-chunk-openrouter-free"
-// import chatChunkExpert from "@/service/chat/chat-deepseek"
 import { AppBuilderMessage } from "./types"
 import { balanceStore } from "@/stores/balanceStore"
 import { appCodeStore } from "./store/appCodeStore"
-import { promptsComposer } from "./prompts"
 import { logStore } from "./AIEditor/components/LogStore"
 import { knowledgeStore } from "./AIEditor/components/KnowledgeStore"
 import { getMetadata } from "@/service/apis/metadata"
@@ -111,21 +109,12 @@ ${modulesContext}
 
   private getRelevantLogs(): { logs: string; completeness: any } {
     const MAX_LOGS = 10
-    // 修改：获取最新的日志，使用 reverse=true 确保最新的日志在前面
     const allLogs = logStore.getLatestLogs(100, true)
-
-    // 优先获取最新的错误和警告日志
     const errorAndWarnings = allLogs.filter((log) => log.level === "error" || log.level === "warn").slice(0, MAX_LOGS)
-
-    // 如果错误和警告不足MAX_LOGS条，补充其他类型的最新日志
     const remainingCount = MAX_LOGS - errorAndWarnings.length
     const otherLogs = allLogs.filter((log) => log.level !== "error" && log.level !== "warn").slice(0, remainingCount)
-
-    // 合并日志并保持最新的日志在前面
     const relevantLogs = [...errorAndWarnings, ...otherLogs].sort((a, b) => b.timestamp - a.timestamp)
-
     const completeness = logStore.checkLogsCompleteness(relevantLogs)
-
     const logsText = relevantLogs
       .map(
         (log) =>
@@ -159,7 +148,10 @@ ${modulesContext}
       const isPMMode = commandContent.trim().toLowerCase().startsWith("@pm")
 
       appCodeStore.setAppId(appId)
-      const systemPrompt = await promptsComposer.getSystemPrompt()
+
+      // 获取资料数据
+      const result = await getMetadata(["resource_index"])
+      const resources = JSON.parse(result.data?.[0]?.value || "[]")
 
       const allModules = appCodeStore.currentVersion?.modules || {}
 
@@ -175,7 +167,6 @@ ${modulesContext}
           relevantModules = allModules
           moduleSelectionMode = "all"
         } else {
-          // const relevantIds = await this.getRelevantModuleIds(allModules, command)
           const relevantIds = []
           if (relevantIds.length === 0) {
             relevantModules = allModules
@@ -211,10 +202,7 @@ ${module.data.code}
         .join("\n---\n")
 
       const { logs: relevantLogs, completeness } = this.getRelevantLogs()
-      // 获取知识库内容
       const knowledgeContext = knowledgeStore.getKnowledgeContext()
-
-      // 获取应用列表信息
       const appsContext = await this.getAppsContext()
 
       const enhancedCommand = `<我的输入>${commandContent}, 生成完整代码必须确保代码是完整的</我的输入><project>
@@ -286,7 +274,6 @@ ${module.data.code}
             <我的输入>${commandContent}</我的输入>`
 
       const allMessages = [
-        { role: "system", content: systemPrompt },
         ...messages,
         {
           role: "user",
@@ -305,7 +292,11 @@ ${module.data.code}
         },
         () => {},
         true,
-        0
+        0,
+        "YES",
+        {
+          resources, // 传递资料数据给后端
+        }
       )
 
       const version = await appCodeStore.handleAIGeneration(response)

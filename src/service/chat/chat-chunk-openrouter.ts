@@ -54,7 +54,8 @@ export default async function chatChunkOpenAIOffice(
   onCancel,
   isFirst = true,
   temperature = 0,
-  overFlag = "YES"
+  overFlag = "YES",
+  promptData = {}
 ) {
   let _messages = messages
   if (isFirst) {
@@ -97,6 +98,7 @@ export default async function chatChunkOpenAIOffice(
   const payload = {
     model: selectedModel,
     messages: _messages,
+    promptData,
     stream: true,
   }
 
