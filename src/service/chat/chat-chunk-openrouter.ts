@@ -5,6 +5,63 @@ import { events } from "fetch-event-stream"
 import { costService } from "@/utils/costService"
 import { aiControllerStore } from "@/app/admin/src/pages/AppBuilder/AIEditor/components/AIControllerStore"
 
+const AI_MODELS = {
+  BASIC: "anthropic/claude-3.5-haiku-20241022:beta",
+  ADVANCED: "anthropic/claude-3.5-sonnet:beta",
+}
+
+function selectModel(messages) {
+  // 检查是否以 @pm 开头
+  const lastMessage = messages[messages.length - 1]
+  if (lastMessage?.content[0]?.text.includes("@pm")) {
+    return AI_MODELS.BASIC
+  }
+
+  // 检查是否有图片
+  const hasImages = messages.some((msg) => msg.images && msg.images.length > 0)
+  if (hasImages) {
+    return AI_MODELS.ADVANCED
+  }
+
+  // 过滤掉 @pm 开头的消息及其对应的 AI 响应
+  const filteredMessages = []
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i]
+    if (msg.role === "user" && msg.content[0]?.text?.includes?.("@pm")) {
+      // 跳过这条消息和下一条 AI 响应
+      i++
+      continue
+    }
+    filteredMessages.push(msg)
+  }
+
+  // 检查消息长度
+  const lastFilteredMessage = filteredMessages[filteredMessages.length - 1]
+  const messageLength = lastFilteredMessage?.content?.length || 0
+
+  return messageLength > 4 ? AI_MODELS.BASIC : AI_MODELS.ADVANCED
+}
+
+// 清理AI响应中的代码块
+function cleanAIResponse(content) {
+  if (typeof content === 'string') {
+    // 使用与 extractShataAICodes 相同的正则模式
+    return content.replace(/<mo-ai-code[^>]*>[\s\S]*?<\/mo-ai-code>/g, '');
+  }
+  if (Array.isArray(content)) {
+    return content.map(item => {
+      if (item.type === 'text' && typeof item.text === 'string') {
+        return {
+          ...item,
+          text: item.text.replace(/<mo-ai-code[^>]*>[\s\S]*?<\/mo-ai-code>/g, '')
+        };
+      }
+      return item;
+    });
+  }
+  return content;
+}
+
 export default async function chatChunkOpenAIOffice(
   messages,
   onChunk,
@@ -18,6 +75,17 @@ export default async function chatChunkOpenAIOffice(
     _messages = messages.map((msg, index) => {
       if (msg.role === "system") {
         return msg
+      } else if (msg.role === "assistant") {
+        // 清理AI响应中的代码块
+        return {
+          role: msg.role,
+          content: [
+            {
+              type: "text",
+              text: typeof msg.content === 'string' ? cleanAIResponse(msg.content) : msg.content[0]?.text
+            }
+          ]
+        }
       } else {
         return {
           role: msg.role,
@@ -35,14 +103,18 @@ export default async function chatChunkOpenAIOffice(
 
   const apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-openrouter"
 
+  // 选择模型
+  const selectedModel = selectModel(_messages)
+  // 保存当前使用的模型到 sessionStorage
+  sessionStorage.setItem("currentAIModel", selectedModel)
+
   const payload = {
-    // model: "anthropic/claude-3.5-haiku-20241022:beta",
+    model: selectedModel,
     messages: _messages,
     stream: true,
   }
 
   let controller = new AbortController()
-  // 同时使用全局控制器和现有的 fetchController
   aiControllerStore.setController(controller)
   fetchController.current = controller
   onCancel(() => {
@@ -77,7 +149,6 @@ export default async function chatChunkOpenAIOffice(
           fullContent += content
           onChunk(content)
 
-          // 检查是否有 usage 数据并计算费用
           if (parsed?.usage) {
             const model = sessionStorage.getItem("aiLevel") || "ADVANCED"
             await costService.recordTokenUsage(
@@ -87,12 +158,10 @@ export default async function chatChunkOpenAIOffice(
                 model: model,
                 content: fullContent,
               },
-              true // 使用 wild 模式的计费标准
+              true
             )
           }
-          // 检查停止原因
           if (parsed?.choices[0]?.finish_reason === "max_tokens") {
-            // 如果停止原因是 length，则继续调用
             const lastTenChars = fullContent.slice(-10)
             await chatChunkOpenAIOffice(
               _messages.concat([
@@ -113,7 +182,7 @@ export default async function chatChunkOpenAIOffice(
               temperature,
               overFlag
             )
-            return // 结束当前调用
+            return
           }
         } catch (error) {
           console.log("Error parsing JSON:", error)
@@ -131,3 +200,5 @@ export default async function chatChunkOpenAIOffice(
     throw error
   }
 }
+
+export { AI_MODELS }
