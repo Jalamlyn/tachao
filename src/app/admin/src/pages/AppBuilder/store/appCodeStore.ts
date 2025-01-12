@@ -123,6 +123,37 @@ class AppCodeStore {
   get appId(): string | null {
     return this.#appId
   }
+
+  // 新增: 重命名应用方法
+  async renameApp(newName: string): Promise<void> {
+    if (!this.currentVersion) {
+      throw new Error("No current version")
+    }
+
+    try {
+      // 创建新版本
+      const newVersion: Version = {
+        timestamp: Date.now(),
+        app: {
+          ...this.currentVersion.app,
+          name: newName, // 更新应用名称
+          version: Date.now(),
+          updatedAt: new Date().toISOString(),
+        },
+        modules: { ...this.currentVersion.modules },
+      }
+
+      // 添加新版本
+      this.addVersion(newVersion)
+
+      // 发布到服务器以保持同步
+      await this.publishToServer({ useLatest: true })
+    } catch (error) {
+      console.error("Error renaming app:", error)
+      throw error
+    }
+  }
+
   clearViewState() {
     this.viewState = initViewState()
   }

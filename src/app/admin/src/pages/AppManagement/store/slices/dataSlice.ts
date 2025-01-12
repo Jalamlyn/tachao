@@ -4,6 +4,7 @@ import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { getCurrentAccountInfo } from "@/service/apis/user"
 import message from "@/components/Message"
 import { AppStore, AppDataSlice, AppIndex, UpdateAppConfigInput, RenameAppInput } from "../types"
+import { appCodeStore } from "@/app/admin/src/pages/AppBuilder/store/appCodeStore"
 
 const QUERY_KEYS = {
   apps: ["apps"] as const,
@@ -239,8 +240,13 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
         queryClient.setQueryData(QUERY_KEYS.apps, updatedData)
 
         try {
+          // 更新应用索引
           await setMetadata("app_index", JSON.stringify(updatedData))
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.apps })
+
+          // 同时更新应用数据中的名称
+          await appCodeStore.renameApp(title.trim())
+          
           message.success("应用重命名成功")
         } catch (error) {
           queryClient.setQueryData(QUERY_KEYS.apps, currentData)
