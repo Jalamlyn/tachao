@@ -23,43 +23,29 @@ function selectModel(messages) {
     return AI_MODELS.ADVANCED
   }
 
-  // 过滤掉 @pm 开头的消息及其对应的 AI 响应
-  const filteredMessages = []
-  for (let i = 0; i < messages.length; i++) {
-    const msg = messages[i]
-    if (msg.role === "user" && msg.content[0]?.text?.includes?.("@pm")) {
-      // 跳过这条消息和下一条 AI 响应
-      i++
-      continue
-    }
-    filteredMessages.push(msg)
-  }
-
   // 检查消息长度
-  const lastFilteredMessage = filteredMessages[filteredMessages.length - 1]
-  const messageLength = lastFilteredMessage?.content?.length || 0
 
-  return messageLength > 4 ? AI_MODELS.BASIC : AI_MODELS.ADVANCED
+  return AI_MODELS.ADVANCED
 }
 
 // 清理AI响应中的代码块
 function cleanAIResponse(content) {
-  if (typeof content === 'string') {
+  if (typeof content === "string") {
     // 使用与 extractShataAICodes 相同的正则模式
-    return content.replace(/<mo-ai-code[^>]*>[\s\S]*?<\/mo-ai-code>/g, '');
+    return content.replace(/<mo-ai-code[^>]*>[\s\S]*?<\/mo-ai-code>/g, "")
   }
   if (Array.isArray(content)) {
-    return content.map(item => {
-      if (item.type === 'text' && typeof item.text === 'string') {
+    return content.map((item) => {
+      if (item.type === "text" && typeof item.text === "string") {
         return {
           ...item,
-          text: item.text.replace(/<mo-ai-code[^>]*>[\s\S]*?<\/mo-ai-code>/g, '')
-        };
+          text: item.text.replace(/<mo-ai-code[^>]*>[\s\S]*?<\/mo-ai-code>/g, ""),
+        }
       }
-      return item;
-    });
+      return item
+    })
   }
-  return content;
+  return content
 }
 
 export default async function chatChunkOpenAIOffice(
@@ -82,9 +68,9 @@ export default async function chatChunkOpenAIOffice(
           content: [
             {
               type: "text",
-              text: typeof msg.content === 'string' ? cleanAIResponse(msg.content) : msg.content[0]?.text
-            }
-          ]
+              text: typeof msg.content === "string" ? cleanAIResponse(msg.content) : msg.content[0]?.text,
+            },
+          ],
         }
       } else {
         return {

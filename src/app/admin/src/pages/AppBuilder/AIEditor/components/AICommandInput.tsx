@@ -28,14 +28,14 @@ const MODEL_INFO = {
     name: "Claude 3.5 Haiku",
     description: "快速响应，适合简单任务",
     icon: "solar:rocket-minimalistic-linear",
-    color: "success"
+    color: "success",
   },
-  "anthropic/claude-3.5-sonnet": {
+  "anthropic/claude-3.5-sonnet:beta": {
     name: "Claude 3.5 Sonnet",
     description: "强大性能，适合复杂任务",
     icon: "solar:star-linear",
-    color: "primary"
-  }
+    color: "primary",
+  },
 }
 
 interface AIAgent {
@@ -104,7 +104,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   // 监听当前模型变化
   useEffect(() => {
     const checkCurrentModel = () => {
-      const model = sessionStorage.getItem('currentAIModel')
+      const model = sessionStorage.getItem("currentAIModel")
       if (model && model !== currentModel) {
         setCurrentModel(model)
       }
@@ -355,21 +355,21 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
         {/* 添加模型信息显示 */}
         {currentModel && (
           <div className='px-4 pt-2'>
-            <Popover placement="top">
+            <Popover placement='top'>
               <PopoverTrigger>
                 <Chip
-                  variant="flat"
+                  variant='flat'
                   color={MODEL_INFO[currentModel]?.color as any}
-                  startContent={<Icon icon={MODEL_INFO[currentModel]?.icon} className="w-3 h-3" />}
-                  className="cursor-help"
+                  startContent={<Icon icon={MODEL_INFO[currentModel]?.icon} className='w-3 h-3' />}
+                  className='cursor-help'
                 >
                   {MODEL_INFO[currentModel]?.name}
                 </Chip>
               </PopoverTrigger>
               <PopoverContent>
-                <div className="px-1 py-2">
-                  <div className="text-small font-bold">{MODEL_INFO[currentModel]?.name}</div>
-                  <div className="text-tiny">{MODEL_INFO[currentModel]?.description}</div>
+                <div className='px-1 py-2'>
+                  <div className='text-small font-bold'>{MODEL_INFO[currentModel]?.name}</div>
+                  <div className='text-tiny'>{MODEL_INFO[currentModel]?.description}</div>
                 </div>
               </PopoverContent>
             </Popover>
@@ -461,9 +461,9 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
           classNames={{
             inputWrapper: "!bg-transparent shadow-none",
             innerWrapper: "relative",
-            input: "pt-1 pb-6 !pr-10 text-medium",
+            input: "pt-1 pb-1 !pr-10 text-medium",
           }}
-          minRows={3}
+          maxRows={2}
           radius='lg'
         />
 

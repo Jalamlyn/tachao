@@ -175,6 +175,125 @@ class TodoStore {
 - 统一使用 JSON 格式
 - 处理数据验证和错误
 
+Recharts 可视化规范:
+1. 基本使用规则:
+- 必须从 context 中获取 Recharts
+- 使用响应式容器包装图表
+- 保持数据格式一致性
+- 处理数据加载和错误状态
+
+2. 图表类型选择指南:
+- 折线图：适用于趋势和时间序列数据
+- 柱状图：适用于分类数据比较
+- 饼图：适用于占比展示（不超过 8 个分类）
+- 面积图：适用于累计值和趋势
+- 散点图：适用于相关性分析
+- 雷达图：适用于多维度数据对比
+
+3. 正确的使用模式:
+\`\`\`jsx
+const ChartExample = observer(() => {
+  const { Recharts } = context;
+  const { 
+    ResponsiveContainer, 
+    LineChart, 
+    Line, 
+    XAxis, 
+    YAxis, 
+    Tooltip, 
+    Legend 
+  } = Recharts;
+
+  // ✅ 正确：使用响应式容器
+  return (
+    <div className="w-full h-[400px]">
+      <ResponsiveContainer>
+        <LineChart data={data}>
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Line 
+            type="monotone" 
+            dataKey="value" 
+            stroke="#8884d8" 
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+});
+\`\`\`
+
+4. 性能优化:
+- 使用 memo 优化重渲染
+- 控制数据点数量
+- 按需加载图表组件
+- 使用防抖处理窗口调整
+- 大数据集使用数据采样
+
+5. 响应式设计:
+- 使用 ResponsiveContainer
+- 设置最小宽度和高度
+- 适配不同屏幕尺寸
+- 移动端优化显示
+- 处理图表溢出
+
+6. 交互设计:
+- 自定义 Tooltip 内容
+- 点击事件处理
+- 缩放和平移控制
+- 图例交互
+- 数据筛选
+
+7. 数据处理最佳实践:
+\`\`\`typescript
+// ✅ 正确：数据转换和格式化
+const formatChartData = (rawData) => {
+  return rawData.map(item => ({
+    name: formatDate(item.date),
+    value: Number(item.value),
+    category: item.type
+  }));
+};
+
+// ✅ 正确：自定义 Tooltip
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  
+  return (
+    <div className="bg-white p-2 border rounded shadow">
+      <p className="text-sm">{label}</p>
+      {payload.map((entry, index) => (
+        <p key={index} style={{ color: entry.color }}>
+          {entry.name}: {entry.value}
+        </p>
+      ))}
+    </div>
+  );
+};
+\`\`\`
+
+8. 图表定制指南:
+- 使用主题色系
+- 自定义图表组件
+- 动画效果设置
+- 坐标轴配置
+- 图例样式调整
+
+9. 错误处理:
+- 数据加载状态
+- 空数据展示
+- 错误边界处理
+- 降级方案
+- 友好的错误提示
+
+10. 辅助功能:
+- 颜色对比度
+- 图表描述
+- 键盘导航
+- 屏幕阅读器支持
+- 交互提示
 
 Web Package Manager (WPM) 使用规范:
 - 模块导入规范:
