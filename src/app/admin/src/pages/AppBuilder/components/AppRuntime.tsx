@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { AppRender } from "@/app/admin/src/pages/AppBuilder/AppRender"
-import { Spinner } from "@nextui-org/react"
+import { Spinner, Chip } from "@nextui-org/react"
 import message from "@/components/Message"
 import { Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
@@ -93,19 +93,61 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
     )
   }
 
+  const BrandMark = () => (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        zIndex: 9999,
+        userSelect: 'none',
+        opacity: 0.95,
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+      }}
+      onClick={() => window.open('https://www.mobenai.com.cn', '_blank')}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget
+        el.style.transform = 'scale(1.05) translateY(-2px)'
+        el.style.opacity = '1'
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget
+        el.style.transform = 'scale(1) translateY(0)'
+        el.style.opacity = '0.95'
+      }}
+    >
+      <Chip
+        variant="shadow"
+        classNames={{
+          base: "bg-gradient-to-r from-blue-600 via-violet-600 to-purple-600 border-small border-white/50 shadow-purple-500/30",
+          content: "drop-shadow shadow-black text-white font-medium tracking-wider",
+        }}
+        startContent={
+          <div className="w-2 h-2 rounded-full bg-white animate-pulse mr-1" />
+        }
+      >
+        Made By 即想 AI
+      </Chip>
+    </div>
+  )
+
   const content = (
-    <Provider>
-      <AppContext.Provider value={{ appId }}>
-        <AppRender
-          appId={appId}
-          basename={`/app-run/${appId}`}
-          onError={(error) => {
-            console.error("Preview error:", error)
-            message.error(`预览错误: ${error.message}`)
-          }}
-        />
-      </AppContext.Provider>
-    </Provider>
+    <>
+      <Provider>
+        <AppContext.Provider value={{ appId }}>
+          <AppRender
+            appId={appId}
+            basename={`/app-run/${appId}`}
+            onError={(error) => {
+              console.error("Preview error:", error)
+              message.error(`预览错误: ${error.message}`)
+            }}
+          />
+        </AppContext.Provider>
+      </Provider>
+      <BrandMark />
+    </>
   )
 
   // 根据accessControl决定是否需要权限检查
