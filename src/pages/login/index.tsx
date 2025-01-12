@@ -133,7 +133,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className='min-h-screen relative bg-gradient-to-b from-primary-dark to-primary-light'>
+    <div
+      className='min-h-screen relative bg-gradient-to-b from-[#2D1B69] via-[#1E1656] to-[#19073B]
+'
+    >
+      <div className="absolute inset-0 bg-[url('/assets/grid.svg')] opacity-20" />
+
       <div className='container mx-auto px-4 min-h-screen flex items-center justify-center'>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -206,7 +211,7 @@ export default function LoginPage() {
                     />
                     <div className='flex items-center justify-center gap-2 mt-4'>
                       <Button
-                        variant="light"
+                        variant='light'
                         color='secondary'
                         startContent={<Icon icon='material-symbols:person-add-outline' />}
                         onClick={() => setShowRequest(true)}
