@@ -1,5 +1,16 @@
 import React from "react"
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Card, CardBody, Tabs, Tab } from "@nextui-org/react"
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  Card,
+  CardBody,
+  Tabs,
+  Tab,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 
 interface AITutorialModalProps {
@@ -72,6 +83,50 @@ export const AITutorialModal: React.FC<AITutorialModalProps> = ({ isOpen, onClos
                   </div>
                 </CardBody>
               </Card>
+            </Tab>
+
+            <Tab
+              key="best-practices"
+              title={
+                <div className="flex items-center gap-2">
+                  <Icon icon="solar:star-linear" className="w-4 h-4"/>
+                  <span>最佳实践</span>
+                </div>
+              }
+            >
+              <div className="space-y-4">
+                <Card className="bg-warning-50/50">
+                  <CardBody>
+                    <h5 className="font-medium flex items-center gap-2">
+                      <Icon icon="solar:lightbulb-bold" className="text-warning"/>
+                      处理复杂需求的最佳实践
+                    </h5>
+                    <div className="mt-2 space-y-2">
+                      <p>对于复杂的需求或难以确定的问题:</p>
+                      <div className="pl-4 space-y-2">
+                        <div className="flex items-start gap-2">
+                          <div className="w-6 h-6 rounded-full bg-warning/10 flex items-center justify-center flex-shrink-0">
+                            <span className="text-warning">1</span>
+                          </div>
+                          <p>先使用 @pm 与产品经理讨论,明确需求范围和实现方案</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <div className="w-6 h-6 rounded-full bg-warning/10 flex items-center justify-center flex-shrink-0">
+                            <span className="text-warning">2</span>
+                          </div>
+                          <p>达成共识后,使用 @mo 请工程师进行具体实现</p>
+                        </div>
+                      </div>
+                      <div className="mt-4 p-3 bg-default-100 rounded-lg">
+                        <p className="font-medium mb-2">示例:</p>
+                        <p className="text-sm">❌ 直接告诉工程师: "我需要一个数据分析dashboard"</p>
+                        <p className="text-sm">✅ 先问产品经理: "@pm 我需要做一个数据分析dashboard,应该包含哪些核心指标和图表?"</p>
+                        <p className="text-sm">✅ 再找工程师: "@mo 请帮我实现一个包含销售趋势、用户增长等指标的dashboard"</p>
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              </div>
             </Tab>
 
             <Tab

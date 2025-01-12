@@ -398,7 +398,7 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
           onKeyPress={handleKeyPress}
           onPaste={handlePaste}
           ref={textareaRef}
-          placeholder='输入 @mo 与工程师对话，或 @pm 与产品经理讨论...'
+          placeholder='输入 @pm 与产品经理讨论需求，或 @mo 请工程师实现功能...'
           classNames={{
             inputWrapper: "!bg-transparent shadow-none",
             innerWrapper: "relative",
