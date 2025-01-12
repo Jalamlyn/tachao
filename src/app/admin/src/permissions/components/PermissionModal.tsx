@@ -92,25 +92,32 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   }
 
   const getAvailableAccounts = () => {
-    if (!accounts || !permissions) return []
-    
+    if (!accounts) return [] // 只检查 accounts
+
+    // 确保 permissions.accounts 存在，如果不存在使用空数组
+    const existingPermissionIds = permissions?.accounts?.map((acc) => acc.accountId) || []
+
     // 获取当前应用信息以识别创建者
-    const appInfo = apps.find(app => app.id === resourceId)
+    const appInfo = apps.find((app) => app.id === resourceId)
     const creatorId = appInfo?.creator?.id
 
-    return accounts.filter(account => {
-      // 过滤掉管理员账号
-      if (account.name === '管理员' || account.account === 'admin') {
+    return accounts.filter((account) => {
+      // 如果账号已经在权限列表中，则过滤掉
+      if (existingPermissionIds.includes(account.id)) {
         return false
       }
 
-      // 过滤掉创建者账号
-      if (account.id === creatorId) {
+      // 只过滤掉明确的管理员账号
+      if (account.account === "admin") {
         return false
       }
 
-      // 过滤掉已经有权限的账号
-      return !permissions.accounts.some(perm => perm.accountId === account.id)
+      // 只过滤掉明确的创建者
+      if (creatorId && account.id === creatorId) {
+        return false
+      }
+
+      return true
     })
   }
 
@@ -132,9 +139,7 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
 
   const handleRemovePermission = async (accountId: string) => {
     // 检查是否是永久权限用户
-    const isPermanentUser = permissions?.accounts.find(
-      acc => acc.accountId === accountId && acc.permanent
-    )
+    const isPermanentUser = permissions?.accounts.find((acc) => acc.accountId === accountId && acc.permanent)
 
     if (isPermanentUser) {
       message.error("无法移除管理员或创建者权限")
@@ -178,8 +183,8 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
     }
 
     // 分类显示权限
-    const permanentAccounts = permissions.accounts.filter(acc => acc.permanent)
-    const regularAccounts = permissions.accounts.filter(acc => !acc.permanent)
+    const permanentAccounts = permissions.accounts.filter((acc) => acc.permanent)
+    const regularAccounts = permissions.accounts.filter((acc) => !acc.permanent)
 
     return (
       <div className='space-y-4'>
@@ -194,11 +199,8 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
               <div className='flex items-center gap-2'>
                 <Icon icon='mdi:account' className='text-default-500' />
                 <span>{accounts.find((a) => a.id === account.accountId)?.name || account.accountId}</span>
-                <Chip 
-                  size='sm' 
-                  color={account.isCreator ? 'primary' : 'secondary'}
-                >
-                  {account.isCreator ? '创建者' : '管理员'}
+                <Chip size='sm' color={account.isCreator ? "primary" : "secondary"}>
+                  {account.isCreator ? "创建者" : "管理员"}
                 </Chip>
               </div>
             </div>
@@ -260,16 +262,12 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
           className='flex-1'
         >
           {availableAccounts.map((account) => (
-            <SelectItem 
-              key={account.id} 
-              value={account.id}
-              textValue={account.name || account.id}
-            >
+            <SelectItem key={account.id} value={account.id} textValue={account.name || account.id}>
               <div className='flex items-center gap-2'>
                 <span>{account.name || account.id}</span>
                 {account.type && (
                   <Chip size='sm' variant='flat' color='default'>
-                    {account.type === 'nb' ? '普通账号' : '工作台账号'}
+                    {account.type === "nb" ? "普通账号" : "工作台账号"}
                   </Chip>
                 )}
               </div>

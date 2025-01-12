@@ -6,15 +6,34 @@ export const usePermissions = (resourceType: ResourceType): UsePermissionsReturn
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 
-  const getPermissions = async (resourceId: string): Promise<Permission | null> => {
+  const getPermissions = async (resourceId: string): Promise<Permission> => {
     try {
       setLoading(true)
       const permissions = await getResourcePermissions(resourceType)
-      return permissions[resourceId] || null
+
+      // 如果没有找到权限记录，返回默认结构
+      if (!permissions[resourceId]) {
+        return {
+          resourceType,
+          resourceId,
+          accounts: [], // 即使没有权限记录，也返回空数组而不是 null
+          isPublic: false,
+          requireAuth: false,
+        }
+      }
+
+      return permissions[resourceId]
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to get permissions")
       setError(error)
-      return null
+      // 发生错误时也返回默认结构而不是 null
+      return {
+        resourceType,
+        resourceId,
+        accounts: [],
+        isPublic: false,
+        requireAuth: false,
+      }
     } finally {
       setLoading(false)
     }

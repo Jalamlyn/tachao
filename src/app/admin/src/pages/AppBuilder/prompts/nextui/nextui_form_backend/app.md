@@ -2123,7 +2123,6 @@ const HomePage = observer(() => {
   };
 
   const handleViewForm = async (formId) => {
-    debugger
     try {
       setLoading(true);
       const success = await dynamicFormStore.loadFormData(formId);
