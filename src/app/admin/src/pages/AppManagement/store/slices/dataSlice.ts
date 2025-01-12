@@ -240,12 +240,27 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
         queryClient.setQueryData(QUERY_KEYS.apps, updatedData)
 
         try {
-          // 更新应用索引
+          // 1. 更新应用索引
           await setMetadata("app_index", JSON.stringify(updatedData))
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.apps })
 
-          // 同时更新应用数据中的名称
-          await appCodeStore.renameApp(title.trim())
+          // 2. 获取应用数据
+          const appResult = await getMetadata([id])
+          if (!appResult.data?.[0]?.value) {
+            throw new Error("无法获取应用数据")
+          }
+
+          const appData = JSON.parse(appResult.data[0].value)
+
+          // 3. 更新应用数据中的名称
+          await setMetadata(id, JSON.stringify({
+            ...appData,
+            app: {
+              ...appData.app,
+              name: title.trim(),
+              updatedAt: new Date().toISOString(),
+            }
+          }))
           
           message.success("应用重命名成功")
         } catch (error) {
