@@ -96,11 +96,6 @@ export const uploadAPI = {
       }
     }
   ) => {
-    // 检查是否是微信环境
-    if (isWeixinBrowser()) {
-      throw new Error("微信环境暂不支持上传功能，请使用其他浏览器")
-    }
-
     // 检查文件大小
     if (options?.maxSize && file.size > options.maxSize) {
       throw new Error(`文件大小不能超过 ${options.maxSize / 1024 / 1024}MB`)
