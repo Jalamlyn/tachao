@@ -34,6 +34,8 @@ export const login = async (data) => {
     password,
   })
   localStorage.setItem(modelBaseUserToken, res.data.tokenValue)
+  localStorage.removeItem("@@appId")
+  localStorage.removeItem("@@organizationId")
   return res.data.tokenValue ? "has token" : res.data
 }
 

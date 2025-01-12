@@ -38,23 +38,24 @@ import { subscriptionService } from "@/app/admin/src/permissions/utils/permissio
 import message from "@/components/Message"
 import { useStore } from "@/stores/StoreProvider"
 import globalStore from "@/globalStore"
+import { useGlobalUser } from "@/hooks/useGlobalUser"
 
 // 添加账号格式验证函数
 const validateAccount = (account: string): { isValid: boolean; message?: string } => {
   // 英文字母开头，后面可以是字母、数字或下划线
   const accountRegex = /^[a-zA-Z][a-zA-Z0-9_]*$/
-  
+
   if (!account) {
-    return { isValid: false, message: '账号不能为空' }
+    return { isValid: false, message: "账号不能为空" }
   }
-  
+
   if (!accountRegex.test(account)) {
-    return { 
-      isValid: false, 
-      message: '账号必须以英文字母开头，只能包含英文字母、数字和下划线' 
+    return {
+      isValid: false,
+      message: "账号必须以英文字母开头，只能包含英文字母、数字和下划线",
     }
   }
-  
+
   return { isValid: true }
 }
 
@@ -74,6 +75,7 @@ const AccountManagement: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()
   // 添加账号验证状态
   const [accountError, setAccountError] = useState("")
+  const userInfo = useGlobalUser()
 
   useEffect(() => {
     fetchAccounts()
@@ -127,26 +129,27 @@ const AccountManagement: React.FC = () => {
       }
 
       // 检查账号类型和限制
-      if (values.type === 'nb') {
-        if (!subscription || subscription.type === 'personal') {
-          message.error('个人版不能创建内部账号，请升级到企业版')
+      if (values.type === "nb") {
+        if (!subscription || subscription.type === "personal") {
+          message.error("个人版不能创建内部账号，请升级到企业版")
           return
         }
 
-        const nbAccounts = accounts.filter(acc => acc.name.startsWith('nb_'))
+        const nbAccounts = accounts.filter((acc) => acc.name.startsWith("nb_"))
         if (nbAccounts.length >= subscription.features.nbAccountLimit) {
+          debugger
           message.error(`已达到内部账号数量限制(${subscription.features.nbAccountLimit}个)`)
           return
         }
       }
 
       // 设置账号名称前缀
-      const accountName = values.type === 'nb' ? `nb_${values.name}` : `wb_${values.name}`
+      const accountName = values.type === "nb" ? `nb_${values.name}` : `wb_${values.name}`
 
       // 创建账号
       const accountRes = await createRamAccount({
         ...values,
-        name: accountName
+        name: accountName,
       })
 
       // 查询默认企业项目
@@ -170,17 +173,17 @@ const AccountManagement: React.FC = () => {
             accountId: accountRes.id,
             name: accountName,
             type: values.type,
-            createdAt: new Date().toISOString()
-          }
-        ]
+            createdAt: new Date().toISOString(),
+          },
+        ],
       })
 
       onCreateModalClose()
       fetchAccounts()
-      message.success('账号创建成功')
+      message.success("账号创建成功")
     } catch (error) {
       console.error("Failed to create account or add to project", error)
-      message.error('创建账号失败')
+      message.error("创建账号失败")
     }
   }
 
@@ -232,14 +235,22 @@ const AccountManagement: React.FC = () => {
   }
 
   const getAccountTypeChip = (name: string) => {
-    if (name === '管理员') {
-      return <Chip color="primary" variant="flat">管理员</Chip>
+    if (name === "管理员") {
+      return (
+        <Chip color='primary' variant='flat'>
+          管理员
+        </Chip>
+      )
     }
-    if (name.startsWith('nb_')) {
-      return <Chip color="secondary" variant="flat">内部账号</Chip>
+    if (name.startsWith("nb_")) {
+      return (
+        <Chip color='secondary' variant='flat'>
+          内部账号
+        </Chip>
+      )
     }
-    if (name.startsWith('wb_')) {
-      return <Chip variant="flat">外部账号</Chip>
+    if (name.startsWith("wb_")) {
+      return <Chip variant='flat'>外部账号</Chip>
     }
     return null
   }
@@ -365,33 +376,24 @@ const AccountManagement: React.FC = () => {
             >
               <ModalHeader className='flex flex-col gap-1'>创建账号</ModalHeader>
               <ModalBody>
-                <RadioGroup
-                  label="账号类型"
-                  name="type"
-                  orientation="horizontal"
-                  defaultValue="wb"
-                >
-                  <Radio value="nb">
+                <RadioGroup label='账号类型' name='type' orientation='horizontal' defaultValue='wb'>
+                  <Radio value='nb'>
                     内部账号
-                    <span className="text-tiny text-default-400 ml-1">
-                      (企业员工)
-                    </span>
+                    <span className='text-tiny text-default-400 ml-1'>(企业员工)</span>
                   </Radio>
-                  <Radio value="wb">
+                  <Radio value='wb'>
                     外部账号
-                    <span className="text-tiny text-default-400 ml-1">
-                      (供应商/客户)
-                    </span>
+                    <span className='text-tiny text-default-400 ml-1'>(供应商/客户)</span>
                   </Radio>
                 </RadioGroup>
                 <Input name='name' label='名称' required />
-                <Input 
-                  name='account' 
-                  label='账号' 
-                  required 
+                <Input
+                  name='account'
+                  label='账号'
+                  required
                   onValueChange={handleAccountChange}
                   errorMessage={accountError}
-                  description="账号必须以英文字母开头，只能包含英文字母、数字和下划线"
+                  description='账号必须以英文字母开头，只能包含英文字母、数字和下划线'
                 />
                 <Input name='password' label='密码' type='password' required />
               </ModalBody>
@@ -422,14 +424,14 @@ const AccountManagement: React.FC = () => {
               <ModalHeader className='flex flex-col gap-1'>编辑账号</ModalHeader>
               <ModalBody>
                 <Input name='name' label='名称' defaultValue={selectedAccount?.name} required />
-                <Input 
-                  name='account' 
-                  label='账号' 
-                  defaultValue={selectedAccount?.account} 
-                  required 
+                <Input
+                  name='account'
+                  label='账号'
+                  defaultValue={selectedAccount?.account}
+                  required
                   onValueChange={handleAccountChange}
                   errorMessage={accountError}
-                  description="账号必须以英文字母开头，只能包含英文字母、数字和下划线"
+                  description='账号必须以英文字母开头，只能包含英文字母、数字和下划线'
                 />
                 <Input name='password' label='密码' type='password' placeholder='留空则不修改密码' />
               </ModalBody>
