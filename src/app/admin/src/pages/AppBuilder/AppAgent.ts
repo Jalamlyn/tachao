@@ -1,5 +1,6 @@
-import chatChunkExpert from "@/service/chat/chat-chunk-openrouter"
+// import chatChunkExpert from "@/service/chat/chat-chunk-openrouter"
 import chatChunkFree from "@/service/chat/chat-chunk-openrouter-free"
+import chatChunkExpert from "@/service/chat/chat-deepseek"
 import { AppBuilderMessage } from "./types"
 import { balanceStore } from "@/stores/balanceStore"
 import { appCodeStore } from "./store/appCodeStore"

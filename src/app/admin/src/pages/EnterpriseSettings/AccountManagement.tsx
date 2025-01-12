@@ -285,7 +285,7 @@ const AccountManagement: React.FC = () => {
                 <EditIcon size={16} />
               </Button>
             </Tooltip>
-            <Tooltip content='分配角色'>
+            {/* <Tooltip content='分配角色'>
               <Button
                 isIconOnly
                 size='sm'
@@ -297,7 +297,7 @@ const AccountManagement: React.FC = () => {
               >
                 <UserPlusIcon size={16} />
               </Button>
-            </Tooltip>
+            </Tooltip> */}
             <Tooltip content='删除账号' color='danger'>
               <Button
                 isIconOnly

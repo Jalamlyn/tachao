@@ -83,7 +83,7 @@ const GuidanceSection = () => (
           </div>
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg bg-warning/10">
-              <Icon icon="solar:puzzle-piece-linear" className="w-5 h-5 text-warning" />
+              <Icon icon="proicons:component" className="w-5 h-5 text-warning" />
             </div>
             <div>
               <h4 className="font-medium">组件库</h4>

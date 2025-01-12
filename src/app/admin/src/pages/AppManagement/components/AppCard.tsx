@@ -163,8 +163,8 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
                 {/* 创建者信息 */}
                 {app.creator && (
                   <Chip color='success' variant='bordered'>
-                    <span className='text-small text-default-600'>
-                      由 {app.creator.name === "管理员" ? "管理员" : app.creator.name.split("_")[1]} 创建
+                    <span className='tracking-tight truncate font-bold text-xs text-default-500'>
+                      {app.creator.name === "管理员" ? "管理员" : app.creator.name.split("_")[1]}
                     </span>
                   </Chip>
                 )}
