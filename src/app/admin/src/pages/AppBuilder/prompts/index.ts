@@ -8,7 +8,9 @@ import { LOCATION_PROMPTS } from "./prompt/location-prompts"
 import { ESM_PROMPTS } from "./prompt/esm-prompts"
 import { AI_PROMPTS } from "./prompt/ai-prompts"
 import { markdown as nextuidoc } from "./doc/nextui.md"
+import { UPLOAD_PROMPTS } from "./prompt/upload-prompts"
 import { TECH_PROMPTS } from "./prompt/tech-prompts"
+import { IMAGE_PROMPTS } from "./prompt/image-prompts"
 
 // 提示词组合器
 export const promptsComposer = {
@@ -43,6 +45,8 @@ ${UI_DESIGN_PROMPTS.designAnalysis}
 ${LOCATION_PROMPTS.locationPrompt}
 ${ESM_PROMPTS.esmPrompt}
 ${AI_PROMPTS.aiPrompt}
+${UPLOAD_PROMPTS.uploadPrompt}
+${IMAGE_PROMPTS.imagePrompt}
 </api-doc>
 
 <business-resources>

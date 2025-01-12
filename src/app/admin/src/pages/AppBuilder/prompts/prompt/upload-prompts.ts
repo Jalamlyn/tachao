@@ -1,7 +1,5 @@
 export const UPLOAD_PROMPTS = {
-  uploadPrompt: {
-    getUploadPrompt() {
-      return `
+  uploadPrompt: `
 系统提供了以下文件上传API，你可以用它们来实现文件上传相关功能：
 
 1. 文件上传API说明：
@@ -241,7 +239,5 @@ const batchUpload = async (files) => {
 - 显示文件大小
 - 提供取消功能
 - 友好的错误提示
-- 上传完成反馈`
-    }
-  }
+- 上传完成反馈`,
 }
