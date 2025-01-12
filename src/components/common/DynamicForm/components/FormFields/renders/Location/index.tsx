@@ -87,7 +87,7 @@ const Location: React.FC<LocationProps> = ({
             isLoading={isLoading}
             onClick={handleGetLocation}
             startContent={!isLoading && <Icon icon='mdi:map-marker' className='w-5 h-5' />}
-            className='min-w-[120px] transition-all duration-300 hover:scale-105'
+            className='min-w-[120px] t-all duration-300 hover:scale-105'
           >
             {value?.address ? "重新获取位置" : "获取位置"}
           </Button>

@@ -52,7 +52,7 @@ export const TemplateSection: React.FC<TemplateSectionProps> = ({
       key={template.id}
       isPressable
       isHoverable
-      className={`border-2 transition-all duration-200 hover:shadow-lg ${
+      className={`border-2 t-all duration-200 hover:shadow-lg ${
         selectedTemplate === template.id ? "border-primary" : "border-transparent"
       }`}
       onPress={() => setSelectedTemplate(template.id)}

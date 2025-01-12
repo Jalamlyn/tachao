@@ -35,7 +35,7 @@ const FormManager: React.FC = () => {
 
   return (
     <PageLayout title='表单模板管理' titleIcon='mdi:form-select' actions={pageActions}>
-      <TemplateGallery onTemplateSelect={handleTemplateSelect} className='transition-all duration-300' />
+      <TemplateGallery onTemplateSelect={handleTemplateSelect} className='t-all duration-300' />
     </PageLayout>
   )
 }

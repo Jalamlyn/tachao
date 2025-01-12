@@ -37,7 +37,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
   return (
     <div
       className={cn(
-        "relative group w-32 h-20 rounded-lg transition-all duration-200",
+        "relative group w-32 h-20 rounded-lg t-all duration-200",
         "border hover:border-primary/50 hover:shadow-md",
         getTypeColor(type)
       )}

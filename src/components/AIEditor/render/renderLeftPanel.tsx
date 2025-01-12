@@ -32,7 +32,7 @@ export const renderLeftPanel = (
                     key={key}
                     className={cn(
                       "min-w-[140px] h-12 px-4",
-                      "transition-all duration-200",
+                      "t-all duration-200",
                       selectedAILevel === key
                         ? "bg-primary text-white shadow-lg scale-105"
                         : "bg-white hover:bg-primary/10"

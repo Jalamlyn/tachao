@@ -10,7 +10,7 @@ import { AI_PROMPTS } from "./prompt/ai-prompts"
 import { markdown as nextuidoc } from "./doc/nextui.md"
 import { UPLOAD_PROMPTS } from "./prompt/upload-prompts"
 import { TECH_PROMPTS } from "./prompt/tech-prompts"
-import { IMAGE_PROMPTS } from "./prompt/image-prompts"
+// import { IMAGE_PROMPTS } from "./prompt/image-prompts"
 
 // 提示词组合器
 export const promptsComposer = {
@@ -46,7 +46,7 @@ ${LOCATION_PROMPTS.locationPrompt}
 ${ESM_PROMPTS.esmPrompt}
 ${AI_PROMPTS.aiPrompt}
 ${UPLOAD_PROMPTS.uploadPrompt}
-${IMAGE_PROMPTS.imagePrompt}
+
 </api-doc>
 
 <business-resources>

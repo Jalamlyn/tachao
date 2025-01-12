@@ -42,7 +42,7 @@ const ProcessStep: React.FC<ProcessStepProps> = ({
     >
       <Card
         className={cn(
-          "border-l-4 transition-all duration-300 ease-in-out transform hover:shadow-lg",
+          "border-l-4 t-all duration-300 ease-in-out transform hover:shadow-lg",
           isConfirmed ? "border-l-blue-500 bg-blue-50/30" : "border-l-gray-200"
         )}
       >
@@ -53,7 +53,7 @@ const ProcessStep: React.FC<ProcessStepProps> = ({
                 initial={false}
                 transition={{ duration: 0.3 }}
                 className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300",
+                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0 t-all duration-300",
                   isConfirmed ? "bg-blue-100 text-blue-600 ring-2 ring-blue-200 shadow-md" : "bg-gray-50 text-gray-400"
                 )}
               >
@@ -103,7 +103,7 @@ const ProcessStep: React.FC<ProcessStepProps> = ({
                         size='sm'
                         isLoading={isLoading}
                         className={cn(
-                          "font-medium w-full md:w-auto transition-all duration-300",
+                          "font-medium w-full md:w-auto t-all duration-300",
                           isLoading ? "opacity-70" : "hover:bg-blue-50 hover:text-blue-600 hover:scale-105"
                         )}
                         startContent={!isLoading && <Icon icon='mdi:check' className='w-4 h-4' />}
@@ -124,7 +124,7 @@ const ProcessStep: React.FC<ProcessStepProps> = ({
                         variant='bordered'
                         size='sm'
                         color='danger'
-                        className='font-medium hover:bg-red-50 hover:scale-105 transition-all duration-300 w-full md:w-auto'
+                        className='font-medium hover:bg-red-50 hover:scale-105 t-all duration-300 w-full md:w-auto'
                         startContent={<Icon icon='mdi:close' className='w-4 h-4' />}
                       >
                         <span className='hidden md:inline'>取消确认</span>

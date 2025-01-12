@@ -69,7 +69,7 @@ export const getRenderHeader =
                     }}
                     className={`cursor-pointer transition-transform hover:scale-105 bg-${tag.color}-500 text-white`}
                     classNames={{
-                      base: "transition-all duration-200",
+                      base: "t-all duration-200",
                       content: "transition-colors duration-200",
                     }}
                   >

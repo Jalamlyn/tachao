@@ -322,7 +322,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                       ? "bg-primary/5 border-primary/10 shadow-sm"
                       : "hover:border-default-100 hover:bg-default-50/50"
                   }
-                  transition-all duration-300 ease-in-out
+                  t-all duration-300 ease-in-out
                 `}
               >
                 <div className='flex items-center gap-2 px-2 py-2'>

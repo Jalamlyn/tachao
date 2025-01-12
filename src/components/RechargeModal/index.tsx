@@ -58,7 +58,7 @@ const PriceCard = ({ amount, isPopular, onSelect, isSelected }) => (
   <Card
     isPressable
     isHoverable
-    className={`transition-all duration-300 ${isSelected ? "border-primary shadow-lg scale-105" : ""}`}
+    className={`t-all duration-300 ${isSelected ? "border-primary shadow-lg scale-105" : ""}`}
     onClick={() => onSelect(amount)}
   >
     <CardBody className='text-center p-6'>
@@ -257,7 +257,7 @@ const RechargeModal = observer(() => {
             key={plan.type}
             isPressable
             isHoverable
-            className={`transition-all duration-300 ${
+            className={`t-all duration-300 ${
               selectedPlan?.type === plan.type ? "border-primary shadow-lg scale-105" : ""
             }`}
             onPress={() => setSelectedPlan(plan)}

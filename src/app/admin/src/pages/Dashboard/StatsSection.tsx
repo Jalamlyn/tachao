@@ -53,7 +53,7 @@ const StatsSection = ({ stats, appsCount }) => {
               },
             }}
           >
-            <Card className='hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-primary/20'>
+            <Card className='hover:shadow-lg t-all duration-300 border-2 border-transparent hover:border-primary/20'>
               <CardBody className='flex flex-col gap-4 p-6'>
                 <div className='p-3 rounded-lg bg-primary/10 w-fit'>
                   <Icon icon={step.icon} className='w-6 h-6 text-primary' />
@@ -104,7 +104,7 @@ const StatsSection = ({ stats, appsCount }) => {
             },
           }}
         >
-          <Card className='hover:shadow-lg transition-all duration-300'>
+          <Card className='hover:shadow-lg t-all duration-300'>
             <CardBody className='flex flex-row items-center gap-4 p-6'>
               <div className={`p-3 rounded-lg bg-${stat.color}/10`}>
                 <Icon icon={stat.icon} className={`w-6 h-6 text-${stat.color}`} />

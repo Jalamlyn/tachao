@@ -69,7 +69,7 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
     return (
       <div className={cn(
         "p-4 bg-gray-50 rounded-lg",
-        "transition-all duration-200",
+        "t-all duration-200",
         "hover:bg-gray-100",
         "min-w-0" // 确保flex子项可以正确收缩
       )}>
@@ -91,7 +91,7 @@ const SummaryField: React.FC<SummaryFieldProps> = ({
           <FormControl>
             <div className={cn(
               "p-4 bg-gray-50 rounded-lg",
-              "transition-all duration-200",
+              "t-all duration-200",
               "hover:bg-gray-100",
               "min-w-0"
             )}>

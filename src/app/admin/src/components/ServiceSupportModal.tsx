@@ -64,7 +64,7 @@ const ServiceSupportModal: React.FC<ServiceSupportModalProps> = ({ isOpen, onClo
                 transition={{ delay: index * 0.1 }}
               >
                 <Card
-                  className='hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden group'
+                  className='hover:shadow-lg t-all duration-300 cursor-pointer overflow-hidden group'
                   isPressable
                 >
                   <CardBody className='flex flex-row items-start gap-4 relative'>

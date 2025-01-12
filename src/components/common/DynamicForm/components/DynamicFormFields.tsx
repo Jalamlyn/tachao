@@ -67,7 +67,7 @@ const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, fo
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
               <Card className={cn(
-                "transition-all duration-200",
+                "t-all duration-200",
                 "hover:shadow-md"
               )}>
                 <CardHeader className="p-4 pb-2">
@@ -79,7 +79,7 @@ const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, fo
                     <p className="text-sm text-gray-500 mt-1">{group.description}</p>
                   )}
                 </CardHeader>
-                <CardContent className={cn("py-4 transition-all duration-200")}>
+                <CardContent className={cn("py-4 t-all duration-200")}>
                   <FormFields fields={group.fields} form={form} isEditable={isEditable} onChange={onChange} />
                 </CardContent>
               </Card>
@@ -111,7 +111,7 @@ const DynamicFormFieldsWrapper: React.FC<DynamicFormFieldsProps> = ({ fields, fo
           </TabsList>
         </div>
         {groups.map((group) => (
-          <TabsContent key={group.key} value={group.key} className={cn("py-4", "transition-all duration-200")}>
+          <TabsContent key={group.key} value={group.key} className={cn("py-4", "t-all duration-200")}>
             {group.description && <p className='text-sm text-gray-500 mb-4'>{group.description}</p>}
             <FormFields fields={group.fields} form={form} isEditable={isEditable} onChange={onChange} />
           </TabsContent>

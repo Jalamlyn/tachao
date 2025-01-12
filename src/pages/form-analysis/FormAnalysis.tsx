@@ -300,7 +300,7 @@ const FormAnalysis: React.FC = () => {
         {Object.entries(AI_LEVELS).map(([key, level]) => (
           <Tooltip content={level.description} key={key}>
             <Button
-              className={`min-w-[140px] h-12 px-4 transition-all duration-200 ${
+              className={`min-w-[140px] h-12 px-4 t-all duration-200 ${
                 selectedAILevel === key ? "bg-primary text-white shadow-lg scale-105" : "bg-white hover:bg-primary/10"
               }`}
               onClick={() => handleAILevelChange(key as keyof typeof AI_LEVELS)}

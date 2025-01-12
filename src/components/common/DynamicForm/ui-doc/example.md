@@ -2089,7 +2089,7 @@ export default (props) => {
                         {items.map((item, index) => (
                           <div
                             key={item.id || index}
-                            className={`p-4 bg-white rounded-lg shadow-sm flex items-center gap-2 transition-all duration-200 ${
+                            className={`p-4 bg-white rounded-lg shadow-sm flex items-center gap-2 t-all duration-200 ${
                               item.checked ? "bg-gray-50" : ""
                             }`}
                           >

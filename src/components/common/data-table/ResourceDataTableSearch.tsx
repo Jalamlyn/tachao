@@ -79,7 +79,7 @@ const DebouncedInput: React.FC<DebouncedInputProps> = ({
           className={cn(
             "h-10 w-full rounded-md border bg-white pl-10 pr-4 text-sm",
             "placeholder:text-gray-500 focus:outline-none",
-            "transition-all duration-200 ease-in-out",
+            "t-all duration-200 ease-in-out",
             "border-gray-200 hover:border-gray-300",
             "focus:border-primary focus:ring-2 focus:ring-primary/20",
             className
@@ -128,7 +128,7 @@ const DebouncedInput: React.FC<DebouncedInputProps> = ({
             "h-10 px-4",
             "bg-primary text-white shadow-sm",
             "hover:bg-primary/90 hover:shadow-md",
-            "active:scale-95 transition-all duration-200",
+            "active:scale-95 t-all duration-200",
             "disabled:opacity-50 disabled:cursor-not-allowed"
           )}
           disabled={!value}

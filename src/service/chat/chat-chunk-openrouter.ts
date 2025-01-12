@@ -33,9 +33,10 @@ export default async function chatChunkOpenAIOffice(
     })
   }
 
-  const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-openrouter"
+  const apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-openrouter"
 
   const payload = {
+    // model: "anthropic/claude-3.5-haiku-20241022:beta",
     messages: _messages,
     stream: true,
   }

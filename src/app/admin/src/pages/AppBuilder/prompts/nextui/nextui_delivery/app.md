@@ -402,7 +402,7 @@ ${systemContext}
 
         {/* 输入框区域 */}
         <div className={cn(
-          "group relative rounded-xl transition-all duration-200",
+          "group relative rounded-xl t-all duration-200",
           isFocused ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-default-200"
         )}>
           <Input

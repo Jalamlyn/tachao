@@ -117,7 +117,7 @@ const ResourceManagement: React.FC = () => {
       <ResourceGallery
         ref={galleryRef}
         onResourceSelect={handleResourceSelect}
-        className='transition-all duration-300'
+        className='t-all duration-300'
         renderHeader={renderHeader}
       />
     </motion.div>

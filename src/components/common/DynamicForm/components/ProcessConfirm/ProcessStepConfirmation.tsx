@@ -27,7 +27,7 @@ const ProcessStepConfirmation: React.FC<ProcessStepConfirmationProps> = ({
         </label>
         <p className={cn(
           "font-medium text-gray-900 pl-6",
-          "transition-all duration-300",
+          "t-all duration-300",
           "hover:text-blue-600"
         )}>
           {confirmer}
@@ -46,7 +46,7 @@ const ProcessStepConfirmation: React.FC<ProcessStepConfirmationProps> = ({
         </label>
         <p className={cn(
           "font-medium text-gray-900 pl-6",
-          "transition-all duration-300",
+          "t-all duration-300",
           "hover:text-blue-600"
         )}>
           {confirmationDate &&

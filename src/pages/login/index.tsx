@@ -269,7 +269,7 @@ export default function LoginPage() {
                       type='submit'
                       onClick={handleAdminLogin}
                       isLoading={loginLoading}
-                      className='w-full transition-all duration-300 font-medium shadow-lg hover:shadow-xl'
+                      className='w-full t-all duration-300 font-medium shadow-lg hover:shadow-xl'
                     >
                       {t("login")}
                     </Button>

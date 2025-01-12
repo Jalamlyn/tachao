@@ -131,7 +131,7 @@ const ReportManagement: React.FC = () => {
       <ReportGallery
         onReportSelect={handleReportSelect}
         onCreateReport={handleCreateClick}
-        className='transition-all duration-300'
+        className='t-all duration-300'
       />
 
       <Modal

@@ -80,7 +80,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
                 <Button
                   color='primary'
                   onClick={onBack}
-                  className='transition-all duration-300 font-medium shadow-lg hover:shadow-xl'
+                  className='t-all duration-300 font-medium shadow-lg hover:shadow-xl'
                 >
                   返回登录
                 </Button>
@@ -136,7 +136,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
                   <div className='flex gap-2 mt-4'>
                     <Button
                       variant='light'
-                      className='flex-1 transition-all duration-300'
+                      className='flex-1 t-all duration-300'
                       onClick={onBack}
                     >
                       返回

@@ -113,7 +113,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
       <Card
         isPressable
         isHoverable
-        className={`border-2 transition-all duration-200 ${
+        className={`border-2 duration-200 ${
           createMode === "scratch" ? "border-primary" : "border-transparent"
         }`}
         onPress={() => {
@@ -137,7 +137,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
       <Card
         isPressable
         isHoverable
-        className={`border-2 transition-all duration-200 ${
+        className={`border-2 duration-200 ${
           createMode === "template" ? "border-primary" : "border-transparent"
         }`}
         onPress={() => setCreateMode("template")}

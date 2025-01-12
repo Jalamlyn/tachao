@@ -169,7 +169,7 @@ export const ReferenceUpload: React.FC<ReferenceUploadProps> = ({ agent, aiLevel
           className={cn(
             "flex gap-3 overflow-x-auto pb-2",
             "scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent",
-            "hover:scrollbar-thumb-gray-300 transition-all duration-200"
+            "hover:scrollbar-thumb-gray-300 t-all duration-200"
           )}
         >
           {imagePreviews.map((image, index) => (

@@ -158,7 +158,7 @@ export default function Component() {
                 <Button
                   fullWidth
                   className={cn(
-                    "relative justify-start truncate bg-gradient-to-r from-primary-500/20 to-secondary-500/20 hover:from-primary-500/30 hover:to-secondary-500/30 transition-all duration-300",
+                    "relative justify-start truncate bg-gradient-to-r from-primary-500/20 to-secondary-500/20 hover:from-primary-500/30 hover:to-secondary-500/30 t-all duration-300",
                     "group overflow-hidden",
                     {
                       "justify-center": isCollapsed,

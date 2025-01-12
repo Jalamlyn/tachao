@@ -25,7 +25,7 @@ const SmartButton: React.FC<React.PropsWithChildren<{ onClick?: () => void; vari
           variant === "primary"
             ? "bg-gradient-to-r from-purple-500 to-cyan-500 text-white"
             : "bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20"
-        } relative px-8 h-14 text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:ring-2 hover:ring-purple-500/20`}
+        } relative px-8 h-14 text-lg font-medium shadow-lg hover:shadow-xl t-all duration-300 hover:ring-2 hover:ring-purple-500/20`}
         onClick={onClick}
       >
         {children}
@@ -164,7 +164,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             ].map((item, index) => (
               <motion.div
                 key={index}
-                className='flex items-center justify-center gap-3 bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300'
+                className='flex items-center justify-center gap-3 bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/20 t-all duration-300'
                 whileHover={{ scale: 1.05 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >

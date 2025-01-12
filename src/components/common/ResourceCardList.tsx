@@ -142,7 +142,7 @@ const ResourceCardList: React.FC<ResourceCardListProps> = ({
             color='primary'
             onClick={onCreate}
             startContent={<Icon icon='mdi:plus' className='w-4 h-4' />}
-            className='w-full sm:w-auto min-w-[160px] bg-gradient-to-r from-blue-600 to-blue-700 shadow hover:shadow-md transition-all duration-300'
+            className='w-full sm:w-auto min-w-[160px] bg-gradient-to-r from-blue-600 to-blue-700 shadow hover:shadow-md t-all duration-300'
             size='sm'
             isDisabled={!appId}
           >
@@ -153,7 +153,7 @@ const ResourceCardList: React.FC<ResourceCardListProps> = ({
           color='default'
           onClick={handleRefresh}
           startContent={<Icon icon='mdi:refresh' className='w-4 h-4' />}
-          className='w-full sm:w-auto min-w-[100px] bg-white hover:bg-gray-50 shadow hover:shadow-md transition-all duration-300'
+          className='w-full sm:w-auto min-w-[100px] bg-white hover:bg-gray-50 shadow hover:shadow-md t-all duration-300'
           size='sm'
           isDisabled={!appId || isRefreshing}
         ></Button>

@@ -80,39 +80,16 @@ export function handleSearch(this: AppCodeStore) {
   codeItems.forEach((item) => {
     let matches = 0
     const searchContentLower = this.viewState.searchContent.toLowerCase()
-    const searchQueryLower = this.viewState.searchQuery.toLowerCase()
     const codeLower = item.code.toLowerCase()
-    const titleLower = item.title.toLowerCase()
-    const nameLower = item.name?.toLowerCase() || ""
 
-    // 代码内容搜索权重
     if (this.viewState.searchContent) {
       const contentMatches = (codeLower.match(new RegExp(searchContentLower, "g")) || []).length
       matches += contentMatches
     }
 
-    // 标题和模块名搜索权重
     if (this.viewState.searchQuery) {
-      // 标题完全匹配给予最高权重
-      if (titleLower === searchQueryLower) {
-        matches += 10
-      }
-      // 标题包含搜索词给予较高权重
-      else if (titleLower.includes(searchQueryLower)) {
-        matches += 5
-      }
-      // 模块名完全匹配给予高权重
-      if (nameLower === searchQueryLower) {
-        matches += 8
-      }
-      // 模块名包含搜索词给予中等权重
-      else if (nameLower.includes(searchQueryLower)) {
-        matches += 4
-      }
-      // 类型匹配给予基础权重
-      if (item.type.toLowerCase().includes(searchQueryLower)) {
-        matches += 2
-      }
+      const titleMatches = item.title.toLowerCase().includes(this.viewState.searchQuery.toLowerCase()) ? 1 : 0
+      matches += titleMatches
     }
 
     if (matches > 0) {
@@ -120,7 +97,6 @@ export function handleSearch(this: AppCodeStore) {
     }
   })
 
-  // 按匹配度排序
   results.sort((a, b) => b.matches - a.matches)
   this.viewState.searchResults = results
 
@@ -196,8 +172,7 @@ export function getFilteredCodeItems(this: AppCodeStore) {
     : items.filter(
         (item) =>
           item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+          item.type.toLowerCase().includes(searchQuery.toLowerCase())
       )
 }
 

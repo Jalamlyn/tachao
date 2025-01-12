@@ -31,7 +31,7 @@ export const ClockInButtons: React.FC<ClockInButtonsProps> = ({
           isLoading={isLoading}
           onClick={() => onClockIn("in")}
           startContent={!isLoading && <Icon icon='mdi:login' className='w-5 h-5' />}
-          className={cn("min-w-[120px]", "transition-all duration-300", "hover:scale-105")}
+          className={cn("min-w-[120px]", "t-all duration-300", "hover:scale-105")}
         >
           签到
         </Button>
@@ -46,7 +46,7 @@ export const ClockInButtons: React.FC<ClockInButtonsProps> = ({
           isLoading={isLoading}
           onClick={() => onClockIn("out")}
           startContent={!isLoading && <Icon icon='mdi:logout' className='w-5 h-5' />}
-          className={cn("min-w-[120px]", "transition-all duration-300", "hover:scale-105")}
+          className={cn("min-w-[120px]", "t-all duration-300", "hover:scale-105")}
         >
           签退
         </Button>

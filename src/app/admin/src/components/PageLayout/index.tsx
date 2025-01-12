@@ -12,7 +12,7 @@ export interface PageLayoutProps {
 const PageLayout: React.FC<PageLayoutProps> = ({ title, titleIcon, actions, children, className = "" }) => {
   return (
     <div
-      className={`w-full min-h-[calc(100vh-180px)] bg-background transition-all duration-300 ease-in-out ${className}`}
+      className={`w-full min-h-[calc(100vh-180px)] bg-background t-all duration-300 ease-in-out ${className}`}
     >
       <div className='flex justify-between items-center mb-3 md:flex-row flex-col md:items-center items-start md:gap-0 gap-4'>
         <div className='flex items-center gap-3 mt-2'>

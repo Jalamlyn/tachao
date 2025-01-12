@@ -33,7 +33,7 @@ const ProcessStepForm: React.FC<ProcessStepFormProps> = ({
     <motion.div
       className={cn(
         "mt-4 pt-4 border-t border-gray-100",
-        "transition-all duration-300",
+        "t-all duration-300",
         isConfirmed ? "opacity-70 hover:opacity-100" : "",
         "rounded-lg"
       )}

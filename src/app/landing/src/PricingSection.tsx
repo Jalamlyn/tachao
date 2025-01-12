@@ -108,7 +108,7 @@ const PricingSection = () => {
               <Card
                 className={`h-full bg-white/5 backdrop-blur-sm border-white/10 hover:border-white/20 
                   ${plan.highlight ? "border-purple-500/50" : ""}
-                  transition-all duration-300 hover:transform hover:scale-105`}
+                  t-all duration-300 hover:transform hover:scale-105`}
               >
                 <div className='p-6 h-full flex flex-col'>
                   <div className='mb-6'>

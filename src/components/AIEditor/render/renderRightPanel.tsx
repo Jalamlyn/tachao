@@ -23,7 +23,7 @@ export const renderRightPanel = (
   return (
     <ResizablePanel defaultSize={70} className='resizable-panel bg-slate-50'>
       <div className='relative h-full flex flex-col p-4'>
-        <div className='version-control-wrapper absolute -top-2 right-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-2 transition-all duration-200 hover:bg-white'>
+        <div className='version-control-wrapper absolute -top-2 right-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg p-2 t-all duration-200 hover:bg-white'>
           <div className='flex items-center gap-3'>
             <div className='version-controls flex items-center gap-1'>
               <Button
@@ -32,7 +32,7 @@ export const renderRightPanel = (
                 onClick={versionControl.rollback}
                 disabled={!versionControl.canRollback}
                 className={cn(
-                  "h-8 w-8 p-0 rounded-full transition-all duration-200",
+                  "h-8 w-8 p-0 rounded-full t-all duration-200",
                   "hover:bg-primary/10 active:scale-95",
                   !versionControl.canRollback && "opacity-50 cursor-not-allowed"
                 )}
@@ -52,7 +52,7 @@ export const renderRightPanel = (
                 onClick={versionControl.forward}
                 disabled={!versionControl.canForward}
                 className={cn(
-                  "h-8 w-8 p-0 rounded-full transition-all duration-200",
+                  "h-8 w-8 p-0 rounded-full t-all duration-200",
                   "hover:bg-primary/10 active:scale-95",
                   !versionControl.canForward && "opacity-50 cursor-not-allowed"
                 )}

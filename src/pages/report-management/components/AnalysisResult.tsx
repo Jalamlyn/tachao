@@ -179,7 +179,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = React.memo((props) => {
                     hidden: { opacity: 0, y: 20 },
                     show: { opacity: 1, y: 0 },
                   }}
-                  className='relative overflow-hidden rounded-xl bg-gradient-to-br from-background to-muted p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1'
+                  className='relative overflow-hidden rounded-xl bg-gradient-to-br from-background to-muted p-4 md:p-6 shadow-lg hover:shadow-xl t-all duration-300 hover:-translate-y-1'
                 >
                   <div className='text-sm text-muted-foreground font-medium mb-2'>
                     {item.label}

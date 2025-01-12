@@ -16,7 +16,7 @@ export default async function chatChunkDeepseek(
   if (isFirst) {
     _messages = messages.map((msg) => ({
       role: msg.role,
-      content: msg.content,
+      content: msg.content?.content || msg.content,
     }))
   } else {
     _messages = messages
