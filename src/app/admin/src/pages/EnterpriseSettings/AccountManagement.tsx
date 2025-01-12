@@ -75,7 +75,7 @@ const AccountManagement: React.FC = () => {
   const { updateBreadcrumbs } = useBreadcrumb()
   // 添加账号验证状态
   const [accountError, setAccountError] = useState("")
-  const userInfo = useGlobalUser()
+  const { userInfo, loading } = useGlobalUser()
 
   useEffect(() => {
     fetchAccounts()
@@ -137,9 +137,10 @@ const AccountManagement: React.FC = () => {
 
         const nbAccounts = accounts.filter((acc) => acc.name.startsWith("nb_"))
         if (nbAccounts.length >= subscription.features.nbAccountLimit) {
-          debugger
-          message.error(`已达到内部账号数量限制(${subscription.features.nbAccountLimit}个)`)
-          return
+          if (userInfo?.organizationId !== "1" && userInfo?.name !== "管理员") {
+            message.error(`已达到内部账号数量限制(${subscription.features.nbAccountLimit}个)`)
+            return
+          }
         }
       }
 
