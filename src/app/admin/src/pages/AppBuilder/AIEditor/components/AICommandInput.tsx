@@ -1,4 +1,4 @@
-import React, { memo, useState, useCallback, useRef } from "react"
+import React, { memo, useState, useCallback, useRef, useEffect } from "react"
 import {
   Button,
   Textarea,
@@ -21,6 +21,22 @@ import { imageStore } from "./ImageStore"
 import message from "@/components/Message"
 import { AITutorialModal } from "./AITutorialModal"
 import { useAICommandButton } from "./hooks/useAICommandButton"
+
+// 添加模型配置
+const MODEL_INFO = {
+  "anthropic/claude-3.5-haiku-20241022:beta": {
+    name: "Claude 3.5 Haiku",
+    description: "快速响应，适合简单任务",
+    icon: "solar:rocket-minimalistic-linear",
+    color: "success"
+  },
+  "anthropic/claude-3.5-sonnet": {
+    name: "Claude 3.5 Sonnet",
+    description: "强大性能，适合复杂任务",
+    icon: "solar:star-linear",
+    color: "primary"
+  }
+}
 
 interface AIAgent {
   processCommand: (
@@ -83,6 +99,25 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const lastTranscriptRef = useRef<string>("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [currentModel, setCurrentModel] = useState("")
+
+  // 监听当前模型变化
+  useEffect(() => {
+    const checkCurrentModel = () => {
+      const model = sessionStorage.getItem('currentAIModel')
+      if (model && model !== currentModel) {
+        setCurrentModel(model)
+      }
+    }
+
+    // 初始检查
+    checkCurrentModel()
+
+    // 设置定时器每秒检查一次
+    const timer = setInterval(checkCurrentModel, 1000)
+
+    return () => clearInterval(timer)
+  }, [currentModel])
 
   const { buttonState, actions } = useAICommandButton({
     input,
@@ -317,6 +352,30 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   return (
     <>
       <form className='flex w-full flex-col gap-2 rounded-medium bg-default-100 transition-colors hover:bg-default-200/70'>
+        {/* 添加模型信息显示 */}
+        {currentModel && (
+          <div className='px-4 pt-2'>
+            <Popover placement="top">
+              <PopoverTrigger>
+                <Chip
+                  variant="flat"
+                  color={MODEL_INFO[currentModel]?.color as any}
+                  startContent={<Icon icon={MODEL_INFO[currentModel]?.icon} className="w-3 h-3" />}
+                  className="cursor-help"
+                >
+                  {MODEL_INFO[currentModel]?.name}
+                </Chip>
+              </PopoverTrigger>
+              <PopoverContent>
+                <div className="px-1 py-2">
+                  <div className="text-small font-bold">{MODEL_INFO[currentModel]?.name}</div>
+                  <div className="text-tiny">{MODEL_INFO[currentModel]?.description}</div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
+
         <input
           type='file'
           ref={fileInputRef}
