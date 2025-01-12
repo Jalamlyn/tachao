@@ -122,24 +122,12 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
   }
   return (
     <>
-      <Card
-        isBlurred
-        className='border-none bg-background/60 dark:bg-default-100/50 w-full group hover:shadow-lg transition-all duration-300'
-        shadow='sm'
-      >
+      <Card>
         <CardBody>
           <div className='grid grid-cols-12 gap-6 items-center'>
             {/* 左侧图标区域 */}
             <div className='col-span-4 md:col-span-3'>
-              <div
-                className={`
-          aspect-square rounded-xl 
-          bg-gradient-to-br ${getTemplateGradient(app.template)}
-          flex items-center justify-center
-          transform group-hover:scale-105 transition-all duration-300
-          shadow-lg
-        `}
-              >
+              <div>
                 <Icon icon={getTemplateIcon(app.template)} className={`w-12 h-12 ${getTemplateColor(app.template)}`} />
               </div>
             </div>
