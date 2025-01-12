@@ -5,16 +5,18 @@ export const IMAGE_PROMPTS = {
 1. 图片服务说明：
 
 a) 真实照片占位：
-- Unsplash Source: https://source.unsplash.com
-  * 随机图片: https://source.unsplash.com/random/{width}x{height}
-  * 指定关键词: https://source.unsplash.com/random/{width}x{height}?{keywords}
-  * 示例: https://source.unsplash.com/random/800x600?nature
+- Picsum Photos (Lorem Picsum): https://picsum.photos
+  * 固定尺寸: https://picsum.photos/200/300
+  * 方形图片: https://picsum.photos/200
+  * 灰度图片: https://picsum.photos/200/300?grayscale
+  * 模糊效果: https://picsum.photos/200/300?blur
+  * 指定图片: https://picsum.photos/id/237/200/300
 
 b) 纯占位图片：
-- Placeholder.com: https://via.placeholder.com
-  * 基础用法: https://via.placeholder.com/{width}x{height}
-  * 自定义文本: https://via.placeholder.com/{width}x{height}?text={text}
-  * 示例: https://via.placeholder.com/300x200?text=Product+Image
+- DummyImage: https://dummyimage.com
+  * 基础用法: https://dummyimage.com/600x400
+  * 自定义颜色: https://dummyimage.com/600x400/000/fff
+  * 带文字: https://dummyimage.com/600x400/000/fff&text=Hello+World
 
 2. 使用场景：
 
@@ -45,7 +47,7 @@ const ImageDemo = () => {
       <div>
         <h3 className="text-lg font-medium mb-2">产品展示图</h3>
         <Image
-          src="https://source.unsplash.com/random/800x600?product"
+          src="https://picsum.photos/800/600"
           alt="Product"
           className="rounded-lg"
         />
@@ -55,7 +57,7 @@ const ImageDemo = () => {
       <div>
         <h3 className="text-lg font-medium mb-2">用户头像</h3>
         <Image
-          src="https://source.unsplash.com/random/200x200?portrait"
+          src="https://picsum.photos/200/200"
           alt="User Avatar"
           className="rounded-full w-20 h-20"
         />
@@ -65,7 +67,7 @@ const ImageDemo = () => {
       <div>
         <h3 className="text-lg font-medium mb-2">加载占位图</h3>
         <Image
-          src="https://via.placeholder.com/400x300?text=Loading..."
+          src="https://dummyimage.com/400x300/e0e0e0/666666&text=Loading..."
           alt="Loading Placeholder"
           className="rounded-lg"
         />
@@ -121,7 +123,7 @@ const ImageWithFallback = ({ src, alt, ...props }) => {
   
   return (
     <Image
-      src={error ? "https://via.placeholder.com/400x300?text=Image+Error" : src}
+      src={error ? "https://dummyimage.com/400x300/e0e0e0/666666&text=Image+Error" : src}
       alt={alt}
       onError={handleError}
       {...props}
@@ -138,21 +140,21 @@ const ResponsiveImage = () => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {/* 小图 */}
       <Image
-        src="https://source.unsplash.com/random/400x300?nature"
+        src="https://picsum.photos/400/300"
         alt="Small"
         className="w-full rounded-lg"
       />
       
       {/* 中图 */}
       <Image
-        src="https://source.unsplash.com/random/800x600?city"
+        src="https://picsum.photos/800/600"
         alt="Medium"
         className="w-full rounded-lg"
       />
       
       {/* 大图 */}
       <Image
-        src="https://source.unsplash.com/random/1200x900?architecture"
+        src="https://picsum.photos/1200/900"
         alt="Large"
         className="w-full rounded-lg"
       />
@@ -167,25 +169,25 @@ a) 产品图片：
 - 使用高质量产品照片
 - 保持白色或简洁背景
 - 突出产品细节
-示例: https://source.unsplash.com/random/800x800?product
+示例: https://picsum.photos/800/800
 
 b) 用户头像：
 - 使用正面人像照片
 - 适当的裁剪比例
 - 清晰的面部特征
-示例: https://source.unsplash.com/random/200x200?face
+示例: https://picsum.photos/200/200
 
 c) 背景图片：
 - 选择合适的场景
 - 考虑文字可读性
 - 适当的亮度对比
-示例: https://source.unsplash.com/random/1920x1080?background
+示例: https://picsum.photos/1920/1080
 
 d) 图标占位：
 - 使用简单的占位图
 - 保持统一的尺寸
 - 清晰的用途说明
-示例: https://via.placeholder.com/64x64?text=Icon
+示例: https://dummyimage.com/64x64/000/fff&text=Icon
 
 9. 进阶用法：
 
@@ -216,9 +218,9 @@ b) 图片集合：
 \`\`\`jsx
 const ImageGallery = () => {
   const images = [
-    { type: 'nature', size: '800x600' },
-    { type: 'architecture', size: '800x600' },
-    { type: 'people', size: '800x600' },
+    { id: '1', size: '800x600' },
+    { id: '2', size: '800x600' },
+    { id: '3', size: '800x600' },
   ];
   
   return (
@@ -226,8 +228,8 @@ const ImageGallery = () => {
       {images.map((image, index) => (
         <Image
           key={index}
-          src={\`https://source.unsplash.com/random/\${image.size}?\${image.type}\`}
-          alt={image.type}
+          src={\`https://picsum.photos/id/\${image.id}/\${image.size}\`}
+          alt={\`Gallery Image \${index + 1}\`}
           className="w-full rounded-lg"
         />
       ))}
