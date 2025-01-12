@@ -34,7 +34,7 @@ export const getResourcePermissions = async (resourceType: ResourceType): Promis
     // 确保每个资源都有默认的权限设置
     Object.keys(permissions).forEach((resourceId) => {
       if (!permissions[resourceId].hasOwnProperty("isPublic")) {
-        permissions[resourceId].isPublic = true // 设置默认为公开访问
+        permissions[resourceId].isPublic = false // 修改默认为非公开访问
       }
     })
 
@@ -51,10 +51,10 @@ export const setResourcePermissions = async (
 ): Promise<void> => {
   const key = getPermissionMetadataKey(resourceType)
   try {
-    // 确保新添加的资源默认为公开访问
+    // 确保新添加的资源默认为非公开访问
     Object.keys(permissions).forEach((resourceId) => {
       if (!permissions[resourceId].hasOwnProperty("isPublic")) {
-        permissions[resourceId].isPublic = true
+        permissions[resourceId].isPublic = false
       }
     })
     await setMetadata(key, JSON.stringify(permissions))
@@ -65,11 +65,56 @@ export const setResourcePermissions = async (
 }
 
 export const isAdmin = (user: any): boolean => {
-  return user?.account === "admin"
+  return user?.account === "admin" || user?.name === "管理员"
+}
+
+// 初始化资源权限
+export const initializeResourcePermissions = async (
+  resourceType: ResourceType,
+  resourceId: string,
+  creator: any
+): Promise<void> => {
+  try {
+    const permissions = await getResourcePermissions(resourceType)
+    
+    // 创建基础权限结构
+    permissions[resourceId] = {
+      resourceType,
+      resourceId,
+      accounts: [
+        // 创建者权限
+        {
+          accountId: creator.id,
+          role: 'owner',
+          grantedAt: new Date().toISOString(),
+          grantedBy: 'system',
+          isCreator: true,
+          permanent: true
+        },
+        // 管理员权限
+        {
+          accountId: 'admin',
+          role: 'admin',
+          grantedAt: new Date().toISOString(),
+          grantedBy: 'system',
+          isAdmin: true,
+          permanent: true
+        }
+      ],
+      isPublic: false,
+      requireAuth: false
+    }
+
+    await setResourcePermissions(resourceType, permissions)
+  } catch (error) {
+    console.error("Error initializing permissions:", error)
+    throw error
+  }
 }
 
 export const hasPermission = async (resourceType: ResourceType, resourceId: string, user: any): Promise<boolean> => {
-  const accountId = user?.id
+  if (!user) return false
+  
   // 1. 检查是否是管理员
   if (isAdmin(user)) {
     return true
@@ -79,9 +124,9 @@ export const hasPermission = async (resourceType: ResourceType, resourceId: stri
   const permissions = await getResourcePermissions(resourceType)
   const resourcePermission = permissions[resourceId]
 
-  // 3. 如果资源不存在权限设置，默认为公开访问
+  // 3. 如果资源不存在权限设置，默认为非公开访问
   if (!resourcePermission) {
-    return true
+    return false
   }
 
   // 4. 检查访问控制设置
@@ -90,11 +135,19 @@ export const hasPermission = async (resourceType: ResourceType, resourceId: stri
   }
 
   if (resourcePermission.requireAuth) {
-    return !!user
+    return true // 只要用户已登录就可以访问
   }
 
-  // 5. 检查具体权限
-  return resourcePermission?.accounts.some((acc) => acc.accountId === accountId) || false
+  // 5. 检查是否是创建者
+  const isCreator = resourcePermission.accounts.some(
+    acc => acc.accountId === user.id && acc.isCreator
+  )
+  if (isCreator) {
+    return true
+  }
+
+  // 6. 检查具体权限
+  return resourcePermission.accounts.some(acc => acc.accountId === user.id) || false
 }
 
 export const hasTemplatePermission = async (
@@ -110,7 +163,7 @@ export const hasTemplatePermission = async (
   const templatePermission = permissions[templateId]
 
   if (!templatePermission) {
-    return true // 默认公开访问
+    return false // 修改默认为非公开访问
   }
 
   if (templatePermission.isPublic) {
@@ -171,9 +224,21 @@ export const addPermission = async (
     }
   }
 
-  const existingPermission = permissions[resourceId].accounts.find((acc) => acc.accountId === accountId)
+  // 检查是否已经有永久权限
+  const existingPermission = permissions[resourceId].accounts.find(
+    acc => acc.accountId === accountId && acc.permanent
+  )
+  
+  if (existingPermission) {
+    return // 如果已经有永久权限，直接返回
+  }
 
-  if (!existingPermission) {
+  // 检查是否已有普通权限
+  const hasExistingPermission = permissions[resourceId].accounts.some(
+    acc => acc.accountId === accountId && !acc.permanent
+  )
+
+  if (!hasExistingPermission) {
     const roles = Array.isArray(role) ? role : [role]
 
     if (roles.includes("creator")) {
@@ -187,6 +252,7 @@ export const addPermission = async (
       role: roles,
       grantedAt: new Date().toISOString(),
       grantedBy: "system",
+      permanent: false
     })
 
     await setResourcePermissions(resourceType, permissions)
@@ -261,13 +327,7 @@ export const setResourceAccessControl = async (
     // 1. 更新权限信息
     const permissions = await getResourcePermissions(resourceType)
     if (!permissions[resourceId]) {
-      permissions[resourceId] = {
-        resourceType,
-        resourceId,
-        accounts: [],
-        isPublic: false,
-        requireAuth: false,
-      }
+      throw new Error('Resource permissions not found')
     }
 
     permissions[resourceId].isPublic = accessControl.isPublic

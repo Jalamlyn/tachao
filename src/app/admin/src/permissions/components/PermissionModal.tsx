@@ -11,13 +11,15 @@ import {
   Spinner,
   RadioGroup,
   Radio,
+  Chip,
 } from "@nextui-org/react"
 import { usePermissions } from "../hooks/usePermissions"
 import { Permission, ResourceType } from "../types"
 import { queryRamAccount } from "@/service/apis/user"
 import message from "@/components/Message"
-import { setResourceAccessControl } from "../utils/permissionUtils"
+import { setResourceAccessControl, isAdmin } from "../utils/permissionUtils"
 import { Icon } from "@iconify/react"
+import { useAppStore } from "@/app/admin/src/pages/AppManagement/store/useAppStore"
 
 interface PermissionModalProps {
   isOpen: boolean
@@ -41,6 +43,8 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false)
   const [accessMode, setAccessMode] = useState<"public" | "authenticated" | "specified">("specified")
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const { useApps } = useAppStore()
+  const { apps } = useApps()
 
   useEffect(() => {
     if (isOpen) {
@@ -51,7 +55,6 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
 
   useEffect(() => {
     if (permissions) {
-      // 根据现有权限设置初始访问模式
       if (permissions.isPublic) {
         setAccessMode("public")
       } else if (permissions.requireAuth) {
@@ -79,7 +82,6 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   const loadPermissions = async () => {
     const data = await getPermissions(resourceId)
     setPermissions(data)
-    // 根据权限状态设置正确的 accessMode
     if (data.isPublic) {
       setAccessMode("public")
     } else if (data.requireAuth) {
@@ -87,6 +89,29 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
     } else {
       setAccessMode("specified")
     }
+  }
+
+  const getAvailableAccounts = () => {
+    if (!accounts || !permissions) return []
+    
+    // 获取当前应用信息以识别创建者
+    const appInfo = apps.find(app => app.id === resourceId)
+    const creatorId = appInfo?.creator?.id
+
+    return accounts.filter(account => {
+      // 过滤掉管理员账号
+      if (account.name === '管理员' || account.account === 'admin') {
+        return false
+      }
+
+      // 过滤掉创建者账号
+      if (account.id === creatorId) {
+        return false
+      }
+
+      // 过滤掉已经有权限的账号
+      return !permissions.accounts.some(perm => perm.accountId === account.id)
+    })
   }
 
   const handleAddPermission = async () => {
@@ -106,6 +131,16 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
   }
 
   const handleRemovePermission = async (accountId: string) => {
+    // 检查是否是永久权限用户
+    const isPermanentUser = permissions?.accounts.find(
+      acc => acc.accountId === accountId && acc.permanent
+    )
+
+    if (isPermanentUser) {
+      message.error("无法移除管理员或创建者权限")
+      return
+    }
+
     try {
       await revokePermission(resourceId, accountId)
       await loadPermissions()
@@ -128,15 +163,6 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
       }
 
       await setResourceAccessControl(resourceType, resourceId, accessControl)
-
-      // 如果切换到其他模式，清除所有特定用户权限
-      if (accessMode !== "specified") {
-        const currentPermissions = permissions?.accounts || []
-        for (const account of currentPermissions) {
-          await revokePermission(resourceId, account.accountId)
-        }
-      }
-
       await loadPermissions()
       setHasUnsavedChanges(false)
       message.success("访问控制设置已更新")
@@ -146,9 +172,122 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
     }
   }
 
-  const availableAccounts = accounts.filter(
-    (account) => !permissions?.accounts.some((perm) => perm.accountId === account.id)
-  )
+  const renderAccountList = () => {
+    if (!permissions?.accounts || permissions.accounts.length === 0) {
+      return <div className='text-center text-default-500 py-4'>暂无授权用户</div>
+    }
+
+    // 分类显示权限
+    const permanentAccounts = permissions.accounts.filter(acc => acc.permanent)
+    const regularAccounts = permissions.accounts.filter(acc => !acc.permanent)
+
+    return (
+      <div className='space-y-4'>
+        {/* 基础权限用户 */}
+        <div className='space-y-2'>
+          <div className='text-small font-medium'>基础权限用户</div>
+          {permanentAccounts.map((account) => (
+            <div
+              key={account.accountId}
+              className='flex items-center justify-between p-2 rounded-lg border border-default-200 bg-default-50'
+            >
+              <div className='flex items-center gap-2'>
+                <Icon icon='mdi:account' className='text-default-500' />
+                <span>{accounts.find((a) => a.id === account.accountId)?.name || account.accountId}</span>
+                <Chip 
+                  size='sm' 
+                  color={account.isCreator ? 'primary' : 'secondary'}
+                >
+                  {account.isCreator ? '创建者' : '管理员'}
+                </Chip>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 其他授权用户 */}
+        {regularAccounts.length > 0 && (
+          <div className='space-y-2'>
+            <div className='text-small font-medium'>授权用户列表</div>
+            {regularAccounts.map((account) => (
+              <div
+                key={account.accountId}
+                className='flex items-center justify-between p-2 rounded-lg border border-default-200'
+              >
+                <div className='flex items-center gap-2'>
+                  <Icon icon='mdi:account' className='text-default-500' />
+                  <span>{accounts.find((a) => a.id === account.accountId)?.name || account.accountId}</span>
+                </div>
+                <Button
+                  size='sm'
+                  color='danger'
+                  variant='light'
+                  isIconOnly
+                  onPress={() => handleRemovePermission(account.accountId)}
+                >
+                  <Icon icon='mdi:delete' />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const renderUserSelection = () => {
+    const availableAccounts = getAvailableAccounts()
+
+    if (availableAccounts.length === 0) {
+      return (
+        <div className='bg-default-50 p-3 rounded-lg'>
+          <div className='text-small text-default-500 flex items-center gap-2'>
+            <Icon icon='mdi:information' className='text-default-400' />
+            <span>没有更多可添加的用户。管理员和创建者已具有永久访问权限。</span>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className='flex items-center gap-2'>
+        <Select
+          size='sm'
+          label='选择账号'
+          placeholder='请选择要授权的账号'
+          selectedKeys={newAccountId ? [newAccountId] : []}
+          onSelectionChange={(keys) => setNewAccountId(Array.from(keys)[0] as string)}
+          className='flex-1'
+        >
+          {availableAccounts.map((account) => (
+            <SelectItem 
+              key={account.id} 
+              value={account.id}
+              textValue={account.name || account.id}
+            >
+              <div className='flex items-center gap-2'>
+                <span>{account.name || account.id}</span>
+                {account.type && (
+                  <Chip size='sm' variant='flat' color='default'>
+                    {account.type === 'nb' ? '普通账号' : '工作台账号'}
+                  </Chip>
+                )}
+              </div>
+            </SelectItem>
+          ))}
+        </Select>
+        <Button
+          color='primary'
+          variant='light'
+          isLoading={loading}
+          onPress={handleAddPermission}
+          isDisabled={isLoadingAccounts || !newAccountId}
+        >
+          添加
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size='lg'>
@@ -191,64 +330,18 @@ export const PermissionModal: React.FC<PermissionModalProps> = ({
 
                 {accessMode === "specified" && (
                   <>
-                    <div className='flex items-center gap-2'>
-                      {isLoadingAccounts ? (
-                        <div className='w-full flex items-center gap-2 h-12'>
-                          <Spinner size='sm' />
-                          <span className='text-small'>加载账号列表中...</span>
-                        </div>
-                      ) : (
-                        <Select
-                          size='sm'
-                          label='选择账号'
-                          placeholder='请选择要授权的账号'
-                          selectedKeys={newAccountId ? [newAccountId] : []}
-                          onSelectionChange={(keys) => setNewAccountId(Array.from(keys)[0] as string)}
-                          className='flex-1'
-                        >
-                          {availableAccounts.map((account) => (
-                            <SelectItem key={account.id} value={account.id}>
-                              {account.name || account.id}
-                            </SelectItem>
-                          ))}
-                        </Select>
-                      )}
-                      <Button
-                        color='primary'
-                        variant='light'
-                        isLoading={loading}
-                        onPress={handleAddPermission}
-                        isDisabled={isLoadingAccounts || !newAccountId}
-                      >
-                        添加
-                      </Button>
-                    </div>
+                    {isLoadingAccounts ? (
+                      <div className='w-full flex items-center gap-2 h-12'>
+                        <Spinner size='sm' />
+                        <span className='text-small'>加载账号列表中...</span>
+                      </div>
+                    ) : (
+                      renderUserSelection()
+                    )}
 
-                    <div className='space-y-2'>
+                    <div classNameclassName='space-y-2'>
                       <div className='text-small font-medium'>已授权用户列表：</div>
-                      {permissions?.accounts.map((account) => (
-                        <div
-                          key={account.accountId}
-                          className='flex items-center justify-between p-2 rounded-lg border border-default-200'
-                        >
-                          <div className='flex items-center gap-2'>
-                            <Icon icon='mdi:account' className='text-default-500' />
-                            <span>{accounts.find((a) => a.id === account.accountId)?.name || account.accountId}</span>
-                          </div>
-                          <Button
-                            size='sm'
-                            color='danger'
-                            variant='light'
-                            isIconOnly
-                            onPress={() => handleRemovePermission(account.accountId)}
-                          >
-                            <Icon icon='mdi:delete' />
-                          </Button>
-                        </div>
-                      ))}
-                      {(!permissions?.accounts || permissions.accounts.length === 0) && (
-                        <div className='text-center text-default-500 py-4'>暂无授权用户</div>
-                      )}
+                      {renderAccountList()}
                     </div>
                   </>
                 )}
