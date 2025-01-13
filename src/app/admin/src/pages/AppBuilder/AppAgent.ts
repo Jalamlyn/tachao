@@ -205,73 +205,62 @@ ${module.data.code}
       const knowledgeContext = knowledgeStore.getKnowledgeContext()
       const appsContext = await this.getAppsContext()
 
-      const enhancedCommand = `<我的输入>${commandContent}, 生成完整代码必须确保代码是完整的</我的输入><project>
-            ${
-              isPMMode
-                ? `
-            注意：这是一个产品经理咨询模式的对话，请不要生成任何代码，只需要：
-            1. 仔细阅读项目代码
-            2. 理解用户的问题,并给出回答。
-            `
-                : ""
-            }
+      // 构建项目上下文数据
+      const projectContext = `
+1. 应用入口代码：
+${appCodeStore.currentVersion?.modules[appEntryId]?.data?.code || "需要先创建应用入口代码，包含基础路由配置"}
+
+2. ${
+        moduleSelectionMode === "manual"
+          ? `手动选中的模块代码 (${Object.keys(relevantModules).length}个模块):`
+          : moduleSelectionMode === "smart"
+          ? `AI智能选择的相关模块代码 (${Object.keys(relevantModules).length}个模块):`
+          : `所有模块代码 (${Object.keys(relevantModules).length}个模块):`
+      }
+${modulesContext}
+
+3. 系统日志上下文（注意：这只是最近的部分日志，按重要性排序）：
+${relevantLogs}
+
+${
+  !completeness.isComplete
+    ? `
+注意：当前日志可能不完整：
+${completeness.summary}
+
+如果这些日志不足以分析问题，请：
+1. 说明需要查看更多日志
+2. 具体说明需要哪些类型的日志（例如：特定时间段、特定级别、或包含特定关键词的日志）
+3. 建议用户使用日志查看器的过滤功能，找到并提供相关日志
+`
+    : ""
+}
+
+4. 知识库内容：
+${knowledgeContext || "暂无自定义知识内容"}
+
+5. 系统中的应用列表：
+${appsContext}
+
+${
+  typeof command !== "string" && command.images?.length > 0
+    ? `
+6. 用户上传的图片资源：
+${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
+    : ""
+}`
+
+      // 构建完整的用户输入
+      const enhancedCommand = isPMMode
+        ? `<我的输入>${commandContent}, 生成完整代码必须确保代码是完整的</我的输入>
             
-            1. 应用入口代码：
-            ${appCodeStore.currentVersion?.modules[appEntryId]?.data?.code || "需要先创建应用入口代码，包含基础路由配置"}
-            
-            2. ${
-              moduleSelectionMode === "manual"
-                ? `手动选中的模块代码 (${Object.keys(relevantModules).length}个模块):`
-                : moduleSelectionMode === "smart"
-                  ? `AI智能选择的相关模块代码 (${Object.keys(relevantModules).length}个模块):`
-                  : `所有模块代码 (${Object.keys(relevantModules).length}个模块):`
-            }
-            ${modulesContext}
+注意：这是一个产品经理咨询模式的对话，请不要生成任何代码，只需要：
+1. 仔细阅读项目代码
+2. 理解用户的问题,并给出回答。
 
-            3. 系统日志上下文（注意：这只是最近的部分日志，按重要性排序）：
-            ${relevantLogs}
-
-            ${
-              !completeness.isComplete
-                ? `
-            注意：当前日志可能不完整：
-            ${completeness.summary}
-            
-            如果这些日志不足以分析问题，请：
-            1. 说明需要查看更多日志
-            2. 具体说明需要哪些类型的日志（例如：特定时间段、特定级别、或包含特定关键词的日志）
-            3. 建议用户使用日志查看器的过滤功能，找到并提供相关日志
-            `
-                : ""
-            }
-
-            4. 知识库内容：
-            ${knowledgeContext || "暂无自定义知识内容"}
-
-            5. 系统中的应用列表：
-            ${appsContext}
-
-            ${
-              typeof command !== "string" && command.images?.length > 0
-                ? `
-            6. 用户上传的图片资源：
-            ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n            ")}
-            `
-                : ""
-            }
-            </project>
-            
-            ${
-              isPMMode
-                ? `
-            请分析上述项目代码和系统日志，并回答用户的问题：
-            <我的输入>${commandContent.replace("@pm", "").trim()}</我的输入>
-            `
-                : `
-            <project> 里是现有代码和系统日志,根据 <我的输入> ,生成所有代码都必须包裹在\`\`\`jsx<mo-ai-code type="xxx" name="xxx" title="xxx" des="模块一句话介绍">生成的代码,必须确保代码是完整的, 不允许用注释省略模块中的任何代码和任何逻辑,禁止在代码中生成"""// ... 保留原有方法 ... {/* ... 保留 xxx ... */}, // 在现有的 xxx 中添加以下方法, // 其他现有方法保持不变..., //其他原有方法... ,/* 原有代码保持不变 */"""</mo-ai-code>\`\`\`标签中,你需要先进行一轮思考, 检查模块上下文是否足够, 如果模块上下文不充分, 向我要求提供更多的模块上下文, 然后列出要生成或者修改的模块名称, 然后再开始生成代码,所有列出的模块都必须生成, ui交互要从设计师的角度思考, 不要返回没有修改的模块
-            `
-            }
-            <我的输入>${commandContent}</我的输入>`
+请分析上述项目代码和系统日志，并回答用户的问题：
+<我的输入>${commandContent.replace("@pm", "").trim()}</我的输入>`
+        : `<我的输入>${commandContent}</我的输入>`
 
       const allMessages = [
         ...messages,
@@ -295,7 +284,8 @@ ${module.data.code}
         0,
         "YES",
         {
-          resources, // 传递资料数据给后端
+          resources,
+          projectContext, // 将项目上下文数据传递给后端
         }
       )
 
