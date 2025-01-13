@@ -132,7 +132,7 @@ const AppBuilder: React.FC = observer(() => {
     } catch (error) {
       console.error("Error publishing app:", error)
       setPublishError(error instanceof Error ? error.message : "发布失败")
-      message.error(error instanceof Error ? error.message : "发布失败")
+    message.error(error instanceof Error ? error.message : "发布失败")
     } finally {
       setIsLoading(false)
       setPublishInProgress(false)
