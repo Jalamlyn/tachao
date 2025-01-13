@@ -59,7 +59,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
           pages: [],
           accessControl: {
             isPublic: false,
-            requireAuth: false,
+            requireAuth: false, // 修改这里：默认设置为所有登录用户可访问
           },
           collaborators: [],
         }
@@ -247,15 +247,18 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
           const appData = JSON.parse(appResult.data[0].value)
 
           // 3. 更新应用数据中的名称
-          await setMetadata(id, JSON.stringify({
-            ...appData,
-            app: {
-              ...appData.app,
-              name: title.trim(),
-              updatedAt: new Date().toISOString(),
-            }
-          }))
-          
+          await setMetadata(
+            id,
+            JSON.stringify({
+              ...appData,
+              app: {
+                ...appData.app,
+                name: title.trim(),
+                updatedAt: new Date().toISOString(),
+              },
+            })
+          )
+
           message.success("应用重命名成功")
         } catch (error) {
           queryClient.setQueryData(QUERY_KEYS.apps, currentData)
