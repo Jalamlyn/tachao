@@ -20,15 +20,8 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
     const query = useQuery({
       queryKey: QUERY_KEYS.apps,
       queryFn: async () => {
-        const [result, userInfo] = await Promise.all([getMetadata(["app_index"]), getCurrentAccountInfo()])
-
-        const apps = result.data?.[0]?.value ? (JSON.parse(result.data[0].value) as AppIndex[]) : []
-
-        // 如果不是admin，只返回用户创建的应用
-        if (userInfo.account !== "admin") {
-          return apps.filter((app) => app.creator?.id === userInfo.id)
-        }
-        return apps
+        const [result] = await Promise.all([getMetadata(["app_index"])])
+        return result.data?.[0]?.value ? (JSON.parse(result.data[0].value) as AppIndex[]) : []
       },
     })
 
@@ -68,6 +61,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
             isPublic: false,
             requireAuth: false,
           },
+          collaborators: [],
         }
 
         const result = await getMetadata(["app_index"])

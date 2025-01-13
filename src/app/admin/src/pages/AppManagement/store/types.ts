@@ -26,6 +26,11 @@ export interface AppIndex {
     isPublic: boolean
     requireAuth: boolean
   }
+  collaborators?: Array<{
+    id: string
+    name: string
+    addedAt: string
+  }>
 }
 
 export interface CreateAppInput {
