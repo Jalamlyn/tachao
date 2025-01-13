@@ -192,10 +192,15 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
       const enhancedCommand = isPMMode
         ? `${commandContent}
             [注意：这是一个产品经理咨询模式的对话，请不要生成任何代码，只需要：
-              1. 仔细阅读项目代码
-              2. 理解我的问题,并给出回答。]`
+              - 仔细阅读项目代码
+              - 进行思考，将思考输出在 <mo-ai-think>你的思考过程</mo-ai-think>
+              - 理解我的问题,并给出回答。
+              ]`
         : `${commandContent}
-            [注意：这是一个工程师模式对话，请根据项目代码和上下文生成完整的模块代码，不允许用注释省略任何逻辑和代码，对于简单的明确的修感，或者文本替换，使用 SEARCH/REPLACE 模式进行替换即可。]
+            [注意：这是一个工程师模式对话，
+              - 仔细阅读项目代码
+              - 进行思考，将思考输出在 <mo-ai-think>你的思考过程</mo-ai-think>
+              - 根据项目代码和上下文生成完整的模块代码，不允许用注释省略任何逻辑和代码，对于简单的明确的修感，或者文本替换，使用 SEARCH/REPLACE 模式进行替换即可。]
         `
 
       const allMessages = [

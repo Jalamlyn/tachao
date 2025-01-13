@@ -2,6 +2,7 @@ import { transform } from "@/utils/moduleLoader"
 import { AppCodeStore, ModuleData, ShataAICode, Version } from "../types"
 import { logStore } from "../../AIEditor/components/LogStore"
 import message from "@/components/Message"
+import { Button } from "@nextui-org/react"
 
 export function compileCode(this: AppCodeStore, code: string): Promise<string> {
   try {
@@ -17,8 +18,35 @@ export function compileCode(this: AppCodeStore, code: string): Promise<string> {
     )
     return Promise.resolve(compiledCode)
   } catch (error) {
-    logStore.error("Error compiling code:", code)
-    message.error("AI 生成代码编译失败, 其尝试点击新对话, 重试")
+    console.error("Error compiling code:", code)
+    message.error(
+      <div className='flex items-center gap-2'>
+        <span>AI 生成代码编译失败</span>
+        <Button
+          size='sm'
+          color='primary'
+          variant='flat'
+          onPress={() => {
+            // 添加错误消息到消息列表
+            const errorMessage = {
+              role: "user",
+              content: "代码生成失败",
+              id: Date.now().toString(),
+              timestamp: new Date().toLocaleTimeString(),
+            }
+            window.postMessage(
+              {
+                type: "ADD_MESSAGE",
+                message: errorMessage,
+              },
+              "*"
+            )
+          }}
+        >
+          重新生成
+        </Button>
+      </div>
+    )
     throw error
   }
 }

@@ -67,30 +67,6 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue
 }
 
-const LogHelpTip: React.FC<{ completeness: any }> = ({ completeness }) => {
-  if (!completeness || completeness.isComplete) return null
-
-  return (
-    <Card className='p-4 mb-4 bg-default-50'>
-      <div className='flex items-start gap-2'>
-        <Icon icon='solar:info-circle-linear' className='text-primary mt-1' />
-        <div className='flex-1'>
-          <p className='text-sm font-medium m-2'>日志可能不完整</p>
-          <p className='text-sm text-default-600 mb-2'>{completeness.summary}</p>
-          <div className='text-sm text-default-500'>
-            <p>建议操作：</p>
-            <ul className='list-disc pl-4 mt-1'>
-              {completeness.missingAspects.timeGaps && <li>使用时间筛选查看特定时间段的日志</li>}
-              {completeness.missingAspects.missingLevels && <li>调整日志级别筛选，确保包含所有必要的日志级别</li>}
-              {completeness.missingAspects.limitedRange && <li>导出更多日志以获取完整上下文</li>}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </Card>
-  )
-}
-
 const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100vh-250px)" }) => {
   const [logs, setLogs] = useState(logStore.logs)
   const [search, setSearch] = useState("")
@@ -233,8 +209,6 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
         </div>
       </div>
 
-      <LogHelpTip completeness={completeness} />
-
       <ScrollShadow
         ref={scrollRef}
         className={cn("w-full rounded-lg bg-default-50/50 p-4", className)}
@@ -270,9 +244,10 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
                 >
                   {LOG_LEVELS[log.level].label}
                 </Chip>
-                <div className='flex-1 text-sm'>
+                <div className='flex-1 text-sm overflow-hidden min-w-0'>
                   <div className='text-default-400 text-xs mb-1'>{new Date(log.timestamp).toLocaleString()}</div>
-                  <div className='whitespace-pre-wrap'>{log.message}</div>
+                  <div className='whitespace-pre-wrap break-all overflow-hidden'>{log.message}</div>
+
                   {log.details && (
                     <motion.pre
                       initial={{ height: 0, opacity: 0 }}

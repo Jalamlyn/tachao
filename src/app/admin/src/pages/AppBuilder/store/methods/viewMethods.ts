@@ -165,15 +165,24 @@ export function getCodeItems(this: AppCodeStore) {
 
 export function getFilteredCodeItems(this: AppCodeStore) {
   const items = this.getCodeItems()
-  const { searchResults, searchQuery } = this.viewState
+  const { searchResults, searchQuery, searchContent } = this.viewState
 
-  return searchResults.length > 0
-    ? items.filter((item) => searchResults.some((result) => result.moduleId === item.id))
-    : items.filter(
-        (item) =>
-          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.type.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+  // 如果有搜索内容且没有匹配结果,返回空列表
+  if (searchContent && searchResults.length === 0) {
+    return []
+  }
+
+  // 如果有搜索结果,返回匹配的项
+  if (searchResults.length > 0) {
+    return items.filter((item) => searchResults.some((result) => result.moduleId === item.id))
+  }
+
+  // 如果只有searchQuery,按标题和类型过滤
+  return items.filter(
+    (item) =>
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.type.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 }
 
 export function setSearchQuery(this: AppCodeStore, query: string) {

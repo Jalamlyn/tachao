@@ -122,6 +122,9 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
   }
 
   const contextStatus = getContextStatus()
+  const filteredItems = appCodeStore.getFilteredCodeItems()
+  const hasSearchContent = appCodeStore.viewState.searchContent.trim() !== ""
+  const noResults = hasSearchContent && appCodeStore.viewState.searchResults.length === 0
 
   return (
     <div className='p-2 h-full flex'>
@@ -206,7 +209,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
             />
             <CodeSearch appId={appId} />
           </div>
-          {appCodeStore.viewState.searchResults.length > 0 && (
+          {hasSearchContent && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -214,6 +217,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
             >
               <Icon icon='mdi:search-web' className='w-3 h-3' />
               找到 {appCodeStore.viewState.searchResults.length} 个匹配结果
+              {noResults && <span className='text-warning'>(无匹配内容)</span>}
             </motion.div>
           )}
         </div>
@@ -308,85 +312,96 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
           )}
 
           <AnimatePresence mode='popLayout'>
-            {appCodeStore.getFilteredCodeItems().map((item) => (
+            {noResults ? (
               <motion.div
-                key={item.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                whileHover={{ x: 5 }}
-                className={`
-                  group relative rounded-lg border border-transparent
-                  ${
-                    appCodeStore.viewState.selectedCodeId === item.id
-                      ? "bg-primary/5 border-primary/10 shadow-sm"
-                      : "hover:border-default-100 hover:bg-default-50/50"
-                  }
-                  t-all duration-300 ease-in-out
-                `}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className='text-center py-8 text-default-400'
               >
-                <div className='flex items-center gap-2 px-2 py-2'>
-                  {item.type !== "app" && (
-                    <Checkbox
-                      size='sm'
-                      isSelected={appCodeStore?.viewState?.selectedModules?.includes(item.id)}
-                      onValueChange={(checked) => {
-                        if (checked) {
-                          appCodeStore.viewState.selectedModules = [...appCodeStore.viewState.selectedModules, item.id]
-                        } else {
-                          appCodeStore.viewState.selectedModules = appCodeStore?.viewState?.selectedModules?.filter(
-                            (id) => id !== item.id
-                          )
-                        }
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      className='transition-transform group-hover:scale-110'
-                      classNames={{
-                        wrapper: "w-3 h-3",
-                      }}
-                    />
-                  )}
-
-                  <div
-                    className='flex-1 flex items-center gap-2 cursor-pointer min-w-0'
-                    onClick={() => appCodeStore.handleCodeSelect(item.id)}
-                  >
-                    <div className='flex-1 min-w-0'>
-                      <span className='text-sm font-medium truncate tracking-wide leading-snug block'>
-                        {item.title}
-                      </span>
-                      <div className='flex items-center gap-2 text-xs text-default-400'>
-                        <span className='truncate tracking-wide'>{item.name}</span>
-                        <span className='flex-shrink-0'>
-                          {new Date(item.updatedAt).toLocaleString("zh-CN", {
-                            month: "2-digit",
-                            day: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                    </div>
-
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      className='absolute right-2 top-2'
-                    >
-                      <div className='w-5 h-5 rounded-md bg-default-50 flex items-center justify-center flex-shrink-0'>
-                        <Icon
-                          icon={getCodeTypeIcon(item.type)}
-                          className={`w-3 h-3 transition-transform group-hover:scale-110 text-${getCodeTypeColor(
-                            item.type
-                          )}`}
-                        />
-                      </div>
-                    </motion.div>
-                  </div>
-                </div>
+                <Icon icon='mdi:file-search-outline' className='w-12 h-12 mx-auto mb-2 opacity-50' />
+                <div className='text-sm'>未找到匹配的模块</div>
               </motion.div>
-            ))}
+            ) : (
+              filteredItems.map((item) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  whileHover={{ x: 5 }}
+                  className={`
+                    group relative rounded-lg border border-transparent
+                    ${
+                      appCodeStore.viewState.selectedCodeId === item.id
+                        ? "bg-primary/5 border-primary/10 shadow-sm"
+                        : "hover:border-default-100 hover:bg-default-50/50"
+                    }
+                    t-all duration-300 ease-in-out
+                  `}
+                >
+                  <div className='flex items-center gap-2 px-2 py-2'>
+                    {item.type !== "app" && (
+                      <Checkbox
+                        size='sm'
+                        isSelected={appCodeStore?.viewState?.selectedModules?.includes(item.id)}
+                        onValueChange={(checked) => {
+                          if (checked) {
+                            appCodeStore.viewState.selectedModules = [...appCodeStore.viewState.selectedModules, item.id]
+                          } else {
+                            appCodeStore.viewState.selectedModules = appCodeStore?.viewState?.selectedModules?.filter(
+                              (id) => id !== item.id
+                            )
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className='transition-transform group-hover:scale-110'
+                        classNames={{
+                          wrapper: "w-3 h-3",
+                        }}
+                      />
+                    )}
+
+                    <div
+                      className='flex-1 flex items-center gap-2 cursor-pointer min-w-0'
+                      onClick={() => appCodeStore.handleCodeSelect(item.id)}
+                    >
+                      <div className='flex-1 min-w-0'>
+                        <span className='text-sm font-medium truncate tracking-wide leading-snug block'>
+                          {item.title}
+                        </span>
+                        <div className='flex items-center gap-2 text-xs text-default-400'>
+                          <span className='truncate tracking-wide'>{item.name}</span>
+                          <span className='flex-shrink-0'>
+                            {new Date(item.updatedAt).toLocaleString("zh-CN", {
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className='absolute right-2 top-2'
+                      >
+                        <div className='w-5 h-5 rounded-md bg-default-50 flex items-center justify-center flex-shrink-0'>
+                          <Icon
+                            icon={getCodeTypeIcon(item.type)}
+                            className={`w-3 h-3 transition-transform group-hover:scale-110 text-${getCodeTypeColor(
+                              item.type
+                            )}`}
+                          />
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </AnimatePresence>
         </div>
       </div>
