@@ -28,7 +28,22 @@ import { apiService, getCurrentAccountInfo, queryCurrentEnterPrise } from "@/ser
 import * as ReactHookForm from "react-hook-form"
 import { logStore } from "../AIEditor/components/LogStore"
 
-let esmIns = null
+// 异步加载esm
+let esmModule: any = null
+const loadEsm = async () => {
+  try {
+    if (!esmModule) {
+      logStore.info('开始加载ESM模块')
+      const module = await import("https://esm.sh/build")
+      esmModule = module.esm
+      logStore.info('ESM模块加载完成')
+    }
+    return esmModule
+  } catch (error) {
+    logStore.error('ESM模块加载失败', { error: error.message })
+    throw new Error(`加载ESM模块失败: ${error.message}`)
+  }
+}
 
 // 创建一个包装了超时控制的 wpm 对象
 const wpm = {
@@ -273,12 +288,5 @@ export const context = (appId) => ({
   recharts,
   cn,
   xlsx: XLSX,
-  esm: async () => {
-    if (esmIns) {
-      return esmIns.default
-    } else {
-      esmIns = await import("https://esm.sh/build")
-      return esmIns.default
-    }
-  },
+  esm: loadEsm // 导出异步加载函数而不是直接导出esm模块
 })
