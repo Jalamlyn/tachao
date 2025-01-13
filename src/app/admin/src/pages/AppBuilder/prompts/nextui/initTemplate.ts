@@ -126,7 +126,7 @@ const handleError = (error, errorInfo = {}) => {
   });
 
   // 显示错误提示给用户
-  context.message.error("应用运行出现异常，请刷新页面重试")
+  context.message.error("应用运行出现异常，请将错误信息发送给 AI 进行修复")
 
   // 控制台输出完整错误信息（用于开发调试）
   console.error("Original error:", error);
@@ -338,7 +338,8 @@ const handleError = (error, errorInfo = {}) => {
     location: window.location.href
   });
 
-  context.message.error("应用运行出现异常，请刷新页面重试")
+  context.message.error("应用运行出现异常，请将错误信息发送给 AI 进行修复")
+
 
   console.error("Original error:", error);
   console.error("Serialized error:", serializedError);

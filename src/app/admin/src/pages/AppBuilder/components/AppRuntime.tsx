@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { AppRender } from "@/app/admin/src/pages/AppBuilder/AppRender"
-import { Spinner, Chip } from "@nextui-org/react"
+import { Spinner, Chip, Button } from "@nextui-org/react"
 import message from "@/components/Message"
 import { Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
@@ -11,11 +11,11 @@ import { PermissionCheck } from "@/app/admin/src/permissions/components/Permissi
 import { localDB } from "@/utils/localDB"
 import { getMetadata, getPublicMetaData } from "@/service/apis/metadata"
 
-interface PreviewPageProps {
+interface AppRuntimeProps {
   appId: string
 }
 
-const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
+const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [appInfo, setAppInfo] = useState<any>(null)
@@ -27,7 +27,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
       return
     }
 
-    const initializePreview = async () => {
+    const initializeApp = async () => {
       try {
         setIsLoading(true)
         setError(null)
@@ -58,13 +58,13 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
 
         setIsLoading(false)
       } catch (error) {
-        console.error("Error initializing preview:", error)
-        setError(error instanceof Error ? error.message : "初始化预览失败")
+        console.error("Error initializing app:", error)
+        setError(error instanceof Error ? error.message : "应用初始化失败")
         setIsLoading(false)
       }
     }
 
-    initializePreview()
+    initializeApp()
   }, [appId])
 
   if (!appId) {
@@ -86,8 +86,19 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   if (error) {
     return (
       <div className='flex items-center justify-center min-h-screen'>
-        <div className='p-4 bg-danger-50 rounded-lg'>
-          <p className='text-danger'>{error}</p>
+        <div className='p-6 bg-danger-50 rounded-lg max-w-[600px] text-center space-y-4'>
+          <h3 className='text-xl font-medium text-danger'>应用运行出错</h3>
+          <p className='text-danger-600'>{error}</p>
+          <p className='text-small text-foreground-500'>
+            如果问题持续存在，请联系网站管理员进行修复
+          </p>
+          <Button
+            color="primary"
+            variant="flat"
+            onClick={() => window.location.reload()}
+          >
+            重新加载
+          </Button>
         </div>
       </div>
     )
@@ -140,8 +151,8 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
             appId={appId}
             basename={`/app-run/${appId}`}
             onError={(error) => {
-              console.error("Preview error:", error)
-              message.error(`预览错误: ${error.message}`)
+              console.error("Runtime error:", error)
+              message.error(`运行错误: ${error.message}`)
             }}
           />
         </AppContext.Provider>
@@ -163,4 +174,4 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   )
 })
 
-export default PreviewPage
+export default AppRuntime

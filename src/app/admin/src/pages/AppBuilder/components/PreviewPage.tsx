@@ -23,8 +23,11 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
     // 添加全局错误处理
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error("Unhandled promise rejection:", event.reason)
-      setError(`未处理的异步错误: ${event.reason?.message || "未知错误"}`)
-      setErrorDetails(event.reason)
+      // 只在没有现有错误时设置新错误
+      if (!error) {
+        setError(`未处理的异步错误: ${event.reason?.message || "未知错误"}`)
+        setErrorDetails(event.reason)
+      }
     }
 
     window.addEventListener("unhandledrejection", handleUnhandledRejection)
@@ -32,7 +35,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
     return () => {
       window.removeEventListener("unhandledrejection", handleUnhandledRejection)
     }
-  }, [])
+  }, [error]) // 添加error作为依赖
 
   const handleAIFix = (errorInfo: any) => {
     window.parent.postMessage(
@@ -52,22 +55,27 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   }
 
   const handleError = (error: Error) => {
-    const errorContent = (
-      <div className='flex items-center gap-2'>
-        <div>{error.message}</div>
-        <Button size='sm' color='primary' onClick={handleAIFix}>
-          AI修复
-        </Button>
-      </div>
-    )
-
-    message.error(errorContent)
+    // 只在没有现有错误时显示新错误
+    if (!errorDetails) {
+      const errorContent = (
+        <div className='flex items-center gap-2'>
+          <div>{error.message}</div>
+          <Button size='sm' color='primary' onClick={handleAIFix}>
+            AI修复
+          </Button>
+        </div>
+      )
+      message.error(errorContent)
+    }
   }
 
   const handleModuleError = (error: Error) => {
-    setError(`模块执行错误: ${error.message}`)
-    setErrorDetails(error)
-    message.error(error.message)
+    // 只在没有现有错误时设置新错误
+    if (!errorDetails) {
+      setError(`模块执行错误: ${error.message}`)
+      setErrorDetails(error)
+      message.error(error.message)
+    }
   }
 
   useEffect(() => {

@@ -33,14 +33,14 @@ let esmModule: any = null
 const loadEsm = async () => {
   try {
     if (!esmModule) {
-      logStore.info('开始加载ESM模块')
+      logStore.info("开始加载ESM模块")
       const module = await import("https://esm.sh/build")
       esmModule = module.esm
-      logStore.info('ESM模块加载完成')
+      logStore.info("ESM模块加载完成")
     }
     return esmModule
   } catch (error) {
-    logStore.error('ESM模块加载失败', { error: error.message })
+    logStore.error("ESM模块加载失败", { error: error.message })
     throw new Error(`加载ESM模块失败: ${error.message}`)
   }
 }
@@ -57,7 +57,7 @@ const wpm = {
         )
         logStore.error(`模块导入失败: ${moduleName}`, { error: error.message })
         reject(error)
-      }, 5000)
+      }, 2000)
     })
 
     try {
@@ -80,11 +80,6 @@ const wpm = {
       throw new Error(`导入模块 ${moduleName} 失败: ${error.message}`)
     }
   },
-}
-
-// 检查是否是微信环境
-const isWeixinBrowser = () => {
-  return /MicroMessenger/i.test(navigator.userAgent)
 }
 
 // 生成唯一的文件路径
@@ -288,5 +283,5 @@ export const context = (appId) => ({
   recharts,
   cn,
   xlsx: XLSX,
-  esm: loadEsm // 导出异步加载函数而不是直接导出esm模块
+  esm: loadEsm, // 导出异步加载函数而不是直接导出esm模块
 })

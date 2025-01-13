@@ -190,11 +190,11 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
 
       // 构建完整的用户输入
       const enhancedCommand = isPMMode
-        ? `<user-input>${commandContent.replace("@pm", "").trim()}</user-input>
+        ? `${commandContent}
             [注意：这是一个产品经理咨询模式的对话，请不要生成任何代码，只需要：
               1. 仔细阅读项目代码
               2. 理解我的问题,并给出回答。]`
-        : `<user-input>${commandContent.replace("@mo", "").trim()}</user-input>
+        : `${commandContent}
             [注意：这是一个工程师模式对话，请根据项目代码和上下文生成完整的模块代码，不允许用注释省略任何逻辑和代码，对于简单的明确的修感，或者文本替换，使用 SEARCH/REPLACE 模式进行替换即可。]
         `
 
