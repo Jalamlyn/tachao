@@ -1,5 +1,4 @@
 import chatChunkExpert from "@/service/chat/chat-chunk-openrouter"
-import chatChunkFree from "@/service/chat/chat-chunk-openrouter-free"
 import { AppBuilderMessage } from "./types"
 import { balanceStore } from "@/stores/balanceStore"
 import { appCodeStore } from "./store/appCodeStore"
@@ -45,65 +44,6 @@ class AppAgent {
     } catch (error) {
       console.error("Error getting apps context:", error)
       return "获取应用信息失败"
-    }
-  }
-
-  private async getRelevantModuleIds(modules: Record<string, any>, command: string | CommandInput): Promise<string[]> {
-    const commandContent = typeof command === "string" ? command : command.content
-    const cleanContent = commandContent.trim().toLowerCase().startsWith("@pm")
-      ? commandContent.replace("@pm", "").trim()
-      : commandContent
-
-    const commandImages = typeof command === "string" ? [] : command.images || []
-
-    const modulesContext = Object.entries(modules)
-      .map(
-        ([id, module]) => `
-模块ID: ${id}
-模块名称: ${module.data.name}
-模块标题: ${module.data.title}
-模块类型: ${module.data.type}
-模块代码:
-${module.data.code}
-`
-      )
-      .join("\n---\n")
-
-    const prompt = `分析以下项目代码和用户输入，返回与用户输入最相关的模块ID列表。
-项目代码：
-${modulesContext}
-
-用户输入：${cleanContent}
-
-请先分析用户输入和各个模块的关系，将分析结果输出到 mo-ai-think 标签中，然后将相关模块ID以JSON格式返回到 <mo-ai-code> 标签中。JSON格式为：{"moduleIds": ["id1", "id2"]}。只返回确实相关的模块ID。`
-
-    let response = ""
-    await chatChunkFree(
-      [
-        {
-          role: "user",
-          content: prompt,
-          images: commandImages,
-        },
-      ],
-      (chunk: string) => {
-        response += chunk
-      },
-      () => {},
-      true,
-      0
-    )
-
-    const match = response.match(/<mo-ai-code.*?>(.*?)<\/mo-ai-code>/s)
-    if (!match) {
-      return []
-    }
-    try {
-      const json = JSON.parse(match[1])
-      return json.moduleIds || []
-    } catch (error) {
-      console.error("Error parsing module IDs:", error)
-      return []
     }
   }
 
@@ -213,8 +153,6 @@ ${appCodeStore.currentVersion?.modules[appEntryId]?.data?.code || "需要先创�
 2. ${
         moduleSelectionMode === "manual"
           ? `手动选中的模块代码 (${Object.keys(relevantModules).length}个模块):`
-          : moduleSelectionMode === "smart"
-          ? `AI智能选择的相关模块代码 (${Object.keys(relevantModules).length}个模块):`
           : `所有模块代码 (${Object.keys(relevantModules).length}个模块):`
       }
 ${modulesContext}
@@ -252,15 +190,13 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
 
       // 构建完整的用户输入
       const enhancedCommand = isPMMode
-        ? `<我的输入>${commandContent}, 生成完整代码必须确保代码是完整的</我的输入>
-            
-注意：这是一个产品经理咨询模式的对话，请不要生成任何代码，只需要：
-1. 仔细阅读项目代码
-2. 理解用户的问题,并给出回答。
-
-请分析上述项目代码和系统日志，并回答用户的问题：
-<我的输入>${commandContent.replace("@pm", "").trim()}</我的输入>`
-        : `<我的输入>${commandContent}</我的输入>`
+        ? `<user-input>${commandContent.replace("@pm", "").trim()}</user-input>
+            [注意：这是一个产品经理咨询模式的对话，请不要生成任何代码，只需要：
+              1. 仔细阅读项目代码
+              2. 理解我的问题,并给出回答。]`
+        : `<user-input>${commandContent.replace("@mo", "").trim()}</user-input>
+            [注意：这是一个工程师模式对话，请根据项目代码和上下文生成完整的模块代码，不允许用注释省略任何逻辑和代码，对于简单的明确的修感，或者文本替换，使用 SEARCH/REPLACE 模式进行替换即可。]
+        `
 
       const allMessages = [
         ...messages,
