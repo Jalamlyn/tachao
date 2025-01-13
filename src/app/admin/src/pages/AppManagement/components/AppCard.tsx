@@ -47,7 +47,11 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
     onClose: onPermissionModalClose,
   } = useDisclosure()
   const { isOpen: isRenameModalOpen, onOpen: onRenameModalOpen, onClose: onRenameModalClose } = useDisclosure()
-  const { isOpen: isCollaboratorModalOpen, onOpen: onCollaboratorModalOpen, onClose: onCollaboratorModalClose } = useDisclosure()
+  const {
+    isOpen: isCollaboratorModalOpen,
+    onOpen: onCollaboratorModalOpen,
+    onClose: onCollaboratorModalClose,
+  } = useDisclosure()
 
   const { renameApp, isRenaming } = useRenameApp()
   const { updateAppConfig, isUpdating } = useUpdateAppConfig()
@@ -56,11 +60,19 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
   const [selectedAccount, setSelectedAccount] = useState("")
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false)
 
+  // 基础编辑权限判断
   const hasEditPermission = (app: AppIndex, currentUser: any) => {
     if (!currentUser) return false
     if (currentUser.account === "admin") return true
     if (app.creator?.id === currentUser.id) return true
     return app.collaborators?.some((c) => c.id === currentUser.id) || false
+  }
+
+  // 新增：管理员权限判断（只有管理员和创建者有权限）
+  const hasAdminPermission = (app: AppIndex, currentUser: any) => {
+    if (!currentUser) return false
+    if (currentUser.account === "admin") return true
+    return app.creator?.id === currentUser.id
   }
 
   const handleDelete = () => {
@@ -112,21 +124,21 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
         throw new Error("未找到选择的用户")
       }
 
-      const updatedApp = {
-        ...app,
-        collaborators: [
-          ...(app.collaborators || []),
-          {
-            id: selectedUser.id,
-            name: selectedUser.name,
-            addedAt: new Date().toISOString(),
-          },
-        ],
-      }
+      const updatedCollaborators = [
+        ...(app.collaborators || []),
+        {
+          id: selectedUser.id,
+          name: selectedUser.name,
+          addedAt: new Date().toISOString(),
+        },
+      ]
 
       await updateAppConfig({
         appId: app.id,
-        input: updatedApp,
+        input: {
+          ...app,
+          collaborators: updatedCollaborators,
+        },
       })
 
       message.success("添加协作者成功")
@@ -140,14 +152,14 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
 
   const handleRemoveCollaborator = async (collaboratorId: string) => {
     try {
-      const updatedApp = {
-        ...app,
-        collaborators: app.collaborators?.filter((c) => c.id !== collaboratorId) || [],
-      }
+      const updatedCollaborators = app.collaborators?.filter((c) => c.id !== collaboratorId) || []
 
       await updateAppConfig({
         appId: app.id,
-        input: updatedApp,
+        input: {
+          ...app,
+          collaborators: updatedCollaborators,
+        },
       })
 
       message.success("移除协作者成功")
@@ -242,7 +254,6 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
                   </Tooltip>
 
                   <div className='flex items-center gap-2'>
-                    <p className='text-small text-default-500'>创建于 {new Date(app.createdAt).toLocaleDateString()}</p>
                     <Chip size='sm' variant='flat' color={getAccessControlLabel().color}>
                       {getAccessControlLabel().label}
                     </Chip>
@@ -309,7 +320,12 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
 
                     <Dropdown>
                       <DropdownTrigger>
-                        <Button size='sm' variant='light' isIconOnly className='bg-default-100/50 hover:bg-default-200/50'>
+                        <Button
+                          size='sm'
+                          variant='light'
+                          isIconOnly
+                          className='bg-default-100/50 hover:bg-default-200/50'
+                        >
                           <Icon icon='mdi:dots-vertical' className='w-5 h-5' />
                         </Button>
                       </DropdownTrigger>
@@ -334,25 +350,30 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
                         >
                           重命名
                         </DropdownItem>
-                        <DropdownItem
-                          key='collaborators'
-                          startContent={<Icon icon='mdi:account-multiple' className='w-4 h-4' />}
-                          onPress={() => {
-                            loadAccounts()
-                            onCollaboratorModalOpen()
-                          }}
-                        >
-                          管理协作者
-                        </DropdownItem>
-                        <DropdownItem
-                          key='delete'
-                          className='text-danger'
-                          color='danger'
-                          startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
-                          onPress={handleDelete}
-                        >
-                          删除应用
-                        </DropdownItem>
+                        {/* 只有管理员和创建者可以看到这些选项 */}
+                        {hasAdminPermission(app, user) && (
+                          <>
+                            <DropdownItem
+                              key='collaborators'
+                              startContent={<Icon icon='mdi:account-multiple' className='w-4 h-4' />}
+                              onPress={() => {
+                                loadAccounts()
+                                onCollaboratorModalOpen()
+                              }}
+                            >
+                              管理协作者
+                            </DropdownItem>
+                            <DropdownItem
+                              key='delete'
+                              className='text-danger'
+                              color='danger'
+                              startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
+                              onPress={handleDelete}
+                            >
+                              删除应用
+                            </DropdownItem>
+                          </>
+                        )}
                       </DropdownMenu>
                     </Dropdown>
                   </>

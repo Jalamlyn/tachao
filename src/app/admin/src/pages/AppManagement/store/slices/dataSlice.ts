@@ -128,17 +128,24 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
               pages: input.pages || app.pages || [],
               homePageId: input.homePageId || app.homePageId,
               accessControl: input.accessControl || app.accessControl,
+              // 确保正确更新 collaborators 字段
+              collaborators: input.collaborators || app.collaborators || [],
               updatedAt: new Date().toISOString(),
             }
           }
           return app
         })
+
+        // 更新本地缓存
         queryClient.setQueryData(QUERY_KEYS.apps, updatedData)
 
         try {
+          // 保存到服务器
           await setMetadata("app_index", JSON.stringify(updatedData))
+          // 刷新查询缓存
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.apps })
         } catch (error) {
+          // 发生错误时恢复本地缓存
           queryClient.setQueryData(QUERY_KEYS.apps, currentData)
           throw error
         }
