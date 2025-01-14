@@ -134,6 +134,9 @@ class AppCodeStore {
       // 移除 export default
       let processedCode = code.replace(/export\s+default\s+/, '')
       
+      // 移除末尾的分号
+      processedCode = processedCode.replace(/;(\s*)$/, '$1')
+      
       // 如果代码已经是 async 函数，直接包装成 IIFE
       if (processedCode.trim().startsWith('async')) {
         return `(${processedCode})()`
