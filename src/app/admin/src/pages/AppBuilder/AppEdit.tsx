@@ -434,6 +434,7 @@ const AppBuilder: React.FC = observer(() => {
         <Tooltip content='发布为模板供他人使用'>
           <Button
             color='primary'
+            variant='flat'
             onClick={handlePublishTemplate}
             isDisabled={isLoading || publishInProgress || isCompiling}
             isLoading={publishInProgress}
