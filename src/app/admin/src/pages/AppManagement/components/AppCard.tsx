@@ -68,10 +68,9 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          // 添加延迟,根据卡片索引顺序依次加载
           setTimeout(() => {
             setShouldLoad(true)
-          }, index * 300) // 每张卡片间隔300ms
+          }, index * 300)
           observer.disconnect()
         }
       },
@@ -264,18 +263,29 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
         <CardBody>
           <div className='space-y-4'>
             {/* 预览区域 */}
-            <div className='relative w-full aspect-video rounded-lg overflow-hidden'>
+            <div className='relative w-full aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-default-50 to-default-100'>
               {shouldLoad ? (
-                <div className='absolute inset-0 scale-[0.5] origin-top-left transform-gpu'>
-                  <iframe
-                    src={`/app-run/${app.id}`}
-                    className='w-[200%] h-[200%] border-0'
-                    title={`Preview of ${app.title}`}
-                  />
+                <div className='relative w-full h-full'>
+                  {/* iframe容器 */}
+                  <div className='absolute inset-0 scale-[0.5] origin-top-left transform-gpu'>
+                    <iframe
+                      src={`/app-run/${app.id}`}
+                      className='w-[200%] h-[200%] border-0'
+                      title={`Preview of ${app.title}`}
+                    />
+                  </div>
+                  {/* 保护层 */}
+                  <div className='absolute inset-0 bg-transparent cursor-pointer' onClick={() => window.open(`/app-run/${app.id}`, "_blank")} />
                 </div>
               ) : (
-                <div className='w-full h-full bg-default-100 animate-pulse rounded-lg flex items-center justify-center'>
-                  <Icon icon='mdi:image-outline' className='w-8 h-8 text-default-300' />
+                <div className='w-full h-full flex flex-col items-center justify-center gap-3 p-4'>
+                  <div className='w-16 h-16 rounded-xl bg-gradient-to-br from-default-200 to-default-100 flex items-center justify-center animate-pulse'>
+                    <Icon icon='mdi:image-outline' className='w-8 h-8 text-default-400' />
+                  </div>
+                  <div className='text-center'>
+                    <p className='text-sm text-default-500'>加载预览...</p>
+                    <p className='text-xs text-default-400 mt-1'>{app.title}</p>
+                  </div>
                 </div>
               )}
             </div>
