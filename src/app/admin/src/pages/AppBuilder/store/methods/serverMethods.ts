@@ -1,6 +1,16 @@
 import { getMetadata, setMetadata, setPlatMetaData, getPlatMetaData } from "@/service/apis/metadata"
-import { AppCodeStore, Version, AppIndexItem, PublishedVersion } from "../types"
+import { AppCodeStore, Version, AppIndexItem, PublishedVersion, BundleVersion } from "../types"
 import { getCurrentAccountInfo } from "@/service/apis/user"
+
+function generateVersionNumber(bundles?: BundleVersion[]): string {
+  if (!bundles || bundles.length === 0) {
+    return "v1.00"
+  }
+  
+  const lastVersion = bundles[0].version
+  const versionNum = parseFloat(lastVersion.substring(1)) + 0.01
+  return `v${versionNum.toFixed(2)}`
+}
 
 export async function publishToServer(this: AppCodeStore, { useLatest = false } = {}) {
   if (!this.appId) {
@@ -18,10 +28,29 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
       versionDate: new Date(versionToPublish.timestamp).toLocaleString(),
     }
 
+    // 1. 先编译并上传bundle
+    const bundleUrl = await this.compileAndUpload()
+    
+    // 2. 准备新的bundle版本信息
+    const currentBundles = versionToPublish.app.bundles || []
+    const newBundle: BundleVersion = {
+      version: generateVersionNumber(currentBundles),
+      timestamp: Date.now(),
+      urls: [bundleUrl]
+    }
+
+    // 3. 更新bundles数组，保持最近10个版本
+    const updatedBundles = [newBundle, ...currentBundles].slice(0, 10)
+
+    // 4. 发布到服务器
     await setMetadata(
       this.appId,
       JSON.stringify({
-        app: versionToPublish.app,
+        app: {
+          ...versionToPublish.app,
+          bundles: updatedBundles,
+          bundleUrl // 保持向后兼容
+        },
         version: versionToPublish.app.version,
         updatedAt: new Date().toISOString(),
       })
@@ -45,11 +74,19 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
       await setMetadata("app_index", JSON.stringify(apps))
     }
 
+    // 更新当前版本的bundle信息
+    if (this.currentVersion) {
+      this.currentVersion.app.bundles = updatedBundles
+      this.currentVersion.app.bundleUrl = bundleUrl
+    }
+
     return {
       success: true,
       publishInfo,
       version: versionToPublish.app.version,
       publishedAt: new Date().toISOString(),
+      bundleUrl,
+      bundles: updatedBundles
     }
   } catch (error) {
     console.error("Error publishing app:", error)
@@ -142,7 +179,6 @@ export async function updateAppIndex(this: AppCodeStore, app: any, name: string)
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       version: app.version,
-      // 添加creator信息
       creator: {
         id: userInfo.id,
         name: userInfo.name || userInfo.username,
@@ -158,6 +194,7 @@ export async function updateAppIndex(this: AppCodeStore, app: any, name: string)
     throw new Error("Failed to update app index")
   }
 }
+
 export async function getLastPublishedVersion(this: AppCodeStore): Promise<PublishedVersion | null> {
   if (!this.appId) throw new Error("No app id")
 
@@ -182,6 +219,8 @@ export async function getLastPublishedVersion(this: AppCodeStore): Promise<Publi
       version: appData.version,
       publishedAt: appData.updatedAt,
       modules,
+      bundleUrl: appData.app.bundleUrl,
+      bundles: appData.app.bundles
     }
   } catch (error) {
     console.error("Error getting last published version:", error)
@@ -202,6 +241,8 @@ export async function rollbackToLastPublished(this: AppCodeStore): Promise<boole
         ...this.currentVersion!.app,
         version: publishedVersion.version,
         updatedAt: new Date().toISOString(),
+        bundleUrl: publishedVersion.bundleUrl,
+        bundles: publishedVersion.bundles
       },
       modules: Object.entries(publishedVersion.modules).reduce(
         (acc, [moduleId, moduleData]) => ({

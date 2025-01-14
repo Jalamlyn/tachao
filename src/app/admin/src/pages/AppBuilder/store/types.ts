@@ -16,13 +16,20 @@ export interface AppModule {
   title?: string
 }
 
+export interface BundleVersion {
+  version: string
+  timestamp: number
+  urls: string[]
+}
+
 export interface App {
   id: string
   name: string
   version: number
   updatedAt: string
   modules: Record<string, AppModule>
-  bundleUrl?: string // 新增：编译后的bundle URL
+  bundleUrl?: string
+  bundles?: BundleVersion[] // 新增：存储最近10个版本的bundle信息
 }
 
 export interface ModuleWrapper {
@@ -36,7 +43,7 @@ export interface Version {
   modules: Record<string, ModuleWrapper>
   serverVersion?: number
   lastSyncTime?: number
-  bundleUrl?: string // 新增：编译后的bundle URL
+  bundleUrl?: string
 }
 
 export interface AIGenerationResult {
@@ -75,14 +82,15 @@ export interface ViewState {
   showDeleteConfirm: boolean
   useSelectedModulesAsContext: boolean
   isDeletingModules?: boolean
-  isCompiling?: boolean // 新增：编译状态
+  isCompiling?: boolean
 }
 
 export interface PublishedVersion {
   version: number
   publishedAt: string
   modules: Record<string, ModuleData>
-  bundleUrl?: string // 新增：编译后的bundle URL
+  bundleUrl?: string
+  bundles?: BundleVersion[]
 }
 
 export interface DependencyCheckResult {
@@ -117,7 +125,6 @@ export interface AppCodeStore {
   viewState: ViewState
   hasPublishedVersion: boolean
 
-  // 方法声明
   compileCode(code: string): Promise<string>
   extractShataAICodes(content: string): ShataAICode[]
   processAIResponse(aiResponse: string): Promise<Record<string, ModuleData>>
@@ -139,7 +146,6 @@ export interface AppCodeStore {
   toggleUseSelectedModulesAsContext(): void
   getSelectedModulesInfo(): Array<{ id: string; name: string; title: string; type: ModuleType }>
   
-  // 新增：编译相关方法
   bundleCompiledCode(): Promise<string>
   compileAndUpload(): Promise<string>
 }
