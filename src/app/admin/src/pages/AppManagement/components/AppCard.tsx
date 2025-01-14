@@ -22,6 +22,7 @@ import {
   Tooltip,
   Select,
   SelectItem,
+  Skeleton,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
@@ -59,6 +60,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
   const [accounts, setAccounts] = useState<any[]>([])
   const [selectedAccount, setSelectedAccount] = useState("")
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false)
+  const [isPreviewLoading, setIsPreviewLoading] = useState(true)
 
   // 基础编辑权限判断
   const hasEditPermission = (app: AppIndex, currentUser: any) => {
@@ -237,147 +239,161 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
     <>
       <Card>
         <CardBody>
-          <div className='grid grid-cols-12 gap-6 items-center'>
-            {/* 左侧图标区域 */}
-            <div className='col-span-4 md:col-span-3'>
-              <div>
-                <Icon icon={getTemplateIcon(app.template)} className={`w-12 h-12 ${getTemplateColor(app.template)}`} />
-              </div>
+          <div className='space-y-4'>
+            {/* 预览区域 */}
+            <div className='relative w-full aspect-video rounded-lg overflow-hidden bg-default-100'>
+              <Skeleton isLoaded={!isPreviewLoading} className='w-full h-full rounded-lg'>
+                <iframe
+                  src={`/app-run/${app.id}`}
+                  className='w-full h-full border-0'
+                  onLoad={() => setIsPreviewLoading(false)}
+                  title={`Preview of ${app.title}`}
+                />
+              </Skeleton>
             </div>
 
-            {/* 右侧信息区域 */}
-            <div className='col-span-8 md:col-span-9 space-y-4'>
-              <div className='flex justify-between items-start'>
-                <div className='space-y-1'>
-                  <Tooltip content={app.title}>
-                    <h3 className='text-xl font-bold tracking-tight truncate max-w-36'>{app.title}</h3>
-                  </Tooltip>
+            <div className='grid grid-cols-12 gap-6 items-center'>
+              {/* 左侧图标区域 */}
+              <div className='col-span-4 md:col-span-3'>
+                <div>
+                  <Icon icon={getTemplateIcon(app.template)} className={`w-12 h-12 ${getTemplateColor(app.template)}`} />
+                </div>
+              </div>
 
-                  <div className='flex items-center gap-2'>
-                    <Chip size='sm' variant='flat' color={getAccessControlLabel().color}>
-                      {getAccessControlLabel().label}
-                    </Chip>
+              {/* 右侧信息区域 */}
+              <div className='col-span-8 md:col-span-9 space-y-4'>
+                <div className='flex justify-between items-start'>
+                  <div className='space-y-1'>
+                    <Tooltip content={app.title}>
+                      <h3 className='text-xl font-bold tracking-tight truncate max-w-36'>{app.title}</h3>
+                    </Tooltip>
+
+                    <div className='flex items-center gap-2'>
+                      <Chip size='sm' variant='flat' color={getAccessControlLabel().color}>
+                        {getAccessControlLabel().label}
+                      </Chip>
+                    </div>
+                  </div>
+
+                  {/* 创建者和协作者信息 */}
+                  <div className='flex flex-col gap-2'>
+                    {app.creator && (
+                      <Chip color='success' variant='bordered'>
+                        <span className='tracking-tight truncate font-bold text-xs text-default-500'>
+                          {app.creator.name === "管理员" ? "管理员" : app.creator.name.split("_")[1]}
+                        </span>
+                      </Chip>
+                    )}
+                    {app.collaborators && app.collaborators.length > 0 && (
+                      <Tooltip
+                        content={
+                          <div className='p-2'>
+                            <p className='text-small font-bold mb-1'>协作者:</p>
+                            {app.collaborators.map((c) => (
+                              <div key={c.id} className='text-tiny'>
+                                {c.name}
+                              </div>
+                            ))}
+                          </div>
+                        }
+                      >
+                        <Chip color='secondary' variant='bordered' className='cursor-help'>
+                          <span className='tracking-tight truncate font-bold text-xs text-default-500'>
+                            {app.collaborators.length} 位协作者
+                          </span>
+                        </Chip>
+                      </Tooltip>
+                    )}
                   </div>
                 </div>
 
-                {/* 创建者和协作者信息 */}
-                <div className='flex flex-col gap-2'>
-                  {app.creator && (
-                    <Chip color='success' variant='bordered'>
-                      <span className='tracking-tight truncate font-bold text-xs text-default-500'>
-                        {app.creator.name === "管理员" ? "管理员" : app.creator.name.split("_")[1]}
-                      </span>
-                    </Chip>
-                  )}
-                  {app.collaborators && app.collaborators.length > 0 && (
-                    <Tooltip
-                      content={
-                        <div className='p-2'>
-                          <p className='text-small font-bold mb-1'>协作者:</p>
-                          {app.collaborators.map((c) => (
-                            <div key={c.id} className='text-tiny'>
-                              {c.name}
-                            </div>
-                          ))}
-                        </div>
-                      }
-                    >
-                      <Chip color='secondary' variant='bordered' className='cursor-help'>
-                        <span className='tracking-tight truncate font-bold text-xs text-default-500'>
-                          {app.collaborators.length} 位协作者
-                        </span>
-                      </Chip>
-                    </Tooltip>
+                {/* 操作按钮 */}
+                <div className='flex gap-2'>
+                  <Button
+                    size='sm'
+                    variant='flat'
+                    startContent={<Icon icon='mdi:eye' className='w-5 h-5' />}
+                    onPress={() => window.open(`/app-run/${app.id}`, "_blank")}
+                  ></Button>
+
+                  {hasEditPermission(app, user) && (
+                    <>
+                      <Button
+                        size='sm'
+                        color='primary'
+                        startContent={<Icon icon='hugeicons:ai-chat-02' className='w-5 h-5' />}
+                        onPress={() => navigate(`/admin/apps/${app.id}/builder`)}
+                      ></Button>
+
+                      <Button
+                        size='sm'
+                        variant='flat'
+                        color='danger'
+                        startContent={<Icon icon='mdi:shield-lock' className='w-5 h-5' />}
+                        onPress={onPermissionModalOpen}
+                      ></Button>
+
+                      <Dropdown>
+                        <DropdownTrigger>
+                          <Button
+                            size='sm'
+                            variant='light'
+                            isIconOnly
+                            className='bg-default-100/50 hover:bg-default-200/50'
+                          >
+                            <Icon icon='mdi:dots-vertical' className='w-5 h-5' />
+                          </Button>
+                        </DropdownTrigger>
+                        <DropdownMenu aria-label='应用操作'>
+                          <DropdownItem
+                            key='copy-id'
+                            startContent={
+                              <Icon
+                                icon='mdi:content-copy'
+                                className='w-4 h-4 transform group-hover:scale-110 transition-transform duration-200'
+                                aria-hidden='true'
+                              />
+                            }
+                            onPress={handleCopyId}
+                          >
+                            复制ID
+                          </DropdownItem>
+                          <DropdownItem
+                            key='rename'
+                            startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
+                            onPress={onRenameModalOpen}
+                          >
+                            重命名
+                          </DropdownItem>
+                          {/* 只有管理员和创建者可以看到这些选项 */}
+                          {hasAdminPermission(app, user) && (
+                            <>
+                              <DropdownItem
+                                key='collaborators'
+                                startContent={<Icon icon='mdi:account-multiple' className='w-4 h-4' />}
+                                onPress={() => {
+                                  loadAccounts()
+                                  onCollaboratorModalOpen()
+                                }}
+                              >
+                                管理协作者
+                              </DropdownItem>
+                              <DropdownItem
+                                key='delete'
+                                className='text-danger'
+                                color='danger'
+                                startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
+                                onPress={handleDelete}
+                              >
+                                删除应用
+                              </DropdownItem>
+                            </>
+                          )}
+                        </DropdownMenu>
+                      </Dropdown>
+                    </>
                   )}
                 </div>
-              </div>
-
-              {/* 操作按钮 */}
-              <div className='flex gap-2'>
-                <Button
-                  size='sm'
-                  variant='flat'
-                  startContent={<Icon icon='mdi:eye' className='w-5 h-5' />}
-                  onPress={() => window.open(`/app-run/${app.id}`, "_blank")}
-                ></Button>
-
-                {hasEditPermission(app, user) && (
-                  <>
-                    <Button
-                      size='sm'
-                      color='primary'
-                      startContent={<Icon icon='hugeicons:ai-chat-02' className='w-5 h-5' />}
-                      onPress={() => navigate(`/admin/apps/${app.id}/builder`)}
-                    ></Button>
-
-                    <Button
-                      size='sm'
-                      variant='flat'
-                      color='danger'
-                      startContent={<Icon icon='mdi:shield-lock' className='w-5 h-5' />}
-                      onPress={onPermissionModalOpen}
-                    ></Button>
-
-                    <Dropdown>
-                      <DropdownTrigger>
-                        <Button
-                          size='sm'
-                          variant='light'
-                          isIconOnly
-                          className='bg-default-100/50 hover:bg-default-200/50'
-                        >
-                          <Icon icon='mdi:dots-vertical' className='w-5 h-5' />
-                        </Button>
-                      </DropdownTrigger>
-                      <DropdownMenu aria-label='应用操作'>
-                        <DropdownItem
-                          key='copy-id'
-                          startContent={
-                            <Icon
-                              icon='mdi:content-copy'
-                              className='w-4 h-4 transform group-hover:scale-110 transition-transform duration-200'
-                              aria-hidden='true'
-                            />
-                          }
-                          onPress={handleCopyId}
-                        >
-                          复制ID
-                        </DropdownItem>
-                        <DropdownItem
-                          key='rename'
-                          startContent={<Icon icon='mdi:pencil' className='w-4 h-4' />}
-                          onPress={onRenameModalOpen}
-                        >
-                          重命名
-                        </DropdownItem>
-                        {/* 只有管理员和创建者可以看到这些选项 */}
-                        {hasAdminPermission(app, user) && (
-                          <>
-                            <DropdownItem
-                              key='collaborators'
-                              startContent={<Icon icon='mdi:account-multiple' className='w-4 h-4' />}
-                              onPress={() => {
-                                loadAccounts()
-                                onCollaboratorModalOpen()
-                              }}
-                            >
-                              管理协作者
-                            </DropdownItem>
-                            <DropdownItem
-                              key='delete'
-                              className='text-danger'
-                              color='danger'
-                              startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
-                              onPress={handleDelete}
-                            >
-                              删除应用
-                            </DropdownItem>
-                          </>
-                        )}
-                      </DropdownMenu>
-                    </Dropdown>
-                  </>
-                )}
               </div>
             </div>
           </div>
