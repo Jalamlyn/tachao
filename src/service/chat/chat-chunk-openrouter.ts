@@ -6,8 +6,8 @@ import { costService } from "@/utils/costService"
 import { aiControllerStore } from "@/app/admin/src/pages/AppBuilder/AIEditor/components/AIControllerStore"
 
 const AI_MODELS = {
-  BASIC: "anthropic/claude-3.5-haiku-20241022:beta",
-  ADVANCED: "anthropic/claude-3.5-sonnet:beta",
+  BASIC: "anthropic/claude-3.5-haiku-20241022",
+  ADVANCED: "anthropic/claude-3.5-sonnet",
 }
 
 function selectModel(messages) {

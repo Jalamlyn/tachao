@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react"
 import {
   Card,
   CardBody,
-  CardFooter,
   Button,
   Dropdown,
   DropdownTrigger,
@@ -15,21 +14,18 @@ import {
   ModalBody,
   ModalFooter,
   Input,
-  RadioGroup,
-  Radio,
   Chip,
   Avatar,
+  AvatarGroup,
   Tooltip,
   Select,
   SelectItem,
-  Skeleton,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useNavigate } from "react-router-dom"
 import { AppIndex, useAppStore } from "../store/useAppStore"
 import { PermissionModal } from "@/app/admin/src/permissions/components/PermissionModal"
 import message from "@/components/Message"
-import { color } from "framer-motion"
 import { useCurrentUser } from "@/app/admin/src/permissions/hooks/useCurrentUser"
 import { queryRamAccount } from "@/service/apis/user"
 
@@ -193,39 +189,6 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
     }
   }
 
-  const getTemplateIcon = (template?: string) => {
-    switch (template) {
-      case "enterprise":
-        return "mdi:building"
-      case "dashboard":
-        return "mdi:view-dashboard-outline"
-      default:
-        return "mdi:view-grid-outline"
-    }
-  }
-
-  const getTemplateColor = (template?: string) => {
-    switch (template) {
-      case "enterprise":
-        return "text-blue-500"
-      case "dashboard":
-        return "text-secondary"
-      default:
-        return "text-primary"
-    }
-  }
-
-  const getTemplateGradient = (template?: string) => {
-    switch (template) {
-      case "enterprise":
-        return "from-blue-100 to-blue-50"
-      case "dashboard":
-        return "from-secondary-100 to-secondary-50"
-      default:
-        return "from-primary-100 to-primary-50"
-    }
-  }
-
   const getAccessControlLabel = () => {
     if (app.accessControl?.isPublic)
       return {
@@ -275,7 +238,10 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
                     />
                   </div>
                   {/* 保护层 */}
-                  <div className='absolute inset-0 bg-transparent cursor-pointer' onClick={() => window.open(`/app-run/${app.id}`, "_blank")} />
+                  <div
+                    className='absolute inset-0 bg-transparent cursor-pointer'
+                    onClick={() => window.open(`/app-run/${app.id}`, "_blank")}
+                  />
                 </div>
               ) : (
                 <div className='w-full h-full flex flex-col items-center justify-center gap-3 p-4'>
@@ -292,7 +258,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
 
             <div className='grid grid-cols-12 gap-6 items-center'>
               {/* 右侧信息区域 */}
-              <div className='col-span-8 md:col-span-9 space-y-4'>
+              <div className='col-span-12 space-y-4'>
                 <div className='flex justify-between items-start'>
                   <div className='space-y-1'>
                     <Tooltip content={app.title}>
@@ -309,11 +275,21 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
                   {/* 创建者和协作者信息 */}
                   <div className='flex flex-col gap-2'>
                     {app.creator && (
-                      <Chip color='success' variant='bordered'>
+                      <div className='flex items-center gap-2'>
+                        <Avatar
+                          size='sm'
+                          showFallback
+                          name={app.creator.name}
+                          src={app.creator.avatar || "https://i.pravatar.cc/150?u=a04258114e29026708c"}
+                          isBordered
+                          radius='full'
+                          fallback={<Icon icon='mdi:account' className='w-4 h-4' />}
+                          className='w-6 h-6'
+                        />
                         <span className='tracking-tight truncate font-bold text-xs text-default-500'>
-                          {app.creator.name === "管理员" ? "管理员" : app.creator.name.split("_")[1]}
+                          创建者：{app.creator.name === "管理员" ? "管理员" : app.creator.name.split("_")[1]}
                         </span>
-                      </Chip>
+                      </div>
                     )}
                     {app.collaborators && app.collaborators.length > 0 && (
                       <Tooltip
@@ -321,18 +297,38 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
                           <div className='p-2'>
                             <p className='text-small font-bold mb-1'>协作者:</p>
                             {app.collaborators.map((c) => (
-                              <div key={c.id} className='text-tiny'>
+                              <div key={c.id} className='flex items-center gap-2 text-tiny'>
+                                <Avatar
+                                  size='sm'
+                                  showFallback
+                                  name={c.name}
+                                  src={c.avatar}
+                                  fallback={<Icon icon='mdi:account' className='w-4 h-4' />}
+                                  className='w-5 h-5'
+                                />
                                 {c.name}
                               </div>
                             ))}
                           </div>
                         }
                       >
-                        <Chip color='secondary' variant='bordered' className='cursor-help'>
+                        <div className='flex items-center gap-2'>
+                          <AvatarGroup isBordered max={3} size='sm' total={app.collaborators.length}>
+                            {app.collaborators.map((c) => (
+                              <Avatar
+                                key={c.id}
+                                size='sm'
+                                showFallback
+                                name={c.name}
+                                src={c.avatar}
+                                fallback={<Icon icon='mdi:account' className='w-4 h-4' />}
+                              />
+                            ))}
+                          </AvatarGroup>
                           <span className='tracking-tight truncate font-bold text-xs text-default-500'>
                             {app.collaborators.length} 位协作者
                           </span>
-                        </Chip>
+                        </div>
                       </Tooltip>
                     )}
                   </div>
