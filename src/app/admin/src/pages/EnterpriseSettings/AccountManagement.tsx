@@ -22,7 +22,7 @@ import {
   Radio,
   RadioGroup,
 } from "@nextui-org/react"
-import { PlusIcon, EditIcon, DeleteIcon, UserPlusIcon, EyeIcon, CopyIcon } from "lucide-react"
+import { PlusIcon, EditIcon, DeleteIcon, UserPlusIcon, EyeIcon, CopyIcon, CheckIcon } from "lucide-react"
 import {
   queryRamAccount,
   createRamAccount,
@@ -67,6 +67,7 @@ const AccountManagement: React.FC = () => {
   const [selectedAccount, setSelectedAccount] = useState(null)
   const [accountDetail, setAccountDetail] = useState(null)
   const [subscription, setSubscription] = useState(null)
+  const [copyingAccountId, setCopyingAccountId] = useState(null) // 新增：跟踪正在复制的账号ID
   const { isOpen: isCreateModalOpen, onOpen: onCreateModalOpen, onClose: onCreateModalClose } = useDisclosure()
   const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure()
   const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
@@ -237,11 +238,12 @@ const AccountManagement: React.FC = () => {
 
   // 新增：复制开通消息的函数
   const copyAccountMessage = async (account) => {
+    setCopyingAccountId(account.id)
     const message = `🎉 欢迎加入即想AI！
 
 您的账号信息如下：
 👤 账号：${account.account}
-🔑 密码：${account.password || '初始密码已发送至管理员'}
+🔑 密码：${account.password}
 🌐 登录地址：www.mobenai.com.cn/login
 
 ✨ 即想AI是一个革命性的AI编程平台，让人人都能成为开发者。
@@ -254,9 +256,14 @@ const AccountManagement: React.FC = () => {
     try {
       await navigator.clipboard.writeText(message)
       message.success("开通消息已复制到剪贴板")
+      // 1.5秒后重置复制状态
+      setTimeout(() => {
+        setCopyingAccountId(null)
+      }, 1500)
     } catch (error) {
       console.error("Failed to copy message", error)
       message.error("复制失败，请重试")
+      setCopyingAccountId(null)
     }
   }
 
@@ -330,7 +337,11 @@ const AccountManagement: React.FC = () => {
                   variant='light'
                   onPress={() => copyAccountMessage(account)}
                 >
-                  <CopyIcon size={16} />
+                  {copyingAccountId === account.id ? (
+                    <CheckIcon size={16} className="text-success" />
+                  ) : (
+                    <CopyIcon size={16} />
+                  )}
                 </Button>
               </Tooltip>
             )}
