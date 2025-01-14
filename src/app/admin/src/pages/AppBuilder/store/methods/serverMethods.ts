@@ -28,15 +28,15 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
       versionDate: new Date(versionToPublish.timestamp).toLocaleString(),
     }
 
-    // 1. 先编译并上传bundle
-    const bundleUrl = await this.compileAndUpload()
+    // 1. 编译并上传所有模块文件
+    const moduleUrls = await this.compileAndUpload()
     
     // 2. 准备新的bundle版本信息
     const currentBundles = versionToPublish.app.bundles || []
     const newBundle: BundleVersion = {
       version: generateVersionNumber(currentBundles),
       timestamp: Date.now(),
-      urls: [bundleUrl]
+      urls: moduleUrls
     }
 
     // 3. 更新bundles数组，保持最近10个版本
@@ -49,7 +49,7 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
         app: {
           ...versionToPublish.app,
           bundles: updatedBundles,
-          bundleUrl // 保持向后兼容
+          bundleUrl: moduleUrls[0] // 保持向后兼容，使用第一个URL
         },
         version: versionToPublish.app.version,
         updatedAt: new Date().toISOString(),
@@ -77,7 +77,7 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
     // 更新当前版本的bundle信息
     if (this.currentVersion) {
       this.currentVersion.app.bundles = updatedBundles
-      this.currentVersion.app.bundleUrl = bundleUrl
+      this.currentVersion.app.bundleUrl = moduleUrls[0] // 保持向后兼容
     }
 
     return {
@@ -85,7 +85,7 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
       publishInfo,
       version: versionToPublish.app.version,
       publishedAt: new Date().toISOString(),
-      bundleUrl,
+      bundleUrl: moduleUrls[0],
       bundles: updatedBundles
     }
   } catch (error) {

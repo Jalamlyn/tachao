@@ -123,30 +123,21 @@ class AppCodeStore {
     return this.#appId
   }
 
-  // 修改：编译代码方法
+  // 保留原有的bundleCompiledCode方法以保持兼容性
   bundleCompiledCode = async (): Promise<string> => {
     if (!this.currentVersion) {
       throw new Error("No current version")
     }
 
-    // 处理模块代码的辅助函数
     const processModuleCode = (code: string): string => {
-      // 移除 export default
       let processedCode = code.replace(/export\s+default\s+/, "")
-
-      // 移除末尾的分号
       processedCode = processedCode.replace(/;(\s*)$/, "$1")
-
-      // 如果代码已经是 async 函数，直接包装成 IIFE
       if (processedCode.trim().startsWith("async")) {
         return `(${processedCode})();`
       }
-
-      // 如果不是 async 函数，需要额外包装
       return `(async () => { ${processedCode} })();`
     }
 
-    // 直接遍历所有模块，过滤掉 markdown，处理并合并编译后的代码
     const moduleCodes = Object.values(this.currentVersion.modules)
       .filter((module) => module.data.type !== "markdown")
       .map((module) => {
@@ -156,7 +147,6 @@ class AppCodeStore {
       .filter(Boolean)
       .join("\n\n")
 
-    // 包装在 async 函数中
     const bundleCode = `
 window.__MO_APP_${this.appId} = async (context) => {
   try {
@@ -170,49 +160,75 @@ window.__MO_APP_${this.appId} = async (context) => {
     return bundleCode
   }
 
-  // 修改：编译并上传方法
-  compileAndUpload = async (): Promise<string> => {
+  // 新增: 编译单个模块为独立文件
+  compileModuleCode = async (moduleId: string, moduleData: any): Promise<string> => {
+    if (!this.appId) throw new Error("No app id")
+
+    const processedCode = moduleData.compiledCode.replace(/export\s+default\s+/, "")
+    
+    return `
+window.__MO_MODULE_${this.appId}_${moduleId} = async (context) => {
+  try {
+    ${processedCode}
+  } catch (error) {
+    console.error('Error executing module:', error)
+    throw error
+  }
+}`
+  }
+
+  // 修改: 支持多文件编译和上传
+  compileAndUpload = async (): Promise<string[]> => {
     try {
-      // 1. 合并编译后的代码
-      const bundleCode = await this.bundleCompiledCode()
+      if (!this.currentVersion) {
+        throw new Error("No current version")
+      }
 
-      // 2. 生成文件名
+      // 1. 编译所有模块
+      const moduleCompilations = await Promise.all(
+        Object.entries(this.currentVersion.modules)
+          .filter(([_, module]) => module.data.type !== "markdown")
+          .map(async ([moduleId, module]) => {
+            const compiledCode = await this.compileModuleCode(moduleId, module.data)
+            return {
+              moduleId,
+              code: compiledCode
+            }
+          })
+      )
+
+      // 2. 生成文件名和准备上传
       const version = Date.now()
-      const fileName = `${this.appId}_${version}.js`
+      const uploads = moduleCompilations.map(async ({ moduleId, code }) => {
+        const fileName = `${this.appId}_${moduleId}_${version}.js`
+        const encoder = new TextEncoder()
+        const encodedCode = encoder.encode(code)
 
-      // 3. 进行认证
-      const auth = app.auth()
-      await auth.signInAnonymously()
+        // 3. 上传文件
+        const uploadResult = await app.uploadFile({
+          cloudPath: `app-bundles/${fileName}`,
+          filePath: new Blob([encodedCode], {
+            type: "application/javascript;charset=utf-8",
+          }),
+        })
 
-      // 4. 使用 TextEncoder 确保 UTF-8 编码
-      const encoder = new TextEncoder()
-      const encodedCode = encoder.encode(bundleCode)
+        // 4. 获取临时URL
+        const urlResult = await app.getTempFileURL({
+          fileList: [uploadResult.fileID],
+        })
 
-      // 5. 上传文件
-      const uploadResult = await app.uploadFile({
-        cloudPath: `app-bundles/${fileName}`,
-        filePath: new Blob([encodedCode], {
-          type: "application/javascript;charset=utf-8",
-        }),
+        return urlResult.fileList[0]?.tempFileURL
       })
 
-      // 6. 获取临时URL
-      const urlResult = await app.getTempFileURL({
-        fileList: [uploadResult.fileID],
-      })
+      // 5. 等待所有上传完成
+      const urls = await Promise.all(uploads)
+      const validUrls = urls.filter(Boolean) as string[]
 
-      const fileUrl = urlResult.fileList[0]?.tempFileURL
-      if (!fileUrl) {
-        throw new Error("Failed to get file URL")
+      if (validUrls.length === 0) {
+        throw new Error("Failed to upload module files")
       }
 
-      // 7. 更新当前版本的 bundleUrl
-      if (this.currentVersion) {
-        this.currentVersion.bundleUrl = fileUrl
-        this.currentVersion.app.bundleUrl = fileUrl
-      }
-
-      return fileUrl
+      return validUrls
     } catch (error) {
       console.error("Error compiling and uploading:", error)
       throw error
