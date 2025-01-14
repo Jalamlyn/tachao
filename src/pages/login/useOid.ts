@@ -7,8 +7,18 @@ export const useOid = (loginData) => {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
+    const directOid = urlParams.get("oid")
     const callback = urlParams.get("callback")
 
+    // 直接从 URL 获取 oid
+    if (directOid) {
+      loginData.current.organizationId = directOid
+      globalStore.organizationId = directOid
+      setHasOidParam(true)
+      return
+    }
+
+    // 保持原有的 callback 解析逻辑
     if (callback) {
       try {
         const callbackUrl = new URL(decodeURIComponent(callback))
