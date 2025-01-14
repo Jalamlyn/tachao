@@ -136,11 +136,11 @@ class AppCodeStore {
       
       // 如果代码已经是 async 函数，直接包装成 IIFE
       if (processedCode.trim().startsWith('async')) {
-        return `(${processedCode})();`
+        return `(${processedCode})()`
       }
       
       // 如果不是 async 函数，需要额外包装
-      return `(async () => { ${processedCode} })();`
+      return `(async () => { ${processedCode} })()`
     }
 
     // 直接遍历所有模块，过滤掉 markdown，处理并合并编译后的代码
