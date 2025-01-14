@@ -326,12 +326,21 @@ export const setResourceAccessControl = async (
   try {
     // 1. 更新权限信息
     const permissions = await getResourcePermissions(resourceType)
+    
+    // 如果资源没有权限记录，创建一个新的权限记录
     if (!permissions[resourceId]) {
-      throw new Error('Resource permissions not found')
+      permissions[resourceId] = {
+        resourceType,
+        resourceId,
+        accounts: [],
+        isPublic: accessControl.isPublic,
+        requireAuth: accessControl.requireAuth
+      }
+    } else {
+      // 更新现有权限记录
+      permissions[resourceId].isPublic = accessControl.isPublic
+      permissions[resourceId].requireAuth = accessControl.requireAuth
     }
-
-    permissions[resourceId].isPublic = accessControl.isPublic
-    permissions[resourceId].requireAuth = accessControl.requireAuth
 
     await setResourcePermissions(resourceType, permissions)
 
