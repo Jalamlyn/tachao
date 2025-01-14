@@ -164,13 +164,19 @@ window.__MO_APP_${this.appId} = async (context) => {
       const auth = app.auth()
       await auth.signInAnonymously()
       
-      // 4. 上传文件
+      // 4. 使用 TextEncoder 确保 UTF-8 编码
+      const encoder = new TextEncoder()
+      const encodedCode = encoder.encode(bundleCode)
+      
+      // 5. 上传文件
       const uploadResult = await app.uploadFile({
         cloudPath: `app-bundles/${fileName}`,
-        filePath: new Blob([bundleCode], { type: 'application/javascript' })
+        filePath: new Blob([encodedCode], { 
+          type: 'application/javascript;charset=utf-8' 
+        })
       })
 
-      // 5. 获取临时URL
+      // 6. 获取临时URL
       const urlResult = await app.getTempFileURL({
         fileList: [uploadResult.fileID]
       })
@@ -180,7 +186,7 @@ window.__MO_APP_${this.appId} = async (context) => {
         throw new Error("Failed to get file URL")
       }
 
-      // 6. 更新当前版本的 bundleUrl
+      // 7. 更新当前版本的 bundleUrl
       if (this.currentVersion) {
         this.currentVersion.bundleUrl = fileUrl
         this.currentVersion.app.bundleUrl = fileUrl
