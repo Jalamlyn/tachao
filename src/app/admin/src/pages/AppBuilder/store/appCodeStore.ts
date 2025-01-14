@@ -44,7 +44,6 @@ class AppCodeStore {
 
   constructor() {
     this.viewState = initViewState()
-
     makeAutoObservable(this, {}, { autoBind: true })
 
     // 绑定所有方法到实例
@@ -89,10 +88,6 @@ class AppCodeStore {
     this.getContextModules = getContextModules.bind(this)
     this.toggleUseSelectedModulesAsContext = toggleUseSelectedModulesAsContext.bind(this)
     this.getSelectedModulesInfo = getSelectedModulesInfo.bind(this)
-
-    // 绑定新增的编译相关方法
-    this.bundleCompiledCode = this.bundleCompiledCode.bind(this)
-    this.compileAndUpload = this.compileAndUpload.bind(this)
   }
 
   // Getters
@@ -128,8 +123,8 @@ class AppCodeStore {
     return this.#appId
   }
 
-  // 新增: 编译代码方法
-  async bundleCompiledCode(): Promise<string> {
+  // 新增：编译代码方法
+  bundleCompiledCode = async (): Promise<string> => {
     if (!this.currentVersion) {
       throw new Error("No current version")
     }
@@ -155,8 +150,8 @@ window.__MO_APP_${this.appId} = async (context) => {
     return bundleCode
   }
 
-  // 新增: 编译并上传方法
-  async compileAndUpload(): Promise<string> {
+  // 新增：编译并上传方法
+  compileAndUpload = async (): Promise<string> => {
     try {
       // 1. 合并编译后的代码
       const bundleCode = await this.bundleCompiledCode()
@@ -184,39 +179,15 @@ window.__MO_APP_${this.appId} = async (context) => {
         throw new Error("Failed to get file URL")
       }
 
+      // 5. 更新当前版本的 bundleUrl
+      if (this.currentVersion) {
+        this.currentVersion.bundleUrl = fileUrl
+        this.currentVersion.app.bundleUrl = fileUrl
+      }
+
       return fileUrl
     } catch (error) {
       console.error("Error compiling and uploading:", error)
-      throw error
-    }
-  }
-
-  // 新增: 重命名应用方法
-  async renameApp(newName: string): Promise<void> {
-    if (!this.currentVersion) {
-      throw new Error("No current version")
-    }
-
-    try {
-      // 创建新版本
-      const newVersion: Version = {
-        timestamp: Date.now(),
-        app: {
-          ...this.currentVersion.app,
-          name: newName, // 更新应用名称
-          version: Date.now(),
-          updatedAt: new Date().toISOString(),
-        },
-        modules: { ...this.currentVersion.modules },
-      }
-
-      // 添加新版本
-      this.addVersion(newVersion)
-
-      // 发布到服务器以保持同步
-      await this.publishToServer({ useLatest: true })
-    } catch (error) {
-      console.error("Error renaming app:", error)
       throw error
     }
   }

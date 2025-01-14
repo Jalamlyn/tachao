@@ -22,6 +22,7 @@ export interface App {
   version: number
   updatedAt: string
   modules: Record<string, AppModule>
+  bundleUrl?: string // 新增：编译后的bundle URL
 }
 
 export interface ModuleWrapper {
@@ -35,6 +36,7 @@ export interface Version {
   modules: Record<string, ModuleWrapper>
   serverVersion?: number
   lastSyncTime?: number
+  bundleUrl?: string // 新增：编译后的bundle URL
 }
 
 export interface AIGenerationResult {
@@ -72,13 +74,15 @@ export interface ViewState {
   selectedModules: string[]
   showDeleteConfirm: boolean
   useSelectedModulesAsContext: boolean
-  isDeletingModules?: boolean // 新增：模块删除loading状态
+  isDeletingModules?: boolean
+  isCompiling?: boolean // 新增：编译状态
 }
 
 export interface PublishedVersion {
   version: number
   publishedAt: string
   modules: Record<string, ModuleData>
+  bundleUrl?: string // 新增：编译后的bundle URL
 }
 
 export interface DependencyCheckResult {
@@ -134,4 +138,8 @@ export interface AppCodeStore {
   getContextModules(): Record<string, ModuleWrapper>
   toggleUseSelectedModulesAsContext(): void
   getSelectedModulesInfo(): Array<{ id: string; name: string; title: string; type: ModuleType }>
+  
+  // 新增：编译相关方法
+  bundleCompiledCode(): Promise<string>
+  compileAndUpload(): Promise<string>
 }

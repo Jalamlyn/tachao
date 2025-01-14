@@ -36,31 +36,50 @@ const AppBuilder: React.FC = observer(() => {
   const accumulatedTextRef = useRef("")
   const currentMessageIdRef = useRef<string | null>(null)
 
-  // ... [保持其他现有代码不变，直到 pageActions]
+  useEffect(() => {
+    updateBreadcrumbs([
+      { label: "首页", href: "/admin" },
+      { label: "应用管理", href: "/admin/apps" },
+      { label: "应用开发", href: "" },
+    ])
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      appCodeStore.clearViewState()
+    }
+  }, [])
+
+  // ... [保持其他现有代码不变]
+
+  const handleCompileAndUpload = async () => {
+    try {
+      setIsCompiling(true)
+      message.loading("正在编译并上传...", 0)
+      const fileUrl = await appCodeStore.compileAndUpload()
+      message.destroy()
+      message.success("编译成功，文件已上传")
+      console.log("Bundle URL:", fileUrl)
+      
+      // 刷新预览
+      refreshPreview()
+    } catch (error) {
+      message.destroy()
+      message.error("编译失败：" + (error instanceof Error ? error.message : "未知错误"))
+    } finally {
+      setIsCompiling(false)
+    }
+  }
 
   const pageActions = (
     <div className='flex items-center gap-2'>
       <ButtonGroup>
-        {/* 新增编译按钮 */}
+        {/* 编译按钮 */}
         <Tooltip content='编译并上传应用代码'>
           <Button
             color='primary'
             variant='flat'
-            onClick={async () => {
-              try {
-                setIsCompiling(true)
-                message.loading("正在编译并上传...", 0)
-                const fileUrl = await appCodeStore.compileAndUpload()
-                message.destroy()
-                message.success("编译成功，文件已上传")
-                console.log("Bundle URL:", fileUrl)
-              } catch (error) {
-                message.destroy()
-                message.error("编译失败：" + (error instanceof Error ? error.message : "未知错误"))
-              } finally {
-                setIsCompiling(false)
-              }
-            }}
+            onClick={handleCompileAndUpload}
             isDisabled={isLoading || publishInProgress || isCompiling}
             isLoading={isCompiling}
             startContent={<Icon icon='mdi:code-braces' className='w-4 h-4' />}
