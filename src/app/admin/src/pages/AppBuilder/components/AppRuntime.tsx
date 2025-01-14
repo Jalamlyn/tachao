@@ -9,7 +9,6 @@ import { appCodeStore } from "../store/appCodeStore"
 import { context } from "./functionContext"
 import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
 import { localDB } from "@/utils/localDB"
-import { getMetadata, getPublicMetaData } from "@/service/apis/metadata"
 
 interface AppRuntimeProps {
   appId: string
@@ -89,14 +88,8 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
         <div className='p-6 bg-danger-50 rounded-lg max-w-[600px] text-center space-y-4'>
           <h3 className='text-xl font-medium text-danger'>应用运行出错</h3>
           <p className='text-danger-600'>{error}</p>
-          <p className='text-small text-foreground-500'>
-            如果问题持续存在，请联系网站管理员进行修复
-          </p>
-          <Button
-            color="primary"
-            variant="flat"
-            onClick={() => window.location.reload()}
-          >
+          <p className='text-small text-foreground-500'>如果问题持续存在，请联系网站管理员进行修复</p>
+          <Button color='primary' variant='flat' onClick={() => window.location.reload()}>
             重新加载
           </Button>
         </div>
@@ -107,36 +100,34 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
   const BrandMark = () => (
     <div
       style={{
-        position: 'fixed',
-        bottom: '20px',
-        right: '20px',
+        position: "fixed",
+        bottom: "20px",
+        right: "20px",
         zIndex: 9999,
-        userSelect: 'none',
+        userSelect: "none",
         opacity: 0.95,
-        cursor: 'pointer',
-        transition: 'all 0.3s ease',
+        cursor: "pointer",
+        transition: "all 0.3s ease",
       }}
-      onClick={() => window.open('https://www.mobenai.com.cn', '_blank')}
+      onClick={() => window.open("https://www.mobenai.com.cn", "_blank")}
       onMouseEnter={(e) => {
         const el = e.currentTarget
-        el.style.transform = 'scale(1.05) translateY(-2px)'
-        el.style.opacity = '1'
+        el.style.transform = "scale(1.05) translateY(-2px)"
+        el.style.opacity = "1"
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget
-        el.style.transform = 'scale(1) translateY(0)'
-        el.style.opacity = '0.95'
+        el.style.transform = "scale(1) translateY(0)"
+        el.style.opacity = "0.95"
       }}
     >
       <Chip
-        variant="shadow"
+        variant='shadow'
         classNames={{
           base: "bg-gradient-to-r from-blue-600 via-violet-600 to-purple-600 border-small border-white/50 shadow-purple-500/30",
           content: "drop-shadow shadow-black text-white font-medium tracking-wider",
         }}
-        startContent={
-          <div className="w-2 h-2 rounded-full bg-white animate-pulse mr-1" />
-        }
+        startContent={<div className='w-2 h-2 rounded-full bg-white animate-pulse mr-1' />}
       >
         Made By 即想 AI
       </Chip>

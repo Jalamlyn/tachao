@@ -1,6 +1,5 @@
 import { transform } from "@/utils/moduleLoader"
 import { AppCodeStore, ModuleData, ShataAICode, Version } from "../types"
-import { logStore } from "../../AIEditor/components/LogStore"
 import message from "@/components/Message"
 import { Button } from "@nextui-org/react"
 
@@ -215,7 +214,8 @@ export async function executeModules(this: AppCodeStore, context: any) {
         )
         const getResult = moduleFunction(context)
         getResult()
-
+        delete moduleData.code
+        delete moduleData.compiledCode
         results.push({
           success: true,
           moduleId,
@@ -235,15 +235,6 @@ export async function executeModules(this: AppCodeStore, context: any) {
         })
       }
     }
-    // 执行完成后清理
-    if (this.currentVersion) {
-      Object.values(this.currentVersion.modules).forEach((moduleWrapper) => {
-        if (moduleWrapper.data.compiledCode) {
-          delete moduleWrapper.data
-        }
-      })
-    }
-    console.log(this.versions)
     return results
   } catch (error) {
     console.error("Error executing modules:", error)
