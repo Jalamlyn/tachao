@@ -89,6 +89,10 @@ class AppCodeStore {
     this.getContextModules = getContextModules.bind(this)
     this.toggleUseSelectedModulesAsContext = toggleUseSelectedModulesAsContext.bind(this)
     this.getSelectedModulesInfo = getSelectedModulesInfo.bind(this)
+
+    // 绑定新增的编译相关方法
+    this.bundleCompiledCode = this.bundleCompiledCode.bind(this)
+    this.compileAndUpload = this.compileAndUpload.bind(this)
   }
 
   // Getters
@@ -122,6 +126,69 @@ class AppCodeStore {
 
   get appId(): string | null {
     return this.#appId
+  }
+
+  // 新增: 编译代码方法
+  async bundleCompiledCode(): Promise<string> {
+    if (!this.currentVersion) {
+      throw new Error("No current version")
+    }
+
+    // 直接遍历所有模块，过滤掉 markdown，合并编译后的代码
+    const moduleCodes = Object.values(this.currentVersion.modules)
+      .filter(module => module.data.type !== 'markdown')
+      .map(module => module.data.compiledCode)
+      .filter(Boolean)
+      .join('\n\n')
+
+    // 包装在 async 函数中
+    const bundleCode = `
+window.__MO_APP_${this.appId} = async (context) => {
+  try {
+    ${moduleCodes}
+  } catch (error) {
+    console.error('Error executing app:', error)
+    throw error
+  }
+}`
+
+    return bundleCode
+  }
+
+  // 新增: 编译并上传方法
+  async compileAndUpload(): Promise<string> {
+    try {
+      // 1. 合并编译后的代码
+      const bundleCode = await this.bundleCompiledCode()
+      
+      // 2. 生成文件名
+      const version = Date.now()
+      const fileName = `${this.appId}_${version}.js`
+      
+      // 3. 上传文件
+      const auth = app.auth()
+      await auth.signInAnonymously()
+      
+      const uploadResult = await app.uploadFile({
+        cloudPath: `app-bundles/${fileName}`,
+        data: new Blob([bundleCode], { type: 'application/javascript' })
+      })
+
+      // 4. 获取文件URL
+      const urlResult = await app.getTempFileURL({
+        fileList: [uploadResult.fileID]
+      })
+
+      const fileUrl = urlResult.fileList[0]?.tempFileURL
+      if (!fileUrl) {
+        throw new Error("Failed to get file URL")
+      }
+
+      return fileUrl
+    } catch (error) {
+      console.error("Error compiling and uploading:", error)
+      throw error
+    }
   }
 
   // 新增: 重命名应用方法
