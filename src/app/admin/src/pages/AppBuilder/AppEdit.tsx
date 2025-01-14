@@ -421,7 +421,7 @@ const AppBuilder: React.FC = observer(() => {
           <Button
             color='primary'
             variant='flat'
-            onClick={handleCompileAndUpload}
+            onPress={handleCompileAndUpload}
             isDisabled={isLoading || publishInProgress || isCompiling}
             isLoading={isCompiling}
             startContent={<Icon icon='mdi:code-braces' className='w-4 h-4' />}
@@ -435,7 +435,7 @@ const AppBuilder: React.FC = observer(() => {
           <Button
             color="secondary"
             variant='flat'
-            onClick={handlePublishTemplate}
+            onPress={handlePublishTemplate}
             isDisabled={isLoading || publishInProgress || isCompiling}
             isLoading={publishInProgress}
             startContent={<Icon icon='fluent:book-template-20-filled' className='w-4 h-4' />}
@@ -447,8 +447,9 @@ const AppBuilder: React.FC = observer(() => {
 
         <Tooltip content='发布应用到生产环境'>
           <Button
-            color='primary'
-            onClick={handlePublish}
+            color="danger"
+            variant="flat"
+            onPress={handlePublish}
             isDisabled={isLoading || publishInProgress || isCompiling}
             isLoading={publishInProgress}
             startContent={<Icon icon='mdi:rocket-launch' className='w-4 h-4' />}

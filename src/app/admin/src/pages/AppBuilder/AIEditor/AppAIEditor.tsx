@@ -146,7 +146,7 @@ const AIEditor: React.FC<AIEditorProps> = observer(
           <div
             className={cn(
               "flex flex-col max-w-[600px] min-w-[200px] rounded-lg p-3 relative",
-              isUser ? "bg-primary text-primary-foreground" : "bg-content2",
+              isUser ? "bg-secondary-300 text-primary-foreground" : "bg-content2",
               hasError && "bg-danger-50 border border-danger-200",
               "overflow-hidden"
             )}
@@ -332,8 +332,8 @@ const AIEditor: React.FC<AIEditorProps> = observer(
                     key='code'
                     title={
                       <div className='flex items-center gap-2'>
-                        <Icon icon='token-branded:ride' className='w-4 h-4' />
-                        WebIDE
+                        <Icon icon='fluent:code-js-16-filled' className='w-4 h-4' />
+                        Code
                       </div>
                     }
                   />

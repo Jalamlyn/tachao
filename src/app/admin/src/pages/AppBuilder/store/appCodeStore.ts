@@ -132,29 +132,29 @@ class AppCodeStore {
     // 处理模块代码的辅助函数
     const processModuleCode = (code: string): string => {
       // 移除 export default
-      let processedCode = code.replace(/export\s+default\s+/, '')
-      
+      let processedCode = code.replace(/export\s+default\s+/, "")
+
       // 移除末尾的分号
-      processedCode = processedCode.replace(/;(\s*)$/, '$1')
-      
+      processedCode = processedCode.replace(/;(\s*)$/, "$1")
+
       // 如果代码已经是 async 函数，直接包装成 IIFE
-      if (processedCode.trim().startsWith('async')) {
-        return `(${processedCode})()`
+      if (processedCode.trim().startsWith("async")) {
+        return `(${processedCode})();`
       }
-      
+
       // 如果不是 async 函数，需要额外包装
-      return `(async () => { ${processedCode} })()`
+      return `(async () => { ${processedCode} })();`
     }
 
     // 直接遍历所有模块，过滤掉 markdown，处理并合并编译后的代码
     const moduleCodes = Object.values(this.currentVersion.modules)
-      .filter(module => module.data.type !== 'markdown')
-      .map(module => {
+      .filter((module) => module.data.type !== "markdown")
+      .map((module) => {
         const compiledCode = module.data.compiledCode
-        return compiledCode ? processModuleCode(compiledCode) : ''
+        return compiledCode ? processModuleCode(compiledCode) : ""
       })
       .filter(Boolean)
-      .join('\n\n')
+      .join("\n\n")
 
     // 包装在 async 函数中
     const bundleCode = `
@@ -175,30 +175,30 @@ window.__MO_APP_${this.appId} = async (context) => {
     try {
       // 1. 合并编译后的代码
       const bundleCode = await this.bundleCompiledCode()
-      
+
       // 2. 生成文件名
       const version = Date.now()
       const fileName = `${this.appId}_${version}.js`
-      
+
       // 3. 进行认证
       const auth = app.auth()
       await auth.signInAnonymously()
-      
+
       // 4. 使用 TextEncoder 确保 UTF-8 编码
       const encoder = new TextEncoder()
       const encodedCode = encoder.encode(bundleCode)
-      
+
       // 5. 上传文件
       const uploadResult = await app.uploadFile({
         cloudPath: `app-bundles/${fileName}`,
-        filePath: new Blob([encodedCode], { 
-          type: 'application/javascript;charset=utf-8' 
-        })
+        filePath: new Blob([encodedCode], {
+          type: "application/javascript;charset=utf-8",
+        }),
       })
 
       // 6. 获取临时URL
       const urlResult = await app.getTempFileURL({
-        fileList: [uploadResult.fileID]
+        fileList: [uploadResult.fileID],
       })
 
       const fileUrl = urlResult.fileList[0]?.tempFileURL
