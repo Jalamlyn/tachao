@@ -20,12 +20,13 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
   const [appInfo, setAppInfo] = useState<any>(null)
 
   // 新增：动态加载bundle的函数
-  const loadBundles = async (urls: string[]): Promise<void> => {
+  const loadBundles = async (bundles: any): Promise<void> => {
     try {
+      // 加载所有模块的脚本
       await Promise.all(
-        urls.map((url) => {
+        bundles.modules.map((module) => {
           const script = document.createElement("script")
-          script.src = url
+          script.src = module.url
           return new Promise((resolve, reject) => {
             script.onload = resolve
             script.onerror = reject
@@ -39,12 +40,20 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
   }
 
   // 新增：执行应用函数
-  const executeApp = async (appId: string, appContext: any): Promise<void> => {
-    const appFunction = window[`__MO_APP_${appId}`]
-    if (!appFunction) {
-      throw new Error("App function not found")
-    }
-    await appFunction(appContext)
+  const executeApp = async (modules: any, appContext: any): Promise<void> => {
+    // 按模块ID执行对应的函数
+    modules.forEach((module) => {
+      const moduleFunction = window[`__MO_MODULE_${module.id}`]
+      if (!moduleFunction) {
+        console.warn(`Module function not found for ${module.id}`)
+        return
+      }
+      try {
+        moduleFunction(appContext)
+      } catch (error) {
+        console.error(`Error executing module ${module.id}:`, error)
+      }
+    })
   }
 
   useEffect(() => {
@@ -73,16 +82,40 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
           const appData = JSON.parse(appResult.data[0].value)
           setAppInfo(appData.app)
 
-          // 2. 检查是否有bundle URLs
-          if (appData.app.bundles?.[0]?.urls) {
+          // 2. 检查是否有新版本bundle信息
+          if (appData.app.bundles?.[0]?.modules) {
             // 使用新的bundle加载方式
-            await loadBundles(appData.app.bundles[0].urls)
-            await executeApp(appId, context(appId))
+            await loadBundles(appData.app.bundles[0])
+            await executeApp(appData.app.bundles[0].modules, context(appId))
             setIsLoading(false)
             return
           }
+
+          // 3. 回退到旧版本加载方式
+          if (appData.app.bundleUrl) {
+            const script = document.createElement("script")
+            script.src = appData.app.bundleUrl
+            script.onload = () => {
+              const appFunction = window[`__MO_APP_${appId}`]
+              if (appFunction) {
+                appFunction(context(appId))
+                setIsLoading(false)
+              } else {
+                throw new Error("App function not found")
+              }
+            }
+            script.onerror = () => {
+              throw new Error("Failed to load app script")
+            }
+            document.head.appendChild(script)
+            return
+          }
+
+          throw new Error("No valid bundle information found")
         } catch (bundleError) {
-          console.warn("Bundle loading failed, falling back to legacy mode:", bundleError)
+          console.error("Bundle loading failed:", bundleError)
+          setError("应用加载失败: " + bundleError.message)
+          setIsLoading(false)
         }
       } catch (error) {
         console.error("Error initializing app:", error)

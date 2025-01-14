@@ -1,5 +1,5 @@
 import { getMetadata, setMetadata, setPlatMetaData, getPlatMetaData } from "@/service/apis/metadata"
-import { AppCodeStore, Version, AppIndexItem, PublishedVersion, BundleVersion } from "../types"
+import { AppCodeStore, Version, AppIndexItem, PublishedVersion, BundleVersion, ModuleBundle } from "../types"
 import { getCurrentAccountInfo } from "@/service/apis/user"
 
 function generateVersionNumber(bundles?: BundleVersion[]): string {
@@ -31,25 +31,35 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
     // 1. 编译并上传所有模块文件
     const moduleUrls = await this.compileAndUpload()
     
-    // 2. 准备新的bundle版本信息
+    // 2. 准备模块信息
+    const moduleBundles: ModuleBundle[] = Object.entries(versionToPublish.modules).map(([moduleId, moduleWrapper], index) => ({
+      id: moduleId,
+      url: moduleUrls[index],
+      type: moduleWrapper.data.type,
+      name: moduleWrapper.data.name
+    }))
+
+    // 3. 准备新的bundle版本信息
     const currentBundles = versionToPublish.app.bundles || []
     const newBundle: BundleVersion = {
       version: generateVersionNumber(currentBundles),
       timestamp: Date.now(),
-      urls: moduleUrls
+      urls: moduleUrls,
+      modules: moduleBundles,
+      bundleUrl: moduleUrls[0] // 保持向后兼容
     }
 
-    // 3. 更新bundles数组，保持最近10个版本
+    // 4. 更新bundles数组，保持最近10个版本
     const updatedBundles = [newBundle, ...currentBundles].slice(0, 10)
 
-    // 4. 发布到服务器
+    // 5. 发布到服务器
     await setMetadata(
       this.appId,
       JSON.stringify({
         app: {
           ...versionToPublish.app,
           bundles: updatedBundles,
-          bundleUrl: moduleUrls[0] // 保持向后兼容，使用第一个URL
+          bundleUrl: moduleUrls[0] // 保持向后兼容
         },
         version: versionToPublish.app.version,
         updatedAt: new Date().toISOString(),

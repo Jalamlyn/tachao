@@ -16,10 +16,19 @@ export interface AppModule {
   title?: string
 }
 
+export interface ModuleBundle {
+  id: string
+  url: string
+  type: ModuleType
+  name: string
+}
+
 export interface BundleVersion {
   version: string
   timestamp: number
   urls: string[]
+  modules: ModuleBundle[] // 新增: 模块信息数组
+  bundleUrl?: string // 保持向后兼容
 }
 
 export interface App {
@@ -29,7 +38,7 @@ export interface App {
   updatedAt: string
   modules: Record<string, AppModule>
   bundleUrl?: string
-  bundles?: BundleVersion[] // 新增：存储最近10个版本的bundle信息
+  bundles?: BundleVersion[] // 存储最近10个版本的bundle信息
 }
 
 export interface ModuleWrapper {
