@@ -22,7 +22,7 @@ import {
   Radio,
   RadioGroup,
 } from "@nextui-org/react"
-import { PlusIcon, EditIcon, DeleteIcon, UserPlusIcon, EyeIcon } from "lucide-react"
+import { PlusIcon, EditIcon, DeleteIcon, UserPlusIcon, EyeIcon, CopyIcon } from "lucide-react"
 import {
   queryRamAccount,
   createRamAccount,
@@ -235,6 +235,31 @@ const AccountManagement: React.FC = () => {
     }
   }
 
+  // 新增：复制开通消息的函数
+  const copyAccountMessage = async (account) => {
+    const message = `🎉 欢迎加入即想AI！
+
+您的账号信息如下：
+👤 账号：${account.account}
+🔑 密码：${account.password || '初始密码已发送至管理员'}
+🌐 登录地址：www.mobenai.com.cn/login
+
+✨ 即想AI是一个革命性的AI编程平台，让人人都能成为开发者。
+💡 在这里，您可以轻松地将想法转化为应用程序，享受AI驱动的开发体验。
+
+🚀 立即登录，开启您的AI编程之旅！
+
+❓ 如有任何问题，请随时联系管理员。`
+
+    try {
+      await navigator.clipboard.writeText(message)
+      message.success("开通消息已复制到剪贴板")
+    } catch (error) {
+      console.error("Failed to copy message", error)
+      message.error("复制失败，请重试")
+    }
+  }
+
   const getAccountTypeChip = (name: string) => {
     if (name === "管理员") {
       return (
@@ -297,19 +322,18 @@ const AccountManagement: React.FC = () => {
                 <EditIcon size={16} />
               </Button>
             </Tooltip>
-            {/* <Tooltip content='分配角色'>
-              <Button
-                isIconOnly
-                size='sm'
-                variant='light'
-                onPress={() => {
-                  setSelectedAccount(account)
-                  onRoleModalOpen()
-                }}
-              >
-                <UserPlusIcon size={16} />
-              </Button>
-            </Tooltip> */}
+            {account.name.startsWith("nb_") && (
+              <Tooltip content='复制开通消息'>
+                <Button
+                  isIconOnly
+                  size='sm'
+                  variant='light'
+                  onPress={() => copyAccountMessage(account)}
+                >
+                  <CopyIcon size={16} />
+                </Button>
+              </Tooltip>
+            )}
             <Tooltip content='删除账号' color='danger'>
               <Button
                 isIconOnly
@@ -341,8 +365,8 @@ const AccountManagement: React.FC = () => {
       </div>
 
       <Table
-        isHeaderSticky
         aria-label='账号列表'
+        isHeaderSticky
         classNames={{
           base: "max-h-[calc(100vh-420px)] overflow-scroll",
           wrapper: "rounded-none",
