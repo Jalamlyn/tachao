@@ -6,7 +6,7 @@ function generateVersionNumber(bundles?: BundleVersion[]): string {
   if (!bundles || bundles.length === 0) {
     return "v1.00"
   }
-  
+
   const lastVersion = bundles[0].version
   const versionNum = parseFloat(lastVersion.substring(1)) + 0.01
   return `v${versionNum.toFixed(2)}`
@@ -28,15 +28,19 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
       versionDate: new Date(versionToPublish.timestamp).toLocaleString(),
     }
 
-    // 1. 编译并上传所有模块文件
+    // 1. 首先过滤出非markdown模块
+    const executableModules = Object.entries(versionToPublish.modules).filter(
+      ([_, moduleWrapper]) => moduleWrapper.data.type !== "markdown"
+    )
+
+    // 2. 编译并上传可执行模块
     const moduleUrls = await this.compileAndUpload()
-    
-    // 2. 准备模块信息
-    const moduleBundles: ModuleBundle[] = Object.entries(versionToPublish.modules).map(([moduleId, moduleWrapper], index) => ({
+    // 3. 构建模块信息
+    const moduleBundles: ModuleBundle[] = executableModules.map(([moduleId, moduleWrapper], index) => ({
       id: moduleId,
       url: moduleUrls[index],
       type: moduleWrapper.data.type,
-      name: moduleWrapper.data.name
+      name: moduleWrapper.data.name,
     }))
 
     // 3. 准备新的bundle版本信息
@@ -46,7 +50,7 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
       timestamp: Date.now(),
       urls: moduleUrls,
       modules: moduleBundles,
-      bundleUrl: moduleUrls[0] // 保持向后兼容
+      bundleUrl: moduleUrls[0], // 保持向后兼容
     }
 
     // 4. 更新bundles数组，保持最近10个版本
@@ -59,7 +63,7 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
         app: {
           ...versionToPublish.app,
           bundles: updatedBundles,
-          bundleUrl: moduleUrls[0] // 保持向后兼容
+          bundleUrl: moduleUrls[0], // 保持向后兼容
         },
         version: versionToPublish.app.version,
         updatedAt: new Date().toISOString(),
@@ -96,7 +100,7 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
       version: versionToPublish.app.version,
       publishedAt: new Date().toISOString(),
       bundleUrl: moduleUrls[0],
-      bundles: updatedBundles
+      bundles: updatedBundles,
     }
   } catch (error) {
     console.error("Error publishing app:", error)
@@ -230,7 +234,7 @@ export async function getLastPublishedVersion(this: AppCodeStore): Promise<Publi
       publishedAt: appData.updatedAt,
       modules,
       bundleUrl: appData.app.bundleUrl,
-      bundles: appData.app.bundles
+      bundles: appData.app.bundles,
     }
   } catch (error) {
     console.error("Error getting last published version:", error)
@@ -252,7 +256,7 @@ export async function rollbackToLastPublished(this: AppCodeStore): Promise<boole
         version: publishedVersion.version,
         updatedAt: new Date().toISOString(),
         bundleUrl: publishedVersion.bundleUrl,
-        bundles: publishedVersion.bundles
+        bundles: publishedVersion.bundles,
       },
       modules: Object.entries(publishedVersion.modules).reduce(
         (acc, [moduleId, moduleData]) => ({

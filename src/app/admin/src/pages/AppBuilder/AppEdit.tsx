@@ -13,7 +13,7 @@ import { appCodeStore } from "./store/appCodeStore"
 import { logStore } from "./AIEditor/components/LogStore"
 import { ErrorPrompt, PublishModal, PublishTemplateModal, RollbackModal } from "./ErrorPrompt"
 
-const MAX_MESSAGES = 10
+const MAX_MESSAGES = 50
 
 const AppBuilder: React.FC = observer(() => {
   const { appId } = useParams<{ appId: string }>()

@@ -165,11 +165,11 @@ window.__MO_APP_${this.appId} = async (context) => {
     if (!this.appId) throw new Error("No app id")
 
     const processedCode = moduleData.compiledCode.replace(/export\s+default\s+/, "")
-    
+
     return `
-window.__MO_MODULE_${this.appId}_${moduleId} = async (context) => {
+window.__MO_MODULE_${moduleId} = async (context) => {
   try {
-    ${processedCode}
+    (${processedCode})(context);
   } catch (error) {
     console.error('Error executing module:', error)
     throw error
@@ -192,7 +192,7 @@ window.__MO_MODULE_${this.appId}_${moduleId} = async (context) => {
             const compiledCode = await this.compileModuleCode(moduleId, module.data)
             return {
               moduleId,
-              code: compiledCode
+              code: compiledCode,
             }
           })
       )
@@ -200,10 +200,13 @@ window.__MO_MODULE_${this.appId}_${moduleId} = async (context) => {
       // 2. 生成文件名和准备上传
       const version = Date.now()
       const uploads = moduleCompilations.map(async ({ moduleId, code }) => {
-        const fileName = `${this.appId}_${moduleId}_${version}.js`
+        const fileName = `${moduleId}_${version}.js`
         const encoder = new TextEncoder()
         const encodedCode = encoder.encode(code)
 
+        // 3. 进行认证
+        const auth = app.auth()
+        await auth.signInAnonymously()
         // 3. 上传文件
         const uploadResult = await app.uploadFile({
           cloudPath: `app-bundles/${fileName}`,
