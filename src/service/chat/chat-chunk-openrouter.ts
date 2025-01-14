@@ -88,8 +88,9 @@ export default async function chatChunkOpenAIOffice(
     })
   }
 
-  const apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-openrouter"
-
+  // const apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-openrouter"
+  const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-openrouter"
+  
   // 选择模型
   const selectedModel = selectModel(_messages)
   // 保存当前使用的模型到 sessionStorage
