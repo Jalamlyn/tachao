@@ -138,7 +138,7 @@ const AccountManagement: React.FC = () => {
 
         const nbAccounts = accounts.filter((acc) => acc.name.startsWith("nb_"))
         if (nbAccounts.length >= subscription.features.nbAccountLimit) {
-          if (userInfo?.organizationId !== "1" && userInfo?.name !== "管理员") {
+          if (userInfo?.organizationId !== "1") {
             message.error(`已达到内部账号数量限制(${subscription.features.nbAccountLimit}个)`)
             return
           }
