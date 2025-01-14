@@ -8,13 +8,13 @@ import EmptyState from "@/components/EmptyState"
 interface AppGalleryProps {
   apps: AppIndex[]
   isLoading?: boolean
-  onDevelopClick: (app: AppIndex) => void // 添加这个属性
+  onDevelopClick: (app: AppIndex) => void
 }
 
 export const AppGallery: React.FC<AppGalleryProps> = ({
   apps,
   isLoading,
-  onDevelopClick, // 接收属性
+  onDevelopClick,
 }) => {
   if (isLoading) {
     return (
@@ -37,11 +37,12 @@ export const AppGallery: React.FC<AppGalleryProps> = ({
 
   return (
     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
-      {apps.map((app) => (
+      {apps.map((app, index) => (
         <AppCard
           key={app.id}
           app={app}
-          onDevelopClick={onDevelopClick} // 传递给 AppCard
+          index={index}
+          onDevelopClick={onDevelopClick}
         />
       ))}
     </div>

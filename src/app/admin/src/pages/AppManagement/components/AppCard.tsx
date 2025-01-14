@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import {
   Card,
   CardBody,
@@ -35,10 +35,11 @@ import { queryRamAccount } from "@/service/apis/user"
 
 interface AppCardProps {
   app: AppIndex
+  index: number
   onDevelopClick: (app: AppIndex) => void
 }
 
-export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
+export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) => {
   const navigate = useNavigate()
   const [newTitle, setNewTitle] = useState(app.title)
   const { setDeleteModalOpen, setAppToDelete, useRenameApp, useUpdateAppConfig } = useAppStore()
@@ -60,7 +61,29 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
   const [accounts, setAccounts] = useState<any[]>([])
   const [selectedAccount, setSelectedAccount] = useState("")
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(false)
-  const [isPreviewLoading, setIsPreviewLoading] = useState(true)
+  const [shouldLoad, setShouldLoad] = useState(false)
+  const cardRef = useRef(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          // 添加延迟,根据卡片索引顺序依次加载
+          setTimeout(() => {
+            setShouldLoad(true)
+          }, index * 300) // 每张卡片间隔300ms
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [index])
 
   // 基础编辑权限判断
   const hasEditPermission = (app: AppIndex, currentUser: any) => {
@@ -237,35 +260,33 @@ export const AppCard: React.FC<AppCardProps> = ({ app, onDevelopClick }) => {
 
   return (
     <>
-      <Card>
+      <Card ref={cardRef}>
         <CardBody>
           <div className='space-y-4'>
             {/* 预览区域 */}
-            <div className='relative w-full aspect-video rounded-lg overflow-hidden bg-default-100'>
-              <Skeleton isLoaded={!isPreviewLoading} className='w-full h-full rounded-lg'>
-                <iframe
-                  src={`/app-run/${app.id}`}
-                  className='w-full h-full border-0'
-                  onLoad={() => setIsPreviewLoading(false)}
-                  title={`Preview of ${app.title}`}
-                />
-              </Skeleton>
+            <div className='relative w-full aspect-video rounded-lg overflow-hidden'>
+              {shouldLoad ? (
+                <div className='absolute inset-0 scale-[0.5] origin-top-left transform-gpu'>
+                  <iframe
+                    src={`/app-run/${app.id}`}
+                    className='w-[200%] h-[200%] border-0'
+                    title={`Preview of ${app.title}`}
+                  />
+                </div>
+              ) : (
+                <div className='w-full h-full bg-default-100 animate-pulse rounded-lg flex items-center justify-center'>
+                  <Icon icon='mdi:image-outline' className='w-8 h-8 text-default-300' />
+                </div>
+              )}
             </div>
 
             <div className='grid grid-cols-12 gap-6 items-center'>
-              {/* 左侧图标区域 */}
-              <div className='col-span-4 md:col-span-3'>
-                <div>
-                  <Icon icon={getTemplateIcon(app.template)} className={`w-12 h-12 ${getTemplateColor(app.template)}`} />
-                </div>
-              </div>
-
               {/* 右侧信息区域 */}
               <div className='col-span-8 md:col-span-9 space-y-4'>
                 <div className='flex justify-between items-start'>
                   <div className='space-y-1'>
                     <Tooltip content={app.title}>
-                      <h3 className='text-xl font-bold tracking-tight truncate max-w-36'>{app.title}</h3>
+                      <h3 className='text-xl font-bold tracking-tight truncate'>{app.title}</h3>
                     </Tooltip>
 
                     <div className='flex items-center gap-2'>
