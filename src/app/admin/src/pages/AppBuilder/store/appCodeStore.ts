@@ -150,7 +150,7 @@ window.__MO_APP_${this.appId} = async (context) => {
     return bundleCode
   }
 
-  // 新增：编译并上传方法
+  // 修改：编译并上传方法
   compileAndUpload = async (): Promise<string> => {
     try {
       // 1. 合并编译后的代码
@@ -160,16 +160,17 @@ window.__MO_APP_${this.appId} = async (context) => {
       const version = Date.now()
       const fileName = `${this.appId}_${version}.js`
       
-      // 3. 上传文件
+      // 3. 进行认证
       const auth = app.auth()
       await auth.signInAnonymously()
       
+      // 4. 上传文件
       const uploadResult = await app.uploadFile({
         cloudPath: `app-bundles/${fileName}`,
-        data: new Blob([bundleCode], { type: 'application/javascript' })
+        filePath: new Blob([bundleCode], { type: 'application/javascript' })
       })
 
-      // 4. 获取文件URL
+      // 5. 获取临时URL
       const urlResult = await app.getTempFileURL({
         fileList: [uploadResult.fileID]
       })
@@ -179,7 +180,7 @@ window.__MO_APP_${this.appId} = async (context) => {
         throw new Error("Failed to get file URL")
       }
 
-      // 5. 更新当前版本的 bundleUrl
+      // 6. 更新当前版本的 bundleUrl
       if (this.currentVersion) {
         this.currentVersion.bundleUrl = fileUrl
         this.currentVersion.app.bundleUrl = fileUrl
