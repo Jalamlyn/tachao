@@ -123,16 +123,33 @@ class AppCodeStore {
     return this.#appId
   }
 
-  // 新增：编译代码方法
+  // 修改：编译代码方法
   bundleCompiledCode = async (): Promise<string> => {
     if (!this.currentVersion) {
       throw new Error("No current version")
     }
 
-    // 直接遍历所有模块，过滤掉 markdown，合并编译后的代码
+    // 处理模块代码的辅助函数
+    const processModuleCode = (code: string): string => {
+      // 移除 export default
+      let processedCode = code.replace(/export\s+default\s+/, '')
+      
+      // 如果代码已经是 async 函数，直接包装成 IIFE
+      if (processedCode.trim().startsWith('async')) {
+        return `(${processedCode})();`
+      }
+      
+      // 如果不是 async 函数，需要额外包装
+      return `(async () => { ${processedCode} })();`
+    }
+
+    // 直接遍历所有模块，过滤掉 markdown，处理并合并编译后的代码
     const moduleCodes = Object.values(this.currentVersion.modules)
       .filter(module => module.data.type !== 'markdown')
-      .map(module => module.data.compiledCode)
+      .map(module => {
+        const compiledCode = module.data.compiledCode
+        return compiledCode ? processModuleCode(compiledCode) : ''
+      })
       .filter(Boolean)
       .join('\n\n')
 
