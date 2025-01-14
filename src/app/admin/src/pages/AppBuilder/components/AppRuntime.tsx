@@ -5,7 +5,6 @@ import message from "@/components/Message"
 import { Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
 import { observer } from "mobx-react-lite"
-import { appCodeStore } from "../store/appCodeStore"
 import { context } from "./functionContext"
 import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
 import { localDB } from "@/utils/localDB"
@@ -23,15 +22,17 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
   // 新增：动态加载bundle的函数
   const loadBundles = async (urls: string[]): Promise<void> => {
     try {
-      await Promise.all(urls.map(url => {
-        const script = document.createElement('script')
-        script.src = url
-        return new Promise((resolve, reject) => {
-          script.onload = resolve
-          script.onerror = reject
-          document.head.appendChild(script)
+      await Promise.all(
+        urls.map((url) => {
+          const script = document.createElement("script")
+          script.src = url
+          return new Promise((resolve, reject) => {
+            script.onload = resolve
+            script.onerror = reject
+            document.head.appendChild(script)
+          })
         })
-      }))
+      )
     } catch (error) {
       throw new Error(`Failed to load bundles: ${error}`)
     }
@@ -41,7 +42,7 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
   const executeApp = async (appId: string, appContext: any): Promise<void> => {
     const appFunction = window[`__MO_APP_${appId}`]
     if (!appFunction) {
-      throw new Error('App function not found')
+      throw new Error("App function not found")
     }
     await appFunction(appContext)
   }
@@ -66,7 +67,7 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
           // 1. 获取应用元数据
           const appResult = await getMetadata([appId])
           if (!appResult.data?.[0]?.value) {
-            throw new Error('App metadata not found')
+            throw new Error("App metadata not found")
           }
 
           const appData = JSON.parse(appResult.data[0].value)
@@ -81,26 +82,8 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
             return
           }
         } catch (bundleError) {
-          console.warn('Bundle loading failed, falling back to legacy mode:', bundleError)
+          console.warn("Bundle loading failed, falling back to legacy mode:", bundleError)
         }
-
-        // 如果新方式失败，回退到原有方式
-        appCodeStore.setAppId(appId)
-        const version = await appCodeStore.loadApp(appId)
-        if (!version) {
-          throw new Error("Failed to load app")
-        }
-
-        setAppInfo(version.app)
-        const results = await appCodeStore.executeModules(context(appId))
-        const errors = results.filter((r) => !r.success)
-        if (errors.length > 0) {
-          console.error("Module execution errors:", errors)
-          setError("模块执行失败")
-          return
-        }
-
-        setIsLoading(false)
       } catch (error) {
         console.error("Error initializing app:", error)
         setError(error instanceof Error ? error.message : "应用初始化失败")
