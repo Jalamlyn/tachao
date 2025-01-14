@@ -20,30 +20,7 @@ export function compileCode(this: AppCodeStore, code: string): Promise<string> {
     console.error("Error compiling code:", code)
     message.error(
       <div className='flex items-center gap-2'>
-        <span>AI 生成代码编译失败</span>
-        <Button
-          size='sm'
-          color='primary'
-          variant='flat'
-          onPress={() => {
-            // 添加错误消息到消息列表
-            const errorMessage = {
-              role: "user",
-              content: "代码生成失败",
-              id: Date.now().toString(),
-              timestamp: new Date().toLocaleTimeString(),
-            }
-            window.postMessage(
-              {
-                type: "ADD_MESSAGE",
-                message: errorMessage,
-              },
-              "*"
-            )
-          }}
-        >
-          重新生成
-        </Button>
+        <span>AI 生成代码编译失败, 请告诉 AI 重新生成</span>
       </div>
     )
     throw error

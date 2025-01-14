@@ -164,16 +164,10 @@ window.__MO_APP_${this.appId} = async (context) => {
   compileModuleCode = async (moduleId: string, moduleData: any): Promise<string> => {
     if (!this.appId) throw new Error("No app id")
 
-    const processedCode = moduleData.compiledCode.replace(/export\s+default\s+/, "")
-
+    let processedCode = moduleData.compiledCode.replace(/export\s+default\s+/, "return ")
     return `
-window.__MO_MODULE_${moduleId} = async (context) => {
-  try {
-    (${processedCode})(context);
-  } catch (error) {
-    console.error('Error executing module:', error)
-    throw error
-  }
+window.__MO_MODULE_${moduleId} = (context) => {
+  ${processedCode}
 }`
   }
 

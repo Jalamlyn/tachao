@@ -416,24 +416,9 @@ const AppBuilder: React.FC = observer(() => {
   const pageActions = (
     <div className='flex items-center gap-2'>
       <ButtonGroup>
-        {/* 编译按钮 */}
-        <Tooltip content='编译并上传应用代码'>
-          <Button
-            color='primary'
-            variant='flat'
-            onPress={handleCompileAndUpload}
-            isDisabled={isLoading || publishInProgress || isCompiling}
-            isLoading={isCompiling}
-            startContent={<Icon icon='mdi:code-braces' className='w-4 h-4' />}
-            aria-label='编译应用'
-          >
-            编译应用
-          </Button>
-        </Tooltip>
-
         <Tooltip content='发布为模板供他人使用'>
           <Button
-            color="secondary"
+            color='secondary'
             variant='flat'
             onPress={handlePublishTemplate}
             isDisabled={isLoading || publishInProgress || isCompiling}
@@ -447,8 +432,8 @@ const AppBuilder: React.FC = observer(() => {
 
         <Tooltip content='发布应用到生产环境'>
           <Button
-            color="danger"
-            variant="flat"
+            color='danger'
+            variant='flat'
             onPress={handlePublish}
             isDisabled={isLoading || publishInProgress || isCompiling}
             isLoading={publishInProgress}
