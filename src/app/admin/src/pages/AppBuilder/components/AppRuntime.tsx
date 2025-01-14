@@ -9,6 +9,7 @@ import { appCodeStore } from "../store/appCodeStore"
 import { context } from "./functionContext"
 import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
 import { localDB } from "@/utils/localDB"
+import { getMetadata } from "@/service/apis/metadata"
 
 interface AppRuntimeProps {
   appId: string
@@ -18,6 +19,32 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [appInfo, setAppInfo] = useState<any>(null)
+
+  // 新增：动态加载bundle的函数
+  const loadBundles = async (urls: string[]): Promise<void> => {
+    try {
+      await Promise.all(urls.map(url => {
+        const script = document.createElement('script')
+        script.src = url
+        return new Promise((resolve, reject) => {
+          script.onload = resolve
+          script.onerror = reject
+          document.head.appendChild(script)
+        })
+      }))
+    } catch (error) {
+      throw new Error(`Failed to load bundles: ${error}`)
+    }
+  }
+
+  // 新增：执行应用函数
+  const executeApp = async (appId: string, appContext: any): Promise<void> => {
+    const appFunction = window[`__MO_APP_${appId}`]
+    if (!appFunction) {
+      throw new Error('App function not found')
+    }
+    await appFunction(appContext)
+  }
 
   useEffect(() => {
     if (!appId) {
@@ -33,21 +60,39 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
         const pAppId = appId.split("_")[2]
         const organizationId = appId.split("_")[1]
         localDB.setAppId({ id: pAppId, organizationId })
-        // 1. 先设置 appId
+
+        // 尝试新的加载方式
+        try {
+          // 1. 获取应用元数据
+          const appResult = await getMetadata([appId])
+          if (!appResult.data?.[0]?.value) {
+            throw new Error('App metadata not found')
+          }
+
+          const appData = JSON.parse(appResult.data[0].value)
+          setAppInfo(appData.app)
+
+          // 2. 检查是否有bundle URLs
+          if (appData.app.bundles?.[0]?.urls) {
+            // 使用新的bundle加载方式
+            await loadBundles(appData.app.bundles[0].urls)
+            await executeApp(appId, context(appId))
+            setIsLoading(false)
+            return
+          }
+        } catch (bundleError) {
+          console.warn('Bundle loading failed, falling back to legacy mode:', bundleError)
+        }
+
+        // 如果新方式失败，回退到原有方式
         appCodeStore.setAppId(appId)
-        // 2. 加载应用数据
         const version = await appCodeStore.loadApp(appId)
         if (!version) {
           throw new Error("Failed to load app")
         }
 
         setAppInfo(version.app)
-
-        // 3. 准备执行上下文
-        // 4. 执行所有模块
         const results = await appCodeStore.executeModules(context(appId))
-
-        // 5. 检查执行结果
         const errors = results.filter((r) => !r.success)
         if (errors.length > 0) {
           console.error("Module execution errors:", errors)
