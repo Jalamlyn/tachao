@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react"
-import { Input, ScrollShadow, Tooltip, Chip, Checkbox, Button, Card, Badge } from "@nextui-org/react"
+import { Input, ScrollShadow, Tooltip, Chip, Checkbox, Button, Card, Badge, Select, SelectItem } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { observer } from "mobx-react-lite"
@@ -18,6 +18,11 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
   const contextRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // 加载保存的快捷上下文
+  useEffect(() => {
+    appCodeStore.loadContextShortcuts()
+  }, [])
 
   useEffect(() => {
     const container = containerRef.current
@@ -121,6 +126,13 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
     }
   }
 
+  const handleSaveContextShortcut = () => {
+    const name = prompt("请输入快捷上下文名称:")
+    if (name) {
+      appCodeStore.saveContextShortcut(name)
+    }
+  }
+
   const contextStatus = getContextStatus()
   const filteredItems = appCodeStore.getFilteredCodeItems()
   const hasSearchContent = appCodeStore.viewState.searchContent.trim() !== ""
@@ -128,7 +140,6 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
 
   return (
     <div className='p-2 h-full flex'>
-      {/* 左侧导航栏 */}
       <div className='w-8 flex-shrink-0 border-r pr-1 mr-1'>
         <div className='sticky top-0 pt-2 flex flex-col items-center gap-1.5'>
           <Tooltip content='搜索' placement='right'>
@@ -185,9 +196,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
         </div>
       </div>
 
-      {/* 主内容区域 */}
       <div ref={containerRef} className='flex-1 overflow-y-auto'>
-        {/* 搜索区域 */}
         <div ref={searchRef} id='search' className='space-y-2 mb-4'>
           <div className='flex gap-1'>
             <Input
@@ -222,25 +231,36 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
           )}
         </div>
 
-        {/* 上下文区域 */}
         {appCodeStore.viewState.useSelectedModulesAsContext && appCodeStore?.viewState?.selectedModules?.length > 0 && (
           <div ref={contextRef} id='context' className='mb-4'>
             <Card className='bg-default-50/80 backdrop-blur-sm shadow-sm'>
               <div className='p-2'>
                 <div className='text-sm font-medium mb-1.5 flex items-center justify-between'>
                   <span>当前上下文模块</span>
-                  <Button
-                    size='sm'
-                    color='primary'
-                    variant='light'
-                    onClick={() => appCodeStore.toggleUseSelectedModulesAsContext()}
-                    startContent={
-                      <Icon icon='material-symbols:contextual-token-add-outline-sharp' className='w-3 h-3' />
-                    }
-                    className='min-w-unit-16 h-6'
-                  >
-                    清除上下文
-                  </Button>
+                  <div className='flex gap-1'>
+                    <Button
+                      size='sm'
+                      color='primary'
+                      variant='light'
+                      onClick={handleSaveContextShortcut}
+                      startContent={<Icon icon='mdi:bookmark-plus' className='w-3 h-3' />}
+                      className='min-w-unit-16 h-6'
+                    >
+                      保存快捷上下文
+                    </Button>
+                    <Button
+                      size='sm'
+                      color='primary'
+                      variant='light'
+                      onClick={() => appCodeStore.toggleUseSelectedModulesAsContext()}
+                      startContent={
+                        <Icon icon='material-symbols:contextual-token-add-outline-sharp' className='w-3 h-3' />
+                      }
+                      className='min-w-unit-16 h-6'
+                    >
+                      清除上下文
+                    </Button>
+                  </div>
                 </div>
                 <div className='flex flex-wrap gap-1'>
                   {appCodeStore.getSelectedModulesInfo().map((module) => (
@@ -260,7 +280,45 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
           </div>
         )}
 
-        {/* 模块列表 */}
+        {/* 快捷上下文选择器 */}
+        {appCodeStore.viewState.contextShortcuts.length > 0 && (
+          <div className='mb-4'>
+            <Card className='bg-default-50/80 backdrop-blur-sm shadow-sm'>
+              <div className='p-2'>
+                <div className='text-sm font-medium mb-2'>快捷上下文</div>
+                <Select
+                  selectionMode='multiple'
+                  placeholder='选择快捷上下文'
+                  selectedKeys={appCodeStore.viewState.selectedShortcuts}
+                  onSelectionChange={(keys) => appCodeStore.applyContextShortcuts(Array.from(keys) as string[])}
+                  className='w-full'
+                >
+                  {appCodeStore.viewState.contextShortcuts.map((shortcut) => (
+                    <SelectItem key={shortcut.id} value={shortcut.id}>
+                      <div className='flex items-center justify-between w-full'>
+                        <span>{shortcut.name}</span>
+                        <Button
+                          size='sm'
+                          isIconOnly
+                          variant='light'
+                          color='danger'
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            appCodeStore.deleteContextShortcut(shortcut.id)
+                          }}
+                        >
+                          <Icon icon='mdi:delete' className='w-4 h-4' />
+                        </Button>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
+            </Card>
+          </div>
+        )}
+
         <div ref={listRef} id='list' className='space-y-1.5'>
           {appCodeStore?.viewState?.selectedModules?.length > 0 && (
             <motion.div

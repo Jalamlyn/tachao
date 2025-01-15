@@ -72,6 +72,13 @@ export interface ShataAICode {
   title?: string
 }
 
+// 新增: 快捷上下文类型定义
+export interface ContextShortcut {
+  id: string
+  name: string
+  moduleIds: string[]
+}
+
 export interface ViewState {
   selectedCodeId: string | null
   editedCode: string
@@ -92,6 +99,9 @@ export interface ViewState {
   useSelectedModulesAsContext: boolean
   isDeletingModules?: boolean
   isCompiling?: boolean
+  // 新增: 快捷上下文相关状态
+  contextShortcuts: ContextShortcut[]
+  selectedShortcuts: string[]
 }
 
 export interface PublishedVersion {

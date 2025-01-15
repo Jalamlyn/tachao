@@ -13,13 +13,86 @@ export function initViewState(): ViewState {
     showImportModal: false,
     showConfirmModal: false,
     showVersionInfo: false,
-    showExportModal: false, // 新增这一行
+    showExportModal: false,
     importContent: "",
     isImporting: false,
     pendingImportContent: "",
     selectedModules: [],
     showDeleteConfirm: false,
-    useSelectedModulesAsContext: false, // 新增：是否使用选中模块作为上下文
+    useSelectedModulesAsContext: false,
+    contextShortcuts: [], // 新增: 初始化快捷上下文数组
+    selectedShortcuts: [], // 新增: 初始化选中的快捷上下文
+  }
+}
+
+// 新增: 保存快捷上下文
+export function saveContextShortcut(this: AppCodeStore, name: string) {
+  if (!this.viewState.selectedModules.length) {
+    message.warning("请先选择要保存的模块")
+    return
+  }
+
+  const shortcut = {
+    id: `ctx_${Date.now()}`,
+    name,
+    moduleIds: [...this.viewState.selectedModules],
+  }
+
+  this.viewState.contextShortcuts = [...this.viewState.contextShortcuts, shortcut]
+
+  // 保存到 localStorage
+  try {
+    localStorage.setItem("contextShortcuts", JSON.stringify(this.viewState.contextShortcuts))
+    message.success("快捷上下文保存成功")
+  } catch (error) {
+    console.error("Error saving context shortcuts:", error)
+    message.error("保存失败")
+  }
+}
+
+// 新增: 加载快捷上下文
+export function loadContextShortcuts(this: AppCodeStore) {
+  try {
+    const stored = localStorage.getItem("contextShortcuts")
+    if (stored) {
+      this.viewState.contextShortcuts = JSON.parse(stored)
+    }
+  } catch (error) {
+    console.error("Error loading context shortcuts:", error)
+  }
+}
+
+// 新增: 应用快捷上下文
+export function applyContextShortcuts(this: AppCodeStore, shortcutIds: string[]) {
+  const selectedShortcuts = this.viewState.contextShortcuts.filter((s) => shortcutIds.includes(s.id))
+
+  if (selectedShortcuts.length === 0) {
+    return
+  }
+
+  // 合并所有选中快捷方式的模块ID并去重
+  const mergedModuleIds = Array.from(new Set(selectedShortcuts.flatMap((s) => s.moduleIds)))
+
+  this.viewState.selectedModules = mergedModuleIds
+  this.viewState.selectedShortcuts = shortcutIds
+  
+  if (!this.viewState.useSelectedModulesAsContext) {
+    this.toggleUseSelectedModulesAsContext()
+  }
+}
+
+// 新增: 删除快捷上下文
+export function deleteContextShortcut(this: AppCodeStore, shortcutId: string) {
+  this.viewState.contextShortcuts = this.viewState.contextShortcuts.filter((s) => s.id !== shortcutId)
+  this.viewState.selectedShortcuts = this.viewState.selectedShortcuts.filter((id) => id !== shortcutId)
+
+  // 更新 localStorage
+  try {
+    localStorage.setItem("contextShortcuts", JSON.stringify(this.viewState.contextShortcuts))
+    message.success("快捷上下文删除成功")
+  } catch (error) {
+    console.error("Error saving context shortcuts:", error)
+    message.error("删除失败")
   }
 }
 
@@ -36,7 +109,6 @@ export function handleCodeSelect(this: AppCodeStore, moduleId: string) {
   }
 }
 
-// 新增：获取当前上下文模块
 export function getContextModules(this: AppCodeStore) {
   if (this.viewState.useSelectedModulesAsContext && this.viewState.selectedModules.length > 0) {
     return Object.entries(this.currentVersion?.modules || {})
@@ -46,7 +118,6 @@ export function getContextModules(this: AppCodeStore) {
   return this.currentVersion?.modules || {}
 }
 
-// 新增：切换是否使用选中模块作为上下文
 export function toggleUseSelectedModulesAsContext(this: AppCodeStore) {
   if (this.viewState.selectedModules.length === 0 && !this.viewState.useSelectedModulesAsContext) {
     message.warning("请先选择至少一个模块")
@@ -60,7 +131,6 @@ export function toggleUseSelectedModulesAsContext(this: AppCodeStore) {
   )
 }
 
-// 新增：获取选中模块的详细信息
 export function getSelectedModulesInfo(this: AppCodeStore) {
   return this.viewState.selectedModules.map((moduleId) => {
     const module = this.currentVersion?.modules[moduleId]
@@ -130,7 +200,6 @@ export function getCodeItems(this: AppCodeStore) {
 
   const items = []
 
-  // App Entry
   if (this.currentVersion.app) {
     const entryModuleId = `${this.appId}_app_entry`
     const entryModule = this.currentVersion.modules[entryModuleId]
@@ -145,7 +214,6 @@ export function getCodeItems(this: AppCodeStore) {
     }
   }
 
-  // 其他模块
   Object.entries(this.currentVersion.modules).forEach(([moduleId, moduleWrapper]) => {
     const moduleData = moduleWrapper.data
     if (moduleData.type !== "app") {
@@ -167,17 +235,14 @@ export function getFilteredCodeItems(this: AppCodeStore) {
   const items = this.getCodeItems()
   const { searchResults, searchQuery, searchContent } = this.viewState
 
-  // 如果有搜索内容且没有匹配结果,返回空列表
   if (searchContent && searchResults.length === 0) {
     return []
   }
 
-  // 如果有搜索结果,返回匹配的项
   if (searchResults.length > 0) {
     return items.filter((item) => searchResults.some((result) => result.moduleId === item.id))
   }
 
-  // 如果只有searchQuery,按标题和类型过滤
   return items.filter(
     (item) =>
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
