@@ -75,7 +75,6 @@ export const initializeResourcePermissions = async (
   creator: any
 ): Promise<void> => {
   try {
-    debugger
     const permissions = await getResourcePermissions(resourceType)
 
     // 创建基础权限结构
