@@ -4,7 +4,6 @@ import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import { getCurrentAccountInfo } from "@/service/apis/user"
 import message from "@/components/Message"
 import { AppStore, AppDataSlice, AppIndex, UpdateAppConfigInput, RenameAppInput } from "../types"
-import { appCodeStore } from "@/app/admin/src/pages/AppBuilder/store/appCodeStore"
 
 const QUERY_KEYS = {
   apps: ["apps"] as const,
@@ -59,7 +58,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
           pages: [],
           accessControl: {
             isPublic: false,
-            requireAuth: false, // 修改这里：默认设置为所有登录用户可访问
+            requireAuth: false,
           },
           collaborators: [],
         }
@@ -72,6 +71,7 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
         try {
           const updatedData = [...currentData, newApp]
           await setMetadata("app_index", JSON.stringify(updatedData))
+
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.apps })
           return newApp.id
         } catch (error) {
@@ -128,7 +128,6 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
               pages: input.pages || app.pages || [],
               homePageId: input.homePageId || app.homePageId,
               accessControl: input.accessControl || app.accessControl,
-              // 确保正确更新 collaborators 字段
               collaborators: input.collaborators || app.collaborators || [],
               updatedAt: new Date().toISOString(),
             }
@@ -136,16 +135,12 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
           return app
         })
 
-        // 更新本地缓存
         queryClient.setQueryData(QUERY_KEYS.apps, updatedData)
 
         try {
-          // 保存到服务器
           await setMetadata("app_index", JSON.stringify(updatedData))
-          // 刷新查询缓存
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.apps })
         } catch (error) {
-          // 发生错误时恢复本地缓存
           queryClient.setQueryData(QUERY_KEYS.apps, currentData)
           throw error
         }
@@ -241,11 +236,9 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
         queryClient.setQueryData(QUERY_KEYS.apps, updatedData)
 
         try {
-          // 1. 更新应用索引
           await setMetadata("app_index", JSON.stringify(updatedData))
           await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.apps })
 
-          // 2. 获取应用数据
           const appResult = await getMetadata([id])
           if (!appResult.data?.[0]?.value) {
             throw new Error("无法获取应用数据")
@@ -253,7 +246,6 @@ export const createAppDataSlice: StateCreator<AppStore, [], [], AppDataSlice> = 
 
           const appData = JSON.parse(appResult.data[0].value)
 
-          // 3. 更新应用数据中的名称
           await setMetadata(
             id,
             JSON.stringify({

@@ -183,12 +183,16 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
     </>
   )
 
-  // 根据accessControl决定是否需要权限检查
-  if (appInfo?.accessControl?.isPublic || appInfo?.accessControl?.requireAuth) {
+  if (appInfo?.accessControl?.isPublic) {
     return content
   }
 
-  // 其他情况使用权限检查组件
+  // 如果需要登录就可以访问，且用户已登录，直接显示内容
+  if (appInfo?.accessControl?.requireAuth && user) {
+    return content
+  }
+
+  // 其他情况（需要特定权限）才进行权限检查
   return (
     <PermissionCheck resourceType='app' resourceId={appId}>
       {content}

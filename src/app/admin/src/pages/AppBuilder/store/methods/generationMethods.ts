@@ -1,6 +1,10 @@
 import { getMetadata, getPlatMetaData, getPublicMetaData } from "@/service/apis/metadata"
 import { templates } from "../../prompts/templates"
 import { AppCodeStore, Version, AIGenerationResult } from "../types"
+import { initializeResourcePermissions } from "@/app/admin/src/permissions/utils/permissionUtils"
+import { getCurrentAccountInfo } from "@/service/apis/user"
+import message from "@/components/Message"
+
 async function checkAppNameExists(name: string): Promise<boolean> {
   const appIndexResult = await getMetadata(["app_index"])
   const apps = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
@@ -315,6 +319,22 @@ export async function createApp(this: AppCodeStore, name: string, templateId: st
 
     // 添加版本并发布
     this.addVersion(version)
+
+    // 获取当前用户信息用于权限初始化
+    const userInfo = await getCurrentAccountInfo()
+
+    // 初始化应用权限
+    try {
+      await initializeResourcePermissions("app", appId, {
+        id: userInfo.id,
+        name: userInfo.name || userInfo.username,
+      })
+      console.log("Successfully initialized app permissions for creator:", userInfo.name)
+    } catch (error) {
+      console.error("Failed to initialize app permissions:", error)
+      message.error("应用权限初始化失败，但应用已创建")
+    }
+
     await this.publishToServer({ useLatest: true })
     await this.updateAppIndex(version.app, name)
     return appId
