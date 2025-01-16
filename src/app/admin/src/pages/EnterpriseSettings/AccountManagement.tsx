@@ -59,6 +59,24 @@ const validateAccount = (account: string): { isValid: boolean; message?: string 
   return { isValid: true }
 }
 
+// 添加手机号验证函数
+const validatePhone = (phone: string): { isValid: boolean; message?: string } => {
+  const phoneRegex = /^1[3-9]\d{9}$/
+
+  if (!phone) {
+    return { isValid: false, message: "手机号不能为空" }
+  }
+
+  if (!phoneRegex.test(phone)) {
+    return {
+      isValid: false,
+      message: "请输入正确的11位手机号",
+    }
+  }
+
+  return { isValid: true }
+}
+
 const AccountManagement: React.FC = () => {
   const { balanceStore } = useStore()
   const [accounts, setAccounts] = useState([])
@@ -67,14 +85,14 @@ const AccountManagement: React.FC = () => {
   const [selectedAccount, setSelectedAccount] = useState(null)
   const [accountDetail, setAccountDetail] = useState(null)
   const [subscription, setSubscription] = useState(null)
-  const [copyingAccountId, setCopyingAccountId] = useState(null) // 新增：跟踪正在复制的账号ID
+  const [copyingAccountId, setCopyingAccountId] = useState(null)
+  const [phoneError, setPhoneError] = useState("") // 新增手机号错误状态
   const { isOpen: isCreateModalOpen, onOpen: onCreateModalOpen, onClose: onCreateModalClose } = useDisclosure()
   const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure()
   const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
   const { isOpen: isRoleModalOpen, onOpen: onRoleModalOpen, onClose: onRoleModalClose } = useDisclosure()
   const { isOpen: isDetailModalOpen, onOpen: onDetailModalOpen, onClose: onDetailModalClose } = useDisclosure()
   const { updateBreadcrumbs } = useBreadcrumb()
-  // 添加账号验证状态
   const [accountError, setAccountError] = useState("")
   const { userInfo, loading } = useGlobalUser()
 
@@ -83,7 +101,6 @@ const AccountManagement: React.FC = () => {
     fetchRoles()
     fetchSubscription()
 
-    // 更新面包屑
     updateBreadcrumbs([
       { label: "首页", href: "/admin" },
       { label: "企业设置", href: "/admin/settings" },
@@ -122,14 +139,19 @@ const AccountManagement: React.FC = () => {
 
   const handleCreateAccount = async (values) => {
     try {
-      // 验证账号格式
       const accountValidation = validateAccount(values.account)
       if (!accountValidation.isValid) {
         message.error(accountValidation.message)
         return
       }
 
-      // 检查账号类型和限制
+      // 验证手机号
+      const phoneValidation = validatePhone(values.phone)
+      if (!phoneValidation.isValid) {
+        message.error(phoneValidation.message)
+        return
+      }
+
       if (values.type === "nb") {
         if (!subscription || subscription.type === "personal") {
           message.error("个人版不能创建内部账号，请升级到企业版")
@@ -145,28 +167,23 @@ const AccountManagement: React.FC = () => {
         }
       }
 
-      // 设置账号名称前缀
       const accountName = values.type === "nb" ? `nb_${values.name}` : `wb_${values.name}`
 
-      // 创建账号
       const accountRes = await createRamAccount({
         ...values,
         name: accountName,
       })
 
-      // 查询默认企业项目
       const projectRes = await queryMyProject({ name: "默认企业项目" })
       if (projectRes.data && projectRes.data.length > 0) {
-        // 将新账号添加到默认项目中
         await addProjectMember({
           projectId: projectRes.data[0].id,
           ramUserId: accountRes.id,
-          role: "PROJECT_MANAGER", // 默认角色
+          role: "PROJECT_MANAGER",
           name: accountRes.name,
         })
       }
 
-      // 更新账号使用记录
       await subscriptionService.updateAccountUsage(globalStore.organizationId, {
         organizationId: globalStore.organizationId,
         accounts: [
@@ -191,18 +208,29 @@ const AccountManagement: React.FC = () => {
 
   const handleEditAccount = async (values) => {
     try {
-      // 验证账号格式
       const accountValidation = validateAccount(values.account)
       if (!accountValidation.isValid) {
         message.error(accountValidation.message)
         return
       }
 
-      await updateRamAccount(selectedAccount.id, values)
+      // 验证手机号
+      const phoneValidation = validatePhone(values.phone)
+      if (!phoneValidation.isValid) {
+        message.error(phoneValidation.message)
+        return
+      }
+
+      await updateRamAccount(selectedAccount.id, {
+        ...values,
+        phone: values.phone // 确保传递phone字段
+      })
       onEditModalClose()
       fetchAccounts()
+      message.success("账号更新成功")
     } catch (error) {
       console.error("Failed to edit account", error)
+      message.error("更新账号失败")
     }
   }
 
@@ -236,7 +264,6 @@ const AccountManagement: React.FC = () => {
     }
   }
 
-  // 新增：复制开通消息的函数
   const copyAccountMessage = async (account) => {
     setCopyingAccountId(account.id)
     const message = `🎉 欢迎加入即想AI！
@@ -244,6 +271,7 @@ const AccountManagement: React.FC = () => {
 您的账号信息如下：
 👤 账号：${account.account}
 🔑 密码：${account.password}
+📱 手机号：${account.phone}
 🌐 登录地址：www.mobenai.com.cn/login
 
 ✨ 即想AI是一个革命性的AI编程平台，让人人都能成为开发者。
@@ -256,7 +284,6 @@ const AccountManagement: React.FC = () => {
     try {
       await navigator.clipboard.writeText(message)
       message.success("开通消息已复制到剪贴板")
-      // 1.5秒后重置复制状态
       setTimeout(() => {
         setCopyingAccountId(null)
       }, 1500)
@@ -297,9 +324,20 @@ const AccountManagement: React.FC = () => {
     }
   }
 
+  // 新增手机号验证处理函数
+  const handlePhoneChange = (value: string) => {
+    const validation = validatePhone(value)
+    if (!validation.isValid) {
+      setPhoneError(validation.message)
+    } else {
+      setPhoneError("")
+    }
+  }
+
   const columns = [
     { name: "名称", uid: "name" },
     { name: "账号", uid: "account" },
+    { name: "手机号", uid: "phone" }, // 新增手机号列
     { name: "类型", uid: "type" },
     { name: "操作", uid: "actions" },
   ]
@@ -308,6 +346,8 @@ const AccountManagement: React.FC = () => {
     switch (columnKey) {
       case "type":
         return getAccountTypeChip(account.name)
+      case "phone":
+        return account.phone || "-"
       case "actions":
         return (
           <div className='flex justify-center gap-2'>
@@ -432,6 +472,14 @@ const AccountManagement: React.FC = () => {
                   description='账号必须以英文字母开头，只能包含英文字母、数字和下划线'
                 />
                 <Input name='password' label='密码' type='password' required />
+                <Input
+                  name='phone'
+                  label='手机号'
+                  required
+                  onValueChange={handlePhoneChange}
+                  errorMessage={phoneError}
+                  description='请输入11位手机号'
+                />
               </ModalBody>
               <ModalFooter>
                 <Button color='danger' variant='light' onPress={onClose}>
@@ -470,6 +518,15 @@ const AccountManagement: React.FC = () => {
                   description='账号必须以英文字母开头，只能包含英文字母、数字和下划线'
                 />
                 <Input name='password' label='密码' type='password' placeholder='留空则不修改密码' />
+                <Input
+                  name='phone'
+                  label='手机号'
+                  defaultValue={selectedAccount?.phone}
+                  required
+                  onValueChange={handlePhoneChange}
+                  errorMessage={phoneError}
+                  description='请输入11位手机号'
+                />
               </ModalBody>
               <ModalFooter>
                 <Button color='danger' variant='light' onPress={onClose}>
@@ -556,6 +613,10 @@ const AccountManagement: React.FC = () => {
                     <div>
                       <p className='text-sm text-gray-500'>账号</p>
                       <p>{accountDetail.account}</p>
+                    </div>
+                    <div>
+                      <p className='text-sm text-gray-500'>手机号</p>
+                      <p>{accountDetail.phone || "-"}</p>
                     </div>
                     <div>
                       <p className='text-sm text-gray-500'>创建时间</p>
