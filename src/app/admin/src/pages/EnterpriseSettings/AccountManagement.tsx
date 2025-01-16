@@ -223,7 +223,7 @@ const AccountManagement: React.FC = () => {
 
       await updateRamAccount(selectedAccount.id, {
         ...values,
-        phone: values.phone // 确保传递phone字段
+        phone: values.phone, // 确保传递phone字段
       })
       onEditModalClose()
       fetchAccounts()
@@ -271,8 +271,7 @@ const AccountManagement: React.FC = () => {
 您的账号信息如下：
 👤 账号：${account.account}
 🔑 密码：${account.password}
-📱 手机号：${account.phone}
-🌐 登录地址：www.mobenai.com.cn/login
+🌐 登录地址：https://www.mobenai.com.cn/login?oid=1
 
 ✨ 即想AI是一个革命性的AI编程平台，让人人都能成为开发者。
 💡 在这里，您可以轻松地将想法转化为应用程序，享受AI驱动的开发体验。
@@ -371,14 +370,9 @@ const AccountManagement: React.FC = () => {
             </Tooltip>
             {account.name.startsWith("nb_") && (
               <Tooltip content='复制开通消息'>
-                <Button
-                  isIconOnly
-                  size='sm'
-                  variant='light'
-                  onPress={() => copyAccountMessage(account)}
-                >
+                <Button isIconOnly size='sm' variant='light' onPress={() => copyAccountMessage(account)}>
                   {copyingAccountId === account.id ? (
-                    <CheckIcon size={16} className="text-success" />
+                    <CheckIcon size={16} className='text-success' />
                   ) : (
                     <CopyIcon size={16} />
                   )}

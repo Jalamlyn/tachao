@@ -171,7 +171,7 @@ export const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess,
           className='flex-1'
         />
         <Button
-          size='lg'
+          size='sm'
           onClick={handleSendSms}
           disabled={smsCooldown > 0 || isLoading}
           className='self-end mb-1 -top-6'

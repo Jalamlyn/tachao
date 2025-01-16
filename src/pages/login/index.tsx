@@ -146,7 +146,7 @@ export default function LoginPage() {
           className='w-full max-w-md relative'
         >
           {/* 申请账号按钮 - 右上角 */}
-          <Button
+          {/* <Button
             variant='light'
             color='secondary'
             startContent={<Icon icon='material-symbols:person-add-outline' />}
@@ -154,7 +154,7 @@ export default function LoginPage() {
             className='absolute -top-12 right-0 text-sm hover:bg-white/10'
           >
             申请账号
-          </Button>
+          </Button> */}
 
           <Card className='bg-white/20 border bg-white border-white/30 shadow-2xl backdrop-blur-sm'>
             <CardBody className='gap-4 p-8'>
