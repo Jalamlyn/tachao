@@ -143,8 +143,18 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className='w-full max-w-md'
+          className='w-full max-w-md relative'
         >
+          {/* 申请账号按钮 - 右上角 */}
+          <Button
+            color='secondary'
+            startContent={<Icon icon='material-symbols:person-add-outline' />}
+            onClick={() => setShowRequest(true)}
+            className='absolute top-7 right-9 z-20 text-sm '
+          >
+            申请账号
+          </Button>
+
           <Card className='bg-white/20 border bg-white border-white/30 shadow-2xl backdrop-blur-sm'>
             <CardBody className='gap-4 p-8'>
               <motion.p
@@ -172,8 +182,7 @@ export default function LoginPage() {
                   key='external'
                   title={
                     <div className='flex items-center gap-2'>
-                      <Icon icon='material-symbols:person-outline' />
-                      <span>外部用户登录</span>
+                      <span>手机号登录</span>
                     </div>
                   }
                 />
@@ -181,8 +190,7 @@ export default function LoginPage() {
                   key='admin'
                   title={
                     <div className='flex items-center gap-2'>
-                      <Icon icon='material-symbols:admin-panel-settings-outline' />
-                      <span>内部用户登录</span>
+                      <span>账户密码登录</span>
                     </div>
                   }
                 />
@@ -208,17 +216,6 @@ export default function LoginPage() {
                         message.error("手机号验证失败，请重试")
                       }}
                     />
-                    <div className='flex items-center justify-center gap-2 mt-4'>
-                      <Button
-                        variant='light'
-                        color='secondary'
-                        startContent={<Icon icon='material-symbols:person-add-outline' />}
-                        onClick={() => setShowRequest(true)}
-                        className='text-sm'
-                      >
-                        申请账号
-                      </Button>
-                    </div>
                   </motion.form>
                 ) : (
                   <motion.form
