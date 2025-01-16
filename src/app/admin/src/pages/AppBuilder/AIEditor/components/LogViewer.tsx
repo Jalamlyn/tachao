@@ -173,18 +173,6 @@ const LogViewer: React.FC<LogViewerProps> = ({ className, maxHeight = "calc(100v
               </SelectItem>
             )}
           </Select>
-          <Switch
-            size='sm'
-            isSelected={reverseOrder}
-            onValueChange={setReverseOrder}
-            startContent={<Icon icon='solar:sort-by-time-linear' />}
-          >
-            最新日志在顶部
-          </Switch>
-          <Chip variant='flat' size='sm' className='bg-default-100'>
-            共 {logs.length} 条日志
-            {filteredLogs.length !== logs.length && ` (已筛选 ${filteredLogs.length} 条)`}
-          </Chip>
         </div>
         <div className='flex items-center gap-2'>
           <AIStatusIndicator />

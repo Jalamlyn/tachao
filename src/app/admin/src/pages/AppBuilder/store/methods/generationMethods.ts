@@ -4,6 +4,7 @@ import { AppCodeStore, Version, AIGenerationResult } from "../types"
 import { initializeResourcePermissions } from "@/app/admin/src/permissions/utils/permissionUtils"
 import { getCurrentAccountInfo } from "@/service/apis/user"
 import message from "@/components/Message"
+import { appCodeStore } from "../appCodeStore"
 
 async function checkAppNameExists(name: string): Promise<boolean> {
   const appIndexResult = await getMetadata(["app_index"])
@@ -19,8 +20,14 @@ export async function handleAIGeneration(
   if (!this.appId) {
     throw new Error("AppId not set")
   }
-  if (aiResponse.includes(`//其他`)) {
+  if (aiResponse.includes(`... 其他`)) {
     throw new Error("AI 代码生成不完整, 请重新对话")
+  }
+  if (!aiResponse.includes(`<mo-ai-code`)) {
+    return {
+      success: true,
+      isNoCode: true,
+    }
   }
   try {
     const moduleDataMap = await this.processAIResponse(aiResponse)

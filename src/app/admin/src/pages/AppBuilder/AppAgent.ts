@@ -197,12 +197,17 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
               - 进行思考，将思考输出在 <mo-ai-think>你的思考过程</mo-ai-think>
               - 注意要引导用户按照逐步迭代的方式来实现需求，不要设计过于复杂的产品
               - 理解我的问题,并给出回答。
+              - 我不懂技术，也看不懂代码
+              - 这里的内容对用户不可见
               ]`
         : `${commandContent}
             [注意：这是一个工程师模式对话，
               - 仔细阅读项目代码
+              - 我不懂技术，也看不懂代码
               - 进行思考，将思考输出在 <mo-ai-think>你的思考过程</mo-ai-think>
-              - 根据项目代码和上下文生成完整的模块代码，不允许用注释省略任何逻辑和代码，对于简单的明确的修改，或者文本替换，使用 SEARCH/REPLACE 模式进行替换即可。]
+              - 这里的内容对用户不可见
+              - 对于大型文件，使用 SEARCH/REPLACE 模式进行修改
+              ]
         `
 
       const allMessages = [
@@ -233,6 +238,11 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
       )
 
       const version = await appCodeStore.handleAIGeneration(response)
+      if (version.isNoCode) {
+        return {
+          isPMMode: true,
+        }
+      }
       return {
         ...version,
         isPMMode,

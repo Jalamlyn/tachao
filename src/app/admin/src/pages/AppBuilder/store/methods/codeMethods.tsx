@@ -110,7 +110,6 @@ export function extractShataAICodes(content: string): ShataAICode[] {
           const nameMatch = block.match(/name="([^"]+)"/)
           const moduleName = nameMatch ? nameMatch[1] : undefined
           const moduleId = type === "app" ? `${this.appId}_app_entry` : `${this.appId}_${type}_${moduleName}`
-          debugger
           // 获取当前模块的代码
           let currentCode = ""
           if (this.currentVersion?.modules[moduleId]) {
