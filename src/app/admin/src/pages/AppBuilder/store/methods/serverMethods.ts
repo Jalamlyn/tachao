@@ -4,6 +4,7 @@ import {
   setPlatMetaData,
   getPlatMetaData,
   queryMetadataHistory,
+  deleteMetadata,
 } from "@/service/apis/metadata"
 import {
   AppCodeStore,
@@ -98,7 +99,7 @@ export async function saveAppVersion(this: AppCodeStore, name: string, descripti
 
   try {
     const userInfo = await getCurrentAccountInfo()
-    const versionKey = `${this.appId}_version_${Date.now()}`
+    const versionKey = `${this.appId}_version`
 
     const versionInfo: AppVersionInfo = {
       id: versionKey,
@@ -127,11 +128,15 @@ export async function getAppVersionHistory(this: AppCodeStore): Promise<AppVersi
 
   try {
     const result = await queryMetadataHistory({
-      names: [`${this.appId}_version_`],
+      names: [`${this.appId}_version`],
       limit: 100,
     })
-
-    const versions = result.data.map((item) => JSON.parse(item.value))
+    const versions = result.data.map((item) => {
+      return {
+        ...JSON.parse(item.value),
+        versionCode: item.versionCode,
+      }
+    })
     return {
       versions,
       total: result.total,
@@ -139,6 +144,21 @@ export async function getAppVersionHistory(this: AppCodeStore): Promise<AppVersi
   } catch (error) {
     console.error("Error getting app version history:", error)
     throw new Error("Failed to get app version history")
+  }
+}
+
+export async function deleteAppVersion(this: AppCodeStore, versionId: string, versionCode: string): Promise<void> {
+  if (!this.appId) throw new Error("No app id")
+
+  try {
+    await deleteMetadata({
+      name: versionId,
+      versionCode,
+    })
+    message.success("版本删除成功")
+  } catch (error) {
+    console.error("Error deleting app version:", error)
+    throw new Error("Failed to delete app version")
   }
 }
 
