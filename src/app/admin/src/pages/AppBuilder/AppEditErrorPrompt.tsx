@@ -79,16 +79,53 @@ export const PublishModal = ({ isOpen, onClose, appId }) => {
 
   const handleCopyQRCode = useCallback(async () => {
     try {
-      const canvas = document.querySelector("#app-qrcode canvas")
-      if (!canvas) return
+      // 获取 SVG 元素
+      const svg = document.querySelector("#app-qrcode svg")
+      if (!svg) {
+        message.error("未找到二维码图片")
+        return
+      }
 
-      const dataUrl = canvas.toDataURL("image/png")
-      const blob = await (await fetch(dataUrl)).blob()
+      // 创建 canvas
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      
+      // 设置 canvas 尺寸
+      const svgSize = 140 // 与 QRCodeSVG 组件的 size 属性保持一致
+      canvas.width = svgSize
+      canvas.height = svgSize
+      
+      // 将 SVG 转换为 blob URL
+      const svgData = new XMLSerializer().serializeToString(svg)
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
+      const svgUrl = URL.createObjectURL(svgBlob)
+      
+      // 创建图片并绘制到 canvas
+      const img = new Image()
+      
+      // 使用 Promise 包装图片加载过程
+      await new Promise((resolve, reject) => {
+        img.onload = resolve
+        img.onerror = reject
+        img.src = svgUrl
+      })
+
+      // 绘制图片到 canvas
+      ctx.drawImage(img, 0, 0, svgSize, svgSize)
+      
+      // 将 canvas 转换为 blob
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
+      
+      // 写入剪贴板
       await navigator.clipboard.write([
         new ClipboardItem({
-          "image/png": blob,
-        }),
+          'image/png': blob
+        })
       ])
+
+      // 清理 URL
+      URL.revokeObjectURL(svgUrl)
+      
       message.success("二维码已复制到剪贴板")
     } catch (error) {
       console.error("复制二维码失败:", error)
