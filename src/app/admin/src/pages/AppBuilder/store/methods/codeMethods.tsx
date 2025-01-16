@@ -58,8 +58,6 @@ export function extractChangeMessages(content: string): ChangeMessage[] {
   return messages
 }
 
-// 修改: 在处理AI响应时解析变更消息
-
 export function compileCode(this: AppCodeStore, code: string): Promise<string> {
   try {
     const { code: compiledCode } = transform(
@@ -84,6 +82,85 @@ export function compileCode(this: AppCodeStore, code: string): Promise<string> {
   }
 }
 
+// 新增: 提取 search-replace 代码块
+export function extractSearchReplaceCodes(content: string): Array<{
+  type: string
+  name: string
+  title?: string
+  path?: string
+  searchReplaces: Array<{
+    search: string
+    replace: string
+  }>
+}> {
+  const results: Array<{
+    type: string
+    name: string
+    title?: string
+    path?: string
+    searchReplaces: Array<{
+      search: string
+      replace: string
+    }>
+  }> = []
+
+  const searchReplaceBlocks = content.match(/<mo-ai-code-search-replace[^>]*>([\s\S]*?)<\/mo-ai-code-search-replace>/g)
+  if (!searchReplaceBlocks) return results
+
+  for (const block of searchReplaceBlocks) {
+    try {
+      const typeMatch = block.match(/type="([^"]+)"/)
+      const nameMatch = block.match(/name="([^"]+)"/)
+      const titleMatch = block.match(/title="([^"]+)"/)
+      const pathMatch = block.match(/path="([^"]+)"/)
+
+      if (!typeMatch || !nameMatch) continue
+
+      const type = typeMatch[1]
+      const name = nameMatch[1]
+      const title = titleMatch ? titleMatch[1] : undefined
+      const path = pathMatch ? pathMatch[1] : undefined
+
+      const contentMatch = block.match(/<mo-ai-code-search-replace[^>]*>([\s\S]*?)<\/mo-ai-code-search-replace>/)
+      if (!contentMatch) continue
+
+      const searchReplaces: Array<{ search: string; replace: string }> = []
+      const content = contentMatch[1].trim()
+
+      try {
+        const blocks = JSON.parse(content)
+        for (const block of blocks) {
+          const match = block.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/)
+          if (match) {
+            searchReplaces.push({
+              search: match[1].trim(),
+              replace: match[2].trim(),
+            })
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing search-replace blocks:", error)
+        continue
+      }
+
+      if (searchReplaces.length > 0) {
+        results.push({
+          type,
+          name,
+          title,
+          path,
+          searchReplaces,
+        })
+      }
+    } catch (error) {
+      console.error("Error processing search-replace block:", error)
+      continue
+    }
+  }
+
+  return results
+}
+
 export function extractShataAICodes(content: string): ShataAICode[] {
   try {
     const results: ShataAICode[] = []
@@ -101,45 +178,6 @@ export function extractShataAICodes(content: string): ShataAICode[] {
         if (!codeMatch) continue
 
         let code = codeMatch[1].trim()
-
-        // 获取所有 SEARCH/REPLACE 块
-        const searchReplaceMatches = code.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/g)
-
-        if (searchReplaceMatches) {
-          // 获取模块信息，用于后续处理
-          const nameMatch = block.match(/name="([^"]+)"/)
-          const moduleName = nameMatch ? nameMatch[1] : undefined
-          const moduleId = type === "app" ? `${this.appId}_app_entry` : `${this.appId}_${type}_${moduleName}`
-          // 获取当前模块的代码
-          let currentCode = ""
-          if (this.currentVersion?.modules[moduleId]) {
-            currentCode = this.currentVersion.modules[moduleId].data.code
-          }
-
-          // 修改处理逻辑，确保只保留最后一次处理的结果
-          for (const match of searchReplaceMatches) {
-            const [fullMatch, searchContent, replaceContent] =
-              match.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/) || []
-
-            if (!fullMatch) continue
-
-            // 如果 search 部分为空，说明是新代码
-            if (!searchContent.trim()) {
-              code = replaceContent
-              continue
-            }
-
-            // 如果没有当前代码，直接使用替换内容
-            if (!currentCode) {
-              code = replaceContent
-              continue
-            }
-
-            // 在当前代码基础上进行替换
-            code = currentCode.replace(searchContent.trim(), replaceContent.trim())
-            currentCode = code // 更新当前代码，供下一次替换使用
-          }
-        }
 
         if (type === "app") {
           results.push({
@@ -189,9 +227,14 @@ export async function processAIResponse(this: AppCodeStore, aiResponse: string):
     const changeMessages = this.extractChangeMessages(aiResponse)
     changeMessages.forEach((msg) => this.addChangeMessage(msg))
 
+    // 处理完整代码块
     const codeBlocks = this.extractShataAICodes(aiResponse)
     const moduleData: Record<string, ModuleData> = {}
 
+    // 处理 search-replace 代码块
+    const searchReplaceBlocks = this.extractSearchReplaceCodes(aiResponse)
+
+    // 首先处理完整代码块
     for (const block of codeBlocks) {
       const moduleId = block.type === "app" ? `${this.appId}_app_entry` : `${this.appId}_${block.type}_${block.name}`
 
@@ -203,6 +246,31 @@ export async function processAIResponse(this: AppCodeStore, aiResponse: string):
         code: block.code,
         path: block.path,
         compiledCode: block.type === "markdown" ? true : await this.compileCode(block.code),
+      }
+    }
+
+    // 然后处理 search-replace 块
+    for (const block of searchReplaceBlocks) {
+      const moduleId = `${this.appId}_${block.type}_${block.name}`
+      const existingModule = this.currentVersion?.modules[moduleId]
+
+      if (existingModule) {
+        let updatedCode = existingModule.data.code
+
+        // 按顺序应用所有的 search-replace 对
+        for (const { search, replace } of block.searchReplaces) {
+          updatedCode = updatedCode.replace(search, replace)
+        }
+
+        moduleData[moduleId] = {
+          id: moduleId,
+          type: block.type,
+          name: block.name,
+          title: block.title,
+          code: updatedCode,
+          path: block.path,
+          compiledCode: block.type === "markdown" ? true : await this.compileCode(updatedCode),
+        }
       }
     }
 
