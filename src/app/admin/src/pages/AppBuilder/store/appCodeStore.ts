@@ -1,45 +1,16 @@
 import { makeAutoObservable } from "mobx"
 import { Version, ViewState } from "./types"
 
-// 导入拆分的方法
-import { compileCode, extractShataAICodes, processAIResponse, executeModules, addModules } from "./methods/codeMethods"
-import { saveToStorage, loadFromStorage, clearStorage } from "./methods/storageMethods"
-import { addVersion, rollback, forward, clear } from "./methods/versionMethods"
-import { exportToMarkdown, downloadMarkdown } from "./methods/exportMethods"
-import { deleteModules, importFromMarkdown } from "./methods/importMethods"
-import {
-  publishToServer,
-  updateAppIndex,
-  publishTemplate,
-  getLastPublishedVersion,
-  rollbackToLastPublished,
-  // 新增: 导入版本管理相关方法
-  saveAppVersion,
-  getAppVersionHistory,
-  publishFromVersion,
-} from "./methods/serverMethods"
-import { handleAIGeneration, loadApp, createApp, generateInitialVersion } from "./methods/generationMethods"
-import {
-  initViewState,
-  handleCodeSelect,
-  handleSearch,
-  handleSaveEdit,
-  getCodeItems,
-  getFilteredCodeItems,
-  setSearchQuery,
-  setSearchContent,
-  togglePanelCollapse,
-  setEditMode,
-  updateEditedCode,
-  handleCancelEdit,
-  getContextModules,
-  toggleUseSelectedModulesAsContext,
-  getSelectedModulesInfo,
-  loadContextShortcuts,
-  applyContextShortcuts,
-  saveContextShortcut,
-  deleteContextShortcut,
-} from "./methods/viewMethods"
+// 使用 import * as 导入所有方法
+import * as codeMethods from "./methods/codeMethods"
+import * as storageMethods from "./methods/storageMethods"
+import * as versionMethods from "./methods/versionMethods"
+import * as exportMethods from "./methods/exportMethods"
+import * as importMethods from "./methods/importMethods"
+import * as serverMethods from "./methods/serverMethods"
+import * as generationMethods from "./methods/generationMethods"
+import * as viewMethods from "./methods/viewMethods"
+
 import { localDB } from "@/utils/localDB"
 
 class AppCodeStore {
@@ -49,60 +20,80 @@ class AppCodeStore {
   viewState: ViewState
 
   constructor() {
-    this.viewState = initViewState()
+    this.viewState = viewMethods.initViewState()
     makeAutoObservable(this, {}, { autoBind: true })
 
-    // 绑定所有方法到实例
-    this.compileCode = compileCode.bind(this)
-    this.extractShataAICodes = extractShataAICodes.bind(this)
-    this.processAIResponse = processAIResponse.bind(this)
-    this.executeModules = executeModules.bind(this)
-    this.addModules = addModules.bind(this)
-    this.saveToStorage = saveToStorage.bind(this)
-    this.loadFromStorage = loadFromStorage.bind(this)
-    this.clearStorage = clearStorage.bind(this)
-    this.addVersion = addVersion.bind(this)
-    this.rollback = rollback.bind(this)
-    this.forward = forward.bind(this)
-    this.clear = clear.bind(this)
-    this.exportToMarkdown = exportToMarkdown.bind(this)
-    this.downloadMarkdown = downloadMarkdown.bind(this)
-    this.importFromMarkdown = importFromMarkdown.bind(this)
-    this.publishToServer = publishToServer.bind(this)
-    this.publishTemplate = publishTemplate.bind(this)
-    this.updateAppIndex = updateAppIndex.bind(this)
-    this.handleAIGeneration = handleAIGeneration.bind(this)
-    this.loadApp = loadApp.bind(this)
-    this.createApp = createApp.bind(this)
-    this.generateInitialVersion = generateInitialVersion.bind(this)
-    this.getLastPublishedVersion = getLastPublishedVersion.bind(this)
-    this.rollbackToLastPublished = rollbackToLastPublished.bind(this)
-    this.loadContextShortcuts = loadContextShortcuts.bind(this)
-    this.applyContextShortcuts = applyContextShortcuts.bind(this)
-    this.deleteContextShortcut = deleteContextShortcut.bind(this)
-    this.saveContextShortcut = saveContextShortcut.bind(this)
+    // 收集所有方法模块
+    const methodModules = {
+      ...codeMethods,
+      ...storageMethods,
+      ...versionMethods,
+      ...exportMethods,
+      ...importMethods,
+      ...serverMethods,
+      ...generationMethods,
+      ...viewMethods
+    }
+
+    // 自动绑定所有方法
+    Object.entries(methodModules).forEach(([methodName, method]) => {
+      if (typeof method === 'function') {
+        this[methodName] = method.bind(this)
+      }
+    })
+
+    // 保留原有绑定以确保兼容性
+    this.compileCode = codeMethods.compileCode.bind(this)
+    this.extractShataAICodes = codeMethods.extractShataAICodes.bind(this)
+    this.processAIResponse = codeMethods.processAIResponse.bind(this)
+    this.executeModules = codeMethods.executeModules.bind(this)
+    this.addModules = codeMethods.addModules.bind(this)
+    this.saveToStorage = storageMethods.saveToStorage.bind(this)
+    this.loadFromStorage = storageMethods.loadFromStorage.bind(this)
+    this.clearStorage = storageMethods.clearStorage.bind(this)
+    this.addVersion = versionMethods.addVersion.bind(this)
+    this.rollback = versionMethods.rollback.bind(this)
+    this.forward = versionMethods.forward.bind(this)
+    this.clear = versionMethods.clear.bind(this)
+    this.exportToMarkdown = exportMethods.exportToMarkdown.bind(this)
+    this.downloadMarkdown = exportMethods.downloadMarkdown.bind(this)
+    this.importFromMarkdown = importMethods.importFromMarkdown.bind(this)
+    this.publishToServer = serverMethods.publishToServer.bind(this)
+    this.publishTemplate = serverMethods.publishTemplate.bind(this)
+    this.updateAppIndex = serverMethods.updateAppIndex.bind(this)
+    this.handleAIGeneration = generationMethods.handleAIGeneration.bind(this)
+    this.loadApp = generationMethods.loadApp.bind(this)
+    this.createApp = generationMethods.createApp.bind(this)
+    this.generateInitialVersion = generationMethods.generateInitialVersion.bind(this)
+    this.getLastPublishedVersion = serverMethods.getLastPublishedVersion.bind(this)
+    this.rollbackToLastPublished = serverMethods.rollbackToLastPublished.bind(this)
+    this.loadContextShortcuts = viewMethods.loadContextShortcuts.bind(this)
+    this.applyContextShortcuts = viewMethods.applyContextShortcuts.bind(this)
+    this.deleteContextShortcut = viewMethods.deleteContextShortcut.bind(this)
+    this.saveContextShortcut = viewMethods.saveContextShortcut.bind(this)
 
     // 新增: 绑定版本管理相关方法
-    this.saveAppVersion = saveAppVersion.bind(this)
-    this.getAppVersionHistory = getAppVersionHistory.bind(this)
-    this.publishFromVersion = publishFromVersion.bind(this)
+    this.saveAppVersion = serverMethods.saveAppVersion.bind(this)
+    this.getAppVersionHistory = serverMethods.getAppVersionHistory.bind(this)
+    this.publishFromVersion = serverMethods.publishFromVersion.bind(this)
 
     // 绑定视图相关方法
-    this.handleCodeSelect = handleCodeSelect.bind(this)
-    this.handleSearch = handleSearch.bind(this)
-    this.handleSaveEdit = handleSaveEdit.bind(this)
-    this.getCodeItems = getCodeItems.bind(this)
-    this.getFilteredCodeItems = getFilteredCodeItems.bind(this)
-    this.setSearchQuery = setSearchQuery.bind(this)
-    this.setSearchContent = setSearchContent.bind(this)
-    this.togglePanelCollapse = togglePanelCollapse.bind(this)
-    this.setEditMode = setEditMode.bind(this)
-    this.updateEditedCode = updateEditedCode.bind(this)
-    this.handleCancelEdit = handleCancelEdit.bind(this)
-    this.deleteModules = deleteModules.bind(this)
-    this.getContextModules = getContextModules.bind(this)
-    this.toggleUseSelectedModulesAsContext = toggleUseSelectedModulesAsContext.bind(this)
-    this.getSelectedModulesInfo = getSelectedModulesInfo.bind(this)
+    this.handleCodeSelect = viewMethods.handleCodeSelect.bind(this)
+    this.handleSearch = viewMethods.handleSearch.bind(this)
+    this.handleSaveEdit = viewMethods.handleSaveEdit.bind(this)
+    this.getCodeItems = viewMethods.getCodeItems.bind(this)
+    this.getFilteredCodeItems = viewMethods.getFilteredCodeItems.bind(this)
+    this.setSearchQuery = viewMethods.setSearchQuery.bind(this)
+    this.setSearchContent = viewMethods.setSearchContent.bind(this)
+    this.togglePanelCollapse = viewMethods.togglePanelCollapse.bind(this)
+    this.setEditMode = viewMethods.setEditMode.bind(this)
+    this.updateEditedCode = viewMethods.updateEditedCode.bind(this)
+    this.handleCancelEdit = viewMethods.handleCancelEdit.bind(this)
+    this.deleteModules = importMethods.deleteModules.bind(this)
+    this.getContextModules = viewMethods.getContextModules.bind(this)
+    this.toggleUseSelectedModulesAsContext = viewMethods.toggleUseSelectedModulesAsContext.bind(this)
+    this.getSelectedModulesInfo = viewMethods.getSelectedModulesInfo.bind(this)
+    this.deleteAppVersion = serverMethods.deleteAppVersion.bind(this)
   }
 
   // Getters
@@ -248,7 +239,7 @@ window.__MO_MODULE_${moduleId} = (context) => {
   }
 
   clearViewState() {
-    this.viewState = initViewState()
+    this.viewState = viewMethods.initViewState()
   }
 
   generateId(): string {
