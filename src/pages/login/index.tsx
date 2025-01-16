@@ -147,10 +147,11 @@ export default function LoginPage() {
         >
           {/* 申请账号按钮 - 右上角 */}
           <Button
+            variant='light'
             color='secondary'
             startContent={<Icon icon='material-symbols:person-add-outline' />}
             onClick={() => setShowRequest(true)}
-            className='absolute top-7 right-9 z-20 text-sm '
+            className='absolute -top-12 right-0 text-sm hover:bg-white/10'
           >
             申请账号
           </Button>
@@ -226,7 +227,7 @@ export default function LoginPage() {
                     className='flex flex-col gap-4'
                     onSubmit={(e) => e.preventDefault()}
                   >
-                    <EnterpriseList loginData={loginData} />
+                    {!hasOidParam && <EnterpriseList loginData={loginData} />}
                     <Input
                       isRequired
                       label={t("username")}
