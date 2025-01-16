@@ -38,7 +38,7 @@ export const deleteRamAccount = async (id) => {
 
 export const updateRamAccount = async (id, data) => {
   const res = await apiService.put(`/api/ram-users/${id}`, {
-    data,
+    ...data,
   })
   return res.data
 }

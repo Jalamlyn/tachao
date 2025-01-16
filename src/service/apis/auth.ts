@@ -39,6 +39,26 @@ export const login = async (data) => {
   return res.data.tokenValue ? "has token" : res.data
 }
 
+export const loginPhone = async (data) => {
+  const res = await apiService.post(
+    `/public/api/login/phone`,
+    {
+      organizationId: data.organizationId,
+      phone: data.phone,
+    },
+    {
+      headers: {
+        "X-CODE": data.smsCode,
+        "X-PHONE": data.phone,
+      },
+    }
+  )
+  localStorage.setItem(modelBaseUserToken, res.data.tokenValue)
+  localStorage.removeItem("@@appId")
+  localStorage.removeItem("@@organizationId")
+  return res.data.tokenValue ? "has token" : res.data
+}
+
 /**
  * 修改密码
  * @param {string} oldPassword - 旧密码
