@@ -173,3 +173,21 @@ export interface AppCodeStore {
   bundleCompiledCode(): Promise<string>
   compileAndUpload(): Promise<string>
 }
+
+// 新增: 应用版本相关接口
+export interface AppVersionInfo {
+  id: string
+  name: string
+  description: string
+  createdAt: string
+  createdBy: {
+    id: string
+    name: string
+  }
+  version: Version
+}
+
+export interface AppVersionHistory {
+  versions: AppVersionInfo[]
+  total: number
+}

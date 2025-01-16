@@ -1,7 +1,22 @@
-import { getMetadata, setMetadata, setPlatMetaData, getPlatMetaData } from "@/service/apis/metadata"
-import { AppCodeStore, Version, AppIndex, PublishedVersion, BundleVersion, ModuleBundle } from "../types"
+import {
+  getMetadata,
+  setMetadata,
+  setPlatMetaData,
+  getPlatMetaData,
+  queryMetadataHistory,
+} from "@/service/apis/metadata"
+import {
+  AppCodeStore,
+  Version,
+  AppIndex,
+  PublishedVersion,
+  BundleVersion,
+  ModuleBundle,
+  AppVersionInfo,
+  AppVersionHistory,
+} from "../types"
 import { getCurrentAccountInfo } from "@/service/apis/user"
-import html2canvas from 'html2canvas'
+import html2canvas from "html2canvas"
 import message from "@/components/Message"
 
 function generateVersionNumber(bundles?: BundleVersion[]): string {
@@ -17,13 +32,13 @@ function generateVersionNumber(bundles?: BundleVersion[]): string {
 async function captureAndUploadPreview(iframe: HTMLIFrameElement): Promise<{ url: string; fileID: string }> {
   try {
     // 等待 iframe 加载完成
-    await new Promise(resolve => {
-      if (iframe.contentDocument?.readyState === 'complete') {
-        resolve(true);
+    await new Promise((resolve) => {
+      if (iframe.contentDocument?.readyState === "complete") {
+        resolve(true)
       } else {
-        iframe.onload = () => resolve(true);
+        iframe.onload = () => resolve(true)
       }
-    });
+    })
 
     // 使用 html2canvas 截图
     const canvas = await html2canvas(iframe.contentDocument.body, {
@@ -31,52 +46,119 @@ async function captureAndUploadPreview(iframe: HTMLIFrameElement): Promise<{ url
       width: 1200,
       height: 800,
       useCORS: true,
-    });
+    })
 
     // 转换为 blob
-    const blob = await new Promise<Blob>(resolve => {
-      canvas.toBlob(
-        blob => resolve(blob),
-        'image/webp',
-        0.8
-      );
-    });
+    const blob = await new Promise<Blob>((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), "image/webp", 0.8)
+    })
 
     // 创建 File 对象
     const previewFile = new File([blob], `preview-${Date.now()}.webp`, {
-      type: 'image/webp'
-    });
+      type: "image/webp",
+    })
 
     // 生成云存储路径
-    const cloudPath = `app-previews/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.webp`;
-    
+    const cloudPath = `app-previews/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.webp`
+
     // 认证
-    const auth = app.auth();
-    await auth.signInAnonymously();
-    
+    const auth = app.auth()
+    await auth.signInAnonymously()
+
     // 上传文件
     const uploadResult = await app.uploadFile({
       cloudPath,
       filePath: previewFile,
-    });
+    })
 
     // 获取临时URL
     const urlResult = await app.getTempFileURL({
       fileList: [uploadResult.fileID],
-    });
+    })
 
-    const tempFileURL = urlResult.fileList[0]?.tempFileURL;
+    const tempFileURL = urlResult.fileList[0]?.tempFileURL
     if (!tempFileURL) {
-      throw new Error("Failed to get preview image URL");
+      throw new Error("Failed to get preview image URL")
     }
 
     return {
       url: tempFileURL,
-      fileID: uploadResult.fileID
-    };
+      fileID: uploadResult.fileID,
+    }
   } catch (error) {
-    console.error("Error capturing and uploading preview:", error);
-    throw error;
+    console.error("Error capturing and uploading preview:", error)
+    throw error
+  }
+}
+
+// 新增: 保存应用版本
+export async function saveAppVersion(this: AppCodeStore, name: string, description: string): Promise<AppVersionInfo> {
+  if (!this.appId) throw new Error("No app id")
+  if (!this.currentVersion) throw new Error("No current version")
+
+  try {
+    const userInfo = await getCurrentAccountInfo()
+    const versionKey = `${this.appId}_version_${Date.now()}`
+
+    const versionInfo: AppVersionInfo = {
+      id: versionKey,
+      name,
+      description,
+      createdAt: new Date().toISOString(),
+      createdBy: {
+        id: userInfo.id,
+        name: userInfo.name || userInfo.username,
+      },
+      version: this.currentVersion,
+    }
+
+    await setMetadata(versionKey, JSON.stringify(versionInfo))
+    message.success("版本保存成功")
+    return versionInfo
+  } catch (error) {
+    console.error("Error saving app version:", error)
+    throw new Error("Failed to save app version")
+  }
+}
+
+// 新增: 获取应用版本历史
+export async function getAppVersionHistory(this: AppCodeStore): Promise<AppVersionHistory> {
+  if (!this.appId) throw new Error("No app id")
+
+  try {
+    const result = await queryMetadataHistory({
+      names: [`${this.appId}_version_`],
+      limit: 100,
+    })
+
+    const versions = result.data.map((item) => JSON.parse(item.value))
+    return {
+      versions,
+      total: result.total,
+    }
+  } catch (error) {
+    console.error("Error getting app version history:", error)
+    throw new Error("Failed to get app version history")
+  }
+}
+
+// 新增: 从特定版本发布
+export async function publishFromVersion(this: AppCodeStore, versionInfo: AppVersionInfo): Promise<void> {
+  if (!this.appId) throw new Error("No app id")
+
+  try {
+    // 添加版本到历史记录
+    this.addVersion(versionInfo.version)
+
+    // 发布到服务器
+    await this.publishToServer({
+      useLatest: true,
+    })
+
+    message.success("版本发布成功")
+  } catch (error) {
+    console.error("Error publishing from version:", error)
+    throw new Error("Failed to publish from version")
   }
 }
 
@@ -125,20 +207,20 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
     const updatedBundles = [newBundle, ...currentBundles].slice(0, 10)
 
     // 5. 获取预览图
-    const iframe = document.querySelector('iframe');
-    let previewImage = versionToPublish.app.previewImage;
-    
+    const iframe = document.querySelector("iframe")
+    let previewImage = versionToPublish.app.previewImage
+
     if (iframe) {
       try {
-        const { url, fileID } = await captureAndUploadPreview(iframe);
+        const { url, fileID } = await captureAndUploadPreview(iframe)
         previewImage = {
           url,
           fileID,
           updatedAt: new Date().toISOString(),
-        };
+        }
       } catch (error) {
-        console.error("Failed to capture preview:", error);
-        message.warning("预览图生成失败，将使用现有预览图");
+        console.error("Failed to capture preview:", error)
+        message.warning("预览图生成失败，将使用现有预览图")
       }
     }
 

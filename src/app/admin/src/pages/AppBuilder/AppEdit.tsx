@@ -1,94 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef } from "react"
-import { useParams, useLocation } from "react-router-dom"
-import { Button, Spinner, ButtonGroup, Tooltip } from "@nextui-org/react"
-import { Icon } from "@iconify/react"
-import { observer } from "mobx-react-lite"
-import PageLayout from "@/app/admin/src/components/PageLayout"
-import AIEditor from "./AIEditor/AppAIEditor"
-import AppAgent from "./AppAgent"
-import { AppBuilderMessage, CodeItem } from "./types"
-import message from "@/components/Message"
-import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
-import { appCodeStore } from "./store/appCodeStore"
-import { logStore } from "./AIEditor/components/LogStore"
-import { ErrorPrompt, PublishModal, PublishTemplateModal, RollbackModal } from "./ErrorPrompt"
-
-const MAX_MESSAGES = 50
-
-const AppBuilder: React.FC = observer(() => {
-  const { appId } = useParams<{ appId: string }>()
-  const location = useLocation()
-  const [isLoading, setIsLoading] = useState(true)
-  const [messages, setMessages] = useState<AppBuilderMessage[]>([])
-  const [selectedTab, setSelectedTab] = useState("preview")
-  const [appTitle, setAppTitle] = useState("")
-  const { updateBreadcrumbs } = useBreadcrumb()
-  const [showPublishModal, setShowPublishModal] = useState(false)
-  const [showPublishTemplateModal, setShowPublishTemplateModal] = useState(false)
-  const [showRollbackModal, setShowRollbackModal] = useState(false)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [publishInProgress, setPublishInProgress] = useState(false)
-  const [publishError, setPublishError] = useState<string | null>(null)
-  const [moduleError, setModuleError] = useState(null)
-  const [isCompiling, setIsCompiling] = useState(false)
-
-  const accumulatedTextRef = useRef("")
-  const currentMessageIdRef = useRef<string | null>(null)
-
-  useEffect(() => {
-    updateBreadcrumbs([
-      { label: "首页", href: "/admin" },
-      { label: "应用管理", href: "/admin/apps" },
-      { label: "应用开发", href: "" },
-    ])
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      appCodeStore.clearViewState()
-    }
-  }, [])
-
-  // 添加日志消息监听
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === "AI_FIX_REQUEST") {
-        const errorInfo = event.data.payload
-
-        const fixPrompt = `请帮我修复以下错误:
-          错误信息: ${errorInfo.error}
-          路由路径: ${errorInfo.context?.route}
-          堆栈信息: ${errorInfo.stack}
-          ${errorInfo.context?.type === "module_error" ? "这是一个模块执行错误。" : ""}
-          
-          请分析错误原因并生成修复后的完整代码, 每个模块的代码都必须完整, 不能用注释省略任何部分。无论是多小的修改都要给出整个模块的完整代码`
-
-        processCommand(fixPrompt)
-      } else if (event.data.type === "LOG") {
-        const { level, message, details } = event.data
-        logStore[level](message, details)
-      } else if (event.data.type === "LOG_CLEAR") {
-        logStore.clear()
-      }
-    }
-
-    window.addEventListener("message", handleMessage)
-    return () => window.removeEventListener("message", handleMessage)
-  }, [])
-
-  useEffect(() => {
-    const initEditor = async () => {
-      if (!appId) return
-
-      try {
-        setIsLoading(true)
+setIsLoading(true)
 
         const version = await appCodeStore.loadApp(appId)
 
         if (version?.app?.name) {
           setAppTitle(version.app.name)
         }
+
+        // 新增: 加载版本历史
+        const history = await appCodeStore.getAppVersionHistory()
+        setVersions(history.versions)
 
         if (!selectedTab) {
           setSelectedTab("preview")
@@ -111,6 +31,43 @@ const AppBuilder: React.FC = observer(() => {
       setTimeout(() => setIsRefreshing(false), 500)
     }
   }, [isRefreshing])
+
+  // 新增: 保存版本处理函数
+  const handleSaveVersion = async (name: string, description: string) => {
+    try {
+      setIsLoading(true)
+      const versionInfo = await appCodeStore.saveAppVersion(name, description)
+      message.success("版本保存成功")
+      // 更新版本列表
+      const history = await appCodeStore.getAppVersionHistory()
+      setVersions(history.versions)
+    } catch (error) {
+      message.error("保存版本失败: " + (error instanceof Error ? error.message : "未知错误"))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // 新增: 从特定版本发布
+  const handlePublishFromVersion = async (versionInfo) => {
+    try {
+      setIsLoading(true)
+      setPublishInProgress(true)
+      setPublishError(null)
+
+      await appCodeStore.publishFromVersion(versionInfo)
+      message.success("版本发布成功")
+      setShowVersionListModal(false)
+      refreshPreview()
+    } catch (error) {
+      console.error("Error publishing version:", error)
+      setPublishError(error instanceof Error ? error.message : "发布失败")
+      message.error(error instanceof Error ? error.message : "发布失败")
+    } finally {
+      setIsLoading(false)
+      setPublishInProgress(false)
+    }
+  }
 
   const handlePublish = async () => {
     if (!appId) return
@@ -163,7 +120,6 @@ const AppBuilder: React.FC = observer(() => {
     }
   }
 
-  // 新增回滚到最近发布版本的处理函数
   const handleRollbackToLastPublished = async () => {
     try {
       setIsLoading(true)
@@ -416,6 +372,30 @@ const AppBuilder: React.FC = observer(() => {
   const pageActions = (
     <div className='flex items-center gap-2'>
       <ButtonGroup>
+        <Tooltip content='保存当前版本'>
+          <Button
+            color="primary"
+            variant='flat'
+            onPress={() => setShowSaveVersionModal(true)}
+            isDisabled={isLoading || publishInProgress || isCompiling}
+            startContent={<Icon icon='mdi:content-save' className='w-4 h-4' />}
+          >
+            保存版本
+          </Button>
+        </Tooltip>
+
+        <Tooltip content='查看版本历史'>
+          <Button
+            color="primary"
+            variant='flat'
+            onPress={() => setShowVersionListModal(true)}
+            isDisabled={isLoading || publishInProgress || isCompiling}
+            startContent={<Icon icon='mdi:history' className='w-4 h-4' />}
+          >
+            版本历史
+          </Button>
+        </Tooltip>
+
         <Tooltip content='发布为模板供他人使用'>
           <Button
             color='secondary'
@@ -487,6 +467,19 @@ const AppBuilder: React.FC = observer(() => {
           isOpen={showRollbackModal}
           onClose={() => setShowRollbackModal(false)}
           onConfirm={handleRollbackToLastPublished}
+        />
+        
+        {/* 新增: 版本管理相关模态框 */}
+        <SaveVersionModal 
+          isOpen={showSaveVersionModal} 
+          onClose={() => setShowSaveVersionModal(false)}
+          onSave={handleSaveVersion}
+        />
+        <VersionListModal 
+          isOpen={showVersionListModal}
+          onClose={() => setShowVersionListModal(false)}
+          versions={versions}
+          onPublish={handlePublishFromVersion}
         />
       </PageLayout>
     </>
