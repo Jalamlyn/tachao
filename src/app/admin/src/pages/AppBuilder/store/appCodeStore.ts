@@ -31,9 +31,11 @@ import {
   getContextModules,
   toggleUseSelectedModulesAsContext,
   getSelectedModulesInfo,
+  loadContextShortcuts,
+  applyContextShortcuts,
+  saveContextShortcut,
+  deleteContextShortcut,
 } from "./methods/viewMethods"
-import { getAppId } from "@/utils"
-import globalStore from "@/globalStore"
 import { localDB } from "@/utils/localDB"
 
 class AppCodeStore {
@@ -71,6 +73,10 @@ class AppCodeStore {
     this.generateInitialVersion = generateInitialVersion.bind(this)
     this.getLastPublishedVersion = getLastPublishedVersion.bind(this)
     this.rollbackToLastPublished = rollbackToLastPublished.bind(this)
+    this.loadContextShortcuts = loadContextShortcuts.bind(this)
+    this.applyContextShortcuts = applyContextShortcuts.bind(this)
+    this.deleteContextShortcut = deleteContextShortcut.bind(this)
+    this.saveContextShortcut = saveContextShortcut.bind(this)
 
     // 绑定视图相关方法
     this.handleCodeSelect = handleCodeSelect.bind(this)
