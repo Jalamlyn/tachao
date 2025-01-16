@@ -1,7 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Textarea } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
+import { appCodeStore } from "./store/appCodeStore"
 
 // 新增: 版本管理相关组件
 export const SaveVersionModal = ({ isOpen, onClose, onSave }) => {
@@ -9,6 +10,15 @@ export const SaveVersionModal = ({ isOpen, onClose, onSave }) => {
   const [description, setDescription] = useState("")
   const [isSaving, setIsSaving] = useState(false)
 
+  useEffect(() => {
+    if (isOpen) {
+      const changes = appCodeStore.getChangeMessages()
+      const defaultDescription = changes
+        .map((msg) => `${msg.type}(${msg.scope}): ${msg.subject}\n${msg.details.map((d) => `- ${d}`).join("\n")}`)
+        .join("\n\n")
+      setDescription(defaultDescription)
+    }
+  }, [isOpen])
   const handleSave = async () => {
     if (!name.trim()) {
       message.error("请输入版本名称")

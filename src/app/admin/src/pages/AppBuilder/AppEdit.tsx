@@ -11,7 +11,7 @@ import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { appCodeStore } from "./store/appCodeStore"
 import { logStore } from "./AIEditor/components/LogStore"
-import { ErrorPrompt, PublishModal, PublishTemplateModal, RollbackModal } from "./ErrorPrompt"
+import { ErrorPrompt, PublishModal, PublishTemplateModal, RollbackModal } from "./AppEditErrorPrompt"
 import { SaveVersionModal, VersionListModal } from "./AppEditModal"
 
 const MAX_MESSAGES = 50
@@ -157,7 +157,6 @@ const AppBuilder: React.FC = observer(() => {
       setPublishError(null)
 
       await appCodeStore.publishFromVersion(versionInfo)
-      message.success("版本发布成功")
       setShowVersionListModal(false)
       refreshPreview()
     } catch (error) {
@@ -183,8 +182,6 @@ const AppBuilder: React.FC = observer(() => {
 
       if (result.publishInfo.hasNewerVersion) {
         message.info(`已发布${result.publishInfo.versionDate}的版本，` + "但存在更新的版本未发布")
-      } else {
-        message.success("发布成功")
       }
 
       setShowPublishModal(true)
@@ -209,7 +206,6 @@ const AppBuilder: React.FC = observer(() => {
         useLatest: !appCodeStore.isViewingHistory,
       })
 
-      message.success("模板发布成功")
       setShowPublishTemplateModal(true)
     } catch (error) {
       console.error("Error publishing template:", error)

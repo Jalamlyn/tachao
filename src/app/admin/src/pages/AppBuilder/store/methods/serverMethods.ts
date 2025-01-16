@@ -93,7 +93,7 @@ async function captureAndUploadPreview(iframe: HTMLIFrameElement): Promise<{ url
 }
 
 // 新增: 保存应用版本
-export async function saveAppVersion(this: AppCodeStore, name: string, description: string): Promise<AppVersionInfo> {
+export async function saveAppVersion(name: string, description: string = ""): Promise<AppVersionInfo> {
   if (!this.appId) throw new Error("No app id")
   if (!this.currentVersion) throw new Error("No current version")
 
@@ -101,20 +101,33 @@ export async function saveAppVersion(this: AppCodeStore, name: string, descripti
     const userInfo = await getCurrentAccountInfo()
     const versionKey = `${this.appId}_version`
 
+    // 使用收集的变更消息作为默认描述
+    const changes = this.getChangeMessages()
+    const defaultDescription = changes
+      .map((msg) => `${msg.type}(${msg.scope}): ${msg.subject}\n${msg.details.map((d) => `- ${d}`).join("\n")}`)
+      .join("\n\n")
+
     const versionInfo: AppVersionInfo = {
       id: versionKey,
       name,
-      description,
+      description: description || defaultDescription,
       createdAt: new Date().toISOString(),
       createdBy: {
         id: userInfo.id,
         name: userInfo.name || userInfo.username,
       },
-      version: this.currentVersion,
+      version: {
+        ...this.currentVersion,
+        changes,
+      },
+      changes,
     }
 
     await setMetadata(versionKey, JSON.stringify(versionInfo))
-    message.success("版本保存成功")
+
+    // 保存后清空变更记录
+    this.clearChangeMessages()
+
     return versionInfo
   } catch (error) {
     console.error("Error saving app version:", error)
@@ -174,8 +187,6 @@ export async function publishFromVersion(this: AppCodeStore, versionInfo: AppVer
     await this.publishToServer({
       useLatest: true,
     })
-
-    message.success("版本发布成功")
   } catch (error) {
     console.error("Error publishing from version:", error)
     throw new Error("Failed to publish from version")

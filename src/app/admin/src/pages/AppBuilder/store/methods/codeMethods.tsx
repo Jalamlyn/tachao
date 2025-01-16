@@ -1,7 +1,64 @@
 import { transform } from "@/utils/moduleLoader"
-import { AppCodeStore, ModuleData, ShataAICode, Version } from "../types"
+import { AppCodeStore, ModuleData, ShataAICode, ChangeMessage } from "../types"
 import message from "@/components/Message"
-import { Button } from "@nextui-org/react"
+
+// 新增: 解析变更消息
+export function extractChangeMessages(content: string): ChangeMessage[] {
+  const messages: ChangeMessage[] = []
+  const messageBlocks = content.match(/<mo-ai-message>([\s\S]*?)<\/mo-ai-message>/g)
+
+  if (!messageBlocks) return messages
+
+  for (const block of messageBlocks) {
+    try {
+      const contentMatch = block.match(/<mo-ai-message>([\s\S]*?)<\/mo-ai-message>/)
+      if (!contentMatch) continue
+
+      const content = contentMatch[1].trim()
+      const lines = content
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+
+      if (lines.length < 1) continue
+
+      // 解析第一行: type(scope): subject
+      const headerMatch = lines[0].match(/^(\w+)\(([^)]+)\):\s*(.+)$/)
+      if (!headerMatch) continue
+
+      const [_, type, scope, subject] = headerMatch
+
+      // 收集详细信息
+      const details: string[] = []
+      let collectingDetails = false
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i]
+        if (line.startsWith("-")) {
+          collectingDetails = true
+          details.push(line.slice(1).trim())
+        } else if (collectingDetails && line) {
+          details[details.length - 1] += " " + line
+        }
+      }
+
+      messages.push({
+        type: type as ChangeMessage["type"],
+        scope,
+        subject,
+        details,
+        timestamp: Date.now(),
+      })
+    } catch (error) {
+      console.error("Error parsing change message:", error)
+      continue
+    }
+  }
+
+  return messages
+}
+
+// 修改: 在处理AI响应时解析变更消息
 
 export function compileCode(this: AppCodeStore, code: string): Promise<string> {
   try {
@@ -124,6 +181,10 @@ export async function processAIResponse(this: AppCodeStore, aiResponse: string):
   if (!this.appId) throw new Error("AppId not set")
 
   try {
+    // 解析变更消息
+    const changeMessages = this.extractChangeMessages(aiResponse)
+    changeMessages.forEach((msg) => this.addChangeMessage(msg))
+
     const codeBlocks = this.extractShataAICodes(aiResponse)
     const moduleData: Record<string, ModuleData> = {}
 

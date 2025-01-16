@@ -28,6 +28,8 @@ class AppCodeStore {
   versions: Version[] = []
   currentIndex: number = -1
   viewState: ViewState
+  // 新增: 变更消息数组
+  changeMessages: ChangeMessage[] = []
 
   constructor() {
     this.viewState = viewMethods.initViewState()
@@ -86,7 +88,21 @@ class AppCodeStore {
   get appId(): string | null {
     return this.#appId
   }
+  // 新增: 变更消息管理方法
+  addChangeMessage(message: ChangeMessage) {
+    this.changeMessages.push({
+      ...message,
+      timestamp: Date.now(),
+    })
+  }
 
+  clearChangeMessages() {
+    this.changeMessages = []
+  }
+
+  getChangeMessages(): ChangeMessage[] {
+    return [...this.changeMessages]
+  }
   // 新增: 编译单个模块为独立文件
   compileModuleCode = async (moduleId: string, moduleData: any): Promise<string> => {
     if (!this.appId) throw new Error("No app id")

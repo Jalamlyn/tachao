@@ -27,8 +27,17 @@ export interface BundleVersion {
   version: string
   timestamp: number
   urls: string[]
-  modules: ModuleBundle[] // 新增: 模块信息数组
-  bundleUrl?: string // 保持向后兼容
+  modules: ModuleBundle[]
+  bundleUrl?: string
+}
+
+// 新增: 变更消息接口
+export interface ChangeMessage {
+  type: "feat" | "fix" | "docs" | "style" | "refactor" | "test" | "chore"
+  scope: string
+  subject: string
+  details: string[]
+  timestamp: number
 }
 
 export interface App {
@@ -38,7 +47,7 @@ export interface App {
   updatedAt: string
   modules: Record<string, AppModule>
   bundleUrl?: string
-  bundles?: BundleVersion[] // 存储最近10个版本的bundle信息
+  bundles?: BundleVersion[]
   previewImage?: {
     url: string
     updatedAt: string
@@ -58,6 +67,8 @@ export interface Version {
   serverVersion?: number
   lastSyncTime?: number
   bundleUrl?: string
+  // 新增: 版本变更描述
+  changes?: ChangeMessage[]
 }
 
 export interface AIGenerationResult {
@@ -77,7 +88,6 @@ export interface ShataAICode {
   title?: string
 }
 
-// 新增: 快捷上下文类型定义
 export interface ContextShortcut {
   id: string
   name: string
@@ -104,7 +114,6 @@ export interface ViewState {
   useSelectedModulesAsContext: boolean
   isDeletingModules?: boolean
   isCompiling?: boolean
-  // 新增: 快捷上下文相关状态
   contextShortcuts: ContextShortcut[]
   selectedShortcuts: string[]
 }
@@ -148,6 +157,8 @@ export interface AppCodeStore {
   canForward: boolean
   viewState: ViewState
   hasPublishedVersion: boolean
+  // 新增: 变更消息数组
+  changeMessages: ChangeMessage[]
 
   compileCode(code: string): Promise<string>
   extractShataAICodes(content: string): ShataAICode[]
@@ -169,12 +180,16 @@ export interface AppCodeStore {
   getContextModules(): Record<string, ModuleWrapper>
   toggleUseSelectedModulesAsContext(): void
   getSelectedModulesInfo(): Array<{ id: string; name: string; title: string; type: ModuleType }>
-  
+
+  // 新增: 变更消息相关方法
+  addChangeMessage(message: ChangeMessage): void
+  clearChangeMessages(): void
+  getChangeMessages(): ChangeMessage[]
+
   bundleCompiledCode(): Promise<string>
   compileAndUpload(): Promise<string>
 }
 
-// 新增: 应用版本相关接口
 export interface AppVersionInfo {
   id: string
   name: string
@@ -185,6 +200,8 @@ export interface AppVersionInfo {
     name: string
   }
   version: Version
+  // 新增: 版本变更记录
+  changes?: ChangeMessage[]
 }
 
 export interface AppVersionHistory {
