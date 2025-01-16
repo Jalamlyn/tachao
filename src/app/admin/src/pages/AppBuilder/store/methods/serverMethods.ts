@@ -237,24 +237,6 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
     // 4. 更新bundles数组，保持最近10个版本
     const updatedBundles = [newBundle, ...currentBundles].slice(0, 10)
 
-    // 5. 获取预览图
-    const iframe = document.querySelector("iframe")
-    let previewImage = versionToPublish.app.previewImage
-
-    if (iframe) {
-      try {
-        const { url, fileID } = await captureAndUploadPreview(iframe)
-        previewImage = {
-          url,
-          fileID,
-          updatedAt: new Date().toISOString(),
-        }
-      } catch (error) {
-        console.error("Failed to capture preview:", error)
-        message.warning("预览图生成失败，将使用现有预览图")
-      }
-    }
-
     // 6. 发布到服务器
     await setMetadata(
       this.appId,
@@ -263,7 +245,6 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
           ...versionToPublish.app,
           bundles: updatedBundles,
           bundleUrl: moduleUrls[0], // 保持向后兼容
-          previewImage,
         },
         version: versionToPublish.app.version,
         updatedAt: new Date().toISOString(),
@@ -284,7 +265,6 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
       appIndex.lastPublishedAt = new Date().toISOString()
       appIndex.version = versionToPublish.app.version
       appIndex.updatedAt = new Date().toISOString()
-      appIndex.previewImage = previewImage
 
       await setMetadata("app_index", JSON.stringify(apps))
     }
@@ -293,7 +273,6 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
     if (this.currentVersion) {
       this.currentVersion.app.bundles = updatedBundles
       this.currentVersion.app.bundleUrl = moduleUrls[0] // 保持向后兼容
-      this.currentVersion.app.previewImage = previewImage
     }
 
     return {
@@ -303,7 +282,6 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
       publishedAt: new Date().toISOString(),
       bundleUrl: moduleUrls[0],
       bundles: updatedBundles,
-      previewImage,
     }
   } catch (error) {
     console.error("Error publishing app:", error)
