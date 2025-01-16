@@ -75,7 +75,7 @@ export function applyContextShortcuts(this: AppCodeStore, shortcutIds: string[])
 
   this.viewState.selectedModules = mergedModuleIds
   this.viewState.selectedShortcuts = shortcutIds
-  
+
   if (!this.viewState.useSelectedModulesAsContext) {
     this.toggleUseSelectedModulesAsContext()
   }
@@ -123,7 +123,14 @@ export function toggleUseSelectedModulesAsContext(this: AppCodeStore) {
     message.warning("请先选择至少一个模块")
     return
   }
+
+  // 如果是从启用状态切换到禁用状态，清空快捷上下文选择
+  if (this.viewState.useSelectedModulesAsContext) {
+    this.viewState.selectedShortcuts = [] // 清空快捷上下文选择
+  }
+
   this.viewState.useSelectedModulesAsContext = !this.viewState.useSelectedModulesAsContext
+
   message.success(
     this.viewState.useSelectedModulesAsContext
       ? `已启用选中模块上下文 (${this.viewState.selectedModules.length}个模块)`

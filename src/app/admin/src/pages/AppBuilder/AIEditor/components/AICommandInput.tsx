@@ -25,13 +25,13 @@ import { useAICommandButton } from "./hooks/useAICommandButton"
 // 添加模型配置
 const MODEL_INFO = {
   "anthropic/claude-3.5-haiku-20241022": {
-    name: "Claude 3.5 Haiku",
+    name: "高级模型",
     description: "快速响应，适合简单任务",
     icon: "solar:rocket-minimalistic-linear",
     color: "success",
   },
   "anthropic/claude-3.5-sonnet": {
-    name: "Claude 3.5 Sonnet",
+    name: "专家模型",
     description: "强大性能，适合复杂任务",
     icon: "solar:star-linear",
     color: "primary",
