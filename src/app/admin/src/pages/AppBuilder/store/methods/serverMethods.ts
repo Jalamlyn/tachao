@@ -1,6 +1,8 @@
 import { getMetadata, setMetadata, setPlatMetaData, getPlatMetaData } from "@/service/apis/metadata"
-import { AppCodeStore, Version, AppIndexItem, PublishedVersion, BundleVersion, ModuleBundle } from "../types"
+import { AppCodeStore, Version, AppIndex, PublishedVersion, BundleVersion, ModuleBundle } from "../types"
 import { getCurrentAccountInfo } from "@/service/apis/user"
+import html2canvas from 'html2canvas'
+import message from "@/components/Message"
 
 function generateVersionNumber(bundles?: BundleVersion[]): string {
   if (!bundles || bundles.length === 0) {
@@ -10,6 +12,72 @@ function generateVersionNumber(bundles?: BundleVersion[]): string {
   const lastVersion = bundles[0].version
   const versionNum = parseFloat(lastVersion.substring(1)) + 0.01
   return `v${versionNum.toFixed(2)}`
+}
+
+async function captureAndUploadPreview(iframe: HTMLIFrameElement): Promise<{ url: string; fileID: string }> {
+  try {
+    // 等待 iframe 加载完成
+    await new Promise(resolve => {
+      if (iframe.contentDocument?.readyState === 'complete') {
+        resolve(true);
+      } else {
+        iframe.onload = () => resolve(true);
+      }
+    });
+
+    // 使用 html2canvas 截图
+    const canvas = await html2canvas(iframe.contentDocument.body, {
+      scale: 2,
+      width: 1200,
+      height: 800,
+      useCORS: true,
+    });
+
+    // 转换为 blob
+    const blob = await new Promise<Blob>(resolve => {
+      canvas.toBlob(
+        blob => resolve(blob),
+        'image/webp',
+        0.8
+      );
+    });
+
+    // 创建 File 对象
+    const previewFile = new File([blob], `preview-${Date.now()}.webp`, {
+      type: 'image/webp'
+    });
+
+    // 生成云存储路径
+    const cloudPath = `app-previews/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.webp`;
+    
+    // 认证
+    const auth = app.auth();
+    await auth.signInAnonymously();
+    
+    // 上传文件
+    const uploadResult = await app.uploadFile({
+      cloudPath,
+      filePath: previewFile,
+    });
+
+    // 获取临时URL
+    const urlResult = await app.getTempFileURL({
+      fileList: [uploadResult.fileID],
+    });
+
+    const tempFileURL = urlResult.fileList[0]?.tempFileURL;
+    if (!tempFileURL) {
+      throw new Error("Failed to get preview image URL");
+    }
+
+    return {
+      url: tempFileURL,
+      fileID: uploadResult.fileID
+    };
+  } catch (error) {
+    console.error("Error capturing and uploading preview:", error);
+    throw error;
+  }
 }
 
 export async function publishToServer(this: AppCodeStore, { useLatest = false } = {}) {
@@ -56,7 +124,25 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
     // 4. 更新bundles数组，保持最近10个版本
     const updatedBundles = [newBundle, ...currentBundles].slice(0, 10)
 
-    // 5. 发布到服务器
+    // 5. 获取预览图
+    const iframe = document.querySelector('iframe');
+    let previewImage = versionToPublish.app.previewImage;
+    
+    if (iframe) {
+      try {
+        const { url, fileID } = await captureAndUploadPreview(iframe);
+        previewImage = {
+          url,
+          fileID,
+          updatedAt: new Date().toISOString(),
+        };
+      } catch (error) {
+        console.error("Failed to capture preview:", error);
+        message.warning("预览图生成失败，将使用现有预览图");
+      }
+    }
+
+    // 6. 发布到服务器
     await setMetadata(
       this.appId,
       JSON.stringify({
@@ -64,6 +150,7 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
           ...versionToPublish.app,
           bundles: updatedBundles,
           bundleUrl: moduleUrls[0], // 保持向后兼容
+          previewImage,
         },
         version: versionToPublish.app.version,
         updatedAt: new Date().toISOString(),
@@ -84,6 +171,7 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
       appIndex.lastPublishedAt = new Date().toISOString()
       appIndex.version = versionToPublish.app.version
       appIndex.updatedAt = new Date().toISOString()
+      appIndex.previewImage = previewImage
 
       await setMetadata("app_index", JSON.stringify(apps))
     }
@@ -92,6 +180,7 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
     if (this.currentVersion) {
       this.currentVersion.app.bundles = updatedBundles
       this.currentVersion.app.bundleUrl = moduleUrls[0] // 保持向后兼容
+      this.currentVersion.app.previewImage = previewImage
     }
 
     return {
@@ -101,6 +190,7 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
       publishedAt: new Date().toISOString(),
       bundleUrl: moduleUrls[0],
       bundles: updatedBundles,
+      previewImage,
     }
   } catch (error) {
     console.error("Error publishing app:", error)
@@ -184,9 +274,9 @@ export async function updateAppIndex(this: AppCodeStore, app: any, name: string)
   try {
     const userInfo = await getCurrentAccountInfo()
     const appIndexResult = await getMetadata(["app_index"])
-    const apps: AppIndexItem[] = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
+    const apps: AppIndex[] = appIndexResult.data?.[0]?.value ? JSON.parse(appIndexResult.data[0].value) : []
 
-    const newAppIndex: AppIndexItem = {
+    const newAppIndex: AppIndex = {
       id: app.id,
       title: name,
       status: "draft",

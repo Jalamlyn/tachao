@@ -39,6 +39,11 @@ export interface App {
   modules: Record<string, AppModule>
   bundleUrl?: string
   bundles?: BundleVersion[] // 存储最近10个版本的bundle信息
+  previewImage?: {
+    url: string
+    updatedAt: string
+    fileID?: string
+  }
 }
 
 export interface ModuleWrapper {
