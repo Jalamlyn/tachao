@@ -16,7 +16,7 @@ export default function LoginPage() {
   const { t } = useTranslation()
   const [isVisible, setIsVisible] = useState(false)
   const [loginLoading, setLoginLoading] = useState(false)
-  const [selectedTab, setSelectedTab] = useState("external")
+  const [selectedTab, setSelectedTab] = useState("admin")
   const [rememberMe, setRememberMe] = useState(false)
   const [account, setAccount] = useState("")
   const [password, setPassword] = useState("")
