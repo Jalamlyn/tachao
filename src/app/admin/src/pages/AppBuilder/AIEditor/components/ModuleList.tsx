@@ -139,7 +139,6 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
     }
   }
 
-  // 修改 handleSaveContextShortcut 函数
   const handleSaveContextShortcut = () => {
     setShowSaveContextModal(true)
   }
@@ -244,7 +243,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
 
         {appCodeStore.viewState.useSelectedModulesAsContext && appCodeStore?.viewState?.selectedModules?.length > 0 && (
           <div ref={contextRef} id='context' className='mb-4'>
-            <Card className='bg-default-50/80 backdrop-blur-sm shadow-sm'>
+            <Card className='bg-gradient-to-r from-primary-50 to-primary-100/50 backdrop-blur-sm shadow-sm'>
               <div className='p-2'>
                 <div className='text-sm font-medium mb-1.5 flex items-center justify-between'>
                   <span>当前上下文模块</span>
@@ -292,7 +291,7 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
         )}
 
         {/* 快捷上下文选择器 */}
-        {appCodeStore.viewState.contextShortcuts.length > 0 && (
+        {appCodeStore.viewState.contextShortcuts.length > 0 ? (
           <div className='mb-4'>
             <Card className='bg-default-50/80 backdrop-blur-sm shadow-sm'>
               <div className='p-2'>
@@ -357,6 +356,26 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                     </SelectItem>
                   )}
                 </Select>
+              </div>
+            </Card>
+          </div>
+        ) : (
+          <div className='mb-4'>
+            <Card className='bg-default-50/80 backdrop-blur-sm shadow-sm'>
+              <div className='flex flex-col items-center gap-2 py-8'>
+                <Icon icon='solar:bookmark-square-minimalistic-linear' className='w-12 h-12 text-default-300' />
+                <div className='text-default-500 text-center'>
+                  <p className='font-medium'>还没有保存的快捷上下文</p>
+                  <p className='text-small'>选择模块后点击"保存快捷上下文"即可保存当前选择</p>
+                </div>
+                <Button
+                  color='primary'
+                  variant='flat'
+                  startContent={<Icon icon='solar:add-circle-linear' />}
+                  onClick={handleSaveContextShortcut}
+                >
+                  创建第一个快捷上下文
+                </Button>
               </div>
             </Card>
           </div>
