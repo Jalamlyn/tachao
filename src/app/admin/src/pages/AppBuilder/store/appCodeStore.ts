@@ -13,6 +13,10 @@ import {
   publishTemplate,
   getLastPublishedVersion,
   rollbackToLastPublished,
+  // 新增: 导入版本管理相关方法
+  saveAppVersion,
+  getAppVersionHistory,
+  publishFromVersion,
 } from "./methods/serverMethods"
 import { handleAIGeneration, loadApp, createApp, generateInitialVersion } from "./methods/generationMethods"
 import {
@@ -77,6 +81,11 @@ class AppCodeStore {
     this.applyContextShortcuts = applyContextShortcuts.bind(this)
     this.deleteContextShortcut = deleteContextShortcut.bind(this)
     this.saveContextShortcut = saveContextShortcut.bind(this)
+
+    // 新增: 绑定版本管理相关方法
+    this.saveAppVersion = saveAppVersion.bind(this)
+    this.getAppVersionHistory = getAppVersionHistory.bind(this)
+    this.publishFromVersion = publishFromVersion.bind(this)
 
     // 绑定视图相关方法
     this.handleCodeSelect = handleCodeSelect.bind(this)
