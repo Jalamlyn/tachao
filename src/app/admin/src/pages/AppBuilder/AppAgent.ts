@@ -135,6 +135,7 @@ class AppAgent {
 模块名称: ${module.data.name}
 模块标题: ${module.data.title}
 模块类型: ${module.data.type}
+模块路径: ${module.data.path}
 模块代码:
 ${module.data.code}
 `

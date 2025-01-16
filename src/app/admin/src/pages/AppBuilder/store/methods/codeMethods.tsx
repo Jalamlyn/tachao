@@ -110,7 +110,7 @@ export function extractShataAICodes(content: string): ShataAICode[] {
           const nameMatch = block.match(/name="([^"]+)"/)
           const moduleName = nameMatch ? nameMatch[1] : undefined
           const moduleId = type === "app" ? `${this.appId}_app_entry` : `${this.appId}_${type}_${moduleName}`
-
+          debugger
           // 获取当前模块的代码
           let currentCode = ""
           if (this.currentVersion?.modules[moduleId]) {
@@ -148,6 +148,7 @@ export function extractShataAICodes(content: string): ShataAICode[] {
             code,
             name: "entry",
             title: "应用入口",
+            path: "index.jsx",
           })
           continue
         }
@@ -158,11 +159,15 @@ export function extractShataAICodes(content: string): ShataAICode[] {
         const titleMatch = block.match(/title="([^"]+)"/)
         const title = titleMatch ? titleMatch[1] : undefined
 
+        const pathMatch = block.match(/path="([^"]+)"/)
+        const path = pathMatch ? pathMatch[1] : undefined
+
         results.push({
           type,
           code,
           name,
           title,
+          path,
         })
       } catch (blockError) {
         console.error("Error processing code block:", blockError)
@@ -197,6 +202,7 @@ export async function processAIResponse(this: AppCodeStore, aiResponse: string):
         name: block.name!,
         title: block.title,
         code: block.code,
+        path: block.path,
         compiledCode: block.type === "markdown" ? true : await this.compileCode(block.code),
       }
     }
