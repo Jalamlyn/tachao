@@ -9,11 +9,9 @@ import {
   Input,
   Card,
   CardBody,
-  Divider,
   useDisclosure,
   RadioGroup,
   Radio,
-  Chip,
 } from "@nextui-org/react"
 import { useNavigate } from "react-router-dom"
 import { Icon } from "@iconify/react"
@@ -25,6 +23,7 @@ import { TemplateSection } from "./components/TemplateSection"
 import { SuccessDialog, DeleteConfirmDialog } from "./CreateAppModalDialogs"
 import { multiPageTemplate, singlePageTemplate } from "@/app/admin/src/pages/AppBuilder/prompts/nextui/initTemplate"
 import { getPlatMetaData, setPlatMetaData } from "@/service/apis/metadata"
+import message from "@/components/Message"
 
 interface CreateAppModalProps {
   isOpen: boolean
@@ -118,33 +117,22 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
   }
 
   const renderStepIndicator = () => (
-    <div className="flex items-center justify-center gap-2 mb-6">
+    <div className='flex items-center justify-center gap-2 mb-6'>
       {[1, 2, 3].map((step) => (
-        <div
-          key={step}
-          className={`flex items-center ${step !== 3 ? "flex-1" : ""}`}
-        >
+        <div key={step} className={`flex items-center ${step !== 3 ? "flex-1" : ""}`}>
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center ${
               step === currentStep
                 ? "bg-primary text-white"
                 : step < currentStep
-                ? "bg-success/20 text-success"
-                : "bg-default-100 text-default-500"
+                  ? "bg-success/20 text-success"
+                  : "bg-default-100 text-default-500"
             }`}
           >
-            {step < currentStep ? (
-              <Icon icon="mdi:check" className="w-5 h-5" />
-            ) : (
-              step
-            )}
+            {step < currentStep ? <Icon icon='mdi:check' className='w-5 h-5' /> : step}
           </div>
           {step !== 3 && (
-            <div
-              className={`h-0.5 flex-1 mx-2 ${
-                step < currentStep ? "bg-success/20" : "bg-default-100"
-              }`}
-            />
+            <div className={`h-0.5 flex-1 mx-2 ${step < currentStep ? "bg-success/20" : "bg-default-100"}`} />
           )}
         </div>
       ))}
@@ -155,40 +143,31 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <h3 className="text-lg font-bold">为您的应用起个名字</h3>
-              <p className="text-sm text-default-500">
-                给您的应用一个简洁明了的名称
-              </p>
+          <div className='space-y-4'>
+            <div className='text-center mb-6'>
+              <h3 className='text-lg font-bold'>为您的应用起个名字</h3>
+              <p className='text-sm text-default-500'>给您的应用一个简洁明了的名称</p>
             </div>
             <Input
-              label="应用名称"
+              label='应用名称'
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="请输入应用名称"
-              variant="bordered"
-              size="lg"
+              placeholder='请输入应用名称'
+              variant='bordered'
+              size='lg'
               isRequired
-              startContent={
-                <Icon
-                  icon="mdi:application-edit-outline"
-                  className="w-5 h-5 text-default-400"
-                />
-              }
+              startContent={<Icon icon='mdi:application-edit-outline' className='w-5 h-5 text-default-400' />}
             />
           </div>
         )
       case 2:
         return (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h3 className="text-lg font-bold">选择创建方式</h3>
-              <p className="text-sm text-default-500">
-                您可以从零开始创建，或使用现有模板
-              </p>
+          <div className='space-y-6'>
+            <div className='text-center mb-6'>
+              <h3 className='text-lg font-bold'>选择创建方式</h3>
+              <p className='text-sm text-default-500'>您可以从零开始创建，或使用现有模板</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <Card
                 isPressable
                 isHoverable
@@ -200,25 +179,14 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
                   setSelectedTemplate("")
                 }}
               >
-                <CardBody className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`p-3 rounded-lg ${
-                        createMode === "scratch"
-                          ? "bg-primary/10"
-                          : "bg-default-100"
-                      }`}
-                    >
-                      <Icon
-                        icon="mdi:file-outline"
-                        className="w-6 h-6 text-primary"
-                      />
+                <CardBody className='p-4'>
+                  <div className='flex items-center gap-4'>
+                    <div className={`p-3 rounded-lg ${createMode === "scratch" ? "bg-primary/10" : "bg-default-100"}`}>
+                      <Icon icon='mdi:file-outline' className='w-6 h-6 text-primary' />
                     </div>
                     <div>
-                      <h4 className="text-base font-semibold">从零开始</h4>
-                      <p className="text-sm text-default-500">
-                        从零开始构建您的应用
-                      </p>
+                      <h4 className='text-base font-semibold'>从零开始</h4>
+                      <p className='text-sm text-default-500'>从零开始构建您的应用</p>
                     </div>
                   </div>
                 </CardBody>
@@ -228,31 +196,18 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
                 isPressable
                 isHoverable
                 className={`border-2 duration-200 ${
-                  createMode === "template"
-                    ? "border-primary"
-                    : "border-transparent"
+                  createMode === "template" ? "border-primary" : "border-transparent"
                 }`}
                 onPress={() => setCreateMode("template")}
               >
-                <CardBody className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`p-3 rounded-lg ${
-                        createMode === "template"
-                          ? "bg-primary/10"
-                          : "bg-default-100"
-                      }`}
-                    >
-                      <Icon
-                        icon="hugeicons:task-add-02"
-                        className="w-6 h-6 text-primary"
-                      />
+                <CardBody className='p-4'>
+                  <div className='flex items-center gap-4'>
+                    <div className={`p-3 rounded-lg ${createMode === "template" ? "bg-primary/10" : "bg-default-100"}`}>
+                      <Icon icon='hugeicons:task-add-02' className='w-6 h-6 text-primary' />
                     </div>
                     <div>
-                      <h4 className="text-base font-semibold">从模板开始</h4>
-                      <p className="text-sm text-default-500">
-                        使用预设模板快速创建应用
-                      </p>
+                      <h4 className='text-base font-semibold'>从模板开始</h4>
+                      <p className='text-sm text-default-500'>使用预设模板快速创建应用</p>
                     </div>
                   </div>
                 </CardBody>
@@ -262,29 +217,27 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
         )
       case 3:
         return createMode === "scratch" ? (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <h3 className="text-lg font-bold">选择应用类型</h3>
-              <p className="text-sm text-default-500">
-                选择最适合您需求的应用类型
-              </p>
+          <div className='space-y-4'>
+            <div className='text-center mb-6'>
+              <h3 className='text-lg font-bold'>选择应用类型</h3>
+              <p className='text-sm text-default-500'>选择最适合您需求的应用类型</p>
             </div>
             <RadioGroup
               value={initTemplateType}
               onValueChange={(value) => setInitTemplateType(value as "multi" | "single")}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <Radio
-                  value="multi"
-                  description="包含路由配置，适合构建完整应用，可集成单页模块"
-                  className="max-w-full"
+                  value='multi'
+                  description='包含路由配置，适合构建完整应用，可集成单页模块'
+                  className='max-w-full'
                 >
                   多页应用
                 </Radio>
                 <Radio
-                  value="single"
-                  description="无路由配置，适合单一功能模块，可被多页应用集成"
-                  className="max-w-full"
+                  value='single'
+                  description='无路由配置，适合单一功能模块，可被多页应用集成'
+                  className='max-w-full'
                 >
                   单页模块
                 </Radio>
@@ -292,12 +245,10 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
             </RadioGroup>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="text-center mb-6">
-              <h3 className="text-lg font-bold">选择模板</h3>
-              <p className="text-sm text-default-500">
-                从预设模板中选择一个开始
-              </p>
+          <div className='space-y-4'>
+            <div className='text-center mb-6'>
+              <h3 className='text-lg font-bold'>选择模板</h3>
+              <p className='text-sm text-default-500'>从预设模板中选择一个开始</p>
             </div>
             <TemplateSection
               selectedTemplate={selectedTemplate}
@@ -339,17 +290,17 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
           body: "py-6",
           footer: "border-t",
         }}
-        scrollBehavior="inside"
+        scrollBehavior='inside'
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">创建应用</ModalHeader>
-          <ModalBody className="gap-6">
+          <ModalHeader className='flex flex-col gap-1'>创建应用</ModalHeader>
+          <ModalBody className='gap-6'>
             {renderStepIndicator()}
             {renderStepContent()}
           </ModalBody>
           <ModalFooter>
             <Button
-              variant="light"
+              variant='light'
               onPress={() => {
                 if (currentStep === 1) {
                   onClose()
@@ -361,7 +312,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
               {currentStep === 1 ? "取消" : "上一步"}
             </Button>
             <Button
-              color="primary"
+              color='primary'
               onPress={() => {
                 if (currentStep === 3) {
                   handleSubmit()
