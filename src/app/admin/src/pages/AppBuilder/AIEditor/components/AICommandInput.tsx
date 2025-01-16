@@ -352,30 +352,6 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
   return (
     <>
       <form className='flex w-full flex-col gap-2 rounded-medium bg-default-100 transition-colors hover:bg-default-200/70'>
-        {/* 添加模型信息显示 */}
-        {currentModel && (
-          <div className='px-4 pt-2'>
-            <Popover placement='top'>
-              <PopoverTrigger>
-                <Chip
-                  variant='flat'
-                  color={MODEL_INFO[currentModel]?.color as any}
-                  startContent={<Icon icon={MODEL_INFO[currentModel]?.icon} className='w-3 h-3' />}
-                  className='cursor-help'
-                >
-                  {MODEL_INFO[currentModel]?.name}
-                </Chip>
-              </PopoverTrigger>
-              <PopoverContent>
-                <div className='px-1 py-2'>
-                  <div className='text-small font-bold'>{MODEL_INFO[currentModel]?.name}</div>
-                  <div className='text-tiny'>{MODEL_INFO[currentModel]?.description}</div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        )}
-
         <input
           type='file'
           ref={fileInputRef}
