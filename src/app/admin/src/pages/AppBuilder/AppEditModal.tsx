@@ -129,6 +129,24 @@ export const VersionListModal = ({ isOpen, onClose, versions, onPublish, onDelet
                     </span>
                   </div>
                 </div>
+                <div className='flex gap-2'>
+                  <Button
+                    color='primary'
+                    variant='flat'
+                    onPress={() => onPublish(version)}
+                    startContent={<Icon icon='mdi:rocket-launch' className='w-4 h-4' />}
+                  >
+                    发布此版本
+                  </Button>
+                  <Button
+                    color='danger'
+                    variant='flat'
+                    onPress={() => setVersionToDelete(version)}
+                    startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
+                  >
+                    删除
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
