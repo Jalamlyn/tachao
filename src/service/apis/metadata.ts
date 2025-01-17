@@ -1,9 +1,73 @@
 import { apiService } from "./api"
 import { getAppId } from "@/utils"
+import { debounce } from "lodash"
 
 // 元数据键名常量
 export const PHONE_ORG_MAPPING_KEY = "phone_org_mapping"
 export const ACCOUNT_REQUESTS_KEY = "account_requests"
+
+// 缓存相关配置
+const CACHE_DURATION = 5000 // 缓存时间5秒
+const cache = new Map()
+const pendingRequests = new Map()
+const debounceMap = new Map()
+
+// 优化后的get方法
+export const getMetadataWithCache = async (names, appId) => {
+  const cacheKey = JSON.stringify({ names, appId })
+  
+  // 检查是否有相同请求正在进行
+  if (pendingRequests.has(cacheKey)) {
+    return pendingRequests.get(cacheKey)
+  }
+
+  // 检查缓存
+  const cached = cache.get(cacheKey)
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data
+  }
+
+  // 发起新请求
+  const promise = getMetadata(names, appId).then(data => {
+    cache.set(cacheKey, {
+      data,
+      timestamp: Date.now()
+    })
+    pendingRequests.delete(cacheKey)
+    return data
+  })
+
+  pendingRequests.set(cacheKey, promise)
+  return promise
+}
+
+// 优化后的set方法
+export const setMetadataWithDebounce = (name: string, value: any, appId: string) => {
+  if (debounceMap.has(name)) {
+    clearTimeout(debounceMap.get(name))
+  }
+
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(async () => {
+      try {
+        const result = await setMetadata(name, value, appId)
+        debounceMap.delete(name)
+        resolve(result)
+      } catch (error) {
+        debounceMap.delete(name)
+        reject(error)
+      }
+    }, 300)
+
+    debounceMap.set(name, timeoutId)
+  })
+}
+
+// 清理缓存的方法
+export const clearMetadataCache = () => {
+  cache.clear()
+  pendingRequests.clear()
+}
 
 export const queryMetadataHistory = async (data: {
   jsonValueFilter?: {
@@ -129,21 +193,21 @@ export const getPlatMetaData = async (names = [], limit = 1) => {
 
 // 手机号-组织映射相关方法
 export const getPhoneOrgMapping = async (phone: string) => {
-  const result = await getPublicMetaData([PHONE_ORG_MAPPING_KEY], "1869963081721307138	")
+  const result = await getMetadataWithCache([PHONE_ORG_MAPPING_KEY], "1869963081721307138")
   const mapping = JSON.parse(result.data?.[0]?.value || "{}")
   return mapping[phone]
 }
 
 export const setPhoneOrgMapping = async (phone: string, orgId: string) => {
-  const result = await getMetadata([PHONE_ORG_MAPPING_KEY], "1869963081721307138")
+  const result = await getMetadataWithCache([PHONE_ORG_MAPPING_KEY], "1869963081721307138")
   const mapping = JSON.parse(result.data?.[0]?.value || "{}")
   mapping[phone] = orgId
-  await setMetadata(PHONE_ORG_MAPPING_KEY, mapping, "1869963081721307138")
+  await setMetadataWithDebounce(PHONE_ORG_MAPPING_KEY, mapping, "1869963081721307138")
 }
 
 // 账号申请相关方法
 export const getAccountRequests = async () => {
-  const result = await getMetadata([ACCOUNT_REQUESTS_KEY])
+  const result = await getMetadataWithCache([ACCOUNT_REQUESTS_KEY])
   return JSON.parse(result.data?.[0]?.value || "{}")
 }
 
@@ -158,7 +222,7 @@ export const addAccountRequest = async (request: {
 }) => {
   const requests = await getAccountRequests()
   requests[request.id] = request
-  await setMetadata(ACCOUNT_REQUESTS_KEY, requests)
+  await setMetadataWithDebounce(ACCOUNT_REQUESTS_KEY, requests)
 }
 
 export const updateAccountRequest = async (
@@ -174,6 +238,6 @@ export const updateAccountRequest = async (
       ...requests[requestId],
       ...updates,
     }
-    await setMetadata(ACCOUNT_REQUESTS_KEY, requests)
+    await setMetadataWithDebounce(ACCOUNT_REQUESTS_KEY, requests)
   }
 }
