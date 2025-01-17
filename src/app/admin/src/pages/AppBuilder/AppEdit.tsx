@@ -13,6 +13,7 @@ import { appCodeStore } from "./store/appCodeStore"
 import { logStore } from "./AIEditor/components/LogStore"
 import { ErrorPrompt, PublishModal, PublishTemplateModal, RollbackModal } from "./AppEditErrorPrompt"
 import { SaveVersionModal, VersionListModal } from "./AppEditModal"
+import RequestView from "./AIEditor/components/RequestView"
 
 const MAX_MESSAGES = 50
 
