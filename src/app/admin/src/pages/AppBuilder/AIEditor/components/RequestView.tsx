@@ -26,6 +26,24 @@ const RequestView: React.FC = observer(() => {
   }
   return (
     <div className='h-[calc(100vh-200px)] flex flex-col'>
+      <div className='flex items-center justify-between mb-4 px-4'>
+        <div className='flex items-center gap-2'>
+          <Icon icon="solar:history-linear" className='w-5 h-5 text-default-500' />
+          <span className='text-medium font-medium'>请求历史</span>
+        </div>
+        <Button
+          size="sm"
+          variant="flat"
+          color="danger"
+          startContent={<Icon icon="mdi:trash" className="w-4 h-4" />}
+          onPress={() => {
+            requestStore.clear()
+            setSelectedRequest(null)
+          }}
+        >
+          清空日志
+        </Button>
+      </div>
       <div className='flex-1 flex gap-4'>
         {/* 请求列表 */}
         <div className='w-1/4 overflow-hidden'>
