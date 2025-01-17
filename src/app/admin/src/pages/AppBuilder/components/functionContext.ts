@@ -8,10 +8,10 @@ import * as mobx from "mobx"
 import { Icon } from "@iconify/react"
 import {
   deleteMetadata,
-  getMetadata,
-  getPublicMetaData,
+  getMetadata as originalGetMetadata,
+  getPublicMetaData as originalGetPublicMetaData,
   queryMetadataHistory,
-  setMetadata,
+  setMetadata as originalSetMetadata,
 } from "@/service/apis/metadata"
 import * as recharts from "recharts"
 import { cn } from "@/theme/cn"
@@ -27,6 +27,67 @@ import { getLocationPermissionGuide } from "@/components/common/DynamicForm/comp
 import { apiService, getCurrentAccountInfo, queryCurrentEnterPrise } from "@/service/apis/api"
 import * as ReactHookForm from "react-hook-form"
 import { logStore } from "../AIEditor/components/LogStore"
+import { requestStore } from "../AIEditor/components/RequestStore"
+
+// 包装getMetadata函数
+const getMetadata = async (names: string[], appId?: string) => {
+  try {
+    const response = await originalGetMetadata(names, appId)
+    requestStore.addRequest({
+      method: "GET",
+      params: { names, appId },
+      response,
+    })
+    return response
+  } catch (error) {
+    requestStore.addRequest({
+      method: "GET",
+      params: { names, appId },
+      response: error,
+    })
+    throw error
+  }
+}
+
+// 包装setMetadata函数
+const setMetadata = async (name: string, value: any, appId?: string) => {
+  try {
+    const response = await originalSetMetadata(name, value, appId)
+    requestStore.addRequest({
+      method: "SET",
+      params: { name, value, appId },
+      response,
+    })
+    return response
+  } catch (error) {
+    requestStore.addRequest({
+      method: "SET",
+      params: { name, value, appId },
+      response: error,
+    })
+    throw error
+  }
+}
+
+// 包装getPublicMetaData函数
+const getPublicMetaData = async (names: string[]) => {
+  try {
+    const response = await originalGetPublicMetaData(names)
+    requestStore.addRequest({
+      method: "GET",
+      params: { names, type: "public" },
+      response,
+    })
+    return response
+  } catch (error) {
+    requestStore.addRequest({
+      method: "GET",
+      params: { names, type: "public" },
+      response: error,
+    })
+    throw error
+  }
+}
 
 // 异步加载esm
 let esmModule: any = null
