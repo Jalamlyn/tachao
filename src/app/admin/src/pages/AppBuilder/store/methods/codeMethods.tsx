@@ -82,7 +82,7 @@ export function compileCode(this: AppCodeStore, code: string): Promise<string> {
   }
 }
 
-// 新增: 提取 search-replace 代码块
+// 修改: 提取 search-replace 代码块，使用新的文本格式处理方式
 export function extractSearchReplaceCodes(content: string): Array<{
   type: string
   name: string
@@ -127,22 +127,14 @@ export function extractSearchReplaceCodes(content: string): Array<{
       const searchReplaces: Array<{ search: string; replace: string }> = []
       const content = contentMatch[1].trim()
 
-      try {
-        const blocks = JSON.parse(content)
-        for (const block of blocks) {
-          const match = block.match(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/)
-          if (match) {
-            searchReplaces.push({
-              search: match[1].trim(),
-              replace: match[2].trim(),
-            })
-          }
-        }
-      } catch (error) {
-        console.error("Error parsing search-replace blocks:", error)
-        continue
+      // 直接在内容中查找所有的 SEARCH/REPLACE 块
+      const searchReplaceMatches = content.matchAll(/<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)>>>>>>> REPLACE/g)
+      for (const match of Array.from(searchReplaceMatches)) {
+        searchReplaces.push({
+          search: match[1].trim(),
+          replace: match[2].trim(),
+        })
       }
-
       if (searchReplaces.length > 0) {
         results.push({
           type,
@@ -249,17 +241,25 @@ export async function processAIResponse(this: AppCodeStore, aiResponse: string):
       }
     }
 
-    // 然后处理 search-replace 块
+    // 处理 search-replace 块
     for (const block of searchReplaceBlocks) {
       const moduleId = `${this.appId}_${block.type}_${block.name}`
       const existingModule = this.currentVersion?.modules[moduleId]
 
       if (existingModule) {
+        // 从原始代码开始，然后逐步应用每个替换
         let updatedCode = existingModule.data.code
 
         // 按顺序应用所有的 search-replace 对
+        // 每次替换都基于前一次替换的结果
         for (const { search, replace } of block.searchReplaces) {
           updatedCode = updatedCode.replace(search, replace)
+          // 可以添加日志来调试替换过程
+          console.log("After replacement:", {
+            search,
+            replace,
+            result: updatedCode,
+          })
         }
 
         moduleData[moduleId] = {
@@ -267,7 +267,7 @@ export async function processAIResponse(this: AppCodeStore, aiResponse: string):
           type: block.type,
           name: block.name,
           title: block.title,
-          code: updatedCode,
+          code: updatedCode, // 最终的代码包含了所有连续替换的结果
           path: block.path,
           compiledCode: block.type === "markdown" ? true : await this.compileCode(updatedCode),
         }
