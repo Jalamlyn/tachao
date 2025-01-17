@@ -94,32 +94,40 @@ export const VersionListModal = ({ isOpen, onClose, versions, onPublish, onDelet
           <div className='space-y-4'>
             {versions.map((version) => (
               <div key={version.id} className='flex items-center justify-between p-4 border rounded-lg'>
-                <div>
-                  <h3 className='font-medium'>{version.name}</h3>
-                  <p className='text-small text-default-500'>{version.description}</p>
-                  <div className='flex items-center gap-2 mt-1 text-tiny text-default-400'>
-                    <span>创建于 {new Date(version.createdAt).toLocaleString()}</span>
-                    <span>·</span>
-                    <span>创建者: {version.createdBy.name}</span>
+                <div className='space-y-2'>
+                  <div className='flex items-center gap-2'>
+                    <h3 className='text-lg font-medium'>{version.name}</h3>
                   </div>
-                </div>
-                <div className='flex gap-2'>
-                  <Button
-                    color='primary'
-                    variant='flat'
-                    onPress={() => onPublish(version)}
-                    startContent={<Icon icon='mdi:rocket-launch' className='w-4 h-4' />}
-                  >
-                    发布此版本
-                  </Button>
-                  <Button
-                    color='danger'
-                    variant='flat'
-                    onPress={() => setVersionToDelete(version)}
-                    startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
-                  >
-                    删除
-                  </Button>
+
+                  <div className='space-y-1 text-sm text-default-600'>
+                    {version.description.split("\n").map((line, i) => {
+                      if (line.includes(":")) {
+                        const [type, content] = line.split(":")
+                        return (
+                          <div key={i} className='flex gap-2'>
+                            <span className='font-medium text-primary-600'>{type}:</span>
+                            <span>{content}</span>
+                          </div>
+                        )
+                      }
+                      return (
+                        <div key={i} className='pl-4'>
+                          - {line}
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  <div className='flex items-center gap-3 text-tiny text-default-400'>
+                    <span className='flex items-center gap-1'>
+                      <Icon icon='mdi:clock-outline' className='w-4 h-4' />
+                      {new Date(version.createdAt).toLocaleString()}
+                    </span>
+                    <span className='flex items-center gap-1'>
+                      <Icon icon='mdi:account' className='w-4 h-4' />
+                      {version.createdBy.name}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}

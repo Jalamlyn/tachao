@@ -190,24 +190,11 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
 }`
 
       const baseInput = (role) => `
-            [注意：${role}，
-              - 仔细阅读项目代码
-              - 进行思考，将思考输出在 <mo-ai-think>你的思考过程</mo-ai-think>
-              - 这里的内容对用户不可见
-              - 生成的代码不管有多长，都必须完整返回，禁止使用注释省略任何代码和逻辑
-              - 即便是重复性修改也得返回完整代码，禁止使用 “// ... 其余代码保持不变 ...”，这种方式来省略重复性修改
-              - 注意要引导用户按照逐步迭代的方式来完成开发，不要一次开发一个很复杂的功能
-              - 按照 MVP 原则，优先实现最小可行产品（MVP），然后再逐步迭代完善
-              - 要有数据驱动的思路，先从数据模型再到 UI 视图
-              - 开发完功能要告诉用户如何通过界面操作进行测试，使用现有组件进行测试，不要让用户集成新的组件，用户不懂技术也看不懂代码
-              - 使用 typescript 开发
-              - 禁止直接使用 getMetadata 和 setMetadata，必须通过 service 封装成数据模型的方式来操作数据
-              - ts 类型统一使用  type="ts-type" 不需要通过 wpm.export 导出, 也不需要在其他模块通过 wpm.import 导入, 系统会自动识别
-              ]
+            [注意：${role}]
       `
       const enhancedCommand = isPMMode
-        ? `${commandContent}${baseInput("这是一个产品经理模式对话，不需要生成代码，只需要和用户讨论")}`
-        : `${commandContent}${baseInput("这是一个工程师模式对话")}`
+        ? `${commandContent}${baseInput("你作为产品经理PM，仔细阅读<project_context>里的信息，不需要生成代码，只需要和用户讨论")}`
+        : `${commandContent}${baseInput("你作为工程师MO，仔细阅读<project_context>里的信息，需要生成代码")}`
 
       const allMessages = [
         ...messages,

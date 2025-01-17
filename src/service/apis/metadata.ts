@@ -1,6 +1,5 @@
 import { apiService } from "./api"
 import { getAppId } from "@/utils"
-import { debounce } from "lodash"
 
 // 元数据键名常量
 export const PHONE_ORG_MAPPING_KEY = "phone_org_mapping"
@@ -10,7 +9,7 @@ export const ACCOUNT_REQUESTS_KEY = "account_requests"
 const metadataCache = new Map()
 const pendingMetadataRequests = new Map()
 const pendingSetRequests = new Map()
-const CACHE_DURATION = 5000 // 5秒缓存
+const CACHE_DURATION = 0 // 5秒缓存
 const DEBOUNCE_DELAY = 300 // 300ms 防抖延迟
 
 // 实际执行 setMetadata 的函数
@@ -32,7 +31,7 @@ const executeSetMetadata = async (name, value, appId) => {
       },
     }
   )
-  
+
   deleteMetadata({ name, versionCode: Number(res.data.versionCode) - 20 })
   return res.data
 }
@@ -76,7 +75,7 @@ export const getPublicMetaData = async (names) => {
 
 export const getMetadata = async (names, appId) => {
   const cacheKey = JSON.stringify({ names, appId })
-  
+
   // 1. 检查缓存
   const cached = metadataCache.get(cacheKey)
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
@@ -90,16 +89,12 @@ export const getMetadata = async (names, appId) => {
 
   // 3. 立即发起新请求
   const getUrl = `/internal/apps/${getAppId()}/metadata/AI_AGENT/list`
-  const promise = apiService.post(
-    getUrl,
-    { names },
-    { headers: { "x-app": appId } }
-  ).then(res => {
+  const promise = apiService.post(getUrl, { names }, { headers: { "x-app": appId } }).then((res) => {
     const data = res.data
     // 存入缓存
     metadataCache.set(cacheKey, {
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     })
     pendingMetadataRequests.delete(cacheKey)
     return data
@@ -113,7 +108,7 @@ export const setMetadata = async (name, value, appId) => {
   // 如果已有相同name的pending请求，说明这是短时间内的重复调用
   if (pendingSetRequests.has(name)) {
     clearTimeout(pendingSetRequests.get(name).timeoutId)
-    
+
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(async () => {
         try {

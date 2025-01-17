@@ -90,7 +90,7 @@ export default async function chatChunkOpenAIOffice(
 
   // const apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-openrouter"
   const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-openrouter"
-  
+
   // 选择模型
   const selectedModel = selectModel(_messages)
   // 保存当前使用的模型到 sessionStorage
@@ -134,6 +134,7 @@ export default async function chatChunkOpenAIOffice(
       if (event.data !== "[DONE]") {
         try {
           const parsed = jsonParse(event.data)
+
           const content = parsed?.choices[0]?.delta?.content || ""
           fullContent += content
           onChunk(content)
@@ -175,6 +176,7 @@ export default async function chatChunkOpenAIOffice(
           }
         } catch (error) {
           console.log("Error parsing JSON:", error)
+          throw error
         }
       } else {
         localDB.setItem("chat-chunk-over", overFlag)
