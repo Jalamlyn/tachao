@@ -62,7 +62,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = observer(({ isFullWidth, on
   // 添加快捷键保存功能
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
         e.preventDefault()
         if (appCodeStore.viewState.isEditing) {
           appCodeStore.handleSaveEdit()
@@ -70,8 +70,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = observer(({ isFullWidth, on
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [])
 
   return (
@@ -157,7 +157,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = observer(({ isFullWidth, on
             minimap: { enabled: true },
             fontSize: 14,
             lineNumbers: "on",
-            wordWrap: "on",
+            wordWrap: "off",
             automaticLayout: true,
             scrollBeyondLastLine: false,
             smoothScrolling: true,
