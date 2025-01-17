@@ -189,20 +189,8 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
     : ""
 }`
 
-      // 构建完整的用户输入
-      const enhancedCommand = isPMMode
-        ? `${commandContent}
-            [注意：这是一个产品经理咨询模式的对话，请不要生成任何代码，只需要：
-              - 仔细阅读项目代码
-              - 进行思考，将思考输出在 <mo-ai-think>你的思考过程</mo-ai-think>
-              - 注意要引导用户按照逐步迭代的方式来实现需求，不要设计过于复杂的产品
-              - 按照 MVP 原则，优先实现最小可行产品（MVP），然后再逐步迭代完善
-              - 理解我的问题,并给出回答。
-              - 我不懂技术，也看不懂代码
-              - 这里的内容对用户不可见
-              ]`
-        : `${commandContent}
-            [注意：这是一个工程师模式对话，
+      const baseInput = (role) => `
+            [注意：${role}，
               - 仔细阅读项目代码
               - 进行思考，将思考输出在 <mo-ai-think>你的思考过程</mo-ai-think>
               - 这里的内容对用户不可见
@@ -216,7 +204,10 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
               - 禁止直接使用 getMetadata 和 setMetadata，必须通过 service 封装成数据模型的方式来操作数据
               - ts 类型统一使用  type="ts-type" 不需要通过 wpm.export 导出, 也不需要在其他模块通过 wpm.import 导入, 系统会自动识别
               ]
-        `
+      `
+      const enhancedCommand = isPMMode
+        ? `${commandContent}${baseInput("这是一个产品经理模式对话，不需要生成代码，只需要和用户讨论")}`
+        : `${commandContent}${baseInput("这是一个工程师模式对话")}`
 
       const allMessages = [
         ...messages,
