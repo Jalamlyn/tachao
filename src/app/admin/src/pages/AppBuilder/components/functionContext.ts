@@ -207,7 +207,13 @@ const wpm = {
         )
         logStore.error(`模块导入失败: ${moduleName}`, { error: error.message })
         reject(error)
-      }, 2000)
+        console.error(`模块导入失败: ${moduleName}`, error)
+        if (window.__module_import_errors) {
+          window.__module_import_errors.push(moduleName)
+        } else {
+          window.__module_import_errors = [moduleName]
+        }
+      }, 500)
     })
 
     try {
@@ -400,8 +406,8 @@ export const logAPI = {
   },
 }
 
-export const context = (appId) => ({
-  wpm,
+export const context = (appId, mode) => ({
+  wpm: mode === "runtime" ? wpmOriginal : wpm,
   React,
   observer,
   Icon,

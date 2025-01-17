@@ -45,7 +45,7 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
 
   const totalCost = useMemo(() => {
     const cost = records.reduce((sum, record) => {
-      const recordCost = typeof record.totalCost === 'number' ? record.totalCost : 0
+      const recordCost = typeof record.totalCost === "number" ? record.totalCost : 0
       return sum + recordCost
     }, 0)
     onTotalCostChange?.(cost)
@@ -53,10 +53,12 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
   }, [records, onTotalCostChange])
 
   const currentPageCost = useMemo(() => {
-    return currentRecords.reduce((sum, record) => {
-      const recordCost = typeof record.totalCost === 'number' ? record.totalCost : 0
-      return sum + recordCost
-    }, 0).toFixed(4)
+    return currentRecords
+      .reduce((sum, record) => {
+        const recordCost = typeof record.totalCost === "number" ? record.totalCost : 0
+        return sum + recordCost
+      }, 0)
+      .toFixed(4)
   }, [currentRecords])
 
   const handlePageSizeChange = (value: string) => {
@@ -180,6 +182,7 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
             <TableColumn>时间</TableColumn>
             <TableColumn>类型</TableColumn>
             <TableColumn>详情</TableColumn>
+            <TableColumn>消费用户</TableColumn>
             <TableColumn>费用(塔币)</TableColumn>
           </TableHeader>
           <TableBody
@@ -196,6 +199,7 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
                 <TableCell>{new Date(record.timestamp).toLocaleString()}</TableCell>
                 <TableCell>{getRecordTypeChip(record.type)}</TableCell>
                 <TableCell>{renderCostDetails(record)}</TableCell>
+                <TableCell>{record.userName}</TableCell>
                 <TableCell>
                   <span className='font-medium'>{record.totalCost?.toFixed(4)} 塔币</span>
                 </TableCell>

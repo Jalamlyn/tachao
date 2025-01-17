@@ -80,7 +80,7 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
           if (appData.app.bundles?.[0]?.urls) {
             // 使用新的bundle加载方式
             await loadBundles(appData.app.bundles[0].urls)
-            await executeApp(appData.app.bundles[0].modules, context(appId))
+            await executeApp(appData.app.bundles[0].modules, context(appId, "runtime"))
             setIsLoading(false)
             return
           }

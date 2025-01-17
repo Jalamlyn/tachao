@@ -46,6 +46,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
           context: {
             route: window.location.pathname,
             appId,
+            moduleName: window.__module_import_errors ? window.__module_import_errors[0] : "未知模块",
           },
         },
       },
@@ -159,6 +160,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
                         context: {
                           route: window.location.pathname,
                           appId,
+                          moduleName: window.__module_import_errors ? window.__module_import_errors[0] : "未知模块",
                         },
                       },
                     },

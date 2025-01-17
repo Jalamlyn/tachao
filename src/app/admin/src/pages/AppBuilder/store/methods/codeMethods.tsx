@@ -157,7 +157,7 @@ export function extractShataAICodes(content: string): ShataAICode[] {
   try {
     const results: ShataAICode[] = []
     const codeBlocks = content.match(/<mo-ai-code[^>]*>([\s\S]*?)<\/mo-ai-code>/g)
-    
+
     if (!codeBlocks) return results
 
     for (const block of codeBlocks) {
@@ -326,10 +326,10 @@ export async function executeModules(this: AppCodeStore, context: any) {
         const moduleFunction = new Function(
           "context",
           `
-          ${moduleData.compiledCode.replace(/export default/, "return")}
+          ${moduleData.compiledCode.replace(/export default/, `return`)}
         `
         )
-        const getResult = moduleFunction(context)
+        const getResult = moduleFunction(context, moduleData.id)
         getResult()
         delete moduleData.code
         delete moduleData.compiledCode

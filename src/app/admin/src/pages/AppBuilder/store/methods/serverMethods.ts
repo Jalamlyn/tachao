@@ -211,7 +211,7 @@ export async function publishToServer(this: AppCodeStore, { useLatest = false } 
 
     // 1. 首先过滤出非markdown模块
     const executableModules = Object.entries(versionToPublish.modules).filter(
-      ([_, moduleWrapper]) => moduleWrapper.data.type !== "markdown"
+      ([_, moduleWrapper]) => moduleWrapper.data.type !== "markdown" && moduleWrapper.data.type !== "ts-type"
     )
 
     // 2. 编译并上传可执行模块

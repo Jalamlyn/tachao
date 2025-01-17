@@ -21,71 +21,46 @@ interface Props {
 
 interface State {
   hasError: boolean
-  errors: Array<{
-    error: Error
-    errorInfo?: ErrorInfo
-    timestamp: number
-  }>
+  error: Error | null
+  errorInfo: ErrorInfo | null
 }
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
-    errors: [],
+    error: null,
+    errorInfo: null,
   }
 
   public static getDerivedStateFromError(error: Error): State {
     return {
       hasError: true,
-      errors: [{
-        error,
-        timestamp: Date.now()
-      }]
+      error,
+      errorInfo: null,
     }
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Error caught by ErrorBoundary:", error, errorInfo)
-    
-    this.setState(prevState => {
-      const newError = {
-        error,
-        errorInfo,
-        timestamp: Date.now()
-      }
-      
-      // 保持最新的2个错误
-      const errors = [newError, ...prevState.errors].slice(0, 2)
-      
-      return {
-        errors
-      }
+    errorInfo.moduleName = window.__module_import_errors ? window.__module_import_errors[0] : "未知模块"
+    this.setState({
+      errorInfo,
     })
   }
 
   private handleAIFix = () => {
-    if (this.props.onAIFix && this.state.errors.length > 0) {
-      // 获取最新的错误信息
-      const latestError = this.state.errors[0]
+    if (this.props.onAIFix && this.state.error) {
       const errorInfo = {
-        message: latestError.error.message,
-        stack: latestError.error.stack,
-        componentStack: latestError.errorInfo?.componentStack,
+        message: this.state.error.message,
+        stack: this.state.error.stack,
+        componentStack: this.state.errorInfo?.componentStack,
         context: {
-          componentName: this.getComponentNameFromStack(latestError.errorInfo),
+          componentName: window.__module_import_errors ? window.__module_import_errors[0] : "未知模块",
           route: window.location.pathname,
         },
       }
       this.props.onAIFix(errorInfo)
     }
-  }
-
-  private getComponentNameFromStack(errorInfo?: ErrorInfo): string {
-    if (errorInfo?.componentStack) {
-      const match = errorInfo.componentStack.match(/in ([A-Za-z0-9_]+)/)
-      return match ? match[1] : "Unknown Component"
-    }
-    return "Unknown Component"
   }
 
   public render() {
@@ -116,27 +91,15 @@ class ErrorBoundary extends Component<Props, State> {
                 </motion.div>
               </div>
               <div className='flex flex-col'>
-                <p className='text-lg font-medium text-foreground'>遇到了一些问题</p>
+                <p className='text-lg font-medium text-foreground'>遇到了一点小问题</p>
                 <p className='text-small text-foreground-500'>别担心,AI助手可以帮您快速修复</p>
               </div>
             </CardHeader>
             <CardBody>
               <div className='space-y-6'>
-                {this.state.errors.map((errorItem, index) => (
-                  <div key={errorItem.timestamp} className={`p-4 ${index === 0 ? 'bg-warning-50 dark:bg-warning-900/20' : 'bg-gray-50 dark:bg-gray-900/20'} rounded-lg`}>
-                    <p className='text-center text-foreground-900'>
-                      错误 {index + 1}: 模块 {window["@@moduleId"]} 编译错误
-                    </p>
-                    <p className='text-center text-foreground-600 mt-2'>
-                      {errorItem.error.message || "页面渲染出现了一些问题"}
-                    </p>
-                    {errorItem.errorInfo && (
-                      <p className='text-xs text-foreground-400 mt-1'>
-                        {errorItem.errorInfo.componentStack}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                <p className='text-center text-foreground-600'>
+                  {this.state.error?.message || "页面渲染出现了一些问题"}
+                </p>
 
                 <div className='flex justify-center'>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -152,9 +115,7 @@ class ErrorBoundary extends Component<Props, State> {
                   </motion.div>
                 </div>
 
-                <p className='text-center text-small text-foreground-400'>
-                  点击上方按钮,AI助手将立即分析并修复问题
-                </p>
+                <p className='text-center text-small text-foreground-400'>点击上方按钮,AI助手将立即分析并修复问题</p>
               </div>
             </CardBody>
           </Card>
