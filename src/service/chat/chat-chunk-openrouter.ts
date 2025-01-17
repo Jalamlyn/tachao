@@ -7,7 +7,7 @@ import { aiControllerStore } from "@/app/admin/src/pages/AppBuilder/AIEditor/com
 
 const AI_MODELS = {
   BASIC: "anthropic/claude-3.5-haiku-20241022",
-  ADVANCED: "anthropic/claude-3.5-sonnet",
+  ADVANCED: "anthropic/claude-3.5-sonnet:beta",
 }
 
 function selectModel(messages) {
@@ -176,6 +176,7 @@ export default async function chatChunkOpenAIOffice(
           }
         } catch (error) {
           console.log("Error parsing JSON:", error)
+          message.error(`An error occurred while parsing JSON: ${error.message}`)
           throw error
         }
       } else {

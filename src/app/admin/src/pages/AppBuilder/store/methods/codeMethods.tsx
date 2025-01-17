@@ -157,7 +157,7 @@ export function extractShataAICodes(content: string): ShataAICode[] {
   try {
     const results: ShataAICode[] = []
     const codeBlocks = content.match(/<mo-ai-code[^>]*>([\s\S]*?)<\/mo-ai-code>/g)
-
+    
     if (!codeBlocks) return results
 
     for (const block of codeBlocks) {

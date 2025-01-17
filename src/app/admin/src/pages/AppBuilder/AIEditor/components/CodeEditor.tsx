@@ -165,6 +165,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = observer(({ isFullWidth, on
             cursorSmoothCaretAnimation: true,
             formatOnPaste: true,
             formatOnType: true,
+            tabSize: 2, // 设置缩进为 2 个空格
+            insertSpaces: true, // 强制使用空格替代 Tab
+            detectIndentation: false, // 禁用自动检测文件缩进，确保使用指定的 tabSize 和 insertSpaces
             find: {
               addExtraSpaceOnTop: false,
               autoFindInSelection: "never",

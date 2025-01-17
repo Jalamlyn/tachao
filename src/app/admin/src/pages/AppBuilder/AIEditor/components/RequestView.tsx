@@ -28,14 +28,14 @@ const RequestView: React.FC = observer(() => {
     <div className='h-[calc(100vh-200px)] flex flex-col'>
       <div className='flex items-center justify-between mb-4 px-4'>
         <div className='flex items-center gap-2'>
-          <Icon icon="solar:history-linear" className='w-5 h-5 text-default-500' />
+          <Icon icon='solar:history-linear' className='w-5 h-5 text-default-500' />
           <span className='text-medium font-medium'>请求历史</span>
         </div>
         <Button
-          size="sm"
-          variant="flat"
-          color="danger"
-          startContent={<Icon icon="mdi:trash" className="w-4 h-4" />}
+          size='sm'
+          variant='flat'
+          color='danger'
+          startContent={<Icon icon='mdi:trash' className='w-4 h-4' />}
           onPress={() => {
             requestStore.clear()
             setSelectedRequest(null)
@@ -144,9 +144,7 @@ const RequestView: React.FC = observer(() => {
                       </Chip>
                     </div>
                     <Card className='bg-default-50'>
-                      <pre className='p-3 rounded-lg text-small overflow-auto max-h-[500px]'>
-                        {formatJson(selectedRequest.params)}
-                      </pre>
+                      <pre className='p-3 rounded-lg text-small'>{formatJson(selectedRequest.params)}</pre>
                     </Card>
                   </div>
                   <Divider />
@@ -173,7 +171,7 @@ const RequestView: React.FC = observer(() => {
                       </Button>
                     </div>
                     <Card className='bg-default-50'>
-                      <pre className='p-3 rounded-lg text-small overflow-auto max-h-[1000px]'>
+                      <pre className='p-3 rounded-lg text-small'>
                         {formatJson(
                           JSON.parse(
                             selectedRequest?.response?.value

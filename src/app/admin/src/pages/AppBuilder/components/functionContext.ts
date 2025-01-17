@@ -357,7 +357,6 @@ export const logAPI = {
     }
   },
   error: (message: string, details?: any) => {
-    debugger
     if (window.parent && window.parent !== window) {
       window.parent.postMessage(
         {
