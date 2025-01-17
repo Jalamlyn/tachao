@@ -132,6 +132,7 @@ export const costService = {
   // 添加成本记录
   async addCostRecord(record: Partial<CostRecord>): Promise<void> {
     try {
+      const accountInfo = JSON.parse(localStorage.getItem("@@currentAccountInfo") || "{}")
       const costRecords = await getMetadata(["ai-cost-records"])
       const existingRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
 
@@ -139,6 +140,7 @@ export const costService = {
         id: Date.now(),
         timestamp: new Date().toISOString(),
         ...record,
+        userName: accountInfo.name,
       }
 
       await setMetadata("ai-cost-records", [...existingRecords, newRecord])

@@ -8,6 +8,7 @@ import { encrypt } from "./auth"
  */
 export const getCurrentAccountInfo = async () => {
   const res = await apiService.get(`/api/ram-users/self/detail`)
+  localStorage.setItem("@@currentAccountInfo", JSON.stringify(res.data))
   return res.data
 }
 
