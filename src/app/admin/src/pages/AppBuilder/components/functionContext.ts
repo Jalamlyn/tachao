@@ -29,22 +29,53 @@ import * as ReactHookForm from "react-hook-form"
 import { logStore } from "../AIEditor/components/LogStore"
 import { requestStore } from "../AIEditor/components/RequestStore"
 
+// 检查是否在iframe中运行
+const isInIframe = () => {
+  try {
+    return window.self !== window.top
+  } catch (e) {
+    return true
+  }
+}
+
 // 包装getMetadata函数
 const getMetadata = async (names: string[], appId?: string) => {
   try {
     const response = await originalGetMetadata(names, appId)
-    requestStore.addRequest({
-      method: "GET",
-      params: { names, appId },
-      response,
-    })
+    
+    if (isInIframe()) {
+      // 在iframe中,发送请求数据到父窗口
+      window.parent.postMessage({
+        type: "REQUEST",
+        method: "GET",
+        params: { names, appId },
+        response,
+      }, "*")
+    } else {
+      // 在主窗口中直接添加到store
+      requestStore.addRequest({
+        method: "GET",
+        params: { names, appId },
+        response,
+      })
+    }
+    
     return response
   } catch (error) {
-    requestStore.addRequest({
-      method: "GET",
-      params: { names, appId },
-      response: error,
-    })
+    if (isInIframe()) {
+      window.parent.postMessage({
+        type: "REQUEST",
+        method: "GET",
+        params: { names, appId },
+        response: error,
+      }, "*")
+    } else {
+      requestStore.addRequest({
+        method: "GET",
+        params: { names, appId },
+        response: error,
+      })
+    }
     throw error
   }
 }
@@ -53,18 +84,38 @@ const getMetadata = async (names: string[], appId?: string) => {
 const setMetadata = async (name: string, value: any, appId?: string) => {
   try {
     const response = await originalSetMetadata(name, value, appId)
-    requestStore.addRequest({
-      method: "SET",
-      params: { name, value, appId },
-      response,
-    })
+    
+    if (isInIframe()) {
+      window.parent.postMessage({
+        type: "REQUEST",
+        method: "SET",
+        params: { name, value, appId },
+        response,
+      }, "*")
+    } else {
+      requestStore.addRequest({
+        method: "SET",
+        params: { name, value, appId },
+        response,
+      })
+    }
+    
     return response
   } catch (error) {
-    requestStore.addRequest({
-      method: "SET",
-      params: { name, value, appId },
-      response: error,
-    })
+    if (isInIframe()) {
+      window.parent.postMessage({
+        type: "REQUEST",
+        method: "SET",
+        params: { name, value, appId },
+        response: error,
+      }, "*")
+    } else {
+      requestStore.addRequest({
+        method: "SET",
+        params: { name, value, appId },
+        response: error,
+      })
+    }
     throw error
   }
 }
@@ -73,18 +124,38 @@ const setMetadata = async (name: string, value: any, appId?: string) => {
 const getPublicMetaData = async (names: string[]) => {
   try {
     const response = await originalGetPublicMetaData(names)
-    requestStore.addRequest({
-      method: "GET",
-      params: { names, type: "public" },
-      response,
-    })
+    
+    if (isInIframe()) {
+      window.parent.postMessage({
+        type: "REQUEST",
+        method: "GET",
+        params: { names, type: "public" },
+        response,
+      }, "*")
+    } else {
+      requestStore.addRequest({
+        method: "GET",
+        params: { names, type: "public" },
+        response,
+      })
+    }
+    
     return response
   } catch (error) {
-    requestStore.addRequest({
-      method: "GET",
-      params: { names, type: "public" },
-      response: error,
-    })
+    if (isInIframe()) {
+      window.parent.postMessage({
+        type: "REQUEST",
+        method: "GET",
+        params: { names, type: "public" },
+        response: error,
+      }, "*")
+    } else {
+      requestStore.addRequest({
+        method: "GET",
+        params: { names, type: "public" },
+        response: error,
+      })
+    }
     throw error
   }
 }

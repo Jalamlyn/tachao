@@ -11,9 +11,9 @@ import message from "@/components/Message"
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { appCodeStore } from "./store/appCodeStore"
 import { logStore } from "./AIEditor/components/LogStore"
+import { requestStore } from "./AIEditor/components/RequestStore"
 import { ErrorPrompt, PublishModal, PublishTemplateModal, RollbackModal } from "./AppEditErrorPrompt"
 import { SaveVersionModal, VersionListModal } from "./AppEditModal"
-import RequestView from "./AIEditor/components/RequestView"
 
 const MAX_MESSAGES = 50
 
@@ -57,7 +57,7 @@ const AppBuilder: React.FC = observer(() => {
     }
   }, [])
 
-  // 添加日志消息监听
+  // 添加日志和请求消息监听
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === "AI_FIX_REQUEST") {
@@ -76,6 +76,14 @@ const AppBuilder: React.FC = observer(() => {
         logStore[level](message, details)
       } else if (event.data.type === "LOG_CLEAR") {
         logStore.clear()
+      } else if (event.data.type === "REQUEST") {
+        // 处理请求数据
+        const { method, params, response } = event.data
+        requestStore.addRequest({
+          method,
+          params,
+          response,
+        })
       }
     }
 
