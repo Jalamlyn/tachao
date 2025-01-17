@@ -38,8 +38,8 @@ export const costService = {
         output: isCoding ? 109 : 21.8,
       },
       ADVANCED: {
-        input: isCoding ? 73 : 14.6,
-        output: isCoding ? 292 : 58.4,
+        input: isCoding ? 219 : 43.8,
+        output: isCoding ? 109 : 21.8,
       },
     }
 
@@ -57,8 +57,8 @@ export const costService = {
         output: isCoding ? 109 : 21.8,
       },
       ADVANCED: {
-        input: isCoding ? 73 : 14.6,
-        output: isCoding ? 292 : 58.4,
+        input: isCoding ? 219 : 43.8,
+        output: isCoding ? 109 : 21.8,
       },
     }
 
