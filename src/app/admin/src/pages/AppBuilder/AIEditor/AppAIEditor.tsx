@@ -14,6 +14,7 @@ import { CodeView } from "./components/CodeView"
 import { motion } from "framer-motion"
 import LogViewer from "./components/LogViewer"
 import KnowledgeModal from "./components/KnowledgeModal"
+import RequestView from "./components/RequestView"
 
 const AIEditor: React.FC<AIEditorProps> = observer(
   ({
@@ -350,6 +351,21 @@ const AIEditor: React.FC<AIEditorProps> = observer(
                   {actualTab === "logs" && (
                     <div className='h-[calc(100vh-200px)] overflow-auto p-2'>
                       <LogViewer />
+                    </div>
+                  )}
+                </Tab>
+                <Tab
+                  key='data-view'
+                  title={
+                    <div className='flex items-center gap-2'>
+                      <Icon icon='mdi:data' className='w-4 h-4' />
+                      数据请求
+                    </div>
+                  }
+                >
+                  {actualTab === "data-view" && (
+                    <div className='h-[calc(100vh-200px)] overflow-auto p-2'>
+                      <RequestView></RequestView>
                     </div>
                   )}
                 </Tab>

@@ -32,8 +32,6 @@ import { queryRamAccount } from "@/service/apis/user"
 import html2canvas from "html2canvas"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 
-const txApp = app
-
 interface AppCardProps {
   app: AppIndex
   index: number
@@ -55,6 +53,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
     onOpen: onCollaboratorModalOpen,
     onClose: onCollaboratorModalClose,
   } = useDisclosure()
+  const txApp = app
 
   const { renameApp, isRenaming } = useRenameApp()
   const { updateAppConfig, isUpdating } = useUpdateAppConfig()
