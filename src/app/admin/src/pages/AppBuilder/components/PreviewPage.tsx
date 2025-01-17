@@ -43,7 +43,6 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
         type: "AI_FIX_REQUEST",
         payload: {
           error: errorInfo.message || errorInfo,
-          stack: errorInfo.stack,
           context: {
             route: window.location.pathname,
             appId,
@@ -157,7 +156,6 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
                       type: "AI_FIX_REQUEST",
                       payload: {
                         error: error,
-                        stack: errorDetails?.stack,
                         context: {
                           route: window.location.pathname,
                           appId,

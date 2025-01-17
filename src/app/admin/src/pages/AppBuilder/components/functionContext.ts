@@ -42,15 +42,18 @@ const isInIframe = () => {
 const getMetadata = async (names: string[], appId?: string) => {
   try {
     const response = await originalGetMetadata(names, appId)
-    
+
     if (isInIframe()) {
       // 在iframe中,发送请求数据到父窗口
-      window.parent.postMessage({
-        type: "REQUEST",
-        method: "GET",
-        params: { names, appId },
-        response,
-      }, "*")
+      window.parent.postMessage(
+        {
+          type: "REQUEST",
+          method: "GET",
+          params: { names, appId },
+          response,
+        },
+        "*"
+      )
     } else {
       // 在主窗口中直接添加到store
       requestStore.addRequest({
@@ -59,16 +62,19 @@ const getMetadata = async (names: string[], appId?: string) => {
         response,
       })
     }
-    
+
     return response
   } catch (error) {
     if (isInIframe()) {
-      window.parent.postMessage({
-        type: "REQUEST",
-        method: "GET",
-        params: { names, appId },
-        response: error,
-      }, "*")
+      window.parent.postMessage(
+        {
+          type: "REQUEST",
+          method: "GET",
+          params: { names, appId },
+          response: error,
+        },
+        "*"
+      )
     } else {
       requestStore.addRequest({
         method: "GET",
@@ -84,14 +90,17 @@ const getMetadata = async (names: string[], appId?: string) => {
 const setMetadata = async (name: string, value: any, appId?: string) => {
   try {
     const response = await originalSetMetadata(name, value, appId)
-    
+
     if (isInIframe()) {
-      window.parent.postMessage({
-        type: "REQUEST",
-        method: "SET",
-        params: { name, value, appId },
-        response,
-      }, "*")
+      window.parent.postMessage(
+        {
+          type: "REQUEST",
+          method: "SET",
+          params: { name },
+          response,
+        },
+        "*"
+      )
     } else {
       requestStore.addRequest({
         method: "SET",
@@ -99,16 +108,19 @@ const setMetadata = async (name: string, value: any, appId?: string) => {
         response,
       })
     }
-    
+
     return response
   } catch (error) {
     if (isInIframe()) {
-      window.parent.postMessage({
-        type: "REQUEST",
-        method: "SET",
-        params: { name, value, appId },
-        response: error,
-      }, "*")
+      window.parent.postMessage(
+        {
+          type: "REQUEST",
+          method: "SET",
+          params: { name, value, appId },
+          response: error,
+        },
+        "*"
+      )
     } else {
       requestStore.addRequest({
         method: "SET",
@@ -124,14 +136,17 @@ const setMetadata = async (name: string, value: any, appId?: string) => {
 const getPublicMetaData = async (names: string[]) => {
   try {
     const response = await originalGetPublicMetaData(names)
-    
+
     if (isInIframe()) {
-      window.parent.postMessage({
-        type: "REQUEST",
-        method: "GET",
-        params: { names, type: "public" },
-        response,
-      }, "*")
+      window.parent.postMessage(
+        {
+          type: "REQUEST",
+          method: "GET",
+          params: { names, type: "public" },
+          response,
+        },
+        "*"
+      )
     } else {
       requestStore.addRequest({
         method: "GET",
@@ -139,16 +154,19 @@ const getPublicMetaData = async (names: string[]) => {
         response,
       })
     }
-    
+
     return response
   } catch (error) {
     if (isInIframe()) {
-      window.parent.postMessage({
-        type: "REQUEST",
-        method: "GET",
-        params: { names, type: "public" },
-        response: error,
-      }, "*")
+      window.parent.postMessage(
+        {
+          type: "REQUEST",
+          method: "GET",
+          params: { names, type: "public" },
+          response: error,
+        },
+        "*"
+      )
     } else {
       requestStore.addRequest({
         method: "GET",
@@ -339,6 +357,7 @@ export const logAPI = {
     }
   },
   error: (message: string, details?: any) => {
+    debugger
     if (window.parent && window.parent !== window) {
       window.parent.postMessage(
         {
