@@ -239,6 +239,12 @@ export async function processAIResponse(this: AppCodeStore, aiResponse: string):
         path: block.path,
         compiledCode: block.type === "markdown" ? true : await this.compileCode(block.code),
       }
+
+      // 如果是手动选择上下文模式,将新模块添加到选中列表
+      if (this.viewState.useSelectedModulesAsContext && !this.viewState.selectedModules.includes(moduleId)) {
+        this.viewState.selectedModules.push(moduleId)
+        message.success(`新模块 "${block.title || block.name}" 已自动添加到上下文中`)
+      }
     }
 
     // 处理 search-replace 块

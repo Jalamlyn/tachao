@@ -10,6 +10,7 @@ import {
   Badge,
   Select,
   SelectItem,
+  ButtonGroup,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -381,31 +382,47 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                       )}
                     </div>
                     <div className='flex gap-1'>
-                      <Button
-                        size='sm'
-                        color='danger'
-                        variant='flat'
-                        isLoading={appCodeStore.viewState.isDeletingModules}
-                        onClick={() => {
-                          appCodeStore.viewState.showDeleteConfirm = true
-                        }}
-                        startContent={
-                          !appCodeStore.viewState.isDeletingModules && <Icon icon='mdi:delete' className='w-3 h-3' />
-                        }
-                        className='min-w-unit-16 h-6'
-                      >
-                        {appCodeStore.viewState.isDeletingModules ? "检查依赖中..." : "删除"}
-                      </Button>
-                      <Button
-                        size='sm'
-                        color='primary'
-                        variant='flat'
-                        onClick={() => appCodeStore.toggleUseSelectedModulesAsContext()}
-                        startContent={<Icon icon='material-symbols:contextual-token-add-rounded' className='w-3 h-3' />}
-                        className='min-w-unit-16 h-6'
-                      >
-                        {appCodeStore.viewState.useSelectedModulesAsContext ? "取消上下文" : "用作上下文"}
-                      </Button>
+                      <ButtonGroup>
+                        <Button
+                          size='sm'
+                          color='default' // 使用默认颜色，区分与其他操作
+                          variant='flat'
+                          onClick={() => {
+                            appCodeStore.viewState.selectedModules = []
+                          }}
+                          startContent={<Icon icon='mdi:selection-remove' className='w-3 h-3' />}
+                          className='min-w-unit-16 h-6'
+                        >
+                          清空
+                        </Button>
+                        <Button
+                          size='sm'
+                          color='danger'
+                          variant='flat'
+                          isLoading={appCodeStore.viewState.isDeletingModules}
+                          onClick={() => {
+                            appCodeStore.viewState.showDeleteConfirm = true
+                          }}
+                          startContent={
+                            !appCodeStore.viewState.isDeletingModules && <Icon icon='mdi:delete' className='w-3 h-3' />
+                          }
+                          className='min-w-unit-16 h-6'
+                        >
+                          {appCodeStore.viewState.isDeletingModules ? "检查依赖中..." : "删除"}
+                        </Button>
+                        <Button
+                          size='sm'
+                          color='primary'
+                          variant='flat'
+                          onClick={() => appCodeStore.toggleUseSelectedModulesAsContext()}
+                          startContent={
+                            <Icon icon='material-symbols:contextual-token-add-rounded' className='w-3 h-3' />
+                          }
+                          className='min-w-unit-16 h-6'
+                        >
+                          {appCodeStore.viewState.useSelectedModulesAsContext ? "取消上下文" : "用作上下文"}
+                        </Button>
+                      </ButtonGroup>
                     </div>
                   </div>
                 </div>

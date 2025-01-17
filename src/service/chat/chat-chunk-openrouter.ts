@@ -7,7 +7,8 @@ import { aiControllerStore } from "@/app/admin/src/pages/AppBuilder/AIEditor/com
 
 const AI_MODELS = {
   BASIC: "anthropic/claude-3.5-haiku-20241022",
-  ADVANCED: "anthropic/claude-3.5-sonnet",
+  ADVANCED: "anthropic/claude-3.5-haiku-20241022",
+  // ADVANCED: "anthropic/claude-3.5-sonnet",
 }
 
 function selectModel(messages) {

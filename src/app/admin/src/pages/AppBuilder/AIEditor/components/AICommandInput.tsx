@@ -439,7 +439,8 @@ const AICommandInput = memo(({ agent, onResult, onStop, aiLevel }: AICommandInpu
             innerWrapper: "relative",
             input: "pt-1 pb-1 !pr-10 text-medium",
           }}
-          maxRows={2}
+          minRows={5}
+          maxRows={5}
           radius='lg'
         />
 
