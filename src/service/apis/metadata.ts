@@ -6,67 +6,35 @@ import { debounce } from "lodash"
 export const PHONE_ORG_MAPPING_KEY = "phone_org_mapping"
 export const ACCOUNT_REQUESTS_KEY = "account_requests"
 
-// 缓存相关配置
-const CACHE_DURATION = 5000 // 缓存时间5秒
-const cache = new Map()
-const pendingRequests = new Map()
-const debounceMap = new Map()
+// 缓存和请求管理
+const metadataCache = new Map()
+const pendingMetadataRequests = new Map()
+const pendingSetRequests = new Map()
+const CACHE_DURATION = 5000 // 5秒缓存
+const DEBOUNCE_DELAY = 300 // 300ms 防抖延迟
 
-// 优化后的get方法
-export const getMetadataWithCache = async (names, appId) => {
-  const cacheKey = JSON.stringify({ names, appId })
+// 实际执行 setMetadata 的函数
+const executeSetMetadata = async (name, value, appId) => {
+  const url = `/internal/apps/${getAppId()}/metadata`
+  const stringValue = typeof value === "string" ? value : JSON.stringify(value)
+  const res = await apiService.post(
+    url,
+    {
+      type: "AI_AGENT",
+      name,
+      value: stringValue,
+      title: "",
+      tags: [],
+    },
+    {
+      headers: {
+        "x-app": appId,
+      },
+    }
+  )
   
-  // 检查是否有相同请求正在进行
-  if (pendingRequests.has(cacheKey)) {
-    return pendingRequests.get(cacheKey)
-  }
-
-  // 检查缓存
-  const cached = cache.get(cacheKey)
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    return cached.data
-  }
-
-  // 发起新请求
-  const promise = getMetadata(names, appId).then(data => {
-    cache.set(cacheKey, {
-      data,
-      timestamp: Date.now()
-    })
-    pendingRequests.delete(cacheKey)
-    return data
-  })
-
-  pendingRequests.set(cacheKey, promise)
-  return promise
-}
-
-// 优化后的set方法
-export const setMetadataWithDebounce = (name: string, value: any, appId: string) => {
-  if (debounceMap.has(name)) {
-    clearTimeout(debounceMap.get(name))
-  }
-
-  return new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(async () => {
-      try {
-        const result = await setMetadata(name, value, appId)
-        debounceMap.delete(name)
-        resolve(result)
-      } catch (error) {
-        debounceMap.delete(name)
-        reject(error)
-      }
-    }, 300)
-
-    debounceMap.set(name, timeoutId)
-  })
-}
-
-// 清理缓存的方法
-export const clearMetadataCache = () => {
-  cache.clear()
-  pendingRequests.clear()
+  deleteMetadata({ name, versionCode: Number(res.data.versionCode) - 20 })
+  return res.data
 }
 
 export const queryMetadataHistory = async (data: {
@@ -107,42 +75,68 @@ export const getPublicMetaData = async (names) => {
 }
 
 export const getMetadata = async (names, appId) => {
+  const cacheKey = JSON.stringify({ names, appId })
+  
+  // 1. 检查缓存
+  const cached = metadataCache.get(cacheKey)
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data
+  }
+
+  // 2. 检查是否有相同请求正在进行
+  if (pendingMetadataRequests.has(cacheKey)) {
+    return pendingMetadataRequests.get(cacheKey)
+  }
+
+  // 3. 立即发起新请求
   const getUrl = `/internal/apps/${getAppId()}/metadata/AI_AGENT/list`
-  const res = await apiService.post(
+  const promise = apiService.post(
     getUrl,
-    {
-      names,
-    },
-    {
-      headers: {
-        "x-app": appId,
-      },
-    }
-  )
-  return res.data
+    { names },
+    { headers: { "x-app": appId } }
+  ).then(res => {
+    const data = res.data
+    // 存入缓存
+    metadataCache.set(cacheKey, {
+      data,
+      timestamp: Date.now()
+    })
+    pendingMetadataRequests.delete(cacheKey)
+    return data
+  })
+
+  pendingMetadataRequests.set(cacheKey, promise)
+  return promise
 }
 
 export const setMetadata = async (name, value, appId) => {
-  const url = `/internal/apps/${getAppId()}/metadata`
-  const stringValue = typeof value === "string" ? value : JSON.stringify(value)
-  const res = await apiService.post(
-    url,
-    {
-      type: "AI_AGENT",
-      name,
-      value: stringValue,
-      title: "",
-      tags: [],
-    },
-    {
-      headers: {
-        "x-app": appId,
-      },
-    }
-  )
-  //最多保存最近 20次提交的版本
-  deleteMetadata({ name, versionCode: Number(res.data.versionCode) - 20 })
-  return res.data
+  // 如果已有相同name的pending请求，说明这是短时间内的重复调用
+  if (pendingSetRequests.has(name)) {
+    clearTimeout(pendingSetRequests.get(name).timeoutId)
+    
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(async () => {
+        try {
+          const result = await executeSetMetadata(name, value, appId)
+          pendingSetRequests.delete(name)
+          resolve(result)
+        } catch (error) {
+          pendingSetRequests.delete(name)
+          reject(error)
+        }
+      }, DEBOUNCE_DELAY)
+
+      pendingSetRequests.set(name, { timeoutId, promise: { resolve, reject } })
+    })
+  }
+
+  // 第一次调用，立即执行
+  try {
+    const result = await executeSetMetadata(name, value, appId)
+    return result
+  } catch (error) {
+    throw error
+  }
 }
 
 export const deleteMetadata = async ({ name, versionCode }) => {
@@ -193,21 +187,21 @@ export const getPlatMetaData = async (names = [], limit = 1) => {
 
 // 手机号-组织映射相关方法
 export const getPhoneOrgMapping = async (phone: string) => {
-  const result = await getMetadataWithCache([PHONE_ORG_MAPPING_KEY], "1869963081721307138")
+  const result = await getMetadata([PHONE_ORG_MAPPING_KEY], "1869963081721307138")
   const mapping = JSON.parse(result.data?.[0]?.value || "{}")
   return mapping[phone]
 }
 
 export const setPhoneOrgMapping = async (phone: string, orgId: string) => {
-  const result = await getMetadataWithCache([PHONE_ORG_MAPPING_KEY], "1869963081721307138")
+  const result = await getMetadata([PHONE_ORG_MAPPING_KEY], "1869963081721307138")
   const mapping = JSON.parse(result.data?.[0]?.value || "{}")
   mapping[phone] = orgId
-  await setMetadataWithDebounce(PHONE_ORG_MAPPING_KEY, mapping, "1869963081721307138")
+  await setMetadata(PHONE_ORG_MAPPING_KEY, mapping, "1869963081721307138")
 }
 
 // 账号申请相关方法
 export const getAccountRequests = async () => {
-  const result = await getMetadataWithCache([ACCOUNT_REQUESTS_KEY])
+  const result = await getMetadata([ACCOUNT_REQUESTS_KEY])
   return JSON.parse(result.data?.[0]?.value || "{}")
 }
 
@@ -222,7 +216,7 @@ export const addAccountRequest = async (request: {
 }) => {
   const requests = await getAccountRequests()
   requests[request.id] = request
-  await setMetadataWithDebounce(ACCOUNT_REQUESTS_KEY, requests)
+  await setMetadata(ACCOUNT_REQUESTS_KEY, requests)
 }
 
 export const updateAccountRequest = async (
@@ -238,6 +232,6 @@ export const updateAccountRequest = async (
       ...requests[requestId],
       ...updates,
     }
-    await setMetadataWithDebounce(ACCOUNT_REQUESTS_KEY, requests)
+    await setMetadata(ACCOUNT_REQUESTS_KEY, requests)
   }
 }
