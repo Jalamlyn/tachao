@@ -124,7 +124,7 @@ window.__MO_MODULE_${moduleId} = (context) => {
       // 1. 编译所有模块
       const moduleCompilations = await Promise.all(
         Object.entries(this.currentVersion.modules)
-          .filter(([_, module]) => module.data.type !== "markdown")
+          .filter(([_, module]) => module.data.type !== "markdown" && module.data.type !== "ts-type")
           .map(async ([moduleId, module]) => {
             const compiledCode = await this.compileModuleCode(moduleId, module.data)
             return {

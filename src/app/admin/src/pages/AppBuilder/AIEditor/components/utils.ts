@@ -33,3 +33,22 @@ export const getCodeTypeColor = (type: string) => {
       return "default"
   }
 }
+
+// 计算模块大小
+export const calculateModuleSize = (code: string): number => {
+  return new Blob([code]).size
+}
+
+// 格式化文件大小
+export const formatSize = (bytes: number): string => {
+  if (bytes < 1024) return bytes + " B"
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB"
+  return (bytes / (1024 * 1024)).toFixed(2) + " MB"
+}
+
+// 获取模块大小的颜色标识
+export const getModuleSizeColor = (bytes: number): "success" | "warning" | "danger" => {
+  if (bytes < 5 * 1024) return "success" // 小于10KB
+  if (bytes < 10 * 1024) return "warning" // 小于50KB
+  return "danger" // 大于50KB
+}

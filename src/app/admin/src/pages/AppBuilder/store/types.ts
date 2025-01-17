@@ -1,4 +1,4 @@
-export type ModuleType = "app" | "page" | "store" | "service" | "module" | "markdown"
+export type ModuleType = "app" | "page" | "store" | "service" | "module" | "markdown" | "ts-type"
 
 export interface ModuleData {
   id: string

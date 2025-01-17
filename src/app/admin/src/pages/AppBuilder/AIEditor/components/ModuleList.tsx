@@ -17,7 +17,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { observer } from "mobx-react-lite"
 import { appCodeStore } from "../../store/appCodeStore"
 import CodeSearch from "./CodeSearch"
-import { getCodeTypeIcon, getCodeTypeColor } from "./utils"
+import { getCodeTypeIcon, getCodeTypeColor, calculateModuleSize, formatSize, getModuleSizeColor } from "./utils"
 import message from "@/components/Message"
 import SaveContextModal from "./SaveContextModal"
 
@@ -504,21 +504,34 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                         </div>
                       </div>
 
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className='absolute right-2 top-2'
-                      >
-                        <div className='w-5 h-5 rounded-md bg-default-50 flex items-center justify-center flex-shrink-0'>
-                          <Icon
-                            icon={getCodeTypeIcon(item.type)}
-                            className={`w-3 h-3 transition-transform group-hover:scale-110 text-${getCodeTypeColor(
-                              item.type
-                            )}`}
-                          />
-                        </div>
-                      </motion.div>
+                      <div className='flex items-center gap-2'>
+                        {/* 添加模块大小显示 */}
+                        <Tooltip content='模块大小' placement='left'>
+                          <Chip
+                            size='sm'
+                            variant='flat'
+                            color={getModuleSizeColor(calculateModuleSize(item.code))}
+                            className='transition-transform group-hover:scale-105'
+                          >
+                            {formatSize(calculateModuleSize(item.code))}
+                          </Chip>
+                        </Tooltip>
+
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                        >
+                          <div className='w-5 h-5 rounded-md bg-default-50 flex items-center justify-center flex-shrink-0'>
+                            <Icon
+                              icon={getCodeTypeIcon(item.type)}
+                              className={`w-3 h-3 transition-transform group-hover:scale-110 text-${getCodeTypeColor(
+                                item.type
+                              )}`}
+                            />
+                          </div>
+                        </motion.div>
+                      </div>
                     </div>
                   </div>
                 </motion.div>

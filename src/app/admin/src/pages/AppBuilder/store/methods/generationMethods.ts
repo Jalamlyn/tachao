@@ -20,7 +20,7 @@ export async function handleAIGeneration(
   if (!this.appId) {
     throw new Error("AppId not set")
   }
-  if (aiResponse.includes(`... 其他`)) {
+  if (aiResponse.includes(`... 其他`) || aiResponse.includes(`... 其余`)) {
     throw new Error("AI 代码生成不完整, 请重新对话")
   }
   if (!aiResponse.includes(`<mo-ai-code`)) {
