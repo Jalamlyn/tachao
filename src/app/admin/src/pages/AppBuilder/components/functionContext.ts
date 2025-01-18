@@ -28,6 +28,7 @@ import { apiService, getCurrentAccountInfo, queryCurrentEnterPrise } from "@/ser
 import * as ReactHookForm from "react-hook-form"
 import { logStore } from "../AIEditor/components/LogStore"
 import { requestStore } from "../AIEditor/components/RequestStore"
+import { LuckyWheel, LuckyGrid, SlotMachine } from "@lucky-canvas/react"
 
 // 检查是否在iframe中运行
 const isInIframe = () => {
@@ -200,21 +201,7 @@ const wpm = {
   export: wpmOriginal.export,
   import: async (moduleName: string) => {
     // 创建一个超时 Promise
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
-        const error = new Error(
-          `模块 ${moduleName} 未实现或其依赖模块未实现，请检查：\n1. 该模块是否已通过 wpm.export 导出\n2. 该模块内部引用的其他模块是否都已实现`
-        )
-        logStore.error(`模块导入失败: ${moduleName}`, { error: error.message })
-        reject(error)
-        console.error(`模块导入失败: ${moduleName}`, error)
-        if (window.__module_import_errors) {
-          window.__module_import_errors.push(moduleName)
-        } else {
-          window.__module_import_errors = [moduleName]
-        }
-      }, 500)
-    })
+    const timeoutPromise = new Promise((_, reject) => {})
 
     try {
       // 使用 Promise.race 竞争
@@ -433,6 +420,13 @@ export const context = (appId, mode) => ({
     },
     upload: uploadAPI,
     log: logAPI,
+  },
+  npm: {
+    "@lucky-canvas/react": {
+      LuckyWheel,
+      LuckyGrid,
+      SlotMachine,
+    },
   },
   ai,
   mobx,

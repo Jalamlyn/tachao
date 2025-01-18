@@ -194,7 +194,7 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
       `
       const enhancedCommand = isPMMode
         ? `${commandContent}${baseInput("你作为产品经理PM，仔细阅读<project_context>里的信息，不需要生成代码，只需要和用户讨论")}`
-        : `${commandContent}${baseInput("你作为工程师MO，仔细阅读<project_context>里的信息，需要生成代码")}`
+        : `${commandContent}${baseInput("你作为工程师MO，仔细阅读<project_context>里的信息，生成完整代码来完成用户的需求，生成的代码必须包裹在<mo-ai-code>内，不要添加 \`\`\`typescript 这样的标签，如果用户反馈有任何问题，你都必须通过打日志来排查问题，只有定位到问题才生成修复代码")}`
 
       const allMessages = [
         ...messages,
