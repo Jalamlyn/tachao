@@ -62,11 +62,9 @@ const AppBuilder: React.FC = observer(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === "AI_FIX_REQUEST") {
         const errorInfo = event.data.payload
-        debugger
         const fixPrompt = `请帮我修复以下错误:
           错误信息: ${errorInfo.error}
           路由路径: ${errorInfo.context?.route}
-          错误模块: ${errorInfo.context?.moduleName}
           ${errorInfo.context?.type === "module_error" ? "这是一个模块执行错误。" : ""}
           
           请分析错误原因并生成修复后的完整代码, 每个模块的代码都必须完整, 不能用注释省略任何部分。无论是多小的修改都要给出整个模块的完整代码`
