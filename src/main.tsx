@@ -26,7 +26,6 @@ function loadCloudBaseSDK() {
     // 设置脚本加载完成后的回调
     script.onload = () => {
       // 确保 cloudbase 全局对象存在
-      debugger
       window.app = cloudbase.init({
         env: "mobenai-weapp-dev-2e8qhi3a963364", // 替换为你的云开发环境 ID
         clientId: "mobenai-weapp-dev-2e8qhi3a963364", // 替换为你的云开发环境 ID

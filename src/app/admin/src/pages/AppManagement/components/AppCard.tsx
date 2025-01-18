@@ -53,7 +53,6 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
     onOpen: onCollaboratorModalOpen,
     onClose: onCollaboratorModalClose,
   } = useDisclosure()
-  const window.app = app
 
   const { renameApp, isRenaming } = useRenameApp()
   const { updateAppConfig, isUpdating } = useUpdateAppConfig()
