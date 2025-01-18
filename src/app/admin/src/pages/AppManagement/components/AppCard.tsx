@@ -53,7 +53,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
     onOpen: onCollaboratorModalOpen,
     onClose: onCollaboratorModalClose,
   } = useDisclosure()
-  const txApp = app
+  const window.app = app
 
   const { renameApp, isRenaming } = useRenameApp()
   const { updateAppConfig, isUpdating } = useUpdateAppConfig()
@@ -217,17 +217,17 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
       const cloudPath = `app-previews/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.webp`
 
       // 认证
-      const auth = txApp.auth()
+      const auth = window.app.auth()
       await auth.signInAnonymously()
 
       // 上传文件
-      const uploadResult = await txApp.uploadFile({
+      const uploadResult = await window.app.uploadFile({
         cloudPath,
         filePath: previewFile,
       })
 
       // 获取临时URL
-      const urlResult = await txApp.getTempFileURL({
+      const urlResult = await window.app.getTempFileURL({
         fileList: [uploadResult.fileID],
       })
 
