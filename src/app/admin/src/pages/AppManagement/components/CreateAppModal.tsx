@@ -94,7 +94,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
         createMode === "scratch"
           ? initTemplateType === "multi"
             ? multiPageTemplate
-            : singlePageTemplate
+            : multiPageTemplate
           : selectedTemplate
 
       const appId = await appCodeStore.createApp(title.trim(), templateCode)
