@@ -15,7 +15,7 @@ import { requestStore } from "./AIEditor/components/RequestStore"
 import { ErrorPrompt, PublishModal, PublishTemplateModal, RollbackModal } from "./AppEditErrorPrompt"
 import { SaveVersionModal, VersionListModal } from "./AppEditModal"
 
-const MAX_MESSAGES = 50
+const MAX_MESSAGES = 10
 
 const AppBuilder: React.FC = observer(() => {
   const { appId } = useParams<{ appId: string }>()
