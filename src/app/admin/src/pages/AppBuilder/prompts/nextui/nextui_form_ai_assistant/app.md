@@ -193,7 +193,6 @@ const QuickActions = ({ onSelect }) => {
 };
 
 const AIChat = observer(() => {
-  // ... 保持原有的状态和引用定义 ...
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const abortControllerRef = useRef(null);
@@ -206,7 +205,6 @@ const AIChat = observer(() => {
   const [formIdInput, setFormIdInput] = useState('');
   const [inputError, setInputError] = useState('');
 
-  // ... 保持原有的副作用和方法定义 ...
   useEffect(() => {
     if (scrollRef.current) {
       const scrollElement = scrollRef.current;
