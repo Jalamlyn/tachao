@@ -231,11 +231,6 @@ export const localDB = {
     }
   },
 
-  notifyChange: (key, value) => {
-    console.log(key)
-    eventEmitter.emit(key, { key, value })
-  },
-
   watchKey: (key, callback) => {
     const fullKey = currentAppId ? `${currentAppId}:${key}` : key
     const handle = (args) => {
