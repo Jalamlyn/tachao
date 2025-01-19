@@ -29,8 +29,6 @@ import * as ReactHookForm from "react-hook-form"
 import { logStore } from "../AIEditor/components/LogStore"
 import { requestStore } from "../AIEditor/components/RequestStore"
 import { LuckyWheel, LuckyGrid, SlotMachine } from "@lucky-canvas/react"
-import * as PIXIJS from "pixi.js"
-import * as PIXIJSREACT from "@pixi/react"
 
 // 检查是否在iframe中运行
 const isInIframe = () => {
@@ -429,8 +427,6 @@ export const context = (appId, mode) => ({
       LuckyGrid,
       SlotMachine,
     },
-    "pixi.js": PIXIJS,
-    "@pixi/react": PIXIJSREACT,
   },
   ai,
   mobx,
