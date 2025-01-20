@@ -1,4 +1,6 @@
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { balanceStore } from "@/stores/balanceStore"
+import globalStore from "@/globalStore"
 
 interface TokenUsage {
   promptTokenCount: number
@@ -84,15 +86,17 @@ export const costService = {
       if (usage.model.startsWith("deepseek")) {
         costCalculator = this.calculateDeepSeekCost
       } else {
-        costCalculator = this.calculateClaudeCost
+        costCalculator = isWild ? this.calculateClaudeWildCost : this.calculateClaudeCost
       }
 
       const inputCost = costCalculator(usage.content || "", usage.promptTokenCount, true, usage.model)
       const outputCost = costCalculator(usage.content || "", usage.candidatesTokenCount, false, usage.model)
+      const totalCost = inputCost + outputCost
 
+      // 记录总的cost
       await this.addCostRecord({
         type: "token_usage",
-        totalCost: inputCost + outputCost,
+        totalCost: totalCost,
         detail: {
           tokenUsage: {
             promptTokenCount: usage.promptTokenCount,
@@ -103,6 +107,12 @@ export const costService = {
           },
         },
       })
+
+      // 更新账号已使用额度
+      const currentUserId = globalStore.currentUser?.id
+      if (currentUserId) {
+        await balanceStore.updateAccountUsage(currentUserId, totalCost)
+      }
     } catch (error) {
       console.error("Error recording token usage:", error)
       throw error

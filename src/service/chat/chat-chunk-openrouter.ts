@@ -4,6 +4,8 @@ import { localDB } from "@/utils/localDB"
 import { events } from "fetch-event-stream"
 import { costService } from "@/utils/costService"
 import { aiControllerStore } from "@/app/admin/src/pages/AppBuilder/AIEditor/components/AIControllerStore"
+import { balanceStore } from "@/stores/balanceStore"
+import globalStore from "@/globalStore"
 
 const AI_MODELS = {
   BASIC: "anthropic/claude-3.5-haiku-20241022",
@@ -23,15 +25,12 @@ function selectModel(messages) {
     return AI_MODELS.ADVANCED
   }
 
-  // 检查消息长度
-
   return AI_MODELS.ADVANCED
 }
 
 // 清理AI响应中的代码块
 function cleanAIResponse(content) {
   if (typeof content === "string") {
-    // 使用与 extractShataAICodes 相同的正则模式
     return content.replace(/<mo-ai-code[^>]*>[\s\S]*?<\/mo-ai-code>/g, "")
   }
   if (Array.isArray(content)) {
@@ -63,7 +62,6 @@ export default async function chatChunkOpenAIOffice(
       if (msg.role === "system") {
         return msg
       } else if (msg.role === "assistant") {
-        // 清理AI响应中的代码块
         return {
           role: msg.role,
           content: [
@@ -88,13 +86,21 @@ export default async function chatChunkOpenAIOffice(
     })
   }
 
-  // const apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-openrouter"
   const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-openrouter"
 
   // 选择模型
   const selectedModel = selectModel(_messages)
   // 保存当前使用的模型到 sessionStorage
   sessionStorage.setItem("currentAIModel", selectedModel)
+
+  // 获取当前用户ID
+  const currentUserId = globalStore.currentUser?.id
+
+  // 检查余额和账号额度
+  const hasEnoughBalance = await balanceStore.checkBalance(0.1, currentUserId)
+  if (!hasEnoughBalance) {
+    return
+  }
 
   const payload = {
     model: selectedModel,
