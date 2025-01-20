@@ -39,6 +39,7 @@ import message from "@/components/Message"
 import { useStore } from "@/stores/StoreProvider"
 import globalStore from "@/globalStore"
 import { useGlobalUser } from "@/hooks/useGlobalUser"
+import { getMetadata, setMetadata } from "@/service/apis/metadata"
 
 // 添加账号格式验证函数
 const validateAccount = (account: string): { isValid: boolean; message?: string } => {
@@ -77,6 +78,18 @@ const validatePhone = (phone: string): { isValid: boolean; message?: string } =>
   return { isValid: true }
 }
 
+// 验证token限制输入
+const validateTokenLimit = (limit: string): { isValid: boolean; message?: string } => {
+  const number = Number(limit)
+  if (isNaN(number)) {
+    return { isValid: false, message: "请输入有效的数字" }
+  }
+  if (number < 0) {
+    return { isValid: false, message: "Token限制不能为负数" }
+  }
+  return { isValid: true }
+}
+
 const AccountManagement: React.FC = () => {
   const { balanceStore } = useStore()
   const [accounts, setAccounts] = useState([])
@@ -86,7 +99,9 @@ const AccountManagement: React.FC = () => {
   const [accountDetail, setAccountDetail] = useState(null)
   const [subscription, setSubscription] = useState(null)
   const [copyingAccountId, setCopyingAccountId] = useState(null)
-  const [phoneError, setPhoneError] = useState("") // 新增手机号错误状态
+  const [phoneError, setPhoneError] = useState("")
+  const [tokenLimits, setTokenLimits] = useState({})
+  const [tokenLimitError, setTokenLimitError] = useState("")
   const { isOpen: isCreateModalOpen, onOpen: onCreateModalOpen, onClose: onCreateModalClose } = useDisclosure()
   const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure()
   const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
@@ -100,12 +115,38 @@ const AccountManagement: React.FC = () => {
     fetchAccounts()
     fetchRoles()
     fetchSubscription()
+    fetchTokenLimits()
 
     updateBreadcrumbs([
       { label: "首页", href: "/admin" },
       { label: "企业设置", href: "/admin/settings" },
     ])
   }, [])
+
+  const fetchTokenLimits = async () => {
+    try {
+      const res = await getMetadata(["account-token-limits"])
+      if (res?.data?.[0]?.value) {
+        setTokenLimits(JSON.parse(res.data[0].value))
+      }
+    } catch (error) {
+      console.error("Failed to fetch token limits:", error)
+    }
+  }
+
+  const saveTokenLimits = async (newLimits) => {
+    try {
+      await setMetadata([
+        {
+          key: "account-token-limits",
+          value: JSON.stringify(newLimits),
+        },
+      ])
+    } catch (error) {
+      console.error("Failed to save token limits:", error)
+      throw error
+    }
+  }
 
   const fetchSubscription = async () => {
     try {
@@ -145,10 +186,15 @@ const AccountManagement: React.FC = () => {
         return
       }
 
-      // 验证手机号
       const phoneValidation = validatePhone(values.phone)
       if (!phoneValidation.isValid) {
         message.error(phoneValidation.message)
+        return
+      }
+
+      const tokenLimitValidation = validateTokenLimit(values.tokenLimit)
+      if (!tokenLimitValidation.isValid) {
+        message.error(tokenLimitValidation.message)
         return
       }
 
@@ -173,6 +219,14 @@ const AccountManagement: React.FC = () => {
         ...values,
         name: accountName,
       })
+
+      // 保存token限制
+      const newTokenLimits = {
+        ...tokenLimits,
+        [accountRes.id]: Number(values.tokenLimit),
+      }
+      await saveTokenLimits(newTokenLimits)
+      setTokenLimits(newTokenLimits)
 
       const projectRes = await queryMyProject({ name: "默认企业项目" })
       if (projectRes.data && projectRes.data.length > 0) {
@@ -214,17 +268,31 @@ const AccountManagement: React.FC = () => {
         return
       }
 
-      // 验证手机号
       const phoneValidation = validatePhone(values.phone)
       if (!phoneValidation.isValid) {
         message.error(phoneValidation.message)
         return
       }
 
+      const tokenLimitValidation = validateTokenLimit(values.tokenLimit)
+      if (!tokenLimitValidation.isValid) {
+        message.error(tokenLimitValidation.message)
+        return
+      }
+
       await updateRamAccount(selectedAccount.id, {
         ...values,
-        phone: values.phone, // 确保传递phone字段
+        phone: values.phone,
       })
+
+      // 更新token限制
+      const newTokenLimits = {
+        ...tokenLimits,
+        [selectedAccount.id]: Number(values.tokenLimit),
+      }
+      await saveTokenLimits(newTokenLimits)
+      setTokenLimits(newTokenLimits)
+
       onEditModalClose()
       fetchAccounts()
       message.success("账号更新成功")
@@ -237,6 +305,13 @@ const AccountManagement: React.FC = () => {
   const handleDeleteAccount = async () => {
     try {
       await deleteRamAccount(selectedAccount.id)
+      
+      // 删除token限制
+      const newTokenLimits = { ...tokenLimits }
+      delete newTokenLimits[selectedAccount.id]
+      await saveTokenLimits(newTokenLimits)
+      setTokenLimits(newTokenLimits)
+
       onDeleteModalClose()
       fetchAccounts()
     } catch (error) {
@@ -323,7 +398,6 @@ const AccountManagement: React.FC = () => {
     }
   }
 
-  // 新增手机号验证处理函数
   const handlePhoneChange = (value: string) => {
     const validation = validatePhone(value)
     if (!validation.isValid) {
@@ -333,10 +407,20 @@ const AccountManagement: React.FC = () => {
     }
   }
 
+  const handleTokenLimitChange = (value: string) => {
+    const validation = validateTokenLimit(value)
+    if (!validation.isValid) {
+      setTokenLimitError(validation.message)
+    } else {
+      setTokenLimitError("")
+    }
+  }
+
   const columns = [
     { name: "名称", uid: "name" },
     { name: "账号", uid: "account" },
-    { name: "手机号", uid: "phone" }, // 新增手机号列
+    { name: "手机号", uid: "phone" },
+    { name: "Token限制", uid: "tokenLimit" },
     { name: "类型", uid: "type" },
     { name: "操作", uid: "actions" },
   ]
@@ -347,6 +431,12 @@ const AccountManagement: React.FC = () => {
         return getAccountTypeChip(account.name)
       case "phone":
         return account.phone || "-"
+      case "tokenLimit":
+        return (
+          <Tooltip content={tokenLimits[account.id] === 0 ? "无限制" : `${tokenLimits[account.id]} tokens`}>
+            <span>{tokenLimits[account.id] === 0 ? "无限制" : tokenLimits[account.id]}</span>
+          </Tooltip>
+        )
       case "actions":
         return (
           <div className='flex justify-center gap-2'>
@@ -474,6 +564,15 @@ const AccountManagement: React.FC = () => {
                   errorMessage={phoneError}
                   description='请输入11位手机号'
                 />
+                <Input
+                  name='tokenLimit'
+                  label='Token使用限制'
+                  type='number'
+                  defaultValue='0'
+                  description='0表示无限制'
+                  onValueChange={handleTokenLimitChange}
+                  errorMessage={tokenLimitError}
+                />
               </ModalBody>
               <ModalFooter>
                 <Button color='danger' variant='light' onPress={onClose}>
@@ -520,6 +619,15 @@ const AccountManagement: React.FC = () => {
                   onValueChange={handlePhoneChange}
                   errorMessage={phoneError}
                   description='请输入11位手机号'
+                />
+                <Input
+                  name='tokenLimit'
+                  label='Token使用限制'
+                  type='number'
+                  defaultValue={tokenLimits[selectedAccount?.id] || 0}
+                  description='0表示无限制'
+                  onValueChange={handleTokenLimitChange}
+                  errorMessage={tokenLimitError}
                 />
               </ModalBody>
               <ModalFooter>
@@ -611,6 +719,10 @@ const AccountManagement: React.FC = () => {
                     <div>
                       <p className='text-sm text-gray-500'>手机号</p>
                       <p>{accountDetail.phone || "-"}</p>
+                    </div>
+                    <div>
+                      <p className='text-sm text-gray-500'>Token限制</p>
+                      <p>{tokenLimits[accountDetail.id] === 0 ? "无限制" : `${tokenLimits[accountDetail.id]} tokens`}</p>
                     </div>
                     <div>
                       <p className='text-sm text-gray-500'>创建时间</p>
