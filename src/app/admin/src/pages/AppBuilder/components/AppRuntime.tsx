@@ -8,7 +8,7 @@ import { observer } from "mobx-react-lite"
 import { context } from "./functionContext"
 import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
 import { localDB } from "@/utils/localDB"
-import { getMetadata } from "@/service/apis/metadata"
+import { getPublicMetaData } from "@/service/apis/metadata"
 
 interface AppRuntimeProps {
   appId: string
@@ -68,7 +68,7 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
         // 尝试新的加载方式
         try {
           // 1. 获取应用元数据
-          const appResult = await getMetadata([appId])
+          const appResult = await getPublicMetaData([appId])
           if (!appResult.data?.[0]?.value) {
             throw new Error("App metadata not found")
           }
@@ -132,7 +132,7 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
     <div
       style={{
         position: "fixed",
-        bottom: "20px",
+        bottom: "60px",
         right: "20px",
         zIndex: 9999,
         userSelect: "none",

@@ -34,12 +34,12 @@ export const costService = {
     const isCoding = content.includes(`mo-ai-code`)
     const ratePerMillionTokens = {
       EXPERT: {
-        input: isCoding ? 21.9 * 2 : 4.38 * 2,
-        output: isCoding ? 10.9 * 2 : 2.18 * 2,
+        input: isCoding ? 219 : 43.8,
+        output: isCoding ? 109 : 21.8,
       },
       ADVANCED: {
-        input: isCoding ? 21.9 * 2 : 4.38 * 2,
-        output: isCoding ? 10.9 * 2 : 2.18 * 2,
+        input: isCoding ? 219 : 43.8,
+        output: isCoding ? 109 : 21.8,
       },
     }
 
@@ -53,12 +53,12 @@ export const costService = {
     const isCoding = content.includes(`mo-ai-code`)
     const ratePerMillionTokens = {
       EXPERT: {
-        input: isCoding ? 21.9 * 2 : 4.38 * 2,
-        output: isCoding ? 10.9 * 2 : 2.18 * 2,
+        input: isCoding ? 219 : 43.8,
+        output: isCoding ? 109 : 21.8,
       },
       ADVANCED: {
-        input: isCoding ? 21.9 * 2 : 4.38 * 2,
-        output: isCoding ? 10.9 * 2 : 2.18 * 2,
+        input: isCoding ? 219 : 43.8,
+        output: isCoding ? 109 : 21.8,
       },
     }
 
