@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react"
 import { AppRender } from "@/app/admin/src/pages/AppBuilder/AppRender"
 import { Spinner, Card, CardBody, CardHeader, Button } from "@nextui-org/react"
 import message from "@/components/Message"
-import { Provider } from "@/provider"
+import { calculateActualBalance, Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
 import { observer } from "mobx-react-lite"
 import { Icon } from "@iconify/react"
 import { appCodeStore } from "../store/appCodeStore"
 import { context } from "./functionContext"
+import { balanceStore } from "@/stores/balanceStore"
 
 interface PreviewPageProps {
   appId: string
@@ -18,6 +19,14 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [errorDetails, setErrorDetails] = useState<any>(null)
+
+  useEffect(() => {
+    const initBalanceStore = async () => {
+      const actualBalance = await calculateActualBalance()
+      balanceStore.setActualBalance(actualBalance)
+    }
+    initBalanceStore()
+  }, [])
 
   useEffect(() => {
     // 添加全局错误处理

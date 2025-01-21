@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react"
 import { AppRender } from "@/app/admin/src/pages/AppBuilder/AppRender"
 import { Spinner, Chip, Button } from "@nextui-org/react"
 import message from "@/components/Message"
-import { Provider } from "@/provider"
+import { calculateActualBalance, Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
 import { observer } from "mobx-react-lite"
 import { context } from "./functionContext"
 import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
 import { localDB } from "@/utils/localDB"
 import { getPublicMetaData } from "@/service/apis/metadata"
+import { balanceStore } from "@/stores/balanceStore"
 
 interface AppRuntimeProps {
   appId: string
@@ -49,6 +50,13 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
       runner()
     })
   }
+  useEffect(() => {
+    const initBalanceStore = async () => {
+      const actualBalance = await calculateActualBalance()
+      balanceStore.setActualBalance(actualBalance)
+    }
+    initBalanceStore()
+  }, [])
 
   useEffect(() => {
     if (!appId) {

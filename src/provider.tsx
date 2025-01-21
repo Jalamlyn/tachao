@@ -65,7 +65,7 @@ const preloadModules = async () => {
   })
 }
 
-const calculateActualBalance = async () => {
+export const calculateActualBalance = async () => {
   try {
     const accountRes = await getAccount()
     if (!accountRes?.totalComputePower) {
