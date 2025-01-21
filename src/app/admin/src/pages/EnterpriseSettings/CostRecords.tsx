@@ -5,9 +5,9 @@ import { Icon } from "@iconify/react"
 import { getMetadata } from "@/service/apis/metadata"
 import { Select, SelectItem } from "@nextui-org/react"
 import { Chip } from "@nextui-org/react"
-import { Tooltip } from "@nextui-org/react"
+import { Tooltip, Input } from "@nextui-org/react"
 
-const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
+const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) => {
   const [records, setRecords] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const [recordsPerPage, setRecordsPerPage] = useState(10)
@@ -37,20 +37,27 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
     }
   }
 
-  const indexOfLastRecord = showAll ? records.length : currentPage * recordsPerPage
-  const indexOfFirstRecord = showAll ? 0 : (currentPage - 1) * recordsPerPage
-  const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord)
+  // 过滤记录
+  const filteredRecords = useMemo(() => {
+    return records.filter(
+      (record) => !searchQuery || record.userName?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  }, [records, searchQuery])
 
-  const totalPages = Math.ceil(records.length / recordsPerPage)
+  const indexOfLastRecord = showAll ? filteredRecords.length : currentPage * recordsPerPage
+  const indexOfFirstRecord = showAll ? 0 : (currentPage - 1) * recordsPerPage
+  const currentRecords = filteredRecords.slice(indexOfFirstRecord, indexOfLastRecord)
+
+  const totalPages = Math.ceil(filteredRecords.length / recordsPerPage)
 
   const totalCost = useMemo(() => {
-    const cost = records.reduce((sum, record) => {
+    const cost = filteredRecords.reduce((sum, record) => {
       const recordCost = typeof record.totalCost === "number" ? record.totalCost : 0
       return sum + recordCost
     }, 0)
     onTotalCostChange?.(cost)
     return cost.toFixed(4)
-  }, [records, onTotalCostChange])
+  }, [filteredRecords, onTotalCostChange])
 
   const currentPageCost = useMemo(() => {
     return currentRecords
@@ -115,6 +122,14 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
       const { tokenUsage } = record.detail
       return (
         <div className='space-y-1'>
+          {record.userInput && (
+            <div className='flex items-center gap-2 mb-2'>
+              <span className='text-sm text-default-500'>用户输入:</span>
+              <Tooltip content={record.userInput}>
+                <span className='text-sm truncate max-w-[200px] cursor-help'>{record.userInput}</span>
+              </Tooltip>
+            </div>
+          )}
           <div className='flex items-center gap-2'>
             <span className='text-sm text-default-500'>输入 Token:</span>
             <span>{tokenUsage.promptTokenCount}</span>
@@ -209,7 +224,7 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
         </Table>
         <div className='flex justify-between items-center px-4 py-3 bg-default-50 rounded-lg mt-4'>
           <div className='text-small text-default-600 flex items-center gap-1'>
-            <Icon icon='mdi:file-document-outline' className='w-4 h-4' />共 {records.length} 条记录
+            <Icon icon='mdi:file-document-outline' className='w-4 h-4' />共 {filteredRecords.length} 条记录
           </div>
           <div className='flex gap-4 items-center'>
             <Select
@@ -236,7 +251,7 @@ const CostRecords = forwardRef(({ onTotalCostChange }, ref) => {
             </Select>
             {!showAll && (
               <Pagination
-                total={Math.ceil(records.length / recordsPerPage)}
+                total={Math.ceil(filteredRecords.length / recordsPerPage)}
                 page={currentPage}
                 onChange={(page) => setCurrentPage(page)}
                 showControls

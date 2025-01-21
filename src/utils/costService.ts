@@ -7,6 +7,7 @@ interface TokenUsage {
   candidatesTokenCount: number
   model: string
   content?: string
+  userInput?: string // 新增用户输入字段
 }
 
 interface CostRecord {
@@ -14,6 +15,7 @@ interface CostRecord {
   timestamp: string
   type: "token_usage" | "subscription" | string
   totalCost: number
+  userInput?: string // 新增用户输入字段
   detail: {
     tokenUsage?: {
       promptTokenCount: number
@@ -97,6 +99,7 @@ export const costService = {
       await this.addCostRecord({
         type: "token_usage",
         totalCost: totalCost,
+        userInput: usage.userInput, // 添加用户输入记录
         detail: {
           tokenUsage: {
             promptTokenCount: usage.promptTokenCount,

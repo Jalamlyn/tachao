@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { Card, CardBody, Button, Chip, Spinner, Tooltip } from "@nextui-org/react"
+import { Card, CardBody, Button, Chip, Spinner, Tooltip, Input } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { getAccount } from "@/service/apis/pay"
 import CostRecords from "./CostRecords"
@@ -21,6 +21,7 @@ const AccountFinance = observer(() => {
   const [loading, setLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [balanceLogs, setBalanceLogs] = useState([])
+  const [searchQuery, setSearchQuery] = useState("")
   const costRecordsRef = React.useRef(null)
 
   useEffect(() => {
@@ -102,6 +103,10 @@ const AccountFinance = observer(() => {
 
   const handleTotalCostChange = (cost: number) => {
     setTotalCost(cost)
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value)
   }
 
   const InfoItem = ({ label, value, tooltip = null }) => (
@@ -247,7 +252,19 @@ const AccountFinance = observer(() => {
         </CardBody>
       </Card>
 
-      <CostRecords ref={costRecordsRef} onTotalCostChange={handleTotalCostChange} />
+      <div className='space-y-4'>
+        <div className='flex justify-between items-center'>
+          <Input
+            size='sm'
+            placeholder='搜索用户名...'
+            value={searchQuery}
+            onValueChange={handleSearchChange}
+            startContent={<Icon icon='solar:minimalistic-magnifer-bold-duotone' className='text-default-400' />}
+            className='w-64'
+          />
+        </div>
+        <CostRecords ref={costRecordsRef} onTotalCostChange={handleTotalCostChange} searchQuery={searchQuery} />
+      </div>
     </div>
   )
 })

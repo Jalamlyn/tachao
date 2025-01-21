@@ -137,6 +137,14 @@ export default async function chatChunkOpenAIOffice(
     const eventStream = events(response, controller.signal)
     let fullContent = ""
 
+    // 获取用户最后一条输入
+    const lastUserMessage = _messages.filter((msg) => msg.role === "user").pop()
+    const userInput = lastUserMessage
+      ? typeof lastUserMessage.content === "string"
+        ? lastUserMessage.content
+        : lastUserMessage.content[0]?.text || ""
+      : ""
+
     for await (let event of eventStream) {
       if (event.data !== "[DONE]") {
         try {
@@ -154,6 +162,7 @@ export default async function chatChunkOpenAIOffice(
                 candidatesTokenCount: parsed.usage.completion_tokens,
                 model: model,
                 content: fullContent,
+                userInput: userInput, // 添加用户输入记录
               },
               true
             )
