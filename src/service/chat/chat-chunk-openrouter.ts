@@ -88,6 +88,7 @@ export default async function chatChunkOpenAIOffice(
   }
 
   const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-openrouter"
+  // const apiEndPoint = "https://api.openai-prc.com"
 
   // 选择模型
   const selectedModel = selectModel(_messages)
@@ -108,6 +109,7 @@ export default async function chatChunkOpenAIOffice(
     messages: _messages,
     promptData,
     stream: true,
+    temperature,
   }
 
   let controller = new AbortController()
