@@ -42,12 +42,12 @@ import { useGlobalUser } from "@/hooks/useGlobalUser"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 
 interface AccountBalance {
-  limit: number;
-  used: number;
+  limit: number
+  used: number
 }
 
 interface AccountBalances {
-  [accountId: string]: AccountBalance;
+  [accountId: string]: AccountBalance
 }
 
 // 添加账号格式验证函数
@@ -145,10 +145,7 @@ const AccountManagement: React.FC = () => {
 
   const saveAccountBalances = async (newBalances: AccountBalances) => {
     try {
-      await setMetadata([{
-        key: "account-balances",
-        value: JSON.stringify(newBalances)
-      }])
+      await setMetadata(["account-balances"], newBalances)
     } catch (error) {
       console.error("Failed to save account balances:", error)
       throw error
@@ -232,8 +229,8 @@ const AccountManagement: React.FC = () => {
         ...accountBalances,
         [accountRes.id]: {
           limit: Number(values.balanceLimit) || 10,
-          used: 0
-        }
+          used: 0,
+        },
       }
       await saveAccountBalances(newBalances)
       setAccountBalances(newBalances)
@@ -300,8 +297,8 @@ const AccountManagement: React.FC = () => {
         ...accountBalances,
         [selectedAccount.id]: {
           ...accountBalances[selectedAccount.id],
-          limit: Number(values.balanceLimit)
-        }
+          limit: Number(values.balanceLimit),
+        },
       }
       await saveAccountBalances(newBalances)
       setAccountBalances(newBalances)
@@ -318,7 +315,7 @@ const AccountManagement: React.FC = () => {
   const handleDeleteAccount = async () => {
     try {
       await deleteRamAccount(selectedAccount.id)
-      
+
       // 删除账号塔币额度信息
       const newBalances = { ...accountBalances }
       delete newBalances[selectedAccount.id]
@@ -358,7 +355,7 @@ const AccountManagement: React.FC = () => {
 
 您的账号信息如下：
 👤 账号：${account.account}
-🔑 密码：${account.password}
+🔑 密码：${account.account}
 🌐 登录地址：https://www.mobenai.com.cn/login?oid=1
 
 ✨ 即想AI是一个革命性的AI编程平台，让人人都能成为开发者。
@@ -737,10 +734,9 @@ const AccountManagement: React.FC = () => {
                     <div>
                       <p className='text-sm text-gray-500'>塔币限制</p>
                       <p>
-                        {accountBalances[accountDetail.id]?.limit === 0 
-                          ? "无限制" 
-                          : `${accountBalances[accountDetail.id]?.limit || 10} 塔币 (已使用: ${accountBalances[accountDetail.id]?.used.toFixed(2) || 0})`
-                        }
+                        {accountBalances[accountDetail.id]?.limit === 0
+                          ? "无限制"
+                          : `${accountBalances[accountDetail.id]?.limit || 10} 塔币 (已使用: ${accountBalances[accountDetail.id]?.used.toFixed(2) || 0})`}
                       </p>
                     </div>
                     <div>

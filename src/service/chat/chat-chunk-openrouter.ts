@@ -10,6 +10,7 @@ import globalStore from "@/globalStore"
 const AI_MODELS = {
   BASIC: "anthropic/claude-3.5-haiku-20241022",
   ADVANCED: "anthropic/claude-3.5-sonnet:beta",
+  // ADVANCED: "deepseek/deepseek-r1",
 }
 
 function selectModel(messages) {
