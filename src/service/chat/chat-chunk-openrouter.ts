@@ -157,28 +157,26 @@ export default async function chatChunkOpenAIOffice(
         : lastUserMessage.content[0]?.text || ""
       : ""
 
+    // 添加 usage 累加器
+    let totalUsage = {
+      promptTokenCount: 0,
+      candidatesTokenCount: 0
+    }
+
     for await (let event of eventStream) {
       if (event.data !== "[DONE]") {
         try {
           const parsed = jsonParse(event.data)
-
           const content = parsed?.choices[0]?.delta?.content || ""
           fullContent += content
           onChunk(content)
 
+          // 累加 usage 而不是立即记录
           if (parsed?.usage) {
-            const model = sessionStorage.getItem("aiLevel") || "ADVANCED"
-            await costService.recordTokenUsage(
-              {
-                promptTokenCount: parsed.usage.prompt_tokens,
-                candidatesTokenCount: parsed.usage.completion_tokens,
-                model: model,
-                content: fullContent,
-                userInput: userInput,
-              },
-              true
-            )
+            totalUsage.promptTokenCount += parsed.usage.prompt_tokens || 0
+            totalUsage.candidatesTokenCount += parsed.usage.completion_tokens || 0
           }
+
           if (parsed?.choices[0]?.finish_reason === "max_tokens") {
             const lastTenChars = fullContent.slice(-10)
             await chatChunkOpenAIOffice(
@@ -208,6 +206,20 @@ export default async function chatChunkOpenAIOffice(
           throw error
         }
       } else {
+        // 在对话结束时才记录总的消费
+        if (totalUsage.promptTokenCount > 0 || totalUsage.candidatesTokenCount > 0) {
+          const model = sessionStorage.getItem("aiLevel") || "ADVANCED"
+          await costService.recordTokenUsage(
+            {
+              promptTokenCount: totalUsage.promptTokenCount,
+              candidatesTokenCount: totalUsage.candidatesTokenCount,
+              model: model,
+              content: fullContent,
+              userInput: userInput,
+            },
+            true
+          )
+        }
         localDB.setItem("chat-chunk-over", overFlag)
       }
     }
