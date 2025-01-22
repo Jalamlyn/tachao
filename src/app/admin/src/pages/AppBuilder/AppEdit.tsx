@@ -56,6 +56,20 @@ const AppBuilder: React.FC = observer(() => {
       appCodeStore.clearViewState()
     }
   }, [])
+  const handlePullVersion = async (versionInfo) => {
+    try {
+      setIsLoading(true)
+      await appCodeStore.pullVersion(versionInfo)
+      setShowVersionListModal(false)
+      refreshPreview()
+      message.success("代码拉取成功")
+    } catch (error) {
+      console.error("Error pulling version:", error)
+      message.error(error instanceof Error ? error.message : "拉取失败")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // 添加日志和请求消息监听
   useEffect(() => {
@@ -564,6 +578,7 @@ const AppBuilder: React.FC = observer(() => {
           versions={versions}
           onPublish={handlePublishFromVersion}
           onDelete={handleDeleteVersion}
+          onPull={handlePullVersion} // 新增的处理函数
         />
       </PageLayout>
     </>

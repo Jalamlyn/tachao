@@ -175,21 +175,51 @@ export async function deleteAppVersion(this: AppCodeStore, versionId: string, ve
   }
 }
 
-// 新增: 从特定版本发布
-export async function publishFromVersion(this: AppCodeStore, versionInfo: AppVersionInfo): Promise<void> {
+// 新增: 更新本地代码的公共方法
+export async function updateLocalVersion(this: AppCodeStore, versionInfo: AppVersionInfo): Promise<void> {
   if (!this.appId) throw new Error("No app id")
 
   try {
     // 添加版本到历史记录
     this.addVersion(versionInfo.version)
+    message.success("本地代码已更新")
+  } catch (error) {
+    console.error("Error updating local version:", error)
+    throw new Error("Failed to update local version")
+  }
+}
+
+// 修改: 从特定版本发布
+export async function publishFromVersion(this: AppCodeStore, versionInfo: AppVersionInfo): Promise<void> {
+  if (!this.appId) throw new Error("No app id")
+
+  try {
+    // 先更新本地代码
+    await this.updateLocalVersion(versionInfo)
 
     // 发布到服务器
     await this.publishToServer({
       useLatest: true,
     })
+
+    message.success("版本发布成功")
   } catch (error) {
     console.error("Error publishing from version:", error)
-    throw new Error("Failed to publish from version")
+    throw new Error("Failed to publish version")
+  }
+}
+
+// 新增: 拉取代码方法
+export async function pullVersion(this: AppCodeStore, versionInfo: AppVersionInfo): Promise<void> {
+  if (!this.appId) throw new Error("No app id")
+
+  try {
+    // 只更新本地代码，不发布
+    await this.updateLocalVersion(versionInfo)
+    message.success("代码拉取成功")
+  } catch (error) {
+    console.error("Error pulling version:", error)
+    throw new Error("Failed to pull version")
   }
 }
 
