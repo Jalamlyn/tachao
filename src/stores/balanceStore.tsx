@@ -46,16 +46,34 @@ class BalanceStore {
     }
   }
 
-  // 保存所有账号额度信息
+  // 保存账户余额信息
   private async saveAccountBalances(balances: AccountBalances) {
     try {
-      await setMetadata([{
-        key: this.ACCOUNT_BALANCE_KEY,
-        value: JSON.stringify(balances)
-      }])
+      await setMetadata(this.ACCOUNT_BALANCE_KEY, JSON.stringify(balances))
     } catch (error) {
       console.error('Failed to save account balances:', error)
       throw error
+    }
+  }
+
+  // 更新账户使用额度
+  async updateAccountUsage(accountId: string, cost: number): Promise<boolean> {
+    try {
+      // 1. 获取当前所有账户的余额数据
+      const res = await getMetadata([this.ACCOUNT_BALANCE_KEY])
+      let balances = res?.data?.[0]?.value ? JSON.parse(res.data[0].value) : {}
+      
+      // 2. 更新指定账户的已使用额度（累加）
+      balances[accountId] = balances[accountId] || { limit: 10, used: 0 }
+      balances[accountId].used = Number((balances[accountId].used + cost).toFixed(4))
+      
+      // 3. 保存更新后的数据
+      await setMetadata(this.ACCOUNT_BALANCE_KEY, JSON.stringify(balances))
+      
+      return true
+    } catch (error) {
+      console.error(`Failed to update account usage for ${accountId}:`, error)
+      return false
     }
   }
 
@@ -64,14 +82,6 @@ class BalanceStore {
     const balances = await this.getAccountBalances()
     balances[accountId] = balances[accountId] || { limit: 10, used: 0 }
     balances[accountId].limit = limit
-    await this.saveAccountBalances(balances)
-  }
-
-  // 更新账号已使用额度
-  async updateAccountUsage(accountId: string, cost: number) {
-    const balances = await this.getAccountBalances()
-    balances[accountId] = balances[accountId] || { limit: 10, used: 0 }
-    balances[accountId].used += cost
     await this.saveAccountBalances(balances)
   }
 
