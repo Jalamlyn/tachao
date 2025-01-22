@@ -100,10 +100,18 @@ export default async function chatChunkOpenAIOffice(
   // 获取当前用户ID
   const currentUserId = globalStore.currentUser?.id
 
-  // 检查余额和账号额度
-  const hasEnoughBalance = await balanceStore.checkBalance(0.1, currentUserId)
+  // 只检查余额，不更新使用量
+  const hasEnoughBalance = await balanceStore.checkBalance(0.1)
   if (!hasEnoughBalance) {
     return
+  }
+
+  // 如果提供了accountId，检查账户额度
+  if (currentUserId) {
+    const hasEnoughAccountBalance = await balanceStore.checkAccountBalance(currentUserId, 0.1)
+    if (!hasEnoughAccountBalance) {
+      return
+    }
   }
 
   const payload = {
@@ -166,7 +174,7 @@ export default async function chatChunkOpenAIOffice(
                 candidatesTokenCount: parsed.usage.completion_tokens,
                 model: model,
                 content: fullContent,
-                userInput: userInput, // 添加用户输入记录
+                userInput: userInput,
               },
               true
             )
