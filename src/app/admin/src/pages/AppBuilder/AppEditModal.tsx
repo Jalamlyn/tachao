@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Textarea } from "@nextui-org/react"
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Textarea, ButtonGroup } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
 import { appCodeStore } from "./store/appCodeStore"
@@ -74,7 +74,8 @@ export const SaveVersionModal = ({ isOpen, onClose, onSave }) => {
     </Modal>
   )
 }
-export const VersionListModal = ({ isOpen, onClose, versions, onPublish, onDelete }) => {
+
+export const VersionListModal = ({ isOpen, onClose, versions, onPublish, onDelete, onPull }) => {
   const [versionToDelete, setVersionToDelete] = useState(null)
 
   const handleDelete = async (version) => {
@@ -129,24 +130,37 @@ export const VersionListModal = ({ isOpen, onClose, versions, onPublish, onDelet
                     </span>
                   </div>
                 </div>
-                <div className='flex gap-2'>
+                <ButtonGroup variant="flat">
+                  {/* 拉取代码按钮 */}
                   <Button
-                    color='primary'
-                    variant='flat'
+                    color="secondary"
+                    onPress={() => onPull(version)}
+                    startContent={<Icon icon="solar:download-minimalistic-bold" className="w-4 h-4" />}
+                    className="min-w-[100px]"
+                  >
+                    拉取代码
+                  </Button>
+                  
+                  {/* 发布版本按钮 */}
+                  <Button
+                    color="primary"
                     onPress={() => onPublish(version)}
-                    startContent={<Icon icon='mdi:rocket-launch' className='w-4 h-4' />}
+                    startContent={<Icon icon="mdi:rocket-launch" className="w-4 h-4" />}
+                    className="min-w-[100px]"
                   >
                     发布此版本
                   </Button>
+                  
+                  {/* 删除按钮 */}
                   <Button
-                    color='danger'
-                    variant='flat'
+                    color="danger"
                     onPress={() => setVersionToDelete(version)}
-                    startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
+                    startContent={<Icon icon="mdi:delete" className="w-4 h-4" />}
+                    className="min-w-[80px]"
                   >
                     删除
                   </Button>
-                </div>
+                </ButtonGroup>
               </div>
             ))}
           </div>
