@@ -145,7 +145,7 @@ const AccountManagement: React.FC = () => {
 
   const saveAccountBalances = async (newBalances: AccountBalances) => {
     try {
-      await setMetadata(["account-balances"], newBalances)
+      await setMetadata("account-balances", newBalances)
     } catch (error) {
       console.error("Failed to save account balances:", error)
       throw error

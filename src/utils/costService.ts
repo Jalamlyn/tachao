@@ -96,7 +96,7 @@ export const costService = {
       const totalCost = inputCost + outputCost
 
       // 记录总的cost
-      await this.addCostRecord({
+      this.addCostRecord({
         type: "token_usage",
         totalCost: totalCost,
         userInput: usage.userInput, // 添加用户输入记录
@@ -113,6 +113,7 @@ export const costService = {
 
       // 更新账号已使用额度
       const currentUserId = globalStore.currentUser?.id
+      debugger
       if (currentUserId) {
         await balanceStore.updateAccountUsage(currentUserId, totalCost)
       }
