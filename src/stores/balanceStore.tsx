@@ -17,7 +17,7 @@ class BalanceStore {
   balance: number = 0
   actualBalance: number = 0
   loading: boolean = false
-  private readonly ACCOUNT_BALANCE_KEY = 'account-balances'
+  private readonly ACCOUNT_BALANCE_KEY = "account-balances"
 
   constructor() {
     makeAutoObservable(this)
@@ -41,7 +41,7 @@ class BalanceStore {
       const res = await getMetadata([this.ACCOUNT_BALANCE_KEY])
       return res?.data?.[0]?.value ? JSON.parse(res.data[0].value) : {}
     } catch (error) {
-      console.error('Failed to get account balances:', error)
+      console.error("Failed to get account balances:", error)
       return {}
     }
   }
@@ -51,7 +51,7 @@ class BalanceStore {
     try {
       await setMetadata(this.ACCOUNT_BALANCE_KEY, JSON.stringify(balances))
     } catch (error) {
-      console.error('Failed to save account balances:', error)
+      console.error("Failed to save account balances:", error)
       throw error
     }
   }
@@ -62,14 +62,14 @@ class BalanceStore {
       // 1. 获取当前所有账户的余额数据
       const res = await getMetadata([this.ACCOUNT_BALANCE_KEY])
       let balances = res?.data?.[0]?.value ? JSON.parse(res.data[0].value) : {}
-      
+
       // 2. 更新指定账户的已使用额度（累加）
       balances[accountId] = balances[accountId] || { limit: 10, used: 0 }
       balances[accountId].used = Number((balances[accountId].used + cost).toFixed(4))
-      
+
       // 3. 保存更新后的数据
       await setMetadata(this.ACCOUNT_BALANCE_KEY, JSON.stringify(balances))
-      
+
       return true
     } catch (error) {
       console.error(`Failed to update account usage for ${accountId}:`, error)
@@ -87,9 +87,14 @@ class BalanceStore {
 
   // 检查账号额度
   async checkAccountBalance(accountId: string, cost: number): Promise<boolean> {
+    // 如果是管理员,跳过余额检查
+    if (globalStore.currentUser?.name === '管理员') {
+      return true
+    }
+    
     const balances = await this.getAccountBalances()
     const accountBalance = balances[accountId] || { limit: 10, used: 0 }
-    
+
     const remaining = accountBalance.limit - accountBalance.used
     if (remaining < cost) {
       message.error(`账号额度不足,剩余${remaining.toFixed(2)}塔币`)
@@ -105,6 +110,11 @@ class BalanceStore {
   }
 
   async checkBalance(cost: number = 0.1, accountId?: string): Promise<boolean> {
+    // 如果是管理员,跳过余额检查
+    if (globalStore.currentUser?.name === '管理员') {
+      return true
+    }
+
     // 检查订阅状态
     const subscription = await subscriptionService.getSubscription(globalStore.organizationId)
     if (!subscription) {
@@ -123,8 +133,6 @@ class BalanceStore {
       )
       return false
     }
-
-    // 检查账号额度(如果提供了accountId)
     if (accountId) {
       const hasEnoughAccountBalance = await this.checkAccountBalance(accountId, cost)
       if (!hasEnoughAccountBalance) {

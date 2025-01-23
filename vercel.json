@@ -18,5 +18,10 @@
     "enabled": true,
     "silent": false
   },
-  "rewrites": []
+  "rewrites": [
+    {
+      "source": "/((?!api|dev).*)",
+      "destination": "/index.html"
+    }
+  ]
 }

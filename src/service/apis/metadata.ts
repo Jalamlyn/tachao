@@ -89,6 +89,7 @@ export const getMetadata = async (names, appId) => {
 
   // 3. 立即发起新请求
   const getUrl = `/internal/apps/${getAppId()}/metadata/AI_AGENT/list`
+  
   const promise = apiService.post(getUrl, { names }, { headers: { "x-app": appId } }).then((res) => {
     const data = res.data
     // 存入缓存

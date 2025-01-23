@@ -113,7 +113,6 @@ export const costService = {
 
       // 更新账号已使用额度
       const currentUserId = globalStore.currentUser?.id
-      debugger
       if (currentUserId) {
         await balanceStore.updateAccountUsage(currentUserId, totalCost)
       }
