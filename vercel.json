@@ -18,14 +18,5 @@
     "enabled": true,
     "silent": false
   },
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "http://106.14.47.161/api/:path*"
-    },
-    {
-      "source": "/((?!api|dev).*)",
-      "destination": "/index.html"
-    }
-  ]
+  "rewrites": []
 }
