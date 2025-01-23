@@ -12,8 +12,8 @@ export default defineConfig({
       process.env.DEPLOY_ENV === "us"
         ? "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/api"
         : process.env.NODE_ENV === "production"
-        ? "/api"
-        : "/dev"
+          ? "/api"
+          : "/dev"
     ),
   },
   plugins: [
@@ -65,7 +65,7 @@ export default defineConfig({
     port: 5174,
     proxy: {
       "/dev/": {
-        target: "https://www.mobenai.com.cn/api/",
+        target: "http://106.14.47.161/api/",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/dev/, ""),
         autoRewrite: true,
