@@ -150,10 +150,10 @@ export default async function chatChunkGeminiOffice(
               // 判断是否已有数据
               if (existingRecords.length > 0) {
                 // 插入新记录到现有数据
-                await setMetadata("ai-cost-records", [...existingRecords, newRecord])
+                setMetadata("ai-cost-records", [...existingRecords, newRecord])
               } else {
                 // 没有数据，直接设置
-                await setMetadata("ai-cost-records", [newRecord])
+                setMetadata("ai-cost-records", [newRecord])
               }
 
               localDB.setItem("chat-chunk-over", overFlag)

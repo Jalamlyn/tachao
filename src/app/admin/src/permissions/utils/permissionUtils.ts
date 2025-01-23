@@ -470,7 +470,7 @@ export const subscriptionService = {
         },
       }
 
-      await setMetadata("ai-cost-records", [...existingRecords, newRecord])
+      setMetadata("ai-cost-records", [...existingRecords, newRecord])
     } catch (error) {
       console.error("Error updating subscription:", error)
       throw error

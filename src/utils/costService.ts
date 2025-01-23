@@ -156,7 +156,7 @@ export const costService = {
         userName: accountInfo.name,
       }
 
-      await setMetadata("ai-cost-records", [...existingRecords, newRecord])
+      setMetadata("ai-cost-records", [...existingRecords, newRecord])
     } catch (error) {
       console.error("Error adding cost record:", error)
       throw error

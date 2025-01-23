@@ -183,9 +183,9 @@ export default async function chatChunkOpenAIOffice(
         },
       }
       if (existingRecords.length > 0) {
-        await setMetadata("ai-cost-records", [...existingRecords, newRecord])
+        setMetadata("ai-cost-records", [...existingRecords, newRecord])
       } else {
-        await setMetadata("ai-cost-records", [newRecord])
+        setMetadata("ai-cost-records", [newRecord])
       }
     } catch (e) {
       console.error("Error storing cost records:", e)
