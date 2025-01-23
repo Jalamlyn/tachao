@@ -7,9 +7,12 @@
   "scripts": {
     "dev": "vite",
     "build": "yarn config set registry 'https://registry.npm.taobao.org' && vite build",
+    "build:us": "cross-env DEPLOY_ENV=us vite build",
     "lint": "eslint -c .eslintrc.json ./src/**/**/*.{ts,tsx} --fix",
     "preview": "vite preview",
     "push": "git push && git push github main",
+    "push:cn": "git push",
+    "push:us": "cross-env DEPLOY_ENV=us git push us main",
     "vercel": "vercel dev --debug"
   },
   "dependencies": {
@@ -165,6 +168,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "@vitejs/plugin-react-swc": "^3.7.0",
     "autoprefixer": "^10.4.19",
+    "cross-env": "^7.0.3",
     "eslint": "^8.26.0",
     "eslint-config-prettier": "^8.2.0",
     "eslint-plugin-import": "^2.26.0",

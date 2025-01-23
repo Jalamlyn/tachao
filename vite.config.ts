@@ -8,7 +8,13 @@ import { visualizer } from "rollup-plugin-visualizer"
 
 export default defineConfig({
   define: {
-    __API_BASE_URL__: JSON.stringify(process.env.NODE_ENV === "production" ? "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/api" : "/dev"),
+    __API_BASE_URL__: JSON.stringify(
+      process.env.DEPLOY_ENV === "us"
+        ? "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/api"
+        : process.env.NODE_ENV === "production"
+        ? "/api"
+        : "/dev"
+    ),
   },
   plugins: [
     million.vite({ auto: true }),
@@ -16,11 +22,9 @@ export default defineConfig({
     tsconfigPaths(),
     mdPlugin.default({ mode: [Mode.MARKDOWN] }),
     visualizer({
-      // emitFile: true,
-      // filename: "stats.html",
-      open: true, // 打包后自动打开页面
-      gzipSize: true, // 查看 gzip 压缩大小
-      brotliSize: true, // 查看 brotli 压缩大小
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
     }),
   ],
   resolve: {
@@ -52,15 +56,6 @@ export default defineConfig({
           dateFns: ["date-fns"],
           parse5: ["parse5"],
         },
-        // manualChunks(id) {
-        //   // 打包依赖
-        //   if (id.includes("monaco")) {
-        //     return "monaco"
-        //   }
-        //   if (id.includes("node_modules")) {
-        //     return "vendor"
-        //   }
-        // },
         chunkFileNames: "[name].[hash].js",
       },
     },
@@ -71,7 +66,6 @@ export default defineConfig({
     proxy: {
       "/dev/": {
         target: "https://www.mobenai.com.cn/api/",
-        // target: "http://106.14.47.161/api/",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/dev/, ""),
         autoRewrite: true,
