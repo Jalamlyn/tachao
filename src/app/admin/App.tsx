@@ -116,7 +116,7 @@ export default function Component() {
                   {loading ? "Loading..." : userInfo?.name || "Unknown User"}
                 </p>
                 <p className='text-tiny font-medium text-default-400'>
-                  {loading ? "Loading..." : userInfo?.userRoles[0]?.keyz || "Unknown Role"}
+                  {loading ? "Loading..." : userInfo?.userRoles?.[0]?.keyz || "Unknown Role"}
                 </p>
               </div>
             </div>
