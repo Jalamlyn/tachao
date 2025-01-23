@@ -6,86 +6,65 @@ import { getMetadata } from "@/service/apis/metadata"
 import { Select, SelectItem } from "@nextui-org/react"
 import { Chip } from "@nextui-org/react"
 import { Tooltip, Input } from "@nextui-org/react"
+import { costService } from "@/utils/costService"
 
 const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) => {
   const [records, setRecords] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
-  const [recordsPerPage, setRecordsPerPage] = useState(10)
-  const [showAll, setShowAll] = useState(false)
+  const [recordsPerPage] = useState(50)
+  const [totalRecords, setTotalRecords] = useState(0)
+  const [totalCost, setTotalCost] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     fetchCostRecords()
-  }, [])
+    fetchCostTotal()
+  }, [currentPage])
 
   useImperativeHandle(ref, () => ({
-    refresh: fetchCostRecords,
+    refresh: async () => {
+      await fetchCostRecords()
+      await fetchCostTotal()
+      return true
+    },
   }))
+
+  const fetchCostTotal = async () => {
+    try {
+      const costTotal = await costService.getCostTotal()
+      setTotalRecords(costTotal.totalRecords)
+      setTotalCost(costTotal.totalCost)
+      onTotalCostChange?.(costTotal.totalCost)
+    } catch (error) {
+      console.error("Error fetching cost total:", error)
+    }
+  }
 
   const fetchCostRecords = async () => {
     setIsLoading(true)
     try {
-      const costRecords = await getMetadata(["ai-cost-records"])
-      const parsedRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
-      setRecords(parsedRecords)
-      return true
+      const pageRecords = await costService.getPageRecords(currentPage)
+      const filteredRecords = pageRecords.filter(
+        (record) => !searchQuery || record.userName?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      setRecords(filteredRecords)
     } catch (error) {
       console.error("Error fetching cost records:", error)
-      return false
     } finally {
       setIsLoading(false)
     }
   }
 
-  // 过滤记录
-  const filteredRecords = useMemo(() => {
-    return records.filter(
-      (record) => !searchQuery || record.userName?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }, [records, searchQuery])
-
-  const indexOfLastRecord = showAll ? filteredRecords.length : currentPage * recordsPerPage
-  const indexOfFirstRecord = showAll ? 0 : (currentPage - 1) * recordsPerPage
-  const currentRecords = filteredRecords.slice(indexOfFirstRecord, indexOfLastRecord)
-
-  const totalPages = Math.ceil(filteredRecords.length / recordsPerPage)
-
-  const totalCost = useMemo(() => {
-    const cost = filteredRecords.reduce((sum, record) => {
-      const recordCost = typeof record.totalCost === "number" ? record.totalCost : 0
-      return sum + recordCost
-    }, 0)
-    onTotalCostChange?.(cost)
-    return cost.toFixed(4)
-  }, [filteredRecords, onTotalCostChange])
+  const totalPages = Math.ceil(totalRecords / recordsPerPage)
 
   const currentPageCost = useMemo(() => {
-    return currentRecords
+    return records
       .reduce((sum, record) => {
         const recordCost = typeof record.totalCost === "number" ? record.totalCost : 0
         return sum + recordCost
       }, 0)
       .toFixed(4)
-  }, [currentRecords])
-
-  const handlePageSizeChange = (value: string) => {
-    if (value === "all") {
-      setShowAll(true)
-      setCurrentPage(1)
-    } else {
-      setShowAll(false)
-      setRecordsPerPage(Number(value))
-      setCurrentPage(1)
-    }
-  }
-
-  const pageSizeOptions = [
-    { value: "10", label: "10 条/页" },
-    { value: "20", label: "20 条/页" },
-    { value: "50", label: "50 条/页" },
-    { value: "100", label: "100 条/页" },
-    { value: "all", label: "显示全部" },
-  ]
+  }, [records])
 
   const getRecordTypeChip = (type: string) => {
     const typeConfig = {
@@ -178,7 +157,7 @@ const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) =>
         </div>
         <div className='mb-4'>
           <p className='text-sm text-default-600'>
-            总费用: <span className='font-medium text-default-800'>{totalCost} 塔币</span>
+            总费用: <span className='font-medium text-default-800'>{totalCost.toFixed(4)} 塔币</span>
           </p>
           <p className='text-sm text-default-600'>
             当前显示费用: <span className='font-medium text-default-800'>{currentPageCost} 塔币</span>
@@ -201,7 +180,7 @@ const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) =>
             <TableColumn>费用(塔币)</TableColumn>
           </TableHeader>
           <TableBody
-            items={currentRecords}
+            items={records}
             isLoading={isLoading}
             loadingContent={
               <div className='w-full h-[400px] flex items-center justify-center'>
@@ -224,40 +203,9 @@ const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) =>
         </Table>
         <div className='flex justify-between items-center px-4 py-3 bg-default-50 rounded-lg mt-4'>
           <div className='text-small text-default-600 flex items-center gap-1'>
-            <Icon icon='mdi:file-document-outline' className='w-4 h-4' />共 {filteredRecords.length} 条记录
+            <Icon icon='mdi:file-document-outline' className='w-4 h-4' />共 {totalRecords} 条记录
           </div>
-          <div className='flex gap-4 items-center'>
-            <Select
-              size='sm'
-              value={showAll ? "all" : recordsPerPage.toString()}
-              onChange={(e) => handlePageSizeChange(e.target.value)}
-              className='w-[140px]'
-              classNames={{
-                trigger: "h-unit-8 min-h-unit-8 py-0.5 shadow-sm hover:shadow transition-shadow duration-200",
-                value: "text-small",
-                listbox: "text-small",
-              }}
-              aria-label='选择每页显示条数'
-            >
-              {pageSizeOptions.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  className='data-[selected=true]:bg-primary-50 data-[selected=true]:text-primary'
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </Select>
-            {!showAll && (
-              <Pagination
-                total={Math.ceil(filteredRecords.length / recordsPerPage)}
-                page={currentPage}
-                onChange={(page) => setCurrentPage(page)}
-                showControls
-              />
-            )}
-          </div>
+          <Pagination total={totalPages} page={currentPage} onChange={(page) => setCurrentPage(page)} showControls />
         </div>
       </CardBody>
     </Card>
