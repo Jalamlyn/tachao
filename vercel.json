@@ -21,7 +21,7 @@
   "rewrites": [
     {
       "source": "/dev/:path*",
-      "destination": "https://www.mobenai.com.cn/api/:path*"
+      "destination": "http://106.14.47.161/api/:path*"
     },
     {
       "source": "/((?!api|dev).*)",
