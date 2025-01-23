@@ -8,7 +8,7 @@ import { visualizer } from "rollup-plugin-visualizer"
 
 export default defineConfig({
   define: {
-    __API_BASE_URL__: JSON.stringify(process.env.NODE_ENV === "production" ? "https://www.mobenai.com.cn/api" : "/dev"),
+    __API_BASE_URL__: JSON.stringify(process.env.NODE_ENV === "production" ? "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/api" : "/dev"),
   },
   plugins: [
     million.vite({ auto: true }),
