@@ -34,6 +34,10 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        app: path.resolve(__dirname, 'app.html'),
+      },
       output: {
         entryFileNames: "[name].[hash].js",
         assetFileNames: "[name].[extname]",
@@ -48,13 +52,10 @@ export default defineConfig({
           "@visactor/react-vtable": ["@visactor/react-vtable"],
           localStorage: ["localforage"],
           babel: ["@babel/standalone"],
-          mermaid: ["mermaid"],
           xlsx: ["xlsx"],
           lodash: ["lodash"],
           gpt: ["gpt-tokenizer/model/gpt-4o"],
           echarts: ["echarts"],
-          dateFns: ["date-fns"],
-          parse5: ["parse5"],
         },
         chunkFileNames: "[name].[hash].js",
       },

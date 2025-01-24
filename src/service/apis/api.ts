@@ -6,7 +6,7 @@ export const modelBaseUserToken = "model-base-user-token"
 
 export const apiService = axios.create({
   // @ts-ignore
-  baseURL: window.location.href.includes("moben.cloud")
+  baseURL: !window.location.href.includes("mobenai.com.cn")
     ? "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/api"
     : __API_BASE_URL__,
   headers: {
