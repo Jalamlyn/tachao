@@ -123,7 +123,6 @@ class BalanceStore {
     if (globalStore.currentUser?.name === '管理员') {
       return true
     }
-
     // 检查订阅状态
     const subscription = await subscriptionService.getSubscription(globalStore.organizationId)
     if (!subscription) {

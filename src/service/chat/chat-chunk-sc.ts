@@ -9,13 +9,13 @@ import globalStore from "@/globalStore"
 
 const AI_MODELS = {
   // BASIC: "anthropic/claude-3.5-haiku-20241022",
-  BASIC: "deepseek/deepseek-r1:free",
+  BASIC: "deepseek-ai/DeepSeek-R1",
   // BASIC: "deepseek/deepseek-r1",
   // ADVANCED: "anthropic/claude-3.5-sonnet:beta",
   // ADVANCED: "deepseek/deepseek-r1",
   // ADVANCED: "google/gemini-2.0-flash-exp:free",
-  ADVANCED: "deepseek/deepseek-r1:free",
-  USER: "deepseek/deepseek-r1:free",
+  ADVANCED: "deepseek-ai/DeepSeek-V3",
+  USER: "deepseek-ai/DeepSeek-R1",
 }
 
 function selectModel(messages) {
@@ -93,7 +93,7 @@ export default async function chatChunkOpenAIOffice(
     })
   }
 
-  const apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-openrouter"
+  const apiEndPoint = "https://1259692580-1w0gjex43c.ap-shanghai.tencentscf.com/chat-sc"
   // const apiEndPoint = "https://api.openai-prc.com"
 
   // 选择模型
@@ -117,10 +117,11 @@ export default async function chatChunkOpenAIOffice(
       return
     }
   }
-
+  
   const payload = {
     model: selectedModel,
     messages: _messages,
+    max_tokens: 4096,
     promptData,
     stream: true,
     temperature,

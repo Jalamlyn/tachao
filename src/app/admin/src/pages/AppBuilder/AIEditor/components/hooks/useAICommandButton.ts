@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import { aiControllerStore } from "../AIControllerStore"
-import { imageStore } from "../ImageStore"
 import message from "@/components/Message"
 
 interface AIAgent {
@@ -81,9 +80,12 @@ export function useAICommandButton({ input, previews, agent, onResult, onStop }:
         mode: isPMMode ? "pm" : "engineer", // 添加模式标记
       }
 
-      const messageContent = {
+      let messageContent = {
         content: lastInputRef.current.content,
         images: lastInputRef.current.images,
+      }
+      if (messageContent.images.length === 0) {
+        messageContent = lastInputRef.current.content
       }
 
       // 立即清空输入和图片

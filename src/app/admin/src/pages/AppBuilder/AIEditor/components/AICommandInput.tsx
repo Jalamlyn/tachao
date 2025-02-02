@@ -1,18 +1,5 @@
 import React, { memo, useState, useCallback, useRef, useEffect } from "react"
-import {
-  Button,
-  Textarea,
-  Tooltip,
-  Progress,
-  Badge,
-  ScrollShadow,
-  Modal,
-  ModalContent,
-  Chip,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@nextui-org/react"
+import { Button, Textarea, Tooltip, Progress, Badge, Modal, ModalContent, Chip } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import debounce from "lodash/debounce"
 
@@ -21,22 +8,6 @@ import { imageStore } from "./ImageStore"
 import message from "@/components/Message"
 import { AITutorialModal } from "./AITutorialModal"
 import { useAICommandButton } from "./hooks/useAICommandButton"
-
-// 添加模型配置
-const MODEL_INFO = {
-  "anthropic/claude-3.5-haiku-20241022": {
-    name: "高级模型",
-    description: "快速响应，适合简单任务",
-    icon: "solar:rocket-minimalistic-linear",
-    color: "success",
-  },
-  "anthropic/claude-3.5-sonnet": {
-    name: "专家模型",
-    description: "强大性能，适合复杂任务",
-    icon: "solar:star-linear",
-    color: "primary",
-  },
-}
 
 interface AIAgent {
   processCommand: (
