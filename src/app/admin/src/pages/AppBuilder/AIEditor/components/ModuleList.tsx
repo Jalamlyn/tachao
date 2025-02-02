@@ -16,7 +16,6 @@ import { Icon } from "@iconify/react"
 import { motion, AnimatePresence } from "framer-motion"
 import { observer } from "mobx-react-lite"
 import { appCodeStore } from "../../store/appCodeStore"
-import CodeSearch from "./CodeSearch"
 import { getCodeTypeIcon, getCodeTypeColor, calculateModuleSize, formatSize, getModuleSizeColor } from "./utils"
 import message from "@/components/Message"
 import SaveContextModal from "./SaveContextModal"
@@ -227,7 +226,6 @@ export const ModuleList: React.FC<ModuleListProps> = observer(({ appId }) => {
                 input: "text-sm",
               }}
             />
-            <CodeSearch appId={appId} />
           </div>
           {hasSearchContent && (
             <motion.div
