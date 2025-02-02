@@ -128,6 +128,27 @@ class BalanceStore {
     const subscription = await subscriptionService.getSubscription(globalStore.organizationId)
     if (!subscription) {
       message.error("请先订阅服务")
+      this.showRechargeModal(true)
+      return false
+    }
+
+    // 检查套餐是否过期
+    const subscriptionStatus = await subscriptionService.checkSubscriptionStatus(globalStore.organizationId)
+    if (subscriptionStatus.status === 'expired') {
+      message.error({
+        content: (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <span>您的套餐已过期,请续费后继续使用</span>
+            </div>
+            <div className="text-xs text-default-500">
+              提示:续费套餐后即可继续使用AI功能
+            </div>
+          </div>
+        ),
+        duration: 5000,
+      })
+      this.showRechargeModal(true)
       return false
     }
 
@@ -140,6 +161,7 @@ class BalanceStore {
           <p className='text-xs text-gray-500'>当前余额: {this.actualBalance.toFixed(2)} 塔币</p>
         </div>
       )
+      this.showRechargeModal(false)
       return false
     }
     if (accountId) {
