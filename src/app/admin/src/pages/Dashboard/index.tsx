@@ -7,7 +7,6 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import ProductManagerModal from "./ProductManagerModal"
 import StatsSection from "./StatsSection"
 import WelcomeCard from "./WelcomeCard"
-import AIChat from "@/app/admin/src/components/AIChat"
 import { useNavigate } from "react-router-dom"
 import { useMetadata } from "@/hooks/metadata"
 import { apiService } from "@/service/apis/api"
@@ -113,7 +112,6 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [showProductManager, setShowProductManager] = useState(false)
   const [fileCount, setFileCount] = useState(0)
-  const [showAIChat, setShowAIChat] = useState(false)
   const { userInfo } = useGlobalUser()
   const isAdmin = userInfo?.account === "admin"
 
@@ -332,24 +330,12 @@ const Dashboard: React.FC = () => {
 
       <ProductManagerModal isOpen={showProductManager} onClose={() => setShowProductManager(false)} />
 
-      <AIChat isOpen={showAIChat} onClose={() => setShowAIChat(false)} />
-
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 1 }}
         className='fixed bottom-6 right-6'
-      >
-        <Button
-          isIconOnly
-          color='primary'
-          size='lg'
-          className='rounded-full shadow-lg hover:shadow-xl transition-shadow'
-          onPress={() => setShowAIChat(true)}
-        >
-          <Icon icon='hugeicons:ai-chat-02' className='w-6 h-6' />
-        </Button>
-      </motion.div>
+      ></motion.div>
     </div>
   )
 }

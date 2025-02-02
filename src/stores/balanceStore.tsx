@@ -17,6 +17,7 @@ class BalanceStore {
   balance: number = 0
   actualBalance: number = 0
   loading: boolean = false
+  isRechargeModalOpen: boolean = false
   private readonly ACCOUNT_BALANCE_KEY = "account-balances"
 
   constructor() {
@@ -33,6 +34,14 @@ class BalanceStore {
 
   setLoading(loading: boolean) {
     this.loading = loading
+  }
+
+  showRechargeModal(isSubscription: boolean = false) {
+    this.isRechargeModalOpen = true
+  }
+
+  hideRechargeModal() {
+    this.isRechargeModalOpen = false
   }
 
   // 获取所有账号额度信息
@@ -63,7 +72,7 @@ class BalanceStore {
       const res = await getMetadata([this.ACCOUNT_BALANCE_KEY])
       let balances = res?.data?.[0]?.value ? JSON.parse(res.data[0].value) : {}
 
-      // 2. 更新指定账户的已使用额度（累加）
+      // 2. 更新指定账户的已使用额度(累加)
       balances[accountId] = balances[accountId] || { limit: 10, used: 0 }
       balances[accountId].used = Number((balances[accountId].used + cost).toFixed(4))
 

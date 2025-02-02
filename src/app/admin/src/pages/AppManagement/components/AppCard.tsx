@@ -29,7 +29,6 @@ import { PermissionModal } from "@/app/admin/src/permissions/components/Permissi
 import message from "@/components/Message"
 import { useCurrentUser } from "@/app/admin/src/permissions/hooks/useCurrentUser"
 import { queryRamAccount } from "@/service/apis/user"
-import html2canvas from "html2canvas"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 
 interface AppCardProps {
@@ -416,14 +415,6 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
                         color='primary'
                         startContent={<Icon icon='hugeicons:ai-chat-02' className='w-5 h-5' />}
                         onPress={() => navigate(`/admin/apps/${app.id}/builder`)}
-                      ></Button>
-
-                      <Button
-                        size='sm'
-                        variant='flat'
-                        color='danger'
-                        startContent={<Icon icon='mdi:shield-lock' className='w-5 h-5' />}
-                        onPress={onPermissionModalOpen}
                       ></Button>
 
                       <Dropdown>
