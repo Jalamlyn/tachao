@@ -8,14 +8,11 @@ import { balanceStore } from "@/stores/balanceStore"
 import globalStore from "@/globalStore"
 
 const AI_MODELS = {
-  // BASIC: "anthropic/claude-3.5-haiku-20241022",
-  BASIC: "deepseek/deepseek-chat",
+  BASIC: "anthropic/claude-3.5-haiku-20241022",
   // BASIC: "deepseek/deepseek-r1",
-  // ADVANCED: "anthropic/claude-3.5-sonnet:beta",
-  // ADVANCED: "deepseek/deepseek-r1",
+  ADVANCED: "anthropic/claude-3.5-sonnet:beta",
   // ADVANCED: "google/gemini-2.0-flash-exp:free",
-  ADVANCED: "deepseek/deepseek-chat",
-  USER: "deepseek/deepseek-r1:free",
+  // ADVANCED: "deepseek/deepseek-r1",
 }
 
 function selectModel(messages) {
@@ -60,8 +57,7 @@ export default async function chatChunkOpenAIOffice(
   isFirst = true,
   temperature = 0,
   overFlag = "YES",
-  promptData = {},
-  isUSER
+  promptData = {}
 ) {
   let _messages = messages
   if (isFirst) {
@@ -93,11 +89,11 @@ export default async function chatChunkOpenAIOffice(
     })
   }
 
-  const apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-openrouter"
+  const apiEndPoint = "https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-openrouter"
   // const apiEndPoint = "https://api.openai-prc.com"
 
   // 选择模型
-  const selectedModel = isUSER ? AI_MODELS.USER : selectModel(_messages)
+  const selectedModel = selectModel(_messages)
   // 保存当前使用的模型到 sessionStorage
   sessionStorage.setItem("currentAIModel", selectedModel)
 

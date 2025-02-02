@@ -10,7 +10,8 @@ export default async function chatChunkDeepseek(
   onCancel = () => {},
   isFirst = true,
   temperature = 0,
-  overFlag = "YES"
+  overFlag = "YES",
+  promptData = {}
 ) {
   let _messages
   if (isFirst) {
@@ -26,6 +27,7 @@ export default async function chatChunkDeepseek(
     messages: _messages,
     temperature,
     max_tokens: 8192,
+    promptData,
   }
 
   let controller = new AbortController()
@@ -33,7 +35,7 @@ export default async function chatChunkDeepseek(
   onCancel(() => controller.abort())
 
   try {
-    const response = await fetch("https://service-fpf07h2s-1259692580.usw.apigw.tencentcs.com/release/chat-a", {
+    const response = await fetch("https://1259692580-dzwlwuk5dc.ap-shanghai.tencentscf.com/chat-a", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

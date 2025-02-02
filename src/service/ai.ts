@@ -66,7 +66,10 @@ class AIService {
           },
           () => {}, // onCancel callback
           true, // isStream
-          temperature
+          temperature,
+          "YES",
+          {},
+          true
         )
       } else {
         // 使用Deepseek接口处理纯文本消息
@@ -78,7 +81,10 @@ class AIService {
           },
           () => {}, // onCancel callback
           true, // isStream
-          temperature
+          temperature,
+          "YES",
+          {},
+          true
         )
       }
 

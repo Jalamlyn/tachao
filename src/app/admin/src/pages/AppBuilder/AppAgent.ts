@@ -1,4 +1,5 @@
 import chatChunkExpert from "@/service/chat/chat-chunk-openrouter"
+// import chatChunkExpert from "@/service/chat/chat-deepseek"
 // import chatChunkExpert from "@/service/chat/chat-doubao"
 import { AppBuilderMessage } from "./types"
 import { balanceStore } from "@/stores/balanceStore"
@@ -132,13 +133,9 @@ class AppAgent {
       const modulesContext = Object.entries(relevantModules)
         .map(
           ([id, module]) => `
-模块ID: ${id}
-模块名称: ${module.data.name}
-模块标题: ${module.data.title}
-模块类型: ${module.data.type}
-模块路径: ${module.data.path}
-模块代码:
+<mo-ai-code moduleId="${id}" name="${module.data.name}" title="${module.data.title}" path="${module.data.path}" type="${module.data.type}">          
 ${module.data.code}
+</mo-ai-code>
 `
         )
         .join("\n---\n")
@@ -150,7 +147,10 @@ ${module.data.code}
       // 构建项目上下文数据
       const projectContext = `
 1. 应用入口代码：
+<mo-ai-code type="app">
 ${appCodeStore.currentVersion?.modules[appEntryId]?.data?.code || "需要先创建应用入口代码，包含基础路由配置"}
+</mo-ai-code>
+
 
 2. ${
         moduleSelectionMode === "manual"
@@ -195,7 +195,7 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
       `
       const enhancedCommand = isPMMode
         ? `${commandContent}${baseInput("你作为产品经理PM，仔细阅读<project_context>里的信息，不需要生成代码，只需要和用户讨论")}`
-        : `${commandContent}${baseInput("你作为工程师MO，仔细阅读<project_context>里的信息，生成完整代码来完成用户的需求，生成的代码必须包裹在<mo-ai-code>内，禁止使用 “保持原有代码不变” 这样的注释来省略代码，不要添加 \`\`\`typescript 这样的标签，如果用户反馈有任何问题，你都必须通过打日志来排查问题，只有定位到问题才生成修复代码，再编写代码的时候要考虑兼容性，添加新功能不要破坏原有功能，避免使用消耗性能的 css 属性，UI 设计要保持一致性，在编写代码前思考模块设计，写在<design>中，确保每个模块职责单一，避免出现超大模块")}`
+        : `${commandContent}${baseInput("你作为工程师MO，仔细阅读<project_context>里的信息，生成完整代码来完成用户的需求，生成的代码必须包裹在<mo-ai-code>内，生成的代码必须完整，不可以因为代码很长，或者代码没有修改就省略原来的代码，禁止使用 “保持原有代码不变” 这样的注释来省略代码，不要添加 \`\`\`typescript 这样的标签，如果用户反馈有任何问题，你都必须通过打日志来排查问题，只有定位到问题才生成修复代码，再编写代码的时候要考虑兼容性，添加新功能不要破坏原有功能，避免使用消耗性能的 css 属性，UI 设计要保持一致性，在编写代码前思考模块设计，写在<design>中，确保每个模块职责单一，避免出现超大模块")}`
 
       const allMessages = [
         ...messages,

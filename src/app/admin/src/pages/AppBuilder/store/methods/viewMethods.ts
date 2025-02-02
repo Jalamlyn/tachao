@@ -252,8 +252,8 @@ export function getFilteredCodeItems(this: AppCodeStore) {
 
   return items.filter(
     (item) =>
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.type.toLowerCase().includes(searchQuery.toLowerCase())
+      item?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item?.type?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 }
 
