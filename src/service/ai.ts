@@ -1,4 +1,4 @@
-import chatChunk from "@/service/chat/chat-chunk-openrouter"
+import chatChunk from "@/service/chat/chat-chunk-sc"
 
 // 计算费用的函数
 
