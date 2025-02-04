@@ -37,14 +37,16 @@ function selectModel(messages) {
 // 清理AI响应中的代码块
 function cleanAIResponse(content) {
   if (typeof content === "string") {
-    return content.replace(/<mo-ai-code[^>]*>[\s\S]*?<\/mo-ai-code>/g, "")
+    return content.replace(/<mo-ai-code[^>]*>[\s\S]*?<\/mo-ai-code>/g, "").replace(/<think[^>]*>[\s\S]*?<\/think>/g, "")
   }
   if (Array.isArray(content)) {
     return content.map((item) => {
       if (item.type === "text" && typeof item.text === "string") {
         return {
           ...item,
-          text: item.text.replace(/<mo-ai-code[^>]*>[\s\S]*?<\/mo-ai-code>/g, ""),
+          text: item.text
+            .replace(/<mo-ai-code[^>]*>[\s\S]*?<\/mo-ai-code>/g, "")
+            .replace(/<think[^>]*>[\s\S]*?<\/think>/g, ""),
         }
       }
       return item
@@ -117,7 +119,7 @@ export default async function chatChunkOpenAIOffice(
       return
     }
   }
-  
+
   const payload = {
     model: selectedModel,
     messages: _messages,
