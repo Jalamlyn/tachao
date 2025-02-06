@@ -6,7 +6,6 @@ import { calculateActualBalance, Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
 import { observer } from "mobx-react-lite"
 import { context } from "./functionContext"
-import { PermissionCheck } from "@/app/admin/src/permissions/components/PermissionCheck"
 import { localDB } from "@/utils/localDB"
 import { getPublicMetaData } from "@/service/apis/metadata"
 import { balanceStore } from "@/stores/balanceStore"
@@ -173,38 +172,20 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
     </div>
   )
 
-  const content = (
+  return (
     <>
-      <Provider>
-        <AppContext.Provider value={{ appId }}>
-          <AppRender
-            appId={appId}
-            basename={`/app-run/${appId}`}
-            onError={(error) => {
-              console.error("Runtime error:", error)
-              message.error(`运行错误: ${error.message}`)
-            }}
-          />
-        </AppContext.Provider>
-      </Provider>
+      <AppContext.Provider value={{ appId }}>
+        <AppRender
+          appId={appId}
+          basename={`/app-run/${appId}`}
+          onError={(error) => {
+            console.error("Runtime error:", error)
+            message.error(`运行错误: ${error.message}`)
+          }}
+        />
+      </AppContext.Provider>
       <BrandMark />
     </>
-  )
-
-  if (appInfo?.accessControl?.isPublic) {
-    return content
-  }
-
-  // 如果需要登录就可以访问，且用户已登录，直接显示内容
-  if (appInfo?.accessControl?.requireAuth && user) {
-    return content
-  }
-
-  // 其他情况（需要特定权限）才进行权限检查
-  return (
-    <PermissionCheck resourceType='app' resourceId={appId}>
-      {content}
-    </PermissionCheck>
   )
 })
 
