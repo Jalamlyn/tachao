@@ -81,7 +81,7 @@ const AppBuilder: React.FC = observer(() => {
           路由路径: ${errorInfo.context?.route}
           ${errorInfo.context?.type === "module_error" ? "这是一个模块执行错误。" : ""}
           
-          请分析错误原因并生成修复后的完整代码, 每个模块的代码都必须完整, 不能用注释省略任何部分。无论是多小的修改都要给出整个模块的完整代码`
+          请分析错误原因并生成修复后的完整代码, 每个模块的代码都必须完整, 不能用注释省略任何部分。无论是多小的修改都要给出整个模块的完整代码，如果是模块导入超时的错误，你要检查下所有导入的模块是否都正确实现并导出`
 
         processCommand(fixPrompt)
       } else if (event.data.type === "LOG") {
