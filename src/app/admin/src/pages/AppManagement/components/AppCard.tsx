@@ -276,19 +276,9 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
   }
 
   const getAccessControlLabel = () => {
-    if (app.accessControl?.isPublic)
-      return {
-        color: "success",
-        label: "所有用户可访问",
-      }
-    if (app.accessControl?.requireAuth)
-      return {
-        color: "primary",
-        label: "所有登录用户可访问",
-      }
     return {
-      color: "default",
-      label: "指定用户可访问",
+      color: "success",
+      label: "所有用户可访问",
     }
   }
 

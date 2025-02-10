@@ -8,16 +8,22 @@ import { balanceStore } from "@/stores/balanceStore"
 import globalStore from "@/globalStore"
 
 const AI_MODELS = {
-  // BASIC: "anthropic/claude-3.5-haiku-20241022",
-  BASIC: "deepseek/deepseek-r1:free",
-  // BASIC: "deepseek/deepseek-r1",
-  // ADVANCED: "anthropic/claude-3.5-sonnet:beta",
-  // ADVANCED: "deepseek/deepseek-r1",
-  // ADVANCED: "google/gemini-2.0-flash-exp:free",
+  // BASIC: "anthropic/claude-3.5-sonnet:beta",
+  // BASIC: "deepseek/deepseek-r1:free",
+  // BASIC: "google/gemini-2.0-flash-001",
+  // BASIC: "google/gemini-2.0-flash-thinking-exp:free",
+  BASIC: "anthropic/claude-3.5-haiku-20241022",
+  ADVANCED: "anthropic/claude-3.5-sonnet",
+  // ADVANCED: "anthropic/claude-3.5-sonnet",
+  // ADVANCED: "deepseek/deepseek-chat",
+  // ADVANCED: "google/gemini-2.0-flash-thinking-exp:free",
   // ADVANCED: "deepseek/deepseek-r1:free",
   // ADVANCED: "google/gemini-2.0-flash-001",
-  ADVANCED: "google/gemini-2.0-pro-exp-02-05:free",
-  USER: "deepseek/deepseek-r1:free",
+  // ADVANCED: "google/gemini-2.0-flash-thinking-exp:free",
+  // ADVANCED: "anthropic/claude-3.5-haiku-20241022:beta",
+  // ADVANCED: "google/gemini-2.0-pro-exp-02-05:free",
+  // ADVANCED: "deepseek/deepseek-r1",
+  USER: "google/gemini-2.0-flash-thinking-exp:free",
 }
 
 function selectModel(messages) {
@@ -183,7 +189,7 @@ export default async function chatChunkOpenAIOffice(
             totalUsage.candidatesTokenCount += parsed.usage.completion_tokens || 0
           }
 
-          if (parsed?.choices[0]?.finish_reason === "max_tokens") {
+          if (parsed?.choices[0]?.finish_reason === "length") {
             const lastTenChars = fullContent.slice(-10)
             await chatChunkOpenAIOffice(
               _messages.concat([

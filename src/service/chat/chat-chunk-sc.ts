@@ -14,7 +14,7 @@ const AI_MODELS = {
   // ADVANCED: "anthropic/claude-3.5-sonnet:beta",
   // ADVANCED: "deepseek/deepseek-r1",
   // ADVANCED: "google/gemini-2.0-flash-exp:free",
-  ADVANCED: "deepseek-ai/DeepSeek-R1",
+  ADVANCED: "deepseek-ai/DeepSeek-V3",
   USER: "deepseek-ai/DeepSeek-R1",
 }
 

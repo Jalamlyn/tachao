@@ -36,3 +36,5 @@ export const AppRender: React.FC<AppRenderProps> = ({ appId, basename, onError, 
     </ErrorBoundary>
   )
 }
+
+

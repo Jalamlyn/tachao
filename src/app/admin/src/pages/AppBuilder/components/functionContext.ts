@@ -201,7 +201,11 @@ const wpm = {
   export: wpmOriginal.export,
   import: async (moduleName: string) => {
     // 创建一个超时 Promise
-    const timeoutPromise = new Promise((_, reject) => {})
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`模块 ${moduleName} 导入超时(5秒)`))
+      }, 5000)
+    })
 
     try {
       // 使用 Promise.race 竞争
@@ -209,14 +213,13 @@ const wpm = {
 
       // 检查结果是否有效
       if (!result) {
-        const error = new Error(
-          `模块 ${moduleName} 未实现或返回值为空，请确保：\n1. 模块已正确导出\n2. 导出的内容不为空`
-        )
+        const error = new Error(`模块 ${moduleName} 未实现或返回值为空,请确保:\n1. 模块已正确导出\n2. 导出的内容不为空`)
         logStore.error(`模块导入失败: ${moduleName}`, { error: error.message })
         throw error
       }
 
       logStore.info(`模块导入成功: ${moduleName}`)
+      console.log(`模块导入成功: ${moduleName}`, result)
       return result
     } catch (error) {
       logStore.error(`模块导入错误: ${moduleName}`, { error: error.message })
