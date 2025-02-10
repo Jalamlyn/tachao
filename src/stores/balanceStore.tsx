@@ -4,6 +4,7 @@ import message from "@/components/Message"
 import { subscriptionService } from "@/app/admin/src/permissions/utils/permissionUtils"
 import globalStore from "@/globalStore"
 import { costService } from "@/utils/costService"
+import { getAccount } from "@/service/apis/pay"
 
 interface AccountBalance {
   limit: number
@@ -131,17 +132,16 @@ class BalanceStore {
     // 检查套餐是否过期
     const subscriptionStatus = await subscriptionService.checkSubscriptionStatus(globalStore.organizationId)
     if (subscriptionStatus.status === "expired") {
-      message.error({
-        content: (
-          <div className='flex flex-col gap-2'>
-            <div className='flex items-center gap-2'>
-              <span>您的套餐已过期,请续费后继续使用</span>
-            </div>
-            <div className='text-xs text-default-500'>提示:续费套餐后即可继续使用AI功能</div>
+      message.error(
+        <div className='flex flex-col gap-2'>
+          <div className='flex items-center gap-2'>
+            <span>您的套餐已过期,请续费后继续使用</span>
           </div>
-        ),
-        duration: 5000,
-      })
+          <div className='text-xs text-default-500'>提示:续费套餐后即可继续使用AI功能</div>
+        </div>,
+        { duration: 5000 }
+      )
+
       this.showRechargeModal(true)
       return false
     }
@@ -179,15 +179,15 @@ class BalanceStore {
       const balanceRes = await getMetadata(["balance"])
       const totalBalance = balanceRes?.data?.[0]?.value ? Number(balanceRes.data[0].value) : 0
       this.setBalance(totalBalance)
-
       // 获取总消费
       const costTotal = await costService.getCostTotal()
+      const accountRes = await getAccount()
       const totalCost = costTotal.totalCost || 0
 
       // 计算实际可用余额
-      const actualBalance = totalBalance - totalCost
+      const actualBalance = (accountRes.totalComputePower / 100).toFixed(2) - totalCost
       this.setActualBalance(actualBalance)
-      
+
       // 同步到全局状态
       globalStore.actualBalance = actualBalance
     } catch (error) {

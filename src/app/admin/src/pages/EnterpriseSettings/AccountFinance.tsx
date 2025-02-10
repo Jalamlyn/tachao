@@ -28,7 +28,7 @@ const AccountFinance = observer(() => {
     fetchAccountData()
     fetchSubscriptionData()
     fetchBalanceLogs()
-
+    balanceStore.fetchBalance()
     // 监听余额变化
     const disposer = reaction(
       () => balanceStore.actualBalance,
