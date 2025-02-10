@@ -9,6 +9,7 @@ import {
   SubscriptionHistory,
 } from "../types"
 import { hasRequiredPermission } from "../config/constants"
+import { costService } from "@/utils/costService"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
 
@@ -129,7 +130,7 @@ export const hasPermission = async (resourceType: ResourceType, resourceId: stri
     const permissions = await getResourcePermissions(resourceType)
     const resourcePermission = permissions[resourceId]
 
-    // 3. 如果资源不存在权限设置，默认为非公开访问
+    // 3. 如果资源不存在权限设置,默认为非公开访问
     if (!resourcePermission) {
       console.log("Permission check failed: No permission settings found for resource")
       return false
@@ -167,7 +168,7 @@ export const hasPermission = async (resourceType: ResourceType, resourceId: stri
       return true
     }
 
-    // 8. 如果是应用类型，检查应用索引中的创建者信息
+    // 8. 如果是应用类型,检查应用索引中的创建者信息
     if (resourceType === "app") {
       try {
         const appIndexResult = await getMetadata(["app_index"])
@@ -270,7 +271,7 @@ export const addPermission = async (
   )
 
   if (existingPermission) {
-    return // 如果已经有永久权限，直接返回
+    return // 如果已经有永久权限,直接返回
   }
 
   // 检查是否已有普通权限
@@ -367,7 +368,7 @@ export const setResourceAccessControl = async (
     // 1. 更新权限信息
     const permissions = await getResourcePermissions(resourceType)
 
-    // 如果资源没有权限记录，创建一个新的权限记录
+    // 如果资源没有权限记录,创建一个新的权限记录
     if (!permissions[resourceId]) {
       permissions[resourceId] = {
         resourceType,
@@ -444,6 +445,14 @@ export const subscriptionService = {
         subscription.expireDate = new Date(currentExpireDate.getTime() + oneMonth).toISOString()
       }
 
+      // 记录订阅费用
+      await costService.recordSubscriptionCost(
+        subscription.type === "personal" ? "个人版" : "企业版",
+        1, // 默认1个月
+        subscription.price,
+        subscription.features
+      )
+
       await this.addSubscriptionHistory(orgId, {
         type: subscription.type,
         price: subscription.price,
@@ -452,25 +461,6 @@ export const subscriptionService = {
       })
 
       await setMetadata(METADATA_KEYS.SUBSCRIPTION(orgId), JSON.stringify(subscription))
-
-      const costRecords = await getMetadata(["ai-cost-records"])
-      const existingRecords = costRecords?.data[0]?.value ? JSON.parse(costRecords.data[0].value) : []
-
-      const newRecord = {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        type: "subscription",
-        totalCost: subscription.price,
-        detail: {
-          subscription: {
-            plan: subscription.type === "personal" ? "个人版" : "企业版",
-            duration: 1,
-            features: subscription.features,
-          },
-        },
-      }
-
-      setMetadata("ai-cost-records", [...existingRecords, newRecord])
     } catch (error) {
       console.error("Error updating subscription:", error)
       throw error
