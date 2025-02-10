@@ -3,6 +3,7 @@ import { getMetadata, setMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
 import { subscriptionService } from "@/app/admin/src/permissions/utils/permissionUtils"
 import globalStore from "@/globalStore"
+import { costService } from "@/utils/costService"
 
 interface AccountBalance {
   limit: number
@@ -174,12 +175,21 @@ class BalanceStore {
   async fetchBalance() {
     this.setLoading(true)
     try {
-      const res = await getMetadata(["balance"])
-      if (res?.data?.[0]?.value) {
-        const balance = Number(res.data[0].value)
-        this.setBalance(balance)
-        this.setActualBalance(balance)
-      }
+      // 获取总余额
+      const balanceRes = await getMetadata(["balance"])
+      const totalBalance = balanceRes?.data?.[0]?.value ? Number(balanceRes.data[0].value) : 0
+      this.setBalance(totalBalance)
+
+      // 获取总消费
+      const costTotal = await costService.getCostTotal()
+      const totalCost = costTotal.totalCost || 0
+
+      // 计算实际可用余额
+      const actualBalance = totalBalance - totalCost
+      this.setActualBalance(actualBalance)
+      
+      // 同步到全局状态
+      globalStore.actualBalance = actualBalance
     } catch (error) {
       console.error("Failed to fetch balance", error)
     } finally {
