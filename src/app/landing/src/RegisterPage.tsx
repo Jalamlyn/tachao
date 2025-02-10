@@ -1,5 +1,15 @@
-import React, { useState } from "react"
-import { Card, CardBody, Button, Input } from "@nextui-org/react"
+import React, { useState, useRef } from "react"
+import {
+  Button,
+  Input,
+  Checkbox,
+  Link,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { useForm, Controller } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
@@ -7,27 +17,30 @@ import * as yup from "yup"
 import { createEnterPrise, smsCaptcha } from "@/service/apis/api"
 import { message } from "@/components/Message"
 import { useNavigate } from "react-router-dom"
-import { motion } from "framer-motion"
+import { useTranslation } from "react-i18next"
 
 const schema = yup.object().shape({
-  name: yup.string().required("企业名称不能为空").trim(),
-  phone: yup.string().required("手机号不能为空").trim(),
-  smsCode: yup.string().required("验证码不能为空").trim(),
+  name: yup.string().required("enterprise_name_required").trim(),
+  phone: yup.string().required("phone_required").trim(),
+  smsCode: yup.string().required("sms_code_required").trim(),
   password: yup
     .string()
-    .min(8, "密码至少8位")
-    .matches(/[a-zA-Z]/, "密码必须包含字母")
-    .matches(/[0-9]/, "密码必须包含数字")
-    .required("密码不能为空")
+    .min(8, "password_min_length")
+    .matches(/[a-zA-Z]/, "password_letter_required")
+    .matches(/[0-9]/, "password_number_required")
+    .required("password_required")
     .trim(),
+  agreeTerms: yup.boolean().oneOf([true], "agree_terms_required"),
 })
 
-const RegisterPage = () => {
+export default function RegisterPage() {
+  const { t } = useTranslation()
   const [isVisible, setIsVisible] = useState(false)
   const [registerLoading, setRegisterLoading] = useState(false)
   const [smsLoading, setSmsLoading] = useState(false)
   const [smsCooldown, setSmsCooldown] = useState(0)
-  const navigate = useNavigate()
+  const [registerSuccessModalVisible, setRegisterSuccessModalVisible] = useState(false)
+  const navigator = useNavigate()
 
   const toggleVisibility = () => setIsVisible(!isVisible)
 
@@ -42,197 +55,174 @@ const RegisterPage = () => {
 
   const onSubmit = async (data) => {
     setRegisterLoading(true)
-    try {
-      data.description = data.name
-      data.organizationCode = data.name
-      const res = await createEnterPrise(data)
-      if (res) {
-        message.success("注册成功!请使用手机号登录")
-        navigate("/login")
-      }
-    } catch (error) {
-      console.error("Registration failed:", error)
-      message.error(error.response?.data?.message || "注册失败,请重试")
-    } finally {
-      setRegisterLoading(false)
+    data.description = data.name
+    data.organizationCode = data.name
+    const res = await createEnterPrise(data)
+    if (res.code !== 400) {
+      setRegisterSuccessModalVisible(true)
+    } else {
+      message.error(res.message)
     }
+
+    setRegisterLoading(false)
   }
 
   const handleSendSms = async () => {
     const phone = getValues("phone")
     if (!phone) {
-      return message.error("请输入手机号")
+      return message.error(t("phone_required"))
     }
 
     setSmsLoading(true)
-    try {
-      await smsCaptcha(phone)
-      message.success("验证码已发送")
-      const cooldownTime = Date.now() + 60000
-      localStorage.setItem("smsCooldown", cooldownTime.toString())
-      setSmsCooldown(60)
-      const interval = setInterval(() => {
-        setSmsCooldown((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-    } catch (error) {
-      console.error("SMS send failed:", error)
-      message.error(error.response?.data?.message || "发送验证码失败,请重试")
-    } finally {
-      setSmsLoading(false)
-    }
+    const res = await smsCaptcha(phone)
+
+    message.success(t("sms_sent"))
+    const cooldownTime = Date.now() + 60000
+    localStorage.setItem("smsCooldown", cooldownTime)
+    setSmsCooldown(60)
+    const interval = setInterval(() => {
+      setSmsCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    setSmsLoading(false)
+  }
+
+  const handleRegisterSuccessModalClose = () => {
+    setRegisterSuccessModalVisible(false)
+    navigator("/login")
   }
 
   return (
-    <div className='min-h-screen relative bg-gradient-to-b from-[#2D1B69] via-[#1E1656] to-[#19073B]'>
-      <div className="absolute inset-0 bg-[url('/assets/grid.svg')] opacity-20" />
-      <div className='container mx-auto px-4 min-h-screen flex items-center justify-center'>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className='w-full max-w-md'
-        >
-          <Card className='bg-white/20 border bg-white border-white/30 shadow-2xl backdrop-blur-sm'>
-            <CardBody className='gap-4 p-8'>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className='space-y-6'
-              >
-                <h1 className='text-2xl font-bold text-white'>企业注册</h1>
-                <p className='text-white/80'>注册即想智能账号,开启AI驱动的企业管理之旅</p>
-              </motion.div>
-
-              <form className='flex flex-col gap-4 mt-4' onSubmit={handleSubmit(onSubmit)}>
-                <Controller
-                  name='name'
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      label='企业名称'
-                      placeholder='请输入企业名称'
-                      variant='bordered'
-                      isInvalid={!!errors.name}
-                      errorMessage={errors.name?.message}
-                      classNames={{
-                        label: "text-white",
-                        input: "text-white",
-                      }}
-                    />
-                  )}
+    <div className='flex h-screen w-screen items-center justify-center p-2 sm:p-4 lg:p-8'>
+      <div className='flex w-full max-w-sm flex-col gap-4 rounded-large bg-content1 px-8 pb-10 pt-6 shadow-small'>
+        <p className='pb-2 text-xl font-medium'>{t("welcome_register_mobenai")}</p>
+        <form className='flex flex-col gap-3' onSubmit={handleSubmit(onSubmit)}>
+          <Controller
+            name='name'
+            control={control}
+            render={({ field }) => (
+              <Input
+                isRequired
+                {...field}
+                label={t("enterprise_name")}
+                placeholder={t("enter_enterprise_name")}
+                type='text'
+                variant='bordered'
+                isInvalid={!!errors.name}
+                errorMessage={t(errors.name?.message)}
+              />
+            )}
+          />
+          <Controller
+            name='phone'
+            control={control}
+            render={({ field }) => (
+              <Input
+                isRequired
+                {...field}
+                label={t("phone_number")}
+                placeholder={t("enter_phone_number")}
+                type='tel'
+                variant='bordered'
+                isInvalid={!!errors.phone}
+                errorMessage={t(errors.phone?.message)}
+              />
+            )}
+          />
+          <div className='flex gap-2 items-center'>
+            <Controller
+              name='smsCode'
+              control={control}
+              render={({ field }) => (
+                <Input
+                  isRequired
+                  {...field}
+                  label={t("verification_code")}
+                  placeholder={t("enter_verification_code")}
+                  type='text'
+                  variant='bordered'
+                  isInvalid={!!errors.smsCode}
+                  errorMessage={t(errors.smsCode?.message)}
                 />
-
-                <Controller
-                  name='phone'
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      label='手机号码'
-                      placeholder='请输入手机号'
-                      variant='bordered'
-                      isInvalid={!!errors.phone}
-                      errorMessage={errors.phone?.message}
-                      classNames={{
-                        label: "text-white",
-                        input: "text-white",
-                      }}
-                    />
-                  )}
-                />
-
-                <div className='flex gap-2'>
-                  <Controller
-                    name='smsCode'
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        {...field}
-                        label='验证码'
-                        placeholder='请输入验证码'
-                        variant='bordered'
-                        isInvalid={!!errors.smsCode}
-                        errorMessage={errors.smsCode?.message}
-                        classNames={{
-                          label: "text-white",
-                          input: "text-white",
-                        }}
-                      />
+              )}
+            />
+            <Button size='lg' onClick={handleSendSms} disabled={smsCooldown > 0 || smsLoading}>
+              {smsCooldown > 0 ? t("resend_code_countdown", { seconds: smsCooldown }) : t("send_verification_code")}
+            </Button>
+          </div>
+          <Controller
+            name='password'
+            control={control}
+            render={({ field }) => (
+              <Input
+                isRequired
+                {...field}
+                endContent={
+                  <button type='button' onClick={toggleVisibility}>
+                    {isVisible ? (
+                      <Icon className='pointer-events-none text-2xl text-default-400' icon='solar:eye-closed-linear' />
+                    ) : (
+                      <Icon className='pointer-events-none text-2xl text-default-400' icon='solar:eye-bold' />
                     )}
-                  />
-                  <Button
-                    className='self-end mb-1'
-                    onClick={handleSendSms}
-                    disabled={smsCooldown > 0 || smsLoading}
-                    isLoading={smsLoading}
-                  >
-                    {smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码"}
-                  </Button>
-                </div>
-
-                <Controller
-                  name='password'
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      label='密码'
-                      placeholder='请设置登录密码'
-                      type={isVisible ? "text" : "password"}
-                      variant='bordered'
-                      isInvalid={!!errors.password}
-                      errorMessage={errors.password?.message}
-                      endContent={
-                        <button type='button' onClick={toggleVisibility}>
-                          {isVisible ? (
-                            <Icon className='text-2xl text-default-400' icon='solar:eye-closed-linear' />
-                          ) : (
-                            <Icon className='text-2xl text-default-400' icon='solar:eye-bold' />
-                          )}
-                        </button>
-                      }
-                      classNames={{
-                        label: "text-white",
-                        input: "text-white",
-                      }}
-                    />
-                  )}
-                />
-
-                <div className='flex gap-2 mt-4'>
-                  <Button
-                    color='primary'
-                    className='flex-1'
-                    type='submit'
-                    isLoading={registerLoading}
-                    startContent={!registerLoading && <Icon icon='solar:user-plus-rounded-bold' />}
-                  >
-                    注册
-                  </Button>
-                  <Button
-                    variant='flat'
-                    className='flex-1'
-                    onClick={() => navigate("/login")}
-                    startContent={<Icon icon='solar:login-2-bold' />}
-                  >
-                    返回登录
-                  </Button>
-                </div>
-              </form>
-            </CardBody>
-          </Card>
-        </motion.div>
+                  </button>
+                }
+                label={t("password")}
+                placeholder={t("enter_password")}
+                type={isVisible ? "text" : "password"}
+                variant='bordered'
+                isInvalid={!!errors.password}
+                errorMessage={t(errors.password?.message)}
+              />
+            )}
+          />
+          {/* <Controller
+            name='agreeTerms'
+            control={control}
+            render={({ field }) => (
+              <Checkbox {...field} className='py-4' size='sm' isInvalid={!!errors.agreeTerms}>
+                {t("agree_terms_and_policy")}
+                <Link href='#' size='sm'>
+                  {t("terms_of_service")}
+                </Link>
+                {t("and")}
+                <Link href='#' size='sm'>
+                  {t("privacy_policy")}
+                </Link>
+              </Checkbox>
+            )}
+          /> */}
+          {errors.agreeTerms && <p className='text-tiny text-danger'>{t(errors.agreeTerms.message)}</p>}
+          <Button color='primary' type='submit' isLoading={registerLoading}>
+            {t("register")}
+          </Button>
+        </form>
+        <p className='text-center text-small'>
+          {t("already_have_account")}
+          <Link href='/login' size='sm'>
+            {t("login")}
+          </Link>
+        </p>
       </div>
+
+      <Modal isOpen={registerSuccessModalVisible} onClose={handleRegisterSuccessModalClose}>
+        <ModalContent>
+          <ModalHeader>{t("register_success")}</ModalHeader>
+          <ModalBody>
+            <p>{t("register_success_message")}</p>
+          </ModalBody>
+          <ModalFooter>
+            <Button color='primary' onClick={handleRegisterSuccessModalClose}>
+              {t("i_know")}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   )
 }
-
-export default RegisterPage
