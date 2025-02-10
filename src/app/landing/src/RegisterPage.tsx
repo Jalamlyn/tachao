@@ -1,45 +1,90 @@
 import React, { useState } from "react"
 import { Card, CardBody, Button, Input } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
-import { motion } from "framer-motion"
-import { useNavigate } from "react-router-dom"
-import { createEnterPrise } from "@/service/apis/api"
+import { useForm, Controller } from "react-hook-form"
+import { yupResolver } from "@hookform/resolvers/yup"
+import * as yup from "yup"
+import { createEnterPrise, smsCaptcha } from "@/service/apis/api"
 import { message } from "@/components/Message"
-import { PhoneVerification } from "@/components/PhoneVerification"
+import { useNavigate } from "react-router-dom"
+import { motion } from "framer-motion"
+
+const schema = yup.object().shape({
+  name: yup.string().required("企业名称不能为空").trim(),
+  phone: yup.string().required("手机号不能为空").trim(),
+  smsCode: yup.string().required("验证码不能为空").trim(),
+  password: yup
+    .string()
+    .min(8, "密码至少8位")
+    .matches(/[a-zA-Z]/, "密码必须包含字母")
+    .matches(/[0-9]/, "密码必须包含数字")
+    .required("密码不能为空")
+    .trim(),
+})
 
 const RegisterPage = () => {
   const [isVisible, setIsVisible] = useState(false)
   const [registerLoading, setRegisterLoading] = useState(false)
-  const [enterpriseName, setEnterpriseName] = useState("")
+  const [smsLoading, setSmsLoading] = useState(false)
+  const [smsCooldown, setSmsCooldown] = useState(0)
   const navigate = useNavigate()
 
   const toggleVisibility = () => setIsVisible(!isVisible)
 
-  const handleRegister = async (phone: string) => {
-    if (!enterpriseName.trim()) {
-      return message.error("请输入企业名称")
-    }
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+  } = useForm({
+    resolver: yupResolver(schema),
+  })
 
+  const onSubmit = async (data) => {
     setRegisterLoading(true)
     try {
-      const data = {
-        name: enterpriseName.trim(),
-        phone,
-        password: phone, // 使用手机号作为默认密码
-        description: enterpriseName.trim(),
-        organizationCode: enterpriseName.trim(),
-      }
-
+      data.description = data.name
+      data.organizationCode = data.name
       const res = await createEnterPrise(data)
       if (res) {
-        message.success("注册成功!请尽快修改默认密码")
+        message.success("注册成功!请使用手机号登录")
         navigate("/login")
       }
     } catch (error) {
       console.error("Registration failed:", error)
-      message.error("注册失败,请重试")
+      message.error(error.response?.data?.message || "注册失败,请重试")
     } finally {
       setRegisterLoading(false)
+    }
+  }
+
+  const handleSendSms = async () => {
+    const phone = getValues("phone")
+    if (!phone) {
+      return message.error("请输入手机号")
+    }
+
+    setSmsLoading(true)
+    try {
+      await smsCaptcha(phone)
+      message.success("验证码已发送")
+      const cooldownTime = Date.now() + 60000
+      localStorage.setItem("smsCooldown", cooldownTime.toString())
+      setSmsCooldown(60)
+      const interval = setInterval(() => {
+        setSmsCooldown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } catch (error) {
+      console.error("SMS send failed:", error)
+      message.error(error.response?.data?.message || "发送验证码失败,请重试")
+    } finally {
+      setSmsLoading(false)
     }
   }
 
@@ -53,26 +98,6 @@ const RegisterPage = () => {
           transition={{ duration: 0.6 }}
           className='w-full max-w-md'
         >
-          {/* 页面标题和说明 */}
-          <div className="text-center mb-6">
-            <motion.h1 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-3xl font-bold text-white mb-2"
-            >
-              企业注册
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="text-white/70"
-            >
-              注册即想智能账号,开启AI驱动的企业管理之旅
-            </motion.p>
-          </div>
-
           <Card className='bg-white/20 border bg-white border-white/30 shadow-2xl backdrop-blur-sm'>
             <CardBody className='gap-4 p-8'>
               <motion.div
@@ -81,91 +106,125 @@ const RegisterPage = () => {
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className='space-y-6'
               >
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold text-white">开始使用</h2>
-                  <p className="text-sm text-white/70">
-                    填写以下信息完成注册,注册后即可使用全部功能
-                  </p>
-                </div>
+                <h1 className='text-2xl font-bold text-white'>企业注册</h1>
+                <p className='text-white/80'>注册即想智能账号,开启AI驱动的企业管理之旅</p>
               </motion.div>
 
-              <form className='flex flex-col gap-4 mt-4' onSubmit={(e) => e.preventDefault()}>
-                <div className="space-y-1">
-                  <Input
-                    isRequired
-                    label='企业名称'
-                    placeholder='请输入企业名称'
-                    value={enterpriseName}
-                    onChange={(e) => setEnterpriseName(e.target.value)}
-                    variant='bordered'
-                    description="请输入营业执照上的企业全称"
-                    classNames={{
-                      label: "text-white",
-                      input: "text-white",
-                      description: "text-white/60"
-                    }}
-                    startContent={
-                      <Icon icon="solar:buildings-bold-duotone" className="text-white/50" />
-                    }
-                  />
-                </div>
+              <form className='flex flex-col gap-4 mt-4' onSubmit={handleSubmit(onSubmit)}>
+                <Controller
+                  name='name'
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      label='企业名称'
+                      placeholder='请输入企业名称'
+                      variant='bordered'
+                      isInvalid={!!errors.name}
+                      errorMessage={errors.name?.message}
+                      classNames={{
+                        label: "text-white",
+                        input: "text-white",
+                      }}
+                    />
+                  )}
+                />
 
-                <div className="space-y-2">
-                  <p className="text-sm text-white/70 mb-2">
-                    手机号验证
-                    <span className="text-xs ml-2 text-white/50">
-                      (将作为管理员账号使用)
-                    </span>
-                  </p>
-                  <PhoneVerification
-                    onSuccess={handleRegister}
-                    onError={(error) => {
-                      console.error("Phone verification failed:", error)
-                      message.error("手机号验证失败,请重试")
-                    }}
-                    buttonText="注册"
-                    loading={registerLoading}
-                  />
-                </div>
+                <Controller
+                  name='phone'
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      label='手机号码'
+                      placeholder='请输入手机号'
+                      variant='bordered'
+                      isInvalid={!!errors.phone}
+                      errorMessage={errors.phone?.message}
+                      classNames={{
+                        label: "text-white",
+                        input: "text-white",
+                      }}
+                    />
+                  )}
+                />
 
-                <div className='flex justify-between items-center mt-4'>
+                <div className='flex gap-2'>
+                  <Controller
+                    name='smsCode'
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        {...field}
+                        label='验证码'
+                        placeholder='请输入验证码'
+                        variant='bordered'
+                        isInvalid={!!errors.smsCode}
+                        errorMessage={errors.smsCode?.message}
+                        classNames={{
+                          label: "text-white",
+                          input: "text-white",
+                        }}
+                      />
+                    )}
+                  />
                   <Button
-                    variant='light'
+                    className='self-end mb-1'
+                    onClick={handleSendSms}
+                    disabled={smsCooldown > 0 || smsLoading}
+                    isLoading={smsLoading}
+                  >
+                    {smsCooldown > 0 ? `${smsCooldown}s` : "获取验证码"}
+                  </Button>
+                </div>
+
+                <Controller
+                  name='password'
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      label='密码'
+                      placeholder='请设置登录密码'
+                      type={isVisible ? "text" : "password"}
+                      variant='bordered'
+                      isInvalid={!!errors.password}
+                      errorMessage={errors.password?.message}
+                      endContent={
+                        <button type='button' onClick={toggleVisibility}>
+                          {isVisible ? (
+                            <Icon className='text-2xl text-default-400' icon='solar:eye-closed-linear' />
+                          ) : (
+                            <Icon className='text-2xl text-default-400' icon='solar:eye-bold' />
+                          )}
+                        </button>
+                      }
+                      classNames={{
+                        label: "text-white",
+                        input: "text-white",
+                      }}
+                    />
+                  )}
+                />
+
+                <div className='flex gap-2 mt-4'>
+                  <Button
+                    color='primary'
+                    className='flex-1'
+                    type='submit'
+                    isLoading={registerLoading}
+                    startContent={!registerLoading && <Icon icon='solar:user-plus-rounded-bold' />}
+                  >
+                    注册
+                  </Button>
+                  <Button
+                    variant='flat'
+                    className='flex-1'
                     onClick={() => navigate("/login")}
-                    className='text-white'
-                    startContent={<Icon icon="solar:arrow-left-line-duotone" />}
+                    startContent={<Icon icon='solar:login-2-bold' />}
                   >
                     返回登录
                   </Button>
-                  <Button
-                    variant='light'
-                    onClick={() => navigate("/")}
-                    className='text-white'
-                    startContent={<Icon icon="solar:home-angle-line-duotone" />}
-                  >
-                    返回首页
-                  </Button>
-                </div>
-
-                <div className="mt-4 text-center">
-                  <p className="text-xs text-white/50">
-                    注册即表示同意
-                    <Button 
-                      variant="light" 
-                      className="text-xs text-white/70 hover:text-white"
-                      size="sm"
-                    >
-                      服务条款
-                    </Button>
-                    和
-                    <Button
-                      variant="light"
-                      className="text-xs text-white/70 hover:text-white"
-                      size="sm"
-                    >
-                      隐私政策
-                    </Button>
-                  </p>
                 </div>
               </form>
             </CardBody>
