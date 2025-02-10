@@ -8,19 +8,19 @@ import { message } from "@/components/Message"
 import { useTranslation } from "react-i18next"
 import { jsonParse, jsonStringify } from "@/utils"
 import { motion, AnimatePresence } from "framer-motion"
-import AccountRequest from "./AccountRequest"
 import { useOid } from "./useOid"
 import { PhoneVerification } from "@/components/PhoneVerification"
+import { useNavigate } from "react-router-dom"
 
 export default function LoginPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [isVisible, setIsVisible] = useState(false)
   const [loginLoading, setLoginLoading] = useState(false)
   const [selectedTab, setSelectedTab] = useState("admin")
   const [rememberMe, setRememberMe] = useState(false)
   const [account, setAccount] = useState("")
   const [password, setPassword] = useState("")
-  const [showRequest, setShowRequest] = useState(false)
   const [sloganVisible, setSloganVisible] = useState(false)
 
   const loginData = useRef({
@@ -73,7 +73,7 @@ export default function LoginPage() {
           window.location.href = "/admin"
         }
       } else {
-        message.error(t("login_failed"))
+        message.error(res.message)
       }
     } catch (error) {
       console.error(t("login_error_log"), error)
@@ -117,7 +117,7 @@ export default function LoginPage() {
           window.location.href = "/admin"
         }
       } else {
-        message.error(t("login_failed"))
+        message.error(res.message)
       }
     } catch (error) {
       console.error(t("login_error_log"), error)
@@ -127,15 +127,8 @@ export default function LoginPage() {
     }
   }
 
-  if (showRequest) {
-    return <AccountRequest onBack={() => setShowRequest(false)} />
-  }
-
   return (
-    <div
-      className='min-h-screen relative bg-gradient-to-b from-[#2D1B69] via-[#1E1656] to-[#19073B]
-'
-    >
+    <div className='min-h-screen relative bg-gradient-to-b from-[#2D1B69] via-[#1E1656] to-[#19073B]'>
       <div className="absolute inset-0 bg-[url('/assets/grid.svg')] opacity-20" />
 
       <div className='container mx-auto px-4 min-h-screen flex items-center justify-center'>
@@ -145,16 +138,16 @@ export default function LoginPage() {
           transition={{ duration: 0.6 }}
           className='w-full max-w-md relative'
         >
-          {/* 申请账号按钮 - 右上角 */}
-          {/* <Button
+          {/* 注册企业按钮 - 右上角 */}
+          <Button
             variant='light'
             color='secondary'
-            startContent={<Icon icon='material-symbols:person-add-outline' />}
-            onClick={() => setShowRequest(true)}
+            startContent={<Icon icon='material-symbols:business-center-outline' />}
+            onClick={() => navigate("/register")}
             className='absolute -top-12 right-0 text-sm hover:bg-white/10'
           >
-            申请账号
-          </Button> */}
+            注册企业
+          </Button>
 
           <Card className='bg-white/20 border bg-white border-white/30 shadow-2xl backdrop-blur-sm'>
             <CardBody className='gap-4 p-8'>
@@ -214,7 +207,7 @@ export default function LoginPage() {
                       }}
                       onError={(error) => {
                         console.error("Phone verification failed:", error)
-                        message.error("手机号验证失败，请重试")
+                        message.error("手机号验证失败,请重试")
                       }}
                     />
                   </motion.form>

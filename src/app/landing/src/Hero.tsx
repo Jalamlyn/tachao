@@ -3,7 +3,6 @@ import { motion, useScroll, useTransform, useSpring, useAnimation } from "framer
 import { Button } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import QRCodeModal from "./QRCodeModal"
-import WaitListModal from "./WaitListModal"
 import { useNavigate } from "react-router-dom"
 
 interface HeroProps {
@@ -41,7 +40,6 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
   const [inView, setInView] = useState(false)
   const [ref, setRef] = useState<HTMLElement | null>(null)
   const [isQRCodeOpen, setIsQRCodeOpen] = useState(false)
-  const [isWaitListOpen, setIsWaitListOpen] = useState(false)
 
   // 增强的滚动动画效果
   const y = useTransform(scrollY, [0, 500], [0, 150])
@@ -108,7 +106,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         >
           <SmartButton variant='secondary' onClick={() => navigate("/login")}>
             <Icon icon='mdi:user' className='mr-1' />
-            企业管理员登录
+            登录
           </SmartButton>
         </motion.div>
 
@@ -141,7 +139,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             transition={{ duration: 0.8, delay: 0.4 }}
             className='flex flex-wrap justify-center gap-6'
           >
-            <SmartButton onClick={() => setIsWaitListOpen(true)}>
+            <SmartButton onClick={() => navigate("/register")}>
               <Icon icon='mdi:rocket-launch' className='mr-2' />
               立即体验
             </SmartButton>
@@ -178,7 +176,6 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
         </div>
       </div>
 
-      <WaitListModal isOpen={isWaitListOpen} onClose={() => setIsWaitListOpen(false)} />
       <QRCodeModal isOpen={isQRCodeOpen} onClose={() => setIsQRCodeOpen(false)} />
     </section>
   )
