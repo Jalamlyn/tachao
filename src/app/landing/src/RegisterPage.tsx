@@ -99,9 +99,11 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className='flex h-screen w-screen items-center justify-center p-2 sm:p-4 lg:p-8'>
+    <div className='min-h-screen flex justify-center items-center relative bg-gradient-to-b from-[#2D1B69] via-[#1E1656] to-[#19073B]'>
+      <div className="absolute inset-0 bg-[url('/assets/grid.svg')] opacity-20" />
+
       <div className='flex w-full max-w-sm flex-col gap-4 rounded-large bg-content1 px-8 pb-10 pt-6 shadow-small'>
-        <p className='pb-2 text-xl font-medium'>{t("welcome_register_mobenai")}</p>
+        <p className='pb-2 text-xl font-medium'>欢迎注册 即想 AI</p>
         <form className='flex flex-col gap-3' onSubmit={handleSubmit(onSubmit)}>
           <Controller
             name='name'

@@ -131,5 +131,40 @@ const AppSelector: React.FC = () => {
     </BrowserRouter>
   )
 }
+window.test = () => {
+  async function getNativePayQrCode(orderId, amount) {
+    try {
+      const result = await app.callFunction({
+        name: "native-pay-qr-code",
+        data: {
+          orderId,
+          amount,
+        },
+      })
 
+      if (result.result.code === 0) {
+        return result.result.data.qrCodeUrl
+      } else {
+        throw new Error(result.result.msg)
+      }
+    } catch (error) {
+      console.error("调用云函数失败:", error)
+      throw error
+    }
+  }
+
+  // 示例调用
+  debugger
+  getNativePayQrCode("123456", 100)
+    .then((qrCodeUrl) => {
+      console.log("支付二维码链接:", qrCodeUrl)
+      // 在网页中显示二维码
+      const img = document.createElement("img")
+      img.src = qrCodeUrl
+      document.body.appendChild(img)
+    })
+    .catch((error) => {
+      console.error("生成支付二维码失败:", error)
+    })
+}
 ReactDOM.createRoot(document.getElementById("root")!).render(<AppSelector></AppSelector>)
