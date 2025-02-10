@@ -7,6 +7,7 @@ import mdPlugin, { Mode } from "vite-plugin-markdown"
 import { visualizer } from "rollup-plugin-visualizer"
 
 export default defineConfig({
+  mode: "development",
   define: {
     __API_BASE_URL__: JSON.stringify(
       process.env.DEPLOY_ENV === "us"
