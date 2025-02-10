@@ -97,10 +97,10 @@ class BalanceStore {
   // 检查账号额度
   async checkAccountBalance(accountId: string, cost: number): Promise<boolean> {
     // 如果是管理员,跳过余额检查
-    if (globalStore.currentUser?.name === '管理员') {
+    if (globalStore.currentUser?.name === "管理员") {
       return true
     }
-    
+
     const balances = await this.getAccountBalances()
     const accountBalance = balances[accountId] || { limit: 10, used: 0 }
 
@@ -119,10 +119,6 @@ class BalanceStore {
   }
 
   async checkBalance(cost: number = 0.1, accountId?: string): Promise<boolean> {
-    // 如果是管理员,跳过余额检查
-    if (globalStore.currentUser?.name === '管理员') {
-      return true
-    }
     // 检查订阅状态
     const subscription = await subscriptionService.getSubscription(globalStore.organizationId)
     if (!subscription) {
@@ -133,16 +129,14 @@ class BalanceStore {
 
     // 检查套餐是否过期
     const subscriptionStatus = await subscriptionService.checkSubscriptionStatus(globalStore.organizationId)
-    if (subscriptionStatus.status === 'expired') {
+    if (subscriptionStatus.status === "expired") {
       message.error({
         content: (
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
+          <div className='flex flex-col gap-2'>
+            <div className='flex items-center gap-2'>
               <span>您的套餐已过期,请续费后继续使用</span>
             </div>
-            <div className="text-xs text-default-500">
-              提示:续费套餐后即可继续使用AI功能
-            </div>
+            <div className='text-xs text-default-500'>提示:续费套餐后即可继续使用AI功能</div>
           </div>
         ),
         duration: 5000,
@@ -162,6 +156,10 @@ class BalanceStore {
       )
       this.showRechargeModal(false)
       return false
+    }
+    // 如果是管理员,跳过账户余额检查
+    if (globalStore.currentUser?.name === "管理员") {
+      return true
     }
     if (accountId) {
       const hasEnoughAccountBalance = await this.checkAccountBalance(accountId, cost)

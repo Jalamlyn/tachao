@@ -213,7 +213,7 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
   cn,
   xlsx,
   esm,
-} = context`
+} = context,默认图片使用 images.unsplash.com 的服务来生成，UI 样式使用 tailwindcss`
 
       const allMessages = [
         ...messages,
