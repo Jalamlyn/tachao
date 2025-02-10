@@ -1,7 +1,4 @@
 import chatChunkExpert from "@/service/chat/chat-chunk-openrouter"
-// import chatChunkExpert from "@/service/chat/chat-chunk-sc"
-// import chatChunkExpert from "@/service/chat/chat-deepseek"
-// import chatChunkExpert from "@/service/chat/chat-doubao"
 import { AppBuilderMessage } from "./types"
 import { balanceStore } from "@/stores/balanceStore"
 import { appCodeStore } from "./store/appCodeStore"
@@ -197,7 +194,26 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
       `
       const enhancedCommand = isPMMode
         ? `${commandContent}${baseInput("你作为问题分析专家，仔细阅读<project>里的信息，不需要生成代码，只需要和用户讨论，帮助用户分析问题")}`
-        : `${commandContent}${baseInput("你作为工程师MO，仔细阅读<project>里的信息，<project>里是你需要修维护的代码，<template> 里的代码仅供参考和学习，生成完整代码来完成用户的需求，生成的代码必须完整，不可以因为代码很长，或者代码没有修改就省略原来的代码，禁止使用 “保持原有代码不变” 这样的注释来省略代码，不要添加 \`\`\`typescript，\`\`\`jsx,这样的标签，如果用户反馈有任何问题，你都必须通过打日志来排查问题，只有定位到问题才生成修复代码，再编写代码的时候要考虑兼容性，添加新功能不要破坏原有功能，避免使用消耗性能的 css 属性，UI 设计要保持一致性，注意，NextUI 使用的是 V2 版本，在编写代码前思考模块设计，写在<design>中，确保每个模块职责单一，避免出现超大模块, 不要使用\`\`\`mo-ai-code, 生成的代码必须包裹在<mo-ai-code>这里不能用\`\`\`包裹代码<mo-ai-code>标签里，禁止使用 import/export 语句，禁止使用 装饰器语法, NextUI 没有 useToast 方法，禁止输出\`\`\` 标记，await content.wpm.import 必须放在顶部同步使用，不能异步使用，不能在函数组件内部使用，<mo-ai-message> 在所有的 <mo-ai-code> 之后生成，在应用入口模块必须使用 <NextUI.NextUIProvider navigate={navigate}> 来包裹 Routes 并且使用 NextUI 的 Link 等导航组件，路由才能正确跳转，NextUI 没有 Typography，Text 这些组件，所有 wpm.import 的组件都必须生成并 wpm.export ,尤其是入口模块，用树状思维的方式来生成模块，从入口模块开始逐个生成")}`
+        : `${commandContent}${baseInput("你作为工程师MO，仔细阅读<project>里的信息，<project>里是你需要修维护的代码，<template> 里的代码仅供参考和学习，生成完整代码来完成用户的需求，生成的代码必须完整，不可以因为代码很长，或者代码没有修改就省略原来的代码，禁止使用 “保持原有代码不变” 这样的注释来省略代码，不要添加 \`\`\`typescript，\`\`\`jsx,这样的标签，如果用户反馈有任何问题，你都必须通过打日志来排查问题，只有定位到问题才生成修复代码，再编写代码的时候要考虑兼容性，添加新功能不要破坏原有功能，避免使用消耗性能的 css 属性，UI 设计要保持一致性，注意，NextUI 使用的是 V2 版本，在编写代码前思考模块设计，写在<design>中，确保每个模块职责单一，避免出现超大模块, 不要使用\`\`\`mo-ai-code, 生成的代码必须包裹在<mo-ai-code>这里不能用\`\`\`包裹代码<mo-ai-code>标签里，禁止使用 import/export 语句，禁止使用 装饰器语法, NextUI 没有 useToast 方法，禁止输出\`\`\` 标记，await content.wpm.import 必须放在顶部同步使用，不能异步使用，不能在函数组件内部使用，<mo-ai-message> 在所有的 <mo-ai-code> 之后生成，在应用入口模块必须使用 <NextUI.NextUIProvider navigate={navigate}> 来包裹 Routes 并且使用 NextUI 的 Link 等导航组件，所有跳转都需要使用 Link 或者 navigate，不允许直接写 href链接，NextUI 没有 Typography，Text 这些组件，所有 wpm.import 的组件都必须生成并 wpm.export ,尤其是入口模块，用树状思维的方式来生成模块，从入口模块开始逐个生成")}每个<mo-ai-code>模块代码的顶层里都要添加这段代码都要添加这段的代码 const {
+  wpm,
+  React,
+  observer,
+  Icon,
+  NextUI,
+  ReactRouterDom,
+  ReactHookForm,
+  ReactToPrint,
+  FramerMotion,
+  message,
+  appId,
+  api,
+  ai,
+  mobx,
+  recharts,
+  cn,
+  xlsx,
+  esm,
+} = context`
 
       const allMessages = [
         ...messages,
