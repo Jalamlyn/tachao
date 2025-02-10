@@ -184,20 +184,16 @@ const RechargeModal = observer(() => {
   const handlePaymentModalClose = () => {
     setIsPaymentModalOpen(false)
     // 添加刷新提示
-    message.info({
-      content: (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <Icon icon="solar:refresh-circle-bold-duotone" className="text-lg" />
-            <span>支付完成后，请刷新页面查看最新余额</span>
-          </div>
-          <div className="text-xs text-default-500">
-            提示：刷新页面后即可看到充值的塔币
-          </div>
+    message.info(
+      <div className='flex flex-col gap-2'>
+        <div className='flex items-center gap-2'>
+          <Icon icon='solar:refresh-circle-bold-duotone' className='text-lg' />
+          <span>支付完成后,请刷新页面查看最新余额</span>
         </div>
-      ),
-      duration: 10000, // 显示10秒
-    })
+        <div className='text-xs text-default-500'>提示:刷新页面后即可看到充值的塔币</div>
+      </div>,
+      { duration: 10000 }
+    )
   }
 
   const renderTokenTab = () => (
@@ -381,7 +377,7 @@ const RechargeModal = observer(() => {
         </ModalContent>
       </Modal>
 
-      <Modal isOpen={isPaymentModalOpen} onClose={handlePaymentModalClose} size='full'>
+      <Modal isOpen={isPaymentModalOpen} onClose={handlePaymentModalClose} size='5xl'>
         <ModalContent>
           {(onClose) => (
             <>
@@ -399,10 +395,7 @@ const RechargeModal = observer(() => {
                     <span>完成支付后，请刷新页面以查看最新的账户信息</span>
                   </p>
                 </div>
-                <iframe
-                  srcDoc={paymentForm}
-                  style={{ width: "100%", height: "600px", border: "none" }}
-                />
+                <iframe srcDoc={paymentForm} style={{ width: "100%", height: "600px", border: "none" }} />
               </ModalBody>
             </>
           )}
