@@ -33,10 +33,12 @@ export default defineConfig({
     },
   },
   build: {
+    minify: false, // 不压缩代码
+    sourcemap: true, // 保留sourcemap
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html'),
-        app: path.resolve(__dirname, 'app.html'),
+        main: path.resolve(__dirname, "index.html"),
+        app: path.resolve(__dirname, "app.html"),
       },
       output: {
         entryFileNames: "[name].[hash].js",
