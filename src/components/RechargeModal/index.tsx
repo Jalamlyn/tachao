@@ -33,7 +33,7 @@ const SUBSCRIPTION_PLANS = {
       nbAccountLimit: 0,
       wbAccountLimit: -1,
     },
-    description: ["1个管理员账号", "不限数量外部账号", "基础AI功能"],
+    description: ["1个管理员账号", "基础AI功能", "社区支持"],
     costInTokens: 9.9,
   },
   enterprise: {
@@ -46,7 +46,7 @@ const SUBSCRIPTION_PLANS = {
       nbAccountLimit: 4,
       wbAccountLimit: -1,
     },
-    description: ["1个管理员账号", "4个内部账号", "不限数量外部账号", "完整AI功能"],
+    description: ["1个管理员账号", "4个内部账号", "完整AI功能"],
     costInTokens: 99,
   },
 }

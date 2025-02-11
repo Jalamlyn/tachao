@@ -14,7 +14,7 @@ const Footer: React.FC = () => {
               <img src='/assets/logo.jpg' alt='IdeaNow AI' className='w-[100px] h-auto rounded-lg' />
               <div className='flex flex-col'>
                 <span className='text-white font-bold'>模本智能</span>
-                <span className='text-white/70 text-sm'>AI驱动的企业管理平台</span>
+                <span className='text-white/70 text-sm'>AI驱动的应用开发平台</span>
               </div>
             </div>
             <p className='text-white/70'>企业应用开发成本直降80%</p>
