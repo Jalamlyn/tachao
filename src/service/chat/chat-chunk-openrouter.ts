@@ -13,6 +13,25 @@ const AI_MODELS = {
   USER: "google/gemini-2.0-flash-001",
 }
 
+// 定义JavaScript执行工具
+const TOOLS = [{
+  "type": "function",
+  "function": {
+    "name": "executeJavaScript",
+    "description": "Execute JavaScript code and return the result",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "The JavaScript code to execute"
+        }
+      },
+      "required": ["code"]
+    }
+  }
+}]
+
 function selectModel(messages) {
   // 检查是否以 @pm 开头
   const lastMessage = messages[messages.length - 1]
@@ -131,6 +150,7 @@ export default async function chatChunkOpenAIOffice(
     stream: true,
     stop,
     temperature,
+    tools: TOOLS, // 添加tools到请求中
   }
 
   let controller = new AbortController()
@@ -178,6 +198,34 @@ export default async function chatChunkOpenAIOffice(
       if (event.data !== "[DONE]") {
         try {
           const parsed = jsonParse(event.data)
+          
+          // 处理工具调用
+          if (parsed?.choices[0]?.delta?.tool_calls) {
+            const toolCall = parsed.choices[0].delta.tool_calls[0]
+            if (toolCall.function.name === "executeJavaScript") {
+              const args = JSON.parse(toolCall.function.arguments)
+              const result = await executeScript(args.code)
+              
+              // 将执行结果作为工具响应添加到消息中
+              await chatChunkOpenAIOffice(
+                _messages.concat([
+                  {
+                    role: "tool",
+                    name: "executeJavaScript",
+                    tool_call_id: toolCall.id,
+                    content: result
+                  }
+                ]),
+                onChunk,
+                onCancel,
+                false,
+                temperature,
+                overFlag
+              )
+              return
+            }
+          }
+
           const content = parsed?.choices[0]?.delta?.content || ""
           fullContent += content
           onChunk(content)
@@ -212,13 +260,13 @@ export default async function chatChunkOpenAIOffice(
             return
           }
 
-          // 处理需要执行代码的情况
+          // 保留原有的script标签处理逻辑以保持兼容性
           if (parsed?.choices[0]?.finish_reason === "stop") {
             const scriptMatch = fullContent.match(/<mo-ai-script>([\s\S]*?)<\/mo-ai-script>/)
             if (scriptMatch) {
               const code = scriptMatch[1]
               const result = await executeScript(code)
-              const newContent = fullContent.replace(/<mo-ai-script>[\s\S]*?<\/mo-ai-script>/, result)
+              const newContent = fullContent.replace(/<mo-ai-script>[\s\S]*?<\/mo-ai-script>/g, result)
               
               await chatChunkOpenAIOffice(
                 _messages.concat([
