@@ -547,15 +547,15 @@ const AccountManagement: React.FC = () => {
             >
               <ModalHeader className='flex flex-col gap-1'>创建账号</ModalHeader>
               <ModalBody>
-                <RadioGroup label='账号类型' name='type' orientation='horizontal' defaultValue='wb'>
+                <RadioGroup defaultValue='nb' label='账号类型' name='type' orientation='horizontal'>
                   <Radio value='nb'>
                     内部账号
                     <span className='text-tiny text-default-400 ml-1'>(企业员工)</span>
                   </Radio>
-                  <Radio value='wb'>
+                  {/* <Radio value='wb'>
                     外部账号
                     <span className='text-tiny text-default-400 ml-1'>(供应商/客户)</span>
-                  </Radio>
+                  </Radio> */}
                 </RadioGroup>
                 <Input name='name' label='名称' required />
                 <Input
