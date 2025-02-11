@@ -12,120 +12,24 @@ interface HeroProps {
 // 产品视频组件
 const ProductVideo: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [isPlaying, setIsPlaying] = useState(true)
-  const [isMuted, setIsMuted] = useState(true)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          videoRef.current?.load()
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    if (videoRef.current) {
-      observer.observe(videoRef.current)
-    }
-
-    return () => observer.disconnect()
-  }, [])
-
-  const handlePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause()
-      } else {
-        videoRef.current.play()
-      }
-      setIsPlaying(!isPlaying)
-    }
-  }
-
-  const handleMuteToggle = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted
-      setIsMuted(!isMuted)
-    }
-  }
-
-  const handleLoadedData = () => {
-    setIsLoading(false)
-  }
-
-  const handleError = () => {
-    setError("视频加载失败,请刷新页面重试")
-    setIsLoading(false)
-  }
-
-  if (error) {
-    return (
-      <div className="relative w-full max-w-4xl mx-auto my-12 rounded-2xl bg-red-500/10 aspect-video">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <Icon icon="mdi:alert" className="w-16 h-16 text-red-500/50 mx-auto mb-4" />
-            <p className="text-white/70">{error}</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <div className="relative w-full max-w-4xl mx-auto my-12 rounded-2xl bg-gradient-to-r from-purple-500/10 to-cyan-500/10 aspect-video animate-pulse">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <Icon icon="mdi:video" className="w-16 h-16 text-white/50 mx-auto mb-4" />
-            <p className="text-white/70">产品演示视频加载中...</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return (
-    <div className="relative w-full max-w-4xl mx-auto my-12 rounded-2xl overflow-hidden group">
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl" />
+    <div className='relative w-full max-w-4xl mx-auto my-12 rounded-2xl overflow-hidden group'>
+      <div className='absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl' />
       <video
         ref={videoRef}
-        className="w-full rounded-2xl"
+        className='w-full rounded-2xl'
         autoPlay
-        muted={isMuted}
+        muted
         loop
         playsInline
-        onLoadedData={handleLoadedData}
-        onError={handleError}
-        preload="metadata"
       >
-        <source src="" type="video/mp4" />
+        <source
+          src='https://6d6f-mobenai-weapp-dev-2e8qhi3a963364-1259692580.tcb.qcloud.la/2%E6%9C%8812%E6%97%A5.mp4?sign=74e621d5a9ed30b90f728700e96f7bb1&t=1739305856'
+          type='video/mp4'
+        />
         您的浏览器不支持视频播放。
       </video>
-      
-      <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-          onClick={handlePlayPause}
-          aria-label={isPlaying ? "暂停" : "播放"}
-        >
-          <Icon icon={isPlaying ? "mdi:pause" : "mdi:play"} className="w-6 h-6" />
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-          onClick={handleMuteToggle}
-          aria-label={isMuted ? "取消静音" : "静音"}
-        >
-          <Icon icon={isMuted ? "mdi:volume-off" : "mdi:volume-high"} className="w-6 h-6" />
-        </motion.button>
-      </div>
     </div>
   )
 }
