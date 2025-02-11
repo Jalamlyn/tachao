@@ -262,18 +262,16 @@ export default function LoginPage() {
               </AnimatePresence>
 
               {/* 注册企业部分 */}
-              <div className="mt-6">
-                <Divider className="my-4" />
-                <div className="text-center">
-                  <p className="text-sm text-gray-400 mb-4">还没有企业账号?</p>
+              <div className='mt-6'>
+                <Divider className='my-4' />
+                <div className='text-center'>
                   <Button
                     variant='flat'
                     color='secondary'
-                    startContent={<Icon icon='material-symbols:business-center-outline' />}
                     onClick={() => navigate("/register")}
                     className='w-full bg-white/10 hover:bg-white/20 transition-all duration-300'
                   >
-                    注册企业
+                    还没有企业账号? 点击注册企业
                   </Button>
                 </div>
               </div>
