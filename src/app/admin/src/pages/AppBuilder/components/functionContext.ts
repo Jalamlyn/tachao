@@ -328,7 +328,7 @@ export const logAPI = {
           type: "LOG",
           level: "info",
           message,
-          details,
+          details: JSON.stringify(details, null, 2),
         },
         "*"
       )
@@ -344,7 +344,7 @@ export const logAPI = {
           type: "LOG",
           level: "warn",
           message,
-          details,
+          details: JSON.stringify(details, null, 2),
         },
         "*"
       )
@@ -359,7 +359,7 @@ export const logAPI = {
           type: "LOG",
           level: "error",
           message,
-          details,
+          details: JSON.stringify(details, null, 2),
         },
         "*"
       )
@@ -374,7 +374,7 @@ export const logAPI = {
           type: "LOG",
           level: "debug",
           message,
-          details,
+          details: JSON.stringify(details, null, 2),
         },
         "*"
       )

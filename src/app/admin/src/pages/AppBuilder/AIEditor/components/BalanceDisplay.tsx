@@ -13,58 +13,39 @@ const BalanceDisplay = observer(() => {
     balanceStore.fetchBalance()
 
     // 设置定期更新
-    const timer = setInterval(() => {
-      balanceStore.fetchBalance()
-    }, 5 * 60 * 1000) // 每5分钟更新一次
+    const timer = setInterval(
+      () => {
+        balanceStore.fetchBalance()
+      },
+      2 * 60 * 1000
+    ) // 每1分钟更新一次
 
     return () => clearInterval(timer)
   }, [])
 
   return (
-    <div className="flex items-center gap-2">
-      <Tooltip content="点击充值">
+    <div className='flex items-center gap-2'>
+      <Tooltip content='点击充值'>
         <Button
-          size="sm"
-          variant="light"
+          size='sm'
+          variant='light'
           color={balanceStore.actualBalance < 10 ? "warning" : "primary"}
-          startContent={<Icon icon="solar:wallet-money-bold" className="w-4 h-4" />}
+          startContent={<Icon icon='solar:wallet-money-bold' className='w-4 h-4' />}
           onClick={() => balanceStore.showRechargeModal(false)}
         >
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode='wait'>
             <motion.span
               key={balanceStore.actualBalance}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="font-medium"
+              className='font-medium'
             >
               {balanceStore.actualBalance.toFixed(2)} 梦想币
             </motion.span>
           </AnimatePresence>
         </Button>
       </Tooltip>
-      
-      {balanceStore.actualBalance < 10 && balanceStore.actualBalance >= 0 && (
-        <Chip 
-          color="warning" 
-          variant="flat" 
-          size="sm"
-          startContent={<Icon icon="solar:danger-triangle-bold" className="w-3 h-3" />}
-        >
-          余额偏低
-        </Chip>
-      )}
-      
-      {balanceStore.actualBalance < 0 && (
-        <Chip 
-          color="danger" 
-          variant="flat" 
-          size="sm"
-          startContent={<Icon icon="solar:shield-warning-bold" className="w-3 h-3" />}
-        >
-          账户已欠费
-        </Chip>
-      )}
     </div>
   )
 })

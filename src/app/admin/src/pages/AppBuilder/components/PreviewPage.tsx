@@ -1,6 +1,18 @@
 import React, { useState, useEffect } from "react"
 import { AppRender } from "@/app/admin/src/pages/AppBuilder/AppRender"
-import { Spinner, Card, CardBody, CardHeader, Button } from "@nextui-org/react"
+import {
+  Spinner,
+  Card,
+  CardBody,
+  CardHeader,
+  Button,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Textarea,
+} from "@nextui-org/react"
 import message from "@/components/Message"
 import { calculateActualBalance, Provider } from "@/provider"
 import { AppContext } from "@/contexts/AppContext"
@@ -19,6 +31,8 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [errorDetails, setErrorDetails] = useState<any>(null)
+  const [isOperationModalOpen, setIsOperationModalOpen] = useState(false)
+  const [userOperations, setUserOperations] = useState("")
 
   useEffect(() => {
     const initBalanceStore = async () => {
@@ -51,11 +65,12 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
       {
         type: "AI_FIX_REQUEST",
         payload: {
-          error: errorInfo.message || errorInfo,
+          error: JSON.stringify(errorInfo.message || errorInfo),
           context: {
             route: window.location.pathname,
             appId,
             moduleName: window.__module_import_errors ? window.__module_import_errors[0] : "未知模块",
+            userOperations: userOperations.trim(), // 添加用户操作记录
           },
         },
       },
@@ -69,7 +84,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
       const errorContent = (
         <div className='flex items-center gap-2'>
           <div>{error.message}</div>
-          <Button size='sm' color='primary' onClick={handleAIFix}>
+          <Button size='sm' color='primary' onClick={() => setIsOperationModalOpen(true)}>
             AI修复
           </Button>
         </div>
@@ -85,6 +100,11 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
       setErrorDetails(error)
       message.error(error.message)
     }
+  }
+
+  const handleSubmitOperations = () => {
+    setIsOperationModalOpen(false)
+    handleAIFix(errorDetails || error)
   }
 
   useEffect(() => {
@@ -160,22 +180,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
                 color='primary'
                 className='px-8 font-medium shadow-lg'
                 startContent={<Icon icon='flowbite:fix-tables-outline' className='w-5 h-5' />}
-                onClick={() => {
-                  window.parent.postMessage(
-                    {
-                      type: "AI_FIX_REQUEST",
-                      payload: {
-                        error: error,
-                        context: {
-                          route: window.location.pathname,
-                          appId,
-                          moduleName: window.__module_import_errors ? window.__module_import_errors[0] : "未知模块",
-                        },
-                      },
-                    },
-                    "*"
-                  )
-                }}
+                onClick={() => setIsOperationModalOpen(true)}
               >
                 一键修复问题
               </Button>
@@ -184,6 +189,45 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
           </div>
         </CardBody>
       </Card>
+
+      {/* 用户操作记录收集对话框 */}
+      <Modal isOpen={isOperationModalOpen} onClose={() => setIsOperationModalOpen(false)} size='2xl'>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className='flex flex-col gap-1'>
+                <div className='flex items-center gap-2'>
+                  <Icon icon='mdi:clipboard-text' className='w-5 h-5' />
+                  <span>请描述错误发生前的操作</span>
+                </div>
+              </ModalHeader>
+              <ModalBody>
+                <div className='space-y-4'>
+                  <p className='text-sm text-default-600'>
+                    为了帮助AI更好地定位和修复问题,请详细描述错误发生前您进行了哪些操作。
+                  </p>
+                  <Textarea
+                    label='操作步骤'
+                    placeholder='例如:1. 我先点击了xxx按钮&#10;2. 然后输入了xxx内容&#10;3. 最后点击了xxx时出现错误'
+                    value={userOperations}
+                    onChange={(e) => setUserOperations(e.target.value)}
+                    minRows={3}
+                    variant='bordered'
+                  />
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button color='danger' variant='light' onPress={onClose}>
+                  取消
+                </Button>
+                <Button color='primary' onPress={handleSubmitOperations} isDisabled={!userOperations.trim()}>
+                  提交并修复
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   )
 
