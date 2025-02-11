@@ -163,6 +163,7 @@ export default function LoginPage() {
               >
                 <Tab
                   key='external'
+                  isDisabled
                   title={
                     <div className='flex items-center gap-2'>
                       <span>手机号登录</span>
