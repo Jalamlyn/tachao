@@ -8,22 +8,9 @@ import { balanceStore } from "@/stores/balanceStore"
 import globalStore from "@/globalStore"
 
 const AI_MODELS = {
-  // BASIC: "anthropic/claude-3.5-sonnet:beta",
-  BASIC: "deepseek/deepseek-r1",
-  // BASIC: "google/gemini-2.0-flash-001",
-  // BASIC: "google/gemini-2.0-flash-thinking-exp:free",
-  // BASIC: "anthropic/claude-3.5-haiku-20241022",
+  BASIC: "anthropic/claude-3.5-sonnet",
   ADVANCED: "anthropic/claude-3.5-sonnet",
-  // ADVANCED: "deepseek/deepseek-chat",
-  // ADVANCED: "google/gemini-2.0-flash-thinking-exp:free",
-  // ADVANCED: "deepseek/deepseek-r1",
-  // ADVANCED: "google/gemini-2.0-flash-001",
-  // ADVANCED: "google/gemini-2.0-flash-thinking-exp:free",
-  // ADVANCED: "anthropic/claude-3.5-haiku-20241022:beta",
-  // ADVANCED: "google/gemini-2.0-pro-exp-02-05:free",
-  // ADVANCED: "deepseek/deepseek-r1",
-  // USER: "google/gemini-2.0-flash-thinking-exp:free",
-  USER: "deepseek/deepseek-r1",
+  USER: "google/gemini-2.0-flash-001",
 }
 
 function selectModel(messages) {
@@ -61,6 +48,17 @@ function cleanAIResponse(content) {
   return content
 }
 
+// 执行脚本代码并返回结果
+async function executeScript(code) {
+  try {
+    const result = await new Function(code)()
+    return String(result)
+  } catch (error) {
+    console.error('Script execution error:', error)
+    return `Error executing script: ${error.message}`
+  }
+}
+
 export default async function chatChunkOpenAIOffice(
   messages,
   onChunk,
@@ -69,6 +67,7 @@ export default async function chatChunkOpenAIOffice(
   temperature = 0,
   overFlag = "YES",
   system,
+  stop,
   isUSER
 ) {
   let _messages = messages
@@ -102,7 +101,6 @@ export default async function chatChunkOpenAIOffice(
   }
 
   const apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-openrouter"
-  // const apiEndPoint = "https://api.openai-prc.com"
 
   // 选择模型
   const selectedModel = isUSER ? AI_MODELS.USER : selectModel(_messages)
@@ -112,13 +110,13 @@ export default async function chatChunkOpenAIOffice(
   // 获取当前用户ID
   const currentUserId = globalStore.currentUser?.id
 
-  // 只检查余额，不更新使用量
+  // 只检查余额,不更新使用量
   const hasEnoughBalance = await balanceStore.checkBalance(0.1)
   if (!hasEnoughBalance) {
     return
   }
 
-  // 如果提供了accountId，检查账户额度
+  // 如果提供了accountId,检查账户额度
   if (currentUserId) {
     const hasEnoughAccountBalance = await balanceStore.checkAccountBalance(currentUserId, 0.1)
     if (!hasEnoughAccountBalance) {
@@ -131,6 +129,7 @@ export default async function chatChunkOpenAIOffice(
     messages: _messages,
     system,
     stream: true,
+    stop,
     temperature,
   }
 
@@ -199,7 +198,7 @@ export default async function chatChunkOpenAIOffice(
                   content: [
                     {
                       type: "text",
-                      text: `继续生成，从"""${lastTenChars}"""后面开始生成，但是不要包含从"""${lastTenChars}""",开头和结尾都不要解释和说明，也不要有\`\`\`和这样的标记`,
+                      text: `继续生成,从"""${lastTenChars}"""后面开始生成,但是不要包含从"""${lastTenChars}""",开头和结尾都不要解释和说明,也不要有\`\`\`和这样的标记`,
                     },
                   ],
                 },
@@ -211,6 +210,37 @@ export default async function chatChunkOpenAIOffice(
               overFlag
             )
             return
+          }
+
+          // 处理需要执行代码的情况
+          if (parsed?.choices[0]?.finish_reason === "stop") {
+            const scriptMatch = fullContent.match(/<mo-ai-script>([\s\S]*?)<\/mo-ai-script>/)
+            if (scriptMatch) {
+              const code = scriptMatch[1]
+              const result = await executeScript(code)
+              const newContent = fullContent.replace(/<mo-ai-script>[\s\S]*?<\/mo-ai-script>/, result)
+              
+              await chatChunkOpenAIOffice(
+                _messages.concat([
+                  { role: "assistant", content: newContent },
+                  {
+                    role: "user",
+                    content: [
+                      {
+                        type: "text",
+                        text: "请基于以上执行结果继续回答",
+                      },
+                    ],
+                  },
+                ]),
+                onChunk,
+                onCancel,
+                false,
+                temperature,
+                overFlag
+              )
+              return
+            }
           }
         } catch (error) {
           console.log("Error parsing JSON:", error)
