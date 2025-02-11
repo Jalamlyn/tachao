@@ -71,7 +71,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
     return app.collaborators?.some((c) => c.id === currentUser.id) || false
   }
 
-  // 新增：管理员权限判断（只有管理员和创建者有权限）
+  // 新增:管理员权限判断(只有管理员和创建者有权限)
   const hasAdminPermission = (app: AppIndex, currentUser: any) => {
     if (!currentUser) return false
     if (currentUser.account === "admin") return true
@@ -172,7 +172,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
     }
   }
 
-  // 新增：处理预览图上传
+  // 新增:处理预览图上传
   const handlePreviewUpload = async (file: File) => {
     if (file.size > 4 * 1024 * 1024) {
       message.error("图片大小不能超过4MB")
@@ -296,19 +296,84 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
     })
   }
 
+  // 新增:获取默认背景样式
+  const getDefaultPreviewStyle = () => {
+    const gradientColors = [
+      ['#4F46E5', '#7C3AED'], // 紫色系
+      ['#2563EB', '#3B82F6'], // 蓝色系
+      ['#059669', '#10B981'], // 绿色系
+      ['#DC2626', '#EF4444'], // 红色系
+      ['#D97706', '#F59E0B'], // 橙色系
+    ]
+    
+    // 使用应用ID来确定颜色,保证同一个应用每次显示相同的颜色
+    const colorIndex = app.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % gradientColors.length
+    const [color1, color2] = gradientColors[colorIndex]
+    
+    return {
+      background: `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`,
+      position: 'relative' as const,
+      overflow: 'hidden',
+    }
+  }
+
+  // 新增:获取装饰图案样式
+  const getPatternStyle = () => {
+    return {
+      position: 'absolute' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      opacity: 0.1,
+      backgroundImage: `
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.3) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(255,255,255,0.3) 0%, transparent 20%),
+        linear-gradient(60deg, transparent 0%, rgba(255,255,255,0.1) 100%)
+      `,
+      transition: 'opacity 0.3s ease-in-out',
+    }
+  }
+
+  // 新增:获取默认内容样式
+  const getDefaultContentStyle = () => {
+    return {
+      position: 'absolute' as const,
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      textAlign: 'center' as const,
+      color: 'white',
+      zIndex: 1,
+    }
+  }
+
   return (
     <>
       <Card ref={cardRef}>
         <CardBody>
           <div className='space-y-4'>
             {/* 预览区域 */}
-            <div className='relative w-full aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-default-50 to-default-100'>
-              <NextImage
-                src={app?.previewImage?.url}
-                alt={`Preview of ${app.title}`}
-                className='w-full h-full object-cover transition-transform duration-200 hover:scale-105'
-                onClick={() => window.open(`/app-run/${app.id}`, "_blank")}
-              />
+            <div 
+              className='relative w-full aspect-video rounded-lg overflow-hidden cursor-pointer'
+              style={!app?.previewImage?.url ? getDefaultPreviewStyle() : {}}
+              onClick={() => window.open(`/app-run/${app.id}`, "_blank")}
+            >
+              {app?.previewImage?.url ? (
+                <NextImage
+                  src={app.previewImage.url}
+                  alt={`Preview of ${app.title}`}
+                  className='w-full h-full object-cover transition-transform duration-200 hover:scale-105'
+                />
+              ) : (
+                <>
+                  <div style={getPatternStyle()} className="hover:opacity-0.2 transition-opacity duration-300" />
+                  <div style={getDefaultContentStyle()}>
+                    <Icon icon="hugeicons:ai-chat-02" className="w-12 h-12 mb-2 opacity-90" />
+                    <h3 className="text-lg font-bold tracking-tight">{app.title}</h3>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className='grid grid-cols-12 gap-6 items-center'>
@@ -342,7 +407,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
                           className='w-6 h-6'
                         />
                         <span className='tracking-tight truncate font-bold text-xs text-default-500'>
-                          创建者：{app.creator.name === "管理员" ? "管理员" : app.creator.name.split("_")[1]}
+                          创建者:{app.creator.name === "管理员" ? "管理员" : app.creator.name.split("_")[1]}
                         </span>
                       </div>
                     )}
