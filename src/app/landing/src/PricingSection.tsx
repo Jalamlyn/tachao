@@ -77,7 +77,7 @@ const PricingSection = () => {
           <p className='text-xl text-white/80'>选择最适合您企业的方案</p>
         </motion.div>
 
-        <div className='grid md:grid-cols-4 gap-8 max-w-7xl mx-auto'>
+        <div className='grid md:grid-cols-3 gap-8 max-w-7xl mx-auto'>
           {Object.entries(SUBSCRIPTION_PLANS).map(([key, plan]) => (
             <motion.div
               key={key}
