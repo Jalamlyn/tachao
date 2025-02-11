@@ -6,45 +6,28 @@ import QRCodeModal from "./QRCodeModal"
 import WaitListModal from "./WaitListModal"
 
 const SUBSCRIPTION_PLANS = {
-  free: {
-    type: "free",
-    name: "免费版",
-    price: "永久免费",
-    period: "",
-    description: "适合初创团队和个人使用",
-    features: [
-      { text: "1个管理员账号", icon: "solar:user-id-bold-duotone" },
-      { text: "不限数量外部账号", icon: "solar:users-group-rounded-bold-duotone", highlight: true },
-      { text: "基础管理功能", icon: "solar:widget-bold-duotone" },
-      { text: "基础数据分析", icon: "solar:chart-bold-duotone" },
-      { text: "社区支持", icon: "solar:chat-square-like-bold-duotone" },
-      { text: "不含AI功能", icon: "solar:forbidden-circle-bold-duotone", isLimited: true },
-    ],
-  },
   personal: {
     type: "personal",
     name: "个人版",
-    price: 19.9,
+    price: 9.9,
     period: "月",
     description: "适合个人或小型团队使用",
     features: [
       { text: "1个管理员账号", icon: "solar:user-id-bold-duotone" },
       { text: "不限数量外部账号", icon: "solar:users-group-rounded-bold-duotone" },
-      { text: "10个塔币/月", icon: "solar:dollar-minimalistic-bold-duotone" },
       { text: "基础AI功能", icon: "iconamoon:lightning-2-fill" },
     ],
   },
   enterprise: {
     type: "enterprise",
     name: "企业版",
-    price: 199,
+    price: 99,
     period: "月",
     description: "适合中小型企业使用",
     features: [
       { text: "1个管理员账号", icon: "solar:user-id-bold-duotone" },
       { text: "4个内部账号", icon: "solar:users-group-rounded-bold-duotone", highlight: true },
       { text: "不限数量外部账号", icon: "solar:users-group-rounded-bold-duotone" },
-      { text: "100个塔币/月", icon: "solar:dollar-minimalistic-bold-duotone", highlight: true },
       { text: "完整AI功能", icon: "iconamoon:lightning-2-fill" },
       { text: "优先技术支持", icon: "solar:shield-user-bold-duotone" },
     ],
@@ -59,7 +42,7 @@ const SUBSCRIPTION_PLANS = {
     features: [
       { text: "无限内部账号", icon: "solar:users-group-rounded-bold-duotone" },
       { text: "不限数量外部账号", icon: "solar:users-group-rounded-bold-duotone" },
-      { text: "自定义塔币数量", icon: "solar:dollar-minimalistic-bold-duotone" },
+      { text: "自定义梦想币数量", icon: "solar:dollar-minimalistic-bold-duotone" },
       { text: "专属AI模型", icon: "iconamoon:lightning-2-fill" },
       { text: "专属技术支持", icon: "solar:shield-user-bold-duotone" },
       { text: "定制化开发", icon: "solar:code-square-bold-duotone" },

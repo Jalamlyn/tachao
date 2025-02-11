@@ -1,4 +1,5 @@
 import chatChunkExpert from "@/service/chat/chat-chunk-openrouter"
+// import chatChunkExpert from "@/service/chat/chat-chunk-sc"
 import { AppBuilderMessage } from "./types"
 import { balanceStore } from "@/stores/balanceStore"
 import { appCodeStore } from "./store/appCodeStore"
@@ -7,6 +8,7 @@ import { knowledgeStore } from "./AIEditor/components/KnowledgeStore"
 import { getMetadata } from "@/service/apis/metadata"
 import { AppIndex } from "../AppManagement/store/types"
 import { markdown as template } from "./template.md"
+import getSystemPrompt from "@/prompts"
 
 interface CommandInput {
   content: string
@@ -225,7 +227,10 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
       ]
 
       let response = ""
-
+      const system = await getSystemPrompt(resources, {
+        projectContext, // 将项目上下文数据传递给后端
+        template,
+      })
       await chatChunkExpert(
         allMessages,
         (chunk: string) => {
@@ -236,11 +241,7 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
         true,
         0,
         "YES",
-        {
-          resources,
-          projectContext, // 将项目上下文数据传递给后端
-          template,
-        }
+        system
       )
 
       const version = await appCodeStore.handleAIGeneration(response)

@@ -167,7 +167,7 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
         }}
         startContent={<div className='w-2 h-2 rounded-full bg-white animate-pulse mr-1' />}
       >
-        Made By 即想 AI
+        Made By 模本 AI
       </Chip>
     </div>
   )

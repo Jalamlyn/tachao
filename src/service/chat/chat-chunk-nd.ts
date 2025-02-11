@@ -8,21 +8,8 @@ import { balanceStore } from "@/stores/balanceStore"
 import globalStore from "@/globalStore"
 
 const AI_MODELS = {
-  // BASIC: "anthropic/claude-3.5-sonnet:beta",
-  BASIC: "deepseek/deepseek-r1",
-  // BASIC: "google/gemini-2.0-flash-001",
-  // BASIC: "google/gemini-2.0-flash-thinking-exp:free",
-  // BASIC: "anthropic/claude-3.5-haiku-20241022",
-  ADVANCED: "anthropic/claude-3.5-sonnet",
-  // ADVANCED: "deepseek/deepseek-chat",
-  // ADVANCED: "google/gemini-2.0-flash-thinking-exp:free",
-  // ADVANCED: "deepseek/deepseek-r1",
-  // ADVANCED: "google/gemini-2.0-flash-001",
-  // ADVANCED: "google/gemini-2.0-flash-thinking-exp:free",
-  // ADVANCED: "anthropic/claude-3.5-haiku-20241022:beta",
-  // ADVANCED: "google/gemini-2.0-pro-exp-02-05:free",
-  // ADVANCED: "deepseek/deepseek-r1",
-  // USER: "google/gemini-2.0-flash-thinking-exp:free",
+  BASIC: "claude-3-5-sonnet-20240620",
+  ADVANCED: "claude-3-5-sonnet-20240620",
   USER: "deepseek/deepseek-r1",
 }
 
@@ -68,6 +55,7 @@ export default async function chatChunkOpenAIOffice(
   isFirst = true,
   temperature = 0,
   overFlag = "YES",
+  // promptData = {},
   system,
   isUSER
 ) {
@@ -101,7 +89,9 @@ export default async function chatChunkOpenAIOffice(
     })
   }
 
-  const apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-openrouter"
+  // const apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-nd"
+  const apiEndPoint = "https://api.openai-prc.com/v1/chat/completions"
+
   // const apiEndPoint = "https://api.openai-prc.com"
 
   // 选择模型
@@ -128,9 +118,10 @@ export default async function chatChunkOpenAIOffice(
 
   const payload = {
     model: selectedModel,
-    messages: _messages,
-    system,
+    messages: [{ role: "system", content: system }, ..._messages],
+    // system,
     stream: true,
+    max_tokens: 8196,
     temperature,
   }
 
@@ -146,6 +137,7 @@ export default async function chatChunkOpenAIOffice(
     const response = await fetch(apiEndPoint, {
       method: "POST",
       headers: {
+        Authorization: `Bearer sk-16YPph9BKRo5BGrW3cW7NeBHbA9lXAxYbqsaEOR0mr4K3WBV`,
         "Content-Type": "application/json",
       },
       body: jsonStringify(payload),

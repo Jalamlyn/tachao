@@ -108,7 +108,7 @@ class BalanceStore {
 
     const remaining = accountBalance.limit - accountBalance.used
     if (remaining < cost) {
-      message.error(`账号额度不足,剩余${remaining.toFixed(2)}塔币`)
+      message.error(`账号额度不足,剩余${remaining.toFixed(2)}梦想币`)
       return false
     }
     return true
@@ -152,7 +152,7 @@ class BalanceStore {
       message.error(
         <div>
           <p>余额不足,请充值</p>
-          <p className='text-xs text-gray-500'>当前余额: {this.actualBalance.toFixed(2)} 塔币</p>
+          <p className='text-xs text-gray-500'>当前余额: {this.actualBalance.toFixed(2)} 梦想币</p>
         </div>
       )
       this.showRechargeModal(false)

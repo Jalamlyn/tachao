@@ -154,7 +154,6 @@ window.test = () => {
   }
 
   // 示例调用
-  debugger
   getNativePayQrCode("123456", 100)
     .then((qrCodeUrl) => {
       console.log("支付二维码链接:", qrCodeUrl)

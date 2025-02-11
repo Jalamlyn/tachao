@@ -103,7 +103,7 @@ export default function RegisterPage() {
       <div className="absolute inset-0 bg-[url('/assets/grid.svg')] opacity-20" />
 
       <div className='flex w-full max-w-sm flex-col gap-4 rounded-large bg-content1 px-8 pb-10 pt-6 shadow-small'>
-        <p className='pb-2 text-xl font-medium'>欢迎注册 即想 AI</p>
+        <p className='pb-2 text-xl font-medium'>欢迎注册 模本 AI</p>
         <form className='flex flex-col gap-3' onSubmit={handleSubmit(onSubmit)}>
           <Controller
             name='name'

@@ -174,21 +174,21 @@ const AccountFinance = observer(() => {
           <div className='flex flex-col gap-4'>
             <div>
               <InfoItem
-                label='累计充值塔币总额'
-                value={account?.totalComputePower ? `${(account.totalComputePower / 100).toFixed(2)} 塔币` : "0 塔币"}
-                tooltip='账户充值的总塔币数量'
+                label='累计充值梦想币总额'
+                value={account?.totalComputePower ? `${(account.totalComputePower / 100).toFixed(2)} 梦想币` : "0 梦想币"}
+                tooltip='账户充值的总梦想币数量'
               />
-              <InfoItem label='已消费' value={`${totalCost.toFixed(2)} 塔币`} tooltip='所有已使用的塔币总和' />
+              <InfoItem label='已消费' value={`${totalCost.toFixed(2)} 梦想币`} tooltip='所有已使用的梦想币总和' />
               <InfoItem
                 label='实际可用余额'
-                value={`${actualBalance.toFixed(2)} 塔币`}
+                value={`${actualBalance.toFixed(2)} 梦想币`}
                 tooltip='总额减去已消费后的实际可用余额'
               />
               {actualBalance < 0 && (
                 <div className='mt-2 p-2 bg-danger-50 rounded-lg'>
                   <p className='text-sm text-danger flex items-center gap-1'>
                     <Icon icon='solar:danger-triangle-bold-duotone' className='w-4 h-4' />
-                    <span>当前账户已欠费 {Math.abs(actualBalance).toFixed(2)} 塔币， 请及时充值以确保服务正常使用</span>
+                    <span>当前账户已欠费 {Math.abs(actualBalance).toFixed(2)} 梦想币， 请及时充值以确保服务正常使用</span>
                   </p>
                 </div>
               )}

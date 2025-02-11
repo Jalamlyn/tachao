@@ -119,11 +119,11 @@ const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) =>
           </div>
           <div className='flex items-center gap-2'>
             <span className='text-sm text-default-500'>输入费用:</span>
-            <span>{tokenUsage.inputCost?.toFixed(4)} 塔币</span>
+            <span>{tokenUsage.inputCost?.toFixed(4)} 梦想币</span>
           </div>
           <div className='flex items-center gap-2'>
             <span className='text-sm text-default-500'>输出费用:</span>
-            <span>{tokenUsage.outputCost?.toFixed(4)} 塔币</span>
+            <span>{tokenUsage.outputCost?.toFixed(4)} 梦想币</span>
           </div>
         </div>
       )
@@ -157,10 +157,10 @@ const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) =>
         </div>
         <div className='mb-4'>
           <p className='text-sm text-default-600'>
-            总费用: <span className='font-medium text-default-800'>{totalCost.toFixed(4)} 塔币</span>
+            总费用: <span className='font-medium text-default-800'>{totalCost.toFixed(4)} 梦想币</span>
           </p>
           <p className='text-sm text-default-600'>
-            当前显示费用: <span className='font-medium text-default-800'>{currentPageCost} 塔币</span>
+            当前显示费用: <span className='font-medium text-default-800'>{currentPageCost} 梦想币</span>
           </p>
         </div>
         <Table
@@ -177,7 +177,7 @@ const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) =>
             <TableColumn>类型</TableColumn>
             <TableColumn>详情</TableColumn>
             <TableColumn>消费用户</TableColumn>
-            <TableColumn>费用(塔币)</TableColumn>
+            <TableColumn>费用(梦想币)</TableColumn>
           </TableHeader>
           <TableBody
             items={records}
@@ -195,7 +195,7 @@ const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) =>
                 <TableCell>{renderCostDetails(record)}</TableCell>
                 <TableCell>{record.userName}</TableCell>
                 <TableCell>
-                  <span className='font-medium'>{record.totalCost?.toFixed(4)} 塔币</span>
+                  <span className='font-medium'>{record.totalCost?.toFixed(4)} 梦想币</span>
                 </TableCell>
               </TableRow>
             )}

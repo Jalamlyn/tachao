@@ -1,5 +1,5 @@
 export default {
-  company_name: "即想智能",
+  company_name: "模本智能",
   beta_notice: "Mo 正在内测欢迎👏垂询",
   resources: "资源",
   cooperation: "合作",

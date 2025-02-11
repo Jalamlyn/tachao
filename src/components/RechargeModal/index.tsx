@@ -26,30 +26,28 @@ const SUBSCRIPTION_PLANS = {
   personal: {
     type: "personal",
     name: "个人版",
-    price: 19.9,
+    price: 9.9,
     accountCost: 9.9,
     features: {
       adminAccount: true,
       nbAccountLimit: 0,
       wbAccountLimit: -1,
-      tokenAmount: 10,
     },
-    description: ["1个管理员账号", "不限数量外部账号", "10个塔币", "基础AI功能"],
-    costInTokens: 19.9,
+    description: ["1个管理员账号", "不限数量外部账号", "基础AI功能"],
+    costInTokens: 9.9,
   },
   enterprise: {
     type: "enterprise",
     name: "企业版",
-    price: 199,
+    price: 99,
     accountCost: 99,
     features: {
       adminAccount: true,
       nbAccountLimit: 4,
       wbAccountLimit: -1,
-      tokenAmount: 100,
     },
-    description: ["1个管理员账号", "4个内部账号", "不限数量外部账号", "100个塔币", "完整AI功能"],
-    costInTokens: 199,
+    description: ["1个管理员账号", "4个内部账号", "不限数量外部账号", "完整AI功能"],
+    costInTokens: 99,
   },
 }
 
@@ -152,7 +150,7 @@ const RechargeModal = observer(() => {
       const currentBalance = balanceStore.actualBalance
 
       if (currentBalance < requiredTokens) {
-        message.info(`塔币余额不足，订阅${selectedPlan.name}需要${requiredTokens}塔币，请先充值`)
+        message.info(`梦想币余额不足，订阅${selectedPlan.name}需要${requiredTokens}梦想币，请先充值`)
         setSelectedTab("token")
         return
       }
@@ -173,7 +171,7 @@ const RechargeModal = observer(() => {
 
       balanceStore.setActualBalance(currentBalance - requiredTokens)
 
-      message.success(`已成功订阅${selectedPlan.name}，扣除${requiredTokens}塔币`)
+      message.success(`已成功订阅${selectedPlan.name}，扣除${requiredTokens}梦想币`)
       balanceStore.hideRechargeModal()
     } catch (error) {
       console.error("订阅失败:", error)
@@ -190,7 +188,7 @@ const RechargeModal = observer(() => {
           <Icon icon='solar:refresh-circle-bold-duotone' className='text-lg' />
           <span>支付完成后,请刷新页面查看最新余额</span>
         </div>
-        <div className='text-xs text-default-500'>提示:刷新页面后即可看到充值的塔币</div>
+        <div className='text-xs text-default-500'>提示:刷新页面后即可看到充值的梦想币</div>
       </div>,
       { duration: 10000 }
     )
@@ -268,7 +266,7 @@ const RechargeModal = observer(() => {
                   </div>
                 </div>
                 <Chip color='primary' variant='flat'>
-                  {plan.costInTokens} 塔币
+                  {plan.costInTokens} 梦想币
                 </Chip>
               </div>
               <div className='space-y-3 flex-grow'>
@@ -296,8 +294,8 @@ const RechargeModal = observer(() => {
         <div className='flex items-center gap-2 text-sm text-default-600'>
           <Icon icon='solar:info-circle-bold-duotone' />
           <span>
-            当前塔币余额：
-            <span className='font-medium text-primary'>{balanceStore.actualBalance.toFixed(2)}</span> 塔币
+            当前梦想币余额：
+            <span className='font-medium text-primary'>{balanceStore.actualBalance.toFixed(2)}</span> 梦想币
           </span>
         </div>
       </div>
@@ -327,7 +325,7 @@ const RechargeModal = observer(() => {
                     title={
                       <div className='flex items-center gap-2'>
                         <Icon icon='solar:wallet-money-bold-duotone' />
-                        充值塔币
+                        充值梦想币
                       </div>
                     }
                   />
@@ -351,7 +349,7 @@ const RechargeModal = observer(() => {
                     <span>
                       {selectedTab === "token"
                         ? "支付完成后，请刷新页面查看最新余额"
-                        : `订阅套餐将使用塔币支付，当前余额：${balanceStore.actualBalance.toFixed(2)}塔币`}
+                        : `订阅套餐将使用梦想币支付，当前余额：${balanceStore.actualBalance.toFixed(2)}梦想币`}
                     </span>
                   </p>
                 </div>

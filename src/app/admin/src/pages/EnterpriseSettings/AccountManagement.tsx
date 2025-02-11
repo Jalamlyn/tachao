@@ -87,14 +87,14 @@ const validatePhone = (phone: string): { isValid: boolean; message?: string } =>
   return { isValid: true }
 }
 
-// 验证塔币限制输入
+// 验证梦想币限制输入
 const validateBalanceLimit = (limit: string): { isValid: boolean; message?: string } => {
   const number = Number(limit)
   if (isNaN(number)) {
     return { isValid: false, message: "请输入有效的数字" }
   }
   if (number < 0) {
-    return { isValid: false, message: "塔币限制不能为负数" }
+    return { isValid: false, message: "梦想币限制不能为负数" }
   }
   return { isValid: true }
 }
@@ -224,7 +224,7 @@ const AccountManagement: React.FC = () => {
         name: accountName,
       })
 
-      // 设置账号塔币额度
+      // 设置账号梦想币额度
       const newBalances = {
         ...accountBalances,
         [accountRes.id]: {
@@ -292,7 +292,7 @@ const AccountManagement: React.FC = () => {
         phone: values.phone,
       })
 
-      // 更新账号塔币额度
+      // 更新账号梦想币额度
       const newBalances = {
         ...accountBalances,
         [selectedAccount.id]: {
@@ -316,7 +316,7 @@ const AccountManagement: React.FC = () => {
     try {
       await deleteRamAccount(selectedAccount.id)
 
-      // 删除账号塔币额度信息
+      // 删除账号梦想币额度信息
       const newBalances = { ...accountBalances }
       delete newBalances[selectedAccount.id]
       await saveAccountBalances(newBalances)
@@ -351,14 +351,14 @@ const AccountManagement: React.FC = () => {
 
   const copyAccountMessage = async (account) => {
     setCopyingAccountId(account.id)
-    const message = `🎉 欢迎加入即想AI！
+    const message = `🎉 欢迎加入模本AI！
 
 您的账号信息如下：
 👤 账号：${account.account}
 🔑 密码：${account.account}
 🌐 登录地址：https://www.mobenai.com.cn/login?oid=1
 
-✨ 即想AI是一个革命性的AI编程平台，让人人都能成为开发者。
+✨ 模本AI是一个革命性的AI编程平台，让人人都能成为开发者。
 💡 在这里，您可以轻松地将想法转化为应用程序，享受AI驱动的开发体验。
 
 🚀 立即登录，开启您的AI编程之旅！
@@ -430,7 +430,7 @@ const AccountManagement: React.FC = () => {
     { name: "名称", uid: "name" },
     { name: "账号", uid: "account" },
     { name: "手机号", uid: "phone" },
-    { name: "塔币限制", uid: "balance" },
+    { name: "梦想币限制", uid: "balance" },
     { name: "类型", uid: "type" },
     { name: "操作", uid: "actions" },
   ]
@@ -445,7 +445,7 @@ const AccountManagement: React.FC = () => {
         const balance = accountBalances[account.id] || { limit: 10, used: 0 }
         return (
           <Tooltip content={`已使用: ${balance.used.toFixed(2)} / 总额度: ${balance.limit}`}>
-            <span>剩余: {(balance.limit - balance.used).toFixed(2)} 塔币</span>
+            <span>剩余: {(balance.limit - balance.used).toFixed(2)} 梦想币</span>
           </Tooltip>
         )
       case "actions":
@@ -577,10 +577,10 @@ const AccountManagement: React.FC = () => {
                 />
                 <Input
                   name='balanceLimit'
-                  label='塔币限制'
+                  label='梦想币限制'
                   type='number'
                   defaultValue='10'
-                  description='默认10塔币，0表示无限制'
+                  description='默认10梦想币，0表示无限制'
                   onValueChange={handleBalanceLimitChange}
                   errorMessage={balanceLimitError}
                 />
@@ -633,10 +633,10 @@ const AccountManagement: React.FC = () => {
                 />
                 <Input
                   name='balanceLimit'
-                  label='塔币限制'
+                  label='梦想币限制'
                   type='number'
                   defaultValue={accountBalances[selectedAccount?.id]?.limit || 10}
-                  description='默认10塔币，0表示无限制'
+                  description='默认10梦想币，0表示无限制'
                   onValueChange={handleBalanceLimitChange}
                   errorMessage={balanceLimitError}
                 />
@@ -732,11 +732,11 @@ const AccountManagement: React.FC = () => {
                       <p>{accountDetail.phone || "-"}</p>
                     </div>
                     <div>
-                      <p className='text-sm text-gray-500'>塔币限制</p>
+                      <p className='text-sm text-gray-500'>梦想币限制</p>
                       <p>
                         {accountBalances[accountDetail.id]?.limit === 0
                           ? "无限制"
-                          : `${accountBalances[accountDetail.id]?.limit || 10} 塔币 (已使用: ${accountBalances[accountDetail.id]?.used.toFixed(2) || 0})`}
+                          : `${accountBalances[accountDetail.id]?.limit || 10} 梦想币 (已使用: ${accountBalances[accountDetail.id]?.used.toFixed(2) || 0})`}
                       </p>
                     </div>
                     <div>

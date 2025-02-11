@@ -13,7 +13,7 @@ const Footer: React.FC = () => {
             <div className='flex items-center space-x-2'>
               <img src='/assets/logo.jpg' alt='IdeaNow AI' className='w-[100px] h-auto rounded-lg' />
               <div className='flex flex-col'>
-                <span className='text-white font-bold'>即想智能</span>
+                <span className='text-white font-bold'>模本智能</span>
                 <span className='text-white/70 text-sm'>AI驱动的企业管理平台</span>
               </div>
             </div>

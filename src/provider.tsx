@@ -23,7 +23,7 @@ const LogoAnimation = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        即想 AI
+        模本 AI
       </motion.h1>
       <motion.p
         className='text-xl text-indigo-300'

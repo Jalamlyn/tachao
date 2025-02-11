@@ -56,7 +56,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose }) => {
               </ul>
             </div>
 
-            <p className='text-default-600 font-medium'>扫描二维码联系预约演示</p>
+            <p className='text-default-600 font-medium'>有问题，就找我们老板</p>
 
             <motion.div
               className='flex justify-center'
