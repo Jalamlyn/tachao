@@ -188,7 +188,7 @@ const AccountFinance = observer(() => {
                 <div className='mt-2 p-2 bg-danger-50 rounded-lg'>
                   <p className='text-sm text-danger flex items-center gap-1'>
                     <Icon icon='solar:danger-triangle-bold-duotone' className='w-4 h-4' />
-                    <span>当前账户已欠费 {Math.abs(actualBalance).toFixed(2)} 梦想币， 请及时充值以确保服务正常使用</span>
+                    <span>当前账户已欠费 {Math.abs(actualBalance).toFixed(2)} 梦想币， 请及时为梦想充值</span>
                   </p>
                 </div>
               )}
