@@ -42,7 +42,6 @@ const SUBSCRIPTION_PLANS = {
     features: [
       { text: "无限内部账号", icon: "solar:users-group-rounded-bold-duotone" },
       { text: "不限数量外部账号", icon: "solar:users-group-rounded-bold-duotone" },
-      { text: "自定义梦想币数量", icon: "solar:dollar-minimalistic-bold-duotone" },
       { text: "专属AI模型", icon: "iconamoon:lightning-2-fill" },
       { text: "专属技术支持", icon: "solar:shield-user-bold-duotone" },
       { text: "定制化开发", icon: "solar:code-square-bold-duotone" },
