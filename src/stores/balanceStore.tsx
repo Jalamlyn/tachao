@@ -121,6 +121,7 @@ class BalanceStore {
   }
 
   async checkBalance(cost: number = 0.1, accountId?: string): Promise<boolean> {
+    await this.fetchBalance()
     // 检查订阅状态
     const subscription = await subscriptionService.getSubscription(globalStore.organizationId)
     if (!subscription) {

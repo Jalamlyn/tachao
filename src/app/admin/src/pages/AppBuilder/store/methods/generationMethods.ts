@@ -1,5 +1,5 @@
 import { getMetadata, getPlatMetaData, getPublicMetaData } from "@/service/apis/metadata"
-import { templates } from "../../prompts/templates"
+import { templates } from "../../../../../../../prompts/prompts/templates"
 import { AppCodeStore, Version, AIGenerationResult } from "../types"
 import { initializeResourcePermissions } from "@/app/admin/src/permissions/utils/permissionUtils"
 import { getCurrentAccountInfo } from "@/service/apis/user"

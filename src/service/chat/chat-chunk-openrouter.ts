@@ -10,27 +10,30 @@ import globalStore from "@/globalStore"
 const AI_MODELS = {
   BASIC: "anthropic/claude-3.5-sonnet",
   ADVANCED: "anthropic/claude-3.5-sonnet",
-  USER: "google/gemini-2.0-flash-001",
+  USER: "anthropic/claude-3.5-sonnet",
+  // USER: "google/gemini-2.0-flash-001",
 }
 
 // 定义JavaScript执行工具
-const TOOLS = [{
-  "type": "function",
-  "function": {
-    "name": "executeJavaScript",
-    "description": "Execute JavaScript code and return the result",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "string",
-          "description": "The JavaScript code to execute"
-        }
+const TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "executeJavaScript",
+      description: "Execute JavaScript code and return the result",
+      parameters: {
+        type: "object",
+        properties: {
+          code: {
+            type: "string",
+            description: "The JavaScript code to execute",
+          },
+        },
+        required: ["code"],
       },
-      "required": ["code"]
-    }
-  }
-}]
+    },
+  },
+]
 
 function selectModel(messages) {
   // 检查是否以 @pm 开头
@@ -73,7 +76,7 @@ async function executeScript(code) {
     const result = await new Function(code)()
     return String(result)
   } catch (error) {
-    console.error('Script execution error:', error)
+    console.error("Script execution error:", error)
     return `Error executing script: ${error.message}`
   }
 }
@@ -198,14 +201,14 @@ export default async function chatChunkOpenAIOffice(
       if (event.data !== "[DONE]") {
         try {
           const parsed = jsonParse(event.data)
-          
+
           // 处理工具调用
           if (parsed?.choices[0]?.delta?.tool_calls) {
             const toolCall = parsed.choices[0].delta.tool_calls[0]
             if (toolCall.function.name === "executeJavaScript") {
               const args = JSON.parse(toolCall.function.arguments)
               const result = await executeScript(args.code)
-              
+
               // 将执行结果作为工具响应添加到消息中
               await chatChunkOpenAIOffice(
                 _messages.concat([
@@ -213,8 +216,8 @@ export default async function chatChunkOpenAIOffice(
                     role: "tool",
                     name: "executeJavaScript",
                     tool_call_id: toolCall.id,
-                    content: result
-                  }
+                    content: result,
+                  },
                 ]),
                 onChunk,
                 onCancel,
@@ -258,37 +261,6 @@ export default async function chatChunkOpenAIOffice(
               overFlag
             )
             return
-          }
-
-          // 保留原有的script标签处理逻辑以保持兼容性
-          if (parsed?.choices[0]?.finish_reason === "stop") {
-            const scriptMatch = fullContent.match(/<mo-ai-script>([\s\S]*?)<\/mo-ai-script>/)
-            if (scriptMatch) {
-              const code = scriptMatch[1]
-              const result = await executeScript(code)
-              const newContent = fullContent.replace(/<mo-ai-script>[\s\S]*?<\/mo-ai-script>/g, result)
-              
-              await chatChunkOpenAIOffice(
-                _messages.concat([
-                  { role: "assistant", content: newContent },
-                  {
-                    role: "user",
-                    content: [
-                      {
-                        type: "text",
-                        text: "请基于以上执行结果继续回答",
-                      },
-                    ],
-                  },
-                ]),
-                onChunk,
-                onCancel,
-                false,
-                temperature,
-                overFlag
-              )
-              return
-            }
           }
         } catch (error) {
           console.log("Error parsing JSON:", error)

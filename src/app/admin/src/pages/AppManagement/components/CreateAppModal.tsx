@@ -21,7 +21,7 @@ import { useAppStore } from "../store/useAppStore"
 import { getCurrentAccountInfo } from "@/service/apis/user"
 import { TemplateSection } from "./components/TemplateSection"
 import { SuccessDialog, DeleteConfirmDialog } from "./CreateAppModalDialogs"
-import { multiPageTemplate, singlePageTemplate } from "@/app/admin/src/pages/AppBuilder/prompts/nextui/initTemplate"
+import { multiPageTemplate, singlePageTemplate } from "@/prompts/prompts/nextui/initTemplate"
 import { getPlatMetaData, setPlatMetaData } from "@/service/apis/metadata"
 import message from "@/components/Message"
 

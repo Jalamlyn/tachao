@@ -49,7 +49,7 @@ class AIService {
 
   // 统一的chat方法
   async chat(messages: any[], options: ChatOptions = {}): Promise<void> {
-    const { onChunk, onResult, onError, temperature = 0 } = options
+    const { onChunk, onResult, onError, temperature = 0, stop } = options
     let fullContent = ""
 
     try {
@@ -69,7 +69,8 @@ class AIService {
           true, // isStream
           temperature,
           "YES",
-          {},
+          "",
+          stop,
           true
         )
       } else {
@@ -84,7 +85,8 @@ class AIService {
           true, // isStream
           temperature,
           "YES",
-          {},
+          "",
+          stop,
           true
         )
       }
