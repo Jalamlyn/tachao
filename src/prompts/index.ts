@@ -1,5 +1,5 @@
 import RESOURCE_PROMPTS from "./resource"
-import NEXTUI_DOC from "./next-ui-doc"
+// import NEXTUI_DOC from "./next-ui-doc"
 import SERVICE_DOC from "./experience"
 
 export default async function getSystemPrompt(resources, promptData = {}) {
@@ -31,7 +31,6 @@ ${SERVICE_DOC}
 
 
 <next-ui-doc-v2>
-${NEXTUI_DOC}
 NextUI V2的组件列表，只包含以下组件
 accordion
 alert

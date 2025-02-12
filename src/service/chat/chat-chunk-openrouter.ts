@@ -201,7 +201,7 @@ export default async function chatChunkOpenAIOffice(
         try {
           const parsed = jsonParse(event.data)
           // 处理工具调用
-          if (!parsed?.choices) {
+          if (!parsed?.choices || parsed?.choices[0]?.finish_reason === "error") {
             throw new Error("网络拥堵，请稍后重试，或者切换其他可用模型")
           }
           if (parsed?.choices[0]?.delta?.tool_calls) {
@@ -224,7 +224,8 @@ export default async function chatChunkOpenAIOffice(
                 onCancel,
                 false,
                 temperature,
-                overFlag
+                overFlag,
+                system
               )
               return
             }
@@ -239,7 +240,6 @@ export default async function chatChunkOpenAIOffice(
             totalUsage.promptTokenCount += parsed.usage.prompt_tokens || 0
             totalUsage.candidatesTokenCount += parsed.usage.completion_tokens || 0
           }
-
           if (parsed?.choices[0]?.finish_reason === "length") {
             const lastTenChars = fullContent.slice(-10)
             await chatChunkOpenAIOffice(
@@ -250,7 +250,7 @@ export default async function chatChunkOpenAIOffice(
                   content: [
                     {
                       type: "text",
-                      text: `继续生成,从"""${lastTenChars}"""后面开始生成,但是不要包含从"""${lastTenChars}""",开头和结尾都不要解释和说明,也不要有\`\`\`和这样的标记`,
+                      text: `继续生成,从"""${lastTenChars}"""后面开始生成,但是不要包含"""${lastTenChars}""",开头和结尾都不要解释和说明,也不要有\`\`\`和这样的标记，如果是非连续的，注意添加空格`,
                     },
                   ],
                 },
@@ -259,7 +259,8 @@ export default async function chatChunkOpenAIOffice(
               onCancel,
               false,
               temperature,
-              overFlag
+              overFlag,
+              system
             )
             return
           }

@@ -29,12 +29,10 @@ export const AppRender: React.FC<AppRenderProps> = ({ appId, basename, onError, 
       <BrowserRouter basename={basename}>
         {App && (
           <AppEntry>
-            <App></App>
+            <App basename={basename}></App>
           </AppEntry>
         )}
       </BrowserRouter>
     </ErrorBoundary>
   )
 }
-
-
