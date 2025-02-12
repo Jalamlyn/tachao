@@ -26,6 +26,7 @@ interface PreviewPageProps {
   appId: string
   onAIFix?: (errorInfo: any) => void
 }
+let _userOperations = ""
 
 const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   const [isLoading, setIsLoading] = useState(true)
@@ -61,26 +62,22 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   }, [error])
 
   const handleAIFix = (errorInfo: any) => {
-    // 对于模块错误,直接发送修复请求
-    if (errorInfo.type === "module_error") {
-      window.parent.postMessage(
-        {
-          type: "AI_FIX_REQUEST",
-          payload: {
-            error: JSON.stringify(errorInfo.message),
-            context: {
-              type: "module_error",
-              route: window.location.pathname,
-              appId,
-              moduleName: errorInfo.context?.moduleName,
-            },
+    window.parent.postMessage(
+      {
+        type: "AI_FIX_REQUEST",
+        payload: {
+          error: JSON.stringify(errorInfo.message),
+          context: {
+            type: "module_error",
+            route: window.location.pathname,
+            appId,
+            moduleName: errorInfo.context?.moduleName,
+            userOperations: _userOperations,
           },
         },
-        "*"
-      )
-      return
-    }
-
+      },
+      "*"
+    )
     // 其他错误,打开操作收集对话框
     setIsOperationModalOpen(true)
   }

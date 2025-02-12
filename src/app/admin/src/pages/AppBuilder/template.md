@@ -26,9 +26,11 @@ const {
 } = context;
 
 const { Routes, Route, Navigate, useNavigate } = ReactRouterDom;
+const { Navbar, NavbarBrand, NavbarContent, NavbarItem, Link } = NextUI;
 
 // 导入页面组件
 const ChatPage = await context.wpm.import('page_chat');
+const UploadPage = await context.wpm.import('page_upload');
 
 const App = observer(() => {
   const navigate = useNavigate();
@@ -36,10 +38,32 @@ const App = observer(() => {
   return (
     <NextUI.NextUIProvider navigate={navigate}>
       <div className="min-h-screen bg-background">
-        <Routes>
-          <Route path="/" element={<Navigate to="/chat" replace />} />
-          <Route path="/chat" element={<ChatPage />} />
-        </Routes>
+        <Navbar>
+          <NavbarBrand>
+            <Icon icon="solar:calendar-bold-duotone" className="w-6 h-6 text-primary"/>
+            <p className="font-bold text-inherit">考勤助手</p>
+          </NavbarBrand>
+          <NavbarContent className="hidden sm:flex gap-4" justify="center">
+            <NavbarItem>
+              <Link color="foreground" href="/chat">
+                智能对话
+              </Link>
+            </NavbarItem>
+            <NavbarItem>
+              <Link color="foreground" href="/upload">
+                数据上传
+              </Link>
+            </NavbarItem>
+          </NavbarContent>
+        </Navbar>
+
+        <main className="container mx-auto py-4">
+          <Routes>
+            <Route path="/" element={<Navigate to="/chat" replace />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/upload" element={<UploadPage />} />
+          </Routes>
+        </main>
       </div>
     </NextUI.NextUIProvider>
   );
@@ -97,7 +121,7 @@ const ChatInput = observer(({ onSend, loading }) => {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyPress={handleKeyPress}
-        placeholder="输入问题..."
+        placeholder="输入问题,例如: 统计本月迟到情况..."
         className="flex-1"
         size="lg"
         endContent={
@@ -160,61 +184,8 @@ const ChatMessage = observer(({ message, isAi }) => {
     return () => clearInterval(interval);
   }, [message.phase]);
 
-  // 如果是第二阶段的用户消息,不显示
-  if (!isAi && message.phase === 'second-phase') {
-    api.log.info('跳过显示第二阶段用户消息', {
-      messageId: message.id,
-      content: message.content
-    });
-    return null;
-  }
-
   const hasError = message.error && message.errorMessage;
   const isLoading = message.phase === 'thinking' || message.phase === 'answering';
-
-  // 处理消息内容,如果包含代码块则隐藏
-  const processContent = (content) => {
-    if (!content) return '';
-
-    // 检查是否包含代码块
-    const hasCodeBlock = content.includes('<mo-ai-script>');
-    if (hasCodeBlock) {
-      // 如果是第一阶段且包含代码,返回思考中
-      if (message.phase === 'thinking') {
-        return '思考中';
-      }
-
-      // 获取代码块之前的内容
-      const beforeCode = content.split('<mo-ai-script>')[0];
-      return beforeCode || '正在处理';
-    }
-
-    return content;
-  };
-
-  const displayContent = processContent(message.content);
-
-  // 获取加载状态文本
-  const getLoadingText = () => {
-    switch (message.phase) {
-      case 'thinking':
-        return '思考中';
-      case 'answering':
-        return displayContent || '生成回答中';
-      case 'executing':
-        return '执行代码中';
-      default:
-        return '处理中';
-    }
-  };
-
-  api.log.info('渲染消息组件', {
-    messageId: message.id,
-    phase: message.phase,
-    hasError,
-    isLoading,
-    content: displayContent?.slice(0, 100)
-  });
 
   return (
     <div className={cn("flex gap-3 mb-4", {
@@ -241,8 +212,24 @@ const ChatMessage = observer(({ message, isAi }) => {
           })}>
             <CardBody className="py-2 px-3">
               <p className="text-sm whitespace-pre-wrap">
-                {isLoading ? `${getLoadingText()}${dots}` : displayContent}
+                {isLoading ? `${message.content || '思考中'}${dots}` : message.content}
               </p>
+              {message.stats && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Chip color="success" variant="flat" size="sm">
+                    正常: {message.stats.normal}
+                  </Chip>
+                  <Chip color="warning" variant="flat" size="sm">
+                    迟到: {message.stats.late}
+                  </Chip>
+                  <Chip color="danger" variant="flat" size="sm">
+                    早退: {message.stats.early}
+                  </Chip>
+                  <Chip color="danger" variant="flat" size="sm">
+                    缺勤: {message.stats.absent}
+                  </Chip>
+                </div>
+              )}
             </CardBody>
           </Card>
         </motion.div>
@@ -274,21 +261,6 @@ const ChatMessage = observer(({ message, isAi }) => {
           <time className="text-xs text-default-400">
             {new Date(message.timestamp).toLocaleTimeString()}
           </time>
-          {isAi && message.executionResult !== undefined && (
-            <Chip
-              variant="flat"
-              color="success"
-              size="sm"
-              startContent={
-                <Icon
-                  icon="solar:code-circle-line-duotone"
-                  className="w-3 h-3"
-                />
-              }
-            >
-              代码已执行
-            </Chip>
-          )}
         </div>
       </div>
       {!isAi && (
@@ -308,7 +280,7 @@ ChatMessage.displayName = 'ChatMessage';
 ```
 
 ```jsx
-<mo-ai-code type="component" name="comp_code_preview" title="代码预览组件">
+<mo-ai-code type="component" name="comp_data_preview" title="数据预览组件">
 const {
   wpm,
   React,
@@ -330,122 +302,66 @@ const {
   esm,
 } = context;
 
-const { Card, CardBody, Divider, Chip, Spinner } = NextUI;
+const { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Button, Card } = NextUI;
 
-const CodePreview = observer(({ code, result, error, calculating }) => {
+const DataPreview = observer(({ data, onImport, loading }) => {
+  if (!data) return null;
+
   return (
-    <div className="h-full flex flex-col">
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold">执行代码</h3>
-          {code && (
-            <Chip
-              variant="flat"
-              color="primary"
-              size="sm"
-              startContent={
-                <Icon
-                  icon="solar:code-square-line-duotone"
-                  className="w-3 h-3"
-                />
-              }
-            >
-              JavaScript
-            </Chip>
-          )}
+    <Card className="mt-4">
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold">数据预览</h3>
+            <p className="text-small text-default-500">
+              共 {data.total} 条记录
+            </p>
+          </div>
+          <Button
+            color="primary"
+            onPress={onImport}
+            isLoading={loading}
+            startContent={
+              <Icon icon="solar:import-bold-duotone" className="w-4 h-4" />
+            }
+          >
+            导入数据
+          </Button>
         </div>
-        {code ? (
-          <Card className="bg-default-50">
-            <CardBody>
-              <pre className="text-sm overflow-x-auto whitespace-pre-wrap">
-                <code>{code}</code>
-              </pre>
-            </CardBody>
-          </Card>
-        ) : (
-          <p className="text-default-500">暂无代码</p>
-        )}
-      </div>
 
-      <Divider />
-
-      <div className="flex-1 mt-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-semibold">执行结果</h3>
-          {calculating ? (
-            <Chip
-              variant="flat"
-              color="warning"
-              size="sm"
-              startContent={<Spinner size="sm" />}
-            >
-              计算中...
-            </Chip>
-          ) : result !== undefined && !error ? (
-            <Chip
-              variant="flat"
-              color="success"
-              size="sm"
-              startContent={
-                <Icon
-                  icon="solar:check-circle-line-duotone"
-                  className="w-3 h-3"
-                />
-              }
-            >
-              执行成功
-            </Chip>
-          ) : error ? (
-            <Chip
-              variant="flat"
-              color="danger"
-              size="sm"
-              startContent={
-                <Icon
-                  icon="solar:danger-triangle-line-duotone"
-                  className="w-3 h-3"
-                />
-              }
-            >
-              执行失败
-            </Chip>
-          ) : null}
-        </div>
-        <Card className="bg-default-50 h-[calc(100%-3rem)]">
-          <CardBody className="overflow-auto">
-            {calculating ? (
-              <div className="flex items-center justify-center h-full text-default-500">
-                <Spinner label="正在计算..." />
-              </div>
-            ) : error ? (
-              <div className="text-danger">
-                <p className="font-medium mb-1">错误信息:</p>
-                <pre className="text-sm">{error}</pre>
-              </div>
-            ) : result !== undefined ? (
-              <pre className="text-sm whitespace-pre-wrap">
-                {typeof result === 'object'
-                  ? JSON.stringify(result, null, 2)
-                  : String(result)
-                }
-              </pre>
-            ) : (
-              <p className="text-default-500">暂无结果</p>
-            )}
-          </CardBody>
-        </Card>
+        <Table
+          aria-label="考勤数据预览"
+          classNames={{
+            wrapper: "max-h-[400px]"
+          }}
+        >
+          <TableHeader>
+            {data.headers.map((header, index) => (
+              <TableColumn key={index}>{header}</TableColumn>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {data.rows.map((row, rowIndex) => (
+              <TableRow key={rowIndex}>
+                {row.map((cell, cellIndex) => (
+                  <TableCell key={cellIndex}>{cell}</TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
-    </div>
+    </Card>
   );
 });
 
-context.wpm.export('comp_code_preview', CodePreview);
-CodePreview.displayName = 'CodePreview';
+context.wpm.export('comp_data_preview', DataPreview);
+DataPreview.displayName = 'DataPreview';
 </mo-ai-code>
 ```
 
 ```jsx
-<mo-ai-code type="component" name="comp_iframe_preview" title="iframe预览组件">
+<mo-ai-code type="component" name="comp_upload_excel" title="Excel上传组件">
 const {
   wpm,
   React,
@@ -467,144 +383,241 @@ const {
   esm,
 } = context;
 
-const { Card, CardBody, CardHeader, Chip, Spinner } = NextUI;
+const { Card, CardBody, Button, Progress } = NextUI;
+const { motion } = FramerMotion;
 
-const IframePreview = observer(({ html, error, calculating }) => {
-  const iframeRef = React.useRef(null);
+// 导入工具
+const excelUtils = await context.wpm.import('utils_excel');
 
-  // HTML 模板
-  const getTemplate = (content) => `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="https://cdn.tailwindcss.com"></script>
-        <style>
-          body {
-            margin: 0;
-            min-height: 100vh;
-            background: transparent;
-          }
-        </style>
-      </head>
-      <body>
-        ${content || ''}
-      </body>
-    </html>
-  `;
+const UploadExcel = observer(({ onUpload }) => {
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [uploadStatus, setUploadStatus] = React.useState(null);
+  const fileInputRef = React.useRef(null);
 
-  // 重置 iframe
-  const resetIframe = () => {
-    if (iframeRef.current) {
-      try {
-        const doc = iframeRef.current.contentDocument;
-        doc.open();
-        doc.write(getTemplate(''));
-        doc.close();
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
 
-        api.log.info('重置 iframe 内容');
-      } catch (error) {
-        api.log.error('重置 iframe 失败', { error });
-      }
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files.length) {
+      handleFile(files[0]);
     }
   };
 
-  // 更新 iframe 内容
-  React.useEffect(() => {
-    if (!iframeRef.current) return;
+  const handleFileSelect = (e) => {
+    const files = e.target.files;
+    if (files.length) {
+      handleFile(files[0]);
+    }
+  };
+
+  const handleFile = async (file) => {
+    if (!file.name.match(/\.(xlsx|xls)$/)) {
+      message.error('请上传Excel文件(.xlsx或.xls)');
+      return;
+    }
 
     try {
-      api.log.info('准备更新 iframe 内容', {
-        hasHtml: !!html,
-        htmlLength: html?.length,
-        calculating,
-        error
+      setUploadStatus({
+        fileName: file.name,
+        progress: 0,
+        status: 'uploading'
       });
 
-      const doc = iframeRef.current.contentDocument;
-      doc.open();
-      doc.write(getTemplate(html));
-      doc.close();
+      api.log.info('开始处理Excel文件', {
+        fileName: file.name,
+        fileSize: file.size
+      });
 
-      api.log.info('更新 iframe 内容成功');
+      // 转换为CSV
+      const { headers, rows, csv } = await excelUtils.excelToCSV(file);
+
+      // 上传文件
+      const result = await api.upload.uploadFile(file, {
+        onProgress: (percent) => {
+          setUploadStatus(prev => ({
+            ...prev,
+            progress: percent
+          }));
+        },
+        maxSize: 10 * 1024 * 1024
+      });
+
+      setUploadStatus(prev => ({
+        ...prev,
+        status: 'success',
+        fileUrl: result.fileUrl
+      }));
+
+      if (onUpload) {
+        onUpload({
+          ...result,
+          headers,
+          rows,
+          csv
+        });
+      }
+
+      message.success('文件上传成功');
+      api.log.info('文件处理完成', {
+        fileName: file.name,
+        headers,
+        rowCount: rows.length
+      });
+
     } catch (error) {
-      api.log.error('更新 iframe 内容失败', { error });
-      resetIframe();
+      api.log.error('文件处理失败', {
+        error: error.message,
+        fileName: file.name
+      });
+
+      setUploadStatus(prev => ({
+        ...prev,
+        status: 'error',
+        error: error.message
+      }));
+
+      message.error('文件上传失败: ' + error.message);
     }
-  }, [html, calculating, error]);
+  };
+
+  const handleDownloadTemplate = () => {
+    try {
+      excelUtils.generateTemplate();
+      message.success('模板下载成功');
+    } catch (error) {
+      message.error('模板下载失败');
+    }
+  };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">预览效果</h3>
-        {calculating ? (
-          <Chip
-            variant="flat"
-            color="warning"
-            size="sm"
-            startContent={<Spinner size="sm" />}
-          >
-            生成中...
-          </Chip>
-        ) : error ? (
-          <Chip
-            variant="flat"
-            color="danger"
-            size="sm"
-            startContent={
-              <Icon
-                icon="solar:danger-triangle-line-duotone"
-                className="w-3 h-3"
-              />
-            }
-          >
-            生成失败
-          </Chip>
-        ) : html ? (
-          <Chip
-            variant="flat"
-            color="success"
-            size="sm"
-            startContent={
-              <Icon
-                icon="solar:check-circle-line-duotone"
-                className="w-3 h-3"
-              />
-            }
-          >
-            预览就绪
-          </Chip>
-        ) : null}
+    <div className="w-full">
+      <div className="flex justify-end mb-4">
+        <Button
+          color="primary"
+          variant="flat"
+          startContent={
+            <Icon icon="solar:download-square-bold-duotone" className="w-4 h-4" />
+          }
+          onPress={handleDownloadTemplate}
+        >
+          下载模板
+        </Button>
       </div>
 
-      <Card className="flex-1">
-        <CardBody className="p-0 overflow-hidden">
-          {error ? (
-            <div className="p-4 text-danger">
-              <p className="font-medium mb-1">错误信息:</p>
-              <pre className="text-sm whitespace-pre-wrap">{error}</pre>
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept=".xlsx,.xls"
+        onChange={handleFileSelect}
+      />
+
+      <Card
+        className={cn(
+          "border-2 border-dashed transition-colors",
+          isDragging ? "border-primary" : "border-default-200",
+          uploadStatus?.status === 'uploading' ? "opacity-50" : ""
+        )}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <CardBody className="py-8">
+          <div className="flex flex-col items-center gap-4">
+            <motion.div
+              animate={{
+                scale: isDragging ? 1.1 : 1
+              }}
+              className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center"
+            >
+              <Icon
+                icon="solar:file-text-bold-duotone"
+                className="w-8 h-8 text-primary"
+              />
+            </motion.div>
+
+            <div className="text-center">
+              <p className="text-default-700 mb-1">
+                拖拽Excel文件到这里,或者
+                <Button
+                  variant="light"
+                  color="primary"
+                  className="px-1"
+                  onClick={() => fileInputRef.current?.click()}
+                  isDisabled={uploadStatus?.status === 'uploading'}
+                >
+                  点击上传
+                </Button>
+              </p>
+              <p className="text-small text-default-500">
+                支持 .xlsx, .xls 格式,最大10MB
+              </p>
             </div>
-          ) : calculating ? (
-            <div className="h-full flex items-center justify-center">
-              <Spinner label="正在生成..." />
-            </div>
-          ) : (
-            <iframe
-              ref={iframeRef}
-              className="w-full h-full border-0"
-              sandbox="allow-scripts allow-same-origin"
-              title="预览"
-            />
-          )}
+
+            {uploadStatus && (
+              <div className="w-full max-w-md">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon
+                    icon="solar:file-bold-duotone"
+                    className="w-4 h-4 text-default-500"
+                  />
+                  <span className="text-small text-default-700">
+                    {uploadStatus.fileName}
+                  </span>
+                  {uploadStatus.status === 'success' && (
+                    <Icon
+                      icon="solar:check-circle-bold-duotone"
+                      className="w-4 h-4 text-success"
+                    />
+                  )}
+                  {uploadStatus.status === 'error' && (
+                    <Icon
+                      icon="solar:danger-circle-bold-duotone"
+                      className="w-4 h-4 text-danger"
+                    />
+                  )}
+                </div>
+
+                {uploadStatus.status === 'uploading' && (
+                  <Progress
+                    size="sm"
+                    value={uploadStatus.progress}
+                    color="primary"
+                    className="max-w-md"
+                  />
+                )}
+
+                {uploadStatus.status === 'error' && (
+                  <p className="text-small text-danger">
+                    {uploadStatus.error}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </CardBody>
       </Card>
     </div>
   );
 });
 
-context.wpm.export('comp_iframe_preview', IframePreview);
-IframePreview.displayName = 'IframePreview';
+context.wpm.export('comp_upload_excel', UploadExcel);
+UploadExcel.displayName = 'UploadExcel';
 </mo-ai-code>
 ```
 
@@ -660,48 +673,7 @@ IframePreview.displayName = 'IframePreview';
 ```
 
 ```jsx
-<mo-ai-code type="module" name="utils_debounce" title="防抖工具函数">
-const {
-  wpm,
-  React,
-  observer,
-  Icon,
-  NextUI,
-  ReactRouterDom,
-  ReactHookForm,
-  ReactToPrint,
-  FramerMotion,
-  message,
-  appId,
-  api,
-  ai,
-  mobx,
-  recharts,
-  cn,
-  xlsx,
-  esm,
-} = context;
-
-const debounce = (func, wait = 300) => {
-  let timeout;
-
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-};
-
-context.wpm.export('utils_debounce', debounce);
-</mo-ai-code>
-```
-
-```jsx
-<mo-ai-code type="page" name="page_chat" title="AI对话页面">
+<mo-ai-code type="page" name="page_chat" title="对话页面">
 const {
   wpm,
   React,
@@ -728,7 +700,6 @@ const { Card, CardBody } = NextUI;
 // 导入组件
 const ChatInput = await context.wpm.import('comp_chat_input');
 const ChatMessage = await context.wpm.import('comp_chat_message');
-const IframePreview = await context.wpm.import('comp_iframe_preview');
 const chatStore = await context.wpm.import('store_chat');
 
 const ChatPage = observer(() => {
@@ -742,61 +713,545 @@ const ChatPage = observer(() => {
     scrollToBottom();
   }, [chatStore.messages]);
 
-  // 添加布局变化日志
-  React.useEffect(() => {
-    const handleResize = () => {
-      const isLargeScreen = window.innerWidth >= 1024;
-      api.log.info('布局响应变化', {
-        screenWidth: window.innerWidth,
-        isLargeScreen,
-        leftWidth: isLargeScreen ? '30%' : '50%',
-        rightWidth: isLargeScreen ? '70%' : '50%'
-      });
-    };
-
-    window.addEventListener('resize', handleResize);
-    handleResize(); // 初始检查
-
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   return (
-    <div className="grid h-screen grid-cols-2 lg:grid-cols-4 transition-all duration-300">
-      {/* 左侧对话区域 */}
-      <div className="h-full flex flex-col p-4">
-        <Card className="flex-1 mb-4">
-          <CardBody className="p-4 overflow-y-auto">
-            {chatStore.messages.map((message, index) => (
-              <ChatMessage
-                key={index}
-                message={message}
-                isAi={message.role === 'ai'}
-                calculating={index === chatStore.messages.length - 1 && message.role === 'ai' && chatStore.calculating}
-              />
-            ))}
-            <div ref={messagesEndRef} />
-          </CardBody>
-        </Card>
-        <ChatInput
-          onSend={chatStore.sendMessage}
-          loading={chatStore.loading}
-        />
+    <div className="h-screen flex flex-col p-4">
+      <div className="flex items-center gap-3 mb-4">
+        <Icon icon="solar:calendar-bold-duotone" className="w-8 h-8 text-primary"/>
+        <div>
+          <h1 className="text-xl font-bold">考勤助手</h1>
+          <p className="text-small text-default-500">AI驱动的考勤管理工具</p>
+        </div>
       </div>
 
-      {/* 右侧预览区域 */}
-      <div className="h-full p-4 lg:col-span-3">
-        <IframePreview
-          html={chatStore.previewHtml}
-          error={chatStore.previewError}
-          calculating={chatStore.calculating}
-        />
-      </div>
+      <Card className="flex-1 mb-4">
+        <CardBody className="p-4 overflow-y-auto">
+          {chatStore.messages.map((message, index) => (
+            <ChatMessage
+              key={message.id}
+              message={message}
+              isAi={message.role === 'ai'}
+            />
+          ))}
+          <div ref={messagesEndRef} />
+        </CardBody>
+      </Card>
+
+      <ChatInput
+        onSend={chatStore.sendMessage}
+        loading={chatStore.loading}
+      />
     </div>
   );
 });
 
 context.wpm.export('page_chat', ChatPage);
 ChatPage.displayName = 'ChatPage';
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="page" name="page_upload" title="数据上传页面">
+const {
+  wpm,
+  React,
+  observer,
+  Icon,
+  NextUI,
+  ReactRouterDom,
+  ReactHookForm,
+  ReactToPrint,
+  FramerMotion,
+  message,
+  appId,
+  api,
+  ai,
+  mobx,
+  recharts,
+  cn,
+  xlsx,
+  esm,
+} = context;
+
+const { Card, CardBody } = NextUI;
+
+// 导入组件
+const UploadExcel = await context.wpm.import('comp_upload_excel');
+const DataPreview = await context.wpm.import('comp_data_preview');
+const chatStore = await context.wpm.import('store_chat');
+
+const UploadPage = observer(() => {
+  const handleUpload = async (fileInfo) => {
+    try {
+      api.log.info('处理上传文件', {
+        fileName: fileInfo.fileName,
+        rowCount: fileInfo.rows.length
+      });
+
+      // 更新CSV数据到chatStore
+      chatStore.setCSVData(fileInfo.csv);
+
+    } catch (error) {
+      api.log.error('处理上传文件失败', {
+        error: error.message,
+        fileName: fileInfo.fileName
+      });
+      message.error('处理文件失败: ' + error.message);
+    }
+  };
+
+  return (
+    <div className="container mx-auto max-w-5xl p-4">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">上传考勤数据</h1>
+        <p className="text-default-500">
+          上传Excel格式的考勤记录,支持批量导入
+        </p>
+      </div>
+
+      <div className="grid gap-6">
+        <UploadExcel onUpload={handleUpload} />
+
+        <div className="bg-default-50 rounded-lg p-4">
+          <h3 className="font-semibold mb-2">Excel格式说明</h3>
+          <ul className="list-disc list-inside space-y-1 text-small text-default-500">
+            <li>文件格式:.xlsx 或 .xls</li>
+            <li>必填字段:员工ID、姓名、日期、签到时间、签退时间</li>
+            <li>日期格式:YYYY-MM-DD</li>
+            <li>时间格式:HH:mm</li>
+            <li>可选字段:备注</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+context.wpm.export('page_upload', UploadPage);
+UploadPage.displayName = 'UploadPage';
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="service" name="service_attendance" title="考勤数据服务">
+const {
+  wpm,
+  React,
+  observer,
+  Icon,
+  NextUI,
+  ReactRouterDom,
+  ReactHookForm,
+  ReactToPrint,
+  FramerMotion,
+  message,
+  appId,
+  api,
+  ai,
+  mobx,
+  recharts,
+  cn,
+  xlsx,
+  esm,
+} = context;
+
+class AttendanceService {
+  // 元数据键名
+  static METADATA_KEY = `${appId}_attendance_records`;
+
+  // 保存考勤记录
+  async saveRecords(records) {
+    try {
+      api.log.info('开始保存考勤记录', {
+        recordCount: records.length
+      });
+
+      await api.setMetadata(AttendanceService.METADATA_KEY, {
+        records,
+        updatedAt: new Date().toISOString()
+      });
+
+      api.log.info('考勤记录保存成功');
+      return true;
+    } catch (error) {
+      api.log.error('保存考勤记录失败', {
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  // 获取考勤记录
+  async getRecords() {
+    try {
+      api.log.info('开始获取考勤记录');
+
+      const result = await api.getMetadata([AttendanceService.METADATA_KEY]);
+      const data = result.data?.[0]?.value;
+
+      if (!data) {
+        api.log.info('没有找到考勤记录');
+        return [];
+      }
+
+      api.log.info('成功获取考勤记录', {
+        recordCount: data.records?.length
+      });
+
+      return data.records || [];
+    } catch (error) {
+      api.log.error('获取考勤记录失败', {
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  // 统计考勤数据
+  async getStats(startDate, endDate) {
+    try {
+      const records = await this.getRecords();
+
+      api.log.info('开始统计考勤数据', {
+        startDate,
+        endDate,
+        totalRecords: records.length
+      });
+
+      const filteredRecords = records.filter(record => {
+        const recordDate = new Date(record.date);
+        return recordDate >= new Date(startDate) && recordDate <= new Date(endDate);
+      });
+
+      const stats = {
+        total: filteredRecords.length,
+        normal: filteredRecords.filter(r => r.status === 'normal').length,
+        late: filteredRecords.filter(r => r.status === 'late').length,
+        early: filteredRecords.filter(r => r.status === 'early').length,
+        absent: filteredRecords.filter(r => r.status === 'absent').length,
+        period: {
+          start: startDate,
+          end: endDate
+        }
+      };
+
+      api.log.info('考勤统计完成', { stats });
+      return stats;
+    } catch (error) {
+      api.log.error('统计考勤数据失败', {
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  // 解析Excel数据
+  parseExcelData(data) {
+    try {
+      api.log.info('开始解析Excel数据', {
+        rowCount: data.length
+      });
+
+      const records = data.map((row, index) => {
+        // 检查数据格式
+        if (!row.date || !row.employeeId || !row.employeeName) {
+          throw new Error(`第${index + 1}行数据格式不正确`);
+        }
+
+        // 处理考勤状态
+        let status = 'normal';
+        if (!row.checkIn && !row.checkOut) {
+          status = 'absent';
+        } else if (this.isLate(row.checkIn)) {
+          status = 'late';
+        } else if (this.isEarly(row.checkOut)) {
+          status = 'early';
+        }
+
+        return {
+          id: `${row.employeeId}_${row.date}`,
+          employeeId: row.employeeId,
+          employeeName: row.employeeName,
+          date: row.date,
+          checkIn: row.checkIn || '',
+          checkOut: row.checkOut || '',
+          status,
+          remark: row.remark || ''
+        };
+      });
+
+      api.log.info('Excel数据解析完成', {
+        recordCount: records.length
+      });
+
+      return records;
+    } catch (error) {
+      api.log.error('解析Excel数据失败', {
+        error: error.message
+      });
+      throw error;
+    }
+  }
+
+  // 判断是否迟到
+  isLate(checkInTime) {
+    if (!checkInTime) return false;
+    const [hours, minutes] = checkInTime.split(':').map(Number);
+    return hours > 9 || (hours === 9 && minutes > 0);
+  }
+
+  // 判断是否早退
+  isEarly(checkOutTime) {
+    if (!checkOutTime) return false;
+    const [hours, minutes] = checkOutTime.split(':').map(Number);
+    return hours < 18 || (hours === 18 && minutes < 0);
+  }
+}
+
+const attendanceService = new AttendanceService();
+context.wpm.export('service_attendance', attendanceService);
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="store" name="store_attendance" title="考勤数据管理">
+const {
+  wpm,
+  React,
+  observer,
+  Icon,
+  NextUI,
+  ReactRouterDom,
+  ReactHookForm,
+  ReactToPrint,
+  FramerMotion,
+  message,
+  appId,
+  api,
+  ai,
+  mobx,
+  recharts,
+  cn,
+  xlsx,
+  esm,
+} = context;
+
+const { makeAutoObservable, runInAction } = mobx;
+
+// 导入服务
+const attendanceService = await context.wpm.import('service_attendance');
+
+class AttendanceStore {
+  records = [];
+  loading = false;
+  uploadStatus = null;
+  previewData = null;
+  stats = null;
+
+  constructor() {
+    makeAutoObservable(this);
+    this.initializeData();
+  }
+
+  // 初始化数据
+  async initializeData() {
+    try {
+      this.loading = true;
+      const records = await attendanceService.getRecords();
+
+      runInAction(() => {
+        this.records = records;
+        this.updateStats();
+      });
+
+      api.log.info('考勤数据初始化完成', {
+        recordCount: records.length
+      });
+    } catch (error) {
+      api.log.error('考勤数据初始化失败', {
+        error: error.message
+      });
+      message.error('数据加载失败');
+    } finally {
+      runInAction(() => {
+        this.loading = false;
+      });
+    }
+  }
+
+  // 更新统计数据
+  async updateStats() {
+    try {
+      const now = new Date();
+      const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      const stats = await attendanceService.getStats(
+        startDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0]
+      );
+
+      runInAction(() => {
+        this.stats = stats;
+      });
+
+      api.log.info('统计数据更新完成', { stats });
+    } catch (error) {
+      api.log.error('更新统计数据失败', {
+        error: error.message
+      });
+    }
+  }
+
+  // 处理文件上传
+  async handleFileUpload(file) {
+    try {
+      this.loading = true;
+      this.uploadStatus = {
+        status: 'uploading',
+        progress: 0
+      };
+
+      api.log.info('开始上传文件', {
+        fileName: file.name,
+        fileSize: file.size
+      });
+
+      // 上传文件
+      const fileInfo = await api.upload.uploadFile(file, {
+        onProgress: (percent) => {
+          runInAction(() => {
+            this.uploadStatus.progress = percent;
+          });
+        },
+        maxSize: 10 * 1024 * 1024 // 10MB
+      });
+
+      // 读取Excel数据
+      const workbook = await xlsx.read(await file.arrayBuffer());
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = xlsx.utils.sheet_to_json(worksheet);
+
+      // 解析数据
+      const records = attendanceService.parseExcelData(data);
+
+      // 保存记录
+      await attendanceService.saveRecords(records);
+
+      runInAction(() => {
+        this.records = records;
+        this.previewData = {
+          headers: ['员工ID', '姓名', '日期', '签到时间', '签退时间', '状态', '备注'],
+          rows: records.map(r => [
+            r.employeeId,
+            r.employeeName,
+            r.date,
+            r.checkIn,
+            r.checkOut,
+            r.status,
+            r.remark
+          ]),
+          total: records.length
+        };
+        this.uploadStatus = {
+          status: 'success',
+          fileUrl: fileInfo.fileUrl
+        };
+      });
+
+      await this.updateStats();
+      message.success('数据导入成功');
+
+      api.log.info('文件处理完成', {
+        recordCount: records.length,
+        fileUrl: fileInfo.fileUrl
+      });
+
+    } catch (error) {
+      api.log.error('文件处理失败', {
+        error: error.message
+      });
+
+      runInAction(() => {
+        this.uploadStatus = {
+          status: 'error',
+          error: error.message
+        };
+      });
+
+      message.error('数据导入失败: ' + error.message);
+    } finally {
+      runInAction(() => {
+        this.loading = false;
+      });
+    }
+  }
+
+  // 下载模板
+  downloadTemplate() {
+    try {
+      api.log.info('开始生成模板数据');
+
+      const templateData = [
+        {
+          employeeId: 'EMP001',
+          employeeName: '张三',
+          date: '2023-12-25',
+          checkIn: '09:00',
+          checkOut: '18:00',
+          remark: '正常出勤'
+        },
+        {
+          employeeId: 'EMP002',
+          employeeName: '李四',
+          date: '2023-12-25',
+          checkIn: '09:30',
+          checkOut: '18:00',
+          remark: '迟到'
+        }
+      ];
+
+      const ws = xlsx.utils.json_to_sheet(templateData);
+      const wb = xlsx.utils.book_new();
+      xlsx.utils.book_append_sheet(wb, ws, '考勤记录');
+
+      // 设置列宽
+      ws['!cols'] = [
+        { wch: 10 }, // employeeId
+        { wch: 10 }, // employeeName
+        { wch: 12 }, // date
+        { wch: 8 },  // checkIn
+        { wch: 8 },  // checkOut
+        { wch: 20 }  // remark
+      ];
+
+      xlsx.writeFile(wb, '考勤记录模板.xlsx');
+      api.log.info('模板下载完成');
+
+    } catch (error) {
+      api.log.error('下载模板失败', {
+        error: error.message
+      });
+      message.error('下载模板失败');
+    }
+  }
+
+  // 获取考勤统计
+  getAttendanceStats = async (startDate, endDate) => {
+    try {
+      return await attendanceService.getStats(startDate, endDate);
+    } catch (error) {
+      api.log.error('获取考勤统计失败', {
+        error: error.message,
+        startDate,
+        endDate
+      });
+      throw error;
+    }
+  }
+}
+
+const attendanceStore = new AttendanceStore();
+context.wpm.export('store_attendance', attendanceStore);
 </mo-ai-code>
 ```
 
@@ -828,27 +1283,19 @@ const { makeAutoObservable, runInAction } = mobx;
 class ChatStore {
   messages = [];
   loading = false;
-  previewHtml = null;
-  previewError = null;
   calculating = false;
   messageIdCounter = 0;
+  csvData = null;
 
   constructor() {
     makeAutoObservable(this);
   }
 
-  extractHtml = (content) => {
-    const htmlMatch = content.match(/<mo-ai-html>([\s\S]*?)<\/mo-ai-html>/);
-    const html = htmlMatch ? htmlMatch[1].trim() : null;
-
-    api.log.info('提取HTML内容', {
-      hasMatch: !!htmlMatch,
-      htmlLength: html?.length,
-      contentLength: content?.length,
-      content: content?.slice(0, 100)
+  setCSVData = (csv) => {
+    this.csvData = csv;
+    api.log.info('更新CSV数据', {
+      dataLength: csv?.length
     });
-
-    return html;
   }
 
   generateMessageId = () => {
@@ -882,24 +1329,8 @@ class ChatStore {
 
       api.log.info('更新消息', {
         messageId,
-        updates: Object.keys(updates),
-        newContent: updates.content?.slice(0, 100)
+        updates: Object.keys(updates)
       });
-
-      // 检查更新的内容中是否包含HTML
-      if (updates.content) {
-        const html = this.extractHtml(updates.content);
-        if (html) {
-          api.log.info('检测到HTML内容更新', {
-            messageId,
-            htmlLength: html.length
-          });
-          runInAction(() => {
-            this.previewHtml = html;
-            this.previewError = null;
-          });
-        }
-      }
     }
   }
 
@@ -928,13 +1359,8 @@ class ChatStore {
       await ai.chat([
         {
           role: 'system',
-          content: `你是一个使用HTML和Tailwind CSS来实现UI的AI助手。当遇到需要实现界面效果的问题时:
-1. 使用HTML和Tailwind CSS和JavaScript来实现界面
-2. 将HTML代码放在<mo-ai-html>标签中
-3. 代码必须是完整的HTML结构
-4. 使用Tailwind CSS来实现样式
-5. 你必须根据用户的需求来实现界面
-6. 如果实现出错,要说明错误原因`
+          content: `你是一个考勤分析助手,可以分析考勤数据并回答问题。
+${this.csvData ? `当前考勤数据(CSV格式):\n${this.csvData}` : '当前没有考勤数据可供分析。'}`
         },
         {
           role: 'user',
@@ -948,7 +1374,6 @@ class ChatStore {
               messageId: aiMessageId
             });
 
-            // 更新消息内容
             const currentMessage = this.messages.find(m => m.id === aiMessageId);
             const newContent = (currentMessage?.content || '') + chunk;
 
@@ -956,24 +1381,11 @@ class ChatStore {
               content: newContent,
               phase: 'answering'
             });
-
-            // 检查并更新预览HTML
-            const html = this.extractHtml(newContent);
-            if (html) {
-              this.previewHtml = html;
-              this.previewError = null;
-
-              api.log.info('更新预览HTML', {
-                htmlLength: html.length,
-                messageId: aiMessageId
-              });
-            }
           });
         },
         onResult: () => {
           api.log.info('AI对话完成', {
-            messageId: aiMessageId,
-            hasHtml: !!this.previewHtml
+            messageId: aiMessageId
           });
 
           runInAction(() => {
@@ -996,7 +1408,6 @@ class ChatStore {
               phase: 'error'
             });
             this.calculating = false;
-            this.previewError = error.message;
           });
         }
       });
@@ -1017,5 +1428,175 @@ class ChatStore {
 
 const chatStore = new ChatStore();
 context.wpm.export('store_chat', chatStore);
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="ts-type" name="types_attendance" title="考勤类型定义">
+// 考勤记录类型
+type AttendanceRecord = {
+  id: string
+  employeeId: string
+  employeeName: string
+  date: string
+  checkIn: string
+  checkOut: string
+  status: 'normal' | 'late' | 'early' | 'absent'
+  remark?: string
+}
+
+// 考勤统计类型
+type AttendanceStats = {
+  total: number
+  normal: number
+  late: number
+  early: number
+  absent: number
+  period: {
+    start: string
+    end: string
+  }
+}
+
+// 上传状态类型
+type UploadStatus = {
+  fileName: string
+  progress: number
+  status: 'pending' | 'uploading' | 'success' | 'error'
+  error?: string
+  fileUrl?: string
+}
+
+// 预览数据类型
+type PreviewData = {
+  headers: string[]
+  rows: any[]
+  total: number
+}
+</mo-ai-code>
+```
+
+```jsx
+<mo-ai-code type="utils" name="utils_excel" title="Excel工具模块">
+const {
+  wpm,
+  React,
+  observer,
+  Icon,
+  NextUI,
+  ReactRouterDom,
+  ReactHookForm,
+  ReactToPrint,
+  FramerMotion,
+  message,
+  appId,
+  api,
+  ai,
+  mobx,
+  recharts,
+  cn,
+  xlsx,
+  esm,
+} = context;
+
+// Excel转CSV
+const excelToCSV = async (file) => {
+  try {
+    api.log.info('开始转换Excel到CSV', {
+      fileName: file.name,
+      fileSize: file.size
+    });
+
+    const buffer = await file.arrayBuffer();
+    const workbook = xlsx.read(buffer);
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+    // 获取数据范围
+    const range = xlsx.utils.decode_range(worksheet['!ref']);
+    const headers = [];
+    const rows = [];
+
+    // 读取表头
+    for(let C = range.s.c; C <= range.e.c; ++C) {
+      const cell = worksheet[xlsx.utils.encode_cell({r: 0, c: C})];
+      headers.push(cell?.v || `Column${C + 1}`);
+    }
+
+    // 读取数据行
+    for(let R = range.s.r + 1; R <= range.e.r; ++R) {
+      const row = [];
+      for(let C = range.s.c; C <= range.e.c; ++C) {
+        const cell = worksheet[xlsx.utils.encode_cell({r: R, c: C})];
+        row.push(cell?.v || '');
+      }
+      rows.push(row);
+    }
+
+    // 生成CSV
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
+
+    api.log.info('Excel转CSV成功', {
+      headers,
+      rowCount: rows.length
+    });
+
+    return {
+      headers,
+      rows,
+      csv: csvContent
+    };
+
+  } catch (error) {
+    api.log.error('Excel转CSV失败', {
+      error: error.message,
+      fileName: file.name
+    });
+    throw error;
+  }
+};
+
+// 生成模板
+const generateTemplate = () => {
+  try {
+    api.log.info('开始生成考勤模板');
+
+    const template = [
+      ['员工ID', '姓名', '日期', '签到时间', '签退时间', '备注'],
+      ['EMP001', '张三', '2023-12-25', '09:00', '18:00', '正常出勤'],
+      ['EMP002', '李四', '2023-12-25', '09:30', '18:00', '迟到']
+    ];
+
+    const ws = xlsx.utils.aoa_to_sheet(template);
+    const wb = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(wb, ws, '考勤记录');
+
+    // 设置列宽
+    ws['!cols'] = [
+      { wch: 10 }, // 员工ID
+      { wch: 10 }, // 姓名
+      { wch: 12 }, // 日期
+      { wch: 10 }, // 签到时间
+      { wch: 10 }, // 签退时间
+      { wch: 20 }  // 备注
+    ];
+
+    xlsx.writeFile(wb, '考勤记录模板.xlsx');
+    api.log.info('模板生成成功');
+
+  } catch (error) {
+    api.log.error('生成模板失败', {
+      error: error.message
+    });
+    throw error;
+  }
+};
+
+context.wpm.export('utils_excel', {
+  excelToCSV,
+  generateTemplate
+});
 </mo-ai-code>
 ```
