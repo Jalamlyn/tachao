@@ -21,6 +21,7 @@ import {
   Spinner,
   Radio,
   RadioGroup,
+  Progress,
 } from "@nextui-org/react"
 import { PlusIcon, EditIcon, DeleteIcon, UserPlusIcon, EyeIcon, CopyIcon, CheckIcon } from "lucide-react"
 import {
@@ -52,7 +53,7 @@ interface AccountBalances {
 
 // 添加账号格式验证函数
 const validateAccount = (account: string): { isValid: boolean; message?: string } => {
-  // 英文字母开头，后面可以是字母、数字或下划线
+  // 英文字母开头,后面可以是字母、数字或下划线
   const accountRegex = /^[a-zA-Z][a-zA-Z0-9_]*$/
 
   if (!account) {
@@ -62,7 +63,7 @@ const validateAccount = (account: string): { isValid: boolean; message?: string 
   if (!accountRegex.test(account)) {
     return {
       isValid: false,
-      message: "账号必须以英文字母开头，只能包含英文字母、数字和下划线",
+      message: "账号必须以英文字母开头,只能包含英文字母、数字和下划线",
     }
   }
 
@@ -94,7 +95,7 @@ const validateBalanceLimit = (limit: string): { isValid: boolean; message?: stri
     return { isValid: false, message: "请输入有效的数字" }
   }
   if (number < 0) {
-    return { isValid: false, message: "梦想币限制不能为负数" }
+    return { isValid: false, message: "消费额度不能为负数" }
   }
   return { isValid: true }
 }
@@ -204,7 +205,7 @@ const AccountManagement: React.FC = () => {
 
       if (values.type === "nb") {
         if (!subscription || subscription.type === "personal") {
-          message.error("个人版不能创建内部账号，请升级到企业版")
+          message.error("个人版不能创建内部账号,请升级到企业版")
           return
         }
 
@@ -351,19 +352,19 @@ const AccountManagement: React.FC = () => {
 
   const copyAccountMessage = async (account) => {
     setCopyingAccountId(account.id)
-    const message = `🎉 欢迎加入模本AI！
+    const message = `🎉 欢迎加入模本AI!
 
-您的账号信息如下：
-👤 账号：${account.account}
-🔑 密码：${account.account}
-🌐 登录地址：https://www.mobenai.com.cn/login?oid=1
+您的账号信息如下:
+👤 账号:${account.account}
+🔑 密码:${account.account}
+🌐 登录地址:https://www.mobenai.com.cn/login?oid=1
 
-✨ 模本AI是一个革命性的AI编程平台，让人人都能成为开发者。
-💡 在这里，您可以轻松地将想法转化为应用程序，享受AI驱动的开发体验。
+✨ 模本AI是一个革命性的AI编程平台,让人人都能成为开发者。
+💡 在这里,您可以轻松地将想法转化为应用程序,享受AI驱动的开发体验。
 
-🚀 立即登录，开启您的AI编程之旅！
+🚀 立即登录,开启您的AI编程之旅!
 
-❓ 如有任何问题，请随时联系管理员。`
+❓ 如有任何问题,请随时联系管理员。`
 
     try {
       await navigator.clipboard.writeText(message)
@@ -373,7 +374,7 @@ const AccountManagement: React.FC = () => {
       }, 1500)
     } catch (error) {
       console.error("Failed to copy message", error)
-      message.error("复制失败，请重试")
+      message.error("复制失败,请重试")
       setCopyingAccountId(null)
     }
   }
@@ -426,11 +427,31 @@ const AccountManagement: React.FC = () => {
     }
   }
 
+  const renderUsageProgress = (balance: AccountBalance) => {
+    const percentage = (balance.used / balance.limit) * 100
+    const color = percentage >= 90 ? "danger" : percentage >= 70 ? "warning" : "success"
+    
+    return (
+      <div className="w-full">
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-small">已使用: {balance.used.toFixed(2)} 梦想币</span>
+          <span className="text-small">总额度: {balance.limit} 梦想币</span>
+        </div>
+        <Progress 
+          value={percentage} 
+          color={color}
+          size="sm"
+          className="max-w-md"
+        />
+      </div>
+    )
+  }
+
   const columns = [
     { name: "名称", uid: "name" },
     { name: "账号", uid: "account" },
     { name: "手机号", uid: "phone" },
-    { name: "梦想币限制", uid: "balance" },
+    { name: "消费额度使用情况", uid: "balance" },
     { name: "类型", uid: "type" },
     { name: "操作", uid: "actions" },
   ]
@@ -444,8 +465,17 @@ const AccountManagement: React.FC = () => {
       case "balance":
         const balance = accountBalances[account.id] || { limit: 10, used: 0 }
         return (
-          <Tooltip content={`已使用: ${balance.used.toFixed(2)} / 总额度: ${balance.limit}`}>
-            <span>剩余: {(balance.limit - balance.used).toFixed(2)} 梦想币</span>
+          <Tooltip 
+            content={
+              <div className="p-2">
+                <p className="mb-2">账号消费额度使用情况</p>
+                <p className="text-small">已使用: {balance.used.toFixed(2)} 梦想币</p>
+                <p className="text-small">剩余可用: {(balance.limit - balance.used).toFixed(2)} 梦想币</p>
+                <p className="text-small">总额度: {balance.limit} 梦想币</p>
+              </div>
+            }
+          >
+            {renderUsageProgress(balance)}
           </Tooltip>
         )
       case "actions":
@@ -552,10 +582,6 @@ const AccountManagement: React.FC = () => {
                     内部账号
                     <span className='text-tiny text-default-400 ml-1'>(企业员工)</span>
                   </Radio>
-                  {/* <Radio value='wb'>
-                    外部账号
-                    <span className='text-tiny text-default-400 ml-1'>(供应商/客户)</span>
-                  </Radio> */}
                 </RadioGroup>
                 <Input name='name' label='名称' required />
                 <Input
@@ -564,7 +590,7 @@ const AccountManagement: React.FC = () => {
                   required
                   onValueChange={handleAccountChange}
                   errorMessage={accountError}
-                  description='账号必须以英文字母开头，只能包含英文字母、数字和下划线'
+                  description='账号必须以英文字母开头,只能包含英文字母、数字和下划线'
                 />
                 <Input name='password' label='密码' type='password' required />
                 <Input
@@ -577,10 +603,10 @@ const AccountManagement: React.FC = () => {
                 />
                 <Input
                   name='balanceLimit'
-                  label='梦想币限制'
+                  label='消费额度'
                   type='number'
                   defaultValue='10'
-                  description='默认10梦想币，0表示无限制'
+                  description='设置该账号可使用的最大梦想币额度,超过此额度将无法继续使用服务'
                   onValueChange={handleBalanceLimitChange}
                   errorMessage={balanceLimitError}
                 />
@@ -619,7 +645,7 @@ const AccountManagement: React.FC = () => {
                   required
                   onValueChange={handleAccountChange}
                   errorMessage={accountError}
-                  description='账号必须以英文字母开头，只能包含英文字母、数字和下划线'
+                  description='账号必须以英文字母开头,只能包含英文字母、数字和下划线'
                 />
                 <Input name='password' label='密码' type='password' placeholder='留空则不修改密码' />
                 <Input
@@ -633,10 +659,10 @@ const AccountManagement: React.FC = () => {
                 />
                 <Input
                   name='balanceLimit'
-                  label='梦想币限制'
+                  label='消费额度'
                   type='number'
                   defaultValue={accountBalances[selectedAccount?.id]?.limit || 10}
-                  description='默认10梦想币，0表示无限制'
+                  description='设置该账号可使用的最大梦想币额度,超过此额度将无法继续使用服务'
                   onValueChange={handleBalanceLimitChange}
                   errorMessage={balanceLimitError}
                 />
@@ -658,7 +684,7 @@ const AccountManagement: React.FC = () => {
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>确认删除</ModalHeader>
           <ModalBody>
-            <p>您确定要删除账号 "{selectedAccount?.name}" 吗？此操作不可撤销。</p>
+            <p>您确定要删除账号 "{selectedAccount?.name}" 吗?此操作不可撤销。</p>
           </ModalBody>
           <ModalFooter>
             <Button color='default' variant='light' onPress={onDeleteModalClose}>
@@ -732,12 +758,8 @@ const AccountManagement: React.FC = () => {
                       <p>{accountDetail.phone || "-"}</p>
                     </div>
                     <div>
-                      <p className='text-sm text-gray-500'>梦想币限制</p>
-                      <p>
-                        {accountBalances[accountDetail.id]?.limit === 0
-                          ? "无限制"
-                          : `${accountBalances[accountDetail.id]?.limit || 10} 梦想币 (已使用: ${accountBalances[accountDetail.id]?.used.toFixed(2) || 0})`}
-                      </p>
+                      <p className='text-sm text-gray-500'>消费额度使用情况</p>
+                      {renderUsageProgress(accountBalances[accountDetail.id] || { limit: 10, used: 0 })}
                     </div>
                     <div>
                       <p className='text-sm text-gray-500'>创建时间</p>
