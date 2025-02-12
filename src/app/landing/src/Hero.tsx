@@ -16,14 +16,7 @@ const ProductVideo: React.FC = () => {
   return (
     <div className='relative w-full max-w-4xl mx-auto my-12 rounded-2xl overflow-hidden group'>
       <div className='absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl' />
-      <video
-        ref={videoRef}
-        className='w-full rounded-2xl'
-        autoPlay
-        muted
-        loop
-        playsInline
-      >
+      <video ref={videoRef} className='w-full rounded-2xl' autoPlay muted loop playsInline>
         <source
           src='https://6d6f-mobenai-weapp-dev-2e8qhi3a963364-1259692580.tcb.qcloud.la/2%E6%9C%8812%E6%97%A5.mp4?sign=74e621d5a9ed30b90f728700e96f7bb1&t=1739305856'
           type='video/mp4'
@@ -76,7 +69,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
 
   // 打字机效果状态
   const [textIndex, setTextIndex] = useState(0)
-  const texts = ["将你的创意转化为现实代码", "让AI为企业赋能", "10倍提升开发效率"]
+  const texts = ["零代码,让AI为您构建企业应用", "专业级企业应用,一键生成", "像聊天一样开发应用,降低80%成本"]
 
   useEffect(() => {
     if (ref) {
@@ -154,7 +147,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
               {texts[textIndex]}
             </motion.h1>
             <p className='text-xl md:text-2xl text-white/80 leading-relaxed'>
-              像聊天一样开发应用 · 无需编程经验 · 即刻开始创造
+              专注企业应用开发 · 一对一AI助手 · 专业级输出
             </p>
           </motion.div>
 
@@ -190,9 +183,9 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
             className='grid grid-cols-1 md:grid-cols-3 gap-8'
           >
             {[
-              { icon: "mdi:rocket-launch", text: "10分钟快速上线", color: "from-purple-400 to-purple-600" },
-              { icon: "mdi:trending-up", text: "效率提升10倍", color: "from-cyan-400 to-cyan-600" },
-              { icon: "mdi:shield-check", text: "企业级安全保障", color: "from-orange-400 to-orange-600" },
+              { icon: "mdi:flash-outline", text: "零代码开发", color: "from-purple-400 to-purple-600" },
+              { icon: "mdi:robot-excited-outline", text: "专业AI助手", color: "from-cyan-400 to-cyan-600" },
+              { icon: "mdi:rocket-launch-outline", text: "企业级输出", color: "from-orange-400 to-orange-600" },
             ].map((item, index) => (
               <motion.div
                 key={index}
