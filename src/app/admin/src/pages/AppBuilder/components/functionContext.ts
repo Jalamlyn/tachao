@@ -204,7 +204,7 @@ const wpm = {
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
         reject(new Error(`模块 ${moduleName} 导入超时(5秒)`))
-      }, 5000)
+      }, 3000)
     })
 
     try {
