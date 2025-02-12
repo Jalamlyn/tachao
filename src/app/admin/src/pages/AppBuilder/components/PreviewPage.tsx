@@ -58,28 +58,49 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
     return () => {
       window.removeEventListener("unhandledrejection", handleUnhandledRejection)
     }
-  }, [error]) // 添加error作为依赖
+  }, [error])
 
   const handleAIFix = (errorInfo: any) => {
-    window.parent.postMessage(
-      {
-        type: "AI_FIX_REQUEST",
-        payload: {
-          error: JSON.stringify(errorInfo.message || errorInfo),
-          context: {
-            route: window.location.pathname,
-            appId,
-            moduleName: window.__module_import_errors ? window.__module_import_errors[0] : "未知模块",
-            userOperations: userOperations.trim(), // 添加用户操作记录
+    // 对于模块错误,直接发送修复请求
+    if (errorInfo.type === 'module_error') {
+      window.parent.postMessage(
+        {
+          type: "AI_FIX_REQUEST",
+          payload: {
+            error: JSON.stringify(errorInfo.message),
+            context: {
+              type: 'module_error',
+              route: window.location.pathname,
+              appId,
+              moduleName: errorInfo.context?.moduleName,
+            },
           },
         },
-      },
-      "*"
-    )
+        "*"
+      )
+      return
+    }
+
+    // 其他错误,打开操作收集对话框
+    setIsOperationModalOpen(true)
   }
 
   const handleError = (error: Error) => {
-    // 只在没有现有错误时显示新错误
+    // 如果是模块未实现错误,直接触发 AI 修复
+    if (error.name === 'ModuleNotImplementedError') {
+      handleAIFix({
+        message: error.message,
+        type: 'module_error',
+        context: {
+          moduleName: window.__module_import_errors?.[0] || '未知模块',
+          route: window.location.pathname,
+          appId,
+        }
+      })
+      return
+    }
+
+    // 其他错误显示带操作按钮的错误提示
     if (!errorDetails) {
       const errorContent = (
         <div className='flex items-center gap-2'>
@@ -94,17 +115,26 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   }
 
   const handleModuleError = (error: Error) => {
-    // 只在没有现有错误时设置新错误
+    // 如果是模块未实现错误,直接触发 AI 修复
+    if (error.name === 'ModuleNotImplementedError') {
+      handleAIFix({
+        message: error.message,
+        type: 'module_error',
+        context: {
+          moduleName: window.__module_import_errors?.[0] || '未知模块',
+          route: window.location.pathname,
+          appId,
+        }
+      })
+      return
+    }
+
+    // 其他错误显示错误提示,等待用户操作
     if (!errorDetails) {
       setError(`模块执行错误: ${error.message}`)
       setErrorDetails(error)
       message.error(error.message)
     }
-  }
-
-  const handleSubmitOperations = () => {
-    setIsOperationModalOpen(false)
-    handleAIFix(errorDetails || error)
   }
 
   useEffect(() => {
@@ -220,7 +250,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
                 <Button color='danger' variant='light' onPress={onClose}>
                   取消
                 </Button>
-                <Button color='primary' onPress={handleSubmitOperations} isDisabled={!userOperations.trim()}>
+                <Button color='primary' onPress={handleAIFix} isDisabled={!userOperations.trim()}>
                   提交并修复
                 </Button>
               </ModalFooter>
