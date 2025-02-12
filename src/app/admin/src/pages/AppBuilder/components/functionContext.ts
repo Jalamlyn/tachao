@@ -203,7 +203,9 @@ const wpm = {
     // 创建一个超时 Promise
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
-        reject(new Error(`模块 ${moduleName} 导入超时(5秒)`))
+        const error = new Error(`模块 ${moduleName} 导入超时(5秒)`)
+        error.name = "ModuleNotImplementedError" // 标记为模块未实现错误
+        reject(error)
       }, 3000)
     })
 
@@ -214,6 +216,7 @@ const wpm = {
       // 检查结果是否有效
       if (!result) {
         const error = new Error(`模块 ${moduleName} 未实现或返回值为空,请确保:\n1. 模块已正确导出\n2. 导出的内容不为空`)
+        error.name = "ModuleNotImplementedError" // 标记为模块未实现错误
         logStore.error(`模块导入失败: ${moduleName}`, { error: error.message })
         throw error
       }
@@ -222,8 +225,14 @@ const wpm = {
       console.log(`模块导入成功: ${moduleName}`, result)
       return result
     } catch (error) {
+      // 如果是超时错误或模块未实现错误,保持错误类型
+      if (error.name === "ModuleNotImplementedError") {
+        throw error
+      }
+
+      // 其他导入错误,可能是语法错误等,保持原始错误
       logStore.error(`模块导入错误: ${moduleName}`, { error: error.message })
-      throw new Error(`导入模块 ${moduleName} 失败: ${error.message}`)
+      throw error
     }
   },
 }
