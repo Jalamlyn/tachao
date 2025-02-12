@@ -74,6 +74,18 @@ const PriceCard = ({ amount, isPopular, onSelect, isSelected }) => (
   </Card>
 )
 
+// 步骤指示器组件
+const StepIndicator = ({ step, title, subtitle, icon }) => (
+  <div className='flex flex-col items-center'>
+    <div className='flex items-center gap-2'>
+      <div className='w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm'>{step}</div>
+      <Icon icon={icon} className='text-xl' />
+      {title}
+    </div>
+    <span className='text-xs text-default-500 mt-1'>{subtitle}</span>
+  </div>
+)
+
 const RechargeModal = observer(() => {
   const { balanceStore } = useStore()
   const [productList, setProductList] = useState([])
@@ -150,7 +162,13 @@ const RechargeModal = observer(() => {
       const currentBalance = balanceStore.actualBalance
 
       if (currentBalance < requiredTokens) {
-        message.info(`梦想币余额不足，订阅${selectedPlan.name}需要${requiredTokens}梦想币，请先充值`)
+        message.info(
+          <div className='space-y-2'>
+            <p>梦想币余额不足,订阅{selectedPlan.name}需要{requiredTokens}梦想币</p>
+            <p className='text-sm text-default-500'>当前余额: {currentBalance.toFixed(2)} 梦想币</p>
+            <p className='text-sm text-default-500'>还需充值: {(requiredTokens - currentBalance).toFixed(2)} 梦想币</p>
+          </div>
+        )
         setSelectedTab("token")
         return
       }
@@ -171,17 +189,16 @@ const RechargeModal = observer(() => {
 
       balanceStore.setActualBalance(currentBalance - requiredTokens)
 
-      message.success(`已成功订阅${selectedPlan.name}，扣除${requiredTokens}梦想币`)
+      message.success(`已成功订阅${selectedPlan.name},扣除${requiredTokens}梦想币`)
       balanceStore.hideRechargeModal()
     } catch (error) {
       console.error("订阅失败:", error)
-      message.error("订阅失败，请稍后重试")
+      message.error("订阅失败,请稍后重试")
     }
   }
 
   const handlePaymentModalClose = () => {
     setIsPaymentModalOpen(false)
-    // 添加刷新提示
     message.info(
       <div className='flex flex-col gap-2'>
         <div className='flex items-center gap-2'>
@@ -196,6 +213,28 @@ const RechargeModal = observer(() => {
 
   const renderTokenTab = () => (
     <div className='space-y-6'>
+      {/* 充值说明 */}
+      <div className='p-4 bg-default-50 rounded-lg'>
+        <h4 className='font-medium mb-2 flex items-center gap-2'>
+          <Icon icon='solar:info-circle-bold-duotone' className='text-primary' />
+          为什么需要充值梦想币?
+        </h4>
+        <div className='space-y-2 text-sm text-default-600'>
+          <p className='flex items-center gap-2'>
+            <Icon icon='solar:shield-star-bold-duotone' className='text-success' />
+            用于订阅套餐和使用AI服务
+          </p>
+          <p className='flex items-center gap-2'>
+            <Icon icon='solar:wallet-money-bold-duotone' className='text-success' />
+            更灵活的费用管理和使用方式
+          </p>
+          <p className='flex items-center gap-2'>
+            <Icon icon='solar:chart-bold-duotone' className='text-success' />
+            实时查看余额和使用情况
+          </p>
+        </div>
+      </div>
+
       <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
         {priceOptions.map((option) => (
           <PriceCard
@@ -245,6 +284,18 @@ const RechargeModal = observer(() => {
 
   const renderSubscriptionTab = () => (
     <div className='space-y-6'>
+      {/* 套餐余额提示 */}
+      <div className='flex items-center justify-between p-4 bg-primary-50 rounded-lg'>
+        <div>
+          <span className='text-sm text-default-600'>当前账户余额:</span>
+          <span className='text-xl font-bold text-success ml-2'>{balanceStore.actualBalance.toFixed(2)} 梦想币</span>
+        </div>
+        <div>
+          <span className='text-sm text-default-600'>所需梦想币:</span>
+          <span className='text-xl font-bold text-primary ml-2'>{selectedPlan?.costInTokens || 0} 梦想币</span>
+        </div>
+      </div>
+
       <div className='grid md:grid-cols-2 gap-4'>
         {Object.values(SUBSCRIPTION_PLANS).map((plan) => (
           <Card
@@ -294,7 +345,7 @@ const RechargeModal = observer(() => {
         <div className='flex items-center gap-2 text-sm text-default-600'>
           <Icon icon='solar:info-circle-bold-duotone' />
           <span>
-            当前梦想币余额：
+            使用梦想币订阅套餐,当前余额:
             <span className='font-medium text-primary'>{balanceStore.actualBalance.toFixed(2)}</span> 梦想币
           </span>
         </div>
@@ -323,19 +374,23 @@ const RechargeModal = observer(() => {
                   <Tab
                     key='token'
                     title={
-                      <div className='flex items-center gap-2'>
-                        <Icon icon='solar:wallet-money-bold-duotone' />
-                        充值梦想币
-                      </div>
+                      <StepIndicator
+                        step={1}
+                        title='账户充值'
+                        subtitle='先充值购买力'
+                        icon='solar:wallet-money-bold-duotone'
+                      />
                     }
                   />
                   <Tab
                     key='subscription'
                     title={
-                      <div className='flex items-center gap-2'>
-                        <Icon icon='solar:shield-star-bold-duotone' />
-                        购买套餐
-                      </div>
+                      <StepIndicator
+                        step={2}
+                        title='选择套餐'
+                        subtitle='使用余额订阅'
+                        icon='solar:shield-star-bold-duotone'
+                      />
                     }
                   />
                 </Tabs>
@@ -345,11 +400,11 @@ const RechargeModal = observer(() => {
                 <div className='w-full p-4 bg-warning-50 rounded-lg'>
                   <p className='text-warning-700 text-sm flex items-center gap-2'>
                     <Icon icon='solar:info-circle-bold-duotone' className='text-warning-500' />
-                    <span className='font-medium'>温馨提示：</span>
+                    <span className='font-medium'>温馨提示:</span>
                     <span>
                       {selectedTab === "token"
-                        ? "支付完成后，请刷新页面查看最新余额"
-                        : `订阅套餐将使用梦想币支付，当前余额：${balanceStore.actualBalance.toFixed(2)}梦想币`}
+                        ? "支付完成后,请刷新页面查看最新余额"
+                        : `订阅套餐将使用梦想币支付,当前余额:${balanceStore.actualBalance.toFixed(2)}梦想币`}
                     </span>
                   </p>
                 </div>
@@ -389,8 +444,8 @@ const RechargeModal = observer(() => {
                 <div className='mb-4 p-4 bg-warning-50 rounded-lg'>
                   <p className='text-warning-700 flex items-center gap-2'>
                     <Icon icon='solar:info-circle-bold-duotone' className='text-warning-500' />
-                    <span className='font-medium'>重要提示：</span>
-                    <span>完成支付后，请刷新页面以查看最新的账户信息</span>
+                    <span className='font-medium'>重要提示:</span>
+                    <span>完成支付后,请刷新页面以查看最新的账户信息</span>
                   </p>
                 </div>
                 <iframe srcDoc={paymentForm} style={{ width: "100%", height: "600px", border: "none" }} />
