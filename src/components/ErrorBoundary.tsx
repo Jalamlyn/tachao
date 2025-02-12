@@ -63,6 +63,26 @@ class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Error caught by ErrorBoundary:", error, errorInfo)
     errorInfo.moduleName = window.__module_import_errors ? window.__module_import_errors[0] : "未知模块"
+    
+    // 检查是否是模块未实现错误
+    if (error.name === 'ModuleNotImplementedError' || (error.message && error.message.includes('模块') && error.message.includes('未实现'))) {
+      if (this.props.onAIFix) {
+        // 自动触发 AI 修复
+        this.props.onAIFix({
+          message: error.message,
+          stack: error.stack,
+          componentStack: errorInfo.componentStack,
+          context: {
+            componentName: errorInfo.moduleName,
+            route: window.location.pathname,
+            type: 'module_error'
+          }
+        })
+      }
+      // 不设置状态,因为不需要显示错误 UI
+      return
+    }
+
     this.setState({
       errorInfo,
     })
@@ -100,6 +120,14 @@ class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
+      // 如果是模块未实现错误,不显示错误 UI
+      if (
+        this.state.error?.name === 'ModuleNotImplementedError' ||
+        (this.state.error?.message && this.state.error.message.includes('模块') && this.state.error.message.includes('未实现'))
+      ) {
+        return null
+      }
+
       if (this.props.fallback) {
         return this.props.fallback
       }
