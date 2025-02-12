@@ -82,7 +82,6 @@ const StepIndicator = ({ step, title, subtitle, icon }) => (
       <Icon icon={icon} className='text-xl' />
       {title}
     </div>
-    <span className='text-xs text-default-500 mt-1'>{subtitle}</span>
   </div>
 )
 
@@ -164,7 +163,9 @@ const RechargeModal = observer(() => {
       if (currentBalance < requiredTokens) {
         message.info(
           <div className='space-y-2'>
-            <p>梦想币余额不足,订阅{selectedPlan.name}需要{requiredTokens}梦想币</p>
+            <p>
+              梦想币余额不足,订阅{selectedPlan.name}需要{requiredTokens}梦想币
+            </p>
             <p className='text-sm text-default-500'>当前余额: {currentBalance.toFixed(2)} 梦想币</p>
             <p className='text-sm text-default-500'>还需充值: {(requiredTokens - currentBalance).toFixed(2)} 梦想币</p>
           </div>

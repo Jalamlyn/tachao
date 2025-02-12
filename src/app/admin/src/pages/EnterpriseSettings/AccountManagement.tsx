@@ -430,19 +430,14 @@ const AccountManagement: React.FC = () => {
   const renderUsageProgress = (balance: AccountBalance) => {
     const percentage = (balance.used / balance.limit) * 100
     const color = percentage >= 90 ? "danger" : percentage >= 70 ? "warning" : "success"
-    
+
     return (
-      <div className="w-full">
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-small">已使用: {balance.used.toFixed(2)} 梦想币</span>
-          <span className="text-small">总额度: {balance.limit} 梦想币</span>
+      <div className='w-full'>
+        <div className='flex justify-between items-center mb-1'>
+          <span className='text-small'>已使用: {balance.used.toFixed(2)} 梦想币</span>
+          <span className='text-small'>总额度: {balance.limit} 梦想币</span>
         </div>
-        <Progress 
-          value={percentage} 
-          color={color}
-          size="sm"
-          className="max-w-md"
-        />
+        <Progress value={percentage} color={color} size='sm' className='max-w-md' />
       </div>
     )
   }
@@ -465,13 +460,13 @@ const AccountManagement: React.FC = () => {
       case "balance":
         const balance = accountBalances[account.id] || { limit: 10, used: 0 }
         return (
-          <Tooltip 
+          <Tooltip
             content={
-              <div className="p-2">
-                <p className="mb-2">账号消费额度使用情况</p>
-                <p className="text-small">已使用: {balance.used.toFixed(2)} 梦想币</p>
-                <p className="text-small">剩余可用: {(balance.limit - balance.used).toFixed(2)} 梦想币</p>
-                <p className="text-small">总额度: {balance.limit} 梦想币</p>
+              <div className='p-2'>
+                <p className='mb-2'>账号消费额度使用情况</p>
+                <p className='text-small'>已使用: {balance.used.toFixed(2)} 梦想币</p>
+                <p className='text-small'>剩余可用: {(balance.limit - balance.used).toFixed(2)} 梦想币</p>
+                <p className='text-small'>总额度: {balance.limit} 梦想币</p>
               </div>
             }
           >
@@ -736,7 +731,7 @@ const AccountManagement: React.FC = () => {
         </ModalContent>
       </Modal>
 
-      <Modal size='lg' isOpen={isDetailModalOpen} onClose={onDetailModalClose}>
+      <Modal size='3xl' isOpen={isDetailModalOpen} onClose={onDetailModalClose}>
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>账号详情</ModalHeader>
           <ModalBody>
