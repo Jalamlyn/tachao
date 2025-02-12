@@ -203,7 +203,7 @@ const wpm = {
     // 创建一个超时 Promise
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
-        const error = new Error(`模块 ${moduleName} 导入超时(5秒)`)
+        const error = new Error(`模块 ${moduleName} 导入超时(3秒)`)
         error.name = "ModuleNotImplementedError" // 标记为模块未实现错误
         reject(error)
       }, 3000)

@@ -62,14 +62,14 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
 
   const handleAIFix = (errorInfo: any) => {
     // 对于模块错误,直接发送修复请求
-    if (errorInfo.type === 'module_error') {
+    if (errorInfo.type === "module_error") {
       window.parent.postMessage(
         {
           type: "AI_FIX_REQUEST",
           payload: {
             error: JSON.stringify(errorInfo.message),
             context: {
-              type: 'module_error',
+              type: "module_error",
               route: window.location.pathname,
               appId,
               moduleName: errorInfo.context?.moduleName,
@@ -87,15 +87,15 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
 
   const handleError = (error: Error) => {
     // 如果是模块未实现错误,直接触发 AI 修复
-    if (error.name === 'ModuleNotImplementedError') {
+    if (error.name === "ModuleNotImplementedError") {
       handleAIFix({
         message: error.message,
-        type: 'module_error',
+        type: "module_error",
         context: {
-          moduleName: window.__module_import_errors?.[0] || '未知模块',
+          moduleName: window.__module_import_errors?.[0] || "未知模块",
           route: window.location.pathname,
           appId,
-        }
+        },
       })
       return
     }
@@ -116,15 +116,15 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
 
   const handleModuleError = (error: Error) => {
     // 如果是模块未实现错误,直接触发 AI 修复
-    if (error.name === 'ModuleNotImplementedError') {
+    if (error.name === "ModuleNotImplementedError") {
       handleAIFix({
         message: error.message,
-        type: 'module_error',
+        type: "module_error",
         context: {
-          moduleName: window.__module_import_errors?.[0] || '未知模块',
+          moduleName: window.__module_import_errors?.[0] || "未知模块",
           route: window.location.pathname,
           appId,
-        }
+        },
       })
       return
     }
@@ -278,6 +278,25 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   }
 
   if (error) {
+    // 如果是模块未实现错误
+    if (errorDetails?.name === "ModuleNotImplementedError") {
+      // 1. 自动触发修复
+      handleAIFix({
+        message: errorDetails.message,
+        type: "module_error",
+        context: {
+          moduleName: window.__module_import_errors?.[0] || "未知模块",
+          route: window.location.pathname,
+          appId,
+        },
+      })
+      // 2. 显示加载中状态
+      return (
+        <div className='flex items-center justify-center min-h-screen'>
+          <Spinner label='AI 正在修复缺失模块...' />
+        </div>
+      )
+    }
     return renderErrorUI()
   }
 
