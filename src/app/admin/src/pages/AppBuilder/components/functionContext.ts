@@ -197,44 +197,62 @@ const loadEsm = async () => {
 }
 
 // 创建一个包装了超时控制的 wpm 对象
+let hasModuleTimeoutError = false
+
 const wpm = {
   export: wpmOriginal.export,
   import: async (moduleName: string) => {
-    // 创建一个超时 Promise
+    // 如果已经有模块超时了,直接返回 null 或者抛出普通错误
+    if (hasModuleTimeoutError) {
+      return null // 或者静默失败
+    }
+
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
-        const error = new Error(`模块 ${moduleName} 导入超时(3秒)`)
-        error.name = "ModuleNotImplementedError" // 标记为模块未实现错误
-        reject(error)
+        // 第一次超时时设置标记
+        if (!hasModuleTimeoutError) {
+          hasModuleTimeoutError = true
+          const error = new Error(`模块 ${moduleName} 导入超时(3秒)`)
+          error.name = "ModuleNotImplementedError"
+          reject(error)
+        } else {
+          // 后续超时静默失败
+          reject(new Error(`Module ${moduleName} timeout`))
+        }
       }, 3000)
     })
 
     try {
-      // 使用 Promise.race 竞争
       const result = await Promise.race([wpmOriginal.import(moduleName), timeoutPromise])
 
-      // 检查结果是否有效
       if (!result) {
-        const error = new Error(`模块 ${moduleName} 未实现或返回值为空,请确保:\n1. 模块已正确导出\n2. 导出的内容不为空`)
-        error.name = "ModuleNotImplementedError" // 标记为模块未实现错误
-        logStore.error(`模块导入失败: ${moduleName}`, { error: error.message })
-        throw error
+        if (!hasModuleTimeoutError) {
+          hasModuleTimeoutError = true
+          const error = new Error(`模块 ${moduleName} 未实现或返回值为空`)
+          error.name = "ModuleNotImplementedError"
+          throw error
+        }
+        return null
       }
 
-      logStore.info(`模块导入成功: ${moduleName}`)
-      console.log(`模块导入成功: ${moduleName}`, result)
       return result
     } catch (error) {
-      // 如果是超时错误或模块未实现错误,保持错误类型
-      if (error.name === "ModuleNotImplementedError") {
-        throw error
+      // 如果已经有超时错误了,不再抛出新的错误
+      if (hasModuleTimeoutError) {
+        return null
       }
 
-      // 其他导入错误,可能是语法错误等,保持原始错误
-      logStore.error(`模块导入错误: ${moduleName}`, { error: error.message })
+      if (error.name === "ModuleNotImplementedError") {
+        hasModuleTimeoutError = true
+      }
       throw error
     }
   },
+}
+
+// 添加重置方法
+export const resetModuleTimeoutState = () => {
+  hasModuleTimeoutError = false
 }
 
 // 生成唯一的文件路径

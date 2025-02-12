@@ -11,7 +11,6 @@ const AI_MODELS = {
   BASIC: "anthropic/claude-3.5-sonnet",
   ADVANCED: "anthropic/claude-3.5-sonnet",
   USER: "anthropic/claude-3.5-sonnet",
-  // USER: "google/gemini-2.0-flash-001",
 }
 
 // 定义JavaScript执行工具
@@ -201,8 +200,10 @@ export default async function chatChunkOpenAIOffice(
       if (event.data !== "[DONE]") {
         try {
           const parsed = jsonParse(event.data)
-
           // 处理工具调用
+          if (!parsed?.choices) {
+            throw new Error("网络拥堵，请稍后重试，或者切换其他可用模型")
+          }
           if (parsed?.choices[0]?.delta?.tool_calls) {
             const toolCall = parsed.choices[0].delta.tool_calls[0]
             if (toolCall.function.name === "executeJavaScript") {

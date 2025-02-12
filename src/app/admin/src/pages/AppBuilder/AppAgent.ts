@@ -215,7 +215,7 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
   cn,
   xlsx,
   esm,
-} = context,默认图片使用 images.unsplash.com 的服务来生成，UI 样式使用 tailwindcss`
+} = context,默认图片使用 images.unsplash.com 的服务来生成，UI 样式使用 tailwindcss，只使用 wpm.export 导出代码和 wpm.import 导入代码`
 
       const allMessages = [
         ...messages,
