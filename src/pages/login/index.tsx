@@ -12,7 +12,12 @@ import { useOid } from "./useOid"
 import { PhoneVerification } from "@/components/PhoneVerification"
 import { useNavigate } from "react-router-dom"
 
-export default function LoginPage() {
+interface LoginPageProps {
+  isModal?: boolean
+  onSuccess?: () => void
+}
+
+export default function LoginPage({ isModal, onSuccess }: LoginPageProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [isVisible, setIsVisible] = useState(false)
@@ -66,11 +71,15 @@ export default function LoginPage() {
       })
 
       if (res === "has token") {
-        const callback = new URL(location.href).searchParams.get("callback")
-        if (callback) {
-          window.location.href = callback
+        if (onSuccess) {
+          onSuccess()
         } else {
-          window.location.href = "/admin"
+          const callback = new URL(location.href).searchParams.get("callback")
+          if (callback) {
+            window.location.href = callback
+          } else {
+            window.location.href = "/admin"
+          }
         }
       } else {
         message.error(res.message)
@@ -110,11 +119,15 @@ export default function LoginPage() {
         if (rememberMe) {
           localStorage.setItem("loginData", jsonStringify(loginData.current))
         }
-        const callback = new URL(location.href).searchParams.get("callback")
-        if (callback) {
-          window.location.href = callback
+        if (onSuccess) {
+          onSuccess()
         } else {
-          window.location.href = "/admin"
+          const callback = new URL(location.href).searchParams.get("callback")
+          if (callback) {
+            window.location.href = callback
+          } else {
+            window.location.href = "/admin"
+          }
         }
       } else {
         message.error(res.message)
@@ -125,6 +138,153 @@ export default function LoginPage() {
     } finally {
       setLoginLoading(false)
     }
+  }
+
+  const loginContent = (
+    <>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: sloganVisible ? 1 : 0 }}
+        transition={{ duration: 1 }}
+        className='text-lg drop-shadow'
+      >
+        <p className='text-left text-3xl font-semibold'>
+          登录
+          <span aria-label='emoji' className='ml-2' role='img'>
+            👋
+          </span>
+        </p>
+      </motion.p>
+
+      <Tabs
+        selectedKey={selectedTab}
+        onSelectionChange={(key) => setSelectedTab(key.toString())}
+        className='mb-4'
+        variant='underlined'
+        aria-label='登录方式'
+      >
+        <Tab
+          key='external'
+          isDisabled
+          title={
+            <div className='flex items-center gap-2'>
+              <span>手机号登录</span>
+            </div>
+          }
+        />
+        <Tab
+          key='admin'
+          title={
+            <div className='flex items-center gap-2'>
+              <span>账户密码登录</span>
+            </div>
+          }
+        />
+      </Tabs>
+
+      <AnimatePresence mode='wait'>
+        {selectedTab === "external" ? (
+          <motion.form
+            key='external'
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className='flex flex-col gap-4'
+            onSubmit={(e) => e.preventDefault()}
+          >
+            {!hasOidParam && <EnterpriseList loginData={loginData} />}
+            <PhoneVerification
+              onSuccess={(phone) => {
+                handleExternalLogin(phone)
+              }}
+              onError={(error) => {
+                console.error("Phone verification failed:", error)
+                message.error("手机号验证失败,请重试")
+              }}
+            />
+          </motion.form>
+        ) : (
+          <motion.form
+            key='admin'
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className='flex flex-col gap-4'
+            onSubmit={(e) => e.preventDefault()}
+          >
+            {!hasOidParam && <EnterpriseList loginData={loginData} />}
+            <Input
+              isRequired
+              label={t("username")}
+              placeholder={t("enter_your_username")}
+              type='text'
+              variant='bordered'
+              value={account}
+              onChange={(e) => setAccount(e.target.value)}
+              classNames={{
+                label: "font-medium",
+              }}
+            />
+            <Input
+              isRequired
+              endContent={
+                <button type='button' onClick={toggleVisibility} className='focus:outline-none'>
+                  {isVisible ? (
+                    <Icon className='text-xl transition-colors' icon='solar:eye-closed-linear' />
+                  ) : (
+                    <Icon className='text-xl transition-colors' icon='solar:eye-bold' />
+                  )}
+                </button>
+              }
+              label={t("password")}
+              placeholder={t("enter_your_password")}
+              type={isVisible ? "text" : "password"}
+              variant='bordered'
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              classNames={{
+                label: "font-medium",
+              }}
+            />
+            <div className='flex items-center justify-between px-1 py-2'>
+              <Checkbox isSelected={rememberMe} onValueChange={setRememberMe} size='sm'>
+                {t("remember_me")}
+              </Checkbox>
+            </div>
+            <Button
+              color='primary'
+              type='submit'
+              onClick={handleAdminLogin}
+              isLoading={loginLoading}
+              className='w-full t-all duration-300 font-medium shadow-lg hover:shadow-xl'
+            >
+              {t("login")}
+            </Button>
+          </motion.form>
+        )}
+      </AnimatePresence>
+
+      {/* 注册企业部分 */}
+      {!isModal && (
+        <div className='mt-6'>
+          <Divider className='my-4' />
+          <div className='text-center'>
+            <Button
+              variant='flat'
+              color='secondary'
+              onClick={() => navigate("/register")}
+              className='w-full bg-white/10 hover:bg-white/20 transition-all duration-300'
+            >
+              还没有企业账号? 点击注册企业
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+
+  if (isModal) {
+    return loginContent
   }
 
   return (
@@ -140,142 +300,7 @@ export default function LoginPage() {
         >
           <Card className='bg-white/20 border bg-white border-white/30 shadow-2xl backdrop-blur-sm'>
             <CardBody className='gap-4 p-8'>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: sloganVisible ? 1 : 0 }}
-                transition={{ duration: 1 }}
-                className='text-lg drop-shadow'
-              >
-                <p className='text-left text-3xl font-semibold'>
-                  登录
-                  <span aria-label='emoji' className='ml-2' role='img'>
-                    👋
-                  </span>
-                </p>
-              </motion.p>
-
-              <Tabs
-                selectedKey={selectedTab}
-                onSelectionChange={(key) => setSelectedTab(key.toString())}
-                className='mb-4'
-                variant='underlined'
-                aria-label='登录方式'
-              >
-                <Tab
-                  key='external'
-                  isDisabled
-                  title={
-                    <div className='flex items-center gap-2'>
-                      <span>手机号登录</span>
-                    </div>
-                  }
-                />
-                <Tab
-                  key='admin'
-                  title={
-                    <div className='flex items-center gap-2'>
-                      <span>账户密码登录</span>
-                    </div>
-                  }
-                />
-              </Tabs>
-
-              <AnimatePresence mode='wait'>
-                {selectedTab === "external" ? (
-                  <motion.form
-                    key='external'
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className='flex flex-col gap-4'
-                    onSubmit={(e) => e.preventDefault()}
-                  >
-                    {!hasOidParam && <EnterpriseList loginData={loginData} />}
-                    <PhoneVerification
-                      onSuccess={(phone) => {
-                        handleExternalLogin(phone)
-                      }}
-                      onError={(error) => {
-                        console.error("Phone verification failed:", error)
-                        message.error("手机号验证失败,请重试")
-                      }}
-                    />
-                  </motion.form>
-                ) : (
-                  <motion.form
-                    key='admin'
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className='flex flex-col gap-4'
-                    onSubmit={(e) => e.preventDefault()}
-                  >
-                    {!hasOidParam && <EnterpriseList loginData={loginData} />}
-                    <Input
-                      isRequired
-                      label={t("username")}
-                      placeholder={t("enter_your_username")}
-                      type='text'
-                      variant='bordered'
-                      value={account}
-                      onChange={(e) => setAccount(e.target.value)}
-                      classNames={{
-                        label: "font-medium",
-                      }}
-                    />
-                    <Input
-                      isRequired
-                      endContent={
-                        <button type='button' onClick={toggleVisibility} className='focus:outline-none'>
-                          {isVisible ? (
-                            <Icon className='text-xl transition-colors' icon='solar:eye-closed-linear' />
-                          ) : (
-                            <Icon className='text-xl transition-colors' icon='solar:eye-bold' />
-                          )}
-                        </button>
-                      }
-                      label={t("password")}
-                      placeholder={t("enter_your_password")}
-                      type={isVisible ? "text" : "password"}
-                      variant='bordered'
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      classNames={{
-                        label: "font-medium",
-                      }}
-                    />
-                    <div className='flex items-center justify-between px-1 py-2'>
-                      <Checkbox isSelected={rememberMe} onValueChange={setRememberMe} size='sm'>
-                        {t("remember_me")}
-                      </Checkbox>
-                    </div>
-                    <Button
-                      color='primary'
-                      type='submit'
-                      onClick={handleAdminLogin}
-                      isLoading={loginLoading}
-                      className='w-full t-all duration-300 font-medium shadow-lg hover:shadow-xl'
-                    >
-                      {t("login")}
-                    </Button>
-                  </motion.form>
-                )}
-              </AnimatePresence>
-
-              {/* 注册企业部分 */}
-              <div className='mt-6'>
-                <Divider className='my-4' />
-                <div className='text-center'>
-                  <Button
-                    variant='flat'
-                    color='secondary'
-                    onClick={() => navigate("/register")}
-                    className='w-full bg-white/10 hover:bg-white/20 transition-all duration-300'
-                  >
-                    还没有企业账号? 点击注册企业
-                  </Button>
-                </div>
-              </div>
+              {loginContent}
             </CardBody>
           </Card>
         </motion.div>

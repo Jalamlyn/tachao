@@ -1,6 +1,7 @@
 import axios from "axios"
 import { message } from "@/components/Message"
 import { blog, getAppId } from "@/utils"
+import { localDB } from "@/utils/localDB"
 
 export const modelBaseUserToken = "model-base-user-token"
 
@@ -45,16 +46,30 @@ apiService.interceptors.response.use(
     console.log(error)
     if (error.response) {
       if (error.response.status === 401) {
-        // 保存当前的完整 URL
+        // 保存当前的完整 URL 和请求配置
         const currentUrl = window.location.href
-        // 排除登录页面本身，避免循环
-        const isHomePage = window.location.pathname === "/"
-        if (!currentUrl.includes("/login") && !isHomePage) {
-          localStorage.removeItem(modelBaseUserToken)
-          // 将当前 URL 编码后作为 callback 参数
-          const encodedCallback = encodeURIComponent(currentUrl)
-          window.location.href = `/login?callback=${encodedCallback}`
-        }
+        localDB.setItem('global:pendingRequest', error.config)
+        
+        // 显示登录Modal
+        localDB.setItem('global:showLoginModal', true)
+        
+        // 等待登录成功
+        return new Promise((resolve) => {
+          const unwatch = localDB.watchKey('global:loginSuccess', async () => {
+            const config = localDB.getItem('global:pendingRequest')
+            if (config) {
+              try {
+                const result = await axios(config)
+                resolve(result)
+              } catch (retryError) {
+                console.error('Retry request failed:', retryError)
+                message.error('请求重试失败,请刷新页面重试')
+              }
+            }
+            unwatch()
+            localDB.removeItem('global:loginSuccess')
+          })
+        })
       } else if (error.response.data.code === 400) {
         if (error.response.data.data) {
           message.error(error.response.data.data.message)

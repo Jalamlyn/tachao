@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Routes, Route, useNavigate } from "react-router-dom"
 import { NextUIProvider } from "@nextui-org/react"
 import { useTranslation } from "react-i18next"
@@ -13,6 +13,8 @@ import UnauthorizedPage from "./app/admin/src/permissions/pages/UnauthorizedPage
 import ErrorPage from "./app/admin/ErrorPage"
 import WaitListPage from "./pages/WaitListPage"
 import RegisterPage from "./app/landing/src/RegisterPage"
+import { Modal, ModalContent } from "@nextui-org/react"
+import { localDB } from "./utils/localDB"
 
 setTimeout(() => {
   loadBMapScript()
@@ -30,11 +32,29 @@ const queryClient = new QueryClient({
 function App() {
   const navigate = useNavigate()
   const { i18n } = useTranslation()
+  const [showLoginModal, setShowLoginModal] = useState(false)
 
   useEffect(() => {
     const currentLang = getCurrentLanguage()
     i18n.changeLanguage(currentLang)
   }, [])
+
+  useEffect(() => {
+    // 监听登录框显示状态
+    const unwatch = localDB.watchKey('global:showLoginModal', (value) => {
+      setShowLoginModal(!!value)
+    })
+    
+    return () => unwatch()
+  }, [])
+
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false)
+    localDB.setItem('global:loginSuccess', true)
+    // 清理临时数据
+    localDB.removeItem('global:pendingRequest')
+    localDB.removeItem('global:showLoginModal')
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -51,6 +71,21 @@ function App() {
             {AdminRouter()}
           </Routes>
           <Toaster />
+
+          {/* 全局登录Modal */}
+          <Modal 
+            isOpen={showLoginModal} 
+            onClose={() => setShowLoginModal(false)}
+            size="2xl"
+            classNames={{
+              backdrop: "backdrop-blur-sm",
+              base: "border border-white/30"
+            }}
+          >
+            <ModalContent>
+              <LoginPage isModal onSuccess={handleLoginSuccess} />
+            </ModalContent>
+          </Modal>
         </div>
       </NextUIProvider>
     </QueryClientProvider>
