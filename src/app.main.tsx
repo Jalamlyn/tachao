@@ -45,8 +45,8 @@ const getAppIdFromUrl = (prefix: string): string | null => {
 }
 
 const AppRuntimeWrapper: React.FC = () => {
-  const appId = getAppIdFromUrl("app-run")
-  
+  const appId = window.mo_appId
+
   if (!appId) {
     return <div className='text-danger p-4'>无效的应用ID</div>
   }
@@ -54,10 +54,8 @@ const AppRuntimeWrapper: React.FC = () => {
   return (
     <StoreProvider>
       <QueryClientProvider client={queryClient}>
-        <Provider>
-          <AppRuntime appId={appId} />
-          <Toaster position='top-center' expand={true} richColors closeButton />
-        </Provider>
+        <AppRuntime appId={appId} />
+        <Toaster position='top-center' expand={true} richColors closeButton />
       </QueryClientProvider>
     </StoreProvider>
   )

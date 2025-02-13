@@ -8,6 +8,8 @@
     "dev": "vite",
     "build": "yarn config set registry 'https://registry.npm.taobao.org' && vite build",
     "build:us": "cross-env DEPLOY_ENV=us vite build",
+    "build:app": "cross-env BUILD_ENTRY=app vite build",
+    "build:main": "cross-env BUILD_ENTRY=main vite build",
     "lint": "eslint -c .eslintrc.json ./src/**/**/*.{ts,tsx} --fix",
     "preview": "vite preview",
     "push": "git push && git push github main",
