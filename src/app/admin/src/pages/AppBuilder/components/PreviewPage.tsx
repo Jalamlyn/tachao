@@ -23,27 +23,24 @@ import { context } from "./functionContext"
 import { balanceStore } from "@/stores/balanceStore"
 
 // 节流函数
-const throttle = <T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): ((...args: Parameters<T>) => void) => {
-  let timeout: NodeJS.Timeout | null = null;
-  let lastArgs: Parameters<T> | null = null;
+const throttle = <T extends (...args: any[]) => any>(func: T, wait: number): ((...args: Parameters<T>) => void) => {
+  let timeout: NodeJS.Timeout | null = null
+  let lastArgs: Parameters<T> | null = null
 
   return (...args: Parameters<T>) => {
-    lastArgs = args;
+    lastArgs = args
 
     if (!timeout) {
       timeout = setTimeout(() => {
         if (lastArgs) {
-          func(...lastArgs);
+          func(...lastArgs)
         }
-        timeout = null;
-        lastArgs = null;
-      }, wait);
+        timeout = null
+        lastArgs = null
+      }, wait)
     }
-  };
-};
+  }
+}
 
 interface PreviewPageProps {
   appId: string
@@ -79,7 +76,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
           "*"
         )
         setIsOperationModalOpen(true)
-      }, 5000),
+      }, 300),
     [appId]
   )
 
@@ -109,9 +106,12 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
     }
   }, [error])
 
-  const handleAIFix = useCallback((errorInfo: any) => {
-    throttledHandleAIFix(errorInfo)
-  }, [throttledHandleAIFix])
+  const handleAIFix = useCallback(
+    (errorInfo: any) => {
+      throttledHandleAIFix(errorInfo)
+    },
+    [throttledHandleAIFix]
+  )
 
   const handleError = (error: Error) => {
     // 如果是模块未实现错误,直接触发 AI 修复
@@ -278,7 +278,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
                 <Button color='danger' variant='light' onPress={onClose}>
                   取消
                 </Button>
-                <Button color='primary' onPress={handleAIFix} isDisabled={!userOperations.trim()}>
+                <Button color='primary' onPress={handleAIFix}>
                   提交并修复
                 </Button>
               </ModalFooter>

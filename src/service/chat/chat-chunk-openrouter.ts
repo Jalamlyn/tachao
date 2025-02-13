@@ -203,7 +203,8 @@ export default async function chatChunkOpenAIOffice(
           const parsed = jsonParse(event.data)
           // 处理工具调用
           if (!parsed?.choices || parsed?.choices[0]?.finish_reason === "error") {
-            throw new Error("网络拥堵，请点击新对话重试")
+            message.error("网络拥堵,请刷新页面重试")
+            throw new Error("网络拥堵,请刷新页面重试")
           }
           if (parsed?.choices[0]?.delta?.tool_calls) {
             const toolCall = parsed.choices[0].delta.tool_calls[0]
@@ -251,7 +252,7 @@ export default async function chatChunkOpenAIOffice(
                   content: [
                     {
                       type: "text",
-                      text: `继续生成,从"""${lastTenChars}"""后面开始生成,但是不要包含"""${lastTenChars}""",开头和结尾都不要解释和说明,也不要有\`\`\`和这样的标记，如果是非连续的，注意添加空格`,
+                      text: `继续生成,从"""${lastTenChars}"""后面开始生成,但是不要包含"""${lastTenChars}""",开头和结尾都不要解释和说明,也不要有\`\`\`和这样的标记,如果是非连续的,注意添加空格`,
                     },
                   ],
                 },

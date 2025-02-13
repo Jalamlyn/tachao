@@ -9,20 +9,53 @@ interface HeroProps {
   onGetStarted: () => void
 }
 
+// 视频URL常量
+const VIDEO_URLS = {
+  first:
+    "https://6d6f-mobenai-weapp-dev-2e8qhi3a963364-1259692580.tcb.qcloud.la/2%E6%9C%8812%E6%97%A5.mp4?sign=74e621d5a9ed30b90f728700e96f7bb1&t=1739305856",
+  second:
+    "https://6d6f-mobenai-weapp-dev-2e8qhi3a963364-1259692580.tcb.qcloud.la/2%E6%9C%8814%E6%97%A5.mp4?sign=b2088a87a639ea8431adcd354e7c6e8a&t=1739477700",
+}
+
+// 视频类型说明
+const VIDEO_TYPES = {
+  second: "AI开发网站演示",
+  first: "AI开发系统演示",
+}
+
 // 产品视频组件
 const ProductVideo: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [currentVideo, setCurrentVideo] = useState<"first" | "second">("second")
+
+  const handleVideoSwitch = () => {
+    setCurrentVideo((current) => (current === "first" ? "second" : "first"))
+  }
 
   return (
     <div className='relative w-full max-w-4xl mx-auto my-12 rounded-2xl overflow-hidden group'>
       <div className='absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-2xl' />
-      <video ref={videoRef} className='w-full rounded-2xl' autoPlay muted loop playsInline>
-        <source
-          src='https://6d6f-mobenai-weapp-dev-2e8qhi3a963364-1259692580.tcb.qcloud.la/2%E6%9C%8812%E6%97%A5.mp4?sign=74e621d5a9ed30b90f728700e96f7bb1&t=1739305856'
-          type='video/mp4'
-        />
+
+      {/* 当前视频类型说明 */}
+      <div className='absolute top-4 left-4 bg-black/40 backdrop-blur-sm px-4 py-2 rounded-lg text-white font-medium'>
+        <Icon icon={currentVideo === "first" ? "mdi:web" : "mdi:application"} className='inline-block mr-2' />
+        {VIDEO_TYPES[currentVideo]}
+      </div>
+
+      <video ref={videoRef} className='w-full rounded-2xl' autoPlay muted loop playsInline key={currentVideo}>
+        <source src={VIDEO_URLS[currentVideo]} type='video/mp4' />
         您的浏览器不支持视频播放。
       </video>
+
+      {/* 改进的视频切换按钮 */}
+      <Button
+        onClick={handleVideoSwitch}
+        className='absolute bottom-4 right-4 bg-gradient-to-r from-purple-500 to-cyan-500 text-white px-6 py-6 rounded-xl 
+        flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105'
+        startContent={<Icon icon='mdi:video-switch' className='w-5 h-5' />}
+      >
+        切换到{currentVideo === "second" ? "AI开发系统演示" : "AI开发网站演示"}
+      </Button>
     </div>
   )
 }
@@ -69,7 +102,7 @@ const Hero: React.FC<HeroProps> = ({ onGetStarted }) => {
 
   // 打字机效果状态
   const [textIndex, setTextIndex] = useState(0)
-  const texts = ["零代码,让AI为您构建企业应用", "专业级企业应用,一键生成", "像聊天一样开发应用,降低80%成本"]
+  const texts = ["零代码,让AI为您构建企业应用", "专业级企业应用,一键生成", "像聊天一样开发应用,降本增效"]
 
   useEffect(() => {
     if (ref) {

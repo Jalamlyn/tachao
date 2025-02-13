@@ -36,7 +36,7 @@ export const useWatch = (
         } catch (error) {
           console.error("Error parsing form config:", error)
           if (lastResponseRef.current.includes("</mo-ai-code>")) {
-            message.error("表单解析失败")
+            message.error("code 解析失败")
           }
           // updateLastMessage({
           //   content: "表单解析失败",

@@ -9,4 +9,5 @@ export default {
     expireDate: null,
     features: null,
   },
+  isInChatting: false,
 }

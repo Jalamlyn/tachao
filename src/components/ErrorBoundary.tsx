@@ -83,7 +83,7 @@ class ErrorBoundary extends Component<Props, State> {
         this.props.onAIFix(errorInfo);
         this.handleModalClose();
       }
-    }, 5000);
+    }, 300);
   }
 
   public static getDerivedStateFromError(error: Error): State {
