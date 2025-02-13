@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useMemo, useCallback } from "react"
 import { AppRender } from "@/app/admin/src/pages/AppBuilder/AppRender"
 import {
   Spinner,
@@ -22,6 +22,29 @@ import { appCodeStore } from "../store/appCodeStore"
 import { context } from "./functionContext"
 import { balanceStore } from "@/stores/balanceStore"
 
+// 节流函数
+const throttle = <T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): ((...args: Parameters<T>) => void) => {
+  let timeout: NodeJS.Timeout | null = null;
+  let lastArgs: Parameters<T> | null = null;
+
+  return (...args: Parameters<T>) => {
+    lastArgs = args;
+
+    if (!timeout) {
+      timeout = setTimeout(() => {
+        if (lastArgs) {
+          func(...lastArgs);
+        }
+        timeout = null;
+        lastArgs = null;
+      }, wait);
+    }
+  };
+};
+
 interface PreviewPageProps {
   appId: string
   onAIFix?: (errorInfo: any) => void
@@ -34,6 +57,31 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   const [errorDetails, setErrorDetails] = useState<any>(null)
   const [isOperationModalOpen, setIsOperationModalOpen] = useState(false)
   const [userOperations, setUserOperations] = useState("")
+
+  // 使用 useMemo 创建节流后的 handleAIFix
+  const throttledHandleAIFix = useMemo(
+    () =>
+      throttle((errorInfo: any) => {
+        window.parent.postMessage(
+          {
+            type: "AI_FIX_REQUEST",
+            payload: {
+              error: JSON.stringify(errorInfo.message),
+              context: {
+                type: "module_error",
+                route: window.location.pathname,
+                appId,
+                moduleName: errorInfo.context?.moduleName,
+                userOperations: _userOperations,
+              },
+            },
+          },
+          "*"
+        )
+        setIsOperationModalOpen(true)
+      }, 5000),
+    [appId]
+  )
 
   useEffect(() => {
     const initBalanceStore = async () => {
@@ -61,26 +109,9 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
     }
   }, [error])
 
-  const handleAIFix = (errorInfo: any) => {
-    window.parent.postMessage(
-      {
-        type: "AI_FIX_REQUEST",
-        payload: {
-          error: JSON.stringify(errorInfo.message),
-          context: {
-            type: "module_error",
-            route: window.location.pathname,
-            appId,
-            moduleName: errorInfo.context?.moduleName,
-            userOperations: _userOperations,
-          },
-        },
-      },
-      "*"
-    )
-    // 其他错误,打开操作收集对话框
-    setIsOperationModalOpen(true)
-  }
+  const handleAIFix = useCallback((errorInfo: any) => {
+    throttledHandleAIFix(errorInfo)
+  }, [throttledHandleAIFix])
 
   const handleError = (error: Error) => {
     // 如果是模块未实现错误,直接触发 AI 修复

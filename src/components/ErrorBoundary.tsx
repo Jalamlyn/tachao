@@ -14,6 +14,29 @@ import {
 import { Icon } from "@iconify/react"
 import { motion } from "framer-motion"
 
+// 节流函数
+const throttle = <T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): ((...args: Parameters<T>) => void) => {
+  let timeout: NodeJS.Timeout | null = null;
+  let lastArgs: Parameters<T> | null = null;
+
+  return (...args: Parameters<T>) => {
+    lastArgs = args;
+
+    if (!timeout) {
+      timeout = setTimeout(() => {
+        if (lastArgs) {
+          func(...lastArgs);
+        }
+        timeout = null;
+        lastArgs = null;
+      }, wait);
+    }
+  };
+};
+
 interface Props {
   children: ReactNode
   onReset?: () => void
@@ -42,12 +65,25 @@ interface State {
 let userOperations = ""
 
 class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null,
-    errorInfo: null,
-    isModalOpen: false,
-    userSteps: "",
+  private throttledAIFix: (errorInfo: any) => void;
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null,
+      isModalOpen: false,
+      userSteps: "",
+    }
+    
+    // 初始化节流函数
+    this.throttledAIFix = throttle((errorInfo: any) => {
+      if (this.props.onAIFix) {
+        this.props.onAIFix(errorInfo);
+        this.handleModalClose();
+      }
+    }, 5000);
   }
 
   public static getDerivedStateFromError(error: Error): State {
@@ -67,8 +103,8 @@ class ErrorBoundary extends Component<Props, State> {
     // 检查是否是模块未实现错误
     if (error.name === 'ModuleNotImplementedError' || (error.message && error.message.includes('模块') && error.message.includes('未实现'))) {
       if (this.props.onAIFix) {
-        // 自动触发 AI 修复
-        this.props.onAIFix({
+        // 使用节流函数触发 AI 修复
+        this.throttledAIFix({
           message: error.message,
           stack: error.stack,
           componentStack: errorInfo.componentStack,
@@ -77,7 +113,7 @@ class ErrorBoundary extends Component<Props, State> {
             route: window.location.pathname,
             type: 'module_error'
           }
-        })
+        });
       }
       // 不设置状态,因为不需要显示错误 UI
       return
@@ -102,7 +138,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   private handleAIFix = () => {
-    if (this.props.onAIFix && this.state.error) {
+    if (this.state.error) {
       const errorInfo = {
         message: this.state.error.message,
         stack: this.state.error.stack,
@@ -113,8 +149,7 @@ class ErrorBoundary extends Component<Props, State> {
           userOperations,
         },
       }
-      this.props.onAIFix(errorInfo)
-      this.handleModalClose()
+      this.throttledAIFix(errorInfo);
     }
   }
 
