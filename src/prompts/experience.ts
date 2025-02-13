@@ -477,7 +477,10 @@ const AIChat = () => {
         },
         
         // 理科类 0, 日常对话 0.3, 创意类 0.7
-        temperature: 0
+        temperature: 0,
+        // 定义模型
+        model: ""
+        
       });
       
     } catch (error) {

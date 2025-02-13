@@ -49,7 +49,7 @@ class AIService {
 
   // 统一的chat方法
   async chat(messages: any[], options: ChatOptions = {}): Promise<void> {
-    const { onChunk, onResult, onError, temperature = 0, stop } = options
+    const { onChunk, onResult, onError, temperature = 0, model } = options
     let fullContent = ""
 
     try {
@@ -71,7 +71,8 @@ class AIService {
           "YES",
           "",
           stop,
-          true
+          true,
+          model
         )
       } else {
         // 使用Deepseek接口处理纯文本消息
@@ -87,7 +88,8 @@ class AIService {
           "YES",
           "",
           stop,
-          true
+          true,
+          model
         )
       }
 

@@ -10,6 +10,7 @@ import {
 } from "../types"
 import { hasRequiredPermission } from "../config/constants"
 import { costService } from "@/utils/costService"
+import message from "@/components/Message"
 
 const PERMISSION_REQUESTS_KEY = "permission_requests"
 
@@ -18,9 +19,9 @@ const METADATA_KEYS = {
   // 原有权限相关键值
   PERMISSIONS: (resourceType: ResourceType) => `permissions_${resourceType}`,
   // 新增订阅相关键值
-  SUBSCRIPTION: (orgId: string) => `org_subscription_${orgId}`,
-  ACCOUNT_USAGE: (orgId: string) => `org_account_usage_${orgId}`,
-  SUBSCRIPTION_HISTORY: (orgId: string) => `org_subscription_history_${orgId}`,
+  SUBSCRIPTION: (orgId: string) => `org_subscription`,
+  ACCOUNT_USAGE: (orgId: string) => `org_account_usage`,
+  SUBSCRIPTION_HISTORY: (orgId: string) => `org_subscription_history`,
 }
 
 export const getPermissionMetadataKey = (resourceType: ResourceType) => `permissions_${resourceType}`
@@ -438,6 +439,11 @@ export const subscriptionService = {
   async updateSubscription(orgId: string, subscription: Subscription): Promise<void> {
     try {
       const currentSubscription = await this.getSubscription(orgId)
+      // 添加降级限制检查
+      if (currentSubscription && currentSubscription.type === "enterprise" && subscription.type === "personal") {
+        message.error("企业版无法降级到个人版")
+        throw new Error("企业版无法降级到个人版")
+      }
 
       if (currentSubscription && new Date(currentSubscription.expireDate) > new Date()) {
         const currentExpireDate = new Date(currentSubscription.expireDate)

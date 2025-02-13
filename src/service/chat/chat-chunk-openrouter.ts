@@ -10,7 +10,7 @@ import globalStore from "@/globalStore"
 const AI_MODELS = {
   BASIC: "anthropic/claude-3.5-sonnet",
   ADVANCED: "anthropic/claude-3.5-sonnet",
-  USER: "anthropic/claude-3.5-sonnet",
+  USER: "google/gemini-2.0-flash-001",
 }
 
 // 定义JavaScript执行工具
@@ -89,7 +89,8 @@ export default async function chatChunkOpenAIOffice(
   overFlag = "YES",
   system,
   stop,
-  isUSER
+  isUSER,
+  model
 ) {
   let _messages = messages
   if (isFirst) {
@@ -146,7 +147,7 @@ export default async function chatChunkOpenAIOffice(
   }
 
   const payload = {
-    model: selectedModel,
+    model: model || selectedModel,
     messages: _messages,
     system,
     stream: true,
@@ -202,7 +203,7 @@ export default async function chatChunkOpenAIOffice(
           const parsed = jsonParse(event.data)
           // 处理工具调用
           if (!parsed?.choices || parsed?.choices[0]?.finish_reason === "error") {
-            throw new Error("网络拥堵，请稍后重试，或者切换其他可用模型")
+            throw new Error("网络拥堵，请点击新对话重试")
           }
           if (parsed?.choices[0]?.delta?.tool_calls) {
             const toolCall = parsed.choices[0].delta.tool_calls[0]

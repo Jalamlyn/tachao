@@ -352,14 +352,14 @@ const AccountManagement: React.FC = () => {
 
   const copyAccountMessage = async (account) => {
     setCopyingAccountId(account.id)
-    const message = `🎉 欢迎加入模本AI!
+    const message = `🎉 欢迎加入模本智能!
 
 您的账号信息如下:
 👤 账号:${account.account}
 🔑 密码:${account.account}
 🌐 登录地址:https://www.mobenai.com.cn/login?oid=1
 
-✨ 模本AI是一个革命性的AI编程平台,让人人都能成为开发者。
+✨ 模本智能是一个革命性的AI编程平台,让人人都能成为开发者。
 💡 在这里,您可以轻松地将想法转化为应用程序,享受AI驱动的开发体验。
 
 🚀 立即登录,开启您的AI编程之旅!
@@ -465,7 +465,7 @@ const AccountManagement: React.FC = () => {
               <div className='p-2'>
                 <p className='mb-2'>账号消费额度使用情况</p>
                 <p className='text-small'>已使用: {balance.used.toFixed(2)} 梦想币</p>
-                <p className='text-small'>剩余可用: {(balance.limit - balance.used).toFixed(2)} 梦想币</p>
+                <p className='text-small'>剩余可消费: {(balance.limit - balance.used).toFixed(2)} 梦想币（仅账号消费限制，非真实额度）</p>
                 <p className='text-small'>总额度: {balance.limit} 梦想币</p>
               </div>
             }
