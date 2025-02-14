@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx"
-import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { getPublicMetaData, setMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
 import { subscriptionService } from "@/app/admin/src/permissions/utils/permissionUtils"
 import globalStore from "@/globalStore"
@@ -7,7 +7,6 @@ import { costService } from "@/utils/costService"
 import { getAccount } from "@/service/apis/pay"
 
 interface AccountBalance {
-  limit: number
   used: number
 }
 
@@ -49,7 +48,7 @@ class BalanceStore {
   // 获取所有账号额度信息
   async getAccountBalances(): Promise<AccountBalances> {
     try {
-      const res = await getMetadata([this.ACCOUNT_BALANCE_KEY])
+      const res = await getPublicMetaData([this.ACCOUNT_BALANCE_KEY])
       return res?.data?.[0]?.value ? JSON.parse(res.data[0].value) : {}
     } catch (error) {
       console.error("Failed to get account balances:", error)
@@ -71,11 +70,11 @@ class BalanceStore {
   async updateAccountUsage(accountId: string, cost: number): Promise<boolean> {
     try {
       // 1. 获取当前所有账户的余额数据
-      const res = await getMetadata([this.ACCOUNT_BALANCE_KEY])
+      const res = await getPublicMetaData([this.ACCOUNT_BALANCE_KEY])
       let balances = res?.data?.[0]?.value ? JSON.parse(res.data[0].value) : {}
 
       // 2. 更新指定账户的已使用额度(累加)
-      balances[accountId] = balances[accountId] || { limit: 10, used: 0 }
+      balances[accountId] = balances[accountId] || { used: 0 }
       balances[accountId].used = Number((balances[accountId].used + cost).toFixed(4))
 
       // 3. 保存更新后的数据
@@ -88,39 +87,13 @@ class BalanceStore {
     }
   }
 
-  // 创建/更新账号额度限制
-  async setAccountLimit(accountId: string, limit: number) {
-    const balances = await this.getAccountBalances()
-    balances[accountId] = balances[accountId] || { limit: 10, used: 0 }
-    balances[accountId].limit = limit
-    await this.saveAccountBalances(balances)
-  }
-
-  // 检查账号额度
-  async checkAccountBalance(accountId: string, cost: number): Promise<boolean> {
-    // 如果是管理员,跳过余额检查
-    if (globalStore.currentUser?.name === "管理员") {
-      return true
-    }
-
-    const balances = await this.getAccountBalances()
-    const accountBalance = balances[accountId] || { limit: 10, used: 0 }
-
-    const remaining = accountBalance.limit - accountBalance.used
-    if (remaining < cost) {
-      message.error(`账号额度不足,剩余${remaining.toFixed(2)}梦想币`)
-      return false
-    }
-    return true
-  }
-
   // 获取账号额度信息
   async getAccountBalance(accountId: string): Promise<AccountBalance> {
     const balances = await this.getAccountBalances()
-    return balances[accountId] || { limit: 10, used: 0 }
+    return balances[accountId] || { used: 0 }
   }
 
-  async checkBalance(cost: number = 0.1, accountId?: string): Promise<boolean> {
+  async checkBalance(cost: number = 0.1): Promise<boolean> {
     await this.fetchBalance()
     // 检查订阅状态
     const subscription = await subscriptionService.getSubscription(globalStore.organizationId)
@@ -159,16 +132,6 @@ class BalanceStore {
       this.showRechargeModal(false)
       return false
     }
-    // 如果是管理员,跳过账户余额检查
-    if (globalStore.currentUser?.name === "管理员") {
-      return true
-    }
-    if (accountId) {
-      const hasEnoughAccountBalance = await this.checkAccountBalance(accountId, cost)
-      if (!hasEnoughAccountBalance) {
-        return false
-      }
-    }
 
     return true
   }
@@ -177,7 +140,7 @@ class BalanceStore {
     this.setLoading(true)
     try {
       // 获取总余额
-      const balanceRes = await getMetadata(["balance"])
+      const balanceRes = await getPublicMetaData(["balance"])
       const totalBalance = balanceRes?.data?.[0]?.value ? Number(balanceRes.data[0].value) : 0
       this.setBalance(totalBalance)
       // 获取总消费
