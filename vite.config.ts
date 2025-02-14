@@ -32,14 +32,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      // 强制使用 React 开发版本
-      'react': path.resolve(__dirname, './node_modules/react/umd/react.development.js'),
-      'react-dom': path.resolve(__dirname, './node_modules/react-dom/umd/react-dom.development.js')
     },
   },
   build: {
-    minify: false,
-    sourcemap: true,
     rollupOptions: {
       input:
         process.env.BUILD_ENTRY === "app"
