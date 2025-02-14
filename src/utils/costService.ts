@@ -1,4 +1,4 @@
-import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { getPublicMetaData, setMetadata } from "@/service/apis/metadata"
 import { balanceStore } from "@/stores/balanceStore"
 import globalStore from "@/globalStore"
 
@@ -94,7 +94,7 @@ export const costService = {
   // 获取或初始化成本统计
   async getCostTotal(): Promise<CostTotal> {
     try {
-      const result = await getMetadata([COST_TOTAL_KEY])
+      const result = await getPublicMetaData([COST_TOTAL_KEY])
       if (result?.data?.[0]?.value) {
         return JSON.parse(result.data[0].value)
       }
@@ -132,7 +132,7 @@ export const costService = {
   // 获取指定页的记录
   async getPageRecords(page: number): Promise<CostRecord[]> {
     try {
-      const result = await getMetadata([`ai-cost-records-${page}`])
+      const result = await getPublicMetaData([`ai-cost-records-${page}`])
       return result?.data?.[0]?.value ? JSON.parse(result.data[0].value) : []
     } catch (error) {
       console.error("Error getting page records:", error)

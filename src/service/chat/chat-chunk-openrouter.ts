@@ -129,21 +129,10 @@ export default async function chatChunkOpenAIOffice(
   // 保存当前使用的模型到 sessionStorage
   sessionStorage.setItem("currentAIModel", selectedModel)
 
-  // 获取当前用户ID
-  const currentUserId = globalStore.currentUser?.id
-
   // 只检查余额,不更新使用量
   const hasEnoughBalance = await balanceStore.checkBalance(0.1)
   if (!hasEnoughBalance) {
     return
-  }
-
-  // 如果提供了accountId,检查账户额度
-  if (currentUserId) {
-    const hasEnoughAccountBalance = await balanceStore.checkAccountBalance(currentUserId, 0.1)
-    if (!hasEnoughAccountBalance) {
-      return
-    }
   }
 
   const payload = {
