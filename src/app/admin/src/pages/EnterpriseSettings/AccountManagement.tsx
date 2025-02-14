@@ -43,7 +43,6 @@ import { useGlobalUser } from "@/hooks/useGlobalUser"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
 
 interface AccountBalance {
-  limit: number
   used: number
 }
 
@@ -88,18 +87,6 @@ const validatePhone = (phone: string): { isValid: boolean; message?: string } =>
   return { isValid: true }
 }
 
-// 验证梦想币限制输入
-const validateBalanceLimit = (limit: string): { isValid: boolean; message?: string } => {
-  const number = Number(limit)
-  if (isNaN(number)) {
-    return { isValid: false, message: "请输入有效的数字" }
-  }
-  if (number < 0) {
-    return { isValid: false, message: "消费额度不能为负数" }
-  }
-  return { isValid: true }
-}
-
 const AccountManagement: React.FC = () => {
   const { balanceStore } = useStore()
   const [accounts, setAccounts] = useState([])
@@ -112,7 +99,6 @@ const AccountManagement: React.FC = () => {
   const [phoneError, setPhoneError] = useState("")
   const [accountError, setAccountError] = useState("")
   const [accountBalances, setAccountBalances] = useState<AccountBalances>({})
-  const [balanceLimitError, setBalanceLimitError] = useState("")
   const { isOpen: isCreateModalOpen, onOpen: onCreateModalOpen, onClose: onCreateModalClose } = useDisclosure()
   const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure()
   const { isOpen: isDeleteModalOpen, onOpen: onDeleteModalOpen, onClose: onDeleteModalClose } = useDisclosure()
@@ -197,12 +183,6 @@ const AccountManagement: React.FC = () => {
         return
       }
 
-      const balanceLimitValidation = validateBalanceLimit(values.balanceLimit)
-      if (!balanceLimitValidation.isValid) {
-        message.error(balanceLimitValidation.message)
-        return
-      }
-
       if (values.type === "nb") {
         if (!subscription || subscription.type === "personal") {
           message.error("个人版不能创建内部账号,请升级到企业版")
@@ -225,11 +205,10 @@ const AccountManagement: React.FC = () => {
         name: accountName,
       })
 
-      // 设置账号梦想币额度
+      // 初始化账号使用额度记录
       const newBalances = {
         ...accountBalances,
         [accountRes.id]: {
-          limit: Number(values.balanceLimit) || 10,
           used: 0,
         },
       }
@@ -282,27 +261,10 @@ const AccountManagement: React.FC = () => {
         return
       }
 
-      const balanceLimitValidation = validateBalanceLimit(values.balanceLimit)
-      if (!balanceLimitValidation.isValid) {
-        message.error(balanceLimitValidation.message)
-        return
-      }
-
       await updateRamAccount(selectedAccount.id, {
         ...values,
         phone: values.phone,
       })
-
-      // 更新账号梦想币额度
-      const newBalances = {
-        ...accountBalances,
-        [selectedAccount.id]: {
-          ...accountBalances[selectedAccount.id],
-          limit: Number(values.balanceLimit),
-        },
-      }
-      await saveAccountBalances(newBalances)
-      setAccountBalances(newBalances)
 
       onEditModalClose()
       fetchAccounts()
@@ -317,7 +279,7 @@ const AccountManagement: React.FC = () => {
     try {
       await deleteRamAccount(selectedAccount.id)
 
-      // 删除账号梦想币额度信息
+      // 删除账号使用额度记录
       const newBalances = { ...accountBalances }
       delete newBalances[selectedAccount.id]
       await saveAccountBalances(newBalances)
@@ -418,26 +380,13 @@ const AccountManagement: React.FC = () => {
     }
   }
 
-  const handleBalanceLimitChange = (value: string) => {
-    const validation = validateBalanceLimit(value)
-    if (!validation.isValid) {
-      setBalanceLimitError(validation.message)
-    } else {
-      setBalanceLimitError("")
-    }
-  }
-
   const renderUsageProgress = (balance: AccountBalance) => {
-    const percentage = (balance.used / balance.limit) * 100
-    const color = percentage >= 90 ? "danger" : percentage >= 70 ? "warning" : "success"
-
     return (
       <div className='w-full'>
         <div className='flex justify-between items-center mb-1'>
           <span className='text-small'>已使用: {balance.used.toFixed(2)} 梦想币</span>
-          <span className='text-small'>总额度: {balance.limit} 梦想币</span>
         </div>
-        <Progress value={percentage} color={color} size='sm' className='max-w-md' />
+        <Progress value={balance.used} size='sm' className='max-w-md' />
       </div>
     )
   }
@@ -446,7 +395,7 @@ const AccountManagement: React.FC = () => {
     { name: "名称", uid: "name" },
     { name: "账号", uid: "account" },
     { name: "手机号", uid: "phone" },
-    { name: "消费额度使用情况", uid: "balance" },
+    { name: "消费使用情况", uid: "balance" },
     { name: "类型", uid: "type" },
     { name: "操作", uid: "actions" },
   ]
@@ -458,15 +407,13 @@ const AccountManagement: React.FC = () => {
       case "phone":
         return account.phone || "-"
       case "balance":
-        const balance = accountBalances[account.id] || { limit: 10, used: 0 }
+        const balance = accountBalances[account.id] || { used: 0 }
         return (
           <Tooltip
             content={
               <div className='p-2'>
-                <p className='mb-2'>账号消费额度使用情况</p>
+                <p className='mb-2'>账号消费使用情况</p>
                 <p className='text-small'>已使用: {balance.used.toFixed(2)} 梦想币</p>
-                <p className='text-small'>剩余可消费: {(balance.limit - balance.used).toFixed(2)} 梦想币（仅账号消费限制，非真实额度）</p>
-                <p className='text-small'>总额度: {balance.limit} 梦想币</p>
               </div>
             }
           >
@@ -596,15 +543,6 @@ const AccountManagement: React.FC = () => {
                   errorMessage={phoneError}
                   description='请输入11位手机号'
                 />
-                <Input
-                  name='balanceLimit'
-                  label='消费额度'
-                  type='number'
-                  defaultValue='10'
-                  description='设置该账号可使用的最大梦想币额度,超过此额度将无法继续使用服务'
-                  onValueChange={handleBalanceLimitChange}
-                  errorMessage={balanceLimitError}
-                />
               </ModalBody>
               <ModalFooter>
                 <Button color='danger' variant='light' onPress={onClose}>
@@ -651,15 +589,6 @@ const AccountManagement: React.FC = () => {
                   onValueChange={handlePhoneChange}
                   errorMessage={phoneError}
                   description='请输入11位手机号'
-                />
-                <Input
-                  name='balanceLimit'
-                  label='消费额度'
-                  type='number'
-                  defaultValue={accountBalances[selectedAccount?.id]?.limit || 10}
-                  description='设置该账号可使用的最大梦想币额度,超过此额度将无法继续使用服务'
-                  onValueChange={handleBalanceLimitChange}
-                  errorMessage={balanceLimitError}
                 />
               </ModalBody>
               <ModalFooter>
@@ -753,8 +682,8 @@ const AccountManagement: React.FC = () => {
                       <p>{accountDetail.phone || "-"}</p>
                     </div>
                     <div>
-                      <p className='text-sm text-gray-500'>消费额度使用情况</p>
-                      {renderUsageProgress(accountBalances[accountDetail.id] || { limit: 10, used: 0 })}
+                      <p className='text-sm text-gray-500'>消费使用情况</p>
+                      {renderUsageProgress(accountBalances[accountDetail.id] || { used: 0 })}
                     </div>
                     <div>
                       <p className='text-sm text-gray-500'>创建时间</p>
