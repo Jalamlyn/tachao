@@ -170,10 +170,10 @@ const AppBuilder: React.FC = observer(() => {
   const handleSaveVersion = async (name: string, description: string) => {
     try {
       const versionInfo = await appCodeStore.saveAppVersion(name, description)
-      message.success("版本保存成功")
       // 更新版本列表
       const history = await appCodeStore.getAppVersionHistory()
       setVersions(history.versions)
+      message.success("版本保存成功")
     } catch (error) {
       throw error
     }
