@@ -41,19 +41,19 @@ function App() {
 
   useEffect(() => {
     // 监听登录框显示状态
-    const unwatch = localDB.watchKey('global:showLoginModal', (value) => {
+    const unwatch = localDB.watchKey("global:showLoginModal", (value) => {
       setShowLoginModal(!!value)
     })
-    
+
     return () => unwatch()
   }, [])
 
   const handleLoginSuccess = () => {
     setShowLoginModal(false)
-    localDB.setItem('global:loginSuccess', true)
+    localDB.setItem("global:loginSuccess", true)
     // 清理临时数据
-    localDB.removeItem('global:pendingRequest')
-    localDB.removeItem('global:showLoginModal')
+    localDB.removeItem("global:pendingRequest")
+    localDB.removeItem("global:showLoginModal")
   }
 
   return (
@@ -73,13 +73,13 @@ function App() {
           <Toaster />
 
           {/* 全局登录Modal */}
-          <Modal 
-            isOpen={showLoginModal} 
+          <Modal
+            isOpen={showLoginModal}
             onClose={() => setShowLoginModal(false)}
-            size="2xl"
+            size='2xl'
             classNames={{
               backdrop: "backdrop-blur-sm",
-              base: "border border-white/30"
+              base: "border border-white/30 p-4",
             }}
           >
             <ModalContent>

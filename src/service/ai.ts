@@ -1,5 +1,6 @@
 // import chatChunk from "@/service/chat/chat-chunk-sc"
 import chatChunk from "@/service/chat/chat-chunk-openrouter"
+import { stream } from "fetch-event-stream"
 
 // 计算费用的函数
 
@@ -49,7 +50,7 @@ class AIService {
 
   // 统一的chat方法
   async chat(messages: any[], options: ChatOptions = {}): Promise<void> {
-    const { onChunk, onResult, onError, temperature = 0, model } = options
+    const { onChunk, onResult, onError, temperature = 0, model, stream } = options
     let fullContent = ""
 
     try {
@@ -72,7 +73,8 @@ class AIService {
           "",
           stop,
           true,
-          model
+          model,
+          stream
         )
       } else {
         // 使用Deepseek接口处理纯文本消息
@@ -89,7 +91,8 @@ class AIService {
           "",
           stop,
           true,
-          model
+          model,
+          stream
         )
       }
 
