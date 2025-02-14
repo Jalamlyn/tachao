@@ -21,7 +21,8 @@ export async function handleAIGeneration(
     throw new Error("AppId not set")
   }
   if (aiResponse.includes(`... 其他`) || aiResponse.includes(`... 其余`)|| aiResponse.includes(`... 保持`)) {
-    throw new Error("AI 代码生成不完整, 请重新对话")
+    message.error("AI 代码生成不完整, 请重新生成")
+    throw new Error("AI 代码生成不完整, 请重新生成")
   }
   if (!aiResponse.includes(`<mo-ai-code`)) {
     return {

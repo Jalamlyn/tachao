@@ -7,8 +7,8 @@ import { aiControllerStore } from "@/app/admin/src/pages/AppBuilder/AIEditor/com
 import { balanceStore } from "@/stores/balanceStore"
 
 const AI_MODELS = {
-  BASIC: "anthropic/claude-3.5-sonnet",
-  ADVANCED: "anthropic/claude-3.5-sonnet",
+  BASIC: "anthropic/claude-3.5-sonnet:beta",
+  ADVANCED: "anthropic/claude-3.5-sonnet:beta",
   USER: "google/gemini-2.0-flash-001",
 }
 

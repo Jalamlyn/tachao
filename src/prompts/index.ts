@@ -5,18 +5,18 @@ import SERVICE_DOC from "./experience"
 export default async function getSystemPrompt(resources, promptData = {}) {
   // 获取资源提示词
   const resourcePrompt = await RESOURCE_PROMPTS.resourcePrompt.getResourcePrompt(resources)
-
+  let projectSystemPrompt = `
+  ${
+    promptData.projectContext
+      ? `
+  <project>
+  ${promptData.projectContext}
+  </project>
+  `
+      : ""
+  }`
   // 构建基础系统提示词，首先放置项目上下文数据
-  let systemPrompt = `
-${
-  promptData.projectContext
-    ? `
-<project>
-${promptData.projectContext}
-</project>
-`
-    : ""
-}
+  let baseSystemPrompt = `
 <template>
 ${promptData.template}
 </template>
@@ -608,5 +608,17 @@ const batchUpload = async (files) => {
  
 
 `
-  return systemPrompt
+  return [
+    {
+      type: "text",
+      text: baseSystemPrompt,
+      cache_control: {
+        type: "ephemeral",
+      },
+    },
+    {
+      type: "text",
+      text: projectSystemPrompt,
+    },
+  ]
 }
