@@ -15,6 +15,8 @@ export default defineConfig({
           ? "/api"
           : "/dev"
     ),
+    // 强制使用开发版本的 React
+    'process.env.NODE_ENV': '"development"',
   },
   plugins: [
     million.vite({ auto: true }),
@@ -30,6 +32,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // 强制使用 React 开发版本
+      'react': path.resolve(__dirname, './node_modules/react/umd/react.development.js'),
+      'react-dom': path.resolve(__dirname, './node_modules/react-dom/umd/react-dom.development.js')
     },
   },
   build: {
