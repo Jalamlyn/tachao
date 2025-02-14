@@ -5,7 +5,6 @@ import { events } from "fetch-event-stream"
 import { costService } from "@/utils/costService"
 import { aiControllerStore } from "@/app/admin/src/pages/AppBuilder/AIEditor/components/AIControllerStore"
 import { balanceStore } from "@/stores/balanceStore"
-import globalStore from "@/globalStore"
 
 const AI_MODELS = {
   BASIC: "anthropic/claude-3.5-sonnet",
@@ -122,7 +121,10 @@ export default async function chatChunkOpenAIOffice(
     })
   }
 
-  const apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-openrouter"
+  let apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-openrouter"
+  if (model === "hs/deepseek-r1") {
+    apiEndPoint = "https://1259692580-dzwlwuk5dc.ap-shanghai.tencentscf.com/chat-hs"
+  }
 
   // 选择模型
   const selectedModel = isUSER ? AI_MODELS.USER : selectModel(_messages)
@@ -142,7 +144,7 @@ export default async function chatChunkOpenAIOffice(
     stream: true,
     stop,
     temperature,
-    tools: TOOLS, // 添加tools到请求中
+    tools: TOOLS,
   }
 
   let controller = new AbortController()
@@ -186,6 +188,9 @@ export default async function chatChunkOpenAIOffice(
       candidatesTokenCount: 0,
     }
 
+    let isThinkingStarted = false // 标记是否已经开始输出推理内容
+    let hasOutputContent = false // 标记是否已经输出过实际内容
+
     for await (let event of eventStream) {
       if (event.data !== "[DONE]") {
         try {
@@ -201,7 +206,6 @@ export default async function chatChunkOpenAIOffice(
               const args = JSON.parse(toolCall.function.arguments)
               const result = await executeScript(args.code)
 
-              // 将执行结果作为工具响应添加到消息中
               await chatChunkOpenAIOffice(
                 _messages.concat([
                   {
@@ -223,10 +227,29 @@ export default async function chatChunkOpenAIOffice(
           }
 
           const content = parsed?.choices[0]?.delta?.content || ""
-          fullContent += content
-          onChunk(content)
+          const reasoningContent = parsed?.choices[0]?.delta?.reasoning_content || ""
 
-          // 累加 usage 而不是立即记录
+          // 处理推理内容
+          if (reasoningContent) {
+            if (!isThinkingStarted) {
+              onChunk("<think>") // 第一次遇到推理内容时添加开始标签
+              isThinkingStarted = true
+            }
+            onChunk(reasoningContent)
+          }
+
+          // 处理实际内容
+          if (content) {
+            if (isThinkingStarted && !hasOutputContent) {
+              onChunk("</think>") // 在第一个实际内容前关闭推理标签
+              isThinkingStarted = false
+              hasOutputContent = true
+            }
+            fullContent += content
+            onChunk(content)
+          }
+
+          // 累加 usage
           if (parsed?.usage) {
             totalUsage.promptTokenCount += parsed.usage.prompt_tokens || 0
             totalUsage.candidatesTokenCount += parsed.usage.completion_tokens || 0
@@ -241,7 +264,7 @@ export default async function chatChunkOpenAIOffice(
                   content: [
                     {
                       type: "text",
-                      text: `继续生成,从"""${lastTenChars}"""后面开始生成,但是不要包含"""${lastTenChars}""",开头和结尾都不要解释和说明,也不要有\`\`\`和这样的标记,如果是非连续的,注意添加空格`,
+                      text: `继续生成,从"""${lastTenChars}"""后面开始生成,但是不要包含"""${lastTenChars}""",开头和结尾都不要解释和说明,也不要有\`\`\`和这样的标记，主要保持代码生成的连续性`,
                     },
                   ],
                 },
@@ -261,6 +284,11 @@ export default async function chatChunkOpenAIOffice(
           throw error
         }
       } else {
+        // 确保在结束时关闭未关闭的 think 标签
+        if (isThinkingStarted) {
+          onChunk("</think>")
+        }
+
         // 在对话结束时才记录总的消费
         if (totalUsage.promptTokenCount > 0 || totalUsage.candidatesTokenCount > 0) {
           const model = sessionStorage.getItem("aiLevel") || "ADVANCED"

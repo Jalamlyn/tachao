@@ -77,7 +77,7 @@ export default defineConfig({
     port: 5174,
     proxy: {
       "/dev/": {
-        target: "https://1259692580-dzwlwuk5dc.ap-shanghai.tencentscf.com/api/",
+        target: "https://www.mobenai.com.cn/api/",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/dev/, ""),
         autoRewrite: true,

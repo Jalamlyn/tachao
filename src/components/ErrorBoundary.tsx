@@ -146,7 +146,7 @@ class ErrorBoundary extends Component<Props, State> {
         context: {
           componentName: window.__module_import_errors ? window.__module_import_errors[0] : "未知模块",
           route: window.location.pathname,
-          userOperations,
+          userOperations:this.state.userSteps,
         },
       }
       this.throttledAIFix(errorInfo);
@@ -240,7 +240,7 @@ class ErrorBoundary extends Component<Props, State> {
                   取消
                 </Button>
                 <Button color='primary' onPress={this.handleAIFix}>
-                  提交并修复
+                  提交并修复(E)
                 </Button>
               </ModalFooter>
             </ModalContent>

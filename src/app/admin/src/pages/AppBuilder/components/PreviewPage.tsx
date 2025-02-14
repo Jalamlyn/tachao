@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react"
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { AppRender } from "@/app/admin/src/pages/AppBuilder/AppRender"
 import {
   Spinner,
@@ -69,7 +69,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
                 route: window.location.pathname,
                 appId,
                 moduleName: errorInfo.context?.moduleName,
-                userOperations: _userOperations,
+                userOperations: errorInfo.context?.userOperations || _userOperations,
               },
             },
           },
@@ -268,7 +268,10 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
                     label='操作步骤'
                     placeholder='例如:1. 我先点击了xxx按钮&#10;2. 然后输入了xxx内容&#10;3. 最后点击了xxx时出现错误'
                     value={userOperations}
-                    onChange={(e) => setUserOperations(e.target.value)}
+                    onChange={(e) => {
+                      setUserOperations(e.target.value)
+                      _userOperations = e.target.value
+                    }}
                     minRows={3}
                     variant='bordered'
                   />
@@ -279,7 +282,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
                   取消
                 </Button>
                 <Button color='primary' onPress={handleAIFix}>
-                  提交并修复
+                  提交并修复(P)
                 </Button>
               </ModalFooter>
             </>
