@@ -1,5 +1,15 @@
 import { useEffect, useState } from "react"
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Textarea, ButtonGroup } from "@nextui-org/react"
+import {
+  Button,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Input,
+  Textarea,
+  ButtonGroup,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import message from "@/components/Message"
 import { appCodeStore } from "./store/appCodeStore"
@@ -41,7 +51,14 @@ export const SaveVersionModal = ({ isOpen, onClose, onSave }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalContent>
-        <ModalHeader>保存版本</ModalHeader>
+        <ModalHeader>
+          <div>
+            保存版本
+            <div className='text-xs text-blue-300'>
+              由于空间有限，版本最多保存 5个，超过之后会自动删除之前保存的版本，请注意
+            </div>
+          </div>
+        </ModalHeader>
         <ModalBody>
           <div className='space-y-4'>
             <Input
@@ -130,33 +147,33 @@ export const VersionListModal = ({ isOpen, onClose, versions, onPublish, onDelet
                     </span>
                   </div>
                 </div>
-                <ButtonGroup variant="flat">
+                <ButtonGroup variant='flat'>
                   {/* 拉取代码按钮 */}
                   <Button
-                    color="secondary"
+                    color='secondary'
                     onPress={() => onPull(version)}
-                    startContent={<Icon icon="solar:download-minimalistic-bold" className="w-4 h-4" />}
-                    className="min-w-[100px]"
+                    startContent={<Icon icon='solar:download-minimalistic-bold' className='w-4 h-4' />}
+                    className='min-w-[100px]'
                   >
                     拉取代码
                   </Button>
-                  
+
                   {/* 发布版本按钮 */}
                   <Button
-                    color="primary"
+                    color='primary'
                     onPress={() => onPublish(version)}
-                    startContent={<Icon icon="mdi:rocket-launch" className="w-4 h-4" />}
-                    className="min-w-[100px]"
+                    startContent={<Icon icon='mdi:rocket-launch' className='w-4 h-4' />}
+                    className='min-w-[100px]'
                   >
                     发布此版本
                   </Button>
-                  
+
                   {/* 删除按钮 */}
                   <Button
-                    color="danger"
+                    color='danger'
                     onPress={() => setVersionToDelete(version)}
-                    startContent={<Icon icon="mdi:delete" className="w-4 h-4" />}
-                    className="min-w-[80px]"
+                    startContent={<Icon icon='mdi:delete' className='w-4 h-4' />}
+                    className='min-w-[80px]'
                   >
                     删除
                   </Button>
