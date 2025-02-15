@@ -12,7 +12,7 @@ import {
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { AppIndex } from "../store/types"
-import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { getMetadata, getPublicMetaData, setPlatMetaData, setMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
 
 interface PublishAppModalProps {
@@ -122,7 +122,7 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
     try {
       setIsPublishing(true)
       const [indexData, appIndexData] = await Promise.all([
-        getMetadata(["market_apps_index"]),
+        getPublicMetaData(["market_apps_index"]),
         getMetadata(["app_index"]),
       ])
 
@@ -143,23 +143,23 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
 
       const currentPage = Math.ceil((marketIndex.totalApps + 1) / 20)
       const pageKey = `market_apps_page_${currentPage}`
-      const pageDataResult = await getMetadata([pageKey])
+      const pageDataResult = await getPublicMetaData([pageKey])
       const pageData = pageDataResult.data?.[0]?.value ? JSON.parse(pageDataResult.data[0].value) : []
-      await setMetadata(pageKey, JSON.stringify([...pageData, marketApp]))
+      await setPlatMetaData({ name: pageKey, value: JSON.stringify([...pageData, marketApp]) })
 
       const updatedAppIndex = appIndex.map((appItem) =>
         appItem.id === app.id ? { ...appItem, isPublished: true, publishedAt: marketApp.publishedAt } : appItem
       )
       await setMetadata("app_index", JSON.stringify(updatedAppIndex))
 
-      await setMetadata(
-        "market_apps_index",
-        JSON.stringify({
+      await setPlatMetaData({
+        name: "market_apps_index",
+        value: JSON.stringify({
           totalPages: currentPage,
           totalApps: marketIndex.totalApps + 1,
           lastUpdated: marketApp.publishedAt,
-        })
-      )
+        }),
+      })
 
       onSuccess?.()
       onClose()
