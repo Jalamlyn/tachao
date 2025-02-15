@@ -33,7 +33,6 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeRaw from "rehype-raw"
 
-
 // 检查是否在iframe中运行
 const isInIframe = () => {
   try {
@@ -67,7 +66,11 @@ const getMetadata = async (names: string[], appId?: string) => {
         response,
       })
     }
-
+    if (!response.data[0]) {
+      response.data[0] = {
+        value: "{}",
+      }
+    }
     return response
   } catch (error) {
     if (isInIframe()) {

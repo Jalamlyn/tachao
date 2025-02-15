@@ -59,11 +59,12 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
       try {
         setIsLoading(true)
         setError(null)
+        const pAppId = appId.split("_")[2]
 
         // 尝试新的加载方式
         try {
           // 1. 获取应用元数据
-          const appResult = await getPublicMetaData([appId])
+          const appResult = await getPublicMetaData([appId], pAppId)
           if (!appResult.data?.[0]?.value) {
             throw new Error("App metadata not found")
           }
@@ -159,7 +160,6 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
       </Chip>
     </div>
   )
-  debugger
   return (
     <>
       <AppContext.Provider value={{ appId }}>

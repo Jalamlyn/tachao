@@ -56,8 +56,8 @@ export const queryMetadataHistory = async (data: {
   return res.data
 }
 
-export const getPublicMetaData = async (names) => {
-  const appId = getAppId()
+export const getPublicMetaData = async (names, appId) => {
+  let _appId = appId || getAppId()
   const getPublicUrl = `/public/api/metadata/app/type/AI_AGENT`
   const res = await apiService.post(
     getPublicUrl,
@@ -66,7 +66,7 @@ export const getPublicMetaData = async (names) => {
     },
     {
       headers: {
-        appId,
+        appId: _appId,
       },
     }
   )
