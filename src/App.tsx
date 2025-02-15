@@ -15,6 +15,7 @@ import WaitListPage from "./pages/WaitListPage"
 import RegisterPage from "./app/landing/src/RegisterPage"
 import { Modal, ModalContent } from "@nextui-org/react"
 import { localDB } from "./utils/localDB"
+import AppMarket from "./app/landing/src/AppMarket"
 
 setTimeout(() => {
   loadBMapScript()
@@ -64,6 +65,7 @@ function App() {
             <Route path='/' element={<LandingPage />} />
             <Route path='/login' element={<LoginPage />} />
             <Route path='/register' element={<RegisterPage />} />
+            <Route path='/market' element={<AppMarket />} />
             <Route path='/unauthorized' element={<UnauthorizedPage />} />
             <Route path='error' element={<ErrorPage />} />
 

@@ -6,8 +6,6 @@ import Hero from "./src/Hero"
 import Footer from "./src/Footer"
 import ScrollProgress from "./src/ScrollProgress"
 import PricingSection from "./src/PricingSection"
-import RegisterPage from "./src/RegisterPage"
-import AppMarket from "./src/AppMarket"
 import { Routes, Route } from "react-router-dom"
 
 const LandingPage: React.FC = () => {
@@ -34,10 +32,7 @@ const LandingPage: React.FC = () => {
           <div className='min-h-screen bg-gradient-to-b from-primary-dark to-primary-light relative'>
             <Helmet>
               <title>模本智能 - 将你的创意转化为现实代码</title>
-              <meta
-                name='description'
-                content='让 AI 为企业赋能,提升效率,降低成本,1分钟部署,5分钟开发,10分钟上线'
-              />
+              <meta name='description' content='让 AI 为企业赋能,提升效率,降低成本,1分钟部署,5分钟开发,10分钟上线' />
               <meta name='keywords' content='AI,企业服务,效率提升,智能化,沙塔,快速部署,企业管理系统' />
               <meta property='og:title' content='模本智能 - 将你的创意转化为现实代码' />
               <meta
@@ -58,8 +53,6 @@ const LandingPage: React.FC = () => {
           </div>
         }
       />
-      <Route path='/register' element={<RegisterPage />} />
-      <Route path='/market' element={<AppMarket />} />
     </Routes>
   )
 }

@@ -38,10 +38,7 @@ const Footer: React.FC = () => {
             </h3>
             <ul className='space-y-2'>
               {[
-                { text: "AI 开发表单", icon: "solar:chart-bold-duotone" },
-                { text: "AI 开发报表", icon: "solar:chart-bold-duotone" },
-                { text: "AI 开发应用", icon: "solar:widget-bold-duotone" },
-                { text: "AI 分析数据", icon: "solar:chart-2-bold-duotone" },
+                { text: "AI 工程师 MO", icon: "solar:chart-bold-duotone" },
               ].map((item) => (
                 <li key={item.text}>
                   <Link
