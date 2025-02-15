@@ -192,7 +192,7 @@ export default function LoginPage({ isModal, onSuccess }: LoginPageProps) {
             className='flex flex-col gap-4'
             onSubmit={(e) => e.preventDefault()}
           >
-            {!hasOidParam && <EnterpriseList loginData={loginData} />}
+            <EnterpriseList loginData={loginData} />
             <PhoneVerification
               onSuccess={(phone) => {
                 handleExternalLogin(phone)
@@ -212,7 +212,7 @@ export default function LoginPage({ isModal, onSuccess }: LoginPageProps) {
             className='flex flex-col gap-4'
             onSubmit={(e) => e.preventDefault()}
           >
-            {!hasOidParam && <EnterpriseList loginData={loginData} />}
+            <EnterpriseList loginData={loginData} />
             <Input
               isRequired
               label={t("username")}

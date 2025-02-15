@@ -117,7 +117,7 @@ export default function AccountRequest({ onBack }: AccountRequestProps) {
 
               <form className='flex flex-col gap-4' onSubmit={(e) => e.preventDefault()}>
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-                  {!hasOidParam && <EnterpriseList loginData={loginData} />}
+                  <EnterpriseList loginData={loginData} />
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
