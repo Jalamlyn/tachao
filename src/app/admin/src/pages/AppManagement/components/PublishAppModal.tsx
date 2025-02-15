@@ -8,7 +8,7 @@ import {
   Button,
   Card,
   CardBody,
-  Image,
+  Image as NextImage,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { AppIndex } from "../store/types"
@@ -173,78 +173,74 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+    <Modal isOpen={isOpen} onClose={onClose} size='2xl'>
       <ModalContent>
         <ModalHeader>上架应用到应用市场</ModalHeader>
         <ModalBody>
-          <div className="space-y-4">
+          <div className='space-y-4'>
             <p>确定要将应用 "{app.title}" 上架到应用市场吗？上架后所有用户都能看到并使用该应用。</p>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h4 className="text-base font-medium">应用截图（必须上传5张）</h4>
-                <span className="text-sm text-default-500">
-                  {screenshots.length}/5 张
-                </span>
+
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between'>
+                <h4 className='text-base font-medium'>应用截图（必须上传5张）</h4>
+                <span className='text-sm text-default-500'>{screenshots.length}/5 张</span>
               </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+
+              <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
                 {screenshots.map((screenshot, index) => (
-                  <Card key={index} className="relative group">
-                    <CardBody className="p-0">
-                      <Image
+                  <Card key={index} className='relative group'>
+                    <CardBody className='p-0'>
+                      <NextImage
                         src={screenshot}
                         alt={`Screenshot ${index + 1}`}
-                        className="w-full h-32 object-cover"
+                        className='w-full h-32 object-cover'
                       />
                       <Button
-                        size="sm"
-                        color="danger"
-                        variant="flat"
+                        size='sm'
+                        color='danger'
+                        variant='flat'
                         isIconOnly
-                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className='absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity'
                         onClick={() => handleRemoveScreenshot(index)}
                       >
-                        <Icon icon="mdi:close" className="w-4 h-4" />
+                        <Icon icon='mdi:close' className='w-4 h-4' />
                       </Button>
                     </CardBody>
                   </Card>
                 ))}
-                
+
                 {screenshots.length < 5 && (
                   <Card
                     isPressable
-                    className="border-2 border-dashed border-default-200 hover:border-primary cursor-pointer"
+                    className='border-2 border-dashed border-default-200 hover:border-primary cursor-pointer'
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <CardBody className="h-32 flex flex-col items-center justify-center">
-                      <Icon icon="mdi:image-plus" className="w-8 h-8 text-default-400" />
-                      <span className="text-sm text-default-500 mt-2">上传截图</span>
+                    <CardBody className='h-32 flex flex-col items-center justify-center'>
+                      <Icon icon='mdi:image-plus' className='w-8 h-8 text-default-400' />
+                      <span className='text-sm text-default-500 mt-2'>上传截图</span>
                     </CardBody>
                   </Card>
                 )}
               </div>
-              
+
               <input
-                type="file"
+                type='file'
                 ref={fileInputRef}
-                className="hidden"
-                accept="image/jpeg,image/png,image/gif"
+                className='hidden'
+                accept='image/jpeg,image/png,image/gif'
                 onChange={handleFileSelect}
               />
-              
-              <p className="text-xs text-default-500">
-                支持 JPG、PNG、GIF 格式，单张图片大小不超过 4MB
-              </p>
+
+              <p className='text-xs text-default-500'>支持 JPG、PNG、GIF 格式，单张图片大小不超过 4MB</p>
             </div>
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button variant="light" onPress={onClose}>
+          <Button variant='light' onPress={onClose}>
             取消
           </Button>
           <Button
-            color="primary"
+            color='primary'
             onPress={handlePublish}
             isLoading={isPublishing || isUploading}
             isDisabled={screenshots.length < 5}

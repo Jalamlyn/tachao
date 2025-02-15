@@ -102,23 +102,15 @@ const AppMarket: React.FC = () => {
             >
               <Card className='bg-white/10 backdrop-blur-sm border border-white/20'>
                 <CardBody className='p-0'>
-                  <div className='cursor-pointer' onClick={() => handleScreenshotClick(app.screenshots)}>
-                    <Swiper
-                      modules={[Navigation, Pagination]}
-                      navigation
-                      pagination={{ clickable: true }}
-                      className='h-48'
-                    >
-                      {app.screenshots.map((screenshot, index) => (
-                        <SwiperSlide key={index}>
-                          <Image
-                            src={screenshot}
-                            alt={`${app.title} screenshot ${index + 1}`}
-                            className='w-full h-48 object-cover'
-                          />
-                        </SwiperSlide>
-                      ))}
-                    </Swiper>
+                  <div
+                    className='cursor-pointer flex justify-center items-center pt-6'
+                    onClick={() => handleScreenshotClick(app.screenshots)}
+                  >
+                    <Image
+                      src={app.screenshots[0]}
+                      alt={`${app.title} screenshot`}
+                      className='w-full h-48 object-cover'
+                    />
                   </div>
                   <div className='p-4'>
                     <h3 className='text-xl font-bold text-white mb-2'>{app.title}</h3>
@@ -156,7 +148,7 @@ const AppMarket: React.FC = () => {
       >
         <ModalContent>
           <ModalBody>
-            <div className='relative'>
+            <div className='relative mt-6'>
               <Swiper
                 modules={[Navigation, Pagination]}
                 navigation
