@@ -7,10 +7,11 @@ import "swiper/css"
 import "swiper/css/navigation"
 import "swiper/css/pagination"
 import { motion } from "framer-motion"
+import { getMetadata } from "@/service/apis/metadata"
 
 interface MarketApp {
   id: string
-  name: string
+  title: string
   description: string
   accessUrl: string
   publisher: {
@@ -26,17 +27,40 @@ const AppMarket: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [selectedScreenshots, setSelectedScreenshots] = useState<string[]>([])
   const [showScreenshotModal, setShowScreenshotModal] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
     fetchApps()
-  }, [])
+  }, [currentPage, searchTerm])
 
   const fetchApps = async () => {
     try {
-      // TODO: 替换为实际的 API 调用
-      const response = await fetch("/api/market/apps")
-      const data = await response.json()
-      setApps(data)
+      setLoading(true)
+      // 获取市场索引
+      const indexResult = await getMetadata(["market_apps_index"])
+      const marketIndex = indexResult.data?.[0]?.value
+        ? JSON.parse(indexResult.data[0].value)
+        : { totalPages: 0, totalApps: 0 }
+
+      setTotalPages(marketIndex.totalPages)
+
+      // 获取当前页数据
+      const pageResult = await getMetadata([`market_apps_page_${currentPage}`])
+      let pageData = pageResult.data?.[0]?.value ? JSON.parse(pageResult.data[0].value) : []
+
+      // 搜索过滤
+      if (searchTerm) {
+        pageData = pageData.filter((app) =>
+          app.title.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      }
+
+      // 按发布时间排序
+      pageData.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+
+      setApps(pageData)
     } catch (error) {
       console.error("Error fetching apps:", error)
     } finally {
@@ -97,7 +121,7 @@ const AppMarket: React.FC = () => {
                     </Swiper>
                   </div>
                   <div className='p-4'>
-                    <h3 className='text-xl font-bold text-white mb-2'>{app.name}</h3>
+                    <h3 className='text-xl font-bold text-white mb-2'>{app.title}</h3>
                     <p className='text-white/70 text-sm line-clamp-2'>{app.description}</p>
                   </div>
                 </CardBody>
