@@ -68,7 +68,6 @@ function App() {
             <Route path='/market' element={<AppMarket />} />
             <Route path='/unauthorized' element={<UnauthorizedPage />} />
             <Route path='error' element={<ErrorPage />} />
-
             <Route path='/operations/wait-list' element={<WaitListPage />} />
             {AdminRouter()}
           </Routes>
