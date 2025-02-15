@@ -51,25 +51,23 @@ const AppMarket: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <Spinner size="lg" />
+      <div className='h-screen flex items-center justify-center'>
+        <Spinner size='lg' />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary-dark to-primary-light py-20">
-      <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">应用市场</h1>
-          <p className="text-xl text-white/80">发现和使用优秀的企业应用</p>
+    <div className='min-h-screen flex justify-center items-center relative bg-gradient-to-b from-[#2D1B69] via-[#1E1656] to-[#19073B]'>
+      <div className="absolute inset-0 bg-[url('/assets/grid.svg')] opacity-20" />
+
+      <div className='container mx-auto px-4'>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className='text-center mb-12'>
+          <h1 className='text-4xl md:text-5xl font-bold text-white mb-4'>应用市场</h1>
+          <p className='text-xl text-white/80'>发现和使用优秀的企业应用</p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
           {apps.map((app) => (
             <motion.div
               key={app.id}
@@ -78,44 +76,41 @@ const AppMarket: React.FC = () => {
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="bg-white/10 backdrop-blur-sm border border-white/20">
-                <CardBody className="p-0">
-                  <div
-                    className="cursor-pointer"
-                    onClick={() => handleScreenshotClick(app.screenshots)}
-                  >
+              <Card className='bg-white/10 backdrop-blur-sm border border-white/20'>
+                <CardBody className='p-0'>
+                  <div className='cursor-pointer' onClick={() => handleScreenshotClick(app.screenshots)}>
                     <Swiper
                       modules={[Navigation, Pagination]}
                       navigation
                       pagination={{ clickable: true }}
-                      className="h-48"
+                      className='h-48'
                     >
                       {app.screenshots.map((screenshot, index) => (
                         <SwiperSlide key={index}>
                           <Image
                             src={screenshot}
                             alt={`${app.name} screenshot ${index + 1}`}
-                            className="w-full h-48 object-cover"
+                            className='w-full h-48 object-cover'
                           />
                         </SwiperSlide>
                       ))}
                     </Swiper>
                   </div>
-                  <div className="p-4">
-                    <h3 className="text-xl font-bold text-white mb-2">{app.name}</h3>
-                    <p className="text-white/70 text-sm line-clamp-2">{app.description}</p>
+                  <div className='p-4'>
+                    <h3 className='text-xl font-bold text-white mb-2'>{app.name}</h3>
+                    <p className='text-white/70 text-sm line-clamp-2'>{app.description}</p>
                   </div>
                 </CardBody>
-                <CardFooter className="flex justify-between items-center border-t border-white/10">
-                  <div className="flex items-center gap-2 text-white/60 text-sm">
-                    <Icon icon="mdi:account" />
+                <CardFooter className='flex justify-between items-center border-t border-white/10'>
+                  <div className='flex items-center gap-2 text-white/60 text-sm'>
+                    <Icon icon='mdi:account' />
                     <span>{app.publisher.name}</span>
-                    <span className="mx-2">•</span>
+                    <span className='mx-2'>•</span>
                     <span>{new Date(app.publishedAt).toLocaleDateString()}</span>
                   </div>
                   <Button
-                    color="primary"
-                    endContent={<Icon icon="mdi:arrow-right" />}
+                    color='primary'
+                    endContent={<Icon icon='mdi:arrow-right' />}
                     onClick={() => window.open(app.accessUrl, "_blank")}
                   >
                     访问应用
@@ -130,37 +125,28 @@ const AppMarket: React.FC = () => {
       <Modal
         isOpen={showScreenshotModal}
         onClose={() => setShowScreenshotModal(false)}
-        size="5xl"
+        size='5xl'
         classNames={{
           backdrop: "backdrop-blur-sm",
         }}
       >
         <ModalContent>
-          <div className="relative">
-            <Swiper
-              modules={[Navigation, Pagination]}
-              navigation
-              pagination={{ clickable: true }}
-              className="h-[80vh]"
-            >
+          <div className='relative'>
+            <Swiper modules={[Navigation, Pagination]} navigation pagination={{ clickable: true }} className='h-[80vh]'>
               {selectedScreenshots.map((screenshot, index) => (
                 <SwiperSlide key={index}>
-                  <Image
-                    src={screenshot}
-                    alt={`Screenshot ${index + 1}`}
-                    className="w-full h-full object-contain"
-                  />
+                  <Image src={screenshot} alt={`Screenshot ${index + 1}`} className='w-full h-full object-contain' />
                 </SwiperSlide>
               ))}
             </Swiper>
             <Button
               isIconOnly
-              className="absolute top-4 right-4 z-50"
-              color="danger"
-              variant="flat"
+              className='absolute top-4 right-4 z-50'
+              color='danger'
+              variant='flat'
               onPress={() => setShowScreenshotModal(false)}
             >
-              <Icon icon="mdi:close" className="w-6 h-6" />
+              <Icon icon='mdi:close' className='w-6 h-6' />
             </Button>
           </div>
         </ModalContent>
