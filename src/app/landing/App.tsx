@@ -7,6 +7,7 @@ import Footer from "./src/Footer"
 import ScrollProgress from "./src/ScrollProgress"
 import PricingSection from "./src/PricingSection"
 import RegisterPage from "./src/RegisterPage"
+import AppMarket from "./src/AppMarket"
 import { Routes, Route } from "react-router-dom"
 
 const LandingPage: React.FC = () => {
@@ -58,6 +59,7 @@ const LandingPage: React.FC = () => {
         }
       />
       <Route path='/register' element={<RegisterPage />} />
+      <Route path='/market' element={<AppMarket />} />
     </Routes>
   )
 }
