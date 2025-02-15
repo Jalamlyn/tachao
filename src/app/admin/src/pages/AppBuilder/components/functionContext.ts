@@ -31,6 +31,8 @@ import { requestStore } from "../AIEditor/components/RequestStore"
 import { LuckyWheel, LuckyGrid, SlotMachine } from "@lucky-canvas/react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import rehypeRaw from "rehype-raw"
+
 
 // 检查是否在iframe中运行
 const isInIframe = () => {
@@ -412,6 +414,7 @@ export const context = (appId, mode) => ({
   React,
   ReactMarkdown,
   remarkGfm,
+  rehypeRaw,
   observer,
   Icon,
   NextUI,
