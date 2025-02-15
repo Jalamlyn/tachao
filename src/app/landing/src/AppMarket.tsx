@@ -42,7 +42,6 @@ const AppMarket: React.FC = () => {
       setLoading(true)
       // 获取市场索引
       const indexResult = await getPlatMetaData(["market_apps_index"])
-      debugger
       const marketIndex = indexResult.data?.[0]?.values[0].value
         ? JSON.parse(indexResult.data[0].values[0].value)
         : { totalPages: 0, totalApps: 0 }
@@ -128,7 +127,7 @@ const AppMarket: React.FC = () => {
                   <Button
                     color='primary'
                     endContent={<Icon icon='mdi:arrow-right' />}
-                    onClick={() => window.open(app.accessUrl, "_blank")}
+                    onPress={() => window.open(app.accessUrl.replace("app-run", "app-plat"), "_blank")}
                   >
                     访问应用
                   </Button>

@@ -59,9 +59,6 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
       try {
         setIsLoading(true)
         setError(null)
-        const pAppId = appId.split("_")[2]
-        const organizationId = appId.split("_")[1]
-        localDB.setAppId({ id: pAppId, organizationId })
 
         // 尝试新的加载方式
         try {
@@ -162,13 +159,13 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
       </Chip>
     </div>
   )
-
+  debugger
   return (
     <>
       <AppContext.Provider value={{ appId }}>
         <AppRender
           appId={appId}
-          basename={`/app-run/${appId}`}
+          basename={`/app-plat/${appId}`}
           onError={(error) => {
             console.error("Runtime error:", error)
             message.error(`运行错误: ${error.message}`)

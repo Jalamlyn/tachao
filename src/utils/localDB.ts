@@ -36,6 +36,9 @@ const eventEmitter = new EventEmitter()
 
 export const localDB = {
   setAppId: ({ id, organizationId }) => {
+    if (id === "undefined" || !id) {
+      return
+    }
     currentAppId = id
     localStorage.setItem("@@appId", id)
     localStorage.setItem("@@organizationId", organizationId)

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import ReactDOM from "react-dom/client"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 
@@ -13,7 +13,12 @@ import { configure } from "mobx"
 import { StoreProvider } from "./stores/StoreProvider"
 import PreviewPage from "./app/admin/src/pages/AppBuilder/components/PreviewPage"
 import AppRuntime from "./app/admin/src/pages/AppBuilder/components/AppRuntime"
+import AppPlatRuntime from "./app/admin/src/pages/AppBuilder/components/AppPlatRuntime"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { getAppId } from "./utils"
+import { queryMyProject } from "./service/apis/project"
+import { queryApps } from "./service/apis/app"
+import { localDB } from "./utils/localDB"
 
 // 动态加载 CloudBase SDK 并初始化
 function loadCloudBaseSDK() {
@@ -85,6 +90,7 @@ const getAppIdFromUrl = (prefix: string): string | null => {
 
 const AppSelector: React.FC = () => {
   const pathname = window.location.pathname
+  const [isInit, setIsInit] = useState(false)
 
   // 预览模式 - /app-preview/:appId
   if (pathname.startsWith("/app-preview/")) {
@@ -108,12 +114,27 @@ const AppSelector: React.FC = () => {
     if (!appId) {
       return <div className='text-danger p-4'>无效的应用ID</div>
     }
-
     return (
       <StoreProvider>
         <QueryClientProvider client={queryClient}>
           <Provider>
             <AppRuntime appId={appId} />
+            <Toaster position='top-center' expand={true} richColors closeButton />
+          </Provider>
+        </QueryClientProvider>
+      </StoreProvider>
+    )
+  }
+  if (pathname.startsWith("/app-plat/")) {
+    const appId = getAppIdFromUrl("app-plat")
+    if (!appId) {
+      return <div className='text-danger p-4'>无效的应用ID</div>
+    }
+    return (
+      <StoreProvider>
+        <QueryClientProvider client={queryClient}>
+          <Provider>
+            <AppPlatRuntime appId={appId} />
             <Toaster position='top-center' expand={true} richColors closeButton />
           </Provider>
         </QueryClientProvider>
@@ -131,39 +152,5 @@ const AppSelector: React.FC = () => {
     </BrowserRouter>
   )
 }
-window.test = () => {
-  async function getNativePayQrCode(orderId, amount) {
-    try {
-      const result = await app.callFunction({
-        name: "native-pay-qr-code",
-        data: {
-          orderId,
-          amount,
-        },
-      })
 
-      if (result.result.code === 0) {
-        return result.result.data.qrCodeUrl
-      } else {
-        throw new Error(result.result.msg)
-      }
-    } catch (error) {
-      console.error("调用云函数失败:", error)
-      throw error
-    }
-  }
-
-  // 示例调用
-  getNativePayQrCode("123456", 100)
-    .then((qrCodeUrl) => {
-      console.log("支付二维码链接:", qrCodeUrl)
-      // 在网页中显示二维码
-      const img = document.createElement("img")
-      img.src = qrCodeUrl
-      document.body.appendChild(img)
-    })
-    .catch((error) => {
-      console.error("生成支付二维码失败:", error)
-    })
-}
 ReactDOM.createRoot(document.getElementById("root")!).render(<AppSelector></AppSelector>)
