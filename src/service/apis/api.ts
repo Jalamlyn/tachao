@@ -41,7 +41,7 @@ apiService.interceptors.request.use(
 
 apiService.interceptors.response.use(
   (response) => {
-    if (response.status === 200) {
+    if (response.status >= 200 && response.status < 300) {
       if (response.data.code === 401) {
         const currentUrl = window.location.href
         // 排除登录页面本身，避免循环
