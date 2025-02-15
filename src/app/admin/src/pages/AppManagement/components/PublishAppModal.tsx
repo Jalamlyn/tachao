@@ -12,7 +12,7 @@ import {
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { AppIndex } from "../store/types"
-import { getMetadata, getPublicMetaData, setPlatMetaData, setMetadata } from "@/service/apis/metadata"
+import { getMetadata, getPlatMetaData, setPlatMetaData, setMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
 
 interface PublishAppModalProps {
@@ -122,7 +122,7 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
     try {
       setIsPublishing(true)
       const [indexData, appIndexData] = await Promise.all([
-        getPublicMetaData(["market_apps_index"]),
+        getPlatMetaData(["market_apps_index"]),
         getMetadata(["app_index"]),
       ])
 
@@ -143,7 +143,7 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
 
       const currentPage = Math.ceil((marketIndex.totalApps + 1) / 20)
       const pageKey = `market_apps_page_${currentPage}`
-      const pageDataResult = await getPublicMetaData([pageKey])
+      const pageDataResult = await getPlatMetaData([pageKey])
       const pageData = pageDataResult.data?.[0]?.value ? JSON.parse(pageDataResult.data[0].value) : []
       await setPlatMetaData({ name: pageKey, value: JSON.stringify([...pageData, marketApp]) })
 

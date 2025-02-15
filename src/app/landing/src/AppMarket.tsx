@@ -7,7 +7,7 @@ import "swiper/css"
 import "swiper/css/navigation"
 import "swiper/css/pagination"
 import { motion } from "framer-motion"
-import { getMetadata } from "@/service/apis/metadata"
+import { getPlatMetaData } from "@/service/apis/metadata"
 
 interface MarketApp {
   id: string
@@ -41,16 +41,17 @@ const AppMarket: React.FC = () => {
     try {
       setLoading(true)
       // 获取市场索引
-      const indexResult = await getMetadata(["market_apps_index"])
-      const marketIndex = indexResult.data?.[0]?.value
-        ? JSON.parse(indexResult.data[0].value)
+      const indexResult = await getPlatMetaData(["market_apps_index"])
+      debugger
+      const marketIndex = indexResult.data?.[0]?.values[0].value
+        ? JSON.parse(indexResult.data[0].values[0].value)
         : { totalPages: 0, totalApps: 0 }
 
       setTotalPages(marketIndex.totalPages)
 
       // 获取当前页数据
-      const pageResult = await getMetadata([`market_apps_page_${currentPage}`])
-      let pageData = pageResult.data?.[0]?.value ? JSON.parse(pageResult.data[0].value) : []
+      const pageResult = await getPlatMetaData([`market_apps_page_${currentPage}`])
+      let pageData = pageResult.data?.[0]?.values[0].value ? JSON.parse(pageResult.data[0].values[0].value) : []
 
       // 搜索过滤
       if (searchTerm) {

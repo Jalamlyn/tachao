@@ -29,7 +29,7 @@ import { PermissionModal } from "@/app/admin/src/permissions/components/Permissi
 import message from "@/components/Message"
 import { useCurrentUser } from "@/app/admin/src/permissions/hooks/useCurrentUser"
 import { queryRamAccount } from "@/service/apis/user"
-import { getMetadata, setMetadata } from "@/service/apis/metadata"
+import { getMetadata, getPlatMetaData, setMetadata, setPlatMetaData } from "@/service/apis/metadata"
 import { PublishAppModal } from "./PublishAppModal"
 
 interface AppCardProps {
@@ -274,7 +274,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
     try {
       setIsUnpublishing(true)
       const [indexData, appIndexData] = await Promise.all([
-        getMetadata(["market_apps_index"]),
+        getPlatMetaData(["market_apps_index"]),
         getMetadata(["app_index"]),
       ])
 
@@ -285,12 +285,12 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
 
       for (let page = 1; page <= marketIndex.totalPages; page++) {
         const pageKey = `market_apps_page_${page}`
-        const pageDataResult = await getMetadata([pageKey])
+        const pageDataResult = await getPlatMetaData([pageKey])
         const pageData = pageDataResult.data?.[0]?.value ? JSON.parse(pageDataResult.data[0].value) : []
         const updatedPageData = pageData.filter((item) => item.id !== app.id)
 
         if (pageData.length !== updatedPageData.length) {
-          await setMetadata(pageKey, JSON.stringify(updatedPageData))
+          await setPlatMetaData({ name: pageKey, value: JSON.stringify(updatedPageData) })
           break
         }
       }
@@ -300,14 +300,14 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
       )
       await setMetadata("app_index", JSON.stringify(updatedAppIndex))
 
-      await setMetadata(
-        "market_apps_index",
-        JSON.stringify({
+      await setPlatMetaData({
+        name: "market_apps_index",
+        value: JSON.stringify({
           ...marketIndex,
           totalApps: marketIndex.totalApps - 1,
           lastUpdated: new Date().toISOString(),
-        })
-      )
+        }),
+      })
 
       message.success("应用已从应用市场下架")
       onUnpublishConfirmClose()
