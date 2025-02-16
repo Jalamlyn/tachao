@@ -82,8 +82,8 @@ export async function searchExa(query: string): Promise<ExaResponse> {
     }
 
     // 处理费用
-    if (result.data?.costDollars?.total) {
-      const costInTokens = result.data.costDollars.total * 8 // 美元转塔币
+    if (result.costDollars?.total) {
+      const costInTokens = result.costDollars.total * 8 // 美元转塔币
       await costService.addCostRecord({
         type: "exa_search",
         totalCost: costInTokens,
@@ -91,7 +91,7 @@ export async function searchExa(query: string): Promise<ExaResponse> {
           exaSearch: {
             query,
             resultCount: result.results?.length || 0,
-            costBreakdown: result.data.costDollars.breakDown,
+            costBreakdown: result.costDollars.breakDown,
           },
         },
         userInput: query,
@@ -140,8 +140,8 @@ export async function getExaContents(urls: string[]): Promise<ExaContentsRespons
     }
 
     // 处理费用
-    if (result.data?.costDollars?.total) {
-      const costInTokens = result.data.costDollars.total * 8 // 美元转塔币
+    if (result.costDollars?.total) {
+      const costInTokens = result.costDollars.total * 8 // 美元转塔币
       await costService.addCostRecord({
         type: "exa_content",
         totalCost: costInTokens,
