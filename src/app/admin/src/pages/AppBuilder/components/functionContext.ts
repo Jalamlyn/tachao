@@ -32,6 +32,7 @@ import { LuckyWheel, LuckyGrid, SlotMachine } from "@lucky-canvas/react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeRaw from "rehype-raw"
+import { toMarkdown } from "@/service/chat/chat-to-markdown"
 
 // 检查是否在iframe中运行
 const isInIframe = () => {
@@ -428,6 +429,7 @@ export const context = (appId, mode) => ({
   message,
   appId,
   api: {
+    toMarkdown,
     getMetadata,
     setMetadata,
     getPublicMetaData,

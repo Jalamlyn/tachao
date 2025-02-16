@@ -26,7 +26,7 @@ import { knowledgeStore } from "./KnowledgeStore"
 import message from "@/components/Message"
 import KnowledgeEditModal from "./KnowledgeEditModal"
 import GuideCard from "@/app/admin/src/components/GuideCard"
-import { pdfToMarkdown } from "@/service/chat/chat-to-markdown"
+import { toMarkdown } from "@/service/chat/chat-to-markdown"
 
 interface KnowledgeModalProps {
   isOpen: boolean
@@ -105,7 +105,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
       const mid = message.loading("正在处理文档...", 0)
 
       // 调用转换服务
-      const res = await pdfToMarkdown(file)
+      const res = await toMarkdown(file)
 
       // 提取文件名作为标题（去除扩展名）
       const title = file.name.replace(/\.[^/.]+$/, "")

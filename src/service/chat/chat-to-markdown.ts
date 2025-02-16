@@ -7,7 +7,7 @@ import { jsonParse } from "@/utils"
  * @param file PDF文件对象
  * @returns 转换后的markdown文本
  */
-export async function pdfToMarkdown(file: File) {
+export async function toMarkdown(file: File) {
   try {
     // 1. 首先上传文件
     const fileInfo = await uploadAPI.uploadFile(file, {
