@@ -29,6 +29,9 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
   const [isPublishing, setIsPublishing] = useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
+  // 添加分页常量
+  const ITEMS_PER_PAGE = 20
+
   const handleScreenshotUpload = async (file: File) => {
     if (screenshots.length >= 5) {
       message.error("最多只能上传5张截图")
@@ -141,22 +144,42 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
         publishedAt: new Date().toISOString(),
       }
 
-      const currentPage = Math.ceil((marketIndex.totalApps + 1) / 20)
-      const pageKey = `market_apps_page_${currentPage}`
+      // 计算目标页码和检查当前页是否已满
+      const currentTotalApps = marketIndex.totalApps || 0
+      const targetPage = Math.ceil((currentTotalApps + 1) / ITEMS_PER_PAGE)
+      const pageKey = `market_apps_page_${targetPage}`
+
+      // 获取目标页面的当前数据
       const pageDataResult = await getPlatMetaData([pageKey])
       const pageData = pageDataResult.data?.[0]?.value ? JSON.parse(pageDataResult.data[0].value) : []
-      await setPlatMetaData({ name: pageKey, value: JSON.stringify([...pageData, marketApp]) })
 
+      // 如果当前页已满，创建新页面
+      if (pageData.length >= ITEMS_PER_PAGE) {
+        const newPageKey = `market_apps_page_${targetPage + 1}`
+        await setPlatMetaData({
+          name: newPageKey,
+          value: JSON.stringify([marketApp]),
+        })
+      } else {
+        // 追加到当前页
+        await setPlatMetaData({
+          name: pageKey,
+          value: JSON.stringify([...pageData, marketApp]),
+        })
+      }
+
+      // 更新应用索引
       const updatedAppIndex = appIndex.map((appItem) =>
         appItem.id === app.id ? { ...appItem, isPublished: true, publishedAt: marketApp.publishedAt } : appItem
       )
       await setMetadata("app_index", JSON.stringify(updatedAppIndex))
 
+      // 更新市场应用总索引
       await setPlatMetaData({
         name: "market_apps_index",
         value: JSON.stringify({
-          totalPages: currentPage,
-          totalApps: marketIndex.totalApps + 1,
+          totalApps: currentTotalApps + 1,
+          totalPages: Math.ceil((currentTotalApps + 1) / ITEMS_PER_PAGE),
           lastUpdated: marketApp.publishedAt,
         }),
       })
