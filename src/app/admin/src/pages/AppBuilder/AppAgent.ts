@@ -217,7 +217,7 @@ ${command.images.map((url, index) => `图片${index + 1}: ${url}`).join("\n")}`
 } = context
 const { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Button, Input, Modal,ModalBody,ModalContent, useDisclosure } = NextUI;
  
-,占位图片使用 images.unsplash.com 的服务来生成，但是不要修改已有的图片链接，只有当图片 src 为空是才使用 images.unsplash.com 的服务来生成，只使用 wpm.export 导出代码和 wpm.import 导入代码，应用入口模块的导出名称固定使用 appId，所有模块的结尾都要用 </mo-ai-code> 闭合，一次性生成所有模块，不要分批生成, 不要使用 BrowserRouter，因为父组件已经用, await 必须在 async 函数内使用`
+,占位图片使用 images.unsplash.com 的服务来生成，但是不要修改已有的图片链接，只有当图片 src 为空是才使用 images.unsplash.com 的服务来生成，只使用 wpm.export 导出代码和 wpm.import 导入代码，应用入口模块的导出名称固定使用 appId，所有模块的结尾都要用 </mo-ai-code> 闭合，一次性生成所有模块，不要分批生成, 不要使用 BrowserRouter，因为父组件已经用, await 必须在 async 函数内使用，不要在循环或者持续输出的代码中使用日志，只在关键逻辑处打日志`
 
       const allMessages = [
         ...messages,

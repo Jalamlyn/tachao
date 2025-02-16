@@ -65,9 +65,11 @@ export async function searchExa(query: string): Promise<ExaResponse> {
     const response = await fetch("https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/exa-search", {
       method: "POST",
       headers: {
-        "Content-Type": "text/plain",
+        "Content-Type": "application/json",
       },
-      body: query,
+      body: JSON.stringify({
+        query,
+      }),
     })
 
     if (!response.ok) {

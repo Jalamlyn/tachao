@@ -371,6 +371,7 @@ export const logAPI = {
     }
   },
   error: (message: string, details?: any) => {
+    console.error(message, details)
     if (window.parent && window.parent !== window) {
       window.parent.postMessage(
         {

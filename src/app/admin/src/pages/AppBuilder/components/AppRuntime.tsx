@@ -130,8 +130,8 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
     <div
       style={{
         position: "fixed",
-        bottom: "60px",
-        right: "20px",
+        bottom: "6px",
+        right: "2px",
         zIndex: 9999,
         userSelect: "none",
         opacity: 0.95,
@@ -158,7 +158,7 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
         }}
         startContent={<div className='w-2 h-2 rounded-full bg-white animate-pulse mr-1' />}
       >
-        Made By 模本 AI
+        By MoAI
       </Chip>
     </div>
   )
