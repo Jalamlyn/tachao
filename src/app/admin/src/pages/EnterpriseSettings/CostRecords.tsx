@@ -79,7 +79,7 @@ const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) =>
         icon: "solar:shield-star-bold-duotone",
       },
       pdf_to_markdown: {
-        label: "文档转换",
+        label: "文档解析服务费",
         color: "warning",
         icon: "solar:file-text-bold-duotone",
       }
@@ -159,7 +159,7 @@ const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) =>
             <span>{pdfConversion.fileName}</span>
           </div>
           <div className='flex items-center gap-2'>
-            <span className='text-sm text-default-500'>转换页数:</span>
+            <span className='text-sm text-default-500'>解析页数:</span>
             <span>{pdfConversion.successCount} 页</span>
           </div>
           <div className='flex items-center gap-2'>

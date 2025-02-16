@@ -57,14 +57,14 @@ export async function toMarkdown(file: File) {
       
       // 计算并记录费用
       if (parsedResult && typeof parsedResult.result.success_count === 'number') {
-        const cost = parsedResult.result.success_count * 0.6
+        const cost = parsedResult.result.success_count * 0.06
         await costService.addCostRecord({
           type: "pdf_to_markdown",
           totalCost: cost,
           detail: {
             pdfConversion: {
-              successCount: parsedResult.success_count,
-              ratePerCount: 0.6,
+              successCount: parsedResult.result.success_count,
+              ratePerCount: 0.06,
               fileName: file.name
             }
           }
