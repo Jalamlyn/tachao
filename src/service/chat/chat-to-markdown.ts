@@ -1,6 +1,8 @@
 import { message } from "@/components/Message"
 import { uploadAPI } from "@/app/admin/src/pages/AppBuilder/components/functionContext"
 import { jsonParse } from "@/utils"
+import { costService } from "@/utils/costService"
+import { balanceStore } from "@/stores/balanceStore"
 
 /**
  * PDF文件转换为Markdown
@@ -9,6 +11,12 @@ import { jsonParse } from "@/utils"
  */
 export async function toMarkdown(file: File) {
   try {
+    // 检查余额
+    const hasEnoughBalance = await balanceStore.checkBalance(0.6) // 至少需要0.6塔币
+    if (!hasEnoughBalance) {
+      throw new Error("余额不足,请充值后继续使用")
+    }
+
     // 1. 首先上传文件
     const fileInfo = await uploadAPI.uploadFile(file, {
       maxSize: 10 * 1024 * 1024, // 限制10MB
@@ -40,10 +48,28 @@ export async function toMarkdown(file: File) {
     }
 
     const result = await response.text()
+    let parsedResult
 
     try {
       // 尝试解析JSON响应
-      const parsedResult = jsonParse(result)
+      parsedResult = jsonParse(result)
+      
+      // 计算并记录费用
+      if (parsedResult && typeof parsedResult.success_count === 'number') {
+        const cost = parsedResult.success_count * 0.6
+        await costService.addCostRecord({
+          type: "pdf_to_markdown",
+          totalCost: cost,
+          detail: {
+            pdfConversion: {
+              successCount: parsedResult.success_count,
+              ratePerCount: 0.6,
+              fileName: file.name
+            }
+          }
+        })
+      }
+      
       return parsedResult
     } catch (e) {
       // 如果不是JSON格式,直接返回文本
