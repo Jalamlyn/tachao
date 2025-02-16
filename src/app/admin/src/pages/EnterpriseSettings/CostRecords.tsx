@@ -78,6 +78,11 @@ const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) =>
         color: "primary",
         icon: "solar:shield-star-bold-duotone",
       },
+      pdf_to_markdown: {
+        label: "文档转换",
+        color: "warning",
+        icon: "solar:file-text-bold-duotone",
+      }
     }
 
     const config = typeConfig[type] || {
@@ -140,6 +145,26 @@ const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) =>
           <div className='flex items-center gap-2'>
             <span className='text-sm text-default-500'>时长:</span>
             <span>{subscription.duration} 个月</span>
+          </div>
+        </div>
+      )
+    }
+
+    if (record.type === "pdf_to_markdown" && record.detail?.pdfConversion) {
+      const { pdfConversion } = record.detail
+      return (
+        <div className='space-y-1'>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-default-500'>文件名:</span>
+            <span>{pdfConversion.fileName}</span>
+          </div>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-default-500'>转换页数:</span>
+            <span>{pdfConversion.successCount} 页</span>
+          </div>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-default-500'>单价:</span>
+            <span>{pdfConversion.ratePerCount} 梦想币/页</span>
           </div>
         </div>
       )
