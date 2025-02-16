@@ -82,7 +82,17 @@ const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) =>
         label: "文档解析服务费",
         color: "warning",
         icon: "solar:file-text-bold-duotone",
-      }
+      },
+      exa_search: {
+        label: "网络搜索",
+        color: "success",
+        icon: "solar:magnifer-bold-duotone",
+      },
+      exa_content: {
+        label: "网页内容获取",
+        color: "success",
+        icon: "solar:document-text-bold-duotone",
+      },
     }
 
     const config = typeConfig[type] || {
@@ -165,6 +175,66 @@ const CostRecords = forwardRef(({ onTotalCostChange, searchQuery = "" }, ref) =>
           <div className='flex items-center gap-2'>
             <span className='text-sm text-default-500'>单价:</span>
             <span>{pdfConversion.ratePerCount} 梦想币/页</span>
+          </div>
+        </div>
+      )
+    }
+
+    if (record.type === "exa_search" && record.detail?.exaSearch) {
+      const { exaSearch } = record.detail
+      return (
+        <div className='space-y-1'>
+          {record.userInput && (
+            <div className='flex items-center gap-2 mb-2'>
+              <span className='text-sm text-default-500'>搜索内容:</span>
+              <Tooltip content={record.userInput}>
+                <span className='text-sm truncate max-w-[200px] cursor-help'>{record.userInput}</span>
+              </Tooltip>
+            </div>
+          )}
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-default-500'>结果数量:</span>
+            <span>{exaSearch.resultCount} 条</span>
+          </div>
+          {exaSearch.costBreakdown?.map((breakdown, index) => (
+            <div key={index} className='text-sm text-default-500'>
+              {breakdown.search && (
+                <div className='flex items-center gap-2'>
+                  <span>搜索费用:</span>
+                  <span>{(breakdown.search * 8).toFixed(4)} 梦想币</span>
+                </div>
+              )}
+              {breakdown.contents && (
+                <div className='flex items-center gap-2'>
+                  <span>内容获取费用:</span>
+                  <span>{(breakdown.contents * 8).toFixed(4)} 梦想币</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    if (record.type === "exa_content" && record.detail?.exaContent) {
+      const { exaContent } = record.detail
+      return (
+        <div className='space-y-1'>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-default-500'>URL数量:</span>
+            <span>{exaContent.urls.length} 个</span>
+          </div>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-default-500'>成功获取:</span>
+            <span>{exaContent.resultCount} 个</span>
+          </div>
+          <div className='flex items-center gap-2'>
+            <span className='text-sm text-default-500'>URL列表:</span>
+            <Tooltip content={exaContent.urls.join("\n")}>
+              <span className='text-sm truncate max-w-[200px] cursor-help'>
+                {exaContent.urls[0]} {exaContent.urls.length > 1 ? `等${exaContent.urls.length}个` : ""}
+              </span>
+            </Tooltip>
           </div>
         </div>
       )

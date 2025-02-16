@@ -88,7 +88,7 @@
     "echarts": "^5.5.1",
     "eventemitter3": "^5.0.1",
     "events": "^3.3.0",
-    "exa-js": "^1.0.14",
+    "exa-js": "^1.4.10",
     "fetch-event-stream": "^0.1.5",
     "file-saver": "^2.0.5",
     "formulajs": "^1.0.8",

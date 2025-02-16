@@ -19,6 +19,7 @@ import {
   Card,
   Chip,
   ButtonGroup,
+  Textarea,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
@@ -27,6 +28,7 @@ import message from "@/components/Message"
 import KnowledgeEditModal from "./KnowledgeEditModal"
 import GuideCard from "@/app/admin/src/components/GuideCard"
 import { toMarkdown } from "@/service/chat/chat-to-markdown"
+import { getExaContents } from "@/service/chat/chat-exa"
 
 interface KnowledgeModalProps {
   isOpen: boolean
@@ -42,6 +44,8 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
     content: string
   } | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [isProcessingUrl, setIsProcessingUrl] = useState(false)
+  const [urlInput, setUrlInput] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const knowledgeList = searchQuery.trim() ? knowledgeStore.searchKnowledge(searchQuery) : knowledgeStore.knowledgeList
@@ -127,6 +131,52 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
     }
   }
 
+  const handleUrlSubmit = async () => {
+    // 验证URL格式
+    const urls = urlInput
+      .split("\n")
+      .map((url) => url.trim())
+      .filter((url) => url)
+
+    if (urls.length === 0) {
+      message.error("请输入有效的URL")
+      return
+    }
+
+    const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
+    const invalidUrls = urls.filter((url) => !urlPattern.test(url))
+    if (invalidUrls.length > 0) {
+      message.error(`存在无效的URL格式: ${invalidUrls.join(", ")}`)
+      return
+    }
+
+    try {
+      setIsProcessingUrl(true)
+      const mid = message.loading("正在获取网页内容...", 0)
+
+      // 调用exa-get-content接口
+      const result = await getExaContents(urls)
+
+      // 处理每个成功的结果
+      for (const content of result.results) {
+        if (content.text) {
+          // 使用URL的最后部分作为标题
+          const title = new URL(content.url).pathname.split("/").pop() || "网页内容"
+          await knowledgeStore.addKnowledge(null, title, content.text)
+        }
+      }
+
+      message.closeLoading(mid, "success")
+      message.success(`成功添加 ${result.results.length} 个网页内容到知识库`)
+      setUrlInput("") // 清空输入框
+    } catch (error) {
+      console.error("网页内容获取失败:", error)
+      message.error("网页内容获取失败：" + (error instanceof Error ? error.message : "未知错误"))
+    } finally {
+      setIsProcessingUrl(false)
+    }
+  }
+
   const usageProgress = (knowledgeStore.selectedKnowledgeSize / knowledgeStore.sizeLimit) * 100
 
   const columns = [
@@ -206,7 +256,13 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
 
   return (
     <>
-      <input type='file' ref={fileInputRef} className='hidden' accept='.pdf,.doc,.docx' onChange={handleFileUpload} />
+      <input
+        type='file'
+        ref={fileInputRef}
+        className='hidden'
+        accept='.png,.jpg,.jpeg,.pdf,.bmp,.tiff,.webp,.doc,.docx,.html,.mhtml'
+        onChange={handleFileUpload}
+      />
       <Modal scrollBehavior='inside' isOpen={isOpen} onClose={onClose} size='3xl'>
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>
@@ -215,7 +271,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
                 <Icon icon='solar:book-linear' className='w-6 h-6 text-primary' />
                 <span>知识管理</span>
               </div>
-              <div className='flex gap-2'>
+              <div className='flex gap-2 mr-4'>
                 <ButtonGroup>
                   <Button
                     size='sm'
@@ -225,7 +281,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
                     onPress={() => fileInputRef.current?.click()}
                     isLoading={isUploading}
                   >
-                    上传文档
+                    上传文档/图片
                   </Button>
                   <Button
                     size='sm'
@@ -275,6 +331,34 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
                   </ul>
                 }
               />
+
+              {/* 添加URL输入区域 */}
+              <Card className='p-4'>
+                <div className='space-y-2'>
+                  <div className='flex items-center gap-2'>
+                    <Icon icon='solar:link-circle-linear' className='text-primary' />
+                    <span className='font-medium'>引用网页内容</span>
+                  </div>
+                  <Textarea
+                    placeholder='输入网页URL(每行一个)'
+                    value={urlInput}
+                    onValueChange={setUrlInput}
+                    minRows={3}
+                    maxRows={5}
+                  />
+                  <div className='flex justify-end'>
+                    <Button
+                      color='primary'
+                      size='sm'
+                      startContent={<Icon icon='solar:download-square-linear' />}
+                      isLoading={isProcessingUrl}
+                      onPress={handleUrlSubmit}
+                    >
+                      获取内容
+                    </Button>
+                  </div>
+                </div>
+              </Card>
 
               <div className='flex items-center justify-between'>
                 <span className='text-lg font-medium'>知识列表</span>
