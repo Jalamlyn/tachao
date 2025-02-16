@@ -102,17 +102,17 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
 
     try {
       setIsUploading(true)
-      message.loading("正在处理文档...", 0)
+      const mid = message.loading("正在处理文档...", 0)
 
       // 调用转换服务
-      const markdownContent = await pdfToMarkdown(file)
+      const res = await pdfToMarkdown(file)
 
       // 提取文件名作为标题（去除扩展名）
       const title = file.name.replace(/\.[^/.]+$/, "")
 
       // 添加到知识库
-      await knowledgeStore.addKnowledge(null, title, markdownContent)
-
+      await knowledgeStore.addKnowledge(null, title, res.result.markdown)
+      message.closeLoading(mid, "success")
       message.success("文档已成功添加到知识库")
 
       // 清理文件输入
