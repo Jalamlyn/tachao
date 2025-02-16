@@ -52,11 +52,12 @@ export async function toMarkdown(file: File) {
 
     try {
       // 尝试解析JSON响应
+      debugger
       parsedResult = jsonParse(result)
       
       // 计算并记录费用
-      if (parsedResult && typeof parsedResult.success_count === 'number') {
-        const cost = parsedResult.success_count * 0.6
+      if (parsedResult && typeof parsedResult.result.success_count === 'number') {
+        const cost = parsedResult.result.success_count * 0.6
         await costService.addCostRecord({
           type: "pdf_to_markdown",
           totalCost: cost,

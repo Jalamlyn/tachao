@@ -124,7 +124,6 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
       message.error("文档处理失败：" + (error instanceof Error ? error.message : "未知错误"))
     } finally {
       setIsUploading(false)
-      message.destroy()
     }
   }
 
