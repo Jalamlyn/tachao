@@ -52,7 +52,6 @@ export async function toMarkdown(file: File) {
 
     try {
       // 尝试解析JSON响应
-      debugger
       parsedResult = jsonParse(result)
       
       // 计算并记录费用
