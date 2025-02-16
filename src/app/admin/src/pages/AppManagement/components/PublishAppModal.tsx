@@ -33,8 +33,8 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
   const ITEMS_PER_PAGE = 20
 
   const handleScreenshotUpload = async (file: File) => {
-    if (screenshots.length >= 5) {
-      message.error("最多只能上传5张截图")
+    if (screenshots.length >= 2) {
+      message.error("最多只能上传2张截图")
       return
     }
 
@@ -117,8 +117,8 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
   }
 
   const handlePublish = async () => {
-    if (screenshots.length < 5) {
-      message.error("请上传5张应用截图")
+    if (screenshots.length < 2) {
+      message.error("请上传2张应用截图")
       return
     }
 
@@ -151,7 +151,9 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
 
       // 获取目标页面的当前数据
       const pageDataResult = await getPlatMetaData([pageKey])
-      const pageData = pageDataResult.data?.[0]?.value ? JSON.parse(pageDataResult.data[0].value) : []
+      const pageData = pageDataResult.data?.[0]?.values?.[0]?.value
+        ? JSON.parse(pageDataResult.data?.[0]?.values?.[0]?.value)
+        : []
 
       // 如果当前页已满，创建新页面
       if (pageData.length >= ITEMS_PER_PAGE) {
@@ -205,8 +207,8 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
 
             <div className='space-y-2'>
               <div className='flex items-center justify-between'>
-                <h4 className='text-base font-medium'>应用截图（必须上传5张）</h4>
-                <span className='text-sm text-default-500'>{screenshots.length}/5 张</span>
+                <h4 className='text-base font-medium'>应用截图（必须上传2张）</h4>
+                <span className='text-sm text-default-500'>{screenshots.length}/2 张</span>
               </div>
 
               <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
@@ -232,7 +234,7 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
                   </Card>
                 ))}
 
-                {screenshots.length < 5 && (
+                {screenshots.length < 2 && (
                   <Card
                     isPressable
                     className='border-2 border-dashed border-default-200 hover:border-primary cursor-pointer'
@@ -266,7 +268,7 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
             color='primary'
             onPress={handlePublish}
             isLoading={isPublishing || isUploading}
-            isDisabled={screenshots.length < 5}
+            isDisabled={screenshots.length < 2}
           >
             确认上架
           </Button>
