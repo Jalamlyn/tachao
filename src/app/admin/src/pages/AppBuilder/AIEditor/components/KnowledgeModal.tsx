@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useRef } from "react"
 import {
   Modal,
   ModalContent,
@@ -18,6 +18,7 @@ import {
   Progress,
   Card,
   Chip,
+  ButtonGroup,
 } from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { observer } from "mobx-react-lite"
@@ -25,6 +26,7 @@ import { knowledgeStore } from "./KnowledgeStore"
 import message from "@/components/Message"
 import KnowledgeEditModal from "./KnowledgeEditModal"
 import GuideCard from "@/app/admin/src/components/GuideCard"
+import { pdfToMarkdown } from "@/service/chat/chat-to-markdown"
 
 interface KnowledgeModalProps {
   isOpen: boolean
@@ -39,6 +41,8 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
     title: string
     content: string
   } | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const knowledgeList = searchQuery.trim() ? knowledgeStore.searchKnowledge(searchQuery) : knowledgeStore.knowledgeList
 
@@ -72,6 +76,55 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
       if (item) {
         message.success(item.isSelected ? "AI 已取消学习此知识" : "AI 已成功学习此知识，将在对话中参考使用")
       }
+    }
+  }
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // 检查文件类型
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ]
+    if (!allowedTypes.includes(file.type)) {
+      message.error("仅支持 PDF 和 Word 文档格式")
+      return
+    }
+
+    // 检查文件大小 (10MB 限制)
+    if (file.size > 10 * 1024 * 1024) {
+      message.error("文件大小不能超过 10MB")
+      return
+    }
+
+    try {
+      setIsUploading(true)
+      message.loading("正在处理文档...", 0)
+
+      // 调用转换服务
+      const markdownContent = await pdfToMarkdown(file)
+
+      // 提取文件名作为标题（去除扩展名）
+      const title = file.name.replace(/\.[^/.]+$/, "")
+
+      // 添加到知识库
+      await knowledgeStore.addKnowledge(null, title, markdownContent)
+
+      message.success("文档已成功添加到知识库")
+
+      // 清理文件输入
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    } catch (error) {
+      console.error("文档处理失败:", error)
+      message.error("文档处理失败：" + (error instanceof Error ? error.message : "未知错误"))
+    } finally {
+      setIsUploading(false)
+      message.destroy()
     }
   }
 
@@ -154,6 +207,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
 
   return (
     <>
+      <input type='file' ref={fileInputRef} className='hidden' accept='.pdf,.doc,.docx' onChange={handleFileUpload} />
       <Modal scrollBehavior='inside' isOpen={isOpen} onClose={onClose} size='3xl'>
         <ModalContent>
           <ModalHeader className='flex flex-col gap-1'>
@@ -163,18 +217,30 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = observer(({ isOpen,
                 <span>知识管理</span>
               </div>
               <div className='flex gap-2'>
-                <Button
-                  size='sm'
-                  color='primary'
-                  variant='flat'
-                  startContent={<Icon icon='solar:add-circle-linear' />}
-                  onPress={() => {
-                    setEditingItem(null)
-                    setShowEditModal(true)
-                  }}
-                >
-                  添加知识
-                </Button>
+                <ButtonGroup>
+                  <Button
+                    size='sm'
+                    color='primary'
+                    variant='flat'
+                    startContent={<Icon icon='solar:upload-linear' />}
+                    onPress={() => fileInputRef.current?.click()}
+                    isLoading={isUploading}
+                  >
+                    上传文档
+                  </Button>
+                  <Button
+                    size='sm'
+                    color='primary'
+                    variant='flat'
+                    startContent={<Icon icon='solar:add-circle-linear' />}
+                    onPress={() => {
+                      setEditingItem(null)
+                      setShowEditModal(true)
+                    }}
+                  >
+                    添加知识
+                  </Button>
+                </ButtonGroup>
               </div>
             </div>
           </ModalHeader>

@@ -1,6 +1,5 @@
 // import chatChunk from "@/service/chat/chat-chunk-sc"
 import chatChunk from "@/service/chat/chat-chunk-openrouter"
-import { stream } from "fetch-event-stream"
 
 // 计算费用的函数
 
