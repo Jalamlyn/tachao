@@ -15,10 +15,6 @@ import PreviewPage from "./app/admin/src/pages/AppBuilder/components/PreviewPage
 import AppRuntime from "./app/admin/src/pages/AppBuilder/components/AppRuntime"
 import AppPlatRuntime from "./app/admin/src/pages/AppBuilder/components/AppPlatRuntime"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { getAppId } from "./utils"
-import { queryMyProject } from "./service/apis/project"
-import { queryApps } from "./service/apis/app"
-import { localDB } from "./utils/localDB"
 
 // 动态加载 CloudBase SDK 并初始化
 function loadCloudBaseSDK() {

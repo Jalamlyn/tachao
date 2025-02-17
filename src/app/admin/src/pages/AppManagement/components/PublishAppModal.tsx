@@ -14,6 +14,7 @@ import { Icon } from "@iconify/react"
 import { AppIndex } from "../store/types"
 import { getMetadata, getPlatMetaData, setPlatMetaData, setMetadata } from "@/service/apis/metadata"
 import message from "@/components/Message"
+import { useAppStore } from "../store/useAppStore"
 
 interface PublishAppModalProps {
   app: AppIndex
@@ -28,7 +29,8 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
   const [isUploading, setIsUploading] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
-
+  const { useApps } = useAppStore()
+  const { refetch } = useApps()
   // 添加分页常量
   const ITEMS_PER_PAGE = 20
 
@@ -187,6 +189,7 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
       })
 
       onSuccess?.()
+      await refetch()
       onClose()
     } catch (error) {
       console.error("Failed to publish to market:", error)

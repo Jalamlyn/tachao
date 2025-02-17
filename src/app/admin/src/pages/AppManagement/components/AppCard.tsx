@@ -70,6 +70,8 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
   const [isUnpublishing, setIsUnpublishing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cardRef = useRef(null)
+  const { useApps } = useAppStore()
+  const { refetch } = useApps()
 
   const hasEditPermission = (app: AppIndex, currentUser: any) => {
     if (!currentUser) return false
@@ -269,7 +271,6 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
       handlePreviewUpload(file)
     }
   }
-
   const handleUnpublishFromMarket = async () => {
     try {
       setIsUnpublishing(true)
@@ -286,9 +287,11 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
       for (let page = 1; page <= marketIndex.totalPages; page++) {
         const pageKey = `market_apps_page_${page}`
         const pageDataResult = await getPlatMetaData([pageKey])
-        const pageData = pageDataResult.data?.[0]?.value ? JSON.parse(pageDataResult.data[0].value) : []
+        const pageData = pageDataResult.data?.[0]?.values?.[0]?.value
+          ? JSON.parse(pageDataResult.data?.[0]?.values?.[0]?.value)
+          : []
         const updatedPageData = pageData.filter((item) => item.id !== app.id)
-
+        debugger
         if (pageData.length !== updatedPageData.length) {
           await setPlatMetaData({ name: pageKey, value: JSON.stringify(updatedPageData) })
           break
@@ -310,6 +313,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
       })
 
       message.success("应用已从应用市场下架")
+      await refetch()
       onUnpublishConfirmClose()
     } catch (error) {
       console.error("Failed to unpublish from market:", error)
