@@ -110,7 +110,7 @@ const AppMarket: React.FC = () => {
 
   if (loading) {
     return (
-      <div className='h-screen flex items-center justify-center'>
+      <div className='min-h-screen flex items-center justify-center bg-gradient-to-b from-[#2D1B69] via-[#1E1656] to-[#19073B]'>
         <Spinner size='lg' />
       </div>
     )
@@ -121,11 +121,11 @@ const AppMarket: React.FC = () => {
       <div className="absolute inset-0 bg-[url('/assets/grid.svg')] opacity-20" />
 
       {/* 导航栏 */}
-      <Navbar className="bg-background backdrop-blur-md border-b border-white/20">
+      <Navbar className="bg-white/5 backdrop-blur-md border-b border-white/10">
         <NavbarContent justify="start">
           <NavbarItem>
             <Button
-              variant="light"
+              className="bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20"
               startContent={<Icon icon="mdi:arrow-left" />}
               onClick={() => navigate("/")}
             >
@@ -135,7 +135,7 @@ const AppMarket: React.FC = () => {
         </NavbarContent>
         <NavbarContent justify="center">
           <NavbarItem>
-            <h1 className="text-xl font-bold">应用市场</h1>
+            <h1 className="text-xl font-bold text-white">应用市场</h1>
           </NavbarItem>
         </NavbarContent>
       </Navbar>
@@ -149,7 +149,11 @@ const AppMarket: React.FC = () => {
               value={searchTerm}
               onValueChange={handleSearch}
               startContent={<Icon icon="mdi:search" />}
-              className="w-full"
+              className="bg-white/5 backdrop-blur-sm border border-white/10 text-white"
+              classNames={{
+                input: "text-white placeholder:text-white/50",
+                inputWrapper: "hover:bg-white/10"
+              }}
             />
           </div>
           
@@ -157,6 +161,7 @@ const AppMarket: React.FC = () => {
             <Dropdown>
               <DropdownTrigger>
                 <Button 
+                  className="bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20"
                   startContent={<Icon icon="mdi:filter-variant" />}
                 >
                   {categories.find(c => c.key === selectedCategory)?.name || "分类"}
@@ -175,6 +180,7 @@ const AppMarket: React.FC = () => {
             <Dropdown>
               <DropdownTrigger>
                 <Button 
+                  className="bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20"
                   startContent={<Icon icon="mdi:sort" />}
                 >
                   {sortOptions.find(s => s.key === selectedSort)?.name || "排序"}
@@ -201,7 +207,7 @@ const AppMarket: React.FC = () => {
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className='bg-white/10 backdrop-blur-sm border border-white/20 hover:border-white/40 transition-all duration-300'>
+              <Card className='bg-white/5 backdrop-blur-sm border border-white/10 hover:border-white/20 transition-all duration-300'>
                 <CardBody className='p-0'>
                   <div
                     className='cursor-pointer flex justify-center items-center pt-6 overflow-hidden'
@@ -233,7 +239,7 @@ const AppMarket: React.FC = () => {
                     <span>{new Date(app.publishedAt).toLocaleDateString()}</span>
                   </div>
                   <Button
-                    color='primary'
+                    className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white"
                     endContent={<Icon icon='mdi:arrow-right' />}
                     onPress={() => window.open(app.accessUrl.replace("app-run", "app-plat"), "_blank")}
                   >
@@ -258,7 +264,8 @@ const AppMarket: React.FC = () => {
         onClose={() => setShowScreenshotModal(false)}
         size='5xl'
         classNames={{
-          backdrop: "backdrop-blur-sm",
+          backdrop: "backdrop-blur-sm bg-black/50",
+          base: "bg-white/5 backdrop-blur-md border border-white/10",
         }}
       >
         <ModalContent>
