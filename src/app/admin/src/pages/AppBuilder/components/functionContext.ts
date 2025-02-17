@@ -34,6 +34,7 @@ import remarkGfm from "remark-gfm"
 import rehypeRaw from "rehype-raw"
 import { toMarkdown } from "@/service/chat/chat-to-markdown"
 import { searchExa, getExaContents } from "@/service/chat/chat-exa"
+import localforage from "localforage"
 
 // 检查是否在iframe中运行
 const isInIframe = () => {
@@ -431,6 +432,7 @@ export const context = (appId, mode) => ({
   message,
   appId,
   api: {
+    localforage,
     searchExa,
     getExaContents,
     toMarkdown,

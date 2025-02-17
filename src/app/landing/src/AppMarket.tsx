@@ -121,7 +121,7 @@ const AppMarket: React.FC = () => {
       <div className="absolute inset-0 bg-[url('/assets/grid.svg')] opacity-20" />
 
       {/* 导航栏 */}
-      <Navbar className="bg-background/60 backdrop-blur-md border-b border-white/20">
+      <Navbar className="bg-background backdrop-blur-md border-b border-white/20">
         <NavbarContent justify="start">
           <NavbarItem>
             <Button
@@ -157,7 +157,6 @@ const AppMarket: React.FC = () => {
             <Dropdown>
               <DropdownTrigger>
                 <Button 
-                  variant="flat" 
                   startContent={<Icon icon="mdi:filter-variant" />}
                 >
                   {categories.find(c => c.key === selectedCategory)?.name || "分类"}
@@ -176,7 +175,6 @@ const AppMarket: React.FC = () => {
             <Dropdown>
               <DropdownTrigger>
                 <Button 
-                  variant="flat" 
                   startContent={<Icon icon="mdi:sort" />}
                 >
                   {sortOptions.find(s => s.key === selectedSort)?.name || "排序"}

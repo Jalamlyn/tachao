@@ -110,6 +110,10 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
     }
   }
 
+  const handleDownload = () => {
+    message.info("代码包下载功能正在开发中，敬请期待！")
+  }
+
   const loadAccounts = async () => {
     try {
       setIsLoadingAccounts(true)
@@ -271,6 +275,7 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
       handlePreviewUpload(file)
     }
   }
+
   const handleUnpublishFromMarket = async () => {
     try {
       setIsUnpublishing(true)
@@ -513,6 +518,13 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
                         color='primary'
                         startContent={<Icon icon='hugeicons:ai-chat-02' className='w-5 h-5' />}
                         onPress={() => navigate(`/admin/apps/${app.id}/builder`)}
+                      ></Button>
+
+                      <Button
+                        size='sm'
+                        color='secondary'
+                        startContent={<Icon icon='mdi:download' className='w-5 h-5' />}
+                        onPress={handleDownload}
                       ></Button>
 
                       <Dropdown>

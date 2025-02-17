@@ -98,7 +98,7 @@ class BalanceStore {
     // 检查订阅状态
     const subscription = await subscriptionService.getSubscription(globalStore.organizationId)
     if (!subscription) {
-      message.error("请先订阅服务")
+      message.error("请先在充值界面购买套餐，个人套餐或者企业套餐")
       this.showRechargeModal(true)
       return false
     }
