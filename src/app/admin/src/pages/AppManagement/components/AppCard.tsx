@@ -279,11 +279,10 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
         getMetadata(["app_index"]),
       ])
 
-      const marketIndex = indexData.data?.[0]?.value
-        ? JSON.parse(indexData.data[0].value)
+      const marketIndex = indexData.data?.[0]?.values?.[0]?.value
+        ? JSON.parse(indexData.data?.[0]?.values?.[0]?.value)
         : { totalApps: 0, totalPages: 0 }
       const appIndex = appIndexData.data?.[0]?.value ? JSON.parse(appIndexData.data[0].value) : []
-
       for (let page = 1; page <= marketIndex.totalPages; page++) {
         const pageKey = `market_apps_page_${page}`
         const pageDataResult = await getPlatMetaData([pageKey])
@@ -291,7 +290,6 @@ export const AppCard: React.FC<AppCardProps> = ({ app, index, onDevelopClick }) 
           ? JSON.parse(pageDataResult.data?.[0]?.values?.[0]?.value)
           : []
         const updatedPageData = pageData.filter((item) => item.id !== app.id)
-        debugger
         if (pageData.length !== updatedPageData.length) {
           await setPlatMetaData({ name: pageKey, value: JSON.stringify(updatedPageData) })
           break

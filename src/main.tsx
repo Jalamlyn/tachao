@@ -15,6 +15,7 @@ import PreviewPage from "./app/admin/src/pages/AppBuilder/components/PreviewPage
 import AppRuntime from "./app/admin/src/pages/AppBuilder/components/AppRuntime"
 import AppPlatRuntime from "./app/admin/src/pages/AppBuilder/components/AppPlatRuntime"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { setPlatMetaData } from "./service/apis/metadata"
 
 // 动态加载 CloudBase SDK 并初始化
 function loadCloudBaseSDK() {

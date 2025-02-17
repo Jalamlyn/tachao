@@ -131,8 +131,8 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
         getMetadata(["app_index"]),
       ])
 
-      const marketIndex = indexData.data?.[0]?.value
-        ? JSON.parse(indexData.data[0].value)
+      const marketIndex = indexData.data?.[0]?.values?.[0]?.value
+        ? JSON.parse(indexData.data?.[0]?.values?.[0]?.value)
         : { totalApps: 0, totalPages: 0 }
       const appIndex = appIndexData.data?.[0]?.value ? JSON.parse(appIndexData.data[0].value) : []
 
@@ -140,7 +140,7 @@ export const PublishAppModal: React.FC<PublishAppModalProps> = ({ app, isOpen, o
         id: app.id,
         title: app.title,
         description: app.description || "",
-        accessUrl: `/app-run/${app.id}`,
+        accessUrl: `/app-plat/${app.id}`,
         creator: app.creator,
         screenshots: screenshots,
         publishedAt: new Date().toISOString(),
