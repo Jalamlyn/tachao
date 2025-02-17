@@ -197,7 +197,6 @@ export default async function chatChunkOpenAIOffice(
           const parsed = jsonParse(event.data)
           // 处理工具调用
           if (!parsed?.choices || parsed?.choices[0]?.finish_reason === "error") {
-            message.error("网络拥堵,请刷新页面重试")
             throw new Error("网络拥堵,请刷新页面重试")
           }
           if (parsed?.choices[0]?.delta?.tool_calls) {

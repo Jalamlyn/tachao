@@ -1697,199 +1697,6 @@ KnowledgeEditor.displayName = 'KnowledgeEditor';
 ```
 
 ```jsx
-<mo-ai-code type="component" name="comp_knowledge_list" title="知识块列表组件">
-const {
-  wpm,
-  React,
-  observer,
-  Icon,
-  NextUI,
-  ReactRouterDom,
-  ReactHookForm,
-  FramerMotion,
-  message,
-  appId,
-  api,
-  ai,
-  mobx,
-  recharts,
-  cn,
-  xlsx,
-  esm,
-} = context;
-
-const { Card, CardBody, Button, Input, Chip, Spinner, RadioGroup, Radio } = NextUI;
-const { motion, AnimatePresence } = FramerMotion;
-
-const KnowledgeList = observer(({ blocks, selectedId, onSelect, onAdd, loading }) => {
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [viewType, setViewType] = React.useState("all");
-  const [filteredBlocks, setFilteredBlocks] = React.useState(blocks);
-
-  React.useEffect(() => {
-    const filtered = blocks.filter(block =>
-      (viewType === 'all' || block.type === viewType) &&
-      (block.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-       block.description.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-    setFilteredBlocks(filtered);
-  }, [searchQuery, blocks, viewType]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="text-center">
-          <Spinner size="lg" color="primary" className="mb-4"/>
-          <p className="text-default-500">加载知识库...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <Input
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="搜索知识..."
-          startContent={<Icon icon="solar:magnifer-linear" className="text-default-400" />}
-          size="sm"
-          className="flex-1"
-        />
-        <div className="flex items-center gap-4">
-          <RadioGroup
-            orientation="horizontal"
-            value={viewType}
-            onValueChange={setViewType}
-          >
-            <Radio value="all">全部</Radio>
-            <Radio value="document">文档</Radio>
-            <Radio value="image">图片</Radio>
-          </RadioGroup>
-          <Button
-            color="primary"
-            size="sm"
-            startContent={<Icon icon="solar:add-circle-bold" className="w-4 h-4" />}
-            onPress={onAdd}
-          >
-            新建
-          </Button>
-        </div>
-      </div>
-
-      <div className="space-y-2 min-h-[200px]">
-        <AnimatePresence mode="popLayout">
-          {filteredBlocks.length > 0 ? (
-            <div className={cn(
-              "grid gap-4",
-              viewType === 'image' ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4" : "grid-cols-1"
-            )}>
-              {filteredBlocks.map((block) => (
-                <motion.div
-                  key={block.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Card
-                    isPressable
-                    isHoverable
-                    className={cn(
-                      "transition-all duration-200",
-                      selectedId === block.id
-                        ? "border-primary shadow-md scale-[1.02]": "hover:scale-[1.01]"
-                    )}
-                    onPress={() => onSelect(block.id)}
-                  >
-                    <CardBody className="p-3">
-                      {block.type === 'image' ? (
-                        <div className="space-y-2">
-                          <div className="aspect-square overflow-hidden rounded-lg">
-                            <Image
-                              src={block.imageUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?fit=crop&w=300&h=300'}
-                              alt={block.title}
-                              classNames={{
-                                img: "object-cover w-full h-full transition-transform group-hover:scale-110"
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-foreground truncate">
-                              {block.title}
-                            </h3>
-                            <p className="text-small text-default-500 line-clamp-2 mt-1">
-                              {block.description}
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-foreground truncate">
-                              {block.title}
-                            </h3>
-                            <p className="text-small text-default-500 line-clamp-2 mt-1">
-                              {block.description}
-                            </p>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <Chip
-                              variant="flat"
-                              size="sm"
-                              color={block.type === 'document' ? 'primary' : 'secondary'}
-                            >
-                              {block.type === 'document' ? '文档' : '图片'}
-                            </Chip>
-                            <time className="text-tiny text-default-400">
-                              {new Date(block.updatedAt).toLocaleDateString()}
-                            </time>
-                          </div>
-                        </div>
-                      )}
-                    </CardBody>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center py-12 text-default-500"
-            >
-              <Icon icon="solar:notebook-bold" className="w-12 h-12 mb-4" />
-              {searchQuery ? (
-                <>
-                  <p>未找到相关知识</p>
-                  <p className="text-small mt-1">
-                    尝试使用其他关键词搜索
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p>知识库为空</p>
-                  <p className="text-small mt-1">
-                    点击"新建"按钮创建第一个知识块
-                  </p>
-                </>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-});
-
-context.wpm.export('comp_knowledge_list', KnowledgeList);
-KnowledgeList.displayName = 'KnowledgeList';
-</mo-ai-code>
-```
-
-```jsx
 <mo-ai-code type="component" name="comp_knowledge_search_result" title="知识搜索结果组件">
 const {
   wpm,
@@ -2925,6 +2732,21 @@ const KnowledgePage = observer(() => {
     }
   };
 
+  const handleCopyMetadataKey = async (id) => {
+    try {
+      const metadataKey = `${appId}_knowledge_${id}`;
+      await navigator.clipboard.writeText(metadataKey);
+      api.log.info('复制知识块元数据key成功', { id, metadataKey });
+      message.success('元数据key已复制到剪贴板');
+    } catch (error) {
+      api.log.error('复制知识块元数据key失败', {
+        id,
+        error: error.message
+      });
+      message.error('复制失败');
+    }
+  };
+
   const handleBatchDelete = async () => {
     try {
       api.log.info('开始批量删除', {
@@ -3002,35 +2824,50 @@ const KnowledgePage = observer(() => {
         );
       case "actions":
         return (
-          <div className="flex items-center gap-2 justify-end">
-            <Button
-              size="sm"
-              variant="light"
-              onPress={() => handleView(item.id)}
-              isLoading={viewLoading}
-              startContent={<Icon icon="solar:eye-bold" className="text-lg" />}
-            >
-              查看
-            </Button>
-            <Button
-              size="sm"
-              variant="light"
-              color="primary"
-              onPress={() => handleEdit(item.id)}
-              startContent={<Icon icon="solar:pen-bold" className="text-lg" />}
-            >
-              编辑
-            </Button>
-            <Button
-              size="sm"
-              variant="light"
-              color="danger"
-              onPress={() => handleDelete(item.id)}
-              isLoading={deleteLoading === item.id}
-              startContent={<Icon icon="solar:trash-bin-trash-bold" className="text-lg" />}
-            >
-              删除
-            </Button>
+          <div className="flex justify-end">
+            <Dropdown>
+              <DropdownTrigger>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                >
+                  <Icon icon="solar:menu-dots-bold" className="text-lg" />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label="操作菜单">
+                <DropdownItem
+                  key="view"
+                  startContent={<Icon icon="solar:eye-bold" className="text-lg" />}
+                  onPress={() => handleView(item.id)}
+                >
+                  查看
+                </DropdownItem>
+                <DropdownItem
+                  key="edit"
+                  startContent={<Icon icon="solar:pen-bold" className="text-lg" />}
+                  onPress={() => handleEdit(item.id)}
+                >
+                  编辑
+                </DropdownItem>
+                <DropdownItem
+                  key="copy"
+                  startContent={<Icon icon="solar:copy-bold" className="text-lg" />}
+                  onPress={() => handleCopyMetadataKey(item.id)}
+                >
+                  复制元数据Key
+                </DropdownItem>
+                <DropdownItem
+                  key="delete"
+                  className="text-danger"
+                  color="danger"
+                  startContent={<Icon icon="solar:trash-bin-trash-bold" className="text-lg" />}
+                  onPress={() => handleDelete(item.id)}
+                >
+                  删除
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
           </div>
         );
       default:
