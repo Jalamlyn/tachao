@@ -1,5 +1,23 @@
 import React, { useState, useEffect } from "react"
-import { Card, CardBody, CardFooter, Image, Button, Spinner, Modal, ModalContent, ModalBody, Navbar, NavbarContent, NavbarItem, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Input } from "@nextui-org/react"
+import {
+  Card,
+  CardBody,
+  CardFooter,
+  Image,
+  Button,
+  Spinner,
+  Modal,
+  ModalContent,
+  ModalBody,
+  Navbar,
+  NavbarContent,
+  NavbarItem,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Input,
+} from "@nextui-org/react"
 import { Icon } from "@iconify/react"
 import { Swiper, SwiperSlide } from "swiper/react"
 import { Navigation, Pagination } from "swiper/modules"
@@ -69,9 +87,10 @@ const AppMarket: React.FC = () => {
 
       // 搜索过滤
       if (searchTerm) {
-        pageData = pageData.filter((app) => 
-          app.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          app.description.toLowerCase().includes(searchTerm.toLowerCase())
+        pageData = pageData.filter(
+          (app) =>
+            app.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            app.description.toLowerCase().includes(searchTerm.toLowerCase())
         )
       }
 
@@ -121,50 +140,49 @@ const AppMarket: React.FC = () => {
       <div className="absolute inset-0 bg-[url('/assets/grid.svg')] opacity-20" />
 
       {/* 导航栏 */}
-      <Navbar className="bg-white/5 backdrop-blur-md border-b border-white/10">
-        <NavbarContent justify="start">
+      <Navbar className='bg-white/5 backdrop-blur-md border-b border-white/10'>
+        <NavbarContent justify='start'>
           <NavbarItem>
             <Button
-              className="bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20"
-              startContent={<Icon icon="mdi:arrow-left" />}
+              className='bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20'
+              startContent={<Icon icon='mdi:arrow-left' />}
               onClick={() => navigate("/")}
             >
               返回首页
             </Button>
           </NavbarItem>
         </NavbarContent>
-        <NavbarContent justify="center">
+        <NavbarContent justify='center'>
           <NavbarItem>
-            <h1 className="text-xl font-bold text-white">应用市场</h1>
+            <h1 className='text-xl font-bold text-white'>应用市场</h1>
           </NavbarItem>
         </NavbarContent>
       </Navbar>
 
       <div className='container mx-auto p-4'>
         {/* 搜索和筛选区域 */}
-        <div className="flex flex-wrap gap-4 mb-8 items-center justify-between">
-          <div className="flex gap-4 flex-1 max-w-md">
+        <div className='flex flex-wrap gap-4 mb-8 items-center justify-between'>
+          <div className='flex gap-4 flex-1 max-w-md'>
             <Input
-              placeholder="搜索应用..."
+              placeholder='搜索应用...'
               value={searchTerm}
               onValueChange={handleSearch}
-              startContent={<Icon icon="mdi:search" />}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 text-white"
+              startContent={<Icon icon='mdi:search' />}
+              className='bg-white/5 backdrop-blur-sm border border-white/10'
               classNames={{
-                input: "text-white placeholder:text-white/50",
-                inputWrapper: "hover:bg-white/10"
+                inputWrapper: "hover:bg-white/10",
               }}
             />
           </div>
-          
-          <div className="flex gap-4">
+
+          <div className='flex gap-4'>
             <Dropdown>
               <DropdownTrigger>
-                <Button 
-                  className="bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20"
-                  startContent={<Icon icon="mdi:filter-variant" />}
+                <Button
+                  className='bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20'
+                  startContent={<Icon icon='mdi:filter-variant' />}
                 >
-                  {categories.find(c => c.key === selectedCategory)?.name || "分类"}
+                  {categories.find((c) => c.key === selectedCategory)?.name || "分类"}
                 </Button>
               </DropdownTrigger>
               <DropdownMenu
@@ -179,11 +197,11 @@ const AppMarket: React.FC = () => {
 
             <Dropdown>
               <DropdownTrigger>
-                <Button 
-                  className="bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20"
-                  startContent={<Icon icon="mdi:sort" />}
+                <Button
+                  className='bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20'
+                  startContent={<Icon icon='mdi:sort' />}
                 >
-                  {sortOptions.find(s => s.key === selectedSort)?.name || "排序"}
+                  {sortOptions.find((s) => s.key === selectedSort)?.name || "排序"}
                 </Button>
               </DropdownTrigger>
               <DropdownMenu
@@ -224,7 +242,7 @@ const AppMarket: React.FC = () => {
                       {app.title}
                       {app.category && (
                         <span className='text-xs px-2 py-1 rounded-full bg-white/10'>
-                          {categories.find(c => c.key === app.category)?.name || app.category}
+                          {categories.find((c) => c.key === app.category)?.name || app.category}
                         </span>
                       )}
                     </h3>
@@ -239,7 +257,7 @@ const AppMarket: React.FC = () => {
                     <span>{new Date(app.publishedAt).toLocaleDateString()}</span>
                   </div>
                   <Button
-                    className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white"
+                    className='bg-gradient-to-r from-purple-500 to-cyan-500 text-white'
                     endContent={<Icon icon='mdi:arrow-right' />}
                     onPress={() => window.open(app.accessUrl.replace("app-run", "app-plat"), "_blank")}
                   >
@@ -252,9 +270,9 @@ const AppMarket: React.FC = () => {
         </div>
 
         {apps.length === 0 && !loading && (
-          <div className="text-center py-20">
-            <Icon icon="mdi:package-variant" className="w-16 h-16 mx-auto text-white/30" />
-            <p className="text-white/50 mt-4">暂无符合条件的应用</p>
+          <div className='text-center py-20'>
+            <Icon icon='mdi:package-variant' className='w-16 h-16 mx-auto text-white/30' />
+            <p className='text-white/50 mt-4'>暂无符合条件的应用</p>
           </div>
         )}
       </div>
