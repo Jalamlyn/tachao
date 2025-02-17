@@ -8,7 +8,6 @@ import { message } from "@/components/Message"
 import { useTranslation } from "react-i18next"
 import { jsonParse, jsonStringify } from "@/utils"
 import { motion, AnimatePresence } from "framer-motion"
-import { useOid } from "./useOid"
 import { PhoneVerification } from "@/components/PhoneVerification"
 import { useNavigate } from "react-router-dom"
 
@@ -35,7 +34,7 @@ export default function LoginPage({ isModal, onSuccess }: LoginPageProps) {
     enterpriseName: "",
   })
 
-  const { hasOidParam } = useOid(loginData)
+
 
   useEffect(() => {
     const savedLoginData = localStorage.getItem("loginData")
@@ -299,9 +298,7 @@ export default function LoginPage({ isModal, onSuccess }: LoginPageProps) {
           className='w-full max-w-md relative'
         >
           <Card className='bg-white/20 border bg-white border-white/30 shadow-2xl backdrop-blur-sm'>
-            <CardBody className='gap-4 p-8'>
-              {loginContent}
-            </CardBody>
+            <CardBody className='gap-4 p-8'>{loginContent}</CardBody>
           </Card>
         </motion.div>
       </div>
