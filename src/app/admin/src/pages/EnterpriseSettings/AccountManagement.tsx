@@ -37,7 +37,6 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext"
 import { queryMyProject, addProjectMember } from "@/service/apis/project"
 import { subscriptionService } from "@/app/admin/src/permissions/utils/permissionUtils"
 import message from "@/components/Message"
-import { useStore } from "@/stores/StoreProvider"
 import globalStore from "@/globalStore"
 import { useGlobalUser } from "@/hooks/useGlobalUser"
 import { getMetadata, setMetadata } from "@/service/apis/metadata"
@@ -88,7 +87,7 @@ const validatePhone = (phone: string): { isValid: boolean; message?: string } =>
 }
 
 const AccountManagement: React.FC = () => {
-  const { balanceStore } = useStore()
+  
   const [accounts, setAccounts] = useState([])
   const [roles, setRoles] = useState([])
   const [isLoading, setIsLoading] = useState(true)
