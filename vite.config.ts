@@ -10,7 +10,7 @@ export default defineConfig({
   define: {
     __API_BASE_URL__: JSON.stringify(
       process.env.DEPLOY_ENV === "us"
-        ? "https://1259692580-dzwlwuk5dc.ap-shanghai.tencentscf.com/api"
+        ? "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/api"
         : process.env.NODE_ENV === "production"
           ? "/api"
           : "/dev"

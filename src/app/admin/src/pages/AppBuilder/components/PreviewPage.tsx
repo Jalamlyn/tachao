@@ -309,7 +309,7 @@ const PreviewPage: React.FC<PreviewPageProps> = observer(({ appId }) => {
   return (
     <Provider>
       <AppContext.Provider value={{ appId }}>
-        <AppRender onAIFix={handleAIFix} appId={appId} basename={`/app-preview/${appId}`} onError={handleError} />
+        <AppRender onAIFix={handleAIFix} appId={appId} onError={handleError} />
       </AppContext.Provider>
     </Provider>
   )

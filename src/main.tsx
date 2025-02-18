@@ -1,9 +1,6 @@
-import React, { useState } from "react"
+import React from "react"
 import ReactDOM from "react-dom/client"
-import { BrowserRouter, Routes, Route } from "react-router-dom"
-
 import { Provider } from "./provider"
-import App from "./App"
 import "./styles/globals.css"
 import "./styles/github-markdown.css"
 import { Toaster } from "sonner"
@@ -11,11 +8,10 @@ import "./i18n"
 import "./tools"
 import { configure } from "mobx"
 import { StoreProvider } from "./stores/StoreProvider"
-import PreviewPage from "./app/admin/src/pages/AppBuilder/components/PreviewPage"
 import AppRuntime from "./app/admin/src/pages/AppBuilder/components/AppRuntime"
-import AppPlatRuntime from "./app/admin/src/pages/AppBuilder/components/AppPlatRuntime"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { setPlatMetaData } from "./service/apis/metadata"
+import LoginPage from "./pages/login"
+import { BrowserRouter } from "react-router-dom"
 
 // 动态加载 CloudBase SDK 并初始化
 function loadCloudBaseSDK() {
@@ -69,84 +65,29 @@ configure({
   observableRequiresReaction: false,
 })
 
-// 通用的 URL 解析函数
-const getAppIdFromUrl = (prefix: string): string | null => {
-  try {
-    const url = new URL(window.location.href)
-    const pathSegments = url.pathname.split("/")
-    const prefixIndex = pathSegments.indexOf(prefix)
-    if (prefixIndex !== -1 && pathSegments[prefixIndex + 1]) {
-      return pathSegments[prefixIndex + 1]
-    }
-    return null
-  } catch (error) {
-    console.error("Error parsing URL:", error)
-    return null
-  }
-}
-
 const AppSelector: React.FC = () => {
   const pathname = window.location.pathname
-  const [isInit, setIsInit] = useState(false)
-
-  // 预览模式 - /app-preview/:appId
-  if (pathname.startsWith("/app-preview/")) {
-    const appId = getAppIdFromUrl("app-preview")
-    if (!appId) {
-      return <div className='text-danger p-4'>无效的应用ID</div>
-    }
+  if (pathname.startsWith("/login")) {
     return (
-      <StoreProvider>
-        <QueryClientProvider client={queryClient}>
-          <PreviewPage appId={appId} />
+      <BrowserRouter>
+        <StoreProvider>
+          <LoginPage></LoginPage>
           <Toaster position='top-center' expand={true} richColors closeButton />
-        </QueryClientProvider>
-      </StoreProvider>
+        </StoreProvider>
+      </BrowserRouter>
     )
   }
-
-  // 运行时模式 - /app-run/:appId
-  if (pathname.startsWith("/app-run/")) {
-    const appId = getAppIdFromUrl("app-run")
-    if (!appId) {
-      return <div className='text-danger p-4'>无效的应用ID</div>
-    }
-    return (
-      <StoreProvider>
-        <QueryClientProvider client={queryClient}>
-          <Provider>
-            <AppRuntime appId={appId} />
-            <Toaster position='top-center' expand={true} richColors closeButton />
-          </Provider>
-        </QueryClientProvider>
-      </StoreProvider>
-    )
-  }
-  if (pathname.startsWith("/app-plat/")) {
-    const appId = getAppIdFromUrl("app-plat")
-    if (!appId) {
-      return <div className='text-danger p-4'>无效的应用ID</div>
-    }
-    return (
-      <StoreProvider>
-        <QueryClientProvider client={queryClient}>
-          <Provider>
-            <AppPlatRuntime appId={appId} />
-            <Toaster position='top-center' expand={true} richColors closeButton />
-          </Provider>
-        </QueryClientProvider>
-      </StoreProvider>
-    )
-  }
-
   // 主应用
+  const appId = "app_1_1867924698052419585_1739478553889_r29vew"
   return (
-    <BrowserRouter>
-      <StoreProvider>
-        <App />
-        <Toaster position='top-center' expand={true} richColors closeButton />
-      </StoreProvider>
-    </BrowserRouter>
+    <StoreProvider>
+      <QueryClientProvider client={queryClient}>
+        <Provider>
+          <AppRuntime appId={appId} />
+          <Toaster position='top-center' expand={true} richColors closeButton />
+        </Provider>
+      </QueryClientProvider>
+    </StoreProvider>
   )
 }
 

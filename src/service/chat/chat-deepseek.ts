@@ -35,7 +35,7 @@ export default async function chatChunkDeepseek(
   onCancel(() => controller.abort())
 
   try {
-    const response = await fetch("https://1259692580-dzwlwuk5dc.ap-shanghai.tencentscf.com/chat-a", {
+    const response = await fetch("https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-a", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

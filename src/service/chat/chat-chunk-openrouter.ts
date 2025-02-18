@@ -123,7 +123,7 @@ export default async function chatChunkOpenAIOffice(
 
   let apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-openrouter"
   if (model === "hs/deepseek-r1") {
-    apiEndPoint = "https://1259692580-dzwlwuk5dc.ap-shanghai.tencentscf.com/chat-hs"
+    apiEndPoint = "https://1259692580-b9dznk0gp5.na-siliconvalley.tencentscf.com/chat-hs"
   }
 
   // 选择模型

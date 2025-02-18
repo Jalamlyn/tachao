@@ -5,7 +5,6 @@ import wpm from "@wpm-js/core"
 
 interface AppRenderProps {
   appId: string
-  basename: string
   onError?: (error: Error) => void
   onAIFix?: (errorInfo: { message: string; stack?: string; componentStack?: string }) => void
 }
@@ -14,7 +13,7 @@ const AppEntry = ({ children }) => {
   return <>{children}</>
 }
 
-export const AppRender: React.FC<AppRenderProps> = ({ appId, basename, onError, onAIFix }) => {
+export const AppRender: React.FC<AppRenderProps> = ({ appId, onError, onAIFix }) => {
   const [App, setApp] = useState(null)
   useEffect(() => {
     const init = async () => {
@@ -26,10 +25,10 @@ export const AppRender: React.FC<AppRenderProps> = ({ appId, basename, onError, 
 
   return (
     <ErrorBoundary onError={onError} onAIFix={onAIFix}>
-      <BrowserRouter basename={basename}>
+      <BrowserRouter>
         {App && (
           <AppEntry>
-            <App basename={basename}></App>
+            <App></App>
           </AppEntry>
         )}
       </BrowserRouter>

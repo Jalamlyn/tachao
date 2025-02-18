@@ -165,7 +165,6 @@ const AppRuntime: React.FC<AppRuntimeProps> = observer(({ appId }) => {
       <AppContext.Provider value={{ appId }}>
         <AppRender
           appId={appId}
-          basename={`/app-plat/${appId}`}
           onError={(error) => {
             console.error("Runtime error:", error)
             message.error(`运行错误: ${error.message}`)
