@@ -1,4 +1,4 @@
-import { context } from "./lib/context"
+import { context } from "../lib/context"
 
 const {
   wpm,

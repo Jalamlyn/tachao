@@ -6,8 +6,8 @@ import { Toaster } from "sonner"
 import { configure } from "mobx"
 import { StoreProvider } from "./lib/StoreProvider"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import "./importing"
-import App from "./App"
+import "./module/importing"
+import App from "./module/App"
 import { BrowserRouter } from "react-router-dom"
 
 const queryClient = new QueryClient({
