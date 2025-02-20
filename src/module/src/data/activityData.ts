@@ -1,0 +1,108 @@
+import { context } from "@/lib/context"
+
+const {
+  wpm,
+  React,
+  observer,
+  Icon,
+  NextUI,
+  ReactRouterDom,
+  ReactHookForm,
+  ReactToPrint,
+  FramerMotion,
+  message,
+  appId,
+  api,
+  ai,
+  mobx,
+  recharts,
+  cn,
+  xlsx,
+  esm,
+} = context
+
+const defaultActivities = [
+  {
+    id: 1,
+    title: "「指尖生花」手作疗愈沙龙",
+    type: "workshop",
+    location: {
+      latitude: 39.984092,
+      longitude: 116.495138,
+      address: "朝阳区798艺术区尤伦斯当代艺术中心·阶梯教室",
+    },
+    startTime: "2025-03-08 14:00",
+    endTime: "2025-03-08 16:00",
+    description: "在素胚上勾勒心事，用毛线编织时光。让陶泥在掌心舒展成温柔的形状，一针一线里缝补被岁月揉皱的柔软灵魂。",
+    participants: 8,
+    maxParticipants: 15,
+    image: "https://images.unsplash.com/photo-1596367407372-96cb88503db6?w=300&h=200",
+  },
+  {
+    id: 2,
+    title: "「轻羽慢舞」产后修复瑜伽",
+    type: "fitness",
+    location: {
+      latitude: 39.988907,
+      longitude: 116.314964,
+      address: "海淀区中关村大街40号·梵音瑜伽馆",
+    },
+    startTime: "2025-03-15 10:00",
+    endTime: "2025-03-15 11:30",
+    description:
+      "以呼吸为舟，载着疲惫的身体在晨光中漂浮。每一个伸展都是对生命的致谢，让僵硬的肩颈如春日柳枝，在风里重新学会轻盈。",
+    participants: 12,
+    maxParticipants: 20,
+    image: "https://images.unsplash.com/photo-1599447421416-3414500d18a5?w=300&h=200",
+  },
+  {
+    id: 3,
+    title: "「萤火微光」家庭财务私语课",
+    type: "education",
+    location: {
+      latitude: 39.914671,
+      longitude: 116.463739,
+      address: "朝阳区光华路5号院·世纪财富中心2层单向空间",
+    },
+    startTime: "2025-03-22 15:00",
+    endTime: "2025-03-22 17:00",
+    description: "在咖啡香中点亮一盏小灯，听数字化作童话——原来柴米油盐里也能长出翅膀，让琐碎日子泛起珍珠般的光泽。",
+    participants: 15,
+    maxParticipants: 25,
+    image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=300&h=200",
+  },
+  {
+    id: 4,
+    title: "「星月童话」亲子共读夜",
+    type: "parent-child",
+    location: {
+      latitude: 39.992852,
+      longitude: 116.341198,
+      address: "海淀区成府路28号·Page One书店（五道口店）",
+    },
+    startTime: "2025-03-28 19:00",
+    endTime: "2025-03-28 20:30",
+    description: "铺开星空毯，妈妈的声音是孩子枕畔的星河。当绘本里的精灵跃上窗棂，我们的影子在月光下长成相依的树。",
+    participants: 10,
+    maxParticipants: 15,
+    image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&h=200",
+  },
+  {
+    id: 5,
+    title: "「厨房诗行」疗愈系烘焙课",
+    type: "cooking",
+    location: {
+      latitude: 39.933353,
+      longitude: 116.455174,
+      address: "朝阳区三里屯北路19号·三里屯太古里ABC Cooking Studio",
+    },
+    startTime: "2025-04-05 13:00",
+    endTime: "2025-04-05 15:00",
+    description: "让面粉沾染玫瑰香，看烤箱里升起小太阳。那些揉进面团里的叹息，终将在焦糖色的香气中，化作唇边一抹甜。",
+    participants: 8,
+    maxParticipants: 12,
+    image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=300&h=200",
+  },
+]
+
+context.wpm.export("data_activity", defaultActivities)
