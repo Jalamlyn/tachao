@@ -932,42 +932,42 @@
     "@cloudbase/adapter-interface" "^0.6.0"
     web-streams-polyfill "^4.0.0"
 
-"@cloudbase/ai@^2.8.27-beta.0":
-  version "2.8.27-beta.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/ai/-/ai-2.8.27-beta.0.tgz#2427a6fb99b3b8809e4a2f9a6472373b8c8baa03"
-  integrity sha512-wg56/Cw2R4XNWCQ+CKrhqy3dadB91miUYq39xnKOkz/FueIq8nLY/4t2axLArtUXYj5gSuuwUOARxcwTzUN3JQ==
+"@cloudbase/ai@^2.9.2":
+  version "2.9.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/ai/-/ai-2.9.2.tgz#686a9445be33a4770869b108ce4a2ea43dded757"
+  integrity sha512-oof8R8eK6P1ii82gf4kdRv7/IZqGyMmR55g3Di5INlIULBfnE8GCvSZqxGEWYA2eMPvM21ZDNI74BHqgbnyc5g==
   dependencies:
-    "@cloudbase/types" "^2.8.27-beta.0"
+    "@cloudbase/types" "^2.9.2"
     "@mattiasbuelens/web-streams-adapter" "^0.1.0"
     text-encoding-shim "^1.0.5"
     web-streams-polyfill "^4.0.0"
 
-"@cloudbase/analytics@^2.8.27-beta.0":
-  version "2.8.27-beta.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/analytics/-/analytics-2.8.27-beta.0.tgz#135a5db766d51e6b1cf559987d9d00386afb7317"
-  integrity sha512-JKGHuxBnPfD9+Tt5Pinhl4S/56C+LrWIWsdM7YXccRAwkU/Pe7xjZxNClvrSiGUcgsbaUqZhOlzleqTAlQTcgg==
+"@cloudbase/analytics@^2.9.2":
+  version "2.9.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/analytics/-/analytics-2.9.2.tgz#98313122a40b56db2b5750059cd687f145fcf6b2"
+  integrity sha512-3uHqD6jiD6nYswv+jxAdJQnZ7nkVtWzaBbkm60MusCOwYGjcxB32ekOgm1+Gw9wvqpr6SkEOxDoANk8YcmbbAA==
   dependencies:
-    "@cloudbase/types" "^2.8.27-beta.0"
-    "@cloudbase/utilities" "^2.8.27-beta.0"
+    "@cloudbase/types" "^2.9.2"
+    "@cloudbase/utilities" "^2.9.2"
 
-"@cloudbase/app@^2.8.27-beta.0":
-  version "2.8.27-beta.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/app/-/app-2.8.27-beta.0.tgz#acc51d449a634ebc990f6d1563bc7e2e44d33698"
-  integrity sha512-lZmA9ll80RfdBhMuav0wZo7mr3gGJVeMWahp7qnnwfTJef+8Ba1SR5MKInsFABfdo0JT4tT6EFucwZ/1qpzBng==
+"@cloudbase/app@^2.9.2":
+  version "2.9.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/app/-/app-2.9.2.tgz#b5121359f09e00423283d1dae837bf23793eb60d"
+  integrity sha512-nlyxyJrZz11OIk5KCn2b0+S1Bx3uhdVN5KWhbUL5rfv4bntOJd9gFzC1ROAa6Dzb/W4pEcvi6fvz4SXfTvWDHQ==
   dependencies:
     "@cloudbase/adapter-interface" "^0.6.0"
     "@cloudbase/adapter-wx_mp" "^1.1.0"
-    "@cloudbase/types" "^2.8.27-beta.0"
-    "@cloudbase/utilities" "^2.8.27-beta.0"
+    "@cloudbase/types" "^2.9.2"
+    "@cloudbase/utilities" "^2.9.2"
 
-"@cloudbase/auth@^2.8.27-beta.0":
-  version "2.8.27-beta.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/auth/-/auth-2.8.27-beta.0.tgz#49435c62d0f2581c5e719779d74f92beddf4361d"
-  integrity sha512-eaN6QroSlWHEqb8jbUN7R2rUUaM4kAbaEY+UFVmwAk8xP4tjOT1B9gLVLcCS5BCqn5ApuHsQyoF+MzZaaOuNAw==
+"@cloudbase/auth@^2.9.2":
+  version "2.9.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/auth/-/auth-2.9.2.tgz#fe2debc5bbd1952decaf581db9e4a0a895ad611f"
+  integrity sha512-YuQxv6qLGJ2vpIVS6YF80eHxLH2qeBBsvhJnS8uhTrzt77J8xFV57sqsc6EUvJD80u3bD2loaaGF9mfKssCqgw==
   dependencies:
     "@cloudbase/adapter-wx_mp" "^1.1.0"
-    "@cloudbase/oauth" "^2.8.27-beta.0"
-    "@cloudbase/utilities" "^2.8.27-beta.0"
+    "@cloudbase/oauth" "^2.9.2"
+    "@cloudbase/utilities" "^2.9.2"
 
 "@cloudbase/database@0.9.21":
   version "0.9.21"
@@ -979,82 +979,82 @@
     lodash.set "4.3.2"
     lodash.unset "4.5.2"
 
-"@cloudbase/functions@^2.8.27-beta.0":
-  version "2.8.27-beta.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/functions/-/functions-2.8.27-beta.0.tgz#a863db7c69b4813061ec752736f2cc22f03bc7e3"
-  integrity sha512-VLDwHvfxvmVL2p0JUWKx+ej5oScugbShMg2Kz0N+tRchPUJc707vNePu3oGYApKhsSoDvB3Ww2e+9pKrtswklg==
+"@cloudbase/functions@^2.9.2":
+  version "2.9.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/functions/-/functions-2.9.2.tgz#4e5b6b478f9e9a8d3c631cbcfcf4fed82eef8174"
+  integrity sha512-Czhkyl2fTqcrUpP6ic9qVbieNAG5HJ3PJsQ8lDfFANAmFcX2VLSOdzAQaR57PAzp60l+avae/IZDLybA8bmQZQ==
   dependencies:
     "@cloudbase/adapter-interface" "^0.6.0"
-    "@cloudbase/types" "^2.8.27-beta.0"
-    "@cloudbase/utilities" "^2.8.27-beta.0"
+    "@cloudbase/types" "^2.9.2"
+    "@cloudbase/utilities" "^2.9.2"
 
 "@cloudbase/js-sdk@^2.8.27-beta.0":
-  version "2.8.27-beta.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/js-sdk/-/js-sdk-2.8.27-beta.0.tgz#2097ae04dfae263e714abc62ebe719aa1d3f01a7"
-  integrity sha512-Ew8Bpb/mdLkyb1QUJS1eyx78sgGAexVaIS40cMdpJKWITeFKgGAudPUaTYS4p51j2ju+n4DT0N6YviFTBMUF3g==
+  version "2.9.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/js-sdk/-/js-sdk-2.9.2.tgz#375e5c9e676bc531df3f2164014344596aecba14"
+  integrity sha512-sKtKJQSIlUDLCbiXLXNvc5IBHqI0Xyd8a6u4JE6avbZShzwgOgA9ykkD1+hNBeei8uT3hGOr8PhXXJQWw7yL7w==
   dependencies:
     "@cloudbase/adapter-interface" "^0.6.0"
-    "@cloudbase/ai" "^2.8.27-beta.0"
-    "@cloudbase/analytics" "^2.8.27-beta.0"
-    "@cloudbase/app" "^2.8.27-beta.0"
-    "@cloudbase/auth" "^2.8.27-beta.0"
+    "@cloudbase/ai" "^2.9.2"
+    "@cloudbase/analytics" "^2.9.2"
+    "@cloudbase/app" "^2.9.2"
+    "@cloudbase/auth" "^2.9.2"
     "@cloudbase/database" "0.9.21"
-    "@cloudbase/functions" "^2.8.27-beta.0"
-    "@cloudbase/model" "^2.8.27-beta.0"
-    "@cloudbase/realtime" "^2.8.27-beta.0"
-    "@cloudbase/storage" "^2.8.27-beta.0"
-    "@cloudbase/types" "^2.8.27-beta.0"
-    "@cloudbase/utilities" "^2.8.27-beta.0"
+    "@cloudbase/functions" "^2.9.2"
+    "@cloudbase/model" "^2.9.2"
+    "@cloudbase/realtime" "^2.9.2"
+    "@cloudbase/storage" "^2.9.2"
+    "@cloudbase/types" "^2.9.2"
+    "@cloudbase/utilities" "^2.9.2"
 
-"@cloudbase/model@^2.8.27-beta.0":
-  version "2.8.27-beta.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/model/-/model-2.8.27-beta.0.tgz#e6f0869236e30bd2ae74151b91ae56dc8f63cc8a"
-  integrity sha512-figNPVfjOg6nZ5aO9a2lFUETbnOoMCFsgriKP5xtd8cTFQz2tbxKAHr8hoIOeFSsCtFW1tafSnLh7mqQRDooCg==
+"@cloudbase/model@^2.9.2":
+  version "2.9.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/model/-/model-2.9.2.tgz#4d3e56cb76c5a2f5f084f1653dbcd4a3ce7286d8"
+  integrity sha512-PXHe2z8rB2wxTSBaS5s3kWgFaHo6nfXi8FdMVZl80amYGzUUxX+rh2DoGuOnoniWCsc1GJSPkXV3UimqH6PkMQ==
   dependencies:
-    "@cloudbase/types" "^2.8.27-beta.0"
-    "@cloudbase/utilities" "^2.8.27-beta.0"
+    "@cloudbase/types" "^2.9.2"
+    "@cloudbase/utilities" "^2.9.2"
     "@cloudbase/wx-cloud-client-sdk" "^1.3.1"
 
-"@cloudbase/oauth@^2.8.27-beta.0":
-  version "2.8.27-beta.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/oauth/-/oauth-2.8.27-beta.0.tgz#67a1f77479e2cc4e3da96e63f2458fdd51ee54fb"
-  integrity sha512-r+tyxyOB4zvqUNzw423t94v4ptymUp0dXjG3ImJZOjHzCk70iV42j6EjjDNReTeklCV6FXYYxBz5ZeSXlnHk6A==
+"@cloudbase/oauth@^2.9.2":
+  version "2.9.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/oauth/-/oauth-2.9.2.tgz#00abd3545e56cb392475bdbcef1b8f61a018b532"
+  integrity sha512-+J33pXNtFIA8MDE671okOSuSLwVLxetqiXbonizh55URuosZa5Mfoj++TOuhUZBWwfWZNpyOpGZdcrpIJRJYGA==
 
-"@cloudbase/realtime@^2.8.27-beta.0":
-  version "2.8.27-beta.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/realtime/-/realtime-2.8.27-beta.0.tgz#576ea5da176c32effe9a1523ea0feed6c198a3d2"
-  integrity sha512-Y8+BOcsbuP5O+pOnYe4fN8iFfndPeycsw4mmoVokcl8rxYDgOC9lll8rEiIjYIRrw4bui+Kcr6SsWpUQIpX8+Q==
+"@cloudbase/realtime@^2.9.2":
+  version "2.9.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/realtime/-/realtime-2.9.2.tgz#6f8d8565676ec3ee75ff1ad7ed0ae0fc46e6dc3c"
+  integrity sha512-kMfSNezwfGMUDgd8fOxw14wytD78n6pdKl9Hu6yuZjRif24KxUgQFTdaBgGNXh4C4RFAE27bzEWHsDSmwYUi0Q==
   dependencies:
-    "@cloudbase/types" "^2.8.27-beta.0"
+    "@cloudbase/types" "^2.9.2"
 
-"@cloudbase/storage@^2.8.27-beta.0":
-  version "2.8.27-beta.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/storage/-/storage-2.8.27-beta.0.tgz#48a0134e4af8feb41760ffedd4e12bdc39ad2184"
-  integrity sha512-9u41+CaFntvB0/gVRLJWTsdd9i0UVRUzf4VKPtsAAZm2xfZswYDTcyKJ92EcY7Ri6g7cVmIBox2VxtoJw5RAmA==
+"@cloudbase/storage@^2.9.2":
+  version "2.9.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/storage/-/storage-2.9.2.tgz#b36ff354c9cb9b0fa0d85747e850a700fb18ca6f"
+  integrity sha512-gM4bDYuyIJriGvdOzom0AcgtxtpTmyI6RX1LhZLEdeuq1uFjkJHYk7FgVj/zhS7o3HHJTFmwluC72kSCr5WOBQ==
   dependencies:
-    "@cloudbase/types" "^2.8.27-beta.0"
-    "@cloudbase/utilities" "^2.8.27-beta.0"
+    "@cloudbase/types" "^2.9.2"
+    "@cloudbase/utilities" "^2.9.2"
 
-"@cloudbase/types@^2.8.27-beta.0":
-  version "2.8.27-beta.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/types/-/types-2.8.27-beta.0.tgz#ad132a931d7675cc37a7a37a755b6e81bea27c4f"
-  integrity sha512-kp+wAFhvH/3KO/ILomqkOiXfsojV5tbMJo/mkSSB8tuOYAEpXogT7qkMc5xMKHW6vpVhbIjXM1JHqc0WIw19vw==
-  dependencies:
-    "@cloudbase/adapter-interface" "^0.6.0"
-
-"@cloudbase/utilities@^2.8.27-beta.0":
-  version "2.8.27-beta.0"
-  resolved "https://registry.npmmirror.com/@cloudbase/utilities/-/utilities-2.8.27-beta.0.tgz#d6634607524aca6b44b5ac83a2ac2cb82484d0a6"
-  integrity sha512-AQREYChaDQDF6crhwHSoEUTDgNp/5KiGG1HOY2Uj5PoXIfgr4eLt03GFtYxYAHImB3L14wJezeroF62fky594w==
+"@cloudbase/types@^2.9.2":
+  version "2.9.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/types/-/types-2.9.2.tgz#408c358dd8c6eb26097a164ae92f2e631f1a5c9f"
+  integrity sha512-9coBXWTQ8S1/5WyAjRtyJmoo3IzDjT8/XYWTvcCWcxUQgLkaXBIwqrFvLYlJ1xma2aYL15ZzZAFT9MPxDjlCwQ==
   dependencies:
     "@cloudbase/adapter-interface" "^0.6.0"
-    "@cloudbase/types" "^2.8.27-beta.0"
+
+"@cloudbase/utilities@^2.9.2":
+  version "2.9.2"
+  resolved "https://registry.npmmirror.com/@cloudbase/utilities/-/utilities-2.9.2.tgz#ad6397699ed532634e0f6243f564ddbf2bfa9341"
+  integrity sha512-2Vw+48ggCatJBUjd82U0KT61Q0eyws/6FOe0yoxZ+QS/haF8KW0P3xT/CyL6sZF1jeAM98E8EF6BeRdSR+b8Qw==
+  dependencies:
+    "@cloudbase/adapter-interface" "^0.6.0"
+    "@cloudbase/types" "^2.9.2"
     jwt-decode "^3.1.2"
 
 "@cloudbase/wx-cloud-client-sdk@^1.3.1":
-  version "1.3.1"
-  resolved "https://registry.npmmirror.com/@cloudbase/wx-cloud-client-sdk/-/wx-cloud-client-sdk-1.3.1.tgz#55b5640f44a528c30b9ae9e5106ea84521326a61"
-  integrity sha512-HTETUGX3lbCtLgksCOcrYNdWw/lFKsf4Civu4ZFb/H0dRVcZv8DOEqBhF7pImFJT9Hh8fvpuo9iPfT2RM/zs0g==
+  version "1.4.0"
+  resolved "https://registry.npmmirror.com/@cloudbase/wx-cloud-client-sdk/-/wx-cloud-client-sdk-1.4.0.tgz#d7c4f253ef87b76dc5a3fe984c12c7c47326f6f8"
+  integrity sha512-fmvjHuTxiDNeyoxf1NRdL8l+3EtcntyEqhNMXcymLcX2IjckzleXbdEjOcUYnQm5NQY8/wZ6n7e4CXMyR1ei8A==
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"

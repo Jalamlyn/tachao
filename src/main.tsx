@@ -9,6 +9,22 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import "./module/importing"
 import App from "./module/App"
 import { BrowserRouter } from "react-router-dom"
+import cloudbase from "@cloudbase/js-sdk"
+
+async function loadCloudBaseSDK() {
+  // 引入 SDK
+  const app = cloudbase.init({
+    env: "mobenai-weapp-dev-2e8qhi3a963364", // 替换为你的云开发环境 ID
+    clientId: "mobenai-weapp-dev-2e8qhi3a963364", // 替换为你的云开发环境 ID
+  })
+  window.mo_app = app
+  const auth = app.auth({
+    persistence: "local",
+  })
+  await auth.signInAnonymously() // 或者使用其他登录方式
+}
+
+loadCloudBaseSDK()
 
 const queryClient = new QueryClient({
   defaultOptions: {

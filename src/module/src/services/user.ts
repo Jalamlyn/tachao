@@ -47,19 +47,13 @@ class UserService {
         throw new Error("手机号格式不正确")
       }
 
-      const result = await api.cloudRegister({
-        phone,
-        password,
-      })
-
-      if (!result?.userId) {
-        throw new Error("注册失败，请稍后重试")
-      }
-
-      api.log.info("用户注册成功", {
-        userId: result.userId,
-        phone,
-      })
+      const result = await api.cloudRegister(
+        {
+          phone,
+          password,
+        },
+        appId
+      )
 
       return result
     } catch (error) {
@@ -79,10 +73,13 @@ class UserService {
         throw new Error("手机号和密码不能为空")
       }
 
-      const response = await api.cloudLogin({
-        phone,
-        password,
-      })
+      const response = await api.cloudLogin(
+        {
+          phone,
+          password,
+        },
+        appId
+      )
 
       api.log.info("登录接口调用成功，开始处理返回数据", {
         hasData: !!response?.data,
@@ -96,6 +93,7 @@ class UserService {
       const userRecord = response.data.records[0]
 
       if (!userRecord) {
+        message.error("用户不存在或密码错误")
         throw new Error("用户不存在或密码错误")
       }
 

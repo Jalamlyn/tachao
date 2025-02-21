@@ -34,6 +34,8 @@ import localforage from "localforage"
 import { getCurrentAccountInfo } from "./pay"
 import { queryCurrentEnterPrise } from "./enterprise"
 import AMapLoader from "@amap/amap-jsapi-loader"
+import * as cloudMetadata from "./cloudMetadata"
+import * as cloudUser from "./cloudUser"
 
 // 检查是否在iframe中运行
 const isInIframe = () => {
@@ -431,6 +433,8 @@ export const context = {
   message,
   appId: "app_1_1867924698052419585_1739965888047_a4yj39",
   api: {
+    ...cloudMetadata,
+    ...cloudUser,
     localforage,
     searchExa,
     getExaContents,
